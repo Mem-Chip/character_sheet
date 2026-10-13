@@ -178,7 +178,7 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
    \`state: { die: "classTable('…')" }\` 在施加者的作用域里求值，之后在效应里用 \`effect.state.die\` 读。
 6. **防御性的反应改 AC**（护盾术这类）：挂在 \`attackHit\` 的 before 窗口（防守方先问），施加一个加 AC 的效应即可。
    防守方处理完之后，引擎会**按新的 AC 重新判定**，不够就变成未命中。不要挂在 \`d20Rolled\` 上：那时这次攻击要对比的 AC 已经定了。
-7. **升环公式**按原文逐环累加：「1 环 2d8，每高一环多 1d8」= \`(1 + slot.level)d8\`；「3 环 8d6，每高一环多 1d6」= \`(5 + slot.level)d6\`。代进最低环验算一遍。
+7. **升环公式**按原文逐环累加：「2 环 4d6，每高一环多 1d6」= \`(2 + slot.level)d6\`；「1 环 3d4，每高一环多 1d4」= \`(2 + slot.level)d4\`。代进最低环验算一遍。
 8. **生物类型**（\`target.type\`）只有这些写法：${CREATURE_TYPES.join('、')}。
 9. \`allyWithin(x, 尺, { exclude: [self], notCond: '失能' })\`：第三个参数可选，\`exclude\` 不算哪些人，\`notCond\` 要求那个盟友不处于某个状态。
 10. 原文说「另一名生物」→ \`targeting.filter: 'target.id != self.id'\`。

@@ -75,6 +75,7 @@ function actionsFor(s: Session, rules: RuleBook, spells: Json[], id: string): Ac
       manual: { activation, concentration },
     });
   }
+  const offTurn = (a: Action) => inCombat && s.state.order[s.state.turnIndex] !== id && (a.activation === 'action' || a.activation === 'bonus');
   const keys = [...v.sources, ...rules.keys().filter((k) => k.startsWith('XPHB:action:'))];
   const seen = new Set<string>();
   for (const key of keys) {
@@ -94,7 +95,7 @@ function actionsFor(s: Session, rules: RuleBook, spells: Json[], id: string): Ac
         sub: [act, ...(a.cost ?? []).map((k) => describeCost(k, names)), a.concentration ? '专注' : ''].filter(Boolean).join(' · '),
         action: a, slot: slotCost?.slot ?? null,
         needsTargets: !!t && (t.type === 'creature' || t.type === 'area'),
-        ok, why: ok ? '' : `付不起：${costs.map((k) => describeCost(k, names)).join('、')}`,
+        ok, why: ok ? '' : offTurn(a) ? '不是这个角色的回合（别人的回合里只能用反应）' : `付不起：${costs.map((k) => describeCost(k, names)).join('、')}`,
       });
     }
   }

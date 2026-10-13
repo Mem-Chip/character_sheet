@@ -90,7 +90,7 @@ describe('#4 定身类人 → 麻痹 → 5 尺内命中自动重击 → 回合�
     expect(has(s, 'g', '失能')).toBe(true);   // 麻痹隐含失能
 
     dice.push(3, 11, 4, 5);
-    done(s.dispatch({ type: 'useAction', actor: 'f', action: 'weapon:ls', targets: ['g'] }));
+    done(s.dispatch({ type: 'useAction', actor: 'f', action: 'weapon:ls', targets: ['g'], options: { as: 'reaction' } }));   // 别人的回合：借机攻击
     expect(last(s, 'd20Rolled').adv).toBe(true);
     expect(evs(s, 'critUpgraded')).toHaveLength(1);
     expect(last(s, 'damageApplied').total).toBe(4 + 5 + 3);   // 2d8 + 3

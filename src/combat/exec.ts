@@ -476,6 +476,9 @@ export function canPay(tx: Tx, id: Id, costs: Cost[]): boolean {
       if (k.economy === 'action' || k.economy === 'bonus' || k.economy === 'reaction') {
         if (blocked.has(k.economy)) return false;
         if (inCombat(tx) && c.economy[k.economy] < 1) return false;
+        // 2024：动作和附赠动作只能在自己的回合里用（别人的回合里只有反应）。
+        // 引擎统一管，数据里就不用每条都写 requires: turn.isMine
+        if (inCombat(tx) && k.economy !== 'reaction' && tx.state.order[tx.state.turnIndex] !== id) return false;
       }
     } else if ('resource' in k) {
       const max = effectiveView(tx, id).resources[k.resource] ?? 0;
@@ -625,6 +628,9 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
     if (action.requires !== undefined) {
       const ok = resolveBool(tx, action.requires, { self: actor, slot: o.slotLevel }, actor, action.name);
       if (!ok) throw new Rejected(`「${action.name}」的使用条件不满足`);
+    }
+    if (inCombat(tx) && costs.some((k) => 'economy' in k && k.economy === 'attack') && tx.state.order[tx.state.turnIndex] !== actor) {
+      throw new Rejected(`现在不是${c.name}的回合：在别人的回合里攻击要用反应（借机攻击）`);
     }
     if (!canPay(tx, actor, costs)) {
       const names = effectiveView(tx, actor).resourceNames ?? {};

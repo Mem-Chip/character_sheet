@@ -349,6 +349,18 @@ describe('升环：每高一环按原文增加', () => {
 });
 
 describe('动作经济（战斗中）', () => {
+  it('2024：动作和附赠动作只能在自己的回合用；别人的回合里攻击要用反应（DM 可以强制）', () => {
+    const { s, dice } = setup([fighter(), goblin('g', { hpMax: 50 }), cleric('c')]);
+    done(s.dispatch({ type: 'startCombat', order: ['g', 'f', 'c'] }));
+    expect(s.dispatch({ type: 'useAction', actor: 'f', action: 'weapon:ls', targets: ['g'] }).status).toBe('rejected');
+    expect(s.dispatch({ type: 'useAction', actor: 'c', action: 'XPHB:spell:治愈真言#cast', targets: ['f'], slotLevel: 1 }).status).toBe('rejected');
+    dice.push(10, 4);
+    done(s.dispatch({ type: 'useAction', actor: 'f', action: 'weapon:ls', targets: ['g'], options: { as: 'reaction' } }));
+    expect(s.state.combatants.f.economy.reaction).toBe(0);
+    dice.push(10, 4);
+    done(s.dispatch({ type: 'useAction', actor: 'f', action: 'weapon:ls', targets: ['g'], force: true }));
+  });
+
   it('2024：一个回合只能消耗一个法术位施法', () => {
     const { s, dice } = setup([cleric('c'), fighter()]);
     done(s.dispatch({ type: 'startCombat', order: ['c', 'f'] }));
