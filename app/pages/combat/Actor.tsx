@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { ABIL_CN, ABILS, type Ability } from '../../../src/expr';
 import type { Json } from '../../../src/sheet';
 import {
-  canPay, concentrationOf, describeCost, weaponAction,
+  actionCosts, canPay, concentrationOf, describeCost, weaponAction,
   type Action, type ActiveEffect, type Cost, type Duration, type RuleBook, type Session,
 } from '../../../src/combat';
 import { Panel, Pips, Stat, Tag, sgn } from '../../components/ui';
@@ -11,8 +11,14 @@ import { combat, type CombatUi } from '../../lib/combat';
 import type { Engine } from '../../lib/engine';
 import { DAMAGE_TYPES, type Namer } from './shared';
 
-type Group = '武器攻击' | '法术' | '法术（未自动化）' | '特性' | '通用动作';
-const GROUPS: Group[] = ['武器攻击', '法术', '法术（未自动化）', '特性', '通用动作'];
+type Group = '武器攻击' | '法术' | '法术（未自动化）' | '特性' | '通用动作' | '时机到了会问';
+const GROUPS: Group[] = ['武器攻击', '法术', '法术（未自动化）', '特性', '通用动作', '时机到了会问'];
+
+/** 触发时机的说法（「时机到了会问」那一组用） */
+const EVENT_CN: Record<string, string> = {
+  attackHit: '命中时', attackMissed: '未命中时', d20Rolled: '掷出 d20 后', damageIncoming: '将要受伤时', damageTaken: '受伤后',
+  saveForced: '迫使豁免时', turnStart: '回合开始时', turnEnd: '回合结束时', spellCast: '施法后',
+};
 
 interface ActItem {
   /** 有动态数据的：useAction 的动作引用；没有的：manual:<法术名> */
@@ -26,20 +32,19 @@ interface ActItem {
   ok: boolean;
   why: string;
   manual?: { activation: 'action' | 'bonus' | 'reaction' | 'none'; concentration: boolean };
+  /** 不能主动点：由窗口触发（偷袭、至圣斩、护盾术……），只是列出来让人知道 */
+  passive?: boolean;
 }
 
 const TIME_UNIT: Record<string, 'action' | 'bonus' | 'reaction'> = { action: 'action', bonus: 'bonus', reaction: 'reaction' };
 
 const ACT_CN: Record<string, string> = { action: '动作', bonus: '附赠', reaction: '反应', free: '免费', none: '' };
 
-function costsOf(a: Action): Cost[] {
-  const act = typeof a.activation === 'string' ? a.activation : null;
-  return [...(act === 'action' || act === 'bonus' || act === 'reaction' ? [{ economy: act } as Cost] : []), ...(a.cost ?? [])];
-}
 
 function actionsFor(s: Session, rules: RuleBook, spells: Json[], id: string): ActItem[] {
   const c = s.state.combatants[id];
   const v = s.view(id);
+  const names = v.resourceNames ?? {};
   const inCombat = s.state.round !== null;
   const out: ActItem[] = [];
   for (const row of v.attacks) {
@@ -77,7 +82,8 @@ function actionsFor(s: Session, rules: RuleBook, spells: Json[], id: string): Ac
     if (!e?.actions?.length || seen.has(key)) continue;
     seen.add(key);
     for (const a of e.actions) {
-      const costs = costsOf(a);
+      if (a.trigger) continue;   // 窗口触发的动作列在「时机到了会问」里
+      const costs = actionCosts(a);
       const ok = s.peek((tx) => canPay(tx, id, costs));
       const slotCost = (a.cost ?? []).find((k): k is Extract<Cost, { slot: unknown }> => 'slot' in k);
       const group: Group = (a.tags ?? []).includes('spell') ? '法术' : key.includes(':action:') ? '通用动作' : '特性';
@@ -85,10 +91,29 @@ function actionsFor(s: Session, rules: RuleBook, spells: Json[], id: string): Ac
       const t = a.targeting;
       out.push({
         ref: `${key}#${a.id}`, group, name: a.name,
-        sub: [act, ...(a.cost ?? []).map(describeCost), a.concentration ? '专注' : ''].filter(Boolean).join(' · '),
+        sub: [act, ...(a.cost ?? []).map((k) => describeCost(k, names)), a.concentration ? '专注' : ''].filter(Boolean).join(' · '),
         action: a, slot: slotCost?.slot ?? null,
         needsTargets: !!t && (t.type === 'creature' || t.type === 'area'),
-        ok, why: ok ? '' : `付不起：${costs.map(describeCost).join('、')}`,
+        ok, why: ok ? '' : `付不起：${costs.map((k) => describeCost(k, names)).join('、')}`,
+      });
+    }
+  }
+  // 时机能力：常驻的触发器 + 窗口触发的动作
+  for (const key of new Set(v.sources)) {
+    const e = rules.entry(key);
+    if (!e || e.automation === 'manual') continue;
+    const timed = [
+      ...(e.triggers ?? []).map((t) => ({ id: t.id, name: t.label ?? e.name ?? t.id, on: t.on, cost: t.cost ?? [], action: null as Action | null })),
+      ...(e.actions ?? []).filter((a) => a.trigger).map((a) => ({ id: a.id, name: a.name, on: a.trigger!.on, cost: actionCosts(a), action: a })),
+    ];
+    for (const t of timed) {
+      const on = [t.on].flat().map((x) => EVENT_CN[x] ?? x).join(' / ');
+      const ok = s.peek((tx) => canPay(tx, id, t.cost));
+      out.push({
+        ref: `${key}~${t.id}`, group: '时机到了会问', name: t.name,
+        sub: [on, ...t.cost.map((k) => describeCost(k, names))].filter(Boolean).join(' · '),
+        action: t.action ?? { id: t.id, name: t.name, activation: 'none', root: [] },
+        slot: null, needsTargets: false, ok, why: ok ? '' : '现在付不起代价', passive: true,
       });
     }
   }
@@ -216,9 +241,11 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
                 const avail = it.slot ? slotsFor(it.slot.min, it.slot.max) : [];
                 return (
                   <div key={it.ref} className={'act' + (it.ok ? '' : ' no')} title={it.why || it.action.text || ''}>
-                    <button className="btn sm" onClick={() => use(it)}>{it.name}</button>
+                    {it.passive
+                      ? <span className="passive-name">{it.name}</span>
+                      : <button className="btn sm" onClick={() => use(it)}>{it.name}</button>}
                     <span className="small muted">{it.sub}</span>
-                    {it.slot && (
+                    {it.slot && !it.passive && (
                       avail.length
                         ? (
                           <select className="slotsel" value={slotPick[it.ref] ?? avail[0]} onChange={(e) => setSlotPick({ ...slotPick, [it.ref]: Number(e.target.value) })} aria-label="法术位环阶">
@@ -306,13 +333,13 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
               {Object.entries(v.slots).filter(([, n]) => n > 0).map(([L, n]) => (
                 <tr key={'s' + L}>
                   <td>{L} 环法术位</td>
-                  <td className="r"><Pips max={n} used={c.live.slotsUsed[Number(L)] ?? 0} onChange={(used) => combat.dispatch({ type: 'setUsage', id, slot: Number(L), used })} /></td>
+                  <td className="r"><Usage max={n} used={c.live.slotsUsed[Number(L)] ?? 0} onChange={(used) => combat.dispatch({ type: 'setUsage', id, slot: Number(L), used })} /></td>
                 </tr>
               ))}
               {Object.entries(v.resources).map(([k, n]) => (
                 <tr key={'r' + k}>
                   <td>{(v.resourceNames ?? {})[k] ?? k}</td>
-                  <td className="r"><Pips max={n} used={c.live.resourcesUsed[k] ?? 0} onChange={(used) => combat.dispatch({ type: 'setUsage', id, resource: k, used })} /></td>
+                  <td className="r"><Usage max={n} used={c.live.resourcesUsed[k] ?? 0} onChange={(used) => combat.dispatch({ type: 'setUsage', id, resource: k, used })} /></td>
                 </tr>
               ))}
             </tbody>
@@ -320,5 +347,30 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
         </Panel>
       )}
     </div>
+  );
+}
+
+/** 次数：少的画方格，多的（圣疗能量池 30 点）用数字框改「剩余」 */
+function Usage({ max, used, onChange }: { max: number; used: number; onChange: (used: number) => void }) {
+  const [draft, setDraft] = useState<string | null>(null);
+  if (max <= 12) return <Pips max={max} used={used} onChange={onChange} />;
+  // 改完（回车 / 离开输入框）才记一笔，不是每敲一个数字记一笔
+  const commit = () => {
+    if (draft === null) return;
+    const left = Number(draft);
+    setDraft(null);
+    if (draft !== '' && Number.isFinite(left) && max - left !== used) onChange(Math.max(0, Math.min(max, max - Math.floor(left))));
+  };
+  return (
+    <span className="row" style={{ gap: 4, justifyContent: 'flex-end' }}>
+      <span className="tiny faint">剩</span>
+      <input
+        type="number" min={0} max={max} value={draft ?? String(max - used)} aria-label="剩余"
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => { if (e.key === 'Enter') commit(); }}
+      />
+      <span className="tiny faint num">/ {max}</span>
+    </span>
   );
 }

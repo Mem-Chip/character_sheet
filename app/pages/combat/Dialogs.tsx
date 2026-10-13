@@ -10,7 +10,7 @@ import { CREATURE_TYPES, DAMAGE_TYPES, type Namer } from './shared';
 
 /* ------------------------------ 决定 ------------------------------ */
 
-const KIND_CN: Record<string, string> = { optionalTrigger: '可以做出反应', ask: '需要确认', choose: '请选择', physicalDice: '输入骰子结果', slotLevel: '选择法术位', targets: '选择目标' };
+const KIND_CN: Record<string, string> = { optionalTrigger: '可以做出反应', ask: '需要确认', choose: '请选择', physicalDice: '输入骰子结果', slotLevel: '选择法术位', targets: '选择目标', number: '选择数值' };
 
 export function DecisionDialog({ s, name }: { s: Session; name: Namer }) {
   const p = s.pending!;
@@ -30,7 +30,8 @@ export function DecisionDialog({ s, name }: { s: Session; name: Namer }) {
         </div>
       )}
       <div className="serif">{d.prompt}</div>
-      {d.kind === 'optionalTrigger' || d.kind === 'choose' ? <PickOptions d={d} />
+      {d.kind === 'optionalTrigger' || d.kind === 'choose' || d.kind === 'slotLevel' ? <PickOptions d={d} />
+        : d.kind === 'number' ? <NumberPick d={d} />
         : d.kind === 'ask' ? <AskQuestions d={d} />
           : d.kind === 'physicalDice' ? <DiceInput d={d} />
             : <div className="dangerline">界面还不支持这种决定（{d.kind}）。可以放弃这次操作。</div>}
@@ -42,7 +43,7 @@ export function DecisionDialog({ s, name }: { s: Session; name: Namer }) {
 }
 
 function PickOptions({ d }: { d: Decision }) {
-  const [sel, setSel] = useState<string[]>(Array.isArray(d.default) ? (d.default as string[]) : []);
+  const [sel, setSel] = useState<string[]>(Array.isArray(d.default) ? (d.default as string[]) : typeof d.default === 'string' ? [d.default] : []);
   const multi = d.kind === 'optionalTrigger' || !!d.multi;
   const toggle = (id: string) => setSel(multi ? (sel.includes(id) ? sel.filter((x) => x !== id) : [...sel, id]) : [id]);
   return (
@@ -60,9 +61,33 @@ function PickOptions({ d }: { d: Decision }) {
       </div>
       <div className="row" style={{ justifyContent: 'flex-end' }}>
         {d.kind === 'optionalTrigger' && <button className="btn" onClick={() => combat.decide([])}>都不用</button>}
-        <button className="btn primary" disabled={d.kind === 'choose' && !sel.length} onClick={() => combat.decide(sel)}>
+        <button className="btn primary" disabled={d.kind !== 'optionalTrigger' && !sel.length} onClick={() => combat.decide(sel)}>
           {d.kind === 'optionalTrigger' ? (sel.length ? `使用选中的 ${sel.length} 项` : '不用，继续') : '确定'}
         </button>
+      </div>
+    </>
+  );
+}
+
+function NumberPick({ d }: { d: Decision }) {
+  const min = d.min ?? 0;
+  const max = d.max ?? min;
+  const [v, setV] = useState(String(d.default ?? max));
+  const n = Number(v);
+  const ok = v !== '' && Number.isInteger(n) && n >= min && n <= max;
+  return (
+    <>
+      <div className="row">
+        <input
+          type="number" min={min} max={max} value={v} autoFocus aria-label="数值"
+          onChange={(e) => setV(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && ok) combat.decide(n); }}
+        />
+        <input type="range" min={min} max={max} value={ok ? n : min} onChange={(e) => setV(e.target.value)} aria-label="拖动选择" style={{ flex: 1 }} />
+        <span className="tiny faint num">{min}–{max}</span>
+      </div>
+      <div className="row" style={{ justifyContent: 'flex-end' }}>
+        <button className="btn primary" disabled={!ok} onClick={() => combat.decide(n)}>确定</button>
       </div>
     </>
   );

@@ -11,7 +11,8 @@ import { namer } from './combat/shared';
 export function CombatPage({ engine }: { engine: Engine }) {
   const ui = useCombat();
   const [dlg, setDlg] = useState<null | 'pc' | 'monster' | 'settings'>(null);
-  useEffect(() => { initCombat(engine); }, [engine]);
+  // session 为空就（重新）初始化 —— 开发时热更新会把 combat.ts 的模块状态清掉
+  useEffect(() => { if (!ui.session) initCombat(engine); }, [engine, ui.session]);
 
   const s = ui.session;
   if (!s) return <div className="page empty">正在准备遭遇…</div>;

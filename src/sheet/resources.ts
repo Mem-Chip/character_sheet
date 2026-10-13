@@ -5,7 +5,8 @@
  * 同名（或表列名以能力名开头）的合并成一个池；玩家记账在 char.resources[key] = { used, max? }。
  */
 import { clamp } from './constants';
-import { resolveNum } from './abilities';
+import { ABILS, run, type EvalEnv, type FnImpl } from '../expr';
+import { resolveNum, totalLevel } from './abilities';
 import type { SheetEnv } from './env';
 import type { Json } from './store';
 import type { CharData } from './character';
@@ -17,13 +18,18 @@ export const RESOURCE_PICKS: Record<string, { n: number; hint: string }> = {
   已知方案: { n: 2, hint: '奇械师的已知方案' },
 };
 
+/** 只是「计数」、不是可消耗的池（已知祈唤数、已知方案数…）：战斗里不当资源用 */
+export const COUNT_ONLY = new Set(['祈唤', ...Object.keys(RESOURCE_PICKS)]);
+
 export class Resources {
   readonly SPENDABLE = /^(狂暴次数|引导神力|荒野形态|回气|功力|术法点|宿敌|祈唤|已知方案|魔法物品)$/;
   readonly RECOVERY: Record<string, string> = {
-    狂暴次数: 'long', 引导神力: 'short', 荒野形态: 'long', 回气: 'short',
+    狂暴次数: 'long', 引导神力: 'long', 荒野形态: 'long', 回气: 'long',
     功力: 'short', 术法点: 'long', 宿敌: 'long', 祈唤: 'long',
     已知方案: 'long', 魔法物品: 'long',
   };
+  /** 2024：这几种短休只恢复一次，长休全部恢复 */
+  readonly SHORT_REGAIN_ONE = new Set(['狂暴次数', '引导神力', '荒野形态', '回气']);
   readonly RECOVERY_CN: Record<string, string> = { short: '短休恢复', long: '长休恢复', initiative: '先攻时恢复', none: '特殊', '?': '按规则' };
 
   constructor(private readonly env: SheetEnv) {}
@@ -75,6 +81,7 @@ export class Resources {
         out.push({
           key: `table:${k.cls.source}:${k.cls.name}:${name}`,
           name, max: cell.n, recovery: this.RECOVERY[name] || '?',
+          ...(this.SHORT_REGAIN_ONE.has(name) ? { regain: [{ on: 'short', amount: 1 }] } : {}),
           from: `${k.cls.name} ${lvl} 级 · 职业表`, source: 'levelTable',
         });
       });
@@ -82,15 +89,18 @@ export class Resources {
     return out;
   }
 
-  /** 资源上限公式：数字 / 'pb' / 属性名 / 'max(1, int)' / 'table'（交给等级表） */
-  resolveFormula(formula: unknown, sheet: Json, char: CharData | null): number | null {
+  /**
+   * 资源上限公式：数字 / 'pb' / 属性名 / 'max(1, int)' / 'table'（交给等级表），
+   * 其余按表达式算（`level * 5`、`cond(level >= 17, 2, 1)`）—— 表达式里的 `level` 是**该职业**的等级。
+   */
+  resolveFormula(formula: unknown, sheet: Json, char: CharData | null, cls?: string): number | null {
     if (formula == null) return null;
     if (typeof formula === 'number') return formula;
     const s = String(formula).trim();
     if (s === 'table') return null;
-    const m = s.match(/max\s*\(\s*(\d+)\s*,\s*([^)]+)\)/i);
+    const m = s.match(/^max\s*\(\s*(\d+)\s*,\s*([^)]+)\)$/i);
     if (m) {
-      const inner = this.resolveFormula(m[2].trim(), sheet, char);
+      const inner = this.resolveFormula(m[2].trim(), sheet, char, cls);
       return inner == null ? +m[1] : Math.max(+m[1], inner);
     }
     const ctx = { out: sheet || {}, char: char || null };
@@ -99,12 +109,45 @@ export class Resources {
       if (viaNum !== 0) return viaNum;
       const isNumber = Number.isFinite(Number(s));
       const isKnown = /^(pb|level|spellcasting|mod:[a-z]+|[a-z]{2,3})$/i.test(s) || /调整值|调整/.test(s);
-      if (!isNumber && !isKnown) return null;
+      if (!isNumber && !isKnown) return this.exprFormula(s, sheet, char, cls);
       const m0 = s.match(/^mod:([a-z]{3})$/i);
       if (m0 && sheet?.['mod:' + m0[1]] === undefined && sheet?.[m0[1]] === undefined) return null;
       return viaNum;
     }
-    return null;
+    return this.exprFormula(s, sheet, char, cls);
+  }
+
+  /** 表达式公式。根：level（该职业等级，非职业资源 = 总等级）、totalLevel、pb、mod、六个属性名；函数：max/min/floor/ceil/cond/levelOf */
+  private exprFormula(src: string, sheet: Json, char: CharData | null, cls?: string): number | null {
+    const classes: Json[] = char?._resolved?.classes || [];
+    const total = sheet?.level || totalLevel(char);
+    const levelOf = (name: string) => classes.find((k) => k.cls?.name === name)?.level ?? 0;
+    const mod = Object.fromEntries(ABILS.map((a) => [a, sheet?.['mod:' + a] ?? 0]));
+    const fns: Record<string, FnImpl> = {
+      max: (a) => Math.max(...(a as number[])),
+      min: (a) => Math.min(...(a as number[])),
+      floor: (a) => Math.floor(a[0] as number),
+      ceil: (a) => Math.ceil(a[0] as number),
+      cond: (a) => (a[0] ? a[1] : a[2]),
+      levelOf: (a) => levelOf(String(a[0])),
+    };
+    const env: EvalEnv = {
+      root(name) {
+        if (name === 'level') return cls ? levelOf(cls) || total : total;
+        if (name === 'totalLevel') return total;
+        if (name === 'pb') return sheet?.pb ?? 2 + Math.floor((Math.max(1, total) - 1) / 4);
+        if (name === 'mod') return mod;
+        if ((ABILS as readonly string[]).includes(name)) return mod[name];
+        throw new Error(`资源公式里不认识「${name}」`);
+      },
+      fn: (name) => fns[name],
+    };
+    try {
+      const v = run(src, env);
+      return typeof v === 'number' && Number.isFinite(v) ? Math.floor(v) : null;
+    } catch {
+      return null;
+    }
   }
 
   fromAbilities(derived: Json, char: CharData, sheet: Json): Json[] {
@@ -114,7 +157,7 @@ export class Resources {
       out.push({
         key: `ability:${r.from}:${r.id}`, name: r.name,
         id: r.id,
-        max: this.resolveFormula(r.formula, sheet, char),
+        max: this.resolveFormula(r.formula, sheet, char, r.cls),
         recovery: r.recovery || '?', from: r.from, note: r.note || '', source: 'ability',
         override: !!r.override,
         regain: Array.isArray(r.regain) ? r.regain : null,

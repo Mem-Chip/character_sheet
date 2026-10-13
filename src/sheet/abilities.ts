@@ -630,6 +630,20 @@ export class AbilityBook {
         out.push({ source: f.source, name: f.name, kind: 'subclassFeature', cls: k.cls.name, level: f.level });
       }
     }
+    // 选出来的可选特性（魔能祈唤、战技、超魔法…）和专长一样是能力来源：静态 mods / 授予生效，战斗引擎也认得
+    const optData: Json[] = this.env.store.data.optionalfeatures?.optionalfeature || [];
+    for (const k of res.classes || []) {
+      for (const c of [...this.env.options.forClass(k), ...this.env.options.forSubclass(k)]) {
+        if (c.kind !== 'optfeature') continue;
+        const v = (char.decisions || {})[this.env.options.optionKey(char, c)];
+        for (const name of Array.isArray(v) ? v : v ? [v] : []) {
+          if (typeof name !== 'string' || !name || out.some((x) => x.name === name)) continue;
+          // 同名的 2014 / 2024 两版都在数据里：选项值只有名字，优先 2024 版
+          const src = (optData.find((o) => o.name === name && o.source === 'XPHB') ?? optData.find((o) => o.name === name))?.source || 'XPHB';
+          out.push({ source: src, name, kind: 'optfeature' });
+        }
+      }
+    }
     this.ensureHomerules(char);
     const hrList = this.homelibAll(char).filter((e) => e && !e.pickable && this.hrIdOK(e.id));
     const applied = new Set<string>();

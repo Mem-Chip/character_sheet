@@ -7,7 +7,7 @@
 import { normType } from '../combat/damage';
 import { freshEconomy } from '../combat/view';
 import type { AttackRow, Combatant, CombatantView, LiveState } from '../combat/types';
-import { ABILS, SIZE_CN, type CharData, type Json, type SheetEnv } from '../sheet';
+import { ABILS, COUNT_ONLY, SIZE_CN, type CharData, type Json, type SheetEnv } from '../sheet';
 import type { Ability } from '../expr';
 
 const CREATURE_TYPE_CN: Record<string, string> = {
@@ -86,7 +86,7 @@ export function resourceMap(char: CharData, sheet: Json): ResourceMap {
   const out: ResourceMap = { toSheetKey: {}, max: {}, used: {}, name: {} };
   const declared = (char._derived?.resources || []) as Json[];
   for (const r of sheet._resources || []) {
-    if (r.max == null) continue;
+    if (r.max == null || COUNT_ONLY.has(r.name)) continue;
     const decl = declared.find((d) => d.name === r.name || (d.id && r.key.endsWith(':' + d.id)));
     const id = String(decl?.id ?? r.id ?? r.name);
     out.toSheetKey[id] = r.key;

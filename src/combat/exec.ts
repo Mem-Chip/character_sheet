@@ -1,4 +1,4 @@
-import { ABIL_CN, Dice, Unknown, run, runBool, runDice, runInt, type ExprSrc, type Value } from '../expr';
+import { ABIL_CN, Dice, Unknown, run, runBool, runDice, runInt, type ExprSrc, type Question, type Value } from '../expr';
 import { applyDamagePacket, applyHeal, grantTempHp, normType, rollComponent, type DamageComponent, type DamagePacket } from './damage';
 import { controllerOf, d20Test, rollValue } from './d20';
 import { activeTemplates, applyEffect, effectiveView, effectsOf, endEffect, startConcentration } from './effects';
@@ -47,6 +47,8 @@ export interface ExecCtx {
   /** 最近一次豁免的 DC（saveEnds 缺省用它） */
   dc?: number;
   originKind?: ActiveEffect['origin']['kind'];
+  /** number 节点选出来的数（同一次执行里共享） */
+  vars?: Record<string, number>;
 }
 
 export function scopeOf(tx: Tx, ctx: ExecCtx): ScopeData {
@@ -61,6 +63,7 @@ export function scopeOf(tx: Tx, ctx: ExecCtx): ScopeData {
     damage: ctx.damage,
     event: ctx.event,
     effect: ctx.effectId ? tx.state.effects[ctx.effectId] : undefined,
+    vars: ctx.vars,
   };
 }
 
@@ -215,13 +218,40 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
       return;
     }
     case 'choose': {
-      const picked = tx.decide({
+      // 带 when 的选项：条件明确不满足就不列出来（圣疗「移除中毒」要求目标中毒、能量池至少 5 点）
+      const open = n.options.map((o, i) => ({ o, i })).filter(({ o }) => {
+        if (o.when === undefined) return true;
+        const v = runBool(o.when, env(tx, ctx));
+        return v !== false;
+      });
+      if (!open.length) {
+        tx.emit('note', { text: `${ctx.actionName}：${n.prompt}——眼下没有可选的项`, owner: ctx.self }, ctx.cause);
+        return;
+      }
+      const picked = open.length === 1 && (n.count ?? 1) === 1 ? [String(open[0].i)] : tx.decide({
         kind: 'choose', to: controllerOf(tx, ctx.self), prompt: n.prompt, multi: (n.count ?? 1) > 1,
-        options: n.options.map((o, i) => ({ id: String(i), label: o.label })),
-        default: ['0'],
+        options: open.map(({ o, i }) => ({ id: String(i), label: o.label })),
+        default: [String(open[0].i)],
       });
       const list = (Array.isArray(picked) ? picked : [picked]).map(String).slice(0, n.count ?? 1);
       for (const i of list) runNodes(tx, n.options[Number(i)]?.do, ctx);
+      return;
+    }
+    case 'number': {
+      const min = n.min !== undefined ? num(tx, ctx, n.min, `${n.prompt} 的下限`) : 0;
+      const max = num(tx, ctx, n.max, `${n.prompt} 的上限`);
+      const vars = (ctx.vars ??= {});
+      if (max < min) {
+        vars[n.var] = 0;
+        tx.emit('note', { text: `${ctx.actionName}：${n.prompt}——可选范围是空的（最多 ${max}）`, owner: ctx.self }, ctx.cause);
+        return;
+      }
+      const def = n.default !== undefined ? num(tx, ctx, n.default, `${n.prompt} 的默认值`) : max;
+      const v = Number(tx.decide({
+        kind: 'number', to: controllerOf(tx, ctx.self), prompt: `${ctx.actionName}：${n.prompt}`, options: [], min, max,
+        default: Math.max(min, Math.min(max, def)),
+      }));
+      vars[n.var] = Number.isFinite(v) ? Math.max(min, Math.min(max, Math.floor(v))) : min;
       return;
     }
     case 'if': {
@@ -253,7 +283,8 @@ function applyEffectNode(tx: Tx, n: Extract<Node, { kind: 'applyEffect' }>, ctx:
   const state: Record<string, unknown> = {};
   for (const [k, e] of Object.entries(n.state ?? {})) {
     const v = run(e, env(tx, ctx));
-    state[k] = v && typeof v === 'object' && '__ref' in (v as object) ? (v as { id: string }).id : v;
+    // 状态要能存档（JSON / structuredClone）：参与者存 id，骰子存文本
+    state[k] = v instanceof Dice ? v.toString() : v && typeof v === 'object' && '__ref' in (v as object) ? (v as { id: string }).id : v;
   }
   const snap: Record<string, unknown> = {};
   if (ctx.dc !== undefined) snap.dc = ctx.dc;
@@ -413,9 +444,10 @@ function runDamageNodes(tx: Tx, nodes: Array<Extract<Node, { kind: 'damage' }>>,
  * 代价
  * ========================================================================== */
 
-export function describeCost(c: Cost): string {
+/** 代价的说法。names = 资源 id → 显示名（有就用名字，没有就显示 id） */
+export function describeCost(c: Cost, names: Record<string, string> = {}): string {
   if ('economy' in c) return ({ action: '动作', bonus: '附赠动作', reaction: '反应', attack: '一次攻击', move: '移动' } as const)[c.economy];
-  if ('resource' in c) return `${c.resource} ×${c.n ?? 1}`;
+  if ('resource' in c) return `${names[c.resource] ?? c.resource}${c.n === undefined || c.n === 1 ? ' 1 次' : ` ×${c.n}`}`;
   if ('slot' in c) return `${c.slot.min} 环或更高的法术位`;
   if ('recharge' in c) return `充能 ${c.recharge}`;
   return `${c.charges} 充能`;
@@ -532,7 +564,42 @@ export interface ExecuteOpts {
   cause: number | null;
   viaReaction?: boolean;
   options?: Record<string, unknown>;
+  /** 由窗口触发的动作（至圣斩、护盾术）：带上窗口的上下文 —— 命中窗口里的伤害包、攻击信息、检定 */
+  window?: Pick<ExecCtx, 'packet' | 'attack' | 'attacker' | 'roll' | 'damage' | 'event'>;
 }
+
+/** 这个动作的代价（动作经济 + 声明的代价） */
+export function actionCosts(action: Action, asReaction = false): Cost[] {
+  const act = asReaction ? 'reaction' : typeof action.activation === 'string' ? action.activation : 'special';
+  const costs: Cost[] = [];
+  if (act === 'action' || act === 'bonus' || act === 'reaction') costs.push({ economy: act });
+  costs.push(...(action.cost ?? []).filter((k) => !(asReaction && 'economy' in k && k.economy === 'attack')));
+  return costs;
+}
+
+/**
+ * 窗口触发的动作现在能不能用（不抛错版的 executeAction 前置检查，不含目标检查）。
+ * requires 不确定时返回问题，交给窗口一起问。
+ */
+export function triggeredActionUsable(tx: Tx, owner: Id, action: Action): { ok: boolean; questions: Question[] } {
+  const no = { ok: false, questions: [] };
+  const c = tx.state.combatants[owner];
+  if (!c || c.live.dead) return no;
+  const isSpell = (action.tags ?? []).includes('spell');
+  const costs = actionCosts(action);
+  if (!canPay(tx, owner, costs)) return no;
+  const cannot = new Set(activeTemplates(tx, owner).flatMap((a) => a.tpl.flags?.cannot ?? []));
+  if (isSpell && cannot.has('castSpells')) return no;
+  if (action.concentration && cannot.has('concentrate')) return no;
+  if (inCombat(tx) && isSpell && costs.some((k) => 'slot' in k) && c.economy.slotSpellCast) return no;
+  if (action.requires === undefined) return { ok: true, questions: [] };
+  const v = runBool(action.requires, makeEnv(tx, { self: owner }));
+  if (v === false) return no;
+  return { ok: true, questions: v instanceof Unknown ? [...v.questions] : [] };
+}
+
+/** 效果随环阶变化的动作（表达式里用到 slot.level）—— 没指定环阶时值得问一句 */
+const scalesWithSlot = (a: Action) => JSON.stringify(a.root).includes('slot.level');
 
 const ACT_CN: Record<string, string> = { action: '动作', bonus: '附赠动作', reaction: '反应', free: '免费', none: '' };
 
@@ -543,9 +610,7 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
   const isSpell = (action.tags ?? []).includes('spell');
   const asReaction = o.options?.as === 'reaction';
   const act = asReaction ? 'reaction' : typeof action.activation === 'string' ? action.activation : 'special';
-  const costs: Cost[] = [];
-  if (act === 'action' || act === 'bonus' || act === 'reaction') costs.push({ economy: act });
-  costs.push(...(action.cost ?? []).filter((k) => !(asReaction && 'economy' in k && k.economy === 'attack')));
+  const costs = actionCosts(action, asReaction);
   const entryKey = o.actionKey.split('#')[0];
 
   if (!o.force) {
@@ -561,7 +626,10 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
       const ok = resolveBool(tx, action.requires, { self: actor, slot: o.slotLevel }, actor, action.name);
       if (!ok) throw new Rejected(`「${action.name}」的使用条件不满足`);
     }
-    if (!canPay(tx, actor, costs)) throw new Rejected(`「${action.name}」的代价付不起（${costs.map(describeCost).join('、')}）`);
+    if (!canPay(tx, actor, costs)) {
+      const names = effectiveView(tx, actor).resourceNames ?? {};
+      throw new Rejected(`「${action.name}」的代价付不起（${costs.map((k) => describeCost(k, names)).join('、')}）`);
+    }
     if (inCombat(tx) && isSpell && costs.some((k) => 'slot' in k) && c.economy.slotSpellCast) {
       throw new Rejected('2024 规则：一个回合里只能消耗一个法术位来施法');
     }
@@ -600,7 +668,23 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
       throw new Rejected(`${c.name} 没有剩余的攻击次数，也没有动作了`);
     }
   }
-  const slot = payCosts(tx, actor, costs, action.name, seq, o.slotLevel);
+  // 没指定环阶、效果又随环阶变化（窗口里触发的至圣斩）：问用几环
+  let slotLevel = o.slotLevel;
+  const slotCost = costs.find((k): k is Extract<Cost, { slot: unknown }> => 'slot' in k);
+  if (slotLevel === undefined && slotCost && scalesWithSlot(action)) {
+    const levels: number[] = [];
+    for (let l = slotCost.slot.min; l <= (slotCost.slot.max ?? 9); l++) if (slotAvailable(tx, actor, l)) levels.push(l);
+    if (levels.length > 1) {
+      const v = tx.decide({
+        kind: 'slotLevel', to: controllerOf(tx, actor), prompt: `「${action.name}」用几环法术位？`,
+        options: levels.map((l) => ({ id: String(l), label: `${l} 环（剩 ${(effectiveView(tx, actor).slots[l] ?? 0) - (c.live.slotsUsed[l] ?? 0)}）` })),
+        default: String(levels[0]),
+      });
+      const picked = Number(Array.isArray(v) ? v[0] : v);
+      slotLevel = levels.includes(picked) ? picked : levels[0];
+    }
+  }
+  const slot = payCosts(tx, actor, costs, action.name, seq, slotLevel);
   if (slot !== undefined && inCombat(tx) && isSpell) tx.emit('economyChanged', { id: actor, patch: { slotSpellCast: true } }, seq);
   if (isSpell) {
     const cast = tx.emit('spellCast', { actor, spell: action.name, key: entryKey, slotLevel: slot ?? null }, seq);
@@ -624,6 +708,8 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
     concentrationDuration: action.concentration,
     damageDefs: collectDamageDefs(action.root),
     originKind: isSpell ? 'spell' : (action.tags ?? []).includes('weapon') ? 'item' : 'feature',
+    vars: {},
+    ...o.window,
   };
   runNodes(tx, action.root, ctx);
   tx.emit('actionDone', { actor, action: action.name }, seq);

@@ -99,6 +99,7 @@ export function effectiveView(tx: Tx, id: Id): CombatantView {
       conditionImmune: [...c.base.conditionImmune],
     };
     let acBonus = 0;
+    let dcBonus = 0;
     let speedBonus = 0;
     let speedSet: number | null = null;
     let resistAll = false;
@@ -110,6 +111,7 @@ export function effectiveView(tx: Tx, id: Id): CombatantView {
       for (const m of at.tpl.statics ?? []) {
         switch (m.kind) {
           case 'ac': acBonus += num(m.bonus); break;
+          case 'spellDc': dcBonus += num(m.bonus); break;
           case 'speed': speedBonus += num(m.bonus); break;
           case 'speedSet': speedSet = speedSet === null ? m.value : Math.min(speedSet, m.value); break;
           case 'resist': v.resist.push(...m.values); break;
@@ -121,6 +123,7 @@ export function effectiveView(tx: Tx, id: Id): CombatantView {
       }
     }
     v.ac += acBonus;
+    if (v.spell && dcBonus) v.spell = { ...v.spell, dc: v.spell.dc + dcBonus };
     // 「速度变为 0，且无法被增加」：设定值优先于一切加值
     v.speed = speedSet !== null ? speedSet : Math.max(0, v.speed + speedBonus);
     if (resistAll) v.resist.push('*');

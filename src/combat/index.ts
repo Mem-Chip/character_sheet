@@ -6,6 +6,6 @@ export { Session, createEncounter, runTx, DEFAULT_SETTINGS, type DispatchResult,
 export { makeView, makeCombatant, freshEconomy, freshLive, modOf, type ViewInit } from './view';
 export { effectiveView, activeTemplates, hasCondition, findEffect, effectsOf, concentrationOf, CONC_KEY } from './effects';
 export { scopeDef, REF_SHAPE, type ScopeKind } from './scope';
-export { weaponAction, canPay, describeCost } from './exec';
+export { weaponAction, canPay, describeCost, actionCosts } from './exec';
 export { normType } from './damage';
 export { auditRuleBook, WINDOW_EVENTS, EMITTED_EVENTS } from './audit';

@@ -1,5 +1,5 @@
 import {
-  ABILS, T, Unknown, isAbility, isRef,
+  ABILS, T, Unknown, isAbility, isRef, parseDice,
   type CmpOp, type EvalEnv, type FnImpl, type FnSig, type Question, type RefShape, type RefValue, type ScopeDef, type Ty, type Value,
 } from '../expr';
 import { effectiveView, exhaustionOf, findEffect, hasCondition, concentrationOf } from './effects';
@@ -16,6 +16,7 @@ import type { ActiveEffect, AttackInfo, Id } from './types';
  * ========================================================================== */
 
 const abilObj = T.obj(Object.fromEntries(ABILS.map((a) => [a, T.num])));
+const DICE_CELL = /^\s*\d*d\d+(\s*[+-]\s*\d+)?\s*$/i;
 
 export const REF_SHAPE: RefShape = {
   fields: {
@@ -57,7 +58,7 @@ const FUNCS: Record<string, FnSig> = {
 
 const ROLL_FULL = T.obj({
   kind: T.str, sub: T.str, ability: T.str, skill: T.str, natural: T.num, total: T.num, vs: T.num, adv: T.bool, disadv: T.bool,
-  roller: T.str, target: T.str, crit: T.bool,
+  roller: T.str, target: T.str, crit: T.bool, failing: T.bool,
 });
 const ROLL_PRE = T.obj({ kind: T.str, sub: T.str, ability: T.str, skill: T.str, roller: T.str, target: T.str });
 const ATTACK = T.obj({
@@ -81,12 +82,12 @@ const EXTRA: Record<ScopeKind, Record<string, Ty>> = {
   action: { target: T.ref, slot: T.obj({ level: T.num }) },
   node: {
     target: T.ref, attacker: T.ref, slot: T.obj({ level: T.num }),
-    roll: ROLL_FULL, attack: ATTACK, damage: DAMAGE, event: T.open, effect: T.open,
+    roll: ROLL_FULL, attack: ATTACK, damage: DAMAGE, event: T.open, effect: T.open, vars: T.open,
   },
   rollMod: { target: T.ref, attacker: T.ref, attack: ATTACK, roll: ROLL_PRE, effect: T.open },
   trigger: {
     target: T.ref, attacker: T.ref, slot: T.obj({ level: T.num }),
-    roll: ROLL_FULL, attack: ATTACK, damage: DAMAGE, event: T.open, effect: T.open,
+    roll: ROLL_FULL, attack: ATTACK, damage: DAMAGE, event: T.open, effect: T.open, vars: T.open,
   },
   static: { effect: T.open },
   endsOn: { event: T.open, effect: T.open },
@@ -117,6 +118,8 @@ export interface ScopeData {
   damage?: Record<string, Value>;
   event?: Record<string, unknown>;
   effect?: ActiveEffect;
+  /** number 节点选出来的数 */
+  vars?: Record<string, number>;
 }
 
 export function nameOf(tx: Tx, id: Id): string {
@@ -247,7 +250,8 @@ export function makeEnv(tx: Tx, d: ScopeData, assumptions?: string[]): EvalEnv {
       const col = String(a[0]);
       const v = view().classTable[col];
       if (v === undefined) throw new Error(`${nameOf(tx, self)} 的职业等级表里没有「${col}」这一列`);
-      return v;
+      // 骰子格（武艺 1d8、偷袭 3d6）直接给骰子值，才能写 `classTable('武艺') + mod.dex`
+      return typeof v === 'string' && DICE_CELL.test(v) ? parseDice(v) : v;
     },
     dist: (a) => {
       const [p, q] = a as RefValue[];
@@ -333,6 +337,7 @@ export function makeEnv(tx: Tx, d: ScopeData, assumptions?: string[]): EvalEnv {
           const e = need(d.effect, 'effect');
           return { id: e.id, name: e.name, key: e.key, state: e.state as Record<string, Value>, source: e.source };
         }
+        case 'vars': return { ...(d.vars ?? {}) };
         case 'round': return tx.state.round ?? 0;
         case 'turn': {
           const cur = tx.state.order[tx.state.turnIndex];

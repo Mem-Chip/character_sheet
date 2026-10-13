@@ -68,11 +68,11 @@ export function triggersOf(tx: Tx, id: Id): Declared<Trigger>[] {
   return out;
 }
 
-/** 某人身上能用的「反应型动作」（护盾术这类：Action + trigger） */
-export function reactionActionsOf(tx: Tx, id: Id): Array<{ key: string; action: NonNullable<Entry['actions']>[number] }> {
+/** 某人身上由窗口触发的动作（护盾术：反应；至圣斩：命中后的附赠动作）—— 写了 trigger 的 Action */
+export function triggeredActionsOf(tx: Tx, id: Id): Array<{ key: string; action: NonNullable<Entry['actions']>[number] }> {
   const out: Array<{ key: string; action: NonNullable<Entry['actions']>[number] }> = [];
   for (const [k, e] of permanentEntries(tx, id)) {
-    for (const a of e.actions ?? []) if (a.activation === 'reaction' && a.trigger) out.push({ key: k, action: a });
+    for (const a of e.actions ?? []) if (a.trigger) out.push({ key: k, action: a });
   }
   return out;
 }

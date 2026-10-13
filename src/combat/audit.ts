@@ -29,11 +29,11 @@ export const EMITTED_EVENTS = new Set([
 
 const NODE_KINDS = new Set([
   'attack', 'save', 'check', 'damage', 'addDamage', 'heal', 'tempHp', 'applyEffect', 'removeEffect', 'extendEffect',
-  'resource', 'economy', 'choose', 'if', 'forEach', 'repeat', 'move', 'note',
+  'resource', 'economy', 'choose', 'if', 'forEach', 'repeat', 'move', 'note', 'number',
 ]);
 const ROLL_OPS = new Set(['adv', 'disadv', 'add', 'addDice', 'autoFail', 'autoSucceed', 'critRange', 'autoCritOnHit', 'minD20', 'minDie', 'targetAdd']);
 const MODIFY_OPS = new Set(['reroll', 'addToRoll', 'reduceDamage', 'halveDamage', 'setHp', 'cancel']);
-const STATIC_KINDS = new Set(['ac', 'speed', 'speedSet', 'resist', 'resistAll', 'immune', 'vuln', 'conditionImmune']);
+const STATIC_KINDS = new Set(['ac', 'speed', 'speedSet', 'spellDc', 'resist', 'resistAll', 'immune', 'vuln', 'conditionImmune']);
 
 const NUM = T.num;
 const DICE = T.dice;
@@ -114,7 +114,16 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
         expr(n.move, 'node', NUM, `${at}.move`);
         break;
       case 'choose':
-        n.options.forEach((o, i) => nodes(o.do, `${at}.options[${i}]`));
+        n.options.forEach((o, i) => {
+          expr(o.when, 'node', BOOL, `${at}.options[${i}].when`);
+          nodes(o.do, `${at}.options[${i}]`);
+        });
+        break;
+      case 'number':
+        if (!n.var) out.push(`${where(at)}：number 节点缺少 var（选出来的数放在哪）`);
+        expr(n.min, 'node', NUM, `${at}.min`);
+        expr(n.max, 'node', NUM, `${at}.max`);
+        expr(n.default, 'node', NUM, `${at}.default`);
         break;
       case 'if':
         expr(n.when, 'node', BOOL, `${at}.when`);
@@ -173,7 +182,7 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
   const template = (tpl: EffectTemplate, at: string) => {
     for (const s of tpl.statics ?? []) {
       if (!STATIC_KINDS.has(s.kind)) out.push(`${where(at)}：未知静态修正「${s.kind}」`);
-      if (s.kind === 'ac' || s.kind === 'speed') expr(s.bonus, 'static', NUM, `${at}.statics`);
+      if (s.kind === 'ac' || s.kind === 'speed' || s.kind === 'spellDc') expr(s.bonus, 'static', NUM, `${at}.statics`);
     }
     (tpl.rollMods ?? []).forEach((m, i) => rollMod(m, `${at}.rollMods[${i}]`));
     (tpl.triggers ?? []).forEach((t, i) => trigger(t, `${at}.triggers[${i}]`));

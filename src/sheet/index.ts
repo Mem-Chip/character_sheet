@@ -5,7 +5,7 @@ export { blankCharacter, featNames, resolveCharacter, computeCharacter, applyOri
 export { AbilityBook, HR_SOURCE, decisionComplete, abilityPlans, applyChoiceGrant, parseAcFormula, resolveNum, type HomeRuleEntry, type Derived } from './abilities';
 export { Pipeline, CalcCtx, Chooser, buildOrigins, createRules } from './pipeline';
 export { FeatRules, fmtPrereq, sourceShort, type FeatSlot } from './feats';
-export { Resources, Rest } from './resources';
+export { COUNT_ONLY, Resources, Rest } from './resources';
 export { MasteryRules, SoftLimits, WildShape, Unlocks, classSkillBudget, spellbookMax, numOf } from './class-state';
 export { normalizeSheet, normalizeValue } from './normalize';
 export * from './constants';

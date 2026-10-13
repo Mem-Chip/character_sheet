@@ -47,6 +47,44 @@ describe.skipIf(!hasLocalData())('真实角色卡进战斗', () => {
     }
   });
 
+  it('动态条目里花的资源，在拥有它的测试角色身上都有对应的资源池（id 对得上、上限算得出来）', async () => {
+    const rules = new RuleBook(FILES);
+    const spends = (x: unknown, out: Set<string>): Set<string> => {
+      if (Array.isArray(x)) x.forEach((y) => spends(y, out));
+      else if (x && typeof x === 'object') {
+        const o = x as Record<string, unknown>;
+        if (typeof o.resource === 'string') out.add(o.resource);
+        if (o.kind === 'resource' && typeof o.id === 'string') out.add(o.id);
+        Object.values(o).forEach((y) => spends(y, out));
+      } else if (typeof x === 'string') {
+        for (const m of x.matchAll(/resource\('([^']+)'\)/g)) out.add(m[1]);
+      }
+      return out;
+    };
+    let checked = 0;
+    for (const { id } of chars) {
+      const char = fixture(id);
+      const v = viewFromSheet(env, char, await env.compute(char));
+      for (const key of v.sources) {
+        const e = rules.entry(key);
+        if (!e || e.global) continue;
+        for (const r of spends(e, new Set())) {
+          expect(Object.keys(v.resources), `${id} 的「${key}」要花「${r}」`).toContain(r);
+          checked++;
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(5);
+  });
+
+  it('选出来的可选特性（魔能祈唤）是能力来源：静态授予生效，战斗引擎也看得到', async () => {
+    const char = fixture('warlock2-invocations');
+    const v = viewFromSheet(env, char, await env.compute(char));
+    expect(v.sources).toContain('XPHB:幽影护甲');
+    expect(v.sources).toContain('XPHB:spell:法师护甲');   // 幽影护甲授予的法术
+    expect(v.resources).not.toHaveProperty('祈唤');      // 「已知祈唤数」不是可消耗的资源
+  });
+
   it('游荡者 5：刺剑 +6（修掉的熟练 bug）、偷袭读职业表 3d6、精通「侵扰」', async () => {
     const { s, dice } = await encounter([{ id: 'r', char: fixture('rogue5') }], [{ id: 'g' }]);
     const v = s.view('r');

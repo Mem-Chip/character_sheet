@@ -44,6 +44,8 @@ export type StaticMod =
   | { kind: 'ac'; bonus: ExprSrc }
   | { kind: 'speed'; bonus: ExprSrc }
   | { kind: 'speedSet'; value: number; lock?: boolean }
+  /** 法术豁免 DC 加值（先天术法） */
+  | { kind: 'spellDc'; bonus: ExprSrc }
   | { kind: 'resist'; values: string[] }
   | { kind: 'resistAll' }
   | { kind: 'immune'; values: string[] }
@@ -123,7 +125,7 @@ export interface TriggerSpec {
 }
 
 export type Modify =
-  | { op: 'reroll'; die: 'd20'; keep: 'new' | 'higher' }
+  | { op: 'reroll'; die: 'd20'; keep: 'new' | 'higher' | 'lower' }
   | { op: 'addToRoll'; value: ExprSrc }
   | { op: 'reduceDamage'; value: ExprSrc; types?: string[] }
   | { op: 'halveDamage' }
@@ -208,7 +210,9 @@ export type Node =
   | { kind: 'extendEffect'; template: string }
   | { kind: 'resource'; id: string; delta: ExprSrc }
   | { kind: 'economy'; action?: number; bonus?: number; reaction?: number; attacks?: number; move?: ExprSrc }
-  | { kind: 'choose'; prompt: string; options: Array<{ label: string; do: Node[] }>; count?: number }
+  | { kind: 'choose'; prompt: string; options: Array<{ label: string; do: Node[]; when?: ExprSrc }>; count?: number }
+  /** 让人选一个数（圣疗用多少点），结果放进 `vars.<var>` 给后面的节点用 */
+  | { kind: 'number'; prompt: string; var: string; min?: ExprSrc; max: ExprSrc; default?: ExprSrc }
   | { kind: 'if'; when: ExprSrc; then?: Node[]; else?: Node[] }
   | { kind: 'forEach'; in: 'targets' | 'area'; do: Node[] }
   | { kind: 'repeat'; n: ExprSrc; do: Node[] }
@@ -412,7 +416,7 @@ export type Command =
   | { type: 'rest'; kind: 'short' | 'long'; ids?: Id[] }
   | { type: 'setSettings'; settings: Partial<Settings> };
 
-export type DecisionKind = 'optionalTrigger' | 'ask' | 'choose' | 'slotLevel' | 'physicalDice' | 'targets';
+export type DecisionKind = 'optionalTrigger' | 'ask' | 'choose' | 'slotLevel' | 'physicalDice' | 'targets' | 'number';
 
 export interface DecisionOption {
   id: string;
@@ -428,6 +432,9 @@ export interface Decision {
   options: DecisionOption[];
   /** ask：要回答的问题 */
   questions?: Array<{ id: string; text: string; guess?: boolean; scope: string }>;
+  /** number：可选范围 */
+  min?: number;
+  max?: number;
   /** physicalDice：要输入几颗几面骰 */
   dice?: Array<{ faces: number; count: number }>;
   multi?: boolean;

@@ -1,7 +1,7 @@
 import { Unknown, runBool, type Question, type Value } from '../expr';
-import { reactionActionsOf, triggersOf } from './collect';
-import { activeTemplates } from './effects';
-import { canPay, describeCost, executeAction, payCosts, runNodes, type ExecCtx } from './exec';
+import { triggeredActionsOf, triggersOf } from './collect';
+import { activeTemplates, effectiveView } from './effects';
+import { actionCosts, canPay, describeCost, executeAction, payCosts, runNodes, triggeredActionUsable, type ExecCtx } from './exec';
 import type { DamagePacket } from './damage';
 import { makeEnv, nameOf, type ScopeData } from './scope';
 import type { Tx } from './tx';
@@ -91,7 +91,7 @@ function collect(tx: Tx, spec: WindowSpec, done: Set<string>): TriggerCand[] {
     if (spec.phase === 'defensive' && owner === spec.actor) continue;
     if (spec.phase === 'offensive' && owner !== spec.actor) continue;
 
-    const consider = (base: Omit<TriggerCand, 'questions' | 'scope'>, t: TriggerSpec & { limit?: Trigger['limit'] }) => {
+    const consider = (base: Omit<TriggerCand, 'questions' | 'scope'>, t: TriggerSpec & { limit?: Trigger['limit'] }, pre: Question[] = []) => {
       if (done.has(base.key)) return;
       const timing = effectiveTiming(tx, t);
       if (timing.window !== spec.window || !timing.on.includes(spec.event)) return;
@@ -117,7 +117,7 @@ function collect(tx: Tx, spec: WindowSpec, done: Set<string>): TriggerCand[] {
         }
       }
       if (ok === false) return;
-      out.push({ ...base, questions: ok instanceof Unknown ? [...ok.questions] : [], scope });
+      out.push({ ...base, questions: [...pre, ...(ok instanceof Unknown ? ok.questions : [])], scope });
     };
 
     for (const d of triggersOf(tx, owner)) {
@@ -129,12 +129,16 @@ function collect(tx: Tx, spec: WindowSpec, done: Set<string>): TriggerCand[] {
         label: t.label ?? t.id, trigger: t, optional: !!t.optional, cost,
       }, t);
     }
-    for (const { key, action } of reactionActionsOf(tx, owner)) {
-      const cost: Cost[] = [{ economy: 'reaction' }, ...(action.cost ?? [])];
+    for (const { key, action } of triggeredActionsOf(tx, owner)) {
+      // 窗口不对的先跳过（requires 的求值可能要问问题，别为不相干的窗口问）
+      const timing = effectiveTiming(tx, action.trigger!);
+      if (timing.window !== spec.window || !timing.on.includes(spec.event)) continue;
+      const usable = triggeredActionUsable(tx, owner, action);
+      if (!usable.ok) continue;
       consider({
         key: limitKey({ from: key, id: action.id }),
-        owner, source: owner, from: key, label: action.name, action, optional: true, cost,
-      }, action.trigger!);
+        owner, source: owner, from: key, label: action.name, action, optional: true, cost: actionCosts(action),
+      }, action.trigger!, usable.questions);
     }
   }
   return out;
@@ -159,10 +163,16 @@ function fire(tx: Tx, spec: WindowSpec, c: TriggerCand): void {
   if (lim === 'oncePerRound') tx.emit('onceUsed', { id: c.owner, key: c.key, at: `r${tx.state.round ?? 0}` }, seq);
 
   if (c.action) {
-    // 反应型动作：动作自己付代价（反应 + 法术位…），自己跑效果树
+    // 窗口触发的动作：动作自己付代价（反应 / 附赠 + 法术位…），自己跑效果树；
+    // 目标 = 窗口里的目标（至圣斩打的是被命中的那个），没有就是自己
     executeAction(tx, {
-      actor: c.owner, actionKey: `${c.from}#${c.action.id}`, action: c.action, targets: [c.owner],
+      actor: c.owner, actionKey: `${c.from}#${c.action.id}`, action: c.action,
+      targets: spec.target ? [spec.target] : [c.owner],
       cause: seq, viaReaction: true,
+      window: {
+        packet: spec.packet, attack: spec.scope.attack, attacker: spec.scope.attacker ?? spec.actor,
+        roll: spec.refresh ? spec.refresh() : spec.scope.roll, damage: spec.scope.damage, event: spec.scope.event,
+      },
     });
     return;
   }
@@ -247,7 +257,7 @@ export function fireWindow(tx: Tx, spec: WindowSpec): TriggerCand[] {
           id: String(i),
           label: `${nameOf(tx, c.owner)}：${c.label}`,
           detail: [
-            c.cost.length ? `代价：${c.cost.map(describeCost).join('、')}` : '',
+            c.cost.length ? `代价：${c.cost.map((k) => describeCost(k, effectiveView(tx, c.owner).resourceNames ?? {})).join('、')}` : '',
             c.questions.length ? `前提：${c.questions.map((q) => q.text).join('；')}` : '',
           ].filter(Boolean).join('　'),
         })),

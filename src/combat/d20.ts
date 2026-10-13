@@ -278,7 +278,7 @@ export function d20Test(tx: Tx, req: RollRequest): RollResult {
     modify: (m, by) => {
       if (m.op === 'reroll') {
         const [[f]] = tx.roll([{ faces: 20, count: 1 }], controllerOf(tx, by.owner), `${nameOf(tx, req.roller)} 重骰`);
-        result.natural = m.keep === 'higher' ? Math.max(result.natural, f) : f;
+        result.natural = m.keep === 'higher' ? Math.max(result.natural, f) : m.keep === 'lower' ? Math.min(result.natural, f) : f;
         result.d20 = [...result.d20, f];
         result.mods.push({ op: 'add', label: `${by.label}：重骰 → ${f}`, owner: by.owner, from: by.from });
         recompute();
@@ -336,5 +336,22 @@ export function rollValue(r: RollResult): Record<string, Value> {
   return {
     kind: r.kind, sub: r.sub ?? null, ability: r.ability ?? null, skill: r.skill ?? null, natural: r.natural, total: r.total,
     vs: r.vs, adv: r.adv, disadv: r.disadv, roller: r.roller, target: r.target, crit: r.crit,
+    failing: isFailing(r),
   };
+}
+
+/**
+ * 「按现在的结果会失败」—— before 窗口里判定还没做，诗人激励、战术思维这类「检定失败时」的能力看它。
+ * 已经判定过（after 窗口）就直接看结果。
+ */
+function isFailing(r: RollResult): boolean {
+  if (r.outcome) return r.outcome === 'miss' || r.outcome === 'fail';
+  if (r.vs === null) return false;
+  if (r.autoSucceed) return false;
+  if (r.autoFail) return true;
+  if (r.kind === 'attack') {
+    if (r.natural === 1) return true;
+    if (r.natural >= r.critRange) return false;
+  }
+  return r.total < r.vs;
 }
