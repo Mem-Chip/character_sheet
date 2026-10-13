@@ -329,7 +329,7 @@ describe('动作经济（战斗中）', () => {
     const { s, dice } = setup([cleric('c'), fighter()]);
     done(s.dispatch({ type: 'startCombat', order: ['c', 'f'] }));
     dice.push(1, 1);
-    done(s.dispatch({ type: 'useAction', actor: 'c', action: 'XPHB:spell:治疗之言#cast', targets: ['f'], slotLevel: 1 }));
+    done(s.dispatch({ type: 'useAction', actor: 'c', action: 'XPHB:spell:治愈真言#cast', targets: ['f'], slotLevel: 1 }));
     const r = s.dispatch({ type: 'useAction', actor: 'c', action: 'XPHB:spell:祝福术#cast', targets: ['f'], slotLevel: 1 });
     expect(r.status === 'rejected' && r.reason).toMatch(/一个回合里只能消耗一个法术位/);
   });

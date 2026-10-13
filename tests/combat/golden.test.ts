@@ -310,11 +310,11 @@ describe('#12 同一法术不叠加：取最近的；生效的那个结束后另
 });
 
 describe('#13 昏迷结束时倒地仍在', () => {
-  it('治疗之言把 0 生命值的战士救起来', () => {
+  it('治愈真言把 0 生命值的战士救起来', () => {
     const { s, dice } = setup([fighter(), cleric('c')]);
     done(s.dispatch({ type: 'damage', id: 'f', amount: 30, damageType: '钝击' }));
     dice.push(2, 3);
-    done(s.dispatch({ type: 'useAction', actor: 'c', action: 'XPHB:spell:治疗之言#cast', targets: ['f'], slotLevel: 1 }));
+    done(s.dispatch({ type: 'useAction', actor: 'c', action: 'XPHB:spell:治愈真言#cast', targets: ['f'], slotLevel: 1 }));
     expect(s.state.combatants.f.live.hp).toBe(2 + 3 + 3);
     expect(has(s, 'f', '昏迷')).toBe(false);
     expect(has(s, 'f', '倒地')).toBe(true);

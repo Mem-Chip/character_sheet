@@ -10,6 +10,9 @@ import { blankCharacter, type CharData, type SheetEnv } from '../../src/sheet';
 import { createNodeEnv } from '../../src/sheet/node-env';
 import { hasLocalData } from '../../src/sheet/node-provider';
 import { FILES, SCIMITAR, done, evs, last, pending } from '../combat/helpers';
+import spellsJson from '../../data/dyn/spells.json';
+import featuresJson from '../../data/dyn/features.json';
+import { buildTask } from '../../tools/factory/sources';
 
 const chars = JSON.parse(readFileSync(resolve(import.meta.dirname, '..', 'fixtures', 'chars.json'), 'utf8')) as Array<{ id: string; char: object }>;
 const fixture = (id: string, patch: Record<string, unknown> = {}): CharData =>
@@ -75,6 +78,12 @@ describe.skipIf(!hasLocalData())('真实角色卡进战斗', () => {
       }
     }
     expect(checked).toBeGreaterThan(5);
+  });
+
+  it('每条动态数据的键都对得上站点数据里真实的法术 / 特性 / 专长（名字写错就永远不会生效）', async () => {
+    const keys = Object.keys({ ...(spellsJson as { entries: object }).entries, ...(featuresJson as { entries: object }).entries })
+      .filter((k) => !k.startsWith('XPHB:rule:'));
+    for (const k of keys) await expect(buildTask(env, 'x', k), k).resolves.toMatchObject({ key: k });
   });
 
   it('选出来的可选特性（魔能祈唤）是能力来源：静态授予生效，战斗引擎也看得到', async () => {

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import rulesJson from '../../data/rules-2024.json';
 import spellsJson from '../../data/dyn/spells.json';
 import featuresJson from '../../data/dyn/features.json';
@@ -6,7 +7,25 @@ import {
   type AttackRow, type Decision, type DispatchResult, type RuleFile, type RuleLayer, type Settings, type ViewInit,
 } from '../../src/combat';
 
-export const FILES = [rulesJson, spellsJson, featuresJson] as unknown as RuleFile[];
+/**
+ * 环境变量 RULES_OVERLAY 指向一个 `{ entries: { 键: 条目 } }` 文件时，用里面的条目**整条替换**同键的官方条目。
+ * 数据化工厂用它拿现有的场景测试给候选条目打分（`tools/factory/exam.ts grade`）。
+ * 不能直接追加成一个文件：规则书对同键条目是逐字段合并的，官方条目里候选没写的字段会漏进来。
+ */
+function withOverlay(files: RuleFile[]): RuleFile[] {
+  const path = process.env.RULES_OVERLAY;
+  if (!path) return files;
+  const overlay = JSON.parse(readFileSync(path, 'utf8')) as RuleFile;
+  const out = files.map((f) => ({ ...f, entries: { ...f.entries } }));
+  for (const [key, entry] of Object.entries(overlay.entries)) {
+    const home = out.find((f) => key in f.entries) ?? out[out.length - 1];
+    for (const f of out) delete f.entries[key];
+    home.entries[key] = entry;
+  }
+  return out;
+}
+
+export const FILES = withOverlay([rulesJson, spellsJson, featuresJson] as unknown as RuleFile[]);
 
 export interface Who {
   id: string;
@@ -79,7 +98,7 @@ export const cleric = (id = 'c', over: Partial<ViewInit> = {}): Who => ({
   id, kind: 'pc',
   view: {
     name: `牧师${id}`, score: { wis: 16 }, hpMax: 30, spell: { dc: 13, atk: 5, mod: 3, ability: 'wis' }, slots: { 1: 2, 2: 1, 3: 1 },
-    sources: ['XPHB:spell:祝福术', 'XPHB:spell:定身类人', 'XPHB:spell:治疗之言'], ...over,
+    sources: ['XPHB:spell:祝福术', 'XPHB:spell:定身类人', 'XPHB:spell:治愈真言'], ...over,
   },
 });
 export const wizard = (over: Partial<ViewInit> = {}): Who => ({

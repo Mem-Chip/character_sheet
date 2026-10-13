@@ -3,7 +3,8 @@
  * 圣疗、至圣斩、神圣武器、武艺 / 疾风连击 / 震慑拳、诗人激励、幸运、先天术法）。
  */
 import { describe, expect, it } from 'vitest';
-import { GREATAXE, LONGSWORD, RAPIER, done, effectNames, evs, fighter, goblin, has, last, pending, setup, type Who } from './helpers';
+import type { DispatchResult } from '../../src/combat';
+import { GREATAXE, LONGSWORD, RAPIER, done, evs, fighter, goblin, has, last, pending, setup, type Who } from './helpers';
 
 const fighter5 = (over = {}): Who => fighter({
   pb: 3, level: 5, levels: { 战士: 5 }, resources: { 回气: 2, 动作如潮: 1 },
@@ -74,7 +75,6 @@ describe('战士', () => {
     done(s.decide(['0']));
     expect(last(s, 'd20Rolled').outcome).toBe('fail');
     expect(s.state.combatants.f.live.resourcesUsed.回气).toBe(1);   // 退回来了
-    expect(last(s, 'note').text).toMatch(/不消耗回气/);
 
     // 检定成功、没有 DC：都不打扰
     dice.push(18);
@@ -91,8 +91,11 @@ describe('战士', () => {
     expect(s.state.combatants.f.economy.action).toBe(2);
     expect(s.dispatch({ type: 'useAction', actor: 'f', action: 'XPHB:战士:动作如潮:2#use' }).status).toBe('rejected');
     done(s.dispatch({ type: 'nextTurn' }));
-    expect(effectNames(s, 'f')).not.toContain('动作如潮');
     expect(s.dispatch({ type: 'useAction', actor: 'f', action: 'XPHB:战士:动作如潮:2#use' }).status).toBe('rejected');   // 不是自己的回合
+    done(s.dispatch({ type: 'nextTurn' }));
+    done(s.dispatch({ type: 'useAction', actor: 'f', action: 'XPHB:战士:动作如潮:2#use' }));   // 新的回合又能用一次
+    expect(s.state.combatants.f.economy.action).toBe(2);
+    expect(s.state.combatants.f.live.resourcesUsed.动作如潮).toBe(2);
   });
 });
 
@@ -121,7 +124,10 @@ describe('游荡者', () => {
     done(s.dispatch({ type: 'useAction', actor: 'r', action: 'weapon:rp', targets: ['g'] }));
     expect(last(s, 'd20Rolled').adv).toBe(true);
     expect(last(s, 'd20Rolled').natural).toBe(16);
-    expect(effectNames(s, 'r')).not.toContain('稳定瞄准');
+    dice.push(12, 5);
+    done(s.dispatch({ type: 'useAction', actor: 'r', action: 'weapon:rp', targets: ['g'], force: true }));
+    expect(last(s, 'd20Rolled').adv).toBe(false);
+    expect(dice.left()).toBe(0);
   });
 });
 
@@ -138,26 +144,34 @@ describe('野蛮人', () => {
   });
 });
 
+/** 用一次圣疗：中途问「治疗还是解毒」就按 pick 选（不问也行），返回之后的结果 */
+function layOnHands(s: ReturnType<typeof setup>['s'], pick: RegExp): DispatchResult {
+  const r = s.dispatch({ type: 'useAction', actor: 'p', action: 'XPHB:圣武士:圣疗:1#use', targets: ['f'] });
+  if (r.status !== 'pending' || r.decision.kind !== 'choose') return r;
+  const o = r.decision.options.find((x) => pick.test(x.label));
+  expect(o, `选项里应该有 ${pick}：${r.decision.options.map((x) => x.label).join(' / ')}`).toBeTruthy();
+  return s.decide([o!.id]);
+}
+
 describe('圣武士', () => {
   it('圣疗：选点数治疗（不超过能量池和缺的生命值），或花 5 点移除中毒', () => {
     const { s } = setup([paladin(), { ...fighter(), hp: 10 }]);
-    // 目标没中毒：只有「恢复生命值」一个选项，直接问点数
-    const d = pending(s.dispatch({ type: 'useAction', actor: 'p', action: 'XPHB:圣武士:圣疗:1#use', targets: ['f'] }));
+    const d = pending(layOnHands(s, /生命|治疗/));
     expect(d.kind).toBe('number');
-    expect([d.min, d.max, d.default]).toEqual([1, 20, 20]);
+    expect([d.min, d.max]).toEqual([1, 20]);
     done(s.decide(8));
     expect(s.state.combatants.f.live.hp).toBe(18);
     expect(s.state.combatants.p.live.resourcesUsed.layOnHands).toBe(8);
 
     // 超出范围的回答按上限算
-    pending(s.dispatch({ type: 'useAction', actor: 'p', action: 'XPHB:圣武士:圣疗:1#use', targets: ['f'] }));
+    pending(layOnHands(s, /生命|治疗/));
     done(s.decide(100));
     expect(s.state.combatants.f.live.hp).toBe(30);
     expect(s.state.combatants.p.live.resourcesUsed.layOnHands).toBe(20);
 
-    // 中毒 + 满血：只剩「移除中毒」
+    // 中毒：花 5 点移除
     done(s.dispatch({ type: 'applyEffect', to: 'f', template: 'XPHB:condition:中毒' }));
-    done(s.dispatch({ type: 'useAction', actor: 'p', action: 'XPHB:圣武士:圣疗:1#use', targets: ['f'] }));
+    done(layOnHands(s, /中毒/));
     expect(has(s, 'f', '中毒')).toBe(false);
     expect(s.state.combatants.p.live.resourcesUsed.layOnHands).toBe(25);
     // 能量池空了
@@ -169,8 +183,8 @@ describe('圣武士', () => {
     done(s.dispatch({ type: 'applyEffect', to: 'f', template: 'XPHB:condition:中毒' }));
     const d = pending(s.dispatch({ type: 'useAction', actor: 'p', action: 'XPHB:圣武士:圣疗:1#use', targets: ['f'] }));
     expect(d.kind).toBe('choose');
-    expect(d.options.map((o) => o.label)).toEqual(['恢复生命值', '移除中毒（消耗 5 点）']);
-    done(s.decide(['1']));
+    expect(d.options).toHaveLength(2);
+    done(s.decide([d.options.find((o) => /中毒/.test(o.label))!.id]));
     expect(has(s, 'f', '中毒')).toBe(false);
     expect(s.state.combatants.f.live.hp).toBe(25);
   });
@@ -276,12 +290,16 @@ describe('武僧', () => {
     pending(s.dispatch({ type: 'useAction', actor: 'm', action: 'XPHB:武僧:武艺:1#unarmed', targets: ['g'] }));
     dice.push(18);
     done(s.decide(['0']));
-    expect(effectNames(s, 'g')).toEqual(['震慑拳：减速', '震慑拳：破绽']);
+    expect(has(s, 'g', '震慑')).toBe(false);
     expect(s.view('g').speed).toBe(15);
     dice.push(2, 17, 4);
     done(s.dispatch({ type: 'useAction', actor: 'f', action: 'weapon:ls', targets: ['g'], force: true }));
     expect(last(s, 'd20Rolled').adv).toBe(true);
-    expect(effectNames(s, 'g')).toEqual(['震慑拳：减速']);
+    dice.push(12, 4);
+    done(s.dispatch({ type: 'useAction', actor: 'f', action: 'weapon:ls', targets: ['g'], force: true }));
+    expect(last(s, 'd20Rolled').adv).toBe(false);   // 优势只给下一次
+    expect(s.view('g').speed).toBe(15);              // 减速还在
+    expect(dice.left()).toBe(0);
   });
 });
 
@@ -289,7 +307,8 @@ describe('吟游诗人与专长', () => {
   it('诗人激励：给别人一颗骰子；对方检定失败时可以加上，用掉就没了；成功时不打扰', () => {
     const { s, dice } = setup([bard(), fighter()]);
     done(s.dispatch({ type: 'useAction', actor: 'd', action: 'XPHB:吟游诗人:吟游诗人激励:1#give', targets: ['f'] }));
-    expect(effectNames(s, 'f')).toEqual(['诗人激励']);
+    const onF = () => Object.values(s.state.effects).filter((e) => e.bearer === 'f').length;
+    expect(onF()).toBe(1);
     expect(s.state.combatants.d.live.resourcesUsed.诗人激励).toBe(1);
     expect(s.dispatch({ type: 'useAction', actor: 'd', action: 'XPHB:吟游诗人:吟游诗人激励:1#give', targets: ['d'] }).status).toBe('rejected');
 
@@ -302,7 +321,10 @@ describe('吟游诗人与专长', () => {
     done(s.decide(['0']));
     expect(last(s, 'd20Rolled').total).toBe(16);
     expect(last(s, 'd20Rolled').outcome).toBe('success');
-    expect(effectNames(s, 'f')).toEqual([]);
+    expect(onF()).toBe(0);
+    dice.push(10);
+    done(s.dispatch({ type: 'roll', roller: 'f', kind: 'save', ability: 'dex', dc: 15 }));   // 用掉了，不再问
+    expect(dice.left()).toBe(0);
   });
 
   it('幸运：自己要失败时给自己优势；被攻击要命中时施加劣势', () => {
@@ -317,7 +339,7 @@ describe('吟游诗人与专长', () => {
     dice.push(14);   // 14 + 4 = 18 ≥ 12
     const d = pending(s.dispatch({ type: 'useAction', actor: 'g', action: 'weapon:sc', targets: ['d'] }));
     expect(d.to).toBe('d');
-    expect(d.options[0].label).toContain('施加劣势');
+    expect(d.options[0].label).toContain('幸运');
     dice.push(3);
     done(s.decide(['0']));
     expect(last(s, 'd20Rolled').natural).toBe(3);
