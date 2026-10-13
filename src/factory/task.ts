@@ -15,7 +15,7 @@ export interface Task {
   /** 规则条目键：`XPHB:<职业>:<特性>:<等级>` / `XPHB:<专长>` / `XPHB:spell:<法术>` */
   key: string;
   name: string;
-  kind: 'classFeature' | 'subclassFeature' | 'feat' | 'spell' | 'optfeature';
+  kind: 'classFeature' | 'subclassFeature' | 'feat' | 'spell' | 'optfeature' | 'race';
   /** 「圣武士 3 级（奉献之誓）」「1 环法术」「起源专长」 */
   where: string;
   /** 原文（标签已去掉） */
@@ -31,6 +31,8 @@ export interface Task {
   /** 静态层数据里的备注：只是说明文字，**没有任何效果** */
   staticNotes?: string[];
   interface?: TaskInterface;
+  /** 补充说明（这一类条目共通的上下文：卓越骰多大、术法点叫什么…） */
+  extra?: string[];
 }
 
 /**
@@ -99,6 +101,7 @@ export function renderTask(t: Task): string {
   if (t.staticNotes?.length) {
     lines.push('', '## 人物卡数据里的备注（只是给人看的文字，**没有任何效果**；里面提到的战斗中的效果需要你写）', '', t.staticNotes.map((x) => `- ${x}`).join('\n'));
   }
+  if (t.extra?.length) lines.push('', '## 补充', '', t.extra.map((x) => `- ${x}`).join('\n'));
   const ifc = t.interface;
   if (ifc && (ifc.actions?.length || ifc.effects?.length)) {
     lines.push('', '## 接口（别处按这些名字调用，必须一致）', '');

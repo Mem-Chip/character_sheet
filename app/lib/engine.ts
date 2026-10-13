@@ -8,6 +8,8 @@ import abilitiesBuiltin from '../../data/abilities-builtin.json';
 import featuresDyn from '../../data/dyn/features.json';
 import rules2024 from '../../data/rules-2024.json';
 import spellsDyn from '../../data/dyn/spells.json';
+import aiFeatures from '../../data/dyn/ai/features.json';
+import aiSpells from '../../data/dyn/ai/spells.json';
 import { RuleBook, type RuleFile } from '../../src/combat';
 import { BASE_URL, SheetEnv, type DataProvider } from '../../src/sheet';
 
@@ -37,7 +39,8 @@ const browserProvider: DataProvider = {
   },
 };
 
-export const RULE_FILES = [rules2024, spellsDyn, featuresDyn] as unknown as RuleFile[];
+/** AI 生成的数据（未审）在前，手写的在后：同键时手写的覆盖 */
+export const RULE_FILES = [aiFeatures, aiSpells, rules2024, spellsDyn, featuresDyn] as unknown as RuleFile[];
 
 export interface Engine {
   env: SheetEnv;

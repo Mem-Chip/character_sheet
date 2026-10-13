@@ -94,6 +94,14 @@ export function buildSpec(input: SpecInput): string {
 
 只输出这个 JSON 对象本身，不要包在别的结构里，不要解释。
 
+**没有可写的就跳过**：这条规则在战斗 / 游戏进行中没有按时机生效的部分（纯静态加值、熟练、授予法术、只在休息或探索时用的、纯叙事），
+输出 \`{ "skip": "一句话原因" }\`。有一部分能写、一部分引擎做不到 → 写能写的，\`automation: "partial"\`，在 \`text\` 里说清楚哪部分要人处理。
+
+**同名特性的高等级版本**（同一个职业里名字相同、等级更高，比如 17 级的「动作如潮」）通常只是加强低等级那条：
+不要再写一遍动作或触发器（角色两条都有，会出现两份）。加强能用表达式按等级写进低等级那条的，就在这条写 skip 并说明。
+
+**戏法按角色等级变强**（5、11、17 级各加一颗骰）：骰子个数写 \`(1 + floor((self.level + 1) / 6))\`，例如 \`(1 + floor((self.level + 1) / 6))d10\`。
+
 ## 2. 类型定义
 
 \`\`\`ts
@@ -151,7 +159,9 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
 
 1. **主动用的能力** → \`actions\`。动作的 \`id\` 和 \`name\` 用任务「接口」里给的。\`activation\`：动作 action、附赠动作 bonus、反应 reaction、不占动作 free、武器式的一次攻击 none（配 \`cost: [{ economy: 'attack' }]\`）。
 2. **玩家可以选择用不用**的 → \`optional: true\`（引擎会问）；每回合一次 → \`limit: 'oncePerTurn'\`。
-3. **花资源** → \`cost: [{ resource: '<id>' }]\`，id **只能**用任务里列出的。法术位 → \`cost: [{ slot: { min: <环> } }]\`，升环效果写在表达式里（\`slot.level\`）。
+3. **花资源** → \`cost: [{ resource: '<id>' }]\`，id 用任务里列出的。这条能力**自己**有次数（「每次长休可以用 X 次」）而列表里没有对应的池 →
+   在条目顶层声明：\`resources: [{ id: '<新 id>', name: '<中文名>', formula: '<上限>', recovery: 'short' | 'long' }]\`，再照常在 cost 里用它（人物卡会据此加上这个池）。
+   formula 写法：数字、\`'pb'\`、\`'max(1, wis)'\`（属性调整值）、\`'level * 5'\`（level 是**该职业**等级）、\`'cond(level >= 11, 3, 2)'\`。不要拿别的池子凑。法术位 → \`cost: [{ slot: { min: <环> } }]\`，升环效果写在表达式里（\`slot.level\`）。
 4. **由事件触发、还要花附赠动作或反应**的（护盾术、至圣斩）→ 写成 \`actions\` 里带 \`trigger\` 的动作；代价按 \`activation\` 自动算。只能在自己回合用的加 \`requires: 'turn.isMine'\`。
 5. **命中时加伤害**（偷袭类）→ \`attackHit\` before 窗口、\`role: 'actor'\`，\`do: [{ kind: 'addDamage', … }]\`；跟武器同类型就写 \`type: 'attack.damageType'\`。
 6. **「检定失败时」** → \`d20Rolled\` before 窗口，\`when\` 里用 \`roll.failing\`。可选能力只在会改变结果时才提供，别让玩家每次掷骰都被问。

@@ -13,7 +13,9 @@ type Obj = Record<string, unknown>;
 const isObj = (x: unknown): x is Obj => !!x && typeof x === 'object' && !Array.isArray(x);
 
 const KEYS = {
-  entry: ['name', 'text', 'global', 'actions', 'triggers', 'rollMods', 'auras', 'effects', 'automation', 'tags'],
+  entry: ['name', 'text', 'global', 'actions', 'triggers', 'rollMods', 'auras', 'effects', 'automation', 'tags', 'resources'],
+  /** 条目自己声明的资源池（人物卡那边还没有的），见说明书 §5 */
+  resourceDecl: ['id', 'name', 'formula', 'recovery'],
   action: ['id', 'name', 'activation', 'trigger', 'cost', 'requires', 'targeting', 'concentration', 'root', 'tags', 'text'],
   triggerSpec: ['on', 'role', 'window', 'deferTo', 'when'],
   trigger: ['id', 'on', 'role', 'window', 'deferTo', 'when', 'optional', 'limit', 'cost', 'do', 'modify', 'label'],
@@ -164,6 +166,13 @@ export function lintShape(entry: unknown): string[] {
     nodes(o.root, `${at}.root`);
   });
   list(e.triggers, 'triggers', trigger);
+  list(e.resources, 'resources', (r, at) => {
+    if (!keys(r, KEYS.resourceDecl, at)) return;
+    const o = r as Obj;
+    if (typeof o.id !== 'string' || !o.id || typeof o.name !== 'string' || !o.name) out.push(`${at}：id 和 name 都要写`);
+    if (o.formula === undefined || (typeof o.formula !== 'string' && typeof o.formula !== 'number')) out.push(`${at}：formula（上限公式）要写`);
+    if (o.recovery !== 'short' && o.recovery !== 'long') out.push(`${at}：recovery 只能是 'short' 或 'long'`);
+  });
   list(e.rollMods, 'rollMods', rollMod);
   list(e.auras, 'auras', aura);
   if (e.effects !== undefined) {
@@ -173,10 +182,22 @@ export function lintShape(entry: unknown): string[] {
   return out;
 }
 
+export interface ResourceDecl { id: string; name: string; formula: string | number; recovery: 'short' | 'long' }
+
+/** 条目顶层声明的资源池（人物卡那边还没有的次数） */
+export function declaredResources(entry: unknown): ResourceDecl[] {
+  const r = isObj(entry) ? entry.resources : undefined;
+  return Array.isArray(r) ? (r.filter(isObj) as unknown as ResourceDecl[]) : [];
+}
+
 /** 条目里花掉的资源 id（cost 的 resource、resource 节点、表达式里的 resource('…')） */
 export function spentResources(x: unknown, out = new Set<string>()): Set<string> {
   if (Array.isArray(x)) x.forEach((y) => spentResources(y, out));
   else if (isObj(x)) {
+    if (Array.isArray(x.resources) && x.resources.every((r) => isObj(r) && 'formula' in r)) {
+      Object.entries(x).filter(([k]) => k !== 'resources').forEach(([, y]) => spentResources(y, out));
+      return out;
+    }
     if (typeof x.resource === 'string') out.add(x.resource);
     if (x.kind === 'resource' && typeof x.id === 'string') out.add(x.id);
     Object.values(x).forEach((y) => spentResources(y, out));
@@ -215,8 +236,11 @@ export function lintEntry(key: string, entry: unknown, ctx: LintContext): string
   const book = new RuleBook([...files, { entries: { [key]: entry as Entry } } as RuleFile]);
   out.push(...auditRuleBook(book).filter((m) => m.startsWith(key + ' ') || m.startsWith(key + '：')));
   if (ctx.resourceIds) {
+    const declared = declaredResources(entry).map((r) => r.id);
     for (const r of spentResources(entry)) {
-      if (!ctx.resourceIds.includes(r)) out.push(`花了资源「${r}」，但这条能力的持有者没有这个资源（可用：${ctx.resourceIds.join('、') || '无'}）`);
+      if (!ctx.resourceIds.includes(r) && !declared.includes(r)) {
+        out.push(`花了资源「${r}」，但这条能力的持有者没有这个资源（可用：${ctx.resourceIds.join('、') || '无'}；需要新的资源池就在顶层 resources 里声明）`);
+      }
     }
   }
   if (ctx.classTableColumns) {

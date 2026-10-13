@@ -46,6 +46,7 @@ const FUNCS: Record<string, FnSig> = {
   floor: { params: [T.num], returns: T.num },
   ceil: { params: [T.num], returns: T.num },
   abs: { params: [T.num], returns: T.num },
+  cond: { params: [T.bool, T.any, T.any], returns: T.any, doc: "按条件二选一：cond(self.levelOf('战士') >= 10, 1d10, 1d8)" },
   classTable: { params: [T.str], returns: T.any, doc: '职业等级表当前行的某一列' },
   dist: { params: [T.ref, T.ref], returns: T.num, doc: '距离（尺）。没有地图时只能和数字比较，变成一个问题' },
   within: { params: [T.ref, T.ref, T.num], returns: T.bool },
@@ -246,6 +247,7 @@ export function makeEnv(tx: Tx, d: ScopeData, assumptions?: string[]): EvalEnv {
     floor: (a) => Math.floor(a[0] as number),
     ceil: (a) => Math.ceil(a[0] as number),
     abs: (a) => Math.abs(a[0] as number),
+    cond: (a) => (a[0] ? a[1] : a[2]),
     classTable: (a) => {
       const col = String(a[0]);
       const v = view().classTable[col];

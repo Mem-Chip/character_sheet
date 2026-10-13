@@ -9,6 +9,7 @@ import { resolve } from 'node:path';
 import { viewFromSheet } from '../../src/bridge/from-sheet';
 import { flattenEntries, type Task, type TaskInterface } from '../../src/factory';
 import { blankCharacter, type CharData, type Json, type SheetEnv } from '../../src/sheet';
+import type { CombatantView } from '../../src/combat';
 
 const DATA = resolve(import.meta.dirname, '..', '..', 'data', '5etools', 'data');
 const read = (p: string): Json => JSON.parse(readFileSync(resolve(DATA, p), 'utf8'));
@@ -58,8 +59,18 @@ function staticOf(key: string): { staticPart: string[]; staticNotes: string[] } 
   return { staticPart: part, staticNotes: notes.filter(Boolean) };
 }
 
-/** 造一个 20 级角色，看它进战斗后的资源与职业表 */
-async function probe(env: SheetEnv, cls: string, subclass?: string): Promise<{ resources: Record<string, string>; classTable: Record<string, string | number> }> {
+type Probe = { resources: Record<string, string>; classTable: Record<string, string | number>; view: CombatantView };
+const probes = new Map<string, Promise<Probe>>();
+
+/** 造一个 20 级角色，看它进战斗后的资源与职业表（同一职业 / 子职只算一次） */
+function probe(env: SheetEnv, cls: string, subclass?: string): Promise<Probe> {
+  const k = `${cls}/${subclass ?? ''}`;
+  let p = probes.get(k);
+  if (!p) probes.set(k, (p = probeOnce(env, cls, subclass)));
+  return p;
+}
+
+async function probeOnce(env: SheetEnv, cls: string, subclass?: string): Promise<Probe> {
   const char: CharData = {
     ...blankCharacter(), name: '探针',
     abilities: { str: 14, dex: 14, con: 14, int: 14, wis: 14, cha: 14 },
@@ -67,7 +78,26 @@ async function probe(env: SheetEnv, cls: string, subclass?: string): Promise<{ r
   };
   const sheet = await env.compute(char);
   const v = viewFromSheet(env, char, sheet);
-  return { resources: v.resourceNames, classTable: v.classTable };
+  return { resources: v.resourceNames, classTable: v.classTable, view: v };
+}
+
+/** 试算用的「持有者」：职业特性用 20 级探针角色，其余用一个通用角色 */
+export async function ownerView(env: SheetEnv, key: string): Promise<CombatantView | null> {
+  const parts = key.split(':');
+  if (parts.length === 4) {
+    const [, cls, name, lv] = parts;
+    for (const file of classes()) {
+      const sf = (file.subclassFeature || []).find((f: Json) => f.source === 'XPHB' && f.className === cls && f.name === name && f.level === Number(lv));
+      const sub = sf ? (file.subclass || []).find((s: Json) => s.className === cls && s.shortName === sf.subclassShortName && s.source === sf.subclassSource) : null;
+      if (sf || (file.classFeature || []).some((f: Json) => f.source === 'XPHB' && f.className === cls && f.name === name)) {
+        return (await probe(env, cls, sub?.name)).view;
+      }
+    }
+    return null;
+  }
+  const opt = (read('optionalfeatures.json').optionalfeature as Json[]).find((f) => f.source === 'XPHB' && f.name === parts.slice(1).join(':'));
+  const host = opt ? OPT_HOST[(opt.featureType || [])[0]] : undefined;
+  return host ? (await probe(env, host.cls, host.subclass)).view : null;
 }
 
 export async function buildTask(env: SheetEnv, id: string, key: string, iface?: TaskInterface): Promise<Task> {
@@ -108,16 +138,53 @@ export async function buildTask(env: SheetEnv, id: string, key: string, iface?: 
     }
     throw new Error(`找不到职业特性「${key}」`);
   }
-  // 专长 / 可选特性：XPHB:<名字>
+  // 专长 / 可选特性 / 种族：XPHB:<名字>
   const name = parts.slice(1).join(':');
+  const own: Record<string, string> = {};
+  for (const r of abilities[key]?.resources || []) if (r.id) own[r.id] = r.name;
+
   const feat = (read('feats.json').feat as Json[]).find((f) => f.source === 'XPHB' && f.name === name);
-  const opt = feat ? null : (read('optionalfeatures.json').optionalfeature as Json[]).find((f) => f.source === 'XPHB' && f.name === name);
-  const hit = feat ?? opt;
-  if (!hit) throw new Error(`找不到专长 / 可选特性「${name}」`);
-  const resources: Record<string, string> = {};
-  for (const r of abilities[key]?.resources || []) if (r.id) resources[r.id] = r.name;
-  return {
-    id, key, name, kind: feat ? 'feat' : 'optfeature', where: feat ? `专长${hit.category ? `（${hit.category}）` : ''}` : '可选特性',
-    text: flattenEntries(hit.entries), resources, ...staticOf(key), interface: iface,
-  };
+  if (feat) {
+    return {
+      id, key, name, kind: 'feat', where: `专长${feat.category ? `（${FEAT_CAT[feat.category] ?? feat.category}）` : ''}`,
+      text: flattenEntries(feat.entries), resources: own, ...staticOf(key), interface: iface,
+    };
+  }
+  const opt = (read('optionalfeatures.json').optionalfeature as Json[]).find((f) => f.source === 'XPHB' && f.name === name);
+  if (opt) {
+    // 可选特性挂在哪个职业上：用那个职业（子职）的探针取资源
+    const type = (opt.featureType || [])[0] as string;
+    const host = OPT_HOST[type];
+    const p = host ? await probe(env, host.cls, host.subclass) : { resources: {}, classTable: {}, view: null };
+    return {
+      id, key, name, kind: 'optfeature', where: `可选特性（${host?.label ?? type}）`,
+      text: flattenEntries(opt.entries) + (opt.prerequisite ? `\n（前置条件：${JSON.stringify(opt.prerequisite)}）` : ''),
+      classTable: p.classTable, resources: { ...p.resources, ...own }, ...staticOf(key), interface: iface,
+      extra: host?.extra,
+    };
+  }
+  const race = ((read('races.json').race || []) as Json[]).find((r) => r.source === 'XPHB' && r.name === name);
+  if (race) {
+    return {
+      id, key, name, kind: 'race', where: '种族（下面是这个种族的全部特质，写成一个条目）',
+      text: flattenEntries(race.entries), resources: own, ...staticOf(key), interface: iface,
+    };
+  }
+  throw new Error(`找不到专长 / 可选特性 / 种族「${name}」`);
 }
+
+const FEAT_CAT: Record<string, string> = { O: '起源专长', G: '通用专长', FS: '战斗风格专长', 'FS:P': '战斗风格专长', 'FS:R': '战斗风格专长', EB: '史诗恩惠' };
+
+/** 可选特性的宿主：哪个职业（子职）的角色会选它 */
+const OPT_HOST: Record<string, { cls: string; subclass?: string; label: string; extra?: string[] }> = {
+  'MV:B': {
+    cls: '战士', subclass: '战斗大师', label: '战斗大师的战技',
+    extra: [
+      "战技消耗卓越骰：`cost: [{ resource: '卓越骰' }]`。",
+      "卓越骰的大小随战士等级变：`cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))`。",
+      "战技的豁免 DC = 8 + 熟练加值 + 力量或敏捷调整值（取高）：`8 + self.pb + max(self.mod.str, self.mod.dex)`。",
+    ],
+  },
+  EI: { cls: '魔契师', label: '魔契师的魔能祈唤' },
+  MM: { cls: '术士', label: '术士的超魔法', extra: ["超魔法消耗术法点：`cost: [{ resource: 'sorcery_points', n: <点数> }]`。超魔法改的是「下一个施展的法术」，引擎还没有改写法术的机制，通常写成 manual 并说明。"] },
+};

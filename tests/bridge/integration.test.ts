@@ -5,13 +5,15 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { combatantFromSheet, syncLiveToChar, viewFromSheet } from '../../src/bridge/from-sheet';
-import { RuleBook, Session, createEncounter, makeCombatant, makeView, scriptedDice } from '../../src/combat';
+import { RuleBook, Session, createEncounter, makeCombatant, makeView, scriptedDice, type RuleFile } from '../../src/combat';
 import { blankCharacter, type CharData, type SheetEnv } from '../../src/sheet';
 import { createNodeEnv } from '../../src/sheet/node-env';
 import { hasLocalData } from '../../src/sheet/node-provider';
 import { FILES, SCIMITAR, done, evs, last, pending } from '../combat/helpers';
 import spellsJson from '../../data/dyn/spells.json';
 import featuresJson from '../../data/dyn/features.json';
+import aiFeatures from '../../data/dyn/ai/features.json';
+import aiSpells from '../../data/dyn/ai/spells.json';
 import { buildTask } from '../../tools/factory/sources';
 
 const chars = JSON.parse(readFileSync(resolve(import.meta.dirname, '..', 'fixtures', 'chars.json'), 'utf8')) as Array<{ id: string; char: object }>;
@@ -51,7 +53,7 @@ describe.skipIf(!hasLocalData())('真实角色卡进战斗', () => {
   });
 
   it('动态条目里花的资源，在拥有它的测试角色身上都有对应的资源池（id 对得上、上限算得出来）', async () => {
-    const rules = new RuleBook(FILES);
+    const rules = new RuleBook([aiFeatures, aiSpells, ...FILES] as unknown as RuleFile[]);   // 手写 + AI 生成的都查
     const spends = (x: unknown, out: Set<string>): Set<string> => {
       if (Array.isArray(x)) x.forEach((y) => spends(y, out));
       else if (x && typeof x === 'object') {
@@ -80,8 +82,8 @@ describe.skipIf(!hasLocalData())('真实角色卡进战斗', () => {
     expect(checked).toBeGreaterThan(5);
   });
 
-  it('每条动态数据的键都对得上站点数据里真实的法术 / 特性 / 专长（名字写错就永远不会生效）', async () => {
-    const keys = Object.keys({ ...(spellsJson as { entries: object }).entries, ...(featuresJson as { entries: object }).entries })
+  it('每条动态数据的键都对得上站点数据里真实的法术 / 特性 / 专长 / 种族（名字写错就永远不会生效）', async () => {
+    const keys = [spellsJson, featuresJson, aiFeatures, aiSpells].flatMap((f) => Object.keys((f as { entries: object }).entries))
       .filter((k) => !k.startsWith('XPHB:rule:'));
     for (const k of keys) await expect(buildTask(env, 'x', k), k).resolves.toMatchObject({ key: k });
   });
