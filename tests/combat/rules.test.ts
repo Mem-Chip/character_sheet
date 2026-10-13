@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { RuleBook, auditRuleBook, type RuleFile, type RuleLayer } from '../../src/combat';
 import {
-  FILES, LONGSWORD, SHORTBOW, cleric, done, effectNames, evs, fighter, goblin, has, last, pending, rogue, setup,
+  FILES, LONGSWORD, SHORTBOW, cleric, wizard, done, effectNames, evs, fighter, goblin, has, last, pending, rogue, setup,
 } from './helpers';
 
 const camp = (rules: RuleLayer['rules']): RuleLayer[] => [{ scope: 'camp', name: '测试团', rules }];
@@ -327,6 +327,24 @@ describe('定身类人升环：每高一环多一个目标', () => {
     done(s.dispatch({ type: 'useAction', actor: 'c', action: 'XPHB:spell:定身类人#cast', targets: ['g', 'h'], slotLevel: 3 }));
     expect(has(s, 'g', '麻痹') && has(s, 'h', '麻痹')).toBe(true);
     expect(Object.values(s.state.effects).filter((e) => e.key === 'concentration')).toHaveLength(1);
+  });
+});
+
+describe('升环：每高一环按原文增加', () => {
+  it('火球术升环：4 环 9d6（3 环 8d6，每高一环多 1d6）', () => {
+    const { s, dice } = setup([wizard({ slots: { 4: 1 } }), goblin('g', { hpMax: 100 })]);
+    dice.push(2, 1, 1, 1, 1, 1, 1, 1, 1, 1);   // 豁免 2（失败），然后 9 颗 d6
+    done(s.dispatch({ type: 'useAction', actor: 'w', action: 'XPHB:spell:火球术#cast', targets: ['g'], slotLevel: 4 }));
+    expect(last(s, 'damageRolled').parts.map((p: any) => p.dice)).toEqual(['9d6']);
+    expect(dice.left()).toBe(0);
+  });
+
+  it('治愈真言升环：2 环 4d4（每高一环多 2d4）', () => {
+    const { s, dice } = setup([cleric('c'), { ...fighter(), hp: 1 }]);
+    dice.push(1, 1, 1, 1);
+    done(s.dispatch({ type: 'useAction', actor: 'c', action: 'XPHB:spell:治愈真言#cast', targets: ['f'], slotLevel: 2 }));
+    expect(s.state.combatants.f.live.hp).toBe(1 + 4 + 3);
+    expect(dice.left()).toBe(0);
   });
 });
 

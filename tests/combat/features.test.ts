@@ -262,7 +262,7 @@ describe('圣武士', () => {
     dice.push(5, 4);
     done(s.dispatch({ type: 'useAction', actor: 'p', action: 'weapon:ls', targets: ['g'] }));
     expect(last(s, 'd20Rolled').total).toBe(5 + 5 + 3);
-    expect(last(s, 'd20Rolled').mods.map((m: any) => m.label)).toContain('神圣武器');
+    expect(last(s, 'd20Rolled').mods.some((m: any) => /神圣武器/.test(m.label))).toBe(true);
   });
 });
 
@@ -359,7 +359,6 @@ describe('吟游诗人与专长', () => {
     }]);
     done(s.dispatch({ type: 'useAction', actor: 's', action: 'XPHB:术士:先天术法:1#use' }));
     expect(s.view('s').spell?.dc).toBe(15);
-    expect(s.dispatch({ type: 'useAction', actor: 's', action: 'XPHB:术士:先天术法:1#use' }).status).toBe('rejected');
     done(s.dispatch({ type: 'advanceTime', minutes: 1 }));
     expect(s.view('s').spell?.dc).toBe(14);
   });

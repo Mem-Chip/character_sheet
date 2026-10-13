@@ -33,7 +33,22 @@ export interface Task {
   interface?: TaskInterface;
 }
 
-const strip = (s: string) => s.replace(/\{@\w+\s+([^}|]+)(?:\|[^}]*)?\}/g, '$1').replace(/\{@\w+\}/g, '');
+/**
+ * 行内标签 → 站点上显示的文字。大多数标签显示第一段；几个例外要照站点的渲染来，
+ * 否则意思会变：`{@scaledamage 2d8|1-9|1d8}` 在「升环」里显示的是**每环增加的 1d8**，不是基础的 2d8。
+ */
+const TAG_TEXT: Record<string, (parts: string[]) => string> = {
+  scaledamage: (p) => p[2] ?? p[0],
+  scaledice: (p) => p[2] ?? p[0],
+  dc: (p) => `DC ${p[0]}`,
+  chance: (p) => `${p[0]}%`,
+};
+const strip = (s: string): string => s
+  .replace(/\{@(\w+)\s+([^}]*)\}/g, (_, tag: string, body: string) => {
+    const parts = body.split('|').map((x) => x.trim());
+    return (TAG_TEXT[tag] ?? ((p: string[]) => p[0]))(parts);
+  })
+  .replace(/\{@\w+\}/g, '');
 
 /** 5etools 的 entries → 纯文本（保留段落、列表、表格的结构） */
 export function flattenEntries(e: unknown, depth = 0): string {
