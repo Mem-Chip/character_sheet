@@ -1,0 +1,289 @@
+import { Unknown, runBool, type Question, type Value } from '../expr';
+import { reactionActionsOf, triggersOf } from './collect';
+import { activeTemplates } from './effects';
+import { canPay, describeCost, executeAction, payCosts, runNodes, type ExecCtx } from './exec';
+import type { DamagePacket } from './damage';
+import { makeEnv, nameOf, type ScopeData } from './scope';
+import type { Tx } from './tx';
+import type { Action, ActiveEffect, Cost, Id, Modify, Trigger, TriggerSpec } from './types';
+
+/**
+ * 触发器分发（COMBAT-DESIGN §8.2 / §九）。
+ *
+ * 一个「窗口」= 某个事件的 before 或 after 时机。窗口打开时：
+ *   1. 找出所有声明了这个时机的触发器（常驻、效应、灵光授予、反应型动作）；
+ *   2. 过滤身份（actor/target/ally/enemy）、次数限制、代价是否付得起、条件；
+ *   3. 强制的直接执行；可选的按控制者合并成**一个**决定（不打扰原则：没人能用就不停顿）。
+ */
+
+export interface TriggerCand {
+  key: string;
+  owner: Id;
+  source: Id | null;
+  effect?: ActiveEffect;
+  from: string;
+  label: string;
+  trigger?: Trigger;
+  action?: Action;
+  optional: boolean;
+  cost: Cost[];
+  questions: Question[];
+  scope: ScopeData;
+}
+
+export interface WindowSpec {
+  event: string;
+  window: 'before' | 'after';
+  actor?: Id;
+  target?: Id;
+  scope: Omit<Partial<ScopeData>, 'self' | 'source' | 'effect'>;
+  /** attackHit 窗口分段：防守方 / 进攻方（§六⑦） */
+  phase?: 'defensive' | 'offensive';
+  modify?: (m: Modify, by: TriggerCand) => void;
+  /** 修改之后刷新 roll 作用域（重骰窗口循环用） */
+  refresh?: () => Record<string, Value>;
+  packet?: DamagePacket;
+  cause: number | null;
+}
+
+const arr = <T>(x: T | T[]): T[] => (Array.isArray(x) ? x : [x]);
+
+/** 某个触发器在当前房间设置下实际挂在哪个时机（§9.5：看到结果再决定 → deferTo） */
+function effectiveTiming(tx: Tx, t: TriggerSpec): { on: string[]; window: 'before' | 'after' } {
+  if (tx.state.settings.reactionTiming === 'afterResult' && t.deferTo) return { on: [t.deferTo], window: 'before' };
+  return { on: arr(t.on), window: t.window ?? 'after' };
+}
+
+function roleOk(tx: Tx, spec: WindowSpec, owner: Id, role: TriggerSpec['role']): boolean {
+  if (role === 'any') return true;
+  if (role === 'actor') return owner === spec.actor;
+  if (role === 'target') return owner === spec.target;
+  if (owner === spec.actor || owner === spec.target) return false;
+  const ref = spec.target ?? spec.actor;
+  if (!ref) return false;
+  const same = tx.state.combatants[owner]?.side === tx.state.combatants[ref]?.side;
+  return role === 'ally' ? same : !same;
+}
+
+function limitKey(c: { from: string; id: string }): string {
+  return `${c.from}#${c.id}`;
+}
+
+function limitUsed(tx: Tx, owner: Id, limit: Trigger['limit'], key: string): boolean {
+  if (!limit || typeof limit === 'object') return false;
+  const used = tx.state.combatants[owner].economy.once[key];
+  if (limit === 'oncePerTurn') return used === tx.turnKey();
+  return used === `r${tx.state.round ?? 0}`;
+}
+
+export function blockedEconomy(tx: Tx, id: Id): Set<string> {
+  const out = new Set<string>();
+  for (const at of activeTemplates(tx, id)) for (const b of at.tpl.flags?.blocks ?? []) out.add(b);
+  return out;
+}
+
+function collect(tx: Tx, spec: WindowSpec, done: Set<string>): TriggerCand[] {
+  const out: TriggerCand[] = [];
+  const order = turnOrder(tx);
+  for (const owner of order) {
+    const c = tx.state.combatants[owner];
+    if (!c || c.live.dead) continue;
+    if (spec.phase === 'defensive' && owner === spec.actor) continue;
+    if (spec.phase === 'offensive' && owner !== spec.actor) continue;
+
+    const consider = (base: Omit<TriggerCand, 'questions' | 'scope'>, t: TriggerSpec & { limit?: Trigger['limit'] }) => {
+      if (done.has(base.key)) return;
+      const timing = effectiveTiming(tx, t);
+      if (timing.window !== spec.window || !timing.on.includes(spec.event)) return;
+      if (!roleOk(tx, spec, owner, t.role)) return;
+      if (limitUsed(tx, owner, t.limit, base.key)) return;
+      if (!canPay(tx, owner, base.cost)) return;
+      const scope: ScopeData = {
+        ...spec.scope,
+        self: owner,
+        source: base.source,
+        effect: base.effect,
+        target: spec.target,
+        attacker: spec.scope.attacker ?? spec.actor,
+        roll: spec.refresh ? spec.refresh() : spec.scope.roll,
+      };
+      let ok: boolean | Unknown = true;
+      if (t.when !== undefined) {
+        try {
+          ok = runBool(t.when, makeEnv(tx, scope));
+        } catch (e) {
+          tx.emit('ruleError', { where: `触发器「${base.label}」（${base.from}）的条件`, message: (e as Error).message }, spec.cause);
+          ok = false;
+        }
+      }
+      if (ok === false) return;
+      out.push({ ...base, questions: ok instanceof Unknown ? [...ok.questions] : [], scope });
+    };
+
+    for (const d of triggersOf(tx, owner)) {
+      const t = d.item;
+      const cost = [...(t.cost ?? [])];
+      consider({
+        key: limitKey({ from: d.effect ? `${d.from}@${d.effect.id}` : d.from, id: t.id }),
+        owner, source: d.source, effect: d.effect, from: d.from,
+        label: t.label ?? t.id, trigger: t, optional: !!t.optional, cost,
+      }, t);
+    }
+    for (const { key, action } of reactionActionsOf(tx, owner)) {
+      const cost: Cost[] = [{ economy: 'reaction' }, ...(action.cost ?? [])];
+      consider({
+        key: limitKey({ from: key, id: action.id }),
+        owner, source: owner, from: key, label: action.name, action, optional: true, cost,
+      }, action.trigger!);
+    }
+  }
+  return out;
+}
+
+/** 从回合持有者开始的先攻顺序（同时效应：回合持有者先处理，§9.3） */
+function turnOrder(tx: Tx): Id[] {
+  const ids = Object.keys(tx.state.combatants);
+  const order = tx.state.order.length ? tx.state.order.filter((x) => ids.includes(x)) : ids;
+  const rest = ids.filter((x) => !order.includes(x));
+  const all = [...order, ...rest];
+  const i = tx.state.round === null ? 0 : Math.max(0, all.indexOf(tx.state.order[tx.state.turnIndex]));
+  return [...all.slice(i), ...all.slice(0, i)];
+}
+
+function fire(tx: Tx, spec: WindowSpec, c: TriggerCand): void {
+  const seq = tx.emit('triggerFired', {
+    owner: c.owner, label: c.label, from: c.from, event: spec.event, window: spec.window,
+  }, spec.cause);
+  const lim = c.trigger?.limit;
+  if (lim === 'oncePerTurn') tx.emit('onceUsed', { id: c.owner, key: c.key, at: tx.turnKey() }, seq);
+  if (lim === 'oncePerRound') tx.emit('onceUsed', { id: c.owner, key: c.key, at: `r${tx.state.round ?? 0}` }, seq);
+
+  if (c.action) {
+    // 反应型动作：动作自己付代价（反应 + 法术位…），自己跑效果树
+    executeAction(tx, {
+      actor: c.owner, actionKey: `${c.from}#${c.action.id}`, action: c.action, targets: [c.owner],
+      cause: seq, viaReaction: true,
+    });
+    return;
+  }
+  const t = c.trigger!;
+  payCosts(tx, c.owner, t.cost ?? [], `${c.label}`, seq);
+  if (t.modify?.length) {
+    if (!spec.modify) {
+      tx.emit('ruleError', { where: `触发器「${c.label}」`, message: `「${spec.event}」窗口不接受修改（modify）` }, seq);
+    } else {
+      for (const m of t.modify) spec.modify(m, c);
+    }
+  }
+  if (t.do?.length) {
+    const ctx: ExecCtx = {
+      self: c.owner,
+      source: c.source,
+      targets: spec.target ? [spec.target] : [],
+      target: spec.target,
+      attacker: spec.scope.attacker ?? spec.actor,
+      entryKey: c.from,
+      actionName: c.label,
+      cause: seq,
+      locals: {},
+      effectId: c.effect?.id,
+      attack: spec.scope.attack,
+      roll: spec.refresh ? spec.refresh() : spec.scope.roll,
+      damage: spec.scope.damage,
+      event: spec.scope.event,
+      packet: spec.packet,
+      originKind: c.from.includes(':spell:') ? 'spell' : 'feature',
+    };
+    runNodes(tx, t.do, ctx);
+  }
+}
+
+/**
+ * 打开一个窗口。返回触发了的候选。
+ * before 窗口会循环：有人改了结果（重骰、加骰）之后，别人可能因此能用或不能用了。
+ */
+export function fireWindow(tx: Tx, spec: WindowSpec): TriggerCand[] {
+  const fired: TriggerCand[] = [];
+  const done = new Set<string>();
+  const passes = spec.window === 'before' ? 5 : 1;
+  for (let pass = 0; pass < passes; pass++) {
+    const cands = collect(tx, spec, done);
+    if (!cands.length) break;
+    let any = false;
+
+    // 强制的：条件不确定就先问
+    for (const c of cands.filter((x) => !x.optional)) {
+      if (c.questions.length) {
+        const ans = tx.decide({
+          kind: 'ask',
+          to: tx.state.combatants[c.owner].controller,
+          prompt: `「${c.label}」是否生效？`,
+          options: [],
+          questions: c.questions.map((q) => ({ id: q.id, text: q.text, guess: q.guess, scope: q.scope })),
+          default: Object.fromEntries(c.questions.map((q) => [q.id, q.guess ?? false])),
+        }) as Record<string, boolean>;
+        for (const q of c.questions) tx.qAnswers.set(q.id, { value: !!ans[q.id], scope: q.scope });
+        if (!c.questions.every((q) => ans[q.id])) { done.add(c.key); continue; }
+      }
+      done.add(c.key);
+      fire(tx, spec, c);
+      fired.push(c);
+      any = true;
+    }
+
+    // 可选的：按控制者合并成一个决定
+    const byController = new Map<string, TriggerCand[]>();
+    for (const c of cands.filter((x) => x.optional && !done.has(x.key))) {
+      const ctl = tx.state.combatants[c.owner].controller;
+      byController.set(ctl, [...(byController.get(ctl) ?? []), c]);
+    }
+    for (const [ctl, list] of byController) {
+      const picked = tx.decide({
+        kind: 'optionalTrigger',
+        to: ctl,
+        prompt: windowPrompt(tx, spec),
+        multi: true,
+        options: list.map((c, i) => ({
+          id: String(i),
+          label: `${nameOf(tx, c.owner)}：${c.label}`,
+          detail: [
+            c.cost.length ? `代价：${c.cost.map(describeCost).join('、')}` : '',
+            c.questions.length ? `前提：${c.questions.map((q) => q.text).join('；')}` : '',
+          ].filter(Boolean).join('　'),
+        })),
+        default: [],
+      }) as string[];
+      list.forEach((c, i) => {
+        done.add(c.key);
+        if (!picked.includes(String(i))) return;
+        // 选了 = 玩家确认了前提
+        for (const q of c.questions) tx.qAnswers.set(q.id, { value: true, scope: q.scope });
+        if (!canPay(tx, c.owner, c.cost)) return;   // 同一决定里先选的可能已经用掉了反应
+        fire(tx, spec, c);
+        fired.push(c);
+        any = true;
+      });
+    }
+    if (!any) break;
+  }
+  return fired;
+}
+
+function windowPrompt(tx: Tx, spec: WindowSpec): string {
+  const a = spec.actor ? nameOf(tx, spec.actor) : '';
+  const t = spec.target ? nameOf(tx, spec.target) : '';
+  switch (spec.event) {
+    case 'attackHit': return `${a} 的攻击命中了 ${t}。要使用以下能力吗？`;
+    case 'damageIncoming': return `${t} 即将受到伤害。要使用以下能力吗？`;
+    case 'd20Rolled': return `${a} 的检定已掷出。要使用以下能力吗？`;
+    case 'damageTaken': return `${t} 受到了伤害。要使用以下能力吗？`;
+    default: return `「${spec.event}」时机：要使用以下能力吗？`;
+  }
+}
+
+/** 给界面用：某人当前的经济是否被状态挡住 */
+export function economyAvailable(tx: Tx, id: Id, kind: 'action' | 'bonus' | 'reaction'): boolean {
+  if (blockedEconomy(tx, id).has(kind)) return false;
+  const c = tx.state.combatants[id];
+  return tx.state.round === null || c.economy[kind] > 0;
+}

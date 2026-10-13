@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "note": "法术的动态层（黄金条目，手写，用来打磨 schema）。键与原文对照 recon/raw/spells-xphb.json。",
+  "entries": {
+    "XPHB:spell:祝福术": {
+      "name": "祝福术",
+      "automation": "full",
+      "actions": [{
+        "id": "cast", "name": "祝福术", "activation": "action", "tags": ["spell", "magical"],
+        "cost": [{ "slot": { "min": 1 } }],
+        "concentration": { "minutes": 1 },
+        "targeting": { "type": "creature", "count": "2 + slot.level", "range": 30 },
+        "root": [{ "kind": "applyEffect", "to": "each", "template": "祝福" }]
+      }],
+      "effects": {
+        "祝福": {
+          "tags": ["magical", "spell"],
+          "rollMods": [{ "on": { "kind": ["attack", "save"] }, "who": "bearer", "op": "addDice", "value": "1d4", "label": "祝福术" }]
+        }
+      }
+    },
+    "XPHB:spell:定身类人": {
+      "name": "定身类人",
+      "automation": "full",
+      "actions": [{
+        "id": "cast", "name": "定身类人", "activation": "action", "tags": ["spell", "magical"],
+        "cost": [{ "slot": { "min": 2 } }],
+        "concentration": { "minutes": 1 },
+        "targeting": { "type": "creature", "count": "slot.level - 1", "range": 60, "filter": "target.type == '类人生物'" },
+        "root": [{
+          "kind": "save", "ability": "wis", "dc": "self.spell.dc",
+          "onFail": [{
+            "kind": "applyEffect", "template": "定身",
+            "duration": { "minutes": 1, "saveEnds": { "ability": "wis", "at": "turnEnd" } }
+          }]
+        }]
+      }],
+      "effects": {
+        "定身": { "tags": ["magical", "spell"], "implies": ["XPHB:condition:麻痹"] }
+      }
+    },
+    "XPHB:spell:护盾术": {
+      "name": "护盾术",
+      "automation": "full",
+      "actions": [{
+        "id": "cast", "name": "护盾术", "activation": "reaction", "tags": ["spell", "magical"],
+        "trigger": { "on": "attackHit", "role": "target", "window": "before" },
+        "cost": [{ "slot": { "min": 1 } }],
+        "root": [{
+          "kind": "applyEffect", "to": "self", "template": "护盾",
+          "duration": { "until": { "at": "turnStart", "of": "bearer", "nth": 1 } }
+        }]
+      }],
+      "effects": {
+        "护盾": {
+          "tags": ["magical", "spell"],
+          "statics": [{ "kind": "ac", "bonus": 5 }],
+          "triggers": [{
+            "id": "mm", "label": "护盾术：免疫魔法飞弹", "on": "damageIncoming", "role": "target", "window": "before",
+            "when": "event.label == '魔法飞弹'", "modify": [{ "op": "cancel" }]
+          }]
+        }
+      }
+    },
+    "XPHB:spell:火球术": {
+      "name": "火球术",
+      "automation": "full",
+      "actions": [{
+        "id": "cast", "name": "火球术", "activation": "action", "tags": ["spell", "magical"],
+        "cost": [{ "slot": { "min": 3 } }],
+        "targeting": { "type": "area", "range": 150, "area": { "shape": "sphere", "radius": 20 } },
+        "root": [{
+          "kind": "forEach", "in": "area", "do": [{
+            "kind": "save", "ability": "dex", "dc": "self.spell.dc",
+            "onFail": [{ "kind": "damage", "id": "fb", "dice": "(5 + slot.level)d6", "type": "火焰" }],
+            "onSuccess": [{ "kind": "damage", "ref": "fb", "scale": 0.5 }]
+          }]
+        }]
+      }]
+    },
+    "XPHB:spell:治疗之言": {
+      "name": "治疗之言",
+      "automation": "full",
+      "actions": [{
+        "id": "cast", "name": "治疗之言", "activation": "bonus", "tags": ["spell", "magical"],
+        "cost": [{ "slot": { "min": 1 } }],
+        "targeting": { "type": "creature", "count": 1, "range": 60 },
+        "root": [{ "kind": "heal", "amount": "(2 * slot.level)d4 + self.spell.mod" }]
+      }]
+    },
+    "XPHB:spell:猎人印记": {
+      "name": "猎人印记",
+      "automation": "partial",
+      "text": "标记的追踪检定优势、目标降至 0 后转移标记：手动处理。",
+      "actions": [{
+        "id": "cast", "name": "猎人印记", "activation": "bonus", "tags": ["spell", "magical"],
+        "cost": [{ "slot": { "min": 1 } }],
+        "concentration": { "hours": 1 },
+        "targeting": { "type": "creature", "count": 1, "range": 90 },
+        "root": [{ "kind": "applyEffect", "to": "self", "template": "猎人印记", "state": { "mark": "target" } }]
+      }],
+      "effects": {
+        "猎人印记": {
+          "tags": ["magical", "spell"],
+          "triggers": [{
+            "id": "dmg", "label": "猎人印记", "on": "attackHit", "role": "actor", "window": "before",
+            "when": "target.id == effect.state.mark",
+            "do": [{ "kind": "addDamage", "dice": "1d6", "type": "力场" }]
+          }]
+        }
+      }
+    }
+  }
+}

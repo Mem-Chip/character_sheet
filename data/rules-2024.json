@@ -1,0 +1,480 @@
+{
+  "version": 1,
+  "note": "2024 核心规则的动态层：15 个状态、通用动作、8 个武器精通、核心参数。状态与动作原文对照 5e.kiwee.top 的 conditionsdiseases.json / actions.json / items-base.json#itemMastery（XPHB）。",
+  "core": {
+    "critDamage": "doubleDice",
+    "critOn": "attackOnly",
+    "concentrationDc": "min(30, max(10, floor(damage.amount / 2)))",
+    "deathSave": { "dc": 10, "nat20": "heal1", "nat1": 2 },
+    "massiveDamage": true,
+    "flanking": false,
+    "diagonal": "5",
+    "initiative": "individual",
+    "rest": { "short": 60, "long": 480 }
+  },
+  "entries": {
+    "XPHB:condition:目盲": {
+      "name": "目盲",
+      "text": "你无法视物，且会自动失败于任何需要视觉的属性检定。以你为目标的攻击检定具有优势，而你进行的攻击检定具有劣势。",
+      "effects": {
+        "目盲": {
+          "tags": ["condition"],
+          "rollMods": [
+            { "on": { "kind": "attack" }, "who": "bearer", "op": "disadv", "label": "目盲" },
+            { "on": { "kind": "attack" }, "who": "against", "op": "adv", "label": "目标目盲" },
+            { "on": { "kind": "check" }, "who": "bearer", "when": "roll.sub == null && ask('这个检定需要视觉吗？')", "op": "autoFail", "label": "目盲：需要视觉的检定自动失败" }
+          ],
+          "flags": { "cannot": ["see"] }
+        }
+      }
+    },
+    "XPHB:condition:魅惑": {
+      "name": "魅惑",
+      "text": "你无法攻击魅惑源，也无法将其作为伤害性能力或魔法效应的对象。魅惑源对你进行的任何有关社交的属性检定均具有优势。",
+      "automation": "partial",
+      "effects": {
+        "魅惑": {
+          "tags": ["condition"],
+          "flags": { "forbidTarget": "source" },
+          "text": "魅惑源对你的社交检定具有优势（需要由魅惑源那边声明，目前手动处理）"
+        }
+      }
+    },
+    "XPHB:condition:耳聋": {
+      "name": "耳聋",
+      "text": "你无法听声，且会自动失败于任何依赖听觉的属性检定。",
+      "effects": {
+        "耳聋": {
+          "tags": ["condition"],
+          "rollMods": [
+            { "on": { "kind": "check" }, "who": "bearer", "when": "roll.sub == null && ask('这个检定依赖听觉吗？')", "op": "autoFail", "label": "耳聋：依赖听觉的检定自动失败" }
+          ],
+          "flags": { "cannot": ["hear"] }
+        }
+      }
+    },
+    "XPHB:condition:力竭": {
+      "name": "力竭",
+      "text": "可叠加。D20 检定减少力竭等级的两倍；速度减少力竭等级的 5 倍尺；6 级时死亡；长休降低 1 级。",
+      "effects": {
+        "力竭": {
+          "tags": ["condition"],
+          "stack": "level",
+          "deathAtLevel": 6,
+          "rollMods": [
+            { "on": { "kind": "d20" }, "who": "bearer", "op": "add", "value": "-2 * self.exhaustion", "label": "力竭" }
+          ],
+          "statics": [{ "kind": "speed", "bonus": "-5 * self.exhaustion" }]
+        }
+      }
+    },
+    "XPHB:condition:恐慌": {
+      "name": "恐慌",
+      "text": "只要恐惧源在你的视线范围内，你进行的属性检定与攻击检定就具有劣势。你无法自愿地向靠近恐惧源的方向移动。",
+      "effects": {
+        "恐慌": {
+          "tags": ["condition"],
+          "rollMods": [
+            { "on": { "kind": ["check", "attack"] }, "who": "bearer", "when": "source == null || canSee(self, source)", "op": "disadv", "label": "恐慌（恐惧源在视线内）" }
+          ],
+          "flags": { "cannot": ["moveCloser:source"] }
+        }
+      }
+    },
+    "XPHB:condition:受擒": {
+      "name": "受擒",
+      "text": "你的速度变为 0，且无法被增加。除擒抱者外，你对其他任何目标进行的攻击检定都具有劣势。",
+      "effects": {
+        "受擒": {
+          "tags": ["condition"],
+          "statics": [{ "kind": "speedSet", "value": 0, "lock": true }],
+          "rollMods": [
+            { "on": { "kind": "attack" }, "who": "bearer", "when": "source == null || target != source", "op": "disadv", "label": "受擒（目标不是擒抱者）" }
+          ],
+          "duration": {
+            "manual": true,
+            "endsOn": [{ "event": "effectApplied", "when": "source != null && event.bearer == source.id && source.has('失能')" }]
+          }
+        }
+      }
+    },
+    "XPHB:condition:失能": {
+      "name": "失能",
+      "text": "你无法执行任何动作、附赠动作以及反应。你的专注将被打断。你无法说话。如果你在陷入失能状态期间投掷先攻，你的先攻检定将具有劣势。",
+      "effects": {
+        "失能": {
+          "tags": ["condition"],
+          "flags": { "blocks": ["action", "bonus", "reaction"], "breaksConcentration": true, "cannot": ["speak"] },
+          "rollMods": [
+            { "on": { "kind": "initiative" }, "who": "bearer", "op": "disadv", "label": "失能：措手不及" }
+          ]
+        }
+      }
+    },
+    "XPHB:condition:隐形": {
+      "name": "隐形",
+      "text": "投掷先攻时具有优势。以你为目标的攻击检定具有劣势，而你进行的攻击检定具有优势；能看见你的生物不受此影响。",
+      "effects": {
+        "隐形": {
+          "tags": ["condition"],
+          "rollMods": [
+            { "on": { "kind": "initiative" }, "who": "bearer", "op": "adv", "label": "隐形：出其不意" },
+            { "on": { "kind": "attack" }, "who": "against", "when": "!canSee(attacker, self)", "op": "disadv", "label": "目标隐形" },
+            { "on": { "kind": "attack" }, "who": "bearer", "when": "!canSee(target, self)", "op": "adv", "label": "隐形" }
+          ]
+        }
+      }
+    },
+    "XPHB:condition:麻痹": {
+      "name": "麻痹",
+      "text": "你陷入失能状态。速度变为 0 且无法被增加。力量与敏捷豁免自动失败。以你为目标的攻击检定具有优势。攻击者位于你 5 尺内时，命中你的攻击都会变为重击。",
+      "effects": {
+        "麻痹": {
+          "tags": ["condition"],
+          "implies": ["XPHB:condition:失能"],
+          "statics": [{ "kind": "speedSet", "value": 0, "lock": true }],
+          "rollMods": [
+            { "on": { "kind": "save", "ability": ["str", "dex"] }, "who": "bearer", "op": "autoFail", "label": "麻痹：力量/敏捷豁免自动失败" },
+            { "on": { "kind": "attack" }, "who": "against", "op": "adv", "label": "目标麻痹" },
+            { "on": { "kind": "attack" }, "who": "against", "when": "dist(attacker, self) <= 5", "op": "autoCritOnHit", "label": "麻痹：5 尺内命中即重击" }
+          ]
+        }
+      }
+    },
+    "XPHB:condition:石化": {
+      "name": "石化",
+      "text": "你陷入失能状态。速度变为 0。以你为目标的攻击检定具有优势。力量与敏捷豁免自动失败。你具有所有伤害的抗性，并免疫中毒状态。",
+      "effects": {
+        "石化": {
+          "tags": ["condition"],
+          "implies": ["XPHB:condition:失能"],
+          "statics": [
+            { "kind": "speedSet", "value": 0, "lock": true },
+            { "kind": "resistAll" },
+            { "kind": "conditionImmune", "values": ["中毒"] }
+          ],
+          "rollMods": [
+            { "on": { "kind": "attack" }, "who": "against", "op": "adv", "label": "目标石化" },
+            { "on": { "kind": "save", "ability": ["str", "dex"] }, "who": "bearer", "op": "autoFail", "label": "石化：力量/敏捷豁免自动失败" }
+          ]
+        }
+      }
+    },
+    "XPHB:condition:中毒": {
+      "name": "中毒",
+      "text": "你进行的攻击检定与属性检定具有劣势。",
+      "effects": {
+        "中毒": {
+          "tags": ["condition"],
+          "rollMods": [
+            { "on": { "kind": ["attack", "check"] }, "who": "bearer", "op": "disadv", "label": "中毒" }
+          ]
+        }
+      }
+    },
+    "XPHB:condition:倒地": {
+      "name": "倒地",
+      "text": "你只能匍匐，或消耗一半速度起立。你进行的攻击检定具有劣势。攻击者位于你 5 尺内时对你的攻击具有优势，否则具有劣势。",
+      "effects": {
+        "倒地": {
+          "tags": ["condition"],
+          "rollMods": [
+            { "on": { "kind": "attack" }, "who": "bearer", "op": "disadv", "label": "倒地" },
+            { "on": { "kind": "attack" }, "who": "against", "when": "dist(attacker, self) <= 5", "op": "adv", "label": "目标倒地（5 尺内）" },
+            { "on": { "kind": "attack" }, "who": "against", "when": "dist(attacker, self) > 5", "op": "disadv", "label": "目标倒地（5 尺外）" }
+          ]
+        }
+      }
+    },
+    "XPHB:condition:束缚": {
+      "name": "束缚",
+      "text": "你的速度变为 0。以你为目标的攻击检定具有优势，而你进行的攻击检定具有劣势。你进行的敏捷豁免检定具有劣势。",
+      "effects": {
+        "束缚": {
+          "tags": ["condition"],
+          "statics": [{ "kind": "speedSet", "value": 0, "lock": true }],
+          "rollMods": [
+            { "on": { "kind": "attack" }, "who": "against", "op": "adv", "label": "目标束缚" },
+            { "on": { "kind": "attack" }, "who": "bearer", "op": "disadv", "label": "束缚" },
+            { "on": { "kind": "save", "ability": "dex" }, "who": "bearer", "op": "disadv", "label": "束缚：敏捷豁免" }
+          ]
+        }
+      }
+    },
+    "XPHB:condition:震慑": {
+      "name": "震慑",
+      "text": "你陷入失能状态。力量与敏捷豁免自动失败。以你为目标的攻击检定具有优势。",
+      "effects": {
+        "震慑": {
+          "tags": ["condition"],
+          "implies": ["XPHB:condition:失能"],
+          "rollMods": [
+            { "on": { "kind": "save", "ability": ["str", "dex"] }, "who": "bearer", "op": "autoFail", "label": "震慑：力量/敏捷豁免自动失败" },
+            { "on": { "kind": "attack" }, "who": "against", "op": "adv", "label": "目标震慑" }
+          ]
+        }
+      }
+    },
+    "XPHB:condition:昏迷": {
+      "name": "昏迷",
+      "text": "你陷入失能与倒地状态，掉落手持物；此状态结束时倒地不会随之结束。速度为 0。以你为目标的攻击检定具有优势。力量与敏捷豁免自动失败。5 尺内命中你的攻击即重击。你无法感知周遭。",
+      "effects": {
+        "昏迷": {
+          "tags": ["condition"],
+          "implies": ["XPHB:condition:失能"],
+          "statics": [{ "kind": "speedSet", "value": 0, "lock": true }],
+          "rollMods": [
+            { "on": { "kind": "save", "ability": ["str", "dex"] }, "who": "bearer", "op": "autoFail", "label": "昏迷：力量/敏捷豁免自动失败" },
+            { "on": { "kind": "attack" }, "who": "against", "op": "adv", "label": "目标昏迷" },
+            { "on": { "kind": "attack" }, "who": "against", "when": "dist(attacker, self) <= 5", "op": "autoCritOnHit", "label": "昏迷：5 尺内命中即重击" }
+          ],
+          "onApply": [
+            { "kind": "applyEffect", "to": "self", "template": "XPHB:condition:倒地", "duration": { "manual": true } },
+            { "kind": "note", "text": "手上持握的东西全数掉落" }
+          ],
+          "flags": { "cannot": ["perceive"] }
+        }
+      }
+    },
+
+    "XPHB:action:疾走": {
+      "name": "疾走",
+      "tags": ["basic"],
+      "actions": [{ "id": "use", "name": "疾走", "activation": "action", "root": [{ "kind": "economy", "move": "self.speed" }] }]
+    },
+    "XPHB:action:撤离": {
+      "name": "撤离",
+      "tags": ["basic"],
+      "actions": [{ "id": "use", "name": "撤离", "activation": "action", "root": [{ "kind": "applyEffect", "to": "self", "template": "撤离" }] }],
+      "effects": {
+        "撤离": {
+          "text": "当前回合的剩余时间内，你的移动不会引发借机攻击。",
+          "duration": { "until": { "at": "turnEnd", "of": "bearer", "nth": 0 } }
+        }
+      }
+    },
+    "XPHB:action:回避": {
+      "name": "回避",
+      "tags": ["basic"],
+      "actions": [{ "id": "use", "name": "回避", "activation": "action", "root": [{ "kind": "applyEffect", "to": "self", "template": "回避" }] }],
+      "effects": {
+        "回避": {
+          "text": "直到你的下一回合开始前，你能看见的攻击者对你的攻击检定具有劣势，你的敏捷豁免具有优势。陷入失能或速度降至 0 时失去这些增益。",
+          "rollMods": [
+            { "on": { "kind": "attack" }, "who": "against", "when": "canSee(self, attacker) && !self.has('失能') && self.speed > 0", "op": "disadv", "label": "回避" },
+            { "on": { "kind": "save", "ability": "dex" }, "who": "bearer", "when": "!self.has('失能') && self.speed > 0", "op": "adv", "label": "回避" }
+          ],
+          "duration": { "until": { "at": "turnStart", "of": "bearer", "nth": 1 } }
+        }
+      }
+    },
+    "XPHB:action:协助": {
+      "name": "协助",
+      "tags": ["basic"],
+      "actions": [{
+        "id": "use", "name": "协助", "activation": "action",
+        "targeting": { "type": "creature", "count": 1 },
+        "root": [{
+          "kind": "choose", "prompt": "协助的方式",
+          "options": [
+            { "label": "辅助一次攻击检定：虚晃 5 尺内的一个敌人", "do": [{ "kind": "applyEffect", "to": "target", "template": "协助攻击" }] },
+            { "label": "辅助一次属性检定（手动处理）", "do": [{ "kind": "note", "text": "所选盟友下一次使用你所选技能/工具的属性检定具有优势（在你的下个回合开始前）" }] }
+          ]
+        }]
+      }],
+      "effects": {
+        "协助攻击": {
+          "text": "下一次由协助者的盟友对该敌人进行的攻击检定具有优势；协助者的下一回合开始时消失。",
+          "rollMods": [
+            { "on": { "kind": "attack" }, "who": "against", "when": "source != null && attacker.isAllyOf(source)", "op": "adv", "label": "协助" }
+          ],
+          "duration": {
+            "until": { "at": "turnStart", "of": "source", "nth": 1 },
+            "endsOn": [{ "event": "d20Rolled", "when": "event.kind == 'attack' && event.target == self.id && source != null && combatant(event.roller).isAllyOf(source)" }]
+          }
+        }
+      }
+    },
+    "XPHB:action:起立": {
+      "name": "起立",
+      "tags": ["basic"],
+      "text": "消耗你速度一半数值（向下取整）的移动力起立，并由此终止倒地。速度为 0 时无法起立。",
+      "actions": [{
+        "id": "use", "name": "起立", "activation": "free",
+        "requires": "self.has('倒地') && self.speed > 0",
+        "root": [
+          { "kind": "economy", "move": "-floor(self.speed / 2)" },
+          { "kind": "removeEffect", "from": "self", "match": { "name": "倒地" } }
+        ]
+      }]
+    },
+    "XPHB:action:擒抱": {
+      "name": "擒抱",
+      "tags": ["basic"],
+      "text": "徒手打击的选项：目标进行力量或敏捷豁免（由目标选择），DC = 8 + 你的力量调整值 + 熟练加值；失败则陷入受擒状态。需要一只空手，目标体型至多比你大一级。",
+      "actions": [{
+        "id": "use", "name": "擒抱", "activation": "none",
+        "cost": [{ "economy": "attack" }],
+        "targeting": { "type": "creature", "count": 1, "range": "reach" },
+        "root": [{
+          "kind": "save", "ability": ["str", "dex"], "dc": "8 + mod.str + pb",
+          "onFail": [{ "kind": "applyEffect", "to": "target", "template": "XPHB:condition:受擒", "state": { "escapeDc": "8 + mod.str + pb" } }]
+        }]
+      }]
+    },
+    "XPHB:action:推撞": {
+      "name": "推撞",
+      "tags": ["basic"],
+      "text": "徒手打击的选项：目标进行力量或敏捷豁免，DC = 8 + 你的力量调整值 + 熟练加值；失败则你将其推离 5 尺或令其倒地。",
+      "actions": [{
+        "id": "use", "name": "推撞", "activation": "none",
+        "cost": [{ "economy": "attack" }],
+        "targeting": { "type": "creature", "count": 1, "range": "reach" },
+        "root": [{
+          "kind": "save", "ability": ["str", "dex"], "dc": "8 + mod.str + pb",
+          "onFail": [{
+            "kind": "choose", "prompt": "推撞的效果",
+            "options": [
+              { "label": "推离 5 尺", "do": [{ "kind": "move", "mode": "push", "ft": 5 }] },
+              { "label": "令其倒地", "do": [{ "kind": "applyEffect", "to": "target", "template": "XPHB:condition:倒地" }] }
+            ]
+          }]
+        }]
+      }]
+    },
+    "XPHB:action:结束擒抱": {
+      "name": "结束擒抱",
+      "tags": ["basic"],
+      "actions": [{
+        "id": "use", "name": "结束擒抱", "activation": "action",
+        "requires": "self.has('受擒')",
+        "root": [{
+          "kind": "choose", "prompt": "用哪个技能挣脱",
+          "options": [
+            { "label": "力量（运动）", "do": [{ "kind": "check", "ability": "str", "skill": "athletics", "dc": "self.effect('受擒').state.escapeDc", "onSuccess": [{ "kind": "removeEffect", "from": "self", "match": { "name": "受擒" } }] }] },
+            { "label": "敏捷（特技）", "do": [{ "kind": "check", "ability": "dex", "skill": "acrobatics", "dc": "self.effect('受擒').state.escapeDc", "onSuccess": [{ "kind": "removeEffect", "from": "self", "match": { "name": "受擒" } }] }] }
+          ]
+        }]
+      }]
+    },
+    "XPHB:action:终止专注": {
+      "name": "终止专注",
+      "tags": ["basic"],
+      "actions": [{ "id": "use", "name": "终止专注", "activation": "free", "requires": "self.concentrating", "root": [{ "kind": "removeEffect", "from": "self", "match": { "key": "concentration" } }] }]
+    },
+    "XPHB:action:借机攻击": {
+      "name": "借机攻击",
+      "tags": ["basic"],
+      "text": "你可见的生物离开你的触及范围时，你可以执行反应，用武器或徒手打击对其发动一次近战攻击。（用武器攻击并选择「作为反应」发起。）",
+      "automation": "manual"
+    },
+    "XPHB:action:躲藏": { "name": "躲藏", "tags": ["basic"], "automation": "manual", "text": "进行一次 DC 15 的感知（隐匿）检定，成功则获得隐形状态（由 DM 裁定条件）。" },
+    "XPHB:action:搜索": { "name": "搜索", "tags": ["basic"], "automation": "manual", "text": "进行一次感知检定（洞悉 / 医药 / 察觉 / 求生）。" },
+    "XPHB:action:研究": { "name": "研究", "tags": ["basic"], "automation": "manual", "text": "进行一次智力检定（奥秘 / 历史 / 调查 / 自然 / 宗教）。" },
+    "XPHB:action:影响": { "name": "影响", "tags": ["basic"], "automation": "manual", "text": "进行一次魅力或感知检定以改变他人的态度。" },
+    "XPHB:action:操作": { "name": "操作", "tags": ["basic"], "automation": "manual", "text": "使用一件非魔法物件。" },
+    "XPHB:action:魔法": { "name": "魔法", "tags": ["basic"], "automation": "manual", "text": "施展一个法术、使用一件魔法物品或一项魔法特性。" },
+    "XPHB:action:预备": { "name": "预备", "tags": ["basic"], "automation": "manual", "text": "准备在某个可感知的触发条件发生时，用反应执行一个动作。" },
+
+    "XPHB:mastery:擦掠": {
+      "name": "擦掠",
+      "global": true,
+      "text": "以这把武器的攻击检定失手时，仍对目标造成等同于该攻击所用属性调整值的伤害（类型与武器一致）。",
+      "triggers": [{
+        "id": "graze", "label": "擦掠", "on": "attackMissed", "role": "actor",
+        "when": "attack.mastery == '擦掠' && abilityMod(attack.ability) > 0",
+        "do": [{ "kind": "damage", "dice": "abilityMod(attack.ability)", "type": "attack.damageType" }]
+      }]
+    },
+    "XPHB:mastery:削弱": {
+      "name": "削弱",
+      "global": true,
+      "text": "命中一个生物时，直到你的下一回合开始前，该生物的下一次攻击检定具有劣势。",
+      "triggers": [{
+        "id": "sap", "label": "削弱", "on": "attackHit", "role": "actor",
+        "when": "attack.mastery == '削弱'",
+        "do": [{ "kind": "applyEffect", "to": "target", "template": "削弱" }]
+      }],
+      "effects": {
+        "削弱": {
+          "rollMods": [{ "on": { "kind": "attack" }, "who": "bearer", "op": "disadv", "label": "削弱" }],
+          "duration": {
+            "until": { "at": "turnStart", "of": "source", "nth": 1 },
+            "endsOn": [{ "event": "d20Rolled", "when": "event.kind == 'attack' && event.roller == self.id" }]
+          }
+        }
+      }
+    },
+    "XPHB:mastery:缓速": {
+      "name": "缓速",
+      "global": true,
+      "text": "命中并造成伤害时，可以将其速度减少 10 尺直到你的下一回合开始；同类效果不超过 10 尺。",
+      "triggers": [{
+        "id": "slow", "label": "缓速", "on": "attackHit", "role": "actor",
+        "when": "attack.mastery == '缓速' && damage.amount > 0",
+        "do": [{ "kind": "applyEffect", "to": "target", "template": "缓速" }]
+      }],
+      "effects": {
+        "缓速": {
+          "stackKey": "mastery:缓速",
+          "statics": [{ "kind": "speed", "bonus": -10 }],
+          "duration": { "until": { "at": "turnStart", "of": "source", "nth": 1 } }
+        }
+      }
+    },
+    "XPHB:mastery:失衡": {
+      "name": "失衡",
+      "global": true,
+      "text": "命中时可以迫使目标进行体质豁免（DC = 8 + 攻击所用属性调整值 + 熟练加值），失败则倒地。",
+      "triggers": [{
+        "id": "topple", "label": "失衡", "on": "attackHit", "role": "actor", "optional": true,
+        "when": "attack.mastery == '失衡'",
+        "do": [{
+          "kind": "save", "ability": "con", "dc": "8 + abilityMod(attack.ability) + pb",
+          "onFail": [{ "kind": "applyEffect", "to": "target", "template": "XPHB:condition:倒地" }]
+        }]
+      }]
+    },
+    "XPHB:mastery:侵扰": {
+      "name": "侵扰",
+      "global": true,
+      "text": "命中并造成伤害时，直到你的下一回合结束前，你对该生物的下一次攻击检定具有优势。",
+      "triggers": [{
+        "id": "vex", "label": "侵扰", "on": "attackHit", "role": "actor",
+        "when": "attack.mastery == '侵扰' && damage.amount > 0",
+        "do": [{ "kind": "applyEffect", "to": "self", "template": "侵扰", "state": { "target": "target" } }]
+      }],
+      "effects": {
+        "侵扰": {
+          "rollMods": [{ "on": { "kind": "attack" }, "who": "bearer", "when": "target.id == effect.state.target", "op": "adv", "label": "侵扰" }],
+          "duration": {
+            "until": { "at": "turnEnd", "of": "bearer", "nth": 1 },
+            "endsOn": [{ "event": "d20Rolled", "when": "event.kind == 'attack' && event.roller == self.id && event.target == effect.state.target" }]
+          }
+        }
+      }
+    },
+    "XPHB:mastery:推离": {
+      "name": "推离",
+      "global": true,
+      "text": "命中时，如果目标体型不超过大型，可以将其直线推离至多 10 尺。",
+      "triggers": [{
+        "id": "push", "label": "推离", "on": "attackHit", "role": "actor", "optional": true,
+        "when": "attack.mastery == '推离' && target.size != '巨型' && target.size != '超巨型'",
+        "do": [{ "kind": "move", "mode": "push", "ft": 10 }]
+      }]
+    },
+    "XPHB:mastery:横扫": {
+      "name": "横扫",
+      "global": true,
+      "automation": "manual",
+      "text": "近战命中时，可以对第一个目标 5 尺内、同样在你触及范围内的另一生物再进行一次近战攻击；命中时伤害不加属性调整值（除非为负）。每回合一次。"
+    },
+    "XPHB:mastery:迅击": {
+      "name": "迅击",
+      "global": true,
+      "automation": "manual",
+      "text": "轻型属性的额外攻击可以作为攻击动作的一部分进行，而不是附赠动作。每回合一次。"
+    }
+  }
+}

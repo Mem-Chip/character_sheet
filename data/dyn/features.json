@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "note": "职业特性 / 专长的动态层（黄金条目）。键与 abilities-2024.json 一致，合并时只补动态字段，不冲掉静态的 mods/grants/choices/resources。",
+  "entries": {
+    "XPHB:游荡者:偷袭:1": {
+      "name": "偷袭",
+      "automation": "full",
+      "triggers": [{
+        "id": "sneak", "label": "偷袭", "on": "attackHit", "role": "actor", "window": "before",
+        "optional": true, "limit": "oncePerTurn",
+        "when": "(attack.finesse || attack.ranged) && (roll.adv || (allyWithin(target, 5, { exclude: [self], notCond: '失能' }) && !roll.disadv))",
+        "do": [{ "kind": "addDamage", "dice": "classTable('偷袭')", "type": "attack.damageType" }]
+      }]
+    },
+    "XPHB:游荡者:直觉闪避:5": {
+      "name": "直觉闪避",
+      "automation": "full",
+      "triggers": [{
+        "id": "uncanny", "label": "直觉闪避", "on": "attackHit", "role": "target", "window": "before",
+        "deferTo": "damageIncoming", "optional": true,
+        "cost": [{ "economy": "reaction" }],
+        "when": "canSee(self, attacker)",
+        "modify": [{ "op": "halveDamage" }]
+      }]
+    },
+    "XPHB:野蛮人:狂暴:1": {
+      "name": "狂暴",
+      "automation": "full",
+      "actions": [
+        {
+          "id": "enter", "name": "进入狂暴", "activation": "bonus",
+          "cost": [{ "resource": "狂暴" }],
+          "requires": "!self.wearing('HA') && !self.hasEffect('狂暴')",
+          "root": [{ "kind": "applyEffect", "to": "self", "template": "狂暴" }]
+        },
+        {
+          "id": "extend", "name": "延长狂暴", "activation": "bonus",
+          "requires": "self.hasEffect('狂暴') && turn.isMine",
+          "root": [{ "kind": "extendEffect", "template": "狂暴" }]
+        }
+      ],
+      "effects": {
+        "狂暴": {
+          "text": "钝击/穿刺/挥砍抗性；力量检定与力量豁免优势；力量攻击伤害加值；无法专注或施法。持续到你的下一回合结束，可逐轮延长，至多 10 分钟。",
+          "duration": {
+            "until": { "at": "turnEnd", "of": "bearer", "nth": 1 },
+            "max": { "minutes": 10 },
+            "endsOn": [{ "event": "effectApplied", "when": "event.bearer == self.id && self.has('失能')" }]
+          },
+          "statics": [{ "kind": "resist", "values": ["钝击", "穿刺", "挥砍"] }],
+          "rollMods": [
+            { "on": { "kind": ["check", "save"], "ability": "str" }, "who": "bearer", "op": "adv", "label": "狂暴" },
+            { "on": { "kind": "damage" }, "who": "bearer", "when": "attack.ability == 'str'", "op": "add", "value": "classTable('狂暴伤害')", "label": "狂暴伤害" }
+          ],
+          "flags": { "cannot": ["concentrate", "castSpells"] },
+          "triggers": [
+            {
+              "id": "ext-atk", "label": "狂暴延长（攻击敌人）", "on": "d20Rolled", "role": "actor", "window": "after",
+              "when": "roll.kind == 'attack' && turn.isMine && target.isEnemyOf(self)",
+              "do": [{ "kind": "extendEffect", "template": "狂暴" }]
+            },
+            {
+              "id": "ext-save", "label": "狂暴延长（迫使敌人豁免）", "on": "saveForced", "role": "actor", "window": "after",
+              "when": "turn.isMine && target.isEnemyOf(self)",
+              "do": [{ "kind": "extendEffect", "template": "狂暴" }]
+            }
+          ]
+        }
+      }
+    },
+    "XPHB:野蛮人:鲁莽攻击:2": {
+      "name": "鲁莽攻击",
+      "automation": "full",
+      "actions": [{
+        "id": "use", "name": "鲁莽攻击", "activation": "free",
+        "requires": "turn.isMine && !self.hasEffect('鲁莽攻击')",
+        "root": [{ "kind": "applyEffect", "to": "self", "template": "鲁莽攻击" }]
+      }],
+      "effects": {
+        "鲁莽攻击": {
+          "rollMods": [
+            { "on": { "kind": "attack" }, "who": "bearer", "when": "attack.ability == 'str' && turn.isMine", "op": "adv", "label": "鲁莽攻击" },
+            { "on": { "kind": "attack" }, "who": "against", "op": "adv", "label": "目标鲁莽攻击" }
+          ],
+          "duration": { "until": { "at": "turnStart", "of": "bearer", "nth": 1 } }
+        }
+      }
+    },
+    "XPHB:战士:精通重击:3": {
+      "name": "精通重击",
+      "automation": "full",
+      "rollMods": [{ "on": { "kind": "attack", "attack": { "weapon": true } }, "who": "bearer", "op": "critRange", "value": 19, "label": "精通重击" }]
+    },
+    "XPHB:圣武士:守护灵光:6": {
+      "name": "守护灵光",
+      "automation": "full",
+      "auras": [{
+        "id": "protection", "radius": 10, "affects": "allies", "includeSelf": true,
+        "requires": "!self.has('失能')", "stackKey": "守护灵光",
+        "grant": {
+          "rollMods": [{ "on": { "kind": "save" }, "who": "bearer", "op": "add", "value": "max(1, source.mod.cha)", "label": "守护灵光" }]
+        }
+      }]
+    },
+    "XPHB:rule:英雄激励": {
+      "name": "英雄激励",
+      "global": true,
+      "automation": "full",
+      "text": "拥有英雄激励时，可以在掷出任何 D20 后消耗它重骰，必须采用新结果。",
+      "triggers": [{
+        "id": "reroll", "label": "英雄激励：重骰", "on": "d20Rolled", "role": "actor", "window": "before",
+        "optional": true,
+        "cost": [{ "resource": "英雄激励" }],
+        "modify": [{ "op": "reroll", "die": "d20", "keep": "new" }]
+      }]
+    }
+  }
+}
