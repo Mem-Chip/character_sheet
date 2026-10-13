@@ -66,6 +66,24 @@ export function pending(r: DispatchResult): Decision {
   return r.decision;
 }
 
+/**
+ * 场景里不言自明的事实（「本回合还没移动过」「用的就是那把注入过的武器」「对方听得见」），
+ * 规则数据要是问了，一律回答「是」。问人本身是允许的写法（说明书第 5 节），不该因此判错。
+ */
+export function autoYes(s: Session): Session {
+  const dispatch = s.dispatch.bind(s);
+  const decide = s.decide.bind(s);
+  const yes = (r: DispatchResult): DispatchResult => {
+    for (let i = 0; i < 8 && r.status === 'pending' && r.decision.kind === 'ask'; i++) {
+      r = decide(Object.fromEntries((r.decision.questions ?? []).map((q) => [q.id, true])));
+    }
+    return r;
+  };
+  s.dispatch = (cmd, by) => yes(dispatch(cmd, by));
+  s.decide = (value, id) => yes(decide(value, id));
+  return s;
+}
+
 export const evs = (s: Session, type: string) => s.events.filter((e) => e.type === type).map((e) => e.payload as any);
 export const last = (s: Session, type: string) => evs(s, type).at(-1);
 export const has = (s: Session, id: string, cond: string) => s.peek((tx) => hasCondition(tx, id, cond));

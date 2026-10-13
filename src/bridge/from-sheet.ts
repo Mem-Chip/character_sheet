@@ -10,7 +10,7 @@ import type { AttackRow, Combatant, CombatantView, LiveState } from '../combat/t
 import { ABILS, COUNT_ONLY, SIZE_CN, type CharData, type Json, type SheetEnv } from '../sheet';
 import type { Ability } from '../expr';
 
-const CREATURE_TYPE_CN: Record<string, string> = {
+export const CREATURE_TYPE_CN: Record<string, string> = {
   humanoid: '类人生物', beast: '野兽', fey: '精类', fiend: '邪魔', celestial: '天界生物', construct: '构装生物',
   dragon: '龙类', elemental: '元素生物', giant: '巨人', monstrosity: '怪兽', ooze: '泥怪', plant: '植物', undead: '不死生物', aberration: '异怪',
 };

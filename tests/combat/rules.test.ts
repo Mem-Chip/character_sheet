@@ -137,15 +137,21 @@ describe('守护灵光', () => {
     expect(last(s, 'd20Rolled').total).toBe(10);
   });
 
-  it('圣武士自己不用问；失能时灵光失效', () => {
-    const { s, dice } = setup([paladin]);
+  it('圣武士自己的加值在人物卡上，战斗里不再加一次', () => {
+    // 人物卡算出来的豁免总值已经含灵光（静态层的 saveBonus）
+    const { s, dice } = setup([{ ...paladin, view: { ...paladin.view, save: { wis: 3 } } }]);
     dice.push(5);
     done(s.dispatch({ type: 'roll', roller: 'p', kind: 'save', ability: 'wis', dc: 10 }));
-    expect(last(s, 'd20Rolled').total).toBe(5 + 0 + 3);
+    expect(last(s, 'd20Rolled').total).toBe(5 + 3);
+    expect(last(s, 'd20Rolled').mods).toEqual([]);
+  });
+
+  it('圣武士失能时，盟友的灵光失效', () => {
+    const { s, dice } = setup([paladin, fighter()]);
     done(s.dispatch({ type: 'applyEffect', to: 'p', template: 'XPHB:condition:震慑' }));
     dice.push(5);
-    done(s.dispatch({ type: 'roll', roller: 'p', kind: 'save', ability: 'wis', dc: 10 }));
-    expect(last(s, 'd20Rolled').total).toBe(5);
+    done(s.dispatch({ type: 'roll', roller: 'f', kind: 'save', ability: 'con', dc: 10 }));
+    expect(last(s, 'd20Rolled').total).toBe(5 + 2);
   });
 });
 

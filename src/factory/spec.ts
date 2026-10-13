@@ -8,9 +8,12 @@
 import { tyName, type FnSig, type Ty } from '../expr';
 import { EMITTED_EVENTS, WINDOW_EVENTS } from '../combat/audit';
 import { REF_SHAPE, scopeDef, type ScopeKind } from '../combat/scope';
+import { CREATURE_TYPE_CN } from '../bridge/from-sheet';
 
 /** 伤害类型（站点 2024 译名） */
 export const DAMAGE_TYPES = ['钝击', '穿刺', '挥砍', '火焰', '寒冷', '闪电', '雷鸣', '强酸', '毒素', '黯蚀', '光耀', '心灵', '力场'];
+/** 生物类型（`target.type` 的取值） */
+export const CREATURE_TYPES = [...new Set(Object.values(CREATURE_TYPE_CN))];
 export const SKILLS = ['运动', '体操', '巧手', '隐匿', '奥秘', '历史', '调查', '自然', '宗教', '驯兽', '洞悉', '医药', '察觉', '求生', '欺瞒', '威吓', '表演', '游说'];
 
 function fmtTy(t: Ty): string {
@@ -162,7 +165,25 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
 14. 伤害类型用中文：${DAMAGE_TYPES.join(' ')}。技能用中文：${SKILLS.join(' ')}。
 15. 恒定的数值（AC +1、速度 +10、熟练）不写；只有带条件的写成 \`rollMods\` / \`statics\`（在效应里）。
 
-## 6. 例子
+## 6. 引擎怎么执行（容易想错的地方）
+
+1. **攻击节点的 \`bonus\` 缺省是 \`self.spell.atk\`（法术攻击）。** 武器攻击、徒手打击一定要自己写命中加值（\`self.pb + max(self.mod.str, self.mod.dex)\` 这类）；伤害骰里也要自己写属性调整值，引擎不会替你加。
+2. **\`damage\` 节点会立刻造成伤害**，不只是掷骰。一个分支里的 damage 节点先合成一个伤害包结算，再执行同一分支的其他节点。
+   几个目标共用同一次掷骰（火球术）：在**第一次用到的分支里**写 \`id\`，其他分支用 \`ref\` 引用（可以加 \`scale: 0.5\` 减半）。不要在根上单独掷一次 —— 那会直接对目标造成一次伤害。
+3. **需要目标的节点**（attack、save、写给 target 的节点）有多个目标时，会自动对每个目标各执行一次，不用自己包 \`forEach\`。\`targeting.count\` 是最多能选几个。
+4. **触发器的执行顺序**：先付代价（cost），再应用 modify，最后执行 do。do 里读到的 \`roll\` 已经是 modify 之后的结果 ——
+   所以「加完仍然失败就不消耗」可以写成：do 里 \`if roll.failing\` → \`{ kind: 'resource', id: …, delta: 1 }\` 把代价退回去。
+5. **效应模板里的表达式**（效应的 rollMods、triggers、statics），\`self\` 是**承受这个效应的人**，\`source\` 是施加者。
+   要用施加者那边的数值（施加者职业表里的骰子、施加时的环阶），在 \`applyEffect\` 上用 \`state\` 记下来：
+   \`state: { die: "classTable('…')" }\` 在施加者的作用域里求值，之后在效应里用 \`effect.state.die\` 读。
+6. **防御性的反应改 AC**（护盾术这类）：挂在 \`attackHit\` 的 before 窗口（防守方先问），施加一个加 AC 的效应即可。
+   防守方处理完之后，引擎会**按新的 AC 重新判定**，不够就变成未命中。不要挂在 \`d20Rolled\` 上：那时这次攻击要对比的 AC 已经定了。
+7. **升环公式**按原文逐环累加：「1 环 2d8，每高一环多 1d8」= \`(1 + slot.level)d8\`；「3 环 8d6，每高一环多 1d6」= \`(5 + slot.level)d6\`。代进最低环验算一遍。
+8. **生物类型**（\`target.type\`）只有这些写法：${CREATURE_TYPES.join('、')}。
+9. \`allyWithin(x, 尺, { exclude: [self], notCond: '失能' })\`：第三个参数可选，\`exclude\` 不算哪些人，\`notCond\` 要求那个盟友不处于某个状态。
+10. 原文说「另一名生物」→ \`targeting.filter: 'target.id != self.id'\`。
+
+## 7. 例子
 
 例子文件里是一批写好的条目（键 → Entry），照着它们的风格和粒度写。
 `;

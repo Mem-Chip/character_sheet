@@ -38,16 +38,24 @@ function spellDuration(ds: Json[]): string {
   }).join(' / ');
 }
 
-/** 静态层能力数据的摘要：哪些已经处理了 */
-function staticPart(key: string): string[] {
+/** 静态层能力数据：真的算了的（staticPart）和只是文字的备注（staticNotes）分开 */
+function staticOf(key: string): { staticPart: string[]; staticNotes: string[] } {
   const a = abilities[key];
-  if (!a) return [];
-  const out: string[] = [];
-  for (const m of a.mods || []) out.push(m.kind === 'note' ? `备注：${m.note}` : `修正 ${m.kind}：${JSON.stringify({ ...m, kind: undefined })}`);
-  for (const g of a.grants || []) out.push(g.kind === 'note' ? `备注：${g.text ?? ''}` : `授予 ${g.kind}：${(g.values || []).join('、')}`);
-  for (const r of a.resources || []) out.push(`资源池「${r.name}」（id ${r.id}）的上限：${r.formula}，${r.recovery === 'short' ? '短休' : '长休'}恢复`);
-  for (const c of a.choices || []) out.push(`建卡时的选择：${c.label ?? c.id}`);
-  return out;
+  const part: string[] = [];
+  const notes: string[] = [];
+  if (!a) return { staticPart: part, staticNotes: notes };
+  for (const m of a.mods || []) {
+    if (m.kind === 'note') { notes.push(m.note); continue; }
+    part.push(`修正 ${m.kind}：${JSON.stringify({ ...m, kind: undefined, note: undefined })}`);
+    if (m.note) notes.push(m.note);
+  }
+  for (const g of a.grants || []) {
+    if (g.kind === 'note') notes.push(g.text ?? '');
+    else part.push(`授予 ${g.kind}：${(g.values || []).join('、')}`);
+  }
+  for (const r of a.resources || []) part.push(`资源池「${r.name}」（id ${r.id}）的上限：${r.formula}，${r.recovery === 'short' ? '短休' : '长休'}恢复`);
+  for (const c of a.choices || []) part.push(`建卡时的选择：${c.label ?? c.id}`);
+  return { staticPart: part, staticNotes: notes.filter(Boolean) };
 }
 
 /** 造一个 20 级角色，看它进战斗后的资源与职业表 */
@@ -77,7 +85,7 @@ export async function buildTask(env: SheetEnv, id: string, key: string, iface?: 
         concentration: (sp.duration || []).some((d: Json) => d.concentration),
         higher: sp.entriesHigherLevel ? flattenEntries(sp.entriesHigherLevel) : undefined,
       },
-      resources: {}, staticPart: staticPart(key), interface: iface,
+      resources: {}, ...staticOf(key), interface: iface,
     };
   }
   // 职业 / 子职特性：XPHB:<职业>:<特性>:<等级>
@@ -95,7 +103,7 @@ export async function buildTask(env: SheetEnv, id: string, key: string, iface?: 
         id, key, name, kind: sf ? 'subclassFeature' : 'classFeature',
         where: `${cls} ${level} 级${sub ? `（${sub.name}）` : ''}`,
         text: flattenEntries(hit.entries), classTable: p.classTable, resources: p.resources,
-        staticPart: staticPart(key), interface: iface,
+        ...staticOf(key), interface: iface,
       };
     }
     throw new Error(`找不到职业特性「${key}」`);
@@ -110,6 +118,6 @@ export async function buildTask(env: SheetEnv, id: string, key: string, iface?: 
   for (const r of abilities[key]?.resources || []) if (r.id) resources[r.id] = r.name;
   return {
     id, key, name, kind: feat ? 'feat' : 'optfeature', where: feat ? `专长${hit.category ? `（${hit.category}）` : ''}` : '可选特性',
-    text: flattenEntries(hit.entries), resources, staticPart: staticPart(key), interface: iface,
+    text: flattenEntries(hit.entries), resources, ...staticOf(key), interface: iface,
   };
 }

@@ -26,8 +26,10 @@ export interface Task {
   classTable?: Record<string, string | number>;
   /** 可以花的资源：id → 显示名 */
   resources?: Record<string, string>;
-  /** 静态层已经处理了的（人物卡那边的能力数据，给模型看，免得重复写） */
+  /** 静态层**真的**算了的（属性 / 豁免加值、授予、资源池）—— 动态层不要重复 */
   staticPart?: string[];
+  /** 静态层数据里的备注：只是说明文字，**没有任何效果** */
+  staticNotes?: string[];
   interface?: TaskInterface;
 }
 
@@ -77,7 +79,10 @@ export function renderTask(t: Task): string {
   const res = Object.entries(t.resources ?? {});
   lines.push(res.length ? res.map(([id, name]) => `- \`${id}\`：${name}`).join('\n') : '- 没有（法术用法术位，`cost: [{ slot: { min: … } }]`）');
   if (t.staticPart?.length) {
-    lines.push('', '## 人物卡（静态层）已经处理的，不要重复写', '', t.staticPart.map((x) => `- ${x}`).join('\n'));
+    lines.push('', '## 人物卡（静态层）已经算进去的，不要重复写', '', t.staticPart.map((x) => `- ${x}`).join('\n'));
+  }
+  if (t.staticNotes?.length) {
+    lines.push('', '## 人物卡数据里的备注（只是给人看的文字，**没有任何效果**；里面提到的战斗中的效果需要你写）', '', t.staticNotes.map((x) => `- ${x}`).join('\n'));
   }
   const ifc = t.interface;
   if (ifc && (ifc.actions?.length || ifc.effects?.length)) {

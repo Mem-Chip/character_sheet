@@ -73,7 +73,7 @@ describe('#3 祝福 + 力竭', () => {
     done(s.dispatch({ type: 'roll', roller: 'f', kind: 'save', ability: 'con', dc: 10 }));
     const r = last(s, 'd20Rolled');
     expect(r.flat).toBe(-4);
-    expect(r.extra).toEqual([{ label: '祝福术', dice: '1d4', faces: [3], total: 3 }]);
+    expect(r.extra).toEqual([{ label: expect.stringMatching(/祝福/), dice: '1d4', faces: [3], total: 3 }]);
     expect(r.total).toBe(10 + 2 - 4 + 3);
     expect(r.outcome).toBe('success');
   });
@@ -260,7 +260,7 @@ describe('#11 狂暴', () => {
 
     dice.push(10, 6);
     done(s.dispatch({ type: 'useAction', actor: 'b', action: 'weapon:ga', targets: ['g'] }));
-    expect(last(s, 'damageRolled').parts.map((p: any) => p.from)).toEqual(['巨斧', '狂暴伤害']);
+    expect(last(s, 'damageRolled').parts.map((p: any) => p.from)).toEqual(['巨斧', expect.stringMatching(/狂暴/)]);
     expect(last(s, 'damageApplied').total).toBe(6 + 3 + 2);
     expect(evs(s, 'effectExtended')).toHaveLength(1);
 

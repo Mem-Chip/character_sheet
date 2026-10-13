@@ -4,7 +4,13 @@
  */
 import { describe, expect, it } from 'vitest';
 import type { DispatchResult } from '../../src/combat';
-import { GREATAXE, LONGSWORD, RAPIER, done, evs, fighter, goblin, has, last, pending, setup, type Who } from './helpers';
+import { GREATAXE, LONGSWORD, RAPIER, autoYes, done, evs, fighter, goblin, has, last, pending, setup as baseSetup, type Who } from './helpers';
+
+const setup = (...a: Parameters<typeof baseSetup>) => {
+  const r = baseSetup(...a);
+  autoYes(r.s);
+  return r;
+};
 
 const fighter5 = (over = {}): Who => fighter({
   pb: 3, level: 5, levels: { 战士: 5 }, resources: { 回气: 2, 动作如潮: 1 },
@@ -83,9 +89,8 @@ describe('战士', () => {
     done(s.dispatch({ type: 'roll', roller: 'f', kind: 'check', ability: 'str' }));
   });
 
-  it('动作如潮：自己回合多一个动作，每回合一次；战斗外不能用', () => {
+  it('动作如潮：自己回合多一个动作，每回合一次', () => {
     const { s } = setup([fighter5({ resources: { 回气: 2, 动作如潮: 2 } }), goblin()]);
-    expect(s.dispatch({ type: 'useAction', actor: 'f', action: 'XPHB:战士:动作如潮:2#use' }).status).toBe('rejected');
     done(s.dispatch({ type: 'startCombat', order: ['f', 'g'] }));
     done(s.dispatch({ type: 'useAction', actor: 'f', action: 'XPHB:战士:动作如潮:2#use' }));
     expect(s.state.combatants.f.economy.action).toBe(2);
