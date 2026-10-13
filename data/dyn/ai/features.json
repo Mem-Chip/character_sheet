@@ -1,5 +1,1247 @@
 {
  "version": 1,
  "note": "数据化工厂生成（Claude 子代理），经过检查和战斗试算，但**没有人审过**。键不与手写数据重复；手写数据优先。",
- "entries": {}
+ "entries": {
+  "XPHB:伏击": {
+   "name": "伏击",
+   "automation": "full",
+   "text": "敏捷（隐匿）检定或先攻骰时，可以消耗一枚卓越骰加到骰上（失能时不可用）。",
+   "triggers": [
+    {
+     "id": "ambush",
+     "label": "伏击：加卓越骰",
+     "on": "d20Rolled",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "when": "!self.has('失能') && ((roll.kind == 'check' && roll.ability == 'dex' && roll.skill == '隐匿') || roll.kind == 'initiative' || roll.sub == 'initiative')",
+     "cost": [
+      {
+       "resource": "卓越骰"
+      }
+     ],
+     "modify": [
+      {
+       "op": "addToRoll",
+       "value": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:诡诈攻击": {
+   "name": "诡诈攻击",
+   "automation": "full",
+   "text": "附赠动作：消耗卓越骰，对 5 尺内一个生物虚晃一招。本回合你对该生物的下一次攻击检定具有优势；若该攻击命中，伤害加上卓越骰。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "诡诈攻击",
+     "activation": "bonus",
+     "requires": "turn.isMine && !self.hasEffect('诡诈攻击')",
+     "cost": [
+      {
+       "resource": "卓越骰"
+      }
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 5,
+      "filter": "target.id != self.id"
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "诡诈攻击",
+       "state": {
+        "mark": "target",
+        "die": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))"
+       }
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "诡诈攻击": {
+     "text": "本回合对所虚晃的生物的下一次攻击检定具有优势，命中时伤害加卓越骰；这次攻击结算后消失。",
+     "rollMods": [
+      {
+       "on": {
+        "kind": "attack"
+       },
+       "who": "bearer",
+       "when": "target.id == effect.state.mark",
+       "op": "adv",
+       "label": "诡诈攻击"
+      }
+     ],
+     "triggers": [
+      {
+       "id": "hit",
+       "label": "诡诈攻击：命中加卓越骰伤害",
+       "on": "attackHit",
+       "role": "actor",
+       "window": "before",
+       "when": "target.id == effect.state.mark",
+       "do": [
+        {
+         "kind": "addDamage",
+         "dice": "effect.state.die",
+         "type": "attack.damageType"
+        },
+        {
+         "kind": "removeEffect",
+         "match": {
+          "name": "诡诈攻击"
+         },
+         "from": "self"
+        }
+       ]
+      },
+      {
+       "id": "miss",
+       "label": "诡诈攻击：未命中",
+       "on": "attackMissed",
+       "role": "actor",
+       "window": "after",
+       "when": "target.id == effect.state.mark",
+       "do": [
+        {
+         "kind": "removeEffect",
+         "match": {
+          "name": "诡诈攻击"
+         },
+         "from": "self"
+        }
+       ]
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      }
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:换位诈术": {
+   "name": "换位诈术",
+   "automation": "partial",
+   "text": "互换位置本身（目标自愿、不失能、不引发借机攻击）由人处理；卓越骰的点数请玩家掷骰后填入，AC 加值直到你的下个回合开始前。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "换位诈术",
+     "activation": "free",
+     "requires": "turn.isMine",
+     "cost": [
+      {
+       "resource": "卓越骰"
+      },
+      {
+       "economy": "move",
+       "n": 5
+      }
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 5,
+      "filter": "target.id != self.id && !target.has('失能')"
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "与目标互换位置（目标须自愿；这次移动不引发借机攻击）"
+      },
+      {
+       "kind": "number",
+       "prompt": "换位诈术：投掷被消耗的卓越骰（d8 / d10 / d12），填入结果",
+       "var": "r",
+       "min": 1,
+       "max": "cond(self.levelOf('战士') >= 18, 12, cond(self.levelOf('战士') >= 10, 10, 8))"
+      },
+      {
+       "kind": "choose",
+       "prompt": "换位诈术：谁获得 AC 加值？",
+       "options": [
+        {
+         "label": "你自己",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "self",
+           "template": "换位诈术",
+           "state": {
+            "bonus": "vars.r"
+           }
+          }
+         ]
+        },
+        {
+         "label": "被换位的生物",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "换位诈术",
+           "state": {
+            "bonus": "vars.r"
+           }
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "换位诈术": {
+     "text": "AC 获得等于卓越骰结果的加值，直到施加者的下个回合开始前。",
+     "statics": [
+      {
+       "kind": "ac",
+       "bonus": "effect.state.bonus"
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "source",
+       "nth": 1
+      }
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:缴械攻击": {
+   "name": "缴械攻击",
+   "automation": "full",
+   "text": "攻击命中时消耗一枚卓越骰：加到伤害上，目标须通过力量豁免，否则丢下一件你选择的手持物品（掉落在其所在空间，物品掉落由人处理）。",
+   "triggers": [
+    {
+     "id": "disarm",
+     "label": "缴械攻击",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "cost": [
+      {
+       "resource": "卓越骰"
+      }
+     ],
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))",
+       "type": "attack.damageType"
+      },
+      {
+       "kind": "save",
+       "ability": "str",
+       "dc": "8 + self.pb + max(self.mod.str, self.mod.dex)",
+       "onFail": [
+        {
+         "kind": "note",
+         "text": "缴械攻击：目标丢下一件由你选择的手持物品，掉落在其所在的空间"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:恐吓攻击": {
+   "name": "恐吓攻击",
+   "automation": "full",
+   "text": "攻击命中时消耗一枚卓越骰：加到伤害上，目标须通过感知豁免，否则陷入恐慌状态，直到你的下个回合结束。",
+   "triggers": [
+    {
+     "id": "menace",
+     "label": "恐吓攻击",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "cost": [
+      {
+       "resource": "卓越骰"
+      }
+     ],
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))",
+       "type": "attack.damageType"
+      },
+      {
+       "kind": "save",
+       "ability": "wis",
+       "dc": "8 + self.pb + max(self.mod.str, self.mod.dex)",
+       "onFail": [
+        {
+         "kind": "applyEffect",
+         "to": "target",
+         "template": "XPHB:condition:恐慌",
+         "duration": {
+          "until": {
+           "at": "turnEnd",
+           "of": "source",
+           "nth": 1
+          }
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:灵动攻击": {
+   "name": "灵动攻击",
+   "automation": "partial",
+   "text": "攻击命中时消耗一枚卓越骰：加到伤害上（自动）。指定一名能看见或听到你的自愿生物，用其反应移动至多其速度的一半、且不会引发被攻击目标的借机攻击——这一步由人处理。",
+   "triggers": [
+    {
+     "id": "maneuver",
+     "label": "灵动攻击",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "cost": [
+      {
+       "resource": "卓越骰"
+      }
+     ],
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))",
+       "type": "attack.damageType"
+      },
+      {
+       "kind": "note",
+       "text": "灵动攻击：指定一名能看见或听到你的自愿生物，它可以用反应移动至多其速度一半的距离，这次移动不会引发被你攻击的目标的借机攻击（请手动处理）"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:灵巧步法": {
+   "name": "灵巧步法",
+   "automation": "partial",
+   "text": "附赠动作：消耗卓越骰并执行撤离，AC 加值直到你的下个回合开始前。卓越骰的点数请玩家掷骰后填入。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "灵巧步法",
+     "activation": "bonus",
+     "requires": "turn.isMine",
+     "cost": [
+      {
+       "resource": "卓越骰"
+      }
+     ],
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "XPHB:action:撤离#撤离"
+      },
+      {
+       "kind": "number",
+       "prompt": "灵巧步法：投掷被消耗的卓越骰（d8 / d10 / d12），填入结果",
+       "var": "r",
+       "min": 1,
+       "max": "cond(self.levelOf('战士') >= 18, 12, cond(self.levelOf('战士') >= 10, 10, 8))"
+      },
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "灵巧步法",
+       "state": {
+        "bonus": "vars.r"
+       }
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "灵巧步法": {
+     "text": "AC 获得等于卓越骰结果的加值，直到你的下个回合开始前。",
+     "statics": [
+      {
+       "kind": "ac",
+       "bonus": "effect.state.bonus"
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "bearer",
+       "nth": 1
+      }
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:领导风范": {
+   "name": "领导风范",
+   "automation": "full",
+   "text": "魅力（威吓、表演或游说）检定时，可以消耗一枚卓越骰加到检定上。",
+   "triggers": [
+    {
+     "id": "leadership",
+     "label": "领导风范：加卓越骰",
+     "on": "d20Rolled",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "when": "roll.kind == 'check' && roll.ability == 'cha' && (roll.skill == '威吓' || roll.skill == '表演' || roll.skill == '游说')",
+     "cost": [
+      {
+       "resource": "卓越骰"
+      }
+     ],
+     "modify": [
+      {
+       "op": "addToRoll",
+       "value": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:扰乱打击": {
+   "name": "扰乱打击",
+   "automation": "full",
+   "text": "攻击命中时消耗一枚卓越骰：加到伤害上；直到你的下个回合开始前，除你之外的生物对目标的下一次攻击检定具有优势。",
+   "triggers": [
+    {
+     "id": "distract",
+     "label": "扰乱打击",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "cost": [
+      {
+       "resource": "卓越骰"
+      }
+     ],
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))",
+       "type": "attack.damageType"
+      },
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "扰乱打击"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "扰乱打击": {
+     "text": "除施加者之外的生物对该目标的下一次攻击检定具有优势；施加者的下个回合开始时消失。",
+     "rollMods": [
+      {
+       "on": {
+        "kind": "attack"
+       },
+       "who": "against",
+       "when": "source != null && attacker.id != source.id",
+       "op": "adv",
+       "label": "扰乱打击"
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "source",
+       "nth": 1
+      },
+      "endsOn": [
+       {
+        "event": "d20Rolled",
+        "when": "event.kind == 'attack' && event.target == self.id && source != null && event.roller != source.id"
+       }
+      ]
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:挑衅攻击": {
+   "name": "挑衅攻击",
+   "automation": "full",
+   "text": "攻击命中时消耗一枚卓越骰：加到伤害上，目标须通过感知豁免，否则在你的下个回合结束前，对除你之外的生物进行的攻击检定具有劣势。",
+   "triggers": [
+    {
+     "id": "goad",
+     "label": "挑衅攻击",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "cost": [
+      {
+       "resource": "卓越骰"
+      }
+     ],
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))",
+       "type": "attack.damageType"
+      },
+      {
+       "kind": "save",
+       "ability": "wis",
+       "dc": "8 + self.pb + max(self.mod.str, self.mod.dex)",
+       "onFail": [
+        {
+         "kind": "applyEffect",
+         "to": "target",
+         "template": "挑衅攻击"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "挑衅攻击": {
+     "text": "对除施加者之外的生物进行的攻击检定具有劣势，直到施加者的下个回合结束。",
+     "rollMods": [
+      {
+       "on": {
+        "kind": "attack"
+       },
+       "who": "bearer",
+       "when": "source != null && target.id != source.id",
+       "op": "disadv",
+       "label": "挑衅攻击：攻击他人具有劣势"
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "source",
+       "nth": 1
+      }
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:突刺攻击": {
+   "name": "突刺攻击",
+   "automation": "full",
+   "text": "附赠动作：消耗卓越骰并执行疾走。本回合直线移动至少 5 尺后，紧接着以攻击动作中的一次近战攻击命中时，可以把卓越骰加到伤害上。是否满足「直线移动 ≥5 尺且紧接着攻击」由玩家判断（命中时会询问）。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "突刺攻击",
+     "activation": "bonus",
+     "requires": "turn.isMine && !self.hasEffect('突刺攻击')",
+     "cost": [
+      {
+       "resource": "卓越骰"
+      }
+     ],
+     "root": [
+      {
+       "kind": "economy",
+       "move": "self.speed"
+      },
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "突刺攻击",
+       "state": {
+        "die": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))"
+       }
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "突刺攻击": {
+     "text": "本回合直线移动至少 5 尺后，近战攻击命中时可以把卓越骰加到伤害上；用掉即消失。",
+     "triggers": [
+      {
+       "id": "lunge",
+       "label": "突刺攻击：直线移动 5 尺以上后近战命中，加卓越骰伤害",
+       "on": "attackHit",
+       "role": "actor",
+       "window": "before",
+       "optional": true,
+       "when": "attack.melee",
+       "do": [
+        {
+         "kind": "addDamage",
+         "dice": "effect.state.die",
+         "type": "attack.damageType"
+        },
+        {
+         "kind": "removeEffect",
+         "match": {
+          "name": "突刺攻击"
+         },
+         "from": "self"
+        }
+       ]
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      }
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:野蛮人:不屈勇武:18": {
+   "name": "不屈勇武",
+   "automation": "full",
+   "text": "力量检定或力量豁免的总值低于力量属性值时，可以用力量属性值代替总值。只在检定会失败且力量值更高时才询问。",
+   "triggers": [
+    {
+     "id": "indomitable",
+     "label": "不屈勇武：以力量值代替检定总值",
+     "on": "d20Rolled",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "when": "(roll.kind == 'check' || roll.kind == 'save') && roll.ability == 'str' && roll.failing && roll.total < self.score.str",
+     "modify": [
+      {
+       "op": "addToRoll",
+       "value": "self.score.str - roll.total"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:野蛮人:持久狂暴:15": {
+   "name": "持久狂暴",
+   "automation": "partial",
+   "text": "投掷先攻时可以重获所有已用的狂暴次数（长休前只能一次）。狂暴持续 10 分钟：每个回合开始时自动延长。尚未实现的部分：持久狂暴只在昏迷或穿重甲时提前结束，而狂暴效应本身在失能时就会结束，这一点需要人处理。",
+   "triggers": [
+    {
+     "id": "regain",
+     "label": "持久狂暴：先攻时重获全部狂暴次数",
+     "on": "initiativeRolled",
+     "role": "actor",
+     "window": "after",
+     "optional": true,
+     "when": "self.resource('狂暴') < classTable('狂暴次数')",
+     "cost": [
+      {
+       "resource": "持久狂暴"
+      }
+     ],
+     "do": [
+      {
+       "kind": "resource",
+       "id": "狂暴",
+       "delta": "classTable('狂暴次数') - self.resource('狂暴')"
+      }
+     ]
+    },
+    {
+     "id": "extend",
+     "label": "持久狂暴：自动延长狂暴",
+     "on": "turnStarted",
+     "role": "actor",
+     "window": "after",
+     "when": "self.hasEffect('狂暴')",
+     "do": [
+      {
+       "kind": "extendEffect",
+       "template": "XPHB:野蛮人:狂暴:1#狂暴"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:野蛮人:坚韧狂暴:11": {
+   "name": "坚韧狂暴",
+   "automation": "partial",
+   "text": "狂暴期间生命值降至 0 且没有当场死亡时，可以进行 DC 10 的体质豁免，成功则生命值变为野蛮人等级的两倍。第一次之后每多用一次 DC +5，短休或长休后重置为 10。豁免和 DC 累加由人处理：引擎会问「豁免是否成功」，成功则把生命值设为等级的两倍，失败则照常降到 0。",
+   "triggers": [
+    {
+     "id": "relentless",
+     "label": "坚韧狂暴：体质豁免 DC 10（每多用一次 +5）",
+     "on": "reducedTo0",
+     "role": "target",
+     "window": "before",
+     "optional": true,
+     "when": "self.hasEffect('狂暴') && damage.amount - self.hp - self.tempHp < self.hpMax",
+     "modify": [
+      {
+       "op": "setHp",
+       "value": "cond(ask('坚韧狂暴：体质豁免成功了吗？（DC 10，上次休息之后每多用过一次 +5）'), 2 * self.levelOf('野蛮人'), 0)"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:野蛮人:莽驰:7": {
+   "name": "莽驰",
+   "automation": "partial",
+   "text": "进入狂暴的附赠动作的一部分：可以移动至多一半速度。引擎无法把它挂在「进入狂暴」那个动作上，所以做成一个免费动作，只应在刚进入狂暴时使用（由人判断），每回合至多一次。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "莽驰",
+     "activation": "free",
+     "text": "只能作为进入狂暴的那个附赠动作的一部分使用（由人判断）：移动至多一半速度。",
+     "requires": "turn.isMine && self.hasEffect('狂暴') && !self.hasEffect('莽驰')",
+     "root": [
+      {
+       "kind": "economy",
+       "move": "floor(self.speed / 2)"
+      },
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "莽驰"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "莽驰": {
+     "text": "本回合已经用过莽驰。",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      }
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:野蛮人:凶蛮打击:9": {
+   "name": "凶蛮打击",
+   "automation": "partial",
+   "text": "用了鲁莽攻击之后，本回合可以放弃一次力量攻击的优势：命中时额外 1d10（17 级起 2d10）伤害，类型与此次攻击相同，并附带一种凶蛮打击效应（13 级起多出震撼猛击、破势猛击；17 级起可同时选两种不同的效应，强化凶蛮打击 13 / 17 级的内容都已按等级并在这里）。做法：宣告后，本回合第一次力量攻击会被加上一个劣势来抵消优势（有优势又有劣势则平掷）；命中则加伤害并选效应，未命中也算用掉。需要人处理：不能选已经具有劣势的攻击；巨力猛击之后的靠近移动；震撼猛击的「不能借机攻击」。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "凶蛮打击",
+     "activation": "free",
+     "text": "在发动那次力量攻击之前宣告（需要本回合已使用鲁莽攻击，每回合一次）：这次攻击放弃优势。不能选已具有劣势的攻击（由人判断）。",
+     "requires": "turn.isMine && self.hasEffect('鲁莽攻击') && !self.hasEffect('凶蛮打击')",
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "凶蛮打击"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "凶蛮打击": {
+     "text": "本回合第一次力量攻击放弃优势；命中时 +1d10 伤害并附带一种凶蛮打击效应。",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      }
+     },
+     "rollMods": [
+      {
+       "on": {
+        "kind": "attack"
+       },
+       "who": "bearer",
+       "when": "attack.ability == 'str' && !self.hasEffect('凶蛮打击：已选')",
+       "op": "disadv",
+       "label": "凶蛮打击：放弃优势"
+      }
+     ],
+     "triggers": [
+      {
+       "id": "pick",
+       "label": "凶蛮打击：选定这次攻击",
+       "on": "d20Rolled",
+       "role": "actor",
+       "window": "before",
+       "when": "roll.kind == 'attack' && attack.ability == 'str' && !self.hasEffect('凶蛮打击：已选')",
+       "do": [
+        {
+         "kind": "applyEffect",
+         "to": "self",
+         "template": "凶蛮打击：已选"
+        }
+       ]
+      },
+      {
+       "id": "hit",
+       "label": "凶蛮打击：额外伤害与效应",
+       "on": "attackHit",
+       "role": "actor",
+       "window": "before",
+       "when": "attack.ability == 'str' && self.hasEffect('凶蛮打击：已选') && !self.hasEffect('凶蛮打击：已结算')",
+       "do": [
+        {
+         "kind": "addDamage",
+         "dice": "(1 + floor(self.levelOf('野蛮人') / 17))d10",
+         "type": "attack.damageType"
+        },
+        {
+         "kind": "applyEffect",
+         "to": "self",
+         "template": "凶蛮打击：已结算"
+        },
+        {
+         "kind": "if",
+         "when": "self.levelOf('野蛮人') >= 17",
+         "then": [
+          {
+           "kind": "choose",
+           "prompt": "凶蛮打击：选两种不同的效应",
+           "count": 2,
+           "options": [
+            {
+             "label": "巨力猛击：将目标直线推离 15 尺",
+             "do": [
+              {
+               "kind": "move",
+               "mode": "push",
+               "ft": 15
+              },
+              {
+               "kind": "note",
+               "text": "巨力猛击：随后可以立刻向目标移动至多一半速度，且不引发借机攻击（移动由人处理）"
+              }
+             ]
+            },
+            {
+             "label": "断筋猛击：目标速度 -15 尺",
+             "do": [
+              {
+               "kind": "applyEffect",
+               "to": "target",
+               "template": "断筋猛击"
+              }
+             ]
+            },
+            {
+             "label": "震撼猛击：目标下一次豁免具有劣势，且不能借机攻击",
+             "when": "self.levelOf('野蛮人') >= 13",
+             "do": [
+              {
+               "kind": "applyEffect",
+               "to": "target",
+               "template": "震撼猛击"
+              }
+             ]
+            },
+            {
+             "label": "破势猛击：他人对目标的下一次攻击检定 +5",
+             "when": "self.levelOf('野蛮人') >= 13",
+             "do": [
+              {
+               "kind": "applyEffect",
+               "to": "target",
+               "template": "破势猛击"
+              }
+             ]
+            }
+           ]
+          }
+         ],
+         "else": [
+          {
+           "kind": "choose",
+           "prompt": "凶蛮打击：选一种效应",
+           "count": 1,
+           "options": [
+            {
+             "label": "巨力猛击：将目标直线推离 15 尺",
+             "do": [
+              {
+               "kind": "move",
+               "mode": "push",
+               "ft": 15
+              },
+              {
+               "kind": "note",
+               "text": "巨力猛击：随后可以立刻向目标移动至多一半速度，且不引发借机攻击（移动由人处理）"
+              }
+             ]
+            },
+            {
+             "label": "断筋猛击：目标速度 -15 尺",
+             "do": [
+              {
+               "kind": "applyEffect",
+               "to": "target",
+               "template": "断筋猛击"
+              }
+             ]
+            },
+            {
+             "label": "震撼猛击：目标下一次豁免具有劣势，且不能借机攻击",
+             "when": "self.levelOf('野蛮人') >= 13",
+             "do": [
+              {
+               "kind": "applyEffect",
+               "to": "target",
+               "template": "震撼猛击"
+              }
+             ]
+            },
+            {
+             "label": "破势猛击：他人对目标的下一次攻击检定 +5",
+             "when": "self.levelOf('野蛮人') >= 13",
+             "do": [
+              {
+               "kind": "applyEffect",
+               "to": "target",
+               "template": "破势猛击"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "id": "miss",
+       "label": "凶蛮打击：这次攻击未命中",
+       "on": "attackMissed",
+       "role": "actor",
+       "window": "after",
+       "when": "attack.ability == 'str' && self.hasEffect('凶蛮打击：已选') && !self.hasEffect('凶蛮打击：已结算')",
+       "do": [
+        {
+         "kind": "applyEffect",
+         "to": "self",
+         "template": "凶蛮打击：已结算"
+        }
+       ]
+      }
+     ]
+    },
+    "凶蛮打击：已选": {
+     "text": "凶蛮打击已经落在本回合的某次力量攻击上。",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      }
+     }
+    },
+    "凶蛮打击：已结算": {
+     "text": "凶蛮打击的那次攻击已经结算，本回合不能再触发。",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      }
+     }
+    },
+    "断筋猛击": {
+     "stackKey": "断筋猛击",
+     "text": "断筋猛击：速度 -15 尺，直到施加者的下个回合开始；同一时间只受最近一次断筋猛击影响。",
+     "statics": [
+      {
+       "kind": "speed",
+       "bonus": -15
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "source",
+       "nth": 1
+      }
+     }
+    },
+    "震撼猛击": {
+     "text": "震撼猛击：下一次豁免具有劣势；直到施加者的下个回合开始都不能发动借机攻击（借机攻击由人处理）。",
+     "rollMods": [
+      {
+       "on": {
+        "kind": "save"
+       },
+       "who": "bearer",
+       "op": "disadv",
+       "label": "震撼猛击：下一次豁免具有劣势"
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "source",
+       "nth": 1
+      },
+      "endsOn": [
+       {
+        "event": "d20Rolled",
+        "when": "event.kind == 'save' && event.roller == self.id"
+       }
+      ]
+     }
+    },
+    "破势猛击": {
+     "stackKey": "破势猛击",
+     "text": "破势猛击：直到施加者的下个回合开始，下一次由其他生物对其进行的攻击检定 +5；一次攻击只能吃到一次破势猛击。",
+     "rollMods": [
+      {
+       "on": {
+        "kind": "attack"
+       },
+       "who": "against",
+       "when": "source != null && attacker.id != source.id",
+       "op": "add",
+       "value": 5,
+       "label": "破势猛击：攻击检定 +5"
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "source",
+       "nth": 1
+      },
+      "endsOn": [
+       {
+        "event": "d20Rolled",
+        "when": "event.kind == 'attack' && event.target == self.id && source != null && event.roller != source.id"
+       }
+      ]
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:野蛮人:野性直觉:7": {
+   "name": "野性直觉",
+   "automation": "full",
+   "rollMods": [
+    {
+     "on": {
+      "kind": "initiative"
+     },
+     "who": "bearer",
+     "op": "adv",
+     "label": "野性直觉：先攻具有优势"
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:野蛮人:原初学识:3": {
+   "name": "原初学识",
+   "automation": "full",
+   "text": "狂暴期间，体操 / 威吓 / 察觉 / 隐匿 / 求生的属性检定可以改用力量。按「加上力量调整值与原属性调整值之差（不为负）」实现，熟练照常；额外的技能熟练已在人物卡里。",
+   "rollMods": [
+    {
+     "on": {
+      "kind": "check",
+      "skill": [
+       "体操",
+       "威吓",
+       "察觉",
+       "隐匿",
+       "求生"
+      ]
+     },
+     "who": "bearer",
+     "when": "self.hasEffect('狂暴')",
+     "op": "add",
+     "value": "max(0, self.mod.str - abilityMod(roll.ability))",
+     "label": "原初学识：改用力量"
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:指挥官奇袭": {
+   "name": "指挥官奇袭",
+   "automation": "partial",
+   "text": "替换一次攻击、消耗卓越骰、给所选伙伴挂上「命中时加卓越骰伤害」；伙伴用反应发动攻击并扣除其反应由人处理。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "指挥官奇袭",
+     "activation": "none",
+     "requires": "turn.isMine",
+     "cost": [
+      {
+       "economy": "attack"
+      },
+      {
+       "resource": "卓越骰"
+      }
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "filter": "target.id != self.id && target.isAllyOf(self)"
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "指挥官奇袭",
+       "state": {
+        "die": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))"
+       }
+      },
+      {
+       "kind": "note",
+       "text": "指挥官奇袭：所选伙伴（须能看见或听到你）立即用其反应发动一次武器攻击或徒手打击（反应请手动扣除）；命中时自动加上卓越骰伤害"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "指挥官奇袭": {
+     "text": "你的反应攻击命中时，伤害加上指挥者消耗的卓越骰；攻击后或指挥者的回合结束时消失。",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "source",
+       "nth": 0
+      }
+     },
+     "triggers": [
+      {
+       "id": "hit",
+       "label": "指挥官奇袭：命中加卓越骰伤害",
+       "on": "attackHit",
+       "role": "actor",
+       "window": "before",
+       "when": "attack.weapon || attack.unarmed",
+       "do": [
+        {
+         "kind": "addDamage",
+         "dice": "effect.state.die",
+         "type": "attack.damageType"
+        },
+        {
+         "kind": "removeEffect",
+         "match": {
+          "name": "指挥官奇袭"
+         },
+         "from": "self"
+        }
+       ]
+      },
+      {
+       "id": "miss",
+       "label": "指挥官奇袭：未命中",
+       "on": "attackMissed",
+       "role": "actor",
+       "window": "after",
+       "when": "attack.weapon || attack.unarmed",
+       "do": [
+        {
+         "kind": "removeEffect",
+         "match": {
+          "name": "指挥官奇袭"
+         },
+         "from": "self"
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  }
+ }
 }
