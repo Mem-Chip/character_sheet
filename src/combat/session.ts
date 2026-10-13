@@ -1,12 +1,12 @@
 import { ABIL_CN } from '../expr';
-import { applyDamagePacket } from './damage';
+import { applyDamagePacket, applyHeal, grantTempHp } from './damage';
 import { d20Test } from './d20';
 import { applyEffect, checkEndsOn, effectiveView, endConcentration, endEffect } from './effects';
 import { Dice } from '../expr';
 import { executeAction, findAction } from './exec';
 import { advanceTime, nextTurn, rest, startCombat } from './turns';
 import { NeedDecision, Rejected, Tx, setPostEmit, type EngineCtx, type TapeEntry, type TxInput } from './tx';
-import type { CombatantView, Command, Decision, EncounterState, GameEvent, OverridePatch, Settings, UserId } from './types';
+import type { Action, CombatantView, Command, Decision, EncounterState, GameEvent, OverridePatch, Settings, UserId } from './types';
 
 setPostEmit(checkEndsOn);
 
@@ -134,6 +134,42 @@ function handle(tx: Tx, cmd: Command): void {
       }, seq);
       return;
     }
+    case 'heal': {
+      if (!tx.state.combatants[cmd.id]) throw new Rejected(`没有参与者 ${cmd.id}`);
+      const seq = tx.emit('manualOverride', { what: 'heal', id: cmd.id, amount: cmd.amount });
+      applyHeal(tx, cmd.id, cmd.amount, '手动治疗', seq);
+      return;
+    }
+    case 'tempHp': {
+      if (!tx.state.combatants[cmd.id]) throw new Rejected(`没有参与者 ${cmd.id}`);
+      const seq = tx.emit('manualOverride', { what: 'tempHp', id: cmd.id, amount: cmd.amount });
+      grantTempHp(tx, cmd.id, cmd.amount, '手动', seq);
+      return;
+    }
+    case 'manualCast': {
+      const action: Action = {
+        id: 'manual', name: cmd.spell, activation: cmd.activation ?? 'none',
+        cost: cmd.slotLevel ? [{ slot: { min: cmd.slotLevel, max: cmd.slotLevel } }] : [],
+        concentration: cmd.concentration ? { manual: true } : undefined,
+        root: [{ kind: 'note', text: `「${cmd.spell}」还没有自动化数据，效果请手动处理` }],
+        tags: ['spell', 'manual'],
+      };
+      executeAction(tx, {
+        actor: cmd.actor, actionKey: `XPHB:spell:${cmd.spell}#manual`, action, targets: cmd.targets ?? [],
+        slotLevel: cmd.slotLevel, force: cmd.force, cause: null,
+      });
+      return;
+    }
+    case 'setUsage': {
+      if (!tx.state.combatants[cmd.id]) throw new Rejected(`没有参与者 ${cmd.id}`);
+      const v = effectiveView(tx, cmd.id);
+      const max = cmd.slot !== undefined ? v.slots[cmd.slot] ?? 0 : cmd.resource ? v.resources[cmd.resource] ?? 0 : 0;
+      const used = Math.max(0, Math.min(max, cmd.used));
+      const seq = tx.emit('manualOverride', { what: 'usage', id: cmd.id, resource: cmd.resource ?? null, slot: cmd.slot ?? null, used });
+      if (cmd.slot !== undefined) tx.emit('slotUsed', { id: cmd.id, level: cmd.slot, used }, seq);
+      else if (cmd.resource) tx.emit('resourceUsed', { id: cmd.id, resource: cmd.resource, used }, seq);
+      return;
+    }
     case 'endConcentration':
       endConcentration(tx, cmd.id, '主动终止', null);
       return;
@@ -157,6 +193,12 @@ export type DispatchResult =
 interface TxRecord {
   input: TxInput;
   events: GameEvent[];
+}
+
+export interface SessionSave {
+  base: EncounterState;
+  inputs: TxInput[];
+  pending: TxInput | null;
 }
 
 export class Session {
@@ -215,6 +257,23 @@ export class Session {
     }
     this.pending = null;
     return this.run(input);
+  }
+
+  /** 存档：起点 + 每笔事务的输入（命令、骰面磁带、回答、裁定）+ 等待中的那笔 */
+  save(): SessionSave {
+    return {
+      base: structuredClone(this.base),
+      inputs: this.txs.map((t) => structuredClone(t.input)),
+      pending: this.pending ? structuredClone(this.pending.input) : null,
+    };
+  }
+
+  /** 读档：从存档的起点把事务重跑一遍（磁带里有骰面，结果和存档时一样） */
+  static restore(save: SessionSave, ctx: EngineCtx): Session {
+    const s = new Session(save.base, ctx);
+    s.rebuild(save.inputs);
+    if (save.pending && !s.pending) s.run(save.pending);
+    return s;
   }
 
   /** 放弃等待中的事务（什么都没发生过） */

@@ -61,9 +61,9 @@ export const Source = {
 };
 
 /** 子职显示名：非核心来源标出书名（不是「旧版」—— 旧版在加载阶段就被排除了） */
-export function subclassLabel(s: { name: string; source?: string } | null | undefined): string {
+export function subclassLabel(s: { name: string; source?: unknown } | null | undefined): string {
   if (!s) return '';
-  return s.name + (Source.isCore2024(s) ? '' : `（${s.source}）`);
+  return s.name + (Source.isCore2024(s) ? '' : `（${String(s.source)}）`);
 }
 
 /** 子职候选表的统一过滤 + 排序（建卡页 / 能力选择页 / 升级预览都用它） */

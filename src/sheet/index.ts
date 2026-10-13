@@ -9,3 +9,4 @@ export { Resources, Rest } from './resources';
 export { MasteryRules, SoftLimits, WildShape, Unlocks, classSkillBudget, spellbookMax, numOf } from './class-state';
 export { normalizeSheet, normalizeValue } from './normalize';
 export * from './constants';
+export { choiceOptions, decisionValue, classSpells, spellInClassList, spellSourcesReady, abilitySummary, pointBuyCost, STANDARD_ARRAY, backgroundBonusFrom, backgroundOriginFeat, type PoolOption, type PoolResult } from './pools';

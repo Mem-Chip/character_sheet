@@ -3,6 +3,7 @@
  * 骰面全部预先写好：多掷一颗或少掷一颗都会让测试失败 —— 那本身就是规则 bug。
  */
 import { describe, expect, it } from 'vitest';
+import { Session } from '../../src/combat';
 import { barbarian, cleric, done, effectNames, evs, fighter, goblin, has, last, pending, rogue, setup, wizard } from './helpers';
 
 describe('#1 倒地：5 尺内优势，5 尺外劣势', () => {
@@ -345,5 +346,62 @@ describe('#15 DM 事后裁定：火球术里改一个目标的豁免', () => {
     expect(s.state.combatants.g2.live.hp).toBe(26);
     expect(evs(s, 'd20Rolled')[0].overridden).toBe('躲到了掩体后');
     expect(dice.left()).toBe(0);   // 没有掷新骰子
+  });
+});
+
+describe('#16 存档与读档', () => {
+  it('读档重跑出同样的状态；等待中的实体骰决定也接得上', () => {
+    const { s, dice } = setup([fighter(), goblin('g', { hpMax: 30 })], { physical: ['f'] });
+    dice.push(14, 4);
+    done(s.dispatch({ type: 'useAction', actor: 'g', action: 'weapon:sc', targets: ['f'] }));
+    const d = pending(s.dispatch({ type: 'useAction', actor: 'f', action: 'weapon:ls', targets: ['g'] }));
+    expect(d.kind).toBe('physicalDice');
+
+    const saved = JSON.parse(JSON.stringify(s.save()));
+    const r = Session.restore(saved, s.ctx);
+    expect(r.state).toEqual(s.state);
+    expect(r.pending?.decision).toEqual(d);
+    expect(dice.left()).toBe(0);   // 读档没有重掷
+
+    pending(r.decide([[15]]));
+    done(r.decide([[6]]));
+    expect(r.state.combatants.g.live.hp).toBe(30 - (6 + 3));
+    expect(r.state.combatants.f.live.hp).toBe(30 - (4 + 2));
+  });
+});
+
+describe('#17 手动治疗', () => {
+  it('和法术治疗一样把 0 生命值的角色救起来；临时生命值取高', () => {
+    const { s } = setup([fighter()]);
+    done(s.dispatch({ type: 'damage', id: 'f', amount: 30, damageType: '钝击' }));
+    expect(has(s, 'f', '昏迷')).toBe(true);
+    done(s.dispatch({ type: 'heal', id: 'f', amount: 5 }));
+    expect(s.state.combatants.f.live.hp).toBe(5);
+    expect(has(s, 'f', '昏迷')).toBe(false);
+    done(s.dispatch({ type: 'tempHp', id: 'f', amount: 4 }));
+    done(s.dispatch({ type: 'tempHp', id: 'f', amount: 2 }));
+    expect(s.state.combatants.f.live.tempHp).toBe(4);
+  });
+});
+
+describe('#18 没有动态数据的法术：手动施放', () => {
+  it('照样付法术位和动作、开专注、一回合一个法术位；次数可以手动改', () => {
+    const { s } = setup([wizard({ slots: { 1: 2, 2: 2 } }), goblin('g')]);
+    done(s.dispatch({ type: 'startCombat', order: ['w', 'g'] }));
+    done(s.dispatch({ type: 'manualCast', actor: 'w', spell: '朦胧步', slotLevel: 2, activation: 'bonus' }));
+    const w = s.state.combatants.w;
+    expect(w.live.slotsUsed[2]).toBe(1);
+    expect(w.economy.bonus).toBe(0);
+    expect(last(s, 'spellCast').spell).toBe('朦胧步');
+    // 2024：同一回合不能再用法术位施法
+    expect(s.dispatch({ type: 'manualCast', actor: 'w', spell: '魔法飞弹', slotLevel: 1, activation: 'action' }).status).toBe('rejected');
+
+    done(s.dispatch({ type: 'nextTurn' }));
+    done(s.dispatch({ type: 'nextTurn' }));
+    done(s.dispatch({ type: 'manualCast', actor: 'w', spell: '虚弱射线', slotLevel: 2, activation: 'action', concentration: true, targets: ['g'] }));
+    expect(effectNames(s, 'w')).toEqual(['虚弱射线']);
+
+    done(s.dispatch({ type: 'setUsage', id: 'w', slot: 2, used: 0 }));
+    expect(s.state.combatants.w.live.slotsUsed[2]).toBe(0);
   });
 });

@@ -277,6 +277,8 @@ export interface CombatantView {
   /** 这个参与者拥有的规则条目键（特性、专长、种族、已准备法术…） */
   sources: string[];
   resources: Record<string, number>;
+  /** 资源 id → 显示名（界面用；引擎只认 id） */
+  resourceNames: Record<string, string>;
   slots: Record<number, number>;
   /** 职业等级表当前行（`classTable('偷袭')` → '3d6'） */
   classTable: Record<string, string | number>;
@@ -395,6 +397,16 @@ export type Command =
   | { type: 'removeEffect'; id: EffectId }
   | { type: 'adjustHp'; id: Id; delta?: number; set?: number; temp?: number }
   | { type: 'damage'; id: Id; amount: number; damageType: string; source?: Id | null }
+  /** 手动治疗：与法术治疗走同一条路（0 生命值时的昏迷随之结束） */
+  | { type: 'heal'; id: Id; amount: number }
+  | { type: 'tempHp'; id: Id; amount: number }
+  /** 没有动态数据的法术：照样付代价（法术位、动作）、开专注、发 spellCast，效果由人处理 */
+  | {
+      type: 'manualCast'; actor: Id; spell: string; slotLevel?: number;
+      activation?: 'action' | 'bonus' | 'reaction' | 'none'; concentration?: boolean; targets?: Id[]; force?: boolean;
+    }
+  /** 手动改次数：资源或某一环法术位「已用」多少 */
+  | { type: 'setUsage'; id: Id; resource?: string; slot?: number; used: number }
   | { type: 'endConcentration'; id: Id }
   | { type: 'advanceTime'; minutes: number }
   | { type: 'rest'; kind: 'short' | 'long'; ids?: Id[] }

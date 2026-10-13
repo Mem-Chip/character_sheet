@@ -6,7 +6,8 @@ D&D 2024 人物卡 + 战斗引擎。静态规则逻辑移植自 `dsh-p/dnd/dnd20
 ## 命令
 
 ```bash
-npm run fetch:data   # 先抓 5etools 数据到 data/5etools/（静态层测试要用）
+npm run dev          # 界面：http://localhost:5280（卡片库 / 人物卡 / 战斗）
+npm run fetch:data   # 先抓 5etools 数据到 data/5etools/（静态层测试要用；界面没有本地数据时直接从站点取）
 npm test             # 全部测试
 npm run typecheck    # 类型检查
 npm run check:data   # 规则数据审计（表达式编译、模板引用、事件名、双计）
@@ -24,6 +25,7 @@ npm run oracle:fuzz  # 随机角色与原项目对比
 | `src/sheet/` | 静态层（移植自原项目）：规则管线、能力框架、角色解析与计算、资源、专长、职业状态 |
 | `src/combat/` | 战斗引擎：效应、D20 / 伤害管线、触发器、效果树、回合、会话（事务 / 撤销 / 事后裁定）、房规层、审计 |
 | `src/bridge/` | 静态层 → 战斗引擎：人物卡算出的结果转成战斗参与者，战斗结果写回人物卡 |
+| `app/` | 界面（React + Vite）：卡片库、人物卡（卡面 / 建卡）、战斗（参与者、动作、日志与回执、决定弹窗、撤销与事后裁定）；数据存在浏览器 localStorage |
 | `data/rules-2024.json` | 15 个状态、通用动作、武器精通、核心参数 |
 | `data/dyn/` | 法术与特性的动态层（覆盖文件，键与 `abilities-2024.json` 一致） |
 | `data/abilities-*.json` | 静态层的能力数据（移植自原项目） |

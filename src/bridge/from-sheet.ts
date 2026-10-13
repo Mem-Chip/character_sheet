@@ -75,6 +75,7 @@ export interface ResourceMap {
   toSheetKey: Record<string, string>;
   max: Record<string, number>;
   used: Record<string, number>;
+  name: Record<string, string>;
 }
 
 /**
@@ -82,7 +83,7 @@ export interface ResourceMap {
  * 职业表的池和能力声明的池在人物卡那边已经合并过了，这里把合并后的池挂回能力的 id 上。
  */
 export function resourceMap(char: CharData, sheet: Json): ResourceMap {
-  const out: ResourceMap = { toSheetKey: {}, max: {}, used: {} };
+  const out: ResourceMap = { toSheetKey: {}, max: {}, used: {}, name: {} };
   const declared = (char._derived?.resources || []) as Json[];
   for (const r of sheet._resources || []) {
     if (r.max == null) continue;
@@ -91,11 +92,13 @@ export function resourceMap(char: CharData, sheet: Json): ResourceMap {
     out.toSheetKey[id] = r.key;
     out.max[id] = r.max;
     out.used[id] = r.used || 0;
+    out.name[id] = String(r.name ?? id);
   }
   return out;
 }
 
 export function viewFromSheet(env: SheetEnv, char: CharData, sheet: Json): CombatantView {
+  const res = resourceMap(char, sheet);
   const score = Object.fromEntries(ABILS.map((a) => [a, sheet['score:' + a] ?? 10])) as Record<Ability, number>;
   const mod = Object.fromEntries(ABILS.map((a) => [a, sheet['mod:' + a] ?? 0])) as Record<Ability, number>;
   const save = Object.fromEntries(ABILS.map((a) => [a, sheet.saves?.[a]?.total ?? mod[a]])) as Record<Ability, number>;
@@ -166,7 +169,8 @@ export function viewFromSheet(env: SheetEnv, char: CharData, sheet: Json): Comba
     attacks,
     attacksPerAction,
     sources: sourceKeys(env, char),
-    resources: resourceMap(char, sheet).max,
+    resources: res.max,
+    resourceNames: res.name,
     slots,
     classTable: classTableRow(char),
     wearing,

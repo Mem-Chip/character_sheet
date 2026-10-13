@@ -51,6 +51,7 @@ export function makeView(init: ViewInit): CombatantView {
     attacksPerAction: init.attacksPerAction ?? 1,
     sources: init.sources ?? [],
     resources: init.resources ?? {},
+    resourceNames: init.resourceNames ?? {},
     slots: init.slots ?? {},
     classTable: init.classTable ?? {},
     wearing: init.wearing ?? [],
