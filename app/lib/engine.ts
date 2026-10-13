@@ -18,7 +18,8 @@ const browserProvider: DataProvider = {
     let job = memo.get(path);
     if (!job) {
       job = (async () => {
-        for (const url of [`/5etools${path}`, BASE_URL + path]) {
+        // 先取和页面放在一起的数据（开发时是中间件，部署后是 dist/5etools），取不到再去站点
+        for (const url of [`${import.meta.env.BASE_URL}5etools${path}`, BASE_URL + path]) {
           try {
             const r = await fetch(url);
             if (!r.ok) continue;
