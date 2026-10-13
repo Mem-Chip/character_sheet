@@ -15,7 +15,7 @@ npm run oracle       # 用原项目重新生成对比夹具（需要原项目在
 npm run oracle:fuzz  # 随机角色与原项目对比
 ```
 
-静态层的移植方法与差异记录见 [PORTING.md](PORTING.md)。
+静态层的移植方法与差异记录见 [PORTING.md](PORTING.md)；上线（账户、战役、多人同步）的讨论稿见 [SERVER-DESIGN.md](SERVER-DESIGN.md)。
 
 ## 目录
 
