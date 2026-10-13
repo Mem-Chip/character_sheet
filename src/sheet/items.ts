@@ -243,7 +243,7 @@ export class OptionalFeatureRules {
       const count = prog[maxLv];
       const types = g.featureType || [];
       out.push({
-        id: 'opt-' + types.join('_'), kind: 'optfeature', count, types,
+        id: 'opt-' + types.join('_'), kind: 'optfeature', count, types, cls: k.cls.name,
         label: g.name || this.TYPE_CN[types[0]] || types.join('/'), from: `${k.cls.name} ${maxLv} 级`, pool: 'optionalfeature',
       });
     }
@@ -270,7 +270,7 @@ export class OptionalFeatureRules {
     }
     for (const g of groups.values()) {
       out.push({
-        id: 'subopt-' + k.subclassName + '-' + g.count, kind: 'optfeature', count: g.count,
+        id: 'subopt-' + k.subclassName + '-' + g.count, kind: 'optfeature', count: g.count, cls: k.cls.name,
         label: `${k.subclassName}「${g.name}」`, from: `${k.cls.name}·${k.subclassName} ${g.level} 级`,
         pool: 'whitelist', whitelist: [...g.refs],
       });

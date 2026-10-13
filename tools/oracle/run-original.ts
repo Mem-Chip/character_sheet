@@ -1,8 +1,9 @@
 /**
  * 用原项目（参照实现）把 tests/fixtures/chars.json 里的每个角色算一遍，
- * 归一化后写到 tests/fixtures/oracle/<id>.json。npm run oracle
+ * 归一化后写到 .oracle/<id>.json（不进 git）。npm run oracle
  *
- * 只在「原项目的规则逻辑改了」或「加了新的测试角色」时需要重跑；夹具进 git。
+ * 移植验证已经完成（见 PORTING.md），现在只用来手动对照：想知道某处和原项目差在哪，
+ * 就跑它，再和 tests/fixtures/snapshots/ 里同名文件比。
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -10,7 +11,7 @@ import { normalizeSheet, normalizeValue } from '../../src/sheet/normalize';
 import { loadOriginal } from './sandbox';
 
 const ROOT = resolve(import.meta.dirname, '..', '..');
-const OUT = resolve(ROOT, 'tests', 'fixtures', 'oracle');
+const OUT = resolve(ROOT, '.oracle');
 const chars = JSON.parse(readFileSync(resolve(ROOT, 'tests', 'fixtures', 'chars.json'), 'utf8')) as Array<{ id: string; note: string; char: unknown }>;
 const only = process.argv[2];
 

@@ -9,7 +9,6 @@ import { FeatRules } from './feats';
 import { FeatureOptions, ItemRules, LanguageRules, OptionalFeatureRules, ToolRules } from './items';
 import { createRules, type Pipeline } from './pipeline';
 import { Resources, Rest } from './resources';
-import { States } from './states';
 import { DataStore, type DataProvider, type Json } from './store';
 
 export interface SheetEnvOptions {
@@ -39,7 +38,6 @@ export class SheetEnv {
   readonly softLimits: SoftLimits;
   readonly wildShape: WildShape;
   readonly unlocks: Unlocks;
-  readonly states: States;
   readonly homelib: { server: HomeRuleEntry[]; camp: (char: CharData) => HomeRuleEntry[] };
   /** 计算前改角色的钩子（原项目 Plugins.applyCharHooks） */
   readonly charHooks: Array<(char: CharData) => void> = [];
@@ -61,7 +59,6 @@ export class SheetEnv {
     this.softLimits = new SoftLimits(this);
     this.wildShape = new WildShape(this);
     this.unlocks = new Unlocks();
-    this.states = new States();
     this.abilities = new AbilityBook(this, o.builtinAbilities, o.abilities);
     this.rules = createRules();
   }

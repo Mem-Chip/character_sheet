@@ -42,9 +42,8 @@ export function blankCharacter(): CharData {
     deathSaves: { success: 0, failure: 0 },
     arcaneRecovery: { used: false },
     hitDiceSpent: {},
-    states: [],
-    round: 1,
-    statesRounds: {},
+    /** 身上持续存在的效应（法师护甲、力竭、长时间增益…）：战斗引擎的 ActiveEffect 实例 */
+    effects: [],
     notes: '',
   };
 }
@@ -205,7 +204,8 @@ export async function resolveCharacter(env: SheetEnv, char: CharData): Promise<J
 }
 
 /**
- * 完整计算：解析 → 能力框架（派生 + mods）→ 临时状态 → 规则管线 → 资源池。
+ * 完整计算：解析 → 能力框架（派生 + mods）→ 规则管线 → 资源池。
+ * 临时效应（狂暴、祝福、状态…）不在这里：它们由战斗引擎叠在算出来的数值上（src/combat/effects.ts 的 effectiveView）。
  * 顺序要紧：能力的 mods 必须在管线之前进 ctx，否则 AC / HP 那些阶段读不到。
  */
 export async function computeCharacter(env: SheetEnv, char: CharData): Promise<Record<string, any>> {
@@ -220,7 +220,6 @@ export async function computeCharacter(env: SheetEnv, char: CharData): Promise<R
   }
   const ctx = new CalcCtx(char, env);
   env.abilities.applyMods(ctx);
-  env.states.applyEffects(ctx);
   env.rules.run(ctx, env.log);
   ctx.out._warnings = res.warnings;
   ctx.out._derived = derived;
