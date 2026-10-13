@@ -1357,8 +1357,7 @@ type OverridePatch =
 
 ### 16.8 还没做的（按依赖顺序）
 
-1. **静态层移植**：原项目的 `Character.compute` → `View.fromSheet`。这是接上真实人物卡的前提。
-   回归基准：工作目录里的 `verify-baseline.txt`（原项目 `verify-run.mjs` 的 1621 条断言输出）。
+1. ~~**静态层移植**~~ —— 已完成，见 [PORTING.md](PORTING.md)；桥接在 `src/bridge/from-sheet.ts`。
 2. 遭遇界面与人物卡界面（掷骰回执、效应栏、动作面板、决定弹窗）。
 3. 其余约 20 条黄金条目（回气、动作如潮、至圣斩、圣疗、疾风连击、震慑拳、诗人激励、幸运、先天术法…）。
 4. 第 3 步：AI 分诊 522 条 note、怪物确定性解析。

@@ -432,6 +432,14 @@ export function createRules(): Pipeline {
         if (p.all) profWeapons.add('all:' + p.all.fromFilter);
       });
     }
+    /**
+     * ⚠️ 移植时修掉的原项目 bug（见 tests/fixtures/divergences.json）：
+     * 熟练过滤式是 `type=军用武器|property=轻型;灵巧`（没有路径段），原实现 `.slice(1)` 丢掉了第一段；
+     * 而且武器的 property 存的是代码（F / L），原实现拿中文名去比，永远对不上 ——
+     * 游荡者的刺剑、武僧的短剑因此都不加熟练加值。
+     */
+    const propCode: Record<string, string> = { 灵巧: 'F', 轻型: 'L', 重型: 'H', 双手: '2H', 触及: 'R', 投掷: 'T', 多用: 'V', 弹药: 'A', 装填: 'LD', 特殊: 'S' };
+    for (const [code, cn] of Object.entries(ctx.env.store.props || {})) propCode[cn] ??= code;
     const isProf = (w: Json) => {
       const cat = w.weaponCategory;
       if (profWeapons.has(cat === 'martial' ? '军用' : '简易')) return true;
@@ -439,10 +447,10 @@ export function createRules(): Pipeline {
         if (String(key).startsWith('all:')) {
           const expr = String(key).slice(4);
           const props = (w.property || []).map((p: unknown) => String(p).split('|')[0]);
-          const conds = expr.split('|').slice(1).map((g) => g.split('=')).filter((x) => x.length === 2);
+          const conds = expr.split('|').map((g) => g.split('=')).filter((x) => x.length === 2);
           const ok = conds.every(([k, v]) => {
             if (k === 'type') return v.includes('军用') ? cat === 'martial' : cat === 'simple';
-            if (k === 'property') return v.split(';').some((p) => props.includes(p));
+            if (k === 'property') return v.split(';').some((p) => props.includes(propCode[p] ?? p));
             return true;
           });
           if (ok) return true;

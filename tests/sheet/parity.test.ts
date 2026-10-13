@@ -12,6 +12,23 @@ import { hasLocalData } from '../../src/sheet/node-provider';
 const FIX = resolve(import.meta.dirname, '..', 'fixtures');
 const chars = JSON.parse(readFileSync(resolve(FIX, 'chars.json'), 'utf8')) as Array<{ id: string; note: string; char: object }>;
 const oracle = (id: string) => JSON.parse(readFileSync(resolve(FIX, 'oracle', `${id}.json`), 'utf8'));
+/** 有意的差异（修掉的原项目 bug）：期望值换成 ours，并核对原项目那边确实是 oracle 值 —— 原项目改了这里就会提醒 */
+const divergences = (JSON.parse(readFileSync(resolve(FIX, 'divergences.json'), 'utf8')) as {
+  items: Array<{ id: string; path: string; oracle: unknown; ours: unknown; reason: string }>;
+}).items;
+
+function patchPath(root: Record<string, unknown>, path: string, value: unknown, expectOld: unknown): string | null {
+  const segs = path.split('.');
+  let cur: any = root;
+  for (const s of segs.slice(0, -1)) {
+    cur = cur?.[s];
+    if (cur === undefined) return `路径 ${path} 在参照输出里不存在`;
+  }
+  const last = segs.at(-1)!;
+  if (JSON.stringify(cur[last]) !== JSON.stringify(expectOld)) return `${path}：参照输出是 ${JSON.stringify(cur[last])}，清单里写的是 ${JSON.stringify(expectOld)}（原项目变了？）`;
+  cur[last] = value;
+  return null;
+}
 
 /** 列出两边不一样的路径（比一个大 toEqual 好读得多） */
 export function diffPaths(a: unknown, b: unknown, path = '', out: string[] = [], limit = 30): string[] {
@@ -53,7 +70,10 @@ describe.skipIf(!hasLocalData())('静态层与原项目逐项一致', () => {
         extras: normalizeValue(extras),
         char: normalizeValue(Object.fromEntries(Object.entries(char).filter(([k]) => !k.startsWith('_')))),
       };
-      const diffs = diffPaths(got, { sheet: want.sheet, extras: want.extras, char: want.char });
+      const expected = { sheet: want.sheet, extras: want.extras, char: want.char };
+      const stale = divergences.filter((d) => d.id === fx.id).map((d) => patchPath(expected, d.path, d.ours, d.oracle)).filter(Boolean);
+      expect(stale, stale.join('\n')).toEqual([]);
+      const diffs = diffPaths(got, expected);
       expect(diffs, diffs.join('\n')).toEqual([]);
     });
   }

@@ -6,20 +6,29 @@ D&D 2024 人物卡 + 战斗引擎。静态规则逻辑移植自 `dsh-p/dnd/dnd20
 ## 命令
 
 ```bash
+npm run fetch:data   # 先抓 5etools 数据到 data/5etools/（静态层测试要用）
 npm test             # 全部测试
 npm run typecheck    # 类型检查
 npm run check:data   # 规则数据审计（表达式编译、模板引用、事件名、双计）
+npm run oracle       # 用原项目重新生成对比夹具（需要原项目在 ../dsh-p/dnd/dnd2024-sheet）
+npm run oracle:fuzz  # 随机角色与原项目对比
 ```
+
+静态层的移植方法与差异记录见 [PORTING.md](PORTING.md)。
 
 ## 目录
 
 | 目录 | 内容 |
 |---|---|
 | `src/expr/` | 表达式语言：`pb + mod.str`、`(5 + slot.level)d6`、`dist(attacker, self) <= 5`；三值求值（不知道就问） |
+| `src/sheet/` | 静态层（移植自原项目）：规则管线、能力框架、角色解析与计算、资源、专长、职业状态 |
 | `src/combat/` | 战斗引擎：效应、D20 / 伤害管线、触发器、效果树、回合、会话（事务 / 撤销 / 事后裁定）、房规层、审计 |
+| `src/bridge/` | 静态层 → 战斗引擎：人物卡算出的结果转成战斗参与者，战斗结果写回人物卡 |
 | `data/rules-2024.json` | 15 个状态、通用动作、武器精通、核心参数 |
 | `data/dyn/` | 法术与特性的动态层（覆盖文件，键与 `abilities-2024.json` 一致） |
-| `tests/` | 表达式、黄金场景、房规与审计 |
+| `data/abilities-*.json` | 静态层的能力数据（移植自原项目） |
+| `tests/` | 表达式、黄金场景、房规与审计、静态层对比、集成 |
+| `tools/oracle/` | 在 Node 里跑原项目，作为静态层的参照实现 |
 
 ## 用法速览
 
