@@ -113,7 +113,7 @@ export function auraGate(tx: Tx, gate: { aura: Aura; holder: Id }, who: Id): boo
     if (r instanceof Unknown) return r;
   }
   if (holder === who) return true;
-  const d = tx.ctx.spatial?.distance(holder, who);
+  const d = tx.spatial?.distance(holder, who);
   if (typeof d === 'number') return d <= aura.radius;
   const q: Question = {
     id: `aura:${holder}:${aura.id}:${who}`,

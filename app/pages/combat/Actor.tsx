@@ -157,6 +157,26 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
   const inCombat = s.state.round !== null;
   const isTurn = inCombat && s.state.order[s.state.turnIndex] === id;
   const effects = Object.values(s.state.effects).filter((e) => e.bearer === id).sort((a, b) => a.appliedSeq - b.appliedSeq);
+
+  // 玩家看怪物：只看得到外表 —— 体型、伤势、身上的状态
+  if (combat.isSecret(id) || combat.isHidden(id)) {
+    return (
+      <Panel title={<>{c.name} <span className="faint small">{v.size} {v.type}</span></>} aside={isTurn ? <Tag tone="accent">当前回合</Tag> : undefined}>
+        <div className="stack">
+          <div className="muted small">{c.live.dead ? '已经死亡' : c.live.hp <= 0 ? '倒地' : c.live.hp >= v.hpMax ? '看起来毫发无伤' : c.live.hp * 2 <= v.hpMax ? '浴血（伤得不轻）' : '受了伤'}</div>
+          {effects.length > 0 && (
+            <div className="row">
+              {effects.map((e) => {
+                const t = termOfKey(String(e.key ?? ''));
+                return <Tag key={e.id}>{e.key === 'concentration' ? `专注：${e.name}` : t ? <Term {...t}>{e.name}</Term> : e.name}</Tag>;
+              })}
+            </div>
+          )}
+          <div className="tiny faint">具体数值只有 DM 看得到。</div>
+        </div>
+      </Panel>
+    );
+  }
   const conc = s.peek((tx) => concentrationOf(tx, id));
   const conditions = engine.rules.keys().filter((k) => k.startsWith('XPHB:condition:'));
   const tnames = ui.targets.map(name);

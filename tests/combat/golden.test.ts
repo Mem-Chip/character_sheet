@@ -3,7 +3,7 @@
  * 骰面全部预先写好：多掷一颗或少掷一颗都会让测试失败 —— 那本身就是规则 bug。
  */
 import { describe, expect, it } from 'vitest';
-import { Session } from '../../src/combat';
+import { Session, createEncounter, gridFeet, gridSpatial, type Positions } from '../../src/combat';
 import { barbarian, cleric, done, effectNames, evs, fighter, goblin, has, last, pending, rogue, setup, wizard } from './helpers';
 
 describe('#1 倒地：5 尺内优势，5 尺外劣势', () => {
@@ -414,5 +414,36 @@ describe('#18 没有动态数据的法术：手动施放', () => {
 
     done(s.dispatch({ type: 'setUsage', id: 'w', slot: 2, used: 0 }));
     expect(s.state.combatants.w.live.slotsUsed[2]).toBe(0);
+  });
+});
+
+describe('地图：按棋子位置自动判断距离', () => {
+  it('倒地目标在 10 尺外 → 近战劣势，不再按推测；之后挪棋子、重放，结果不变', () => {
+    const pos = { current: { f: { x: 0, y: 0, s: 1 }, g: { x: 2, y: 1, s: 1 } } as Positions | null };
+    const { s, dice, rules } = setup([fighter(), goblin('g')], { positions: pos });
+    done(s.dispatch({ type: 'applyEffect', to: 'g', template: 'XPHB:condition:倒地' }));
+    dice.push(15, 8, 6);
+    done(s.dispatch({ type: 'useAction', actor: 'f', action: 'weapon:ls', targets: ['g'] }));
+    const r = last(s, 'd20Rolled');
+    expect(r.disadv).toBe(true);
+    expect(r.assumptions).toHaveLength(0);
+    // 棋子挪到贴身，再读档重放：用的是当时记下的位置
+    pos.current = { f: { x: 0, y: 0, s: 1 }, g: { x: 1, y: 1, s: 1 } };
+    const again = Session.restore(s.save(), { rules, diceFor: () => dice, positions: () => pos.current });
+    expect(last(again, 'd20Rolled').disadv).toBe(true);
+  });
+
+  it('大型生物占 2×2：斜对角贴着也是 5 尺', () => {
+    const sp = gridSpatial({ a: { x: 0, y: 0, s: 2 }, b: { x: 2, y: 2, s: 1 }, c: { x: 4, y: 0, s: 1 } }, createEncounter('x'));
+    expect(sp.distance('a', 'b')).toBe(5);
+    expect(sp.distance('a', 'c')).toBe(15);
+    expect(sp.distance('a', 'zz')).toBeNull();
+  });
+
+  it('斜走 5-10-5：斜 3 格 = 20 尺，斜 2 横 1 = 20 尺', () => {
+    expect(gridFeet(3, 3)).toBe(15);
+    expect(gridFeet(3, 3, '5-10-5')).toBe(20);
+    expect(gridFeet(-2, 3, '5-10-5')).toBe(20);
+    expect(gridFeet(1, 1, '5-10-5')).toBe(5);
   });
 });

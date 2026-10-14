@@ -6,7 +6,9 @@ import { rosterOrder } from './shared';
 
 export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: CombatUi; onAddPc: () => void; onAddMonster: () => void }) {
   const st = s.state;
-  const ids = rosterOrder(s);
+  // 玩家看不到 DM 藏起来的
+  const ids = rosterOrder(s).filter((id) => !combat.isHidden(id));
+  const dmRemote = ui.remote?.role === 'dm';
   const current = st.round !== null ? st.order[st.turnIndex] : null;
   return (
     <Panel
@@ -25,10 +27,12 @@ export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: Comba
         const effects = Object.values(st.effects).filter((e) => e.bearer === id);
         const down = c.live.hp === 0 && !c.live.dead;
         const isTarget = ui.targets.includes(id);
+        const secret = combat.isSecret(id);
+        const hiddenNow = dmRemote && ui.remote!.hidden.includes(id);
         return (
           <div
             key={id}
-            className={['cbt', id === ui.selected && 'sel', id === current && 'turn', c.live.dead && 'dead', isTarget && 'is-tgt'].filter(Boolean).join(' ')}
+            className={['cbt', id === ui.selected && 'sel', id === current && 'turn', c.live.dead && 'dead', isTarget && 'is-tgt', hiddenNow && 'is-hidden'].filter(Boolean).join(' ')}
             onClick={() => combat.select(id)}
           >
             <span className="init">{c.initiative ?? '—'}</span>
@@ -36,11 +40,16 @@ export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: Comba
               {c.name}
               <span className={'faction ' + (c.side === 'party' ? 'party' : c.side === 'enemy' ? 'enemy' : '')}>{c.side === 'party' ? '友' : c.side === 'enemy' ? '敌' : c.side}</span>
             </span>
-            <span className="hp num">
-              {c.live.hp}<span className="faint">/{max}</span>{c.live.tempHp ? <span className="tmp"> +{c.live.tempHp}</span> : null}
-            </span>
+            {secret
+              ? <span className="hp small muted">{c.live.dead ? '' : woundOf(c.live.hp, max)}</span>
+              : (
+                <span className="hp num">
+                  {c.live.hp}<span className="faint">/{max}</span>{c.live.tempHp ? <span className="tmp"> +{c.live.tempHp}</span> : null}
+                </span>
+              )}
             <div className="side">
-              <div className={'hpbar' + (pct <= 35 ? ' low' : '')} style={{ flexBasis: '100%' }}><i style={{ width: `${pct}%` }} /></div>
+              {!secret && <div className={'hpbar' + (pct <= 35 ? ' low' : '')} style={{ flexBasis: '100%' }}><i style={{ width: `${pct}%` }} /></div>}
+              {hiddenNow && <Tag tone="warn">玩家看不到</Tag>}
               {c.live.dead && <Tag tone="danger">死亡</Tag>}
               {down && <Tag tone="danger">{c.live.stable ? '稳定' : `濒死 ${c.live.deathSaves.s}✓ ${c.live.deathSaves.f}✗`}</Tag>}
               {effects.map((e) => (
@@ -49,6 +58,11 @@ export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: Comba
                 </Tag>
               ))}
               <span style={{ flex: 1 }} />
+              {dmRemote && (
+                <button className="btn ghost sm" onClick={(ev) => { ev.stopPropagation(); combat.setHidden(id, !hiddenNow); }} title={hiddenNow ? '让玩家看到它' : '对玩家藏起来（列表、地图、日志里都不显示）'}>
+                  {hiddenNow ? '亮出' : '藏起'}
+                </button>
+              )}
               <button
                 className={'btn sm tgtbtn' + (isTarget ? ' on' : '')}
                 onClick={(ev) => { ev.stopPropagation(); combat.toggleTarget(id); }}
@@ -60,4 +74,11 @@ export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: Comba
       })}
     </Panel>
   );
+}
+
+/** 不给玩家看具体数字时的伤势说法（2024 规则里「浴血」= 生命值不到一半） */
+function woundOf(hp: number, max: number): string {
+  if (hp <= 0) return '倒地';
+  if (hp >= max) return '完好';
+  return hp * 2 <= max ? '浴血' : '受伤';
 }

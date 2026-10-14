@@ -41,7 +41,24 @@ export interface Remote {
   me: number;
   /** 控制者 id → 用户 id */
   owners: Record<string, number>;
+  /** 骰子来源（按控制者，服务器上存的） */
+  dice: Record<string, DiceMode>;
+  /** DM 藏起来的参与者 */
+  hidden: string[];
+  map: MapState;
   connected: boolean;
+}
+
+export interface Stroke { id: string; by: number; color: string; width: number; pts: number[] }
+export interface MapState {
+  grid: { size: number; ox: number; oy: number; cols: number; rows: number; show: boolean; diagonal?: '5' | '5-10-5' };
+  bg: { img: string; w: number; h: number } | null;
+  strokes: Stroke[];
+  tokens: Record<string, { x: number; y: number }>;
+}
+interface RemoteState {
+  save: SessionSave; owners: Record<string, number>; cards: Record<string, string>; name: string;
+  dice?: Record<string, DiceMode>; hidden?: string[]; map?: MapState;
 }
 
 let ui: CombatUi = { session: null, version: 0, links: {}, dice: { '*': 'engine' }, selected: null, targets: [], toast: null, remote: null };
@@ -120,14 +137,16 @@ function act(body: Record<string, unknown>): DispatchResult {
 }
 
 /** 服务器推来的完整状态：在本地重放一遍用来画界面 */
-function applyRemote(data: { save: SessionSave; owners: Record<string, number>; cards: Record<string, string>; name: string }): void {
+function applyRemote(data: RemoteState): void {
   if (!ui.remote || !engineRef) return;
   try {
     const session = Session.restore(data.save, ctxFor(engineRef));
     const st = session.state;
     const cur = st.round !== null ? st.order[st.turnIndex] : null;
     const selected = ui.selected && st.combatants[ui.selected] ? ui.selected : cur ?? Object.keys(st.combatants)[0] ?? null;
-    set({ session, links: data.cards, selected, targets: ui.targets.filter((t) => st.combatants[t]), remote: { ...ui.remote, owners: data.owners, name: data.name, connected: true } }, false);
+    set({ session, links: data.cards, selected, targets: ui.targets.filter((t) => st.combatants[t]), remote: {
+      ...ui.remote, owners: data.owners, name: data.name, dice: data.dice ?? {}, hidden: data.hidden ?? [], map: data.map ?? ui.remote.map, connected: true,
+    } }, false);
   } catch (e) {
     toast('同步遭遇失败：' + (e as Error).message);
   }
@@ -138,11 +157,15 @@ export const combat = {
   async join(engine: Engine, encounterId: string): Promise<void> {
     engineRef = engine;
     stream?.close();
-    const info = await api<{ role: 'dm' | 'player'; me: number; campaignId: string; name: string; save: SessionSave; owners: Record<string, number>; cards: Record<string, string> }>('GET', `encounters/${encounterId}`);
-    ui = { ...ui, remote: { id: encounterId, name: info.name, campaignId: info.campaignId, role: info.role, me: info.me, owners: info.owners, connected: false }, selected: null, targets: [] };
+    const info = await api<RemoteState & { role: 'dm' | 'player'; me: number; campaignId: string; map: MapState }>('GET', `encounters/${encounterId}`);
+    ui = {
+      ...ui, selected: null, targets: [],
+      remote: { id: encounterId, name: info.name, campaignId: info.campaignId, role: info.role, me: info.me, owners: info.owners, dice: {}, hidden: [], map: info.map, connected: false },
+    };
     applyRemote(info);
     stream = new EventSource(new URL('api/', document.baseURI).pathname + `encounters/${encounterId}/stream`);
     stream.addEventListener('state', (ev) => applyRemote(JSON.parse((ev as MessageEvent).data)));
+    stream.addEventListener('map', (ev) => { if (ui.remote) set({ remote: { ...ui.remote, map: JSON.parse((ev as MessageEvent).data) } }, false); });
     stream.onerror = () => { if (ui.remote) set({ remote: { ...ui.remote, connected: false } }, false); };
   },
   /** 回到本地遭遇 */
@@ -159,12 +182,45 @@ export const combat = {
     const c = ui.session?.state.combatants[combatantId];
     return r.owners[c?.controller ?? combatantId] === r.me;
   },
-  /** 等待中的决定是不是问我的 */
+  /** 等待中的决定是不是问我的（DM：没有归属玩家的都问 DM；问玩家的 DM 可以代答，见战斗页） */
   isMyDecision(): boolean {
     const r = ui.remote;
     const p = ui.session?.pending;
     if (!p) return false;
-    return !r || r.role === 'dm' || r.owners[p.decision.to] === r.me;
+    if (!r) return true;
+    const owner = r.owners[p.decision.to];
+    return r.role === 'dm' ? owner === undefined : owner === r.me;
+  },
+  /** 玩家视角下藏起来的参与者（DM 和本地遭遇：没有） */
+  isHidden(id: string | null | undefined): boolean {
+    const r = ui.remote;
+    return !!id && !!r && r.role !== 'dm' && r.hidden.includes(id);
+  },
+  /** 玩家视角下要保密的参与者：不是自己的、也不是队友（怪物、DM 的 NPC）—— 数值和骰子明细只给 DM 看 */
+  isSecret(id: string | null | undefined): boolean {
+    const r = ui.remote;
+    if (!id || !r || r.role === 'dm') return false;
+    const c = ui.session?.state.combatants[id];
+    if (!c) return false;
+    return c.side !== 'party' && r.owners[c.controller] !== r.me;
+  },
+  /** DM 藏 / 亮出一个参与者 */
+  setHidden(id: string, hidden: boolean): void {
+    if (ui.remote) act({ op: 'setHidden', id, hidden });
+  },
+  /** 地图操作（只在战役遭遇里） */
+  map(body: Record<string, unknown>): Promise<boolean> {
+    const r = ui.remote;
+    if (!r) return Promise.resolve(false);
+    return api<{ status: string; reason?: string }>('POST', `encounters/${r.id}/act`, { op: 'map', ...body })
+      .then((x) => { if (x.status === 'rejected') toast(x.reason || '被拒绝了'); return x.status !== 'rejected'; }, (e: Error) => { toast(e.message); return false; });
+  },
+  /** 乐观更新地图（拖棋子、画线不用等服务器回来） */
+  patchMap(fn: (m: MapState) => void): void {
+    if (!ui.remote) return;
+    const map = structuredClone(ui.remote.map);
+    fn(map);
+    set({ remote: { ...ui.remote, map } }, false);
   },
 
   dispatch(cmd: Command): DispatchResult {
@@ -210,6 +266,7 @@ export const combat = {
   },
   /** mode 为空 = 跟随默认 */
   setDice(user: string, mode: DiceMode | ''): void {
+    if (ui.remote) { act({ op: 'setDice', user, mode }); return; }
     const dice = { ...ui.dice };
     if (mode) dice[user] = mode;
     else delete dice[user];
@@ -233,12 +290,12 @@ export const combat = {
     after(r);
   },
 
-  addMonster(view: ViewInit, count: number, side = 'enemy'): void {
+  addMonster(view: ViewInit, count: number, side = 'enemy', hidden = false): void {
     const s = ui.session!;
     for (let i = 1; i <= count; i++) {
       const name = count > 1 ? `${view.name} ${i}` : view.name;
       const cmd: Command = { type: 'addCombatant', combatant: makeCombatant({ id: uniqueId('m'), kind: 'monster', side, view: makeView({ ...view, name }) }) };
-      if (ui.remote) { act({ op: 'dispatch', cmd }); continue; }
+      if (ui.remote) { act({ op: 'dispatch', cmd, hidden }); continue; }
       const r = s.dispatch(cmd);
       if (r.status !== 'done') { after(r); return; }
     }

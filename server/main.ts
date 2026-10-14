@@ -61,7 +61,7 @@ db.exec(`
 type Row = Record<string, unknown>;
 const one = (sql: string, ...args: Array<string | number | null>) => db.prepare(sql).get(...args) as Row | undefined;
 const all = (sql: string, ...args: Array<string | number | null>) => db.prepare(sql).all(...args) as Row[];
-const run = (sql: string, ...args: Array<string | number | null>) => db.prepare(sql).run(...args);
+const run = (sql: string, ...args: Array<string | number | null | Uint8Array>) => db.prepare(sql).run(...args);
 
 /* ───────────── 密码与会话 ───────────── */
 

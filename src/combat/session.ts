@@ -236,7 +236,9 @@ export class Session {
 
   dispatch(cmd: Command, by: UserId = 'dm'): DispatchResult {
     if (this.pending) return { status: 'rejected', reason: `还有一个决定没有回答：${this.pending.decision.prompt}` };
-    return this.run({ cmd, by, tape: [], answers: {}, overrides: [] });
+    const positions = this.ctx.positions?.() ?? undefined;
+    const diagonal = positions ? this.ctx.diagonal?.() : undefined;
+    return this.run({ cmd, by, tape: [], answers: {}, overrides: [], ...(positions ? { positions } : {}), ...(diagonal && diagonal !== '5' ? { diagonal } : {}) });
   }
 
   /** 回答当前的决定。实体骰的回答是骰面（number[][]），会写进磁带 */

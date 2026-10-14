@@ -31,7 +31,10 @@ const MOD_CN: Record<string, string> = {
 const sgn = (n: number) => (n >= 0 ? `+ ${n}` : `− ${-n}`);
 const abil = (a: unknown) => (a ? ABIL_CN[a as Ability] ?? String(a) : '');
 
-export function describe(ev: GameEvent, name: (id: unknown) => string): Line | null {
+/** 玩家视角下要保密的参与者（怪物）：它的骰子明细、AC、生命值数字不显示 */
+export type Secret = (id: unknown) => boolean;
+
+export function describe(ev: GameEvent, name: (id: unknown) => string, secret: Secret = () => false): Line | null {
   const p = ev.payload as P;
   const L = (text: string, tone?: Tone, extra: Partial<Line> = {}): Line => ({ seq: ev.seq, text, tone, ...extra });
   switch (ev.type) {
@@ -47,10 +50,10 @@ export function describe(ev: GameEvent, name: (id: unknown) => string): Line | n
       return L(`${name(p.actor)} 使用「${p.action}」${act ? `（${act}）` : ''}${tg.length ? ` → ${tg.map(name).join('、')}` : ''}`);
     }
     case 'spellCast': return p.slotLevel ? L(`消耗 ${p.slotLevel} 环法术位`) : null;
-    case 'd20Rolled': return d20Line(ev, p, name);
+    case 'd20Rolled': return d20Line(ev, p, name, secret);
     case 'attackHit': return L(`${p.crit ? '重击！' : '命中'} ${name(p.target)}`, p.crit ? 'crit' : 'hit');
     case 'attackMissed': return L(`未命中 ${name(p.target)}${p.why ? `（${p.why}）` : ''}`, 'miss');
-    case 'attackRechecked': return L(`复核：总值 ${p.total} 对 AC ${p.vs}（原 ${p.vsBefore}）→ 未命中`, 'miss');
+    case 'attackRechecked': return secret(p.target) ? L('复核 → 未命中', 'miss') : L(`复核：总值 ${p.total} 对 AC ${p.vs}（原 ${p.vsBefore}）→ 未命中`, 'miss');
     case 'critUpgraded': return L(`升级为重击（${(p.by as string[]).join('、')}）`, 'crit');
     case 'saveForced': return null;
     case 'saveFailed': return null;
@@ -61,6 +64,7 @@ export function describe(ev: GameEvent, name: (id: unknown) => string): Line | n
       return L(`伤害骰${p.crit ? '（重击）' : ''}${p.scale !== 1 ? `，×${p.scale}` : ''}`, undefined, { receipt: parts.join('；') });
     }
     case 'damageApplied': {
+      if (secret(p.target)) return L(`${name(p.target)} 受到 ${p.total} 点伤害`, 'dmg', { damage: { index: p.index, byType: p.byType } });
       const types = Object.entries(p.byType as Record<string, number>).map(([t, n]) => `${n} ${t}`).join(' + ');
       const notes = (p.notes as string[] | undefined)?.filter(Boolean) ?? [];
       return L(
@@ -68,7 +72,7 @@ export function describe(ev: GameEvent, name: (id: unknown) => string): Line | n
         'dmg', { sub: notes, damage: { index: p.index, byType: p.byType } },
       );
     }
-    case 'healed': return L(`${name(p.target)} 恢复 ${p.amount} 点生命值（${p.label}）　${p.hpBefore} → ${p.hpAfter}`, 'heal');
+    case 'healed': return secret(p.target) ? L(`${name(p.target)} 恢复了生命值`, 'heal') : L(`${name(p.target)} 恢复 ${p.amount} 点生命值（${p.label}）　${p.hpBefore} → ${p.hpAfter}`, 'heal');
     case 'tempHpGained': return L(`${name(p.target)} 获得 ${p.amount} 点临时生命值${p.kept !== p.amount ? `（保留较高的 ${p.kept}）` : ''}`, 'heal');
     case 'effectApplied': return L(`${name(p.bearer)} 获得「${p.name}」${p.source && p.source !== p.bearer ? `（来自 ${name(p.source)}）` : ''}`);
     case 'effectEnded': return L(`${name(p.bearer)} 的「${p.name}」结束${p.reason ? `（${p.reason}）` : ''}`);
@@ -83,7 +87,7 @@ export function describe(ev: GameEvent, name: (id: unknown) => string): Line | n
     case 'deathSaveResult': return L(`${name(p.id)}：${p.result}`, 'heal');
     case 'deathSaveFailed': return L(`${name(p.id)} 死亡豁免失败 ×${p.failures}（${p.by}）`, 'danger');
     case 'stableChanged': return p.stable ? L(`${name(p.id)} 伤势稳定`) : null;
-    case 'manualOverride': return L(`DM：${overrideText(p, name)}`, 'dm');
+    case 'manualOverride': return p.what === 'hp' && secret(p.id) ? L(`DM 调整了 ${name(p.id)} 的生命值`, 'dm') : L(`DM：${overrideText(p, name)}`, 'dm');
     case 'ruleError': return L(`规则出错：${p.where}：${p.message}`, 'danger');
     case 'restStarted': return L(`${p.kind === 'long' ? '长休' : '短休'}开始`, 'head');
     case 'restCompleted': return L(`${p.kind === 'long' ? '长休' : '短休'}结束`);
@@ -112,13 +116,16 @@ function overrideText(p: P, name: (id: unknown) => string): string {
   }
 }
 
-function d20Line(ev: GameEvent, p: P, name: (id: unknown) => string): Line {
+function d20Line(ev: GameEvent, p: P, name: (id: unknown) => string, secret: Secret): Line {
   const d20 = p.d20 as number[];
   const mode = p.cancelled ? '优劣势抵消' : p.adv ? '优势' : p.disadv ? '劣势' : '';
   const dice = d20.length > 1 ? `d20 [${d20.join(', ')}]${mode ? ` ${mode}` : ''} → ${p.natural}` : `d20 [${p.natural}]${mode ? ` ${mode}` : ''}`;
   const extras = (p.extra as P[]).map((x) => ` ${sgn(x.total)}（${x.label} ${x.dice}）`).join('');
   const parts = [`${dice}${p.kept !== p.natural ? ` → 保底 ${p.kept}` : ''}`, p.bonus ? ` ${sgn(p.bonus)}` : '', p.flat ? ` ${sgn(p.flat)}` : '', extras, ` = ${p.total}`];
-  const vs = p.vs !== null && p.vs !== undefined ? (p.kind === 'attack' ? ` 对 AC ${p.vs}` : ` 对 DC ${p.vs}`) : '';
+  // 攻击怪物不告诉 AC；怪物自己掷的骰子（暗骰）不给明细
+  const vs = p.vs === null || p.vs === undefined || (p.kind === 'attack' && secret(p.target)) ? ''
+    : p.kind === 'attack' ? ` 对 AC ${p.vs}` : ` 对 DC ${p.vs}`;
+  const dark = secret(p.roller);
   const out = p.outcome ? OUTCOME_CN[p.outcome] + (p.crit ? '（重击）' : '') : '';
   const what = p.kind === 'attack' ? `用「${String(p.label).replace(/\s*攻击检定$/, '')}」攻击${p.target ? ` ${name(p.target)}` : ''}`
     : p.sub === 'initiative' ? '先攻' : p.sub === 'deathSave' ? '死亡豁免' : p.sub === 'concentration' ? '专注检定'
@@ -134,8 +141,8 @@ function d20Line(ev: GameEvent, p: P, name: (id: unknown) => string): Line {
     seq: ev.seq,
     text: `${name(p.roller)} ${what}${vs}${out ? ` → ${out}` : ''}`,
     tone,
-    receipt: parts.join(''),
-    sub,
+    receipt: dark ? undefined : parts.join(''),
+    sub: dark ? [] : sub,
     roll: { index: p.index, kind: p.kind, judged: p.vs !== null && p.vs !== undefined },
   };
 }

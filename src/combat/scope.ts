@@ -236,7 +236,7 @@ export function makeEnv(tx: Tx, d: ScopeData, assumptions?: string[]): EvalEnv {
   };
 
   const within = (a: Id, b: Id, ft: number): boolean | Unknown => {
-    const dist = tx.ctx.spatial?.distance(a, b);
+    const dist = tx.spatial?.distance(a, b);
     if (typeof dist === 'number') return dist <= ft;
     return ask(withinQ(a, b, ft));
   };
@@ -257,7 +257,7 @@ export function makeEnv(tx: Tx, d: ScopeData, assumptions?: string[]): EvalEnv {
     },
     dist: (a) => {
       const [p, q] = a as RefValue[];
-      const dist = tx.ctx.spatial?.distance(p.id, q.id);
+      const dist = tx.spatial?.distance(p.id, q.id);
       if (typeof dist === 'number') return dist;
       // 符号数：只有和数字比较时才变成问题
       return new Unknown([], {
@@ -280,7 +280,7 @@ export function makeEnv(tx: Tx, d: ScopeData, assumptions?: string[]): EvalEnv {
       const ft = a[1] as number;
       const opts = (a[2] ?? {}) as { exclude?: Value[]; notCond?: string };
       const exclude = (opts.exclude ?? []).filter(isRef).map((r) => r.id);
-      const sp = tx.ctx.spatial?.alliesWithin(x, ft, self, exclude);
+      const sp = tx.spatial?.alliesWithin(x, ft, self, exclude);
       if (sp) {
         return sp.some((id) => !opts.notCond || !hasCondition(tx, id, opts.notCond));
       }
@@ -295,7 +295,7 @@ export function makeEnv(tx: Tx, d: ScopeData, assumptions?: string[]): EvalEnv {
     },
     canSee: (a) => {
       const [p, q] = a as RefValue[];
-      const sp = tx.ctx.spatial?.canSee(p.id, q.id);
+      const sp = tx.spatial?.canSee(p.id, q.id);
       if (typeof sp === 'boolean') return sp;
       const guess = !hasCondition(tx, p.id, '目盲') && !hasCondition(tx, q.id, '隐形');
       return ask({

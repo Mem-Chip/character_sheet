@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import type { GameEvent, Session } from '../../../src/combat';
 import { NumInput, Panel } from '../../components/ui';
-import { combat } from '../../lib/combat';
+import { combat, useCombat } from '../../lib/combat';
 import { describe, txTitle, type Line } from '../../lib/events';
 import type { Namer } from './shared';
 
@@ -13,6 +13,12 @@ const OUTCOMES: Record<string, Array<[string, string]>> = {
 };
 
 export function Log({ s, name }: { s: Session; name: Namer }) {
+  const ui = useCombat();
+  const dm = !ui.remote || ui.remote.role === 'dm';
+  // 玩家视角：DM 藏起来的参与者相关的整笔都不显示；怪物的数值不显示
+  const hidden = ui.remote && !dm ? ui.remote.hidden : [];
+  const mentionsHidden = (x: unknown) => hidden.length > 0 && hidden.some((h) => JSON.stringify(x).includes(`"${h}"`));
+  const secret = (id: unknown) => combat.isSecret(String(id ?? ''));
   const txs = s.transactions;
   const [open, setOpen] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
@@ -24,7 +30,7 @@ export function Log({ s, name }: { s: Session; name: Namer }) {
       flush
       aside={<>
         <span className="tiny">{txs.length} 笔</span>
-        <button className="btn sm" disabled={!txs.length} onClick={() => combat.undo()} title="撤销最后一笔（从起点重放其余的）">撤销</button>
+        {dm && <button className="btn sm" disabled={!txs.length} onClick={() => combat.undo()} title="撤销最后一笔（从起点重放其余的）">撤销</button>}
       </>}
     >
       <div className="log">
@@ -33,8 +39,14 @@ export function Log({ s, name }: { s: Session; name: Namer }) {
           const i = txs.length - shown + k;
           return { t, i };
         }).reverse().map(({ t, i }) => {
+          if (mentionsHidden(t.input.cmd)) return null;
           // 「加入 xx」的标题已经说了，不再重复那一行
-          const lines = t.events.filter((e) => e.type !== 'combatantAdded').map((e) => describe(e, name)).filter((x): x is Line => !!x);
+          const lines = t.events
+            .filter((e) => e.type !== 'combatantAdded')
+            // 先攻顺序里去掉藏着的；其他提到藏着的人的事件整条不显示
+            .map((e) => (e.type === 'combatStarted' && hidden.length ? { ...e, payload: { ...e.payload, order: (e.payload as { order: string[] }).order.filter((x) => !hidden.includes(x)) } } : e))
+            .filter((e) => e.type === 'combatStarted' || !mentionsHidden(e.payload))
+            .map((e) => describe(e, name, secret)).filter((x): x is Line => !!x);
           const overridden = t.input.overrides.length > 0;
           return (
             <div key={i} className="tx">
@@ -47,6 +59,7 @@ export function Log({ s, name }: { s: Session; name: Namer }) {
                 <LineView
                   key={l.seq}
                   l={l}
+                  dm={dm}
                   open={open === `${i}:${l.seq}`}
                   onToggle={() => setOpen(open === `${i}:${l.seq}` ? null : `${i}:${l.seq}`)}
                   onOverride={(patch) => { setOpen(null); combat.override(i, patch); }}
@@ -61,13 +74,14 @@ export function Log({ s, name }: { s: Session; name: Namer }) {
   );
 }
 
-function LineView({ l, open, onToggle, onOverride }: {
+function LineView({ l, dm, open, onToggle, onOverride }: {
   l: Line;
+  dm: boolean;
   open: boolean;
   onToggle: () => void;
   onOverride: (patch: Parameters<typeof combat.override>[1]) => void;
 }) {
-  const canRule = !!l.roll || !!l.damage;
+  const canRule = dm && (!!l.roll || !!l.damage);
   return (
     <div className={'ev' + (l.tone ? ' t-' + l.tone : '')}>
       <div className="evline">

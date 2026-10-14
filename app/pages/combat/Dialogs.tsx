@@ -12,13 +12,14 @@ import { CREATURE_TYPES, DAMAGE_TYPES, type Namer } from './shared';
 
 const KIND_CN: Record<string, string> = { optionalTrigger: '可以做出反应', ask: '需要确认', choose: '请选择', physicalDice: '输入骰子结果', slotLevel: '选择法术位', targets: '选择目标', number: '选择数值' };
 
-export function DecisionDialog({ s, name }: { s: Session; name: Namer }) {
+/** onClose：DM 代玩家回答时可以关掉，回去等玩家自己答 */
+export function DecisionDialog({ s, name, onClose }: { s: Session; name: Namer; onClose?: () => void }) {
   const p = s.pending!;
   const d = p.decision;
   const preview = previewLines(p.preview, name);
   const who = s.state.combatants[d.to]?.name ?? (d.to === 'dm' ? 'DM' : name(d.to));
   return (
-    <Dialog title={<>{KIND_CN[d.kind] ?? '需要决定'} <span className="faint small">· 交给 {who}</span></>}>
+    <Dialog title={<>{KIND_CN[d.kind] ?? '需要决定'} <span className="faint small">· 交给 {who}{onClose ? '（DM 代答）' : ''}</span></>} onClose={onClose}>
       {preview.length > 0 && (
         <div className="preview">
           {preview.map((l) => (
@@ -204,7 +205,8 @@ const PRESETS: Array<[string, Partial<MonsterForm>]> = [
   ['训练假人', { name: '训练假人', ac: 10, hp: 100, init: 0, atkName: '', perAction: 1, type: '构装生物' }],
 ];
 
-export function AddMonsterDialog({ onClose }: { onClose: () => void }) {
+export function AddMonsterDialog({ onClose, canHide }: { onClose: () => void; canHide?: boolean }) {
+  const [hidden, setHidden] = useState(false);
   const [f, setF] = useState<MonsterForm>({
     name: '杂兵', count: 1, side: 'enemy', type: '类人生物', ac: 13, hp: 7, init: 2, speed: 30,
     atkName: '短剑', atkBonus: 4, atkDamage: '1d6 + 2', atkType: '穿刺', perAction: 1, ranged: false,
@@ -219,11 +221,13 @@ export function AddMonsterDialog({ onClose }: { onClose: () => void }) {
         melee: !f.ranged, ranged: f.ranged, finesse: false, ability: f.ranged ? 'dex' : 'str', range: f.ranged ? 150 : undefined,
       }] : [],
     };
-    combat.addMonster(view, Math.max(1, Math.min(20, f.count)), f.side);
+    combat.addMonster(view, Math.max(1, Math.min(20, f.count)), f.side, hidden);
     onClose();
   };
   return (
-    <Dialog title="加怪物" onClose={onClose} footer={<><button className="btn" onClick={onClose}>取消</button><button className="btn primary" onClick={add}>加入 {f.count > 1 ? `${f.count} 个` : ''}</button></>}>
+    <Dialog title="加怪物" onClose={onClose} footer={<>
+      {canHide && <label className="small" style={{ marginRight: 'auto' }}><input type="checkbox" checked={hidden} onChange={(e) => setHidden(e.target.checked)} /> 先藏起来（玩家看不到，之后在参与者列表里亮出）</label>}
+      <button className="btn" onClick={onClose}>取消</button><button className="btn primary" onClick={add}>加入 {f.count > 1 ? `${f.count} 个` : ''}</button></>}>
       <div className="row">
         <span className="tiny faint">速成模板</span>
         {PRESETS.map(([label, p]) => <button key={label} className="chip" onClick={() => set({ ...p, ranged: !!p.ranged, type: p.type ?? '类人生物' })}>{label}</button>)}
@@ -262,21 +266,26 @@ export function AddMonsterDialog({ onClose }: { onClose: () => void }) {
 export function SettingsDialog({ s, ui, onClose }: { s: Session; ui: CombatUi; onClose: () => void }) {
   const st = s.state.settings;
   const put = (patch: Partial<Settings>) => combat.dispatch({ type: 'setSettings', settings: patch });
-  const pcs = Object.values(s.state.combatants).filter((c) => c.kind === 'pc');
+  const remote = ui.remote;
+  const dm = !remote || remote.role === 'dm';
+  // 战役遭遇：骰子设置存在服务器上；玩家只能改自己的
+  const dice = remote ? remote.dice : ui.dice;
+  const pcs = Object.values(s.state.combatants).filter((c) => c.kind === 'pc' && (dm || remote!.owners[c.controller] === remote!.me));
   const diceSel = (user: string, label: string, inherit: boolean) => (
     <Field key={user} label={label}>
       <select
-        value={ui.dice[user] ?? (inherit ? '' : 'engine')}
+        value={dice[user] ?? (inherit ? '' : 'engine')}
         onChange={(e) => combat.setDice(user, e.target.value as DiceMode)}
       >
         {inherit && <option value="">跟随默认</option>}
-        <option value="engine">引擎掷骰</option>
+        <option value="engine">{remote ? '网页掷骰' : '引擎掷骰'}</option>
         <option value="physical">实体骰（手动输入）</option>
       </select>
     </Field>
   );
   return (
-    <Dialog title="遭遇设置" onClose={onClose}>
+    <Dialog title={dm ? '遭遇设置' : '我的骰子'} onClose={onClose}>
+      {dm && <>
       <div className="formgrid">
         <Field label="怪物降到 0 生命值">
           <select value={st.monsterAt0} onChange={(e) => put({ monsterAt0: e.target.value as Settings['monsterAt0'] })}>
@@ -299,12 +308,17 @@ export function SettingsDialog({ s, ui, onClose }: { s: Session; ui: CombatUi; o
       </div>
       <div className="tiny faint">上面三项会作为一笔操作记进日志，可以撤销。</div>
       <hr className="rule" />
+      </>}
       <div className="formgrid">
-        {diceSel('*', '骰子（默认）', false)}
-        {diceSel('dm', 'DM / 怪物', true)}
+        {dm && diceSel('*', '骰子（默认）', false)}
+        {dm && diceSel('dm', 'DM / 怪物', true)}
         {pcs.map((c) => diceSel(c.controller, c.name, true))}
       </div>
-      <div className="tiny faint">骰子来源按人设置，只影响之后新掷的骰子；撤销、重放、事后裁定都复用已经掷出的骰面。</div>
+      {!pcs.length && !dm && <div className="muted small">你在这场遭遇里还没有角色。</div>}
+      <div className="tiny faint">
+        骰子来源按人设置，只影响之后新掷的骰子；撤销、重放、事后裁定都复用已经掷出的骰面。
+        {remote && '选「实体骰」后，轮到你掷骰时会弹出框让你填骰面。'}
+      </div>
     </Dialog>
   );
 }

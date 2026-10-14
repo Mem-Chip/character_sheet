@@ -51,7 +51,15 @@ export interface TxInput {
   tape: TapeEntry[];
   answers: Record<string, AnswerRecord>;
   overrides: OverridePatch[];
+  /** 发起这笔操作时地图上的棋子（格子坐标 + 占几格）。重放时用它，不用现在的位置 */
+  positions?: Positions;
+  /** 斜走规则（发起时的设置；没有 = 每格 5 尺） */
+  diagonal?: Diagonal;
 }
+
+export type Positions = Record<string, { x: number; y: number; s: number }>;
+/** 斜着走一格算多远：'5' = 2024 规则，每格 5 尺；'5-10-5' = 交替 5 尺、10 尺（DMG 可选规则） */
+export type Diagonal = '5' | '5-10-5';
 
 /** 空间查询（地图实现它；没有地图时为 null，相关问题走询问或推测） */
 export interface Spatial {
@@ -65,6 +73,9 @@ export interface EngineCtx {
   /** 某个用户用哪个骰子来源（按人设置，§6.1） */
   diceFor(user: UserId): DiceSource;
   spatial?: Spatial | null;
+  /** 地图上现在的棋子位置（有地图时）；发起新操作时拍一张快照存进 TxInput */
+  positions?: () => Positions | null;
+  diagonal?: () => Diagonal;
 }
 
 type PostEmit = (tx: Tx, ev: GameEvent) => void;
@@ -97,6 +108,13 @@ export class Tx {
   ) {}
 
   get rules(): RuleBook { return this.ctx.rules; }
+
+  private sp: Spatial | null | undefined;
+  /** 空间查询：这笔操作记了棋子位置就按位置算，否则用 ctx 给的（没有就是 null → 问人） */
+  get spatial(): Spatial | null {
+    if (this.sp === undefined) this.sp = this.input.positions ? gridSpatial(this.input.positions, this.state, this.input.diagonal) : this.ctx.spatial ?? null;
+    return this.sp;
+  }
 
   emit(type: string, payload: Record<string, unknown>, cause: number | null = null): number {
     const ev: GameEvent = { seq: this.state.seq + 1, type, payload, cause };
@@ -174,4 +192,45 @@ export class Tx {
   overrideDamage(index: number): Extract<OverridePatch, { damage: number }> | undefined {
     return this.input.overrides.find((o): o is Extract<OverridePatch, { damage: number }> => 'damage' in o && o.damage === index);
   }
+}
+
+/** 横着 dx 格、竖着 dy 格走过去要多少尺 */
+export function gridFeet(dx: number, dy: number, diagonal: Diagonal = '5'): number {
+  const a = Math.abs(dx), b = Math.abs(dy);
+  const diag = Math.min(a, b);
+  const straight = Math.max(a, b) - diag;
+  // 5-10-5：每走两格斜的多算 5 尺
+  return (straight + diag + (diagonal === '5-10-5' ? Math.floor(diag / 2) : 0)) * 5;
+}
+
+/**
+ * 按格子算的空间查询。距离 = 两者占的格子之间最近的那两格之间走过去的距离（gridFeet）。
+ * 不在地图上的 → null（问人）。
+ */
+export function gridSpatial(pos: Positions, state: EncounterState, diagonal: Diagonal = '5'): Spatial {
+  const gap = (a: string, b: string): number | null => {
+    const p = pos[a], q = pos[b];
+    if (!p || !q) return null;
+    const dx = Math.max(0, p.x - (q.x + q.s - 1), q.x - (p.x + p.s - 1));
+    const dy = Math.max(0, p.y - (q.y + q.s - 1), q.y - (p.y + p.s - 1));
+    return gridFeet(dx, dy, diagonal);
+  };
+  return {
+    distance: gap,
+    alliesWithin(of, ft, allyOf, exclude) {
+      if (!pos[of]) return null;
+      const side = state.combatants[allyOf]?.side;
+      const allies = Object.values(state.combatants).filter((c) => c.side === side && c.id !== allyOf && c.id !== of && !exclude.includes(c.id) && !c.live.dead);
+      const near = allies.filter((c) => { const d = gap(of, c.id); return d !== null && d <= ft; }).map((c) => c.id);
+      // 有盟友不在地图上、而在图上的又都不够近：说不准，还是问人
+      if (!near.length && allies.some((c) => !pos[c.id])) return null;
+      return near;
+    },
+    canSee: () => null,
+  };
+}
+
+/** 体型 → 占几格（微型、小型、中型都是 1 格） */
+export function footprint(size: string | undefined): number {
+  return size === '大型' ? 2 : size === '巨型' ? 3 : size === '超巨型' ? 4 : 1;
 }

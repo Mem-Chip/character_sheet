@@ -4,7 +4,7 @@ import spellsJson from '../../data/dyn/spells.json';
 import featuresJson from '../../data/dyn/features.json';
 import {
   RuleBook, Session, createEncounter, hasCondition, makeCombatant, makeView, physicalDice, scriptedDice,
-  type AttackRow, type Decision, type DispatchResult, type RuleFile, type RuleLayer, type Settings, type ViewInit,
+  type AttackRow, type Decision, type Positions, type DispatchResult, type RuleFile, type RuleLayer, type Settings, type ViewInit,
 } from '../../src/combat';
 
 /**
@@ -35,12 +35,13 @@ export interface Who {
   view: ViewInit;
 }
 
-export function setup(cs: Who[], o: { settings?: Partial<Settings>; layers?: RuleLayer[]; physical?: string[] } = {}) {
+export function setup(cs: Who[], o: { settings?: Partial<Settings>; layers?: RuleLayer[]; physical?: string[]; positions?: { current: Positions | null } } = {}) {
   const dice = scriptedDice();
   const rules = new RuleBook(FILES, o.layers ?? []);
   const s = new Session(createEncounter('t', o.settings), {
     rules,
     diceFor: (u) => (o.physical?.includes(u) ? physicalDice : dice),
+    positions: o.positions ? () => o.positions!.current : undefined,
   });
   for (const c of cs) {
     done(s.dispatch({ type: 'addCombatant', combatant: makeCombatant({ id: c.id, kind: c.kind, side: c.side, hp: c.hp, view: makeView(c.view) }) }));
