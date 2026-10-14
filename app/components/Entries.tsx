@@ -1,13 +1,26 @@
 /**
  * 5etools 正文渲染：字符串里的 {@tag …} 标记 + 小节 / 列表 / 表格 / 引用条目。
- * 只管「读得懂」：引用标记渲染成强调色文字，不做悬停卡片（那个随检索一起做）。
+ * 引用标记（法术、状态、专长、职业特性…）渲染成术语：悬停弹出原文，点击固定（见 Term.tsx）。
  */
 import { Fragment, type ReactNode } from 'react';
 import type { Json } from '../../src/sheet';
+import type { TermRef } from '../lib/terms';
+import { Term } from './Term';
 
 const ATK: Record<string, string> = { m: '近战攻击检定', r: '远程攻击检定', 'm,r': '近战或远程攻击检定', ms: '近战法术攻击检定', rs: '远程法术攻击检定', 'ms,rs': '近战或远程法术攻击检定' };
 /** 第 3 段才是显示名的标签（`{@variantrule 熟练|XPHB|熟练加值}`） */
-const THIRD_IS_LABEL = new Set(['variantrule', 'spell', 'item', 'feat', 'condition', 'status', 'skill', 'sense', 'action', 'creature', 'race', 'background', 'hazard', 'deity', 'language', 'optfeature', 'itemMastery', 'book', 'quickref', 'card', 'disease', 'object', 'reward', 'vehicle', 'trap']);
+const THIRD_IS_LABEL = new Set(['variantrule', 'spell', 'item', 'feat', 'condition', 'status', 'skill', 'sense', 'action', 'creature', 'race', 'background', 'hazard', 'deity', 'language', 'optfeature', 'itemMastery', 'quickref', 'card', 'disease', 'object', 'reward', 'vehicle', 'trap']);
+
+/** 引用标记指向哪一条（给悬浮窗查） */
+function tagRef(tag: string, args: string[]): TermRef | null {
+  const name = (args[0] ?? '').trim();
+  if (!name) return null;
+  if (tag === 'classFeature') return { kind: tag, name, cls: args[1], level: Number(args[3]) || undefined };
+  if (tag === 'subclassFeature') return { kind: tag, name, cls: args[1], level: Number(args[5]) || undefined };
+  if (tag === 'itemProperty' || tag === 'itemMastery') return { kind: tag, name: name.split('|')[0], source: args[1] };
+  if (THIRD_IS_LABEL.has(tag)) return { kind: tag, name, source: args[1] || undefined };
+  return null;
+}
 
 function tagText(tag: string, args: string[]): { text: string; style?: 'b' | 'i' | 'ref' | 'num' } {
   const a0 = (args[0] ?? '').replace(/^[^;]*;\s*/, (m) => (tag === 'filter' ? m : ''));
@@ -25,6 +38,8 @@ function tagText(tag: string, args: string[]): { text: string; style?: 'b' | 'i'
     case 'hom': return { text: '命中或失手：', style: 'i' };
     case 'recharge': return { text: `（充能 ${args[0] || 6}–6）` };
     case 'filter': return { text: args[0], style: 'ref' };
+    // {@book 显示文字|书|章|节}：显示的是第 1 段
+    case 'book': case 'adventure': return { text: args[0], style: 'i' };
     case 'classFeature': case 'subclassFeature': return { text: args[0], style: 'ref' };
     case 'itemProperty': return { text: args[2] || args[0], style: 'ref' };
     default:
@@ -59,13 +74,19 @@ export function Inline({ text }: { text: string }): ReactNode {
     out.push(
       style === 'b' ? <b key={k++}>{child}</b>
         : style === 'i' ? <i key={k++}>{child}</i>
-          : style === 'ref' ? <span key={k++} className="ref">{child}</span>
+          : style === 'ref' ? <RefSpan key={k++} tag={tag} args={rest.split('|')}>{child}</RefSpan>
             : style === 'num' ? <span key={k++} className="num">{child}</span>
               : <Fragment key={k++}>{child}</Fragment>,
     );
     i = j + 1;
   }
   return <>{out}</>;
+}
+
+function RefSpan({ tag, args, children }: { tag: string; args: string[]; children: ReactNode }) {
+  const r = tagRef(tag, args);
+  if (!r) return <span className="ref">{children}</span>;
+  return <span className="ref"><Term {...r}>{children}</Term></span>;
 }
 
 function cellText(c: Json): string {

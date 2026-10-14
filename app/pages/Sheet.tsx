@@ -55,8 +55,8 @@ export function SheetPage({ engine }: { engine: Engine }) {
       </div>
       <div className="tabs" role="tablist">
         <button role="tab" aria-selected={tab === 'view'} onClick={() => setTab('view')}>卡面</button>
-        <button role="tab" aria-selected={tab === 'levelup'} onClick={() => setTab('levelup')}>升级</button>
-        <button role="tab" aria-selected={tab === 'build'} onClick={() => setTab('build')}>建卡 / 编辑{pending > 0 && <span className="count">●{pending}</span>}</button>
+        <button role="tab" aria-selected={tab === 'levelup'} onClick={() => setTab('levelup')}>升级{pending > 0 && <span className="count">●{pending}</span>}</button>
+        <button role="tab" aria-selected={tab === 'build'} onClick={() => setTab('build')}>建卡 / 编辑</button>
         <button role="tab" aria-selected={tab === 'data'} onClick={() => setTab('data')}>数据</button>
       </div>
       {tab === 'view' ? <SheetView engine={engine} id={id} char={char} sheet={sheet} />

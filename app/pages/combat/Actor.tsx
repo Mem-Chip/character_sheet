@@ -7,6 +7,8 @@ import {
   type Action, type ActiveEffect, type Cost, type Duration, type RuleBook, type Session,
 } from '../../../src/combat';
 import { NumInput, Panel, Pips, Stat, Tag, sgn } from '../../components/ui';
+import { Term } from '../../components/Term';
+import { termOfKey, type TermRef } from '../../lib/terms';
 import { combat, type CombatUi } from '../../lib/combat';
 import type { Engine } from '../../lib/engine';
 import { DAMAGE_TYPES, type Namer } from './shared';
@@ -34,6 +36,8 @@ interface ActItem {
   manual?: { activation: 'action' | 'bonus' | 'reaction' | 'none'; concentration: boolean };
   /** 不能主动点：由窗口触发（偷袭、至圣斩、护盾术……），只是列出来让人知道 */
   passive?: boolean;
+  /** 悬浮窗查哪一条 */
+  term?: TermRef | null;
 }
 
 const TIME_UNIT: Record<string, 'action' | 'bonus' | 'reaction'> = { action: 'action', bonus: 'bonus', reaction: 'reaction' };
@@ -50,7 +54,7 @@ function actionsFor(s: Session, rules: RuleBook, spells: Json[], id: string): Ac
   for (const row of v.attacks) {
     const can = !c.live.dead && (!inCombat || c.economy.attacksLeft > 0 || c.economy.action > 0);
     out.push({
-      ref: `weapon:${row.id}`, group: '武器攻击', name: row.name,
+      ref: `weapon:${row.id}`, group: '武器攻击', name: row.name, term: { kind: 'item', name: row.name },
       sub: `${sgn(row.bonus)} · ${row.damage} ${row.damageType}${row.mastery ? ` · ${row.mastery}` : ''}`,
       action: weaponAction(row), slot: null, needsTargets: true, ok: can,
       why: can ? '' : c.live.dead ? '已经死亡' : '本回合的动作和攻击次数都用完了',
@@ -67,7 +71,7 @@ function actionsFor(s: Session, rules: RuleBook, spells: Json[], id: string): Ac
     const concentration = !!sp?.duration?.some((d: Json) => d.concentration);
     const timeText = unit && !TIME_UNIT[unit] ? `${sp.time[0].number ?? ''} ${unit === 'minute' ? '分钟' : unit === 'hour' ? '小时' : unit}` : ACT_CN[activation];
     out.push({
-      ref: `manual:${nm}`, group: '法术（未自动化）', name: nm,
+      ref: `manual:${nm}`, group: '法术（未自动化）', name: nm, term: { kind: 'spell', name: nm },
       sub: [level ? `${level} 环` : '戏法', timeText, concentration ? '专注' : ''].filter(Boolean).join(' · '),
       action: { id: 'manual', name: nm, activation, root: [] },
       slot: level > 0 ? { min: level } : null, needsTargets: false,
@@ -91,7 +95,7 @@ function actionsFor(s: Session, rules: RuleBook, spells: Json[], id: string): Ac
       const act = typeof a.activation === 'string' ? ACT_CN[a.activation] : '';
       const t = a.targeting;
       out.push({
-        ref: `${key}#${a.id}`, group, name: a.name,
+        ref: `${key}#${a.id}`, group, name: a.name, term: termOfKey(key),
         sub: [act, ...(a.cost ?? []).map((k) => describeCost(k, names)), a.concentration ? '专注' : ''].filter(Boolean).join(' · '),
         action: a, slot: slotCost?.slot ?? null,
         needsTargets: !!t && (t.type === 'creature' || t.type === 'area'),
@@ -246,8 +250,8 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
                 return (
                   <div key={it.ref} className={'act' + (it.ok ? '' : ' no')} title={it.why || it.action.text || ''}>
                     {it.passive
-                      ? <span className="passive-name">{it.name}</span>
-                      : <button className="btn sm" onClick={() => use(it)}>{it.name}</button>}
+                      ? <span className="passive-name">{it.term ? <Term {...it.term}>{it.name}</Term> : it.name}</span>
+                      : <button className="btn sm" onClick={() => use(it)}>{it.term ? <Term {...it.term} inButton>{it.name}</Term> : it.name}</button>}
                     <span className="small muted">{it.sub}</span>
                     {it.slot && !it.passive && (
                       avail.length
@@ -272,7 +276,7 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
         {effects.length === 0 && <div className="empty" style={{ padding: '8px 12px' }}>没有效应。</div>}
         {effects.map((e) => (
           <div key={e.id} className="effrow">
-            <span className={'nm' + (e.suppressed ? ' faint' : '')}>{e.key === 'concentration' ? `专注：${e.name}` : e.name}</span>
+            <span className={'nm' + (e.suppressed ? ' faint' : '')}>{e.key === 'concentration' ? `专注：${e.name}` : (() => { const t = termOfKey(String(e.key ?? '')); return t ? <Term {...t}>{e.name}</Term> : e.name; })()}</span>
             <span className="tiny faint">{[e.source && e.source !== id ? `来自 ${name(e.source)}` : '', durText(e.duration, e), e.suppressed ? '被压制' : ''].filter(Boolean).join(' · ')}</span>
             <span style={{ flex: 1 }} />
             {e.key === 'concentration'

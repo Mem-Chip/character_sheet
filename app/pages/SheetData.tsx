@@ -12,6 +12,8 @@
 import { useMemo, useState } from 'react';
 import { HR_SOURCE, sourceKeyOf, type HomeRuleEntry, type Json, type SourceSpec } from '../../src/sheet';
 import { Entries } from '../components/Entries';
+import { Term } from '../components/Term';
+import { termOfKey } from '../lib/terms';
 import { Field, Panel, Tag } from '../components/ui';
 import type { Engine } from '../lib/engine';
 import { actions } from '../lib/store';
@@ -96,7 +98,7 @@ export function SheetData(p: Props) {
               return (
                 <FragmentRow key={key}>
                   <tr className={rowOpen ? 'on' : ''} onClick={() => setOpen(rowOpen ? null : key)} style={{ cursor: 'pointer' }}>
-                    <td className="serif">{isHr ? hr?.name || s.name : s.name}{s.level ? <span className="faint small"> {s.level} 级</span> : null}</td>
+                    <td className="serif">{isHr ? hr?.name || s.name : (() => { const t = termOfKey(key); return t ? <Term {...t} inButton>{s.name}</Term> : s.name; })()}{s.level ? <span className="faint small"> {s.level} 级</span> : null}</td>
                     <td className="small muted">{KIND_CN[s.kind] ?? s.kind}{s.cls ? ` · ${s.cls}` : ''}</td>
                     <td>
                       {hr && !isHr ? <Tag tone="warn">家规覆盖</Tag>

@@ -1,0 +1,161 @@
+/**
+ * 术语悬浮窗（像 5etools 的悬停卡片）：
+ * - 鼠标停在术语上 → 弹出一个悬浮窗（整页同时只有一个，鼠标移进窗里不会消失）；
+ * - 点术语 → 变成固定窗（可以同时开好几个，拖标题栏移动，点一下放到最上面）；
+ * - 窗里的正文也是术语，悬停、点击照样能开新的；
+ * - 按钮里的术语：点击照常执行按钮，悬浮窗上有「固定」按钮。
+ * 窗口总在当前屏幕范围内：放在术语下面，放不下就翻到上面，左右夹在屏幕里。
+ */
+import { useLayoutEffect, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import type { Engine } from '../lib/engine';
+import { canLookup, lookupTerm, type TermData, type TermRef } from '../lib/terms';
+import { Entries } from './Entries';
+
+interface Box { left: number; top: number; bottom: number; right: number }
+interface Win { id: number; ref: TermRef; at: Box; x?: number; y?: number; z: number }
+
+let engine: Engine | null = null;
+let hover: Win | null = null;
+let pins: Win[] = [];
+let seq = 0;
+let zTop = 100;
+let hideTimer: ReturnType<typeof setTimeout> | undefined;
+let showTimer: ReturnType<typeof setTimeout> | undefined;
+const listeners = new Set<() => void>();
+let version = 0;
+const emit = () => { version++; for (const l of listeners) l(); };
+
+export function setTermEngine(e: Engine): void { engine = e; }
+
+const boxOf = (el: Element): Box => { const r = el.getBoundingClientRect(); return { left: r.left, top: r.top, bottom: r.bottom, right: r.right }; };
+const sameRef = (a: TermRef, b: TermRef) => a.kind === b.kind && a.name === b.name && a.source === b.source && a.cls === b.cls && a.level === b.level;
+
+const popups = {
+  hoverSoon(ref: TermRef, el: Element) {
+    clearTimeout(hideTimer);
+    clearTimeout(showTimer);
+    if (hover && sameRef(hover.ref, ref)) return;
+    showTimer = setTimeout(() => { hover = { id: ++seq, ref, at: boxOf(el), z: 0 }; emit(); }, 220);
+  },
+  leaveSoon() {
+    clearTimeout(showTimer);
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => { if (hover) { hover = null; emit(); } }, 220);
+  },
+  stay() { clearTimeout(hideTimer); },
+  pin(ref: TermRef, at: Box, xy?: { x: number; y: number }) {
+    clearTimeout(showTimer);
+    clearTimeout(hideTimer);
+    hover = null;
+    pins = [...pins, { id: ++seq, ref, at, z: ++zTop, ...(xy ?? {}) }];
+    emit();
+  },
+  close(id: number) { pins = pins.filter((p) => p.id !== id); emit(); },
+  closeAll() { pins = []; hover = null; emit(); },
+  front(id: number) { pins = pins.map((p) => (p.id === id ? { ...p, z: ++zTop } : p)); emit(); },
+  move(id: number, x: number, y: number) { pins = pins.map((p) => (p.id === id ? { ...p, x, y } : p)); emit(); },
+};
+
+/**
+ * 一个术语。`inButton`：在按钮里，点击交给按钮（悬浮窗上另有「固定」）。
+ * 查不到的类别不加效果，只渲染文字。
+ */
+export function Term(p: { kind: string; name: string; source?: string; cls?: string; level?: number; inButton?: boolean; children?: ReactNode }) {
+  const ref: TermRef = { kind: p.kind, name: p.name, ...(p.source ? { source: p.source } : {}), ...(p.cls ? { cls: p.cls } : {}), ...(p.level != null ? { level: p.level } : {}) };
+  if (!canLookup(p.kind) || !p.name) return <>{p.children ?? p.name}</>;
+  return (
+    <span
+      className={'term' + (p.inButton ? ' in-btn' : '')}
+      onMouseEnter={(e) => popups.hoverSoon(ref, e.currentTarget)}
+      onMouseLeave={() => popups.leaveSoon()}
+      onClick={p.inButton ? undefined : (e) => { e.stopPropagation(); e.preventDefault(); popups.pin(ref, boxOf(e.currentTarget)); }}
+    >
+      {p.children ?? p.name}
+    </span>
+  );
+}
+
+/** 整页挂一个：画悬浮窗和固定窗 */
+export function TermLayer() {
+  useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l); }, () => version);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && hover) { hover = null; emit(); } };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+  return (
+    <>
+      {pins.map((w) => <TermWindow key={w.id} w={w} pinned />)}
+      {hover && <TermWindow key={hover.id} w={hover} pinned={false} />}
+      {pins.length > 1 && <button className="btn sm term-closeall" onClick={() => popups.closeAll()}>关掉全部浮窗（{pins.length}）</button>}
+    </>
+  );
+}
+
+function TermWindow({ w, pinned }: { w: Win; pinned: boolean }) {
+  const el = useRef<HTMLDivElement>(null);
+  const [data, setData] = useState<TermData | null | undefined>(undefined);
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(w.x != null && w.y != null ? { x: w.x, y: w.y } : null);
+
+  useEffect(() => {
+    let alive = true;
+    if (!engine) { setData(null); return; }
+    void lookupTerm(engine, w.ref).then((d) => alive && setData(d));
+    return () => { alive = false; };
+  }, [w.ref]);
+
+  // 放在术语下面；下面放不下就放上面；左右夹在屏幕里
+  useLayoutEffect(() => {
+    if (w.x != null && w.y != null) { setPos({ x: w.x, y: w.y }); return; }
+    const box = el.current?.getBoundingClientRect();
+    if (!box) return;
+    const vw = window.innerWidth, vh = window.innerHeight, m = 8;
+    const x = Math.max(m, Math.min(w.at.left, vw - box.width - m));
+    const below = w.at.bottom + 4;
+    const above = w.at.top - 4 - box.height;
+    const y = below + box.height <= vh - m ? below : above >= m ? above : Math.max(m, vh - box.height - m);
+    setPos({ x, y });
+  }, [w.at, w.x, w.y, data]);
+
+  const drag = (e: React.PointerEvent) => {
+    if (!pinned || !pos) return;
+    const sx = e.clientX - pos.x, sy = e.clientY - pos.y;
+    const onMove = (ev: PointerEvent) => {
+      const x = Math.max(0, Math.min(window.innerWidth - 80, ev.clientX - sx));
+      const y = Math.max(0, Math.min(window.innerHeight - 40, ev.clientY - sy));
+      popups.move(w.id, x, y);
+    };
+    const onUp = () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  };
+
+  return (
+    <div
+      ref={el}
+      className={'termwin' + (pinned ? ' pinned' : '')}
+      style={{ left: pos?.x ?? -9999, top: pos?.y ?? -9999, zIndex: pinned ? w.z : 10000 }}
+      onMouseEnter={pinned ? undefined : () => popups.stay()}
+      onMouseLeave={pinned ? undefined : () => popups.leaveSoon()}
+      onMouseDown={pinned ? () => popups.front(w.id) : undefined}
+      role={pinned ? 'dialog' : 'tooltip'}
+    >
+      <header onPointerDown={drag} style={{ cursor: pinned ? 'move' : undefined }}>
+        <b className="serif">{data?.name ?? w.ref.name}</b>
+        <span className="tiny faint">{data ? `${data.kindLabel}${data.source ? ` · ${data.source}` : ''}` : ''}</span>
+        <span style={{ flex: 1 }} />
+        {pinned
+          ? <button className="btn ghost sm" onPointerDown={(e) => e.stopPropagation()} onClick={() => popups.close(w.id)} aria-label="关闭">×</button>
+          : <button className="btn ghost sm" onClick={() => pos && popups.pin(w.ref, w.at, pos)}>固定</button>}
+      </header>
+      <div className="body prose small">
+        {data === undefined ? <span className="faint">正在查…</span>
+          : data === null ? <span className="faint">没查到「{w.ref.name}」的原文。</span>
+            : <>
+              {data.meta.length > 0 && <div className="meta">{data.meta.map((m, i) => <div key={i}>{m}</div>)}</div>}
+              <Entries entries={data.entries} />
+            </>}
+      </div>
+    </div>
+  );
+}

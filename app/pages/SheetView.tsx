@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { ABILS, ABIL_CN, SCHOOL_CN, classSpells, type CharData, type Json } from '../../src/sheet';
 import { Choices } from '../components/Choices';
+import { Term } from '../components/Term';
 import { SpellBrowser } from '../components/SpellBrowser';
 import { Entries } from '../components/Entries';
 import { Panel, Pips, Stat, Tag, sgn } from '../components/ui';
@@ -54,7 +55,7 @@ function SavesSkills({ sheet }: Props) {
             {Object.entries(sheet.skills || {}).map(([k, s]: [string, Json]) => (
               <tr key={k} className={s.prof ? '' : 'dim'} title={s.fromAbility ? '由种族 / 背景 / 能力授予' : undefined}>
                 <td style={{ width: 16 }}><span className={'dot' + (s.prof ? ' on' : '') + (s.exp ? ' double' : '')} /></td>
-                <td>{s.cn} <span className="faint tiny">{ABBR[s.ability]}</span></td>
+                <td><Term kind="skill" name={s.cn} /> <span className="faint tiny">{ABBR[s.ability]}</span></td>
                 <td className="r num serif">{sgn(s.total)}</td>
               </tr>
             ))}
@@ -181,7 +182,7 @@ function Spells({ engine, id, char, sheet }: Props) {
             const e = ent(s.name);
             return (
               <tr key={s.name + i} className={s.prepared === false ? 'dim' : ''}>
-                <td className="serif">{s.name}</td>
+                <td className="serif"><Term kind="spell" name={s.name} /></td>
                 <td className="small muted">{e ? (e.level ? `${e.level} 环` : '戏法') + ' · ' + (SCHOOL_CN[e.school] ?? '') : ''}{sc.casters?.length > 1 && s.cls ? ` · ${s.cls}` : ''}</td>
                 <td className="r">
                   {e?.level ? (
@@ -269,7 +270,7 @@ function Features({ sheet, char }: Props) {
           {[...g.items].sort((a, b) => (a.level ?? 0) - (b.level ?? 0)).map((f, i) => (
             <details className="feature" key={i}>
               <summary>
-                <span className="nm">{f.name}</span>
+                <span className="nm">{f._origin === 'race' || f._origin === 'hr' ? f.name : <Term kind={f._sub ? 'subclassFeature' : 'classFeature'} name={f.name} cls={f._cls} level={f.level} inButton>{f.name}</Term>}</span>
                 {f.level ? <span className="tiny faint">{f.level} 级</span> : null}
               </summary>
               <div className="prose"><Entries entries={f.entries || []} /></div>

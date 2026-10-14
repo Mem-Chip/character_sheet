@@ -11,7 +11,7 @@ import { useState } from 'react';
 import { SCHOOL_CN, classSpells, type Json } from '../../src/sheet';
 import type { Engine } from '../lib/engine';
 import { actions } from '../lib/store';
-import { Entries } from './Entries';
+import { Term } from './Term';
 import { Dialog, Tag } from './ui';
 
 const SWAP_ON_REST = new Set(['牧师', '德鲁伊', '圣武士', '法师']);
@@ -23,7 +23,6 @@ export function SpellBrowser({ engine, id, char, sheet, onClose }: Props) {
   const casters: Json[] = sc.casters || [];
   const [cls, setCls] = useState<string>(casters[0]?.name ?? '');
   const [q, setQ] = useState('');
-  const [peek, setPeek] = useState<string | null>(null);
   const caster = casters.find((k) => k.name === cls) ?? casters[0];
   if (!caster) return <Dialog title="选法术" onClose={onClose}><div className="empty">这张卡没有施法职业。</div></Dialog>;
 
@@ -104,14 +103,12 @@ export function SpellBrowser({ engine, id, char, sheet, onClose }: Props) {
                         onClick={() => toggle(s.name, lv)}
                       >
                         <span className="box">{on || locked ? '✓' : ''}</span>
-                        <span className="nm">{s.name}</span>
+                        <span className="nm"><Term kind="spell" name={s.name} source={s.source} inButton /></span>
                         <span className="tiny faint">{SCHOOL_CN[s.school] ?? ''}</span>
                         {conc && <Tag>专注</Tag>}
                         {ritual && <Tag>仪式</Tag>}
                         {locked && <Tag tone="accent">常备</Tag>}
                       </button>
-                      <button type="button" className="btn ghost sm" onClick={() => setPeek(peek === s.name ? null : s.name)}>{peek === s.name ? '收起' : '原文'}</button>
-                      {peek === s.name && <div className="prose small peek"><Entries entries={s.entries || []} /></div>}
                     </div>
                   );
                 })}

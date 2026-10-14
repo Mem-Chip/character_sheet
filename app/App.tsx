@@ -1,4 +1,5 @@
 import { AccountButton } from './components/Account';
+import { TermLayer, setTermEngine } from './components/Term';
 import { CampaignsPage } from './pages/Campaigns';
 import { CombatPage } from './pages/Combat';
 import { Library } from './pages/Library';
@@ -11,6 +12,7 @@ const NAV: Array<[Page, string]> = [['library', '卡片库'], ['sheet', '人物�
 export function App() {
   const app = useApp();
   const { engine, error } = useEngine();
+  if (engine) setTermEngine(engine);
   return (
     <div className="app">
       <header className="topbar">
@@ -35,6 +37,7 @@ export function App() {
                 : app.page === 'campaigns' ? <CampaignsPage />
                   : <CombatPage engine={engine} />}
       </main>
+      <TermLayer />
     </div>
   );
 }
