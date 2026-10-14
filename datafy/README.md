@@ -91,7 +91,7 @@ npm run check:data
 
 ## 七、附：怎么从 5etools 抓更多的书
 
-数据来自 5etools 的中文镜像 `https://5e.kiwee.top`（站点外面有 HTTP 基本认证的话，用 `DND_DATA_BASE` 换成别的镜像）。缓存在 `data/5etools/`（不进 git）。
+数据来自 5etools 的中文镜像 `https://5e.kiwee.top`（想换镜像就设环境变量 `DND_DATA_BASE`）。缓存在 `data/5etools/`（不进 git）。
 
 **站点的数据是怎么放的**
 
