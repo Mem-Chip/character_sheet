@@ -1,0 +1,22 @@
+{
+  "name": "不屈勇武",
+  "automation": "full",
+  "text": "力量检定或力量豁免的总值低于力量属性值时，可以用力量属性值代替总值。只在检定会失败且力量值更高时才询问。",
+  "triggers": [
+    {
+      "id": "indomitable",
+      "label": "不屈勇武：以力量值代替检定总值",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "(roll.kind == 'check' || roll.kind == 'save') && roll.ability == 'str' && roll.failing && roll.total < self.score.str",
+      "modify": [
+        {
+          "op": "addToRoll",
+          "value": "self.score.str - roll.total"
+        }
+      ]
+    }
+  ]
+}

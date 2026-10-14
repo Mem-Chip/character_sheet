@@ -1,0 +1,66 @@
+{
+  "name": "驱散亡灵",
+  "automation": "partial",
+  "text": "被驱散的生物会尽可能远离你：引擎用「恐慌」的劣势与不能向你靠近来近似，「尽可能远离」的移动由人处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "驱散亡灵",
+      "activation": "action",
+      "tags": ["magical"],
+      "cost": [{ "resource": "引导神力" }],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": { "shape": "emanation", "radius": 30 }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "if",
+              "when": "target.id != self.id && target.type == '不死生物' && ask('这个亡灵是你选择驱散的吗？')",
+              "then": [
+                {
+                  "kind": "save",
+                  "ability": "wis",
+                  "dc": "self.spell.dc",
+                  "onFail": [
+                    {
+                      "kind": "applyEffect",
+                      "to": "target",
+                      "template": "XPHB:condition:恐慌",
+                      "duration": {
+                        "minutes": 1,
+                        "endsOn": [
+                          { "event": "damageTaken", "when": "event.target == self.id" },
+                          { "event": "effectApplied", "when": "source != null && event.bearer == source.id && source.has('失能')" },
+                          { "event": "died", "when": "source != null && source.dead" }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "applyEffect",
+                      "to": "target",
+                      "template": "XPHB:condition:失能",
+                      "duration": {
+                        "minutes": 1,
+                        "endsOn": [
+                          { "event": "damageTaken", "when": "event.target == self.id" },
+                          { "event": "effectApplied", "when": "source != null && event.bearer == source.id && source.has('失能')" },
+                          { "event": "died", "when": "source != null && source.dead" }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

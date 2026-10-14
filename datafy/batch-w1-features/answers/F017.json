@@ -1,0 +1,53 @@
+{
+  "name": "威慑之姿",
+  "automation": "full",
+  "resources": [
+    { "id": "威慑之姿", "name": "威慑之姿", "formula": "1", "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "威慑之姿",
+      "activation": "bonus",
+      "cost": [{ "resource": "威慑之姿" }],
+      "targeting": {
+        "type": "area",
+        "area": { "shape": "emanation", "radius": 30 },
+        "filter": "target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": "8 + mod.str + pb",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "template": "XPHB:condition:恐慌",
+                  "duration": {
+                    "minutes": 1,
+                    "saveEnds": { "ability": "wis", "dc": "8 + mod.str + pb", "at": "turnEnd" }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reset",
+      "name": "威慑之姿：重置",
+      "activation": "free",
+      "requires": "self.resource('威慑之姿') == 0",
+      "cost": [{ "resource": "狂暴" }],
+      "root": [
+        { "kind": "resource", "id": "威慑之姿", "delta": 1 }
+      ]
+    }
+  ]
+}

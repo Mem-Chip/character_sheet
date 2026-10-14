@@ -1,0 +1,48 @@
+{
+  "name": "巨武器大师",
+  "automation": "partial",
+  "text": "重武器掌握：是否属于攻击动作、武器是否有重型词条由人确认（回合内才会提示）。砍伐者：重击或把生物降到 0 生命值后，给一次额外攻击（附赠动作），必须用同一把近战武器，由人保证。",
+  "triggers": [
+    {
+      "id": "heavy-mastery",
+      "label": "巨武器大师：重武器掌握（额外伤害 = 熟练加值）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "turn.isMine && attack.weapon && ask('这次攻击是攻击动作的一部分，且用的是有重型词条的武器吗？')",
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "pb",
+          "type": "attack.damageType"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "hew",
+      "name": "巨武器大师：砍伐者（附赠动作攻击）",
+      "activation": "bonus",
+      "text": "用近战武器掷出重击，或把一个生物的生命值降到 0 后，可以用附赠动作用同一把武器再攻击一次。",
+      "trigger": {
+        "on": "attackHit",
+        "role": "actor",
+        "window": "after",
+        "when": "attack.weapon && attack.melee && (roll.crit || target.hp <= 0 || target.dead)"
+      },
+      "requires": "turn.isMine",
+      "root": [
+        {
+          "kind": "economy",
+          "attacks": 1
+        },
+        {
+          "kind": "note",
+          "text": "砍伐者：用同一把近战武器再攻击一次"
+        }
+      ]
+    }
+  ]
+}

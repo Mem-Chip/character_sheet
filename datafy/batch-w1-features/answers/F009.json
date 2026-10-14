@@ -1,0 +1,50 @@
+{
+  "name": "持久狂暴",
+  "automation": "partial",
+  "text": "投掷先攻时可以重获所有已用的狂暴次数（长休前只能一次）。狂暴持续 10 分钟：每个回合开始时自动延长。尚未实现的部分：持久狂暴只在昏迷或穿重甲时提前结束，而狂暴效应本身在失能时就会结束，这一点需要人处理。",
+  "resources": [
+    {
+      "id": "持久狂暴",
+      "name": "持久狂暴",
+      "formula": "1",
+      "recovery": "long"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "regain",
+      "label": "持久狂暴：先攻时重获全部狂暴次数",
+      "on": "initiativeRolled",
+      "role": "actor",
+      "window": "after",
+      "optional": true,
+      "when": "self.resource('狂暴') < classTable('狂暴次数')",
+      "cost": [
+        {
+          "resource": "持久狂暴"
+        }
+      ],
+      "do": [
+        {
+          "kind": "resource",
+          "id": "狂暴",
+          "delta": "classTable('狂暴次数') - self.resource('狂暴')"
+        }
+      ]
+    },
+    {
+      "id": "extend",
+      "label": "持久狂暴：自动延长狂暴",
+      "on": "turnStarted",
+      "role": "actor",
+      "window": "after",
+      "when": "self.hasEffect('狂暴')",
+      "do": [
+        {
+          "kind": "extendEffect",
+          "template": "XPHB:野蛮人:狂暴:1#狂暴"
+        }
+      ]
+    }
+  ]
+}

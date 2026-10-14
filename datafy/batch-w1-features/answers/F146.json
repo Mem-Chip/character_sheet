@@ -1,0 +1,34 @@
+{
+  "name": "运动健将",
+  "automation": "partial",
+  "text": "先攻检定与力量（运动）检定具有优势，已写入。重击后可移动至多速度一半的距离：已写成移动预算，但「这次移动不引发借机攻击」需要人手动处理。",
+  "rollMods": [
+    {
+      "on": { "kind": "initiative" },
+      "who": "bearer",
+      "op": "adv",
+      "label": "运动健将：先攻"
+    },
+    {
+      "on": { "kind": "check", "ability": "str", "skill": "运动" },
+      "who": "bearer",
+      "op": "adv",
+      "label": "运动健将：力量（运动）"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "crit-move",
+      "label": "运动健将：重击后移动",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "optional": true,
+      "when": "roll.crit",
+      "do": [
+        { "kind": "economy", "move": "floor(self.speed / 2)" },
+        { "kind": "note", "text": "这次移动不引发借机攻击（手动处理）" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "name": "投毒",
+  "automation": "partial",
+  "text": "狡诈打击选项，花费 1d6 偷袭骰。引擎无法减少偷袭骰，偷袭骰减 1d6 由人手动处理；需先造成偷袭伤害，并随身携带毒药工具（由人确认）。命中后目标进行体质豁免（DC 为狡诈打击通用公式 8 + 敏捷调整值 + 熟练加值），失败则中毒 1 分钟，目标每次自己的回合结束时可重新豁免，成功则中毒结束。",
+  "triggers": [
+    {
+      "id": "poison",
+      "label": "投毒（花费：1d6）",
+      "on": "attackHit",
+      "role": "actor",
+      "limit": "oncePerTurn",
+      "when": "ask('这次命中是否造成了偷袭伤害，并用 1d6 偷袭骰选择投毒？')",
+      "do": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "8 + mod.dex + pb",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "XPHB:condition:中毒",
+              "duration": { "minutes": 1, "saveEnds": { "ability": "con", "at": "turnEnd" } }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

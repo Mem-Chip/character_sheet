@@ -1,0 +1,62 @@
+{
+  "name": "挑衅攻击",
+  "automation": "full",
+  "text": "攻击命中时消耗一枚卓越骰：加到伤害上，目标须通过感知豁免，否则在你的下个回合结束前，对除你之外的生物进行的攻击检定具有劣势。",
+  "triggers": [
+    {
+      "id": "goad",
+      "label": "挑衅攻击",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "cost": [
+        {
+          "resource": "卓越骰"
+        }
+      ],
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))",
+          "type": "attack.damageType"
+        },
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "8 + self.pb + max(self.mod.str, self.mod.dex)",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "挑衅攻击"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "挑衅攻击": {
+      "text": "对除施加者之外的生物进行的攻击检定具有劣势，直到施加者的下个回合结束。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "bearer",
+          "when": "source != null && target.id != source.id",
+          "op": "disadv",
+          "label": "挑衅攻击：攻击他人具有劣势"
+        }
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "source",
+          "nth": 1
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "眩目（花费：3d6）",
+  "automation": "partial",
+  "text": "诡诈打击选项，花费 3d6 偷袭骰：需人工从偷袭伤害中扣除（引擎没有偷袭骰池）。目标进行敏捷豁免（DC = 8 + 敏捷调整值 + 熟练加值）；失败则陷入目盲，直到其下个回合结束。",
+  "triggers": [
+    {
+      "id": "dazzle",
+      "label": "眩目（花费：3d6）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "(attack.finesse || attack.ranged) && (roll.adv || (allyWithin(target, 5, { exclude: [self], notCond: '失能' }) && !roll.disadv))",
+      "do": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "8 + self.mod.dex + self.pb",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "XPHB:condition:目盲",
+              "duration": {
+                "until": {
+                  "at": "turnEnd",
+                  "of": "bearer",
+                  "nth": 0
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

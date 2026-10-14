@@ -1,0 +1,23 @@
+{
+  "name": "反迷惑",
+  "automation": "full",
+  "text": "你或 30 尺内的一名生物在对抗施加魅惑或恐慌状态的效应的豁免中失败时，以反应让这次豁免重骰，且重骰具有优势（两颗新骰取高，用两次重骰近似）。",
+  "triggers": [
+    {
+      "id": "countercharm",
+      "label": "反迷惑：重骰豁免（优势）",
+      "on": "d20Rolled",
+      "role": "any",
+      "window": "before",
+      "optional": true,
+      "when": "roll.kind == 'save' && roll.failing && within(self, combatant(roll.roller), 30) && ask('这次豁免是对抗施加魅惑或恐慌状态的效应吗？')",
+      "cost": [
+        { "economy": "reaction" }
+      ],
+      "modify": [
+        { "op": "reroll", "die": "d20", "keep": "new" },
+        { "op": "reroll", "die": "d20", "keep": "higher" }
+      ]
+    }
+  ]
+}

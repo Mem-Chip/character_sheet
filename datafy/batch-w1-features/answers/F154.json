@@ -1,0 +1,34 @@
+{
+  "name": "奥法打击",
+  "automation": "partial",
+  "text": "用武器命中一个生物后，该生物直到你的下个回合结束前，在对抗你法术的下一次豁免中具有劣势。引擎每次豁免都会询问「是否针对你的法术」；用掉后需人手动移除该效应（否则到你的下个回合结束时自动消失）。",
+  "triggers": [
+    {
+      "id": "arcane-strike",
+      "label": "奥法打击：施加豁免劣势",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.weapon",
+      "do": [
+        { "kind": "applyEffect", "to": "target", "template": "奥法打击" }
+      ]
+    }
+  ],
+  "effects": {
+    "奥法打击": {
+      "rollMods": [
+        {
+          "on": { "kind": "save" },
+          "who": "bearer",
+          "when": "source != null && ask('这次豁免是针对施法者的法术吗？')",
+          "op": "disadv",
+          "label": "奥法打击：对施法者法术的豁免"
+        }
+      ],
+      "duration": {
+        "until": { "at": "turnEnd", "of": "source", "nth": 1 }
+      }
+    }
+  }
+}

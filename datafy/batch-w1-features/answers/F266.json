@@ -1,0 +1,54 @@
+{
+  "name": "追猎如风",
+  "automation": "partial",
+  "text": "恐惧打击心灵伤害从 1d6 变为 2d8 不在本条写（属于恐惧伏击的恐惧打击，需在该条目按等级处理）。额外效应二选一、由人确认所选：群慌已写（目标做法术豁免 DC 的感知豁免，失败恐慌至你的下一回合开始），但目标 10 尺内其他生物的豁免需人手动处理；瞬息打击（对原目标 5 尺内另一生物再攻击）需人手动选择新目标并攻击。",
+  "triggers": [
+    {
+      "id": "dreadful-rider",
+      "label": "追猎如风：恐惧打击的额外效应",
+      "on": "attackHit",
+      "role": "actor",
+      "optional": true,
+      "when": "attack.weapon && ask('这次命中是否使用了恐惧伏击的恐惧打击？')",
+      "do": [
+        {
+          "kind": "choose",
+          "prompt": "追猎如风：选择额外效应",
+          "options": [
+            {
+              "label": "群慌：目标进行感知豁免（DC 为你的法术豁免 DC），失败则恐慌至你的下一回合开始",
+              "do": [
+                {
+                  "kind": "save",
+                  "ability": "wis",
+                  "dc": "self.spell.dc",
+                  "onFail": [
+                    {
+                      "kind": "applyEffect",
+                      "to": "target",
+                      "template": "XPHB:condition:恐慌",
+                      "duration": { "until": { "at": "turnStart", "of": "source", "nth": 1 } }
+                    }
+                  ]
+                },
+                {
+                  "kind": "note",
+                  "text": "群慌：目标 10 尺内的其他每个生物也要进行同样的感知豁免（DC 为你的法术豁免 DC），失败则恐慌至你的下一回合开始，由人手动处理"
+                }
+              ]
+            },
+            {
+              "label": "瞬息打击：用同一武器对原目标 5 尺内的另一生物再攻击一次（手动）",
+              "do": [
+                {
+                  "kind": "note",
+                  "text": "瞬息打击：用同一把武器对原目标 5 尺内的另一生物再发动一次攻击，新目标必须在武器触及或射程内，由人手动处理"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

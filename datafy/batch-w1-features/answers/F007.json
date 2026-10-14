@@ -1,0 +1,22 @@
+{
+  "name": "坚韧狂暴",
+  "automation": "partial",
+  "text": "狂暴期间生命值降至 0 且没有当场死亡时，可以进行 DC 10 的体质豁免，成功则生命值变为野蛮人等级的两倍。第一次之后每多用一次 DC +5，短休或长休后重置为 10。豁免和 DC 累加由人处理：引擎会问「豁免是否成功」，成功则把生命值设为等级的两倍，失败则照常降到 0。",
+  "triggers": [
+    {
+      "id": "relentless",
+      "label": "坚韧狂暴：体质豁免 DC 10（每多用一次 +5）",
+      "on": "reducedTo0",
+      "role": "target",
+      "window": "before",
+      "optional": true,
+      "when": "self.hasEffect('狂暴') && damage.amount - self.hp - self.tempHp < self.hpMax",
+      "modify": [
+        {
+          "op": "setHp",
+          "value": "cond(ask('坚韧狂暴：体质豁免成功了吗？（DC 10，上次休息之后每多用过一次 +5）'), 2 * self.levelOf('野蛮人'), 0)"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "name": "生还者",
+  "automation": "full",
+  "text": "蔑视死亡：死亡豁免具有优势，掷出 18-20 视为 20。英气风发：回合开始时若已浴血且生命值至少 1，恢复 5 + 体质调整值的生命值。",
+  "rollMods": [
+    {
+      "on": { "kind": "deathSave" },
+      "who": "bearer",
+      "op": "adv",
+      "label": "生还者：蔑视死亡"
+    },
+    {
+      "on": { "kind": "deathSave" },
+      "who": "bearer",
+      "op": "critRange",
+      "value": 18,
+      "label": "生还者：死亡豁免 18-20 视为 20"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "resilient",
+      "label": "生还者：英气风发",
+      "on": "turnStarted",
+      "role": "actor",
+      "when": "self.hp >= 1 && self.hp * 2 <= self.hpMax",
+      "do": [
+        { "kind": "heal", "to": "self", "amount": "5 + mod.con" }
+      ]
+    }
+  ]
+}

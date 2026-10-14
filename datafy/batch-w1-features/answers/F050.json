@@ -1,0 +1,41 @@
+{
+  "name": "不破威仪",
+  "automation": "partial",
+  "text": "附赠动作呈现威仪姿态，持续 1 分钟或失能时结束。在此期间，每个生物在一回合中首次命中你的攻击，须通过对抗你法术豁免 DC 的魅力豁免，否则该次攻击失手。魅力豁免由攻击者掷，引擎无法替其掷，改为询问人。完成短休或长休后才能再次使用。",
+  "resources": [
+    { "id": "不破威仪", "name": "不破威仪", "formula": 1, "recovery": "short" }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "不破威仪",
+      "activation": "bonus",
+      "cost": [{ "resource": "不破威仪" }],
+      "root": [
+        { "kind": "applyEffect", "to": "self", "template": "不破威仪" }
+      ]
+    }
+  ],
+  "effects": {
+    "不破威仪": {
+      "text": "攻击者魅力豁免失败则该次攻击失手；豁免由人判定。",
+      "duration": {
+        "minutes": 1,
+        "endsOn": [
+          { "event": "effectApplied", "when": "event.bearer == self.id && self.has('失能')" }
+        ]
+      },
+      "triggers": [
+        {
+          "id": "majesty",
+          "label": "不破威仪：攻击者须通过魅力豁免",
+          "on": "attackHit",
+          "role": "target",
+          "window": "before",
+          "when": "!ask('攻击者是否通过了魅力豁免？（DC 为你的法术豁免 DC；若它本回合已经对你命中过，选是）')",
+          "modify": [{ "op": "cancel" }]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "name": "幽影斗篷",
+  "text": "完全身处微光或黑暗中时，以魔法动作消耗 3 点功力，周身环绕幽影 1 分钟，直至失能或在明亮光照中结束回合。获得隐形；可如通过困难地形般穿过已占据空间（回合结束仍在其中则排出到最近的未占据空间，需人工处理）；疾风连击不再消耗功力（本条目提供这一版本）。",
+  "automation": "partial",
+  "actions": [
+    {
+      "id": "use",
+      "name": "幽影斗篷",
+      "activation": "action",
+      "tags": ["magical"],
+      "cost": [{ "resource": "功力", "n": 3 }],
+      "requires": "!self.hasEffect('幽影斗篷') && ask('你完全身处微光光照或黑暗中吗？')",
+      "root": [
+        { "kind": "applyEffect", "to": "self", "template": "幽影斗篷" }
+      ]
+    },
+    {
+      "id": "flurry",
+      "name": "幽影斗篷：疾风连击（不耗功力）",
+      "activation": "bonus",
+      "requires": "turn.isMine && self.hasEffect('幽影斗篷')",
+      "targeting": { "type": "creature", "count": 1, "range": "reach" },
+      "tags": ["weapon"],
+      "root": [
+        {
+          "kind": "repeat",
+          "n": "2 + min(1, floor(self.levelOf('武僧') / 10))",
+          "do": [
+            {
+              "kind": "attack",
+              "bonus": "self.pb + max(self.mod.str, self.mod.dex)",
+              "attack": {
+                "melee": true,
+                "unarmed": true,
+                "ability": "dex",
+                "damageType": "钝击",
+                "item": "徒手打击"
+              },
+              "onHit": [
+                {
+                  "kind": "damage",
+                  "dice": "classTable('武艺') + max(self.mod.str, self.mod.dex)",
+                  "type": "钝击"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "幽影斗篷": {
+      "text": "获得隐形状态；持续到失能，或在明亮光照中结束你的回合。",
+      "tags": ["magical"],
+      "implies": ["XPHB:condition:隐形"],
+      "duration": {
+        "minutes": 1,
+        "endsOn": [
+          { "event": "effectApplied", "when": "event.bearer == self.id && self.has('失能')" },
+          { "event": "turnEnded", "when": "turn.isMine && ask('你的回合结束时是否处于明亮光照中？')" }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "name": "共视感官",
+  "automation": "partial",
+  "text": "只追踪连接的开始与延续（附赠动作触碰自愿生物，持续到你下回合结束，可用附赠动作延长；需要两者在同一位面，由人判断）。以对方感官观察、60 尺内如同在对方位置施法，引擎无法判定，请手动处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "共视感官",
+      "activation": "bonus",
+      "text": "触碰一个自愿的生物，与其建立感官连接，持续到你下回合结束。",
+      "requires": "turn.isMine && !self.hasEffect('共视感官')",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "共视感官",
+          "state": { "link": "target" }
+        }
+      ]
+    },
+    {
+      "id": "extend",
+      "name": "共视感官：延长连接",
+      "activation": "bonus",
+      "text": "你与该生物仍在同一位面时，用附赠动作把连接延长到你下回合结束。",
+      "requires": "turn.isMine && self.hasEffect('共视感官')",
+      "root": [
+        {
+          "kind": "extendEffect",
+          "template": "共视感官"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "共视感官": {
+      "text": "你与所连接的生物处于感官连接中：可用其感官观察，获得其所有特殊感官的增益；距离不超过 60 尺时可如同在其位置上般施展法术（手动处理）。持续到你下回合结束，可用附赠动作延长。",
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        }
+      }
+    }
+  }
+}

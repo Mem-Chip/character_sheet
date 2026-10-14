@@ -1,0 +1,106 @@
+{
+  "name": "复仇天使",
+  "automation": "partial",
+  "text": "飞行 60 尺与悬浮为静态层的修正，不随本特性开始与结束，需人工处理。豁免 DC 取圣武士的法术豁免 DC。恐慌与攻击优势自动处理。",
+  "resources": [
+    { "id": "avenging-angel", "name": "复仇天使", "formula": "1", "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "复仇天使",
+      "activation": "bonus",
+      "requires": "turn.isMine",
+      "cost": [
+        { "resource": "avenging-angel" }
+      ],
+      "root": [
+        { "kind": "applyEffect", "to": "self", "template": "复仇天使" }
+      ]
+    },
+    {
+      "id": "end",
+      "name": "复仇天使：提前结束",
+      "activation": "free",
+      "requires": "self.hasEffect('复仇天使')",
+      "root": [
+        {
+          "kind": "removeEffect",
+          "from": "self",
+          "match": { "name": "复仇天使" }
+        }
+      ]
+    },
+    {
+      "id": "reset",
+      "name": "复仇天使：重置",
+      "activation": "free",
+      "requires": "self.resource('avenging-angel') < 1",
+      "cost": [
+        { "slot": { "min": 5, "max": 5 } }
+      ],
+      "root": [
+        { "kind": "resource", "id": "avenging-angel", "delta": 1 }
+      ]
+    }
+  ],
+  "effects": {
+    "复仇天使": {
+      "text": "持续 10 分钟。每个在灵光范围内开始其回合的敌人必须通过感知豁免，否则恐慌 1 分钟或直到其受到伤害。",
+      "duration": { "minutes": 10 },
+      "aura": {
+        "id": "dread",
+        "radius": 10,
+        "affects": "enemies",
+        "includeSelf": false,
+        "requires": "!self.has('失能')",
+        "grant": {
+          "triggers": [
+            {
+              "id": "dread",
+              "label": "复仇天使：恐惧灵光",
+              "on": "turnStarted",
+              "role": "actor",
+              "do": [
+                {
+                  "kind": "save",
+                  "ability": "wis",
+                  "dc": "source.spell.dc",
+                  "onFail": [
+                    {
+                      "kind": "applyEffect",
+                      "template": "XPHB:condition:恐慌",
+                      "duration": {
+                        "minutes": 1,
+                        "endsOn": [{ "event": "damageTaken" }]
+                      }
+                    },
+                    {
+                      "kind": "applyEffect",
+                      "template": "复仇天使：恐慌"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "复仇天使：恐慌": {
+      "text": "对被恐慌生物发动的攻击检定具有优势。",
+      "duration": {
+        "minutes": 1,
+        "endsOn": [{ "event": "damageTaken" }]
+      },
+      "rollMods": [
+        {
+          "on": { "kind": "attack" },
+          "who": "against",
+          "op": "adv",
+          "label": "复仇天使：目标恐慌"
+        }
+      ]
+    }
+  }
+}

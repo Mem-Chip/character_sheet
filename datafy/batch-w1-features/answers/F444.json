@@ -1,0 +1,54 @@
+{
+  "name": "巫师杀手",
+  "automation": "full",
+  "resources": [
+    { "id": "审慎护心", "name": "审慎护心", "formula": "1", "recovery": "short" }
+  ],
+  "triggers": [
+    {
+      "id": "focus-break",
+      "label": "巫师杀手：专注中断手",
+      "on": "damageTaken",
+      "role": "actor",
+      "window": "after",
+      "when": "target.concentrating",
+      "do": [
+        { "kind": "applyEffect", "to": "target", "template": "专注中断手" }
+      ]
+    },
+    {
+      "id": "steady-mind",
+      "label": "巫师杀手：审慎护心",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "roll.kind == 'save' && roll.failing && (roll.ability == 'int' || roll.ability == 'wis' || roll.ability == 'cha')",
+      "cost": [
+        { "resource": "审慎护心" }
+      ],
+      "modify": [
+        { "op": "addToRoll", "value": "roll.vs - roll.total" }
+      ]
+    }
+  ],
+  "effects": {
+    "专注中断手": {
+      "text": "维持专注的豁免检定具有劣势（由巫师杀手造成伤害后，本次专注检定）。",
+      "rollMods": [
+        {
+          "on": { "kind": "concentration" },
+          "who": "bearer",
+          "op": "disadv",
+          "label": "巫师杀手：专注中断手"
+        }
+      ],
+      "duration": {
+        "until": { "at": "turnEnd", "of": "bearer", "nth": 0 },
+        "endsOn": [
+          { "event": "d20Rolled", "when": "event.kind == 'concentration' && event.roller == self.id" }
+        ]
+      }
+    }
+  }
+}

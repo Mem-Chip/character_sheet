@@ -1,0 +1,61 @@
+{
+  "name": "扰乱打击",
+  "automation": "full",
+  "text": "攻击命中时消耗一枚卓越骰：加到伤害上；直到你的下个回合开始前，除你之外的生物对目标的下一次攻击检定具有优势。",
+  "triggers": [
+    {
+      "id": "distract",
+      "label": "扰乱打击",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "cost": [
+        {
+          "resource": "卓越骰"
+        }
+      ],
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))",
+          "type": "attack.damageType"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "扰乱打击"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "扰乱打击": {
+      "text": "除施加者之外的生物对该目标的下一次攻击检定具有优势；施加者的下个回合开始时消失。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "against",
+          "when": "source != null && attacker.id != source.id",
+          "op": "adv",
+          "label": "扰乱打击"
+        }
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        },
+        "endsOn": [
+          {
+            "event": "d20Rolled",
+            "when": "event.kind == 'attack' && event.target == self.id && source != null && event.roller != source.id"
+          }
+        ]
+      }
+    }
+  }
+}

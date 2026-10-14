@@ -1,0 +1,36 @@
+{
+  "name": "无敌攻势之恩惠",
+  "automation": "partial",
+  "text": "无阻打击（攻击检定的 d20 掷出 20 时，额外造成等于所提升属性属性值的伤害，类型与本次攻击相同）已写，提升的属性（力量或敏捷）由人选择。摧坚破甲（钝击、挥砍、穿刺伤害无视抗性）引擎不支持忽略抗性，需人工处理。",
+  "triggers": [
+    {
+      "id": "unstoppable-crit",
+      "label": "无敌攻势之恩惠：无阻打击",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "roll.natural == 20",
+      "do": [
+        {
+          "kind": "choose",
+          "prompt": "无阻打击：额外伤害取哪项属性的属性值？",
+          "options": [
+            {
+              "label": "力量",
+              "do": [
+                { "kind": "addDamage", "dice": "score.str", "type": "attack.damageType" }
+              ]
+            },
+            {
+              "label": "敏捷",
+              "do": [
+                { "kind": "addDamage", "dice": "score.dex", "type": "attack.damageType" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

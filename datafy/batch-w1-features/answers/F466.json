@@ -1,0 +1,76 @@
+{
+  "name": "劈砍者",
+  "automation": "full",
+  "triggers": [
+    {
+      "id": "sinew",
+      "label": "劈砍者：伤筋（速度 -10 尺）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "damage.type == '挥砍' && damage.amount > 0",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "伤筋"
+        }
+      ]
+    },
+    {
+      "id": "crushing",
+      "label": "劈砍者：强化重击（目标攻击劣势）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "roll.crit && damage.type == '挥砍'",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "强化重击"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "伤筋": {
+      "text": "速度降低 10 尺，直到劈砍者的下一回合开始。",
+      "statics": [
+        {
+          "kind": "speed",
+          "bonus": -10
+        }
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        }
+      }
+    },
+    "强化重击": {
+      "text": "直到劈砍者的下一回合开始，该生物的所有攻击检定具有劣势。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "bearer",
+          "op": "disadv",
+          "label": "劈砍者：强化重击（攻击劣势）"
+        }
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        }
+      }
+    }
+  }
+}

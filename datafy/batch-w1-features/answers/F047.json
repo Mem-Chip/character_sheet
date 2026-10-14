@@ -1,0 +1,73 @@
+{
+  "name": "惑心魔法",
+  "automation": "full",
+  "text": "始终准备魅惑类人与镜影术属于人物卡静态层授予，此处不写。",
+  "resources": [
+    { "id": "glamour-charm", "name": "惑心魔法", "formula": 1, "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "惑心魔法",
+      "activation": "free",
+      "trigger": {
+        "on": "spellCast",
+        "role": "actor",
+        "window": "after",
+        "when": "self.resource('glamour-charm') > 0 && ask('刚施展的法术是惑控或幻术学派，并且使用了法术位吗？')"
+      },
+      "cost": [{ "resource": "glamour-charm" }],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "target.id != self.id && canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "choose",
+              "prompt": "惑心魔法：令其陷入魅惑还是恐慌？",
+              "options": [
+                {
+                  "label": "魅惑",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "to": "target",
+                      "template": "XPHB:condition:魅惑",
+                      "duration": { "minutes": 1, "saveEnds": { "ability": "wis", "at": "turnEnd" } }
+                    }
+                  ]
+                },
+                {
+                  "label": "恐慌",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "to": "target",
+                      "template": "XPHB:condition:恐慌",
+                      "duration": { "minutes": 1, "saveEnds": { "ability": "wis", "at": "turnEnd" } }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reset",
+      "name": "惑心魔法：重置",
+      "activation": "free",
+      "requires": "self.resource('glamour-charm') < 1",
+      "cost": [{ "resource": "诗人激励" }],
+      "root": [{ "kind": "resource", "id": "glamour-charm", "delta": 1 }]
+    }
+  ]
+}

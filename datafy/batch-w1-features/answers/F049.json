@@ -1,0 +1,43 @@
+{
+  "name": "威仪作锦",
+  "automation": "partial",
+  "text": "始终准备命令术属于人物卡静态层授予，此处不写。附赠动作无需法术位施展命令术的结算，以及魅惑你的生物在对抗此命令术时豁免自动失败，需手动处理。",
+  "resources": [
+    { "id": "majesty", "name": "威仪作锦", "formula": 1, "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "威仪作锦",
+      "activation": "bonus",
+      "cost": [{ "resource": "majesty" }],
+      "concentration": { "minutes": 1 },
+      "root": [
+        { "kind": "note", "text": "附赠动作无需法术位施展命令术（手动结算）" },
+        { "kind": "applyEffect", "to": "self", "template": "威仪作锦" }
+      ]
+    },
+    {
+      "id": "command",
+      "name": "威仪作锦：附赠动作施展命令术",
+      "activation": "bonus",
+      "requires": "self.hasEffect('威仪作锦')",
+      "root": [
+        { "kind": "note", "text": "无需法术位施展命令术（手动结算）；魅惑你的生物对此命令术的豁免自动失败（手动）" }
+      ]
+    },
+    {
+      "id": "reset",
+      "name": "威仪作锦：重置",
+      "activation": "free",
+      "requires": "self.resource('majesty') < 1",
+      "cost": [{ "slot": { "min": 3 } }],
+      "root": [{ "kind": "resource", "id": "majesty", "delta": 1 }]
+    }
+  ],
+  "effects": {
+    "威仪作锦": {
+      "text": "超凡脱俗的容貌：持续 1 分钟，或在专注终止时提前结束。"
+    }
+  }
+}

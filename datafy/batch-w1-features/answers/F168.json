@@ -1,0 +1,23 @@
+{
+  "name": "敏捷攻击",
+  "automation": "partial",
+  "text": "徒手打击与武僧武器（按近战武器近似判断）的攻击检定与伤害，改用敏捷替代力量的部分已自动化。擒抱 / 推撞的豁免 DC 改用敏捷属于那两个基础动作本身，引擎不能替换，需要人处理。",
+  "rollMods": [
+    {
+      "on": { "kind": "attack", "attack": { "melee": true } },
+      "who": "bearer",
+      "when": "attack.ability == 'str' && (attack.unarmed || attack.weapon)",
+      "op": "add",
+      "value": "max(0, mod.dex - mod.str)",
+      "label": "敏捷攻击"
+    },
+    {
+      "on": { "kind": "damage" },
+      "who": "bearer",
+      "when": "attack.melee && attack.ability == 'str' && (attack.unarmed || attack.weapon)",
+      "op": "add",
+      "value": "max(0, mod.dex - mod.str)",
+      "label": "敏捷攻击：伤害"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "name": "报偿",
+  "automation": "partial",
+  "text": "自动部分：受到 5 尺内生物的伤害后，以反应对其发动一次徒手打击（力量，伤害 1 + 力量调整值；狂暴伤害加值照常生效）。用武器反击请选「近战武器」，随后在武器行手动发起这次近战攻击（反应已在这里付过）。目标必须是对你造成伤害的那个生物，由人选择。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "报偿",
+      "activation": "reaction",
+      "trigger": {
+        "on": "damageTaken",
+        "role": "target",
+        "window": "after",
+        "when": "damage.amount > 0 && attacker != null && attacker.id != self.id && within(self, attacker, 5)"
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "reach"
+      },
+      "tags": [
+        "weapon"
+      ],
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "报偿：用什么反击？",
+          "options": [
+            {
+              "label": "徒手打击",
+              "do": [
+                {
+                  "kind": "attack",
+                  "bonus": "self.pb + self.mod.str",
+                  "attack": {
+                    "melee": true,
+                    "unarmed": true,
+                    "ability": "str",
+                    "damageType": "钝击",
+                    "item": "徒手打击"
+                  },
+                  "onHit": [
+                    {
+                      "kind": "damage",
+                      "dice": "1 + self.mod.str",
+                      "type": "钝击"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "近战武器攻击（手动）",
+              "do": [
+                {
+                  "kind": "note",
+                  "text": "报偿：请用武器对伤害你的生物发动一次近战攻击（反应已消耗，在武器行手动发起，不再付反应）"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

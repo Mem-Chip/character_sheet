@@ -1,0 +1,45 @@
+{
+  "name": "暗影步",
+  "text": "完全身处微光光照或黑暗中时，可用附赠动作传送到 60 尺内另一处你可见的未占据空间（落点同样需在微光光照或黑暗中）；随后当前回合结束前的下一次近战攻击具有优势。光照与落点条件由人确认。",
+  "automation": "partial",
+  "actions": [
+    {
+      "id": "use",
+      "name": "暗影步",
+      "activation": "bonus",
+      "requires": "turn.isMine && ask('你完全身处微光光照或黑暗中吗？')",
+      "root": [
+        { "kind": "move", "mode": "teleport", "ft": 60 },
+        { "kind": "note", "text": "落点须为你可见的未占据空间，且同样位于微光光照或黑暗中（人工确认）" },
+        { "kind": "applyEffect", "to": "self", "template": "暗影步" }
+      ]
+    }
+  ],
+  "effects": {
+    "暗影步": {
+      "text": "下一次近战攻击具有优势，直到当前回合结束。",
+      "duration": { "until": { "at": "turnEnd", "of": "bearer", "nth": 0 } },
+      "rollMods": [
+        {
+          "on": { "kind": "attack", "attack": { "melee": true } },
+          "who": "bearer",
+          "op": "adv",
+          "label": "暗影步：下一次近战攻击"
+        }
+      ],
+      "triggers": [
+        {
+          "id": "used",
+          "label": "暗影步：用掉优势",
+          "on": "d20Rolled",
+          "role": "actor",
+          "window": "after",
+          "when": "roll.kind == 'attack' && attack.melee",
+          "do": [
+            { "kind": "removeEffect", "from": "self", "match": { "name": "暗影步" } }
+          ]
+        }
+      ]
+    }
+  }
+}

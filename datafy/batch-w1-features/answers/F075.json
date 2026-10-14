@@ -1,0 +1,30 @@
+{
+  "name": "维持生命",
+  "automation": "partial",
+  "text": "治疗能量池（5 × 牧师等级）原文可分给 30 尺内任意数量的浴血生物，每个恢复至多到其生命上限的一半。这里只做单个目标：分给多个生物时需手动分配。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "维持生命",
+      "activation": "action",
+      "tags": ["magical"],
+      "cost": [{ "resource": "引导神力" }],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30,
+        "filter": "target.hp * 2 <= target.hpMax"
+      },
+      "root": [
+        {
+          "kind": "number",
+          "prompt": "用多少点治疗量？（总量为 5 × 牧师等级）",
+          "var": "n",
+          "min": 1,
+          "max": "min(5 * self.levelOf('牧师'), target.hpMax / 2 - target.hp)"
+        },
+        { "kind": "heal", "amount": "vars.n" }
+      ]
+    }
+  ]
+}

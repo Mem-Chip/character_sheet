@@ -1,0 +1,58 @@
+{
+  "name": "灼光复仇",
+  "automation": "partial",
+  "text": "在你或 60 尺内的盟友将要进行死亡豁免时使用。恢复生命值一半与结束倒地：对自己自动处理，对盟友需要在其角色上手动处理；范围选在那名生物周围 30 尺，选择受影响的生物时请排除被救者本人和你不想伤害的人。",
+  "resources": [
+    { "id": "searing-vengeance", "name": "灼光复仇", "formula": "1", "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "灼光复仇",
+      "activation": "free",
+      "cost": [{ "resource": "searing-vengeance" }],
+      "targeting": { "type": "area", "range": 60, "area": { "shape": "sphere", "radius": 30 } },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "灼光复仇：谁将要进行死亡豁免？",
+          "options": [
+            {
+              "label": "我自己",
+              "do": [
+                { "kind": "heal", "to": "self", "amount": "floor(self.hpMax / 2)" },
+                {
+                  "kind": "if",
+                  "when": "self.has('倒地') && ask('同时结束你的倒地状态吗？')",
+                  "then": [{ "kind": "removeEffect", "from": "self", "match": { "name": "倒地" } }]
+                }
+              ]
+            },
+            {
+              "label": "60 尺内的盟友（其恢复与倒地手动处理）",
+              "do": [
+                {
+                  "kind": "note",
+                  "text": "灼光复仇：令那名盟友恢复等于其生命值上限一半的生命值，且其可以选择结束倒地状态"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            { "kind": "damage", "id": "sv", "dice": "2d8 + self.mod.cha", "type": "光耀" },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "XPHB:condition:目盲",
+              "duration": { "manual": true, "endsOn": [{ "event": "turnEnded" }] }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

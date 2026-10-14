@@ -1,0 +1,29 @@
+{
+  "name": "哨兵",
+  "automation": "partial",
+  "text": "阻拦已自动化（借机攻击命中后，目标本回合剩余时间内速度为 0，由人确认是否为借机攻击）；守护者（5 尺内生物撤离后，或其攻击命中他人后，可立即借机攻击）需人手动处理。",
+  "triggers": [
+    {
+      "id": "block",
+      "label": "哨兵：阻拦",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.melee && ask('这次攻击是借机攻击（反应）吗？')",
+      "do": [
+        { "kind": "applyEffect", "to": "target", "template": "阻拦" }
+      ]
+    }
+  ],
+  "effects": {
+    "阻拦": {
+      "text": "本回合剩余时间内速度为 0。",
+      "statics": [
+        { "kind": "speedSet", "value": 0 }
+      ],
+      "duration": {
+        "until": { "at": "turnEnd", "of": "bearer", "nth": 0 }
+      }
+    }
+  }
+}

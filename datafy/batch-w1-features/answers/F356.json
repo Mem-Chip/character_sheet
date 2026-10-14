@@ -1,0 +1,41 @@
+{
+  "name": "斗转星移",
+  "automation": "partial",
+  "text": "魅惑免疫属于静态部分，这里没有写。反应自动处理：伤害减半、扣掉反应与使用权。攻击者的感知豁免（DC = 你的法术豁免 DC）与失败时受到的心灵伤害（等于你本次实际承受的伤害）需要人结算。契约魔法法术位恢复使用权：多职业时请选契约魔法法术位。",
+  "resources": [
+    { "id": "beguiling-defenses", "name": "斗转星移", "formula": "1", "recovery": "long" }
+  ],
+  "triggers": [
+    {
+      "id": "bewilder",
+      "label": "斗转星移：反应令伤害减半",
+      "on": "attackHit",
+      "role": "target",
+      "window": "before",
+      "deferTo": "damageIncoming",
+      "optional": true,
+      "when": "attacker.isEnemyOf(self) && canSee(self, attacker)",
+      "cost": [
+        { "economy": "reaction" },
+        { "resource": "beguiling-defenses" }
+      ],
+      "modify": [{ "op": "halveDamage" }],
+      "do": [
+        {
+          "kind": "note",
+          "text": "斗转星移：攻击者进行感知豁免（DC = 你的法术豁免 DC），失败则受到心灵伤害，数值等于你本次实际承受的伤害"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "斗转星移：消耗契约魔法法术位恢复反应",
+      "activation": "free",
+      "requires": "self.resource('beguiling-defenses') < 1",
+      "cost": [{ "slot": { "min": 1 } }],
+      "root": [{ "kind": "resource", "id": "beguiling-defenses", "delta": 1 }]
+    }
+  ]
+}

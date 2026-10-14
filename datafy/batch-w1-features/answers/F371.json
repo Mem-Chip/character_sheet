@@ -1,0 +1,53 @@
+{
+  "name": "锐眼斗士",
+  "automation": "partial",
+  "text": "用唤醒心灵与生物形成连结时，可迫使其进行感知豁免（DC 为你的法术豁免 DC）；失败则连结期间它对你的攻击检定具有劣势，你对它的攻击检定具有优势。使用后直到短休或长休前不能再用，除非消耗一个契约魔法法术位（无需动作）复原使用次数。只能紧接唤醒心灵使用、连结结束时移除效果，由人处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "锐眼斗士",
+      "activation": "free",
+      "cost": [ { "resource": "use" } ],
+      "targeting": { "type": "creature", "count": 1, "range": 30, "filter": "canSee(self, target)" },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [ { "kind": "applyEffect", "to": "target", "template": "锐眼斗士：连结" } ]
+        }
+      ]
+    },
+    {
+      "id": "reset",
+      "name": "锐眼斗士：复原使用次数",
+      "activation": "free",
+      "cost": [ { "slot": { "min": 1 } } ],
+      "requires": "self.resource('use') < 1",
+      "root": [ { "kind": "resource", "id": "use", "delta": 1 } ]
+    }
+  ],
+  "effects": {
+    "锐眼斗士：连结": {
+      "tags": ["锐眼斗士"],
+      "text": "连结期间：它对施放者的攻击具有劣势，施放者对它的攻击具有优势。连结结束时手动移除。",
+      "duration": { "manual": true },
+      "rollMods": [
+        {
+          "on": { "kind": "attack" },
+          "who": "bearer",
+          "when": "target.id == source.id",
+          "op": "disadv",
+          "label": "锐眼斗士：对施放者的攻击具有劣势"
+        },
+        {
+          "on": { "kind": "attack" },
+          "who": "against",
+          "when": "attacker.id == source.id",
+          "op": "adv",
+          "label": "锐眼斗士：施放者对其攻击具有优势"
+        }
+      ]
+    }
+  }
+}

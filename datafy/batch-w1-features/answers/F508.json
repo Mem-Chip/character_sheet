@@ -1,0 +1,31 @@
+{
+  "name": "灵动攻击",
+  "automation": "partial",
+  "text": "攻击命中时消耗一枚卓越骰：加到伤害上（自动）。指定一名能看见或听到你的自愿生物，用其反应移动至多其速度的一半、且不会引发被攻击目标的借机攻击——这一步由人处理。",
+  "triggers": [
+    {
+      "id": "maneuver",
+      "label": "灵动攻击",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "cost": [
+        {
+          "resource": "卓越骰"
+        }
+      ],
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))",
+          "type": "attack.damageType"
+        },
+        {
+          "kind": "note",
+          "text": "灵动攻击：指定一名能看见或听到你的自愿生物，它可以用反应移动至多其速度一半的距离，这次移动不会引发被你攻击的目标的借机攻击（请手动处理）"
+        }
+      ]
+    }
+  ]
+}

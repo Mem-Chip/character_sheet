@@ -1,0 +1,42 @@
+{
+  "name": "击昏（花费：6d6）",
+  "automation": "partial",
+  "text": "诡诈打击选项，花费 6d6 偷袭骰：需人工从偷袭伤害中扣除（引擎没有偷袭骰池）。目标进行体质豁免（DC = 8 + 敏捷调整值 + 熟练加值）；失败则陷入昏迷，持续 1 分钟。昏迷的目标在自己的回合结束时可以重新豁免，通过即结束；受到任何伤害也会结束。",
+  "triggers": [
+    {
+      "id": "knockout",
+      "label": "击昏（花费：6d6）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "(attack.finesse || attack.ranged) && (roll.adv || (allyWithin(target, 5, { exclude: [self], notCond: '失能' }) && !roll.disadv))",
+      "do": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "8 + self.mod.dex + self.pb",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "XPHB:condition:昏迷",
+              "duration": {
+                "minutes": 1,
+                "saveEnds": {
+                  "ability": "con",
+                  "at": "turnEnd"
+                },
+                "endsOn": [
+                  {
+                    "event": "damageTaken"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

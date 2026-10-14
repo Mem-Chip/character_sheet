@@ -1,0 +1,70 @@
+{
+  "name": "射手座",
+  "automation": "full",
+  "text": "化身射手座时可立刻（不花动作）射出一发光箭：对 60 尺内一个生物的远程法术攻击，命中造成 1d8 + 感知调整值的光耀伤害；形态持续期间的后续回合可以附赠动作再射。10 级起（闪耀星座）骰子变为 2d8。依赖星耀形态条目施加的效应「星耀形态：射手座」。",
+  "actions": [
+    {
+      "id": "first",
+      "name": "射手座：光箭（化身时，不花动作）",
+      "activation": "free",
+      "requires": "turn.isMine && self.hasEffect('射手座：初箭可用')",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "removeEffect",
+          "from": "self",
+          "match": { "name": "射手座：初箭可用" }
+        },
+        {
+          "kind": "attack",
+          "attack": {
+            "ranged": true,
+            "spell": true,
+            "ability": "wis",
+            "damageType": "光耀"
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "cond(self.levelOf('德鲁伊') >= 10, 2d8, 1d8) + self.mod.wis",
+              "type": "光耀"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "射手座：光箭",
+      "activation": "bonus",
+      "requires": "turn.isMine && self.hasEffect('星耀形态：射手座')",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "ranged": true,
+            "spell": true,
+            "ability": "wis",
+            "damageType": "光耀"
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "cond(self.levelOf('德鲁伊') >= 10, 2d8, 1d8) + self.mod.wis",
+              "type": "光耀"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

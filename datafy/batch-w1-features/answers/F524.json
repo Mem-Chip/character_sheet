@@ -1,0 +1,77 @@
+{
+ "name": "反击",
+ "automation": "partial",
+ "text": "近战攻击对你失手时，可消耗一枚卓越骰（这里只扣卓越骰，反应由随后的武器攻击扣）。之后请用武器或徒手打击对攻击者进行一次近战攻击，并选择「作为反应」发起；该攻击命中时，卓越骰会自动计入伤害。",
+ "triggers": [
+  {
+   "id": "riposte",
+   "label": "反击：消耗卓越骰",
+   "on": "attackMissed",
+   "role": "target",
+   "optional": true,
+   "when": "attack.melee",
+   "cost": [
+    { "resource": "卓越骰" }
+   ],
+   "do": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "反击"
+    },
+    {
+     "kind": "note",
+     "text": "反击：现在用武器或徒手打击对攻击者进行一次近战攻击，并选择「作为反应」发起；命中时卓越骰计入伤害"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "反击": {
+   "text": "你下一次近战武器 / 徒手打击命中时，卓越骰计入伤害；下一次攻击结算后消失。",
+   "duration": {
+    "until": {
+     "at": "turnStart",
+     "of": "bearer",
+     "nth": 1
+    }
+   },
+   "triggers": [
+    {
+     "id": "riposte-hit",
+     "label": "反击：卓越骰计入伤害",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "when": "attack.melee && (attack.weapon || attack.unarmed)",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))",
+       "type": "attack.damageType"
+      },
+      {
+       "kind": "removeEffect",
+       "from": "self",
+       "match": { "name": "反击" }
+      }
+     ]
+    },
+    {
+     "id": "riposte-miss",
+     "label": "反击：这次攻击失手",
+     "on": "attackMissed",
+     "role": "actor",
+     "when": "attack.melee && (attack.weapon || attack.unarmed)",
+     "do": [
+      {
+       "kind": "removeEffect",
+       "from": "self",
+       "match": { "name": "反击" }
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

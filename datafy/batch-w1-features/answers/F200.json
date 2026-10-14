@@ -1,0 +1,46 @@
+{
+  "name": "无影步",
+  "text": "使用暗影步时可消耗 1 点功力，移除开始与结束时对微光光照或黑暗的要求；此外，作为同一个附赠动作的一部分，传送后可立即进行一次徒手打击。本条目是消耗功力的版本（普通暗影步见「暗影步」条目）。传送后的徒手打击需人工选目标并结算（命中 = 熟练 + max(力量, 敏捷)，伤害 = 武艺骰 + max(力量, 敏捷) 钝击）。",
+  "automation": "partial",
+  "actions": [
+    {
+      "id": "ki",
+      "name": "无影步：暗影步（消耗 1 点功力）",
+      "activation": "bonus",
+      "cost": [{ "resource": "功力" }],
+      "requires": "turn.isMine",
+      "root": [
+        { "kind": "move", "mode": "teleport", "ft": 60 },
+        { "kind": "applyEffect", "to": "self", "template": "暗影步" },
+        { "kind": "note", "text": "传送后可立即进行一次徒手打击（附赠动作的一部分），请人工选择目标并结算" }
+      ]
+    }
+  ],
+  "effects": {
+    "暗影步": {
+      "text": "下一次近战攻击具有优势，直到当前回合结束。",
+      "duration": { "until": { "at": "turnEnd", "of": "bearer", "nth": 0 } },
+      "rollMods": [
+        {
+          "on": { "kind": "attack", "attack": { "melee": true } },
+          "who": "bearer",
+          "op": "adv",
+          "label": "暗影步：下一次近战攻击"
+        }
+      ],
+      "triggers": [
+        {
+          "id": "used",
+          "label": "暗影步：用掉优势",
+          "on": "d20Rolled",
+          "role": "actor",
+          "window": "after",
+          "when": "roll.kind == 'attack' && attack.melee",
+          "do": [
+            { "kind": "removeEffect", "from": "self", "match": { "name": "暗影步" } }
+          ]
+        }
+      ]
+    }
+  }
+}

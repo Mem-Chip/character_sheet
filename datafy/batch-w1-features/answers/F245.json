@@ -1,0 +1,38 @@
+{
+  "name": "不知疲倦",
+  "automation": "partial",
+  "text": "短休减少 1 级力竭：引擎没有减一级力竭的节点，需人工处理。",
+  "resources": [
+    { "id": "tireless", "name": "不知疲倦", "formula": "max(1, wis)", "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "temp",
+      "name": "不知疲倦：临时生命值",
+      "activation": "action",
+      "tags": ["magical"],
+      "cost": [
+        { "resource": "tireless" }
+      ],
+      "root": [
+        {
+          "kind": "tempHp",
+          "amount": "1d8 + max(1, self.mod.wis)",
+          "to": "self"
+        }
+      ]
+    }
+  ],
+  "triggers": [
+    {
+      "id": "short-rest",
+      "label": "不知疲倦：减少力竭",
+      "on": "restCompleted",
+      "role": "actor",
+      "when": "event.kind == 'short' && self.exhaustion > 0",
+      "do": [
+        { "kind": "note", "text": "力竭等级减少 1 级（手动处理）" }
+      ]
+    }
+  ]
+}

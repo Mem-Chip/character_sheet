@@ -1,0 +1,66 @@
+{
+  "name": "灵力跃动",
+  "automation": "partial",
+  "text": "附赠动作：获得等同于两倍速度的飞行速度，直到本回合结束。用过后直到短休或长休前不能再用；也可以消耗一枚灵能骰（无需动作）再次使用。飞行本身引擎不追踪，只按「多出一份速度的移动力」计。",
+  "resources": [
+    { "id": "灵力跃动", "name": "灵力跃动", "formula": "1", "recovery": "short" }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "灵力跃动",
+      "activation": "bonus",
+      "requires": "turn.isMine",
+      "cost": [
+        { "resource": "灵力跃动" }
+      ],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "灵力跃动"
+        },
+        {
+          "kind": "economy",
+          "move": "self.speed"
+        },
+        {
+          "kind": "note",
+          "text": "灵力跃动：本回合飞行速度等于两倍速度"
+        }
+      ]
+    },
+    {
+      "id": "reuse",
+      "name": "灵力跃动（消耗灵能骰再次使用）",
+      "activation": "bonus",
+      "requires": "turn.isMine",
+      "cost": [
+        { "resource": "灵能力量" }
+      ],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "灵力跃动"
+        },
+        {
+          "kind": "economy",
+          "move": "self.speed"
+        },
+        {
+          "kind": "note",
+          "text": "灵力跃动：本回合飞行速度等于两倍速度"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "灵力跃动": {
+      "text": "本回合你获得等同于两倍速度的飞行速度。",
+      "duration": {
+        "until": { "at": "turnEnd", "of": "bearer", "nth": 0 }
+      }
+    }
+  }
+}

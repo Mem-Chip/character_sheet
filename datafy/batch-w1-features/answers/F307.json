@@ -1,0 +1,50 @@
+{
+  "name": "撕裂心智",
+  "automation": "partial",
+  "text": "用心灵之刃对生物造成偷袭伤害时，可迫使其进行感知豁免（DC 8 + 熟练 + 敏捷），失败则震慑 1 分钟；其回合结束时可重复豁免，成功即结束。「偷袭生效」按攻击条件近似（心灵之刃、灵巧或远程，且具有优势或 5 尺内有盟友），需人确认。每次长休一次；消耗三枚灵能骰（无需动作）可重置。",
+  "resources": [
+    { "id": "撕裂心智", "name": "撕裂心智", "formula": 1, "recovery": "long" }
+  ],
+  "triggers": [
+    {
+      "id": "shred",
+      "label": "撕裂心智：感知豁免",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "optional": true,
+      "when": "attack.item == '心灵之刃' && (attack.finesse || attack.ranged) && (roll.adv || (allyWithin(target, 5, { exclude: [self], notCond: '失能' }) && !roll.disadv))",
+      "cost": [{ "resource": "撕裂心智" }],
+      "do": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "8 + pb + mod.dex",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "XPHB:condition:震慑",
+              "duration": {
+                "minutes": 1,
+                "saveEnds": { "ability": "wis", "dc": "8 + source.pb + source.mod.dex", "at": "turnEnd" }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "reset",
+      "name": "撕裂心智（重置）",
+      "activation": "free",
+      "requires": "self.resource('撕裂心智') == 0",
+      "cost": [{ "resource": "灵能力量", "n": 3 }],
+      "root": [
+        { "kind": "resource", "id": "撕裂心智", "delta": 1 }
+      ]
+    }
+  ]
+}

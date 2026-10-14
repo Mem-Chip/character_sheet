@@ -1,0 +1,83 @@
+{
+  "name": "灵树枝杈",
+  "automation": "partial",
+  "text": "自动部分：狂暴期间，你可见且在你 30 尺内的生物回合开始时，以反应令其力量豁免（DC 8 + 力量调整值 + 熟练），失败则被传送，之后可令其速度降为 0 至当前回合结束。传送的落点（你 5 尺内你可见的未占据空间，或最近的那个）由人在地图上摆放。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "灵树枝杈",
+      "activation": "reaction",
+      "trigger": {
+        "on": "turnStarted",
+        "role": "any",
+        "window": "after",
+        "when": "!turn.isMine && within(self, turn.of, 30) && canSee(self, turn.of)"
+      },
+      "requires": "self.hasEffect('狂暴')",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30,
+        "filter": "target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "str",
+          "dc": "8 + mod.str + pb",
+          "onFail": [
+            {
+              "kind": "note",
+              "text": "灵树枝杈：把目标传送到你 5 尺内你可见的未占据空间（没有的话取离你最近的那个）"
+            },
+            {
+              "kind": "choose",
+              "prompt": "灵树枝杈：令被传送的目标速度降为 0（至当前回合结束）吗？",
+              "options": [
+                {
+                  "label": "令其速度降为 0",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "to": "target",
+                      "template": "灵树枝杈：定住",
+                      "duration": {
+                        "until": {
+                          "at": "turnEnd",
+                          "of": "bearer",
+                          "nth": 0
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "label": "不降低速度",
+                  "do": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "灵树枝杈：定住": {
+      "text": "被灵树枝杈传送后速度变为 0，持续至当前回合结束。",
+      "statics": [
+        {
+          "kind": "speedSet",
+          "value": 0
+        }
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 0
+        }
+      }
+    }
+  }
+}

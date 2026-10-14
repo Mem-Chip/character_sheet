@@ -1,0 +1,90 @@
+{
+  "name": "神圣火花",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "use",
+      "name": "神圣火花",
+      "activation": "action",
+      "tags": ["magical"],
+      "cost": [{ "resource": "引导神力" }],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30,
+        "filter": "target.id != self.id && canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "神圣火花：恢复生命值，还是迫使其进行体质豁免？",
+          "options": [
+            {
+              "label": "恢复生命值",
+              "do": [
+                {
+                  "kind": "heal",
+                  "to": "target",
+                  "amount": "(cond(self.levelOf('牧师') >= 18, 4, cond(self.levelOf('牧师') >= 13, 3, cond(self.levelOf('牧师') >= 7, 2, 1))))d8 + self.mod.wis"
+                }
+              ]
+            },
+            {
+              "label": "迫使其进行体质豁免",
+              "do": [
+                {
+                  "kind": "choose",
+                  "prompt": "失败时的伤害类型由你选择",
+                  "options": [
+                    {
+                      "label": "黯蚀",
+                      "do": [
+                        {
+                          "kind": "save",
+                          "ability": "con",
+                          "dc": "self.spell.dc",
+                          "onFail": [
+                            {
+                              "kind": "damage",
+                              "id": "necrotic",
+                              "dice": "(cond(self.levelOf('牧师') >= 18, 4, cond(self.levelOf('牧师') >= 13, 3, cond(self.levelOf('牧师') >= 7, 2, 1))))d8 + self.mod.wis",
+                              "type": "黯蚀"
+                            }
+                          ],
+                          "onSuccess": [
+                            { "kind": "damage", "ref": "necrotic", "scale": 0.5 }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "label": "光耀",
+                      "do": [
+                        {
+                          "kind": "save",
+                          "ability": "con",
+                          "dc": "self.spell.dc",
+                          "onFail": [
+                            {
+                              "kind": "damage",
+                              "id": "radiant",
+                              "dice": "(cond(self.levelOf('牧师') >= 18, 4, cond(self.levelOf('牧师') >= 13, 3, cond(self.levelOf('牧师') >= 7, 2, 1))))d8 + self.mod.wis",
+                              "type": "光耀"
+                            }
+                          ],
+                          "onSuccess": [
+                            { "kind": "damage", "ref": "radiant", "scale": 0.5 }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

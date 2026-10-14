@@ -1,0 +1,33 @@
+{
+  "name": "恐惧伏击",
+  "automation": "partial",
+  "text": "伏击者之跃：每场战斗第一个回合开始时速度 +10，直到该回合结束。人物卡静态层的速度 +10 是常驻的，「仅第一个回合」这一限定无法在静态层表达，需要人手动处理（第一个回合之外速度应减 10）。",
+  "resources": [
+    { "id": "恐惧打击", "name": "恐惧打击", "formula": "max(1, wis)", "recovery": "long" }
+  ],
+  "triggers": [
+    {
+      "id": "dread-strike",
+      "label": "恐惧伏击：恐惧打击（额外 2d6 心灵伤害）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "attack.weapon",
+      "cost": [ { "resource": "恐惧打击" } ],
+      "do": [
+        { "kind": "addDamage", "dice": "2d6", "type": "心灵" }
+      ]
+    }
+  ],
+  "rollMods": [
+    {
+      "on": { "kind": "initiative" },
+      "who": "bearer",
+      "op": "add",
+      "value": "max(0, self.mod.wis)",
+      "label": "恐惧伏击：先攻加感知调整值"
+    }
+  ]
+}

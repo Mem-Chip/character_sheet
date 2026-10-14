@@ -1,0 +1,60 @@
+{
+  "name": "召现分身",
+  "text": "附赠动作：消耗一次引导神力，创造一个无实体的完美幻象，位于你 30 尺内一处可见的未占据空间。幻象持续 1 分钟，可无需动作解除，陷入失能时结束。幻象存在期间：可如同在幻象位置施法（须用你自己的感官）；你和幻象都在某生物 5 尺内、且该生物能看见幻象时，你对它的攻击具有优势；附赠动作可把幻象移动至多 30 尺，目的地须是你 120 尺内一处可见的未占据空间。",
+  "automation": "partial",
+  "actions": [
+    {
+      "id": "use",
+      "name": "召现分身",
+      "activation": "bonus",
+      "cost": [
+        { "resource": "引导神力" }
+      ],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "幻象"
+        }
+      ]
+    },
+    {
+      "id": "move",
+      "name": "召现分身：移动幻象",
+      "activation": "bonus",
+      "requires": "self.hasEffect('幻象')",
+      "root": [
+        {
+          "kind": "note",
+          "text": "把幻象移动至多 30 尺，到你 120 尺内一处可见的未占据空间（位置由人处理）"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "幻象": {
+      "name": "幻象",
+      "text": "无实体、不占据空间的完美视觉幻象。可如同在幻象位置施法（须用你自己的感官，手动处理）。",
+      "duration": {
+        "minutes": 1,
+        "endsOn": [
+          {
+            "event": "effectApplied",
+            "when": "event.bearer == self.id && self.has('失能')"
+          }
+        ]
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "bearer",
+          "when": "ask('你和幻象是否都在攻击目标 5 尺内，且目标能看见幻象？')",
+          "op": "adv",
+          "label": "召现分身：干扰"
+        }
+      ]
+    }
+  }
+}

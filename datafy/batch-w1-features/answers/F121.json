@@ -1,0 +1,104 @@
+{
+  "name": "大洋慨赠",
+  "automation": "partial",
+  "text": "使用瀚海之怒时，可以改为让 60 尺内一个自愿生物身上显现光环（该生物使用你的法术豁免 DC 与感知调整值）；消耗两次荒野变形则自己与另一生物同时显现。受赠者自己的浪涌（显现时的与之后附赠动作的）以及你之前赠出的光环被替换，需要手动处理；受赠者的 DC 与骰数记在效应状态里。",
+  "actions": [
+    {
+      "id": "gift",
+      "name": "大洋慨赠：光环显现在自愿生物身上",
+      "activation": "bonus",
+      "text": "消耗一次荒野变形，让 60 尺内一个自愿生物（而非你）身上显现瀚海之怒的光环。",
+      "cost": [
+        { "resource": "wildshape-uses" }
+      ],
+      "requires": "turn.isMine",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "removeEffect",
+          "from": "self",
+          "match": { "name": "瀚海之怒" }
+        },
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "大洋慨赠",
+          "state": {
+            "dc": "self.spell.dc",
+            "dice": "max(1, self.mod.wis)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "both",
+      "name": "大洋慨赠：自己与另一生物同时显现",
+      "activation": "bonus",
+      "text": "消耗两次荒野变形，在你自己和 60 尺内另一个自愿生物身上同时显现瀚海之怒的光环。你自己显现时的那次浪涌请手动结算。",
+      "cost": [
+        { "resource": "wildshape-uses", "n": 2 }
+      ],
+      "requires": "turn.isMine",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "removeEffect",
+          "from": "self",
+          "match": { "name": "瀚海之怒" }
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "inline": {
+            "name": "瀚海之怒",
+            "tags": ["wrath-of-the-sea"],
+            "text": "你周围显现着海浪形态的光环（5 尺；6 级起 10 尺），持续 10 分钟。你解除它、再度显现或陷入失能时提前结束。",
+            "duration": {
+              "minutes": 10,
+              "endsOn": [
+                {
+                  "event": "effectApplied",
+                  "when": "event.bearer == self.id && self.has('失能')"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "大洋慨赠",
+          "state": {
+            "dc": "self.spell.dc",
+            "dice": "max(1, self.mod.wis)"
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "大洋慨赠": {
+      "tags": ["wrath-of-the-sea"],
+      "text": "德鲁伊赋予你的瀚海之怒光环（10 分钟，你陷入失能时提前结束）。你可以像瀚海之怒那样发出浪涌：体质豁免 DC 与伤害骰数（感知调整值颗 d6，最少 1 颗）取自德鲁伊，见效应状态 dc / dice；浪涌请手动结算。",
+      "duration": {
+        "minutes": 10,
+        "endsOn": [
+          {
+            "event": "effectApplied",
+            "when": "event.bearer == self.id && self.has('失能')"
+          }
+        ]
+      }
+    }
+  }
+}

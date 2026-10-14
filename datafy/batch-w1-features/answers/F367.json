@@ -1,0 +1,49 @@
+{
+  "name": "直坠噩梦",
+  "automation": "partial",
+  "text": "每回合一次，以攻击检定命中一个生物后可以发动：目标进行魅力豁免（DC 为你的法术豁免 DC），失败则被送入下层位面并失能，直至你的下一回合结束；若目标并非邪魔，还受到 8d10 点心灵伤害。目标返回的位置（先前空间或最近的空位）需人工处理。每次长休可用一次；可消耗一个契约魔法法术位（无需动作）重置使用权。",
+  "resources": [
+    { "id": "直坠噩梦", "name": "直坠噩梦", "formula": "1", "recovery": "long" }
+  ],
+  "triggers": [
+    {
+      "id": "hurl",
+      "label": "直坠噩梦",
+      "on": "attackHit",
+      "role": "actor",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "cost": [ { "resource": "直坠噩梦" } ],
+      "do": [
+        {
+          "kind": "save",
+          "ability": "cha",
+          "dc": "self.spell.dc",
+          "onFail": [
+            { "kind": "applyEffect", "to": "target", "template": "直坠噩梦：下层位面" },
+            { "kind": "if", "when": "target.type != '邪魔'", "then": [ { "kind": "damage", "dice": "8d10", "type": "心灵" } ] }
+          ]
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "reset",
+      "name": "直坠噩梦：重置使用权",
+      "activation": "free",
+      "cost": [ { "slot": { "min": 1 } } ],
+      "requires": "self.resource('直坠噩梦') < 1",
+      "root": [ { "kind": "resource", "id": "直坠噩梦", "delta": 1 } ]
+    }
+  ],
+  "effects": {
+    "直坠噩梦：下层位面": {
+      "tags": ["直坠噩梦"],
+      "text": "目标已被送入下层位面，失能直至施放者的下一回合结束；返回位置由人处理。",
+      "implies": ["XPHB:condition:失能"],
+      "duration": { "until": { "at": "turnEnd", "of": "source", "nth": 1 } },
+      "onEnd": [ { "kind": "note", "text": "目标返回先前所占据的空间，或最近的未被占据空间（人工放置）" } ]
+    }
+  }
+}

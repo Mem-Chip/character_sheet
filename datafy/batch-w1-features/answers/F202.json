@@ -1,0 +1,58 @@
+{
+  "name": "元素同调",
+  "text": "回合开始时可消耗 1 点功力，让元素能量浸润己身，持续 10 分钟或直至失能。触及 +10 尺（徒手打击的触及，需人工处理）。元素注拳：徒手打击命中时可改用强酸/寒冷/火焰/闪电/雷鸣伤害（伤害类型需人工改）；以此类伤害命中时可迫使目标进行力量豁免（DC 原文未写，暂按功力 DC：8 + 感知 + 熟练，请核对），失败则推离或拉近 10 尺。",
+  "automation": "partial",
+  "triggers": [
+    {
+      "id": "infuse",
+      "label": "元素同调（回合开始：消耗 1 点功力）",
+      "on": "turnStarted",
+      "role": "actor",
+      "optional": true,
+      "when": "turn.isMine && !self.hasEffect('元素同调')",
+      "cost": [{ "resource": "功力" }],
+      "do": [
+        { "kind": "applyEffect", "to": "self", "template": "元素同调" }
+      ]
+    }
+  ],
+  "effects": {
+    "元素同调": {
+      "text": "持续 10 分钟或直至失能；期间徒手打击的触及 +10 尺（人工），元素注拳见条目说明。",
+      "tags": ["magical"],
+      "duration": {
+        "minutes": 10,
+        "endsOn": [
+          { "event": "effectApplied", "when": "event.bearer == self.id && self.has('失能')" }
+        ]
+      },
+      "triggers": [
+        {
+          "id": "push-pull",
+          "label": "元素同调：元素注拳推拉",
+          "on": "attackHit",
+          "role": "actor",
+          "optional": true,
+          "when": "attack.unarmed",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "str",
+              "dc": "8 + self.mod.wis + self.pb",
+              "onFail": [
+                {
+                  "kind": "choose",
+                  "prompt": "将目标推离还是拉近 10 尺？",
+                  "options": [
+                    { "label": "推离 10 尺", "do": [ { "kind": "move", "mode": "push", "ft": 10 } ] },
+                    { "label": "拉近 10 尺", "do": [ { "kind": "move", "mode": "pull", "ft": 10 } ] }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

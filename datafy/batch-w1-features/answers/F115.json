@@ -1,0 +1,54 @@
+{
+  "name": "月光飞步",
+  "automation": "partial",
+  "text": "传送落点是否未被占据、是否在你视线内由人判断。次数在长休时全部恢复（上限由人物卡给出）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "月光飞步",
+      "activation": "bonus",
+      "cost": [
+        { "resource": "moonlightStep" }
+      ],
+      "targeting": {
+        "type": "point",
+        "range": 30
+      },
+      "root": [
+        { "kind": "move", "mode": "teleport", "ft": 30 },
+        { "kind": "applyEffect", "to": "self", "template": "月光飞步" }
+      ]
+    },
+    {
+      "id": "restore",
+      "name": "月光飞步（消耗法术位恢复一次）",
+      "activation": "free",
+      "cost": [
+        { "slot": { "min": 2 } }
+      ],
+      "requires": "self.resource('moonlightStep') < max(1, self.mod.wis)",
+      "root": [
+        { "kind": "resource", "id": "moonlightStep", "delta": 1 }
+      ]
+    }
+  ],
+  "effects": {
+    "月光飞步": {
+      "text": "在这个回合结束前进行的下一次攻击具有优势。",
+      "rollMods": [
+        {
+          "on": { "kind": "attack" },
+          "who": "bearer",
+          "op": "adv",
+          "label": "月光飞步"
+        }
+      ],
+      "duration": {
+        "until": { "at": "turnEnd", "of": "bearer", "nth": 0 },
+        "endsOn": [
+          { "event": "d20Rolled", "when": "event.kind == 'attack' && event.roller == self.id" }
+        ]
+      }
+    }
+  }
+}

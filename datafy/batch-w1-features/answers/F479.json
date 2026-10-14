@@ -1,0 +1,27 @@
+{
+  "name": "伏击",
+  "automation": "full",
+  "text": "敏捷（隐匿）检定或先攻骰时，可以消耗一枚卓越骰加到骰上（失能时不可用）。",
+  "triggers": [
+    {
+      "id": "ambush",
+      "label": "伏击：加卓越骰",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "!self.has('失能') && ((roll.kind == 'check' && roll.ability == 'dex' && roll.skill == '隐匿') || roll.kind == 'initiative' || roll.sub == 'initiative')",
+      "cost": [
+        {
+          "resource": "卓越骰"
+        }
+      ],
+      "modify": [
+        {
+          "op": "addToRoll",
+          "value": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))"
+        }
+      ]
+    }
+  ]
+}

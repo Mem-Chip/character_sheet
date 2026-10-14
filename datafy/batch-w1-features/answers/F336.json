@@ -1,0 +1,38 @@
+{
+  "name": "龙翼",
+  "automation": "partial",
+  "text": "持续 1 小时，可以解散（无需动作）提前终止；重置需消耗 3 点术法点。60 尺飞行速度无法自动化（效应里没有飞行速度字段），需人手动处理。",
+  "resources": [
+    { "id": "dragon-wings", "name": "龙翼", "formula": 1, "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "龙翼：展开",
+      "activation": "bonus",
+      "cost": [{ "resource": "dragon-wings" }],
+      "root": [{ "kind": "applyEffect", "to": "self", "template": "龙翼" }]
+    },
+    {
+      "id": "dismiss",
+      "name": "龙翼：解散",
+      "activation": "free",
+      "requires": "self.hasEffect('龙翼')",
+      "root": [{ "kind": "removeEffect", "from": "self", "match": { "name": "龙翼" } }]
+    },
+    {
+      "id": "restore",
+      "name": "龙翼：重置（3 点术法点）",
+      "activation": "free",
+      "requires": "self.resource('dragon-wings') == 0",
+      "cost": [{ "resource": "sorcery_points", "n": 3 }],
+      "root": [{ "kind": "resource", "id": "dragon-wings", "delta": 1 }]
+    }
+  ],
+  "effects": {
+    "龙翼": {
+      "text": "龙翼持续期间获得 60 尺飞行速度（手动处理）。",
+      "duration": { "minutes": 60 }
+    }
+  }
+}

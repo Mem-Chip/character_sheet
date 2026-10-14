@@ -1,0 +1,25 @@
+{
+  "name": "治愈之光",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "use",
+      "name": "治愈之光",
+      "activation": "bonus",
+      "text": "消耗任意数量的治愈之光骰（每次最多消耗魅力调整值枚，至少 1 枚），投掷这些骰子，总和作为治疗量，治疗自己或 60 尺内一个你可见的生物。",
+      "requires": "self.resource('治愈之光') > 0",
+      "targeting": { "type": "creature", "count": 1, "range": 60 },
+      "root": [
+        {
+          "kind": "number",
+          "prompt": "消耗多少枚治愈之光骰？",
+          "var": "n",
+          "min": 1,
+          "max": "min(self.resource('治愈之光'), max(1, self.mod.cha))"
+        },
+        { "kind": "heal", "amount": "(vars.n)d6", "to": "target" },
+        { "kind": "resource", "id": "治愈之光", "delta": "-vars.n" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "奥术回想",
+  "automation": "partial",
+  "text": "完成一次短休后可以恢复已消耗的法术位：恢复的环阶总和不超过法师等级的一半（向上取整），且每个法术位的环阶都必须小于六环。每次长休可用一次。引擎不能直接恢复法术位，选定后由人手动恢复。",
+  "resources": [
+    { "id": "奥术回想", "name": "奥术回想", "formula": "1", "recovery": "long" }
+  ],
+  "triggers": [
+    {
+      "id": "recover",
+      "label": "奥术回想：恢复法术位",
+      "on": "restCompleted",
+      "role": "actor",
+      "optional": true,
+      "when": "event.kind == 'short'",
+      "cost": [ { "resource": "奥术回想" } ],
+      "do": [
+        {
+          "kind": "number",
+          "prompt": "恢复法术位的环阶总和（不超过法师等级的一半，向上取整；每个法术位都小于六环）",
+          "var": "n",
+          "min": 1,
+          "max": "ceil(self.levelOf('法师') / 2)"
+        },
+        { "kind": "note", "text": "按所选环阶总和恢复已消耗的法术位（人工处理；每个法术位环阶必须小于六环）" }
+      ]
+    }
+  ]
+}

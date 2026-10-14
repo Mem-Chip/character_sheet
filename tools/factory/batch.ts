@@ -1,7 +1,9 @@
 /**
  * 数据化工厂：批量生产（核心数据）。
  *
- *   npx tsx tools/factory/batch.ts plan <wave>          出任务：wave 1 = 职业 / 子职特性、专长、可选特性、种族；wave 2 = 法术
+ *   npx tsx tools/factory/batch.ts plan <wave> [目录]   出任务：wave 1 = 职业 / 子职特性、专长、可选特性、种族；wave 2 = 法术
+ *                                                       目录名里要有 batch-w<wave>（collect 靠它认是哪一波），缺省放在 .factory/ 下
+ *   npx tsx tools/factory/batch.ts refresh <目录>        按现在的代码重写这个目录的 spec.md 和 examples.json（引擎改过之后用）
  *   npx tsx tools/factory/batch.ts lint <目录> <题号>     检查一份答案（子代理自己跑）；{ "skip": "…" } 直接算通过
  *   npx tsx tools/factory/batch.ts collect <目录>        检查 + 战斗试算 → 写进 data/dyn/ai/，没过的列进 failures.json
  *
@@ -100,17 +102,23 @@ function chunk(items: Planned[], size: number): Array<{ group: string; keys: str
   return out;
 }
 
-async function plan(wave: string): Promise<void> {
-  const done = new Set([...GOLDEN, ...allAi()].flatMap((f) => Object.keys(f.entries)));
-  const items = (wave === '1' ? planWave1() : planWave2()).filter((x) => !done.has(x.key));
-  const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 13).replace('T', '-');
-  const dir = resolve(ROOT, '.factory', `batch-w${wave}-${stamp}`);
-  mkdirSync(resolve(dir, 'tasks'), { recursive: true });
-  mkdirSync(resolve(dir, 'answers'), { recursive: true });
+/** 写法说明和范例：从代码和手写数据现生成 */
+function writeSpec(dir: string): void {
   writeFileSync(resolve(dir, 'spec.md'), buildSpec({ typesSource: readFileSync(resolve(ROOT, 'src', 'combat', 'types.ts'), 'utf8') }));
   const examples: Record<string, Entry> = {};
   for (const f of GOLDEN) Object.assign(examples, f.entries);
   writeFileSync(resolve(dir, 'examples.json'), JSON.stringify(examples, null, 1));
+}
+
+async function plan(wave: string, outDir?: string): Promise<void> {
+  const done = new Set([...GOLDEN, ...allAi()].flatMap((f) => Object.keys(f.entries)));
+  const items = (wave === '1' ? planWave1() : planWave2()).filter((x) => !done.has(x.key));
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 13).replace('T', '-');
+  const dir = outDir ? resolve(outDir) : resolve(ROOT, '.factory', `batch-w${wave}-${stamp}`);
+  if (!/batch-w\d/.test(dir)) throw new Error(`目录名里要有 batch-w${wave}：${dir}`);
+  mkdirSync(resolve(dir, 'tasks'), { recursive: true });
+  mkdirSync(resolve(dir, 'answers'), { recursive: true });
+  writeSpec(dir);
 
   const env = await createNodeEnv();
   const prefix = wave === '1' ? 'F' : 'S';
@@ -263,7 +271,8 @@ async function collect(dir: string): Promise<void> {
 }
 
 const [cmd, a, b] = process.argv.slice(2);
-if (cmd === 'plan' && (a === '1' || a === '2')) await plan(a);
+if (cmd === 'plan' && (a === '1' || a === '2')) await plan(a, b);
+else if (cmd === 'refresh' && a) { writeSpec(resolve(a)); console.log(`已重写 ${a}/spec.md 和 examples.json`); }
 else if (cmd === 'lint' && a && b) {
   const { problems, answer } = lintOne(resolve(a), b);
   appendFileSync(resolve(a, 'lint-log.jsonl'), JSON.stringify({ id: b, at: Date.now(), ok: !problems.length }) + '\n');
@@ -271,4 +280,4 @@ else if (cmd === 'lint' && a && b) {
   process.exitCode = problems.length ? 1 : 0;
 } else if (cmd === 'collect' && a) await collect(resolve(a));
 else if (cmd === 'text' && a) console.log(flattenEntries(JSON.parse(a)));
-else console.log('用法：batch.ts plan <1|2> | lint <目录> <题号> | collect <目录>');
+else console.log('用法：batch.ts plan <1|2> [目录] | refresh <目录> | lint <目录> <题号> | collect <目录>');

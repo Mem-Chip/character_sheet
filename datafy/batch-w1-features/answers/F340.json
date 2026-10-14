@@ -1,0 +1,53 @@
+{
+ "name": "扭曲幸运",
+ "automation": "full",
+ "text": "你能看见的生物掷 d20 检定后，可以用反应并消耗 1 术法点，掷 1d4 加到或从中减去该 d20 的结果。只在会改变结果时询问：盟友（含你自己）的检定会失败时问「加」；敌人的检定会成功时问「减」。",
+ "triggers": [
+  {
+   "id": "bend-add",
+   "label": "扭曲幸运：加 1d4",
+   "on": "d20Rolled",
+   "role": "any",
+   "window": "before",
+   "optional": true,
+   "when": "roll.failing && canSee(self, combatant(roll.roller)) && (roll.roller == self.id || combatant(roll.roller).isAllyOf(self))",
+   "cost": [
+    {
+     "economy": "reaction"
+    },
+    {
+     "resource": "sorcery_points"
+    }
+   ],
+   "modify": [
+    {
+     "op": "addToRoll",
+     "value": "1d4"
+    }
+   ]
+  },
+  {
+   "id": "bend-sub",
+   "label": "扭曲幸运：减 1d4",
+   "on": "d20Rolled",
+   "role": "any",
+   "window": "before",
+   "optional": true,
+   "when": "!roll.failing && canSee(self, combatant(roll.roller)) && combatant(roll.roller).isEnemyOf(self)",
+   "cost": [
+    {
+     "economy": "reaction"
+    },
+    {
+     "resource": "sorcery_points"
+    }
+   ],
+   "modify": [
+    {
+     "op": "addToRoll",
+     "value": "-1d4"
+    }
+   ]
+  }
+ ]
+}

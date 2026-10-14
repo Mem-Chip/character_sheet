@@ -1,0 +1,25 @@
+{
+  "name": "精准攻击",
+  "automation": "full",
+  "text": "攻击检定会失手时，可以消耗一枚卓越骰，把骰值加到这次攻击检定上，可能因此命中。",
+  "triggers": [
+    {
+      "id": "precision",
+      "label": "精准攻击：卓越骰加到攻击检定",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "roll.kind == 'attack' && roll.failing",
+      "cost": [
+        { "resource": "卓越骰" }
+      ],
+      "modify": [
+        {
+          "op": "addToRoll",
+          "value": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))"
+        }
+      ]
+    }
+  ]
+}

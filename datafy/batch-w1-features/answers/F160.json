@@ -1,0 +1,59 @@
+{
+  "name": "念力控物",
+  "automation": "partial",
+  "text": "以魔法动作选中一个 30 尺内、你可见的其他生物，将其移动至多 30 尺到另一个对你可见的未占据空间。使用后直至短休或长休前不能再用（资源「念力控物」，1 次）；消耗一枚灵能骰（无需动作）可重置。未固定物件（至多大型）的移动，以及微型物件的给出与收回，引擎不处理，需人工。目标是否自愿也由人确认。",
+  "resources": [
+    {
+      "id": "念力控物",
+      "name": "念力控物",
+      "formula": 1,
+      "recovery": "short"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "念力控物",
+      "activation": "action",
+      "tags": [
+        "magical"
+      ],
+      "cost": [
+        {
+          "resource": "念力控物"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30,
+        "filter": "target.id != self.id && canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "move",
+          "mode": "teleport",
+          "ft": 30
+        }
+      ]
+    },
+    {
+      "id": "reset",
+      "name": "念力控物（消耗灵能骰重置）",
+      "activation": "free",
+      "cost": [
+        {
+          "resource": "灵能力量"
+        }
+      ],
+      "requires": "self.resource('念力控物') < 1",
+      "root": [
+        {
+          "kind": "resource",
+          "id": "念力控物",
+          "delta": 1
+        }
+      ]
+    }
+  ]
+}

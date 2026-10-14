@@ -1,0 +1,29 @@
+{
+  "name": "饮命者",
+  "automation": "partial",
+  "text": "自动：每回合一次，用契约武器命中生物时，可选择额外造成 1d6 黯蚀 / 心灵 / 光耀伤害（伤害类型在触发时选择；契约武器由人确认，因为触发是可选的）。手动：投掷并消耗一颗生命值骰，恢复等于其骰值加体质调整值的生命值（最小 1）；引擎没有生命值骰的资源，需人工处理。",
+  "triggers": [
+    {
+      "id": "drain",
+      "label": "饮命者：额外伤害",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "attack.weapon",
+      "do": [
+        {
+          "kind": "choose",
+          "prompt": "饮命者：额外伤害的类型",
+          "options": [
+            { "label": "黯蚀", "do": [ { "kind": "addDamage", "dice": "1d6", "type": "黯蚀" } ] },
+            { "label": "心灵", "do": [ { "kind": "addDamage", "dice": "1d6", "type": "心灵" } ] },
+            { "label": "光耀", "do": [ { "kind": "addDamage", "dice": "1d6", "type": "光耀" } ] }
+          ]
+        },
+        { "kind": "note", "text": "饮命者：可投掷并消耗一颗生命值骰，恢复其骰值加体质调整值（最小 1），需手动处理" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "name": "防御式决斗",
+  "automation": "full",
+  "text": "「正握着灵巧武器」引擎不知道，由玩家在反应时回答。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "防御式决斗：格挡",
+      "activation": "reaction",
+      "trigger": {
+        "on": "attackHit",
+        "role": "target",
+        "window": "before",
+        "when": "attack.melee && ask('你正握着一把灵巧武器吗？')"
+      },
+      "root": [
+        { "kind": "applyEffect", "to": "self", "template": "防御式决斗" }
+      ]
+    }
+  ],
+  "effects": {
+    "防御式决斗": {
+      "text": "你的熟练加值加入 AC（这次攻击可能因此变为未命中），直到你的下一回合开始前，面对近战攻击时 AC 都有同样的加值。",
+      "rollMods": [
+        {
+          "on": { "kind": "attack" },
+          "who": "against",
+          "when": "attack.melee",
+          "op": "targetAdd",
+          "value": "pb",
+          "label": "防御式决斗：近战攻击时 AC 加熟练加值"
+        }
+      ],
+      "duration": { "until": { "at": "turnStart", "of": "bearer", "nth": 1 } }
+    }
+  }
+}

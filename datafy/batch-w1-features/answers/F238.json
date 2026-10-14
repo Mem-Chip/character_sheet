@@ -1,0 +1,45 @@
+{
+ "name": "坚韧复仇",
+ "automation": "partial",
+ "text": "借机攻击命中后，可以让目标速度降为 0，直到当前回合结束。借机攻击靠提问判断（不在自己回合发生的近战命中才会问）。命中后立刻移动至多你速度一半（属于原反应、不引发借机攻击）需要人手动处理。",
+ "triggers": [
+  {
+   "id": "relentless",
+   "label": "坚韧复仇",
+   "on": "attackHit",
+   "role": "actor",
+   "window": "after",
+   "optional": true,
+   "when": "attack.melee && !turn.isMine && ask('这次命中的是借机攻击吗？')",
+   "do": [
+    {
+     "kind": "applyEffect",
+     "to": "target",
+     "template": "坚韧复仇"
+    },
+    {
+     "kind": "note",
+     "text": "坚韧复仇：你可以立刻移动至多你速度的一半，本次移动属于原反应，不引发借机攻击"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "坚韧复仇": {
+   "text": "速度降为 0，直到当前回合结束。",
+   "statics": [
+    {
+     "kind": "speedSet",
+     "value": 0
+    }
+   ],
+   "duration": {
+    "until": {
+     "at": "turnEnd",
+     "of": "bearer",
+     "nth": 0
+    }
+   }
+  }
+ }
+}

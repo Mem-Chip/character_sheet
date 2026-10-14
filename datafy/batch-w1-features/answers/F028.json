@@ -1,0 +1,18 @@
+{
+  "name": "神之勇者",
+  "automation": "partial",
+  "text": "附赠动作消耗治疗骰恢复生命已写（长休恢复由人物卡的治疗池负责）。治疗池上限随等级增加（6 级 5 枚、12 级 6 枚、17 级 7 枚）：人物卡上限固定为 4，需人手动调整。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "神之勇者：治疗",
+      "activation": "bonus",
+      "requires": "self.resource('healing-pool') > 0",
+      "root": [
+        { "kind": "number", "prompt": "用几枚治疗骰？", "var": "n", "min": 1, "max": "self.resource('healing-pool')" },
+        { "kind": "heal", "to": "self", "amount": "(vars.n)d12" },
+        { "kind": "resource", "id": "healing-pool", "delta": "-vars.n" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "name": "扭曲命运之恩惠",
+  "automation": "full",
+  "text": "时来运转：你或 60 尺内另一名生物的 D20 检定成功或失败时，可以掷 2d4，把结果作为加值或减值加到那次 d20 上。用过之后，直到你掷先攻、完成短休或长休才能再用。只在会改变结果时询问：盟友（含自己）要失败时给加值，敌人要成功时给减值。",
+  "resources": [
+    { "id": "boon-of-fate", "name": "时来运转", "formula": "1", "recovery": "short" }
+  ],
+  "triggers": [
+    {
+      "id": "fate-add",
+      "label": "扭曲命运之恩惠：时来运转（+2d4）",
+      "on": "d20Rolled",
+      "role": "any",
+      "window": "before",
+      "optional": true,
+      "when": "roll.failing && (roll.roller == self.id || (combatant(roll.roller).isAllyOf(self) && within(self, combatant(roll.roller), 60)))",
+      "cost": [
+        { "resource": "boon-of-fate" }
+      ],
+      "modify": [
+        { "op": "addToRoll", "value": "2d4" }
+      ]
+    },
+    {
+      "id": "fate-sub",
+      "label": "扭曲命运之恩惠：时来运转（-2d4）",
+      "on": "d20Rolled",
+      "role": "any",
+      "window": "before",
+      "optional": true,
+      "when": "!roll.failing && roll.roller != self.id && combatant(roll.roller).isEnemyOf(self) && within(self, combatant(roll.roller), 60)",
+      "cost": [
+        { "resource": "boon-of-fate" }
+      ],
+      "modify": [
+        { "op": "addToRoll", "value": "-2d4" }
+      ]
+    },
+    {
+      "id": "fate-reset",
+      "label": "扭曲命运之恩惠：投掷先攻后恢复时来运转",
+      "on": "initiativeRolled",
+      "role": "actor",
+      "when": "self.resource('boon-of-fate') < 1",
+      "do": [
+        { "kind": "resource", "id": "boon-of-fate", "delta": 1 }
+      ]
+    }
+  ]
+}

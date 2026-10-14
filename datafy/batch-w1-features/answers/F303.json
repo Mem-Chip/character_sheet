@@ -1,0 +1,44 @@
+{
+ "name": "寻的攻击",
+ "automation": "full",
+ "text": "心灵之刃的攻击检定会失败时，可以消耗一枚灵能骰（9 级起为 d8，11 级 d10，17 级 d12）加到攻击检定上；加完仍然未命中则灵能骰不消耗。心灵之刃按「物品名为心灵之刃，或造成心灵伤害的武器攻击」判断。",
+ "triggers": [
+  {
+   "id": "homing",
+   "label": "寻的攻击：灵能骰加到攻击检定",
+   "on": "d20Rolled",
+   "role": "actor",
+   "window": "before",
+   "optional": true,
+   "when": "roll.kind == 'attack' && roll.failing && (attack.item == '心灵之刃' || (attack.weapon && attack.damageType == '心灵'))",
+   "cost": [
+    {
+     "resource": "灵能力量"
+    }
+   ],
+   "modify": [
+    {
+     "op": "addToRoll",
+     "value": "cond(self.levelOf('游荡者') >= 17, 1d12, cond(self.levelOf('游荡者') >= 11, 1d10, 1d8))"
+    }
+   ],
+   "do": [
+    {
+     "kind": "if",
+     "when": "roll.failing",
+     "then": [
+      {
+       "kind": "resource",
+       "id": "灵能力量",
+       "delta": 1
+      },
+      {
+       "kind": "note",
+       "text": "寻的攻击：加完仍然未命中，灵能骰不消耗"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

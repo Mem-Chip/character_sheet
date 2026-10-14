@@ -1,0 +1,58 @@
+{
+  "name": "灵巧步法",
+  "automation": "partial",
+  "text": "附赠动作：消耗卓越骰并执行撤离，AC 加值直到你的下个回合开始前。卓越骰的点数请玩家掷骰后填入。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "灵巧步法",
+      "activation": "bonus",
+      "requires": "turn.isMine",
+      "cost": [
+        {
+          "resource": "卓越骰"
+        }
+      ],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "XPHB:action:撤离#撤离"
+        },
+        {
+          "kind": "number",
+          "prompt": "灵巧步法：投掷被消耗的卓越骰（d8 / d10 / d12），填入结果",
+          "var": "r",
+          "min": 1,
+          "max": "cond(self.levelOf('战士') >= 18, 12, cond(self.levelOf('战士') >= 10, 10, 8))"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "灵巧步法",
+          "state": {
+            "bonus": "vars.r"
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "灵巧步法": {
+      "text": "AC 获得等于卓越骰结果的加值，直到你的下个回合开始前。",
+      "statics": [
+        {
+          "kind": "ac",
+          "bonus": "effect.state.bonus"
+        }
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "bearer",
+          "nth": 1
+        }
+      }
+    }
+  }
+}

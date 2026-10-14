@@ -1,0 +1,35 @@
+{
+  "name": "重整旗鼓",
+  "automation": "full",
+  "tags": ["maneuver"],
+  "text": "附赠动作，消耗一枚卓越骰，为位于 30 尺内、能看见或听到你的盟友恢复等同于战士等级一半（向下取整）加卓越骰结果的临时生命值。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "重整旗鼓",
+      "activation": "bonus",
+      "cost": [
+        { "resource": "卓越骰" }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30,
+        "filter": "target.isAllyOf(self)"
+      },
+      "root": [
+        {
+          "kind": "if",
+          "when": "ask('目标能看见或听到你吗？')",
+          "then": [
+            {
+              "kind": "tempHp",
+              "to": "target",
+              "amount": "floor(self.levelOf('战士') / 2) + cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

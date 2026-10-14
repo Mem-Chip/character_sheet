@@ -1,0 +1,37 @@
+{
+  "name": "莽驰",
+  "automation": "partial",
+  "text": "进入狂暴的附赠动作的一部分：可以移动至多一半速度。引擎无法把它挂在「进入狂暴」那个动作上，所以做成一个免费动作，只应在刚进入狂暴时使用（由人判断），每回合至多一次。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "莽驰",
+      "activation": "free",
+      "text": "只能作为进入狂暴的那个附赠动作的一部分使用（由人判断）：移动至多一半速度。",
+      "requires": "turn.isMine && self.hasEffect('狂暴') && !self.hasEffect('莽驰')",
+      "root": [
+        {
+          "kind": "economy",
+          "move": "floor(self.speed / 2)"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "莽驰"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "莽驰": {
+      "text": "本回合已经用过莽驰。",
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 0
+        }
+      }
+    }
+  }
+}

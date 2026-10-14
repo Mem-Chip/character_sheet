@@ -1,0 +1,90 @@
+{
+ "name": "扭曲爆裂",
+ "automation": "partial",
+ "text": "引擎先结算消失位置 30 尺内生物的力量豁免（失败受伤并被拉回原位，成功半伤），再执行传送。传送的目的地（120 尺内、你可见且未被占据）与拉回后的落点（原位空出后最近的空格）由人判断。",
+ "resources": [
+  {
+   "id": "warp-burst",
+   "name": "扭曲爆裂",
+   "formula": 1,
+   "recovery": "long"
+  }
+ ],
+ "actions": [
+  {
+   "id": "use",
+   "name": "扭曲爆裂",
+   "activation": "action",
+   "cost": [
+    {
+     "resource": "warp-burst"
+    }
+   ],
+   "targeting": {
+    "type": "area",
+    "range": "self",
+    "area": {
+     "shape": "sphere",
+     "radius": 30
+    },
+    "filter": "target.id != self.id"
+   },
+   "root": [
+    {
+     "kind": "forEach",
+     "in": "area",
+     "do": [
+      {
+       "kind": "save",
+       "ability": "str",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "id": "burst",
+         "dice": "3d10",
+         "type": "力场"
+        },
+        {
+         "kind": "note",
+         "text": "扭曲爆裂：把失败的生物拉向你原本的位置，停在最靠近的未被占据空间（手动处理）"
+        }
+       ],
+       "onSuccess": [
+        {
+         "kind": "damage",
+         "ref": "burst",
+         "scale": 0.5
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "move",
+     "mode": "teleport",
+     "ft": 120
+    }
+   ]
+  },
+  {
+   "id": "reset",
+   "name": "扭曲爆裂：重置（5 点术法点）",
+   "activation": "free",
+   "requires": "self.resource('warp-burst') == 0",
+   "cost": [
+    {
+     "resource": "sorcery_points",
+     "n": 5
+    }
+   ],
+   "root": [
+    {
+     "kind": "resource",
+     "id": "warp-burst",
+     "delta": 1
+    }
+   ]
+  }
+ ]
+}

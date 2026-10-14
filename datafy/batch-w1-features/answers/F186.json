@@ -1,0 +1,34 @@
+{
+  "name": "无懈可击",
+  "automation": "full",
+  "triggers": [
+    {
+      "id": "invulnerable",
+      "label": "无懈可击：消耗 3 点功力",
+      "on": "turnStarted",
+      "role": "actor",
+      "optional": true,
+      "cost": [{ "resource": "功力", "n": 3 }],
+      "do": [
+        { "kind": "applyEffect", "to": "self", "template": "无懈可击" }
+      ]
+    }
+  ],
+  "effects": {
+    "无懈可击": {
+      "text": "对力场伤害之外的所有伤害具有抗性；持续 1 分钟，或直至陷入失能状态。",
+      "duration": {
+        "minutes": 1,
+        "endsOn": [
+          { "event": "effectApplied", "when": "event.bearer == self.id && self.has('失能')" }
+        ]
+      },
+      "statics": [
+        {
+          "kind": "resist",
+          "values": ["钝击", "穿刺", "挥砍", "火焰", "寒冷", "闪电", "雷鸣", "强酸", "毒素", "黯蚀", "光耀", "心灵"]
+        }
+      ]
+    }
+  }
+}

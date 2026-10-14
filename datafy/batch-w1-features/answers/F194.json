@@ -1,0 +1,80 @@
+{
+ "name": "命极之手",
+ "automation": "partial",
+ "text": "魔法动作，消耗 5 点功力，触碰死亡不超过 24 小时的生物尸体：以 4d10 + 感知调整值的生命值复活，并移除目盲、耳聋、麻痹、中毒、震慑。每次长休一次。引擎是否会自动取消死亡状态不确定，必要时请手动处理。",
+ "resources": [
+  {
+   "id": "handOfUltimateMercy",
+   "name": "命极之手",
+   "formula": "1",
+   "recovery": "long"
+  }
+ ],
+ "actions": [
+  {
+   "id": "use",
+   "name": "命极之手",
+   "activation": "action",
+   "cost": [
+    {
+     "resource": "功力",
+     "n": 5
+    },
+    {
+     "resource": "handOfUltimateMercy"
+    }
+   ],
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": "touch"
+   },
+   "root": [
+    {
+     "kind": "note",
+     "text": "命极之手：目标须是死亡不超过 24 小时的生物尸体。复活后的生命值等于治疗量；如果引擎没有自动取消死亡状态，请手动处理。"
+    },
+    {
+     "kind": "heal",
+     "to": "target",
+     "amount": "4d10 + self.mod.wis"
+    },
+    {
+     "kind": "removeEffect",
+     "from": "target",
+     "match": {
+      "key": "XPHB:condition:目盲"
+     }
+    },
+    {
+     "kind": "removeEffect",
+     "from": "target",
+     "match": {
+      "key": "XPHB:condition:耳聋"
+     }
+    },
+    {
+     "kind": "removeEffect",
+     "from": "target",
+     "match": {
+      "key": "XPHB:condition:麻痹"
+     }
+    },
+    {
+     "kind": "removeEffect",
+     "from": "target",
+     "match": {
+      "key": "XPHB:condition:中毒"
+     }
+    },
+    {
+     "kind": "removeEffect",
+     "from": "target",
+     "match": {
+      "key": "XPHB:condition:震慑"
+     }
+    }
+   ]
+  }
+ ]
+}

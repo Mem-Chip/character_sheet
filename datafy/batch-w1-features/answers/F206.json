@@ -1,0 +1,115 @@
+{
+  "name": "四象神通",
+  "text": "元素同调期间：伤害抗性（强酸/寒冷/火焰/闪电/雷鸣之一，每回合开始可改，自动）；破灭奔行（疾步如风时速度 +20 尺已算入静态；进入生物 5 尺范围时造成武艺骰伤害，每个生物每回合一次，进入距离的判断需人工）；真力注拳（每回合一次，徒手打击命中时额外造成一个武艺骰的同类型伤害，自动）。",
+  "automation": "partial",
+  "triggers": [
+    {
+      "id": "elemental-choice",
+      "label": "四象神通：选择伤害抗性",
+      "on": "turnStarted",
+      "role": "actor",
+      "optional": true,
+      "when": "turn.isMine && self.hasEffect('元素同调')",
+      "do": [
+        {
+          "kind": "choose",
+          "prompt": "本回合选择的元素抗性",
+          "options": [
+            {
+              "label": "强酸",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "inline": {
+                    "name": "四象神通：抗性",
+                    "stackKey": "四象神通抗性",
+                    "statics": [ { "kind": "resist", "values": ["强酸"] } ],
+                    "duration": { "endsOn": [ { "event": "effectEnded", "when": "event.name == '元素同调'" } ] }
+                  }
+                }
+              ]
+            },
+            {
+              "label": "寒冷",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "inline": {
+                    "name": "四象神通：抗性",
+                    "stackKey": "四象神通抗性",
+                    "statics": [ { "kind": "resist", "values": ["寒冷"] } ],
+                    "duration": { "endsOn": [ { "event": "effectEnded", "when": "event.name == '元素同调'" } ] }
+                  }
+                }
+              ]
+            },
+            {
+              "label": "火焰",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "inline": {
+                    "name": "四象神通：抗性",
+                    "stackKey": "四象神通抗性",
+                    "statics": [ { "kind": "resist", "values": ["火焰"] } ],
+                    "duration": { "endsOn": [ { "event": "effectEnded", "when": "event.name == '元素同调'" } ] }
+                  }
+                }
+              ]
+            },
+            {
+              "label": "闪电",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "inline": {
+                    "name": "四象神通：抗性",
+                    "stackKey": "四象神通抗性",
+                    "statics": [ { "kind": "resist", "values": ["闪电"] } ],
+                    "duration": { "endsOn": [ { "event": "effectEnded", "when": "event.name == '元素同调'" } ] }
+                  }
+                }
+              ]
+            },
+            {
+              "label": "雷鸣",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "inline": {
+                    "name": "四象神通：抗性",
+                    "stackKey": "四象神通抗性",
+                    "statics": [ { "kind": "resist", "values": ["雷鸣"] } ],
+                    "duration": { "endsOn": [ { "event": "effectEnded", "when": "event.name == '元素同调'" } ] }
+                  }
+                }
+              ]
+            },
+            {
+              "label": "保持不变",
+              "do": [ { "kind": "note", "text": "本回合抗性类型不变" } ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "true-force",
+      "label": "四象神通：真力注拳（每回合一次）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "attack.unarmed && self.hasEffect('元素同调')",
+      "do": [
+        { "kind": "addDamage", "dice": "classTable('武艺')", "type": "attack.damageType" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "name": "幻影化形",
+  "automation": "full",
+  "text": "生物对你的攻击命中时，用反应让幻象分身代替你，这次攻击自动失手。短休或长休恢复；也可以消耗一个 2 环或更高的法术位（无需动作）恢复使用权。",
+  "resources": [
+    { "id": "illusory-self", "name": "幻影化形", "formula": "1", "recovery": "short" }
+  ],
+  "triggers": [
+    {
+      "id": "decoy",
+      "label": "幻影化形：幻象分身使攻击自动失手",
+      "on": "attackHit",
+      "role": "target",
+      "window": "before",
+      "optional": true,
+      "cost": [
+        { "economy": "reaction" },
+        { "resource": "illusory-self" }
+      ],
+      "modify": [{ "op": "cancel" }]
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "幻影化形：消耗法术位恢复使用权",
+      "activation": "free",
+      "requires": "self.resource('illusory-self') < 1",
+      "cost": [{ "slot": { "min": 2 } }],
+      "root": [{ "kind": "resource", "id": "illusory-self", "delta": 1 }]
+    }
+  ]
+}

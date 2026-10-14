@@ -1,0 +1,42 @@
+{
+  "name": "恍惚（花费：2d6）",
+  "automation": "partial",
+  "text": "诡诈打击选项，花费 2d6 偷袭骰：需人工从偷袭伤害中扣除（引擎没有偷袭骰池）。目标进行体质豁免（DC = 8 + 敏捷调整值 + 熟练加值）；失败则其下一回合只能在移动、执行一个动作、执行一个附赠动作中选一项，这个选择限制引擎不执行，需人工处理。",
+  "triggers": [
+    {
+      "id": "daze",
+      "label": "恍惚（花费：2d6）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "(attack.finesse || attack.ranged) && (roll.adv || (allyWithin(target, 5, { exclude: [self], notCond: '失能' }) && !roll.disadv))",
+      "do": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "8 + self.mod.dex + self.pb",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "恍惚"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "恍惚": {
+      "text": "下一回合只能在移动、执行一个动作、执行一个附赠动作中选一项（引擎不限制，人工处理）。",
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 0
+        }
+      }
+    }
+  }
+}

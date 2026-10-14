@@ -1,0 +1,110 @@
+{
+  "name": "闪耀星座",
+  "automation": "partial",
+  "text": "每个你的回合开始时，若处于星耀形态，可以更换身上闪耀的星座（写成回合开始的可选触发器；新星座的标记效应重新计 10 分钟，更换后不额外获得化身时的那一箭）。射手座的 1d8 变 2d8 已写在射手座条目里（按德鲁伊 10 级判断），圣杯座的 2d8 在圣杯座条目里；巨龙座的 20 尺飞行速度和悬浮在静态层里，且不分星座始终计入（已知限制）。",
+  "triggers": [
+    {
+      "id": "swap",
+      "label": "闪耀星座：更换星座",
+      "on": "turnStarted",
+      "role": "actor",
+      "optional": true,
+      "when": "self.hasEffect('星耀形态')",
+      "do": [
+        {
+          "kind": "choose",
+          "prompt": "更换身上闪耀的星座",
+          "options": [
+            {
+              "label": "射手座",
+              "when": "!self.hasEffect('星耀形态：射手座')",
+              "do": [
+                {
+                  "kind": "removeEffect",
+                  "from": "self",
+                  "match": { "tag": "starry-constellation" }
+                },
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "inline": {
+                    "name": "星耀形态：射手座",
+                    "tags": ["starry-form", "starry-constellation"],
+                    "text": "射手座在你身上亮起：可以用附赠动作发射光箭。",
+                    "duration": {
+                      "minutes": 10,
+                      "endsOn": [
+                        {
+                          "event": "effectApplied",
+                          "when": "event.bearer == self.id && self.has('失能')"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "label": "圣杯座",
+              "when": "!self.hasEffect('星耀形态：圣杯座')",
+              "do": [
+                {
+                  "kind": "removeEffect",
+                  "from": "self",
+                  "match": { "tag": "starry-constellation" }
+                },
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "inline": {
+                    "name": "星耀形态：圣杯座",
+                    "tags": ["starry-form", "starry-constellation"],
+                    "text": "圣杯座在你身上亮起。",
+                    "duration": {
+                      "minutes": 10,
+                      "endsOn": [
+                        {
+                          "event": "effectApplied",
+                          "when": "event.bearer == self.id && self.has('失能')"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "label": "巨龙座",
+              "when": "!self.hasEffect('星耀形态：巨龙座')",
+              "do": [
+                {
+                  "kind": "removeEffect",
+                  "from": "self",
+                  "match": { "tag": "starry-constellation" }
+                },
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "inline": {
+                    "name": "星耀形态：巨龙座",
+                    "tags": ["starry-form", "starry-constellation"],
+                    "text": "巨龙座在你身上亮起。",
+                    "duration": {
+                      "minutes": 10,
+                      "endsOn": [
+                        {
+                          "event": "effectApplied",
+                          "when": "event.bearer == self.id && self.has('失能')"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

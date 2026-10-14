@@ -1,0 +1,55 @@
+{
+  "name": "自然庇护",
+  "automation": "partial",
+  "text": "区域内你和盟友的掩护、盟友获得的自然之护抗性（取决于你当前的地貌）、区域的位置和范围，引擎都不处理，手动。这里只处理：消耗荒野形态次数、1 分钟的持续（失能或死亡时结束）、附赠动作移动区域的提醒。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "自然庇护",
+      "activation": "action",
+      "cost": [
+        { "resource": "wildshape-uses" }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": { "shape": "cube", "size": 15 }
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "自然庇护"
+        },
+        {
+          "kind": "note",
+          "text": "自然庇护：你和盟友在立方区域内拥有掩护；盟友获得你自然之护的当前抗性（手动处理）"
+        }
+      ]
+    },
+    {
+      "id": "move",
+      "name": "自然庇护：移动区域",
+      "activation": "bonus",
+      "requires": "turn.isMine && self.hasEffect('自然庇护')",
+      "root": [
+        {
+          "kind": "note",
+          "text": "自然庇护：把立方区域移动至多 60 尺，移动后仍须在你的 120 尺内"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "自然庇护": {
+      "text": "灵体树木与藤蔓形成的 15 尺立方区域持续 1 分钟，直到你失能或死亡。区域内你和盟友拥有掩护，盟友获得你自然之护的当前抗性（手动处理）。",
+      "duration": {
+        "minutes": 1,
+        "endsOn": [
+          { "event": "effectApplied", "when": "event.bearer == self.id && self.has('失能')" },
+          { "event": "died", "when": "self.dead" }
+        ]
+      }
+    }
+  }
+}

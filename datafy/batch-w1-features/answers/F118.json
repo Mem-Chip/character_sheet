@@ -1,0 +1,114 @@
+{
+  "name": "瀚海之怒",
+  "automation": "full",
+  "text": "附赠动作，消耗一次荒野变形，在自己周围显现 5 尺海浪光环，持续 10 分钟；解除它（无需动作）、再度显现或陷入失能时提前结束。显现时以及之后的回合中以附赠动作，可选择光环内你可见的另一个生物：体质豁免（你的法术豁免 DC），失败则受寒冷伤害（感知调整值颗 d6，最少 1 颗），大型或更小体型还会被推离至多 15 尺。光环大小随等级变化（6 级起 10 尺）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "瀚海之怒",
+      "activation": "bonus",
+      "text": "显现光环；显现时可以立刻选一个光环内你可见的另一个生物承受浪涌（可以不选目标）。再度显现会结束先前的光环。",
+      "cost": [
+        { "resource": "wildshape-uses" }
+      ],
+      "requires": "turn.isMine",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "filter": "target.id != self.id && canSee(self, target) && within(self, target, cond(self.levelOf('德鲁伊') >= 6, 10, 5))"
+      },
+      "root": [
+        {
+          "kind": "removeEffect",
+          "from": "self",
+          "match": { "name": "瀚海之怒" }
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "瀚海之怒"
+        },
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "(max(1, self.mod.wis))d6",
+              "type": "寒冷"
+            },
+            {
+              "kind": "if",
+              "when": "target.size != '巨型' && target.size != '超巨型'",
+              "then": [
+                { "kind": "move", "mode": "push", "ft": 15 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "surge",
+      "name": "瀚海之怒：浪涌",
+      "activation": "bonus",
+      "text": "光环存在期间，以附赠动作选择光环内你可见的另一个生物承受浪涌。",
+      "requires": "turn.isMine && self.hasEffect('瀚海之怒')",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "filter": "target.id != self.id && canSee(self, target) && within(self, target, cond(self.levelOf('德鲁伊') >= 6, 10, 5))"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "(max(1, self.mod.wis))d6",
+              "type": "寒冷"
+            },
+            {
+              "kind": "if",
+              "when": "target.size != '巨型' && target.size != '超巨型'",
+              "then": [
+                { "kind": "move", "mode": "push", "ft": 15 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dismiss",
+      "name": "瀚海之怒：解除光环",
+      "activation": "free",
+      "requires": "self.hasEffect('瀚海之怒')",
+      "root": [
+        {
+          "kind": "removeEffect",
+          "from": "self",
+          "match": { "name": "瀚海之怒" }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "瀚海之怒": {
+      "tags": ["wrath-of-the-sea"],
+      "text": "你周围显现着海浪形态的光环（5 尺；6 级起 10 尺），持续 10 分钟。你解除它、再度显现或陷入失能时提前结束。",
+      "duration": {
+        "minutes": 10,
+        "endsOn": [
+          {
+            "event": "effectApplied",
+            "when": "event.bearer == self.id && self.has('失能')"
+          }
+        ]
+      }
+    }
+  }
+}

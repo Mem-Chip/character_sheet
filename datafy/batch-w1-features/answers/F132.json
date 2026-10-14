@@ -1,0 +1,31 @@
+{
+  "name": "不屈",
+  "automation": "full",
+  "text": "豁免失败时，可以消耗一次不屈，重投并必须采用新结果，并加上等同战士等级的加值。每次长休恢复；13 级起可用两次，17 级起可用三次。",
+  "resources": [
+    {
+      "id": "不屈",
+      "name": "不屈",
+      "formula": "cond(level >= 17, 3, cond(level >= 13, 2, 1))",
+      "recovery": "long"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "indomitable",
+      "label": "不屈：重投豁免",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "roll.kind == 'save' && roll.failing",
+      "cost": [
+        { "resource": "不屈" }
+      ],
+      "modify": [
+        { "op": "reroll", "die": "d20", "keep": "new" },
+        { "op": "addToRoll", "value": "self.levelOf('战士')" }
+      ]
+    }
+  ]
+}

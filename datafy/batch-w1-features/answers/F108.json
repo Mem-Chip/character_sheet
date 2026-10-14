@@ -1,0 +1,84 @@
+{
+  "name": "大地之援",
+  "automation": "full",
+  "text": "魔法动作，消耗一次荒野形态次数：60 尺内一点为中心的 10 尺半径球状区域，你选择的每个生物进行体质豁免，失败 2d6 暗蚀，成功减半；10 级 3d6，14 级 4d6。另外区域内你选择的一名生物恢复同样骰数的生命值——施放后用「大地之援：治疗」选择那名生物。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "大地之援",
+      "activation": "action",
+      "cost": [
+        { "resource": "wildshape-uses" }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": { "shape": "sphere", "radius": 10 }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "lands-aid",
+                  "dice": "(2 + min(1, floor(self.levelOf('德鲁伊') / 10)) + min(1, floor(self.levelOf('德鲁伊') / 14)))d6",
+                  "type": "黯蚀"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "lands-aid",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "大地之援"
+        }
+      ]
+    },
+    {
+      "id": "heal",
+      "name": "大地之援：治疗",
+      "activation": "free",
+      "text": "区域内你选择的一名生物恢复生命值（骰数同伤害）。每次施放一次。",
+      "requires": "self.hasEffect('大地之援')",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 70
+      },
+      "root": [
+        {
+          "kind": "heal",
+          "amount": "(2 + min(1, floor(self.levelOf('德鲁伊') / 10)) + min(1, floor(self.levelOf('德鲁伊') / 14)))d6"
+        },
+        {
+          "kind": "removeEffect",
+          "from": "self",
+          "match": { "name": "大地之援" }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "大地之援": {
+      "text": "本回合刚施放过大地之援，区域内你选择的一名生物还没有恢复生命值。",
+      "duration": {
+        "until": { "at": "turnEnd", "of": "bearer", "nth": 0 }
+      }
+    }
+  }
+}

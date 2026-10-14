@@ -1,0 +1,29 @@
+{
+  "name": "原力蛮击",
+  "automation": "partial",
+  "text": "每个你的回合内一次，武器攻击或荒野变形野兽形态的攻击命中时，额外造成 1d8 寒冷 / 火焰 / 闪电 / 雷鸣伤害（命中时选择）。是否为野兽形态的攻击由人回答。",
+  "triggers": [
+    {
+      "id": "primal-strike",
+      "label": "原力蛮击",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "turn.isMine && !attack.spell && (attack.weapon || ask('这是荒野变形中野兽形态的攻击吗？'))",
+      "do": [
+        {
+          "kind": "choose",
+          "prompt": "原力蛮击：选择额外伤害的类型",
+          "options": [
+            { "label": "寒冷", "do": [ { "kind": "addDamage", "dice": "1d8", "type": "寒冷" } ] },
+            { "label": "火焰", "do": [ { "kind": "addDamage", "dice": "1d8", "type": "火焰" } ] },
+            { "label": "闪电", "do": [ { "kind": "addDamage", "dice": "1d8", "type": "闪电" } ] },
+            { "label": "雷鸣", "do": [ { "kind": "addDamage", "dice": "1d8", "type": "雷鸣" } ] }
+          ]
+        }
+      ]
+    }
+  ]
+}

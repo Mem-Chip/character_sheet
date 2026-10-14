@@ -1,0 +1,302 @@
+{
+  "name": "凶蛮打击",
+  "automation": "partial",
+  "text": "用了鲁莽攻击之后，本回合可以放弃一次力量攻击的优势：命中时额外 1d10（17 级起 2d10）伤害，类型与此次攻击相同，并附带一种凶蛮打击效应（13 级起多出震撼猛击、破势猛击；17 级起可同时选两种不同的效应，强化凶蛮打击 13 / 17 级的内容都已按等级并在这里）。做法：宣告后，本回合第一次力量攻击会被加上一个劣势来抵消优势（有优势又有劣势则平掷）；命中则加伤害并选效应，未命中也算用掉。需要人处理：不能选已经具有劣势的攻击；巨力猛击之后的靠近移动；震撼猛击的「不能借机攻击」。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "凶蛮打击",
+      "activation": "free",
+      "text": "在发动那次力量攻击之前宣告（需要本回合已使用鲁莽攻击，每回合一次）：这次攻击放弃优势。不能选已具有劣势的攻击（由人判断）。",
+      "requires": "turn.isMine && self.hasEffect('鲁莽攻击') && !self.hasEffect('凶蛮打击')",
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "凶蛮打击"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "凶蛮打击": {
+      "text": "本回合第一次力量攻击放弃优势；命中时 +1d10 伤害并附带一种凶蛮打击效应。",
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 0
+        }
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "bearer",
+          "when": "attack.ability == 'str' && !self.hasEffect('凶蛮打击：已选')",
+          "op": "disadv",
+          "label": "凶蛮打击：放弃优势"
+        }
+      ],
+      "triggers": [
+        {
+          "id": "pick",
+          "label": "凶蛮打击：选定这次攻击",
+          "on": "d20Rolled",
+          "role": "actor",
+          "window": "before",
+          "when": "roll.kind == 'attack' && attack.ability == 'str' && !self.hasEffect('凶蛮打击：已选')",
+          "do": [
+            {
+              "kind": "applyEffect",
+              "to": "self",
+              "template": "凶蛮打击：已选"
+            }
+          ]
+        },
+        {
+          "id": "hit",
+          "label": "凶蛮打击：额外伤害与效应",
+          "on": "attackHit",
+          "role": "actor",
+          "window": "before",
+          "when": "attack.ability == 'str' && self.hasEffect('凶蛮打击：已选') && !self.hasEffect('凶蛮打击：已结算')",
+          "do": [
+            {
+              "kind": "addDamage",
+              "dice": "(1 + floor(self.levelOf('野蛮人') / 17))d10",
+              "type": "attack.damageType"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "self",
+              "template": "凶蛮打击：已结算"
+            },
+            {
+              "kind": "if",
+              "when": "self.levelOf('野蛮人') >= 17",
+              "then": [
+                {
+                  "kind": "choose",
+                  "prompt": "凶蛮打击：选两种不同的效应",
+                  "count": 2,
+                  "options": [
+                    {
+                      "label": "巨力猛击：将目标直线推离 15 尺",
+                      "do": [
+                        {
+                          "kind": "move",
+                          "mode": "push",
+                          "ft": 15
+                        },
+                        {
+                          "kind": "note",
+                          "text": "巨力猛击：随后可以立刻向目标移动至多一半速度，且不引发借机攻击（移动由人处理）"
+                        }
+                      ]
+                    },
+                    {
+                      "label": "断筋猛击：目标速度 -15 尺",
+                      "do": [
+                        {
+                          "kind": "applyEffect",
+                          "to": "target",
+                          "template": "断筋猛击"
+                        }
+                      ]
+                    },
+                    {
+                      "label": "震撼猛击：目标下一次豁免具有劣势，且不能借机攻击",
+                      "when": "self.levelOf('野蛮人') >= 13",
+                      "do": [
+                        {
+                          "kind": "applyEffect",
+                          "to": "target",
+                          "template": "震撼猛击"
+                        }
+                      ]
+                    },
+                    {
+                      "label": "破势猛击：他人对目标的下一次攻击检定 +5",
+                      "when": "self.levelOf('野蛮人') >= 13",
+                      "do": [
+                        {
+                          "kind": "applyEffect",
+                          "to": "target",
+                          "template": "破势猛击"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "else": [
+                {
+                  "kind": "choose",
+                  "prompt": "凶蛮打击：选一种效应",
+                  "count": 1,
+                  "options": [
+                    {
+                      "label": "巨力猛击：将目标直线推离 15 尺",
+                      "do": [
+                        {
+                          "kind": "move",
+                          "mode": "push",
+                          "ft": 15
+                        },
+                        {
+                          "kind": "note",
+                          "text": "巨力猛击：随后可以立刻向目标移动至多一半速度，且不引发借机攻击（移动由人处理）"
+                        }
+                      ]
+                    },
+                    {
+                      "label": "断筋猛击：目标速度 -15 尺",
+                      "do": [
+                        {
+                          "kind": "applyEffect",
+                          "to": "target",
+                          "template": "断筋猛击"
+                        }
+                      ]
+                    },
+                    {
+                      "label": "震撼猛击：目标下一次豁免具有劣势，且不能借机攻击",
+                      "when": "self.levelOf('野蛮人') >= 13",
+                      "do": [
+                        {
+                          "kind": "applyEffect",
+                          "to": "target",
+                          "template": "震撼猛击"
+                        }
+                      ]
+                    },
+                    {
+                      "label": "破势猛击：他人对目标的下一次攻击检定 +5",
+                      "when": "self.levelOf('野蛮人') >= 13",
+                      "do": [
+                        {
+                          "kind": "applyEffect",
+                          "to": "target",
+                          "template": "破势猛击"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "miss",
+          "label": "凶蛮打击：这次攻击未命中",
+          "on": "attackMissed",
+          "role": "actor",
+          "window": "after",
+          "when": "attack.ability == 'str' && self.hasEffect('凶蛮打击：已选') && !self.hasEffect('凶蛮打击：已结算')",
+          "do": [
+            {
+              "kind": "applyEffect",
+              "to": "self",
+              "template": "凶蛮打击：已结算"
+            }
+          ]
+        }
+      ]
+    },
+    "凶蛮打击：已选": {
+      "text": "凶蛮打击已经落在本回合的某次力量攻击上。",
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 0
+        }
+      }
+    },
+    "凶蛮打击：已结算": {
+      "text": "凶蛮打击的那次攻击已经结算，本回合不能再触发。",
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 0
+        }
+      }
+    },
+    "断筋猛击": {
+      "stackKey": "断筋猛击",
+      "text": "断筋猛击：速度 -15 尺，直到施加者的下个回合开始；同一时间只受最近一次断筋猛击影响。",
+      "statics": [
+        {
+          "kind": "speed",
+          "bonus": -15
+        }
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        }
+      }
+    },
+    "震撼猛击": {
+      "text": "震撼猛击：下一次豁免具有劣势；直到施加者的下个回合开始都不能发动借机攻击（借机攻击由人处理）。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save"
+          },
+          "who": "bearer",
+          "op": "disadv",
+          "label": "震撼猛击：下一次豁免具有劣势"
+        }
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        },
+        "endsOn": [
+          {
+            "event": "d20Rolled",
+            "when": "event.kind == 'save' && event.roller == self.id"
+          }
+        ]
+      }
+    },
+    "破势猛击": {
+      "stackKey": "破势猛击",
+      "text": "破势猛击：直到施加者的下个回合开始，下一次由其他生物对其进行的攻击检定 +5；一次攻击只能吃到一次破势猛击。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "against",
+          "when": "source != null && attacker.id != source.id",
+          "op": "add",
+          "value": 5,
+          "label": "破势猛击：攻击检定 +5"
+        }
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        },
+        "endsOn": [
+          {
+            "event": "d20Rolled",
+            "when": "event.kind == 'attack' && event.target == self.id && source != null && event.roller != source.id"
+          }
+        ]
+      }
+    }
+  }
+}

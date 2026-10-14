@@ -1,0 +1,44 @@
+{
+  "name": "自然恢复",
+  "automation": "partial",
+  "text": "免环施法：引擎无法替换该法术的法术位消耗，施法时需手动免除那一次法术位。短休恢复法术位：可恢复的法术位由人手动选择并恢复，本条只记录次数。",
+  "resources": [
+    {
+      "id": "natural-recovery-slot",
+      "name": "自然恢复（短休恢复法术位）",
+      "formula": "1",
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "自然恢复（免环施法）",
+      "activation": "free",
+      "cost": [
+        { "resource": "natural-recovery" }
+      ],
+      "text": "施展一个以大地结社准备的一环及以上法术时，无须消耗法术位；随后施法时手动免除该次法术位消耗。",
+      "root": [
+        { "kind": "note", "text": "本次施法免除法术位消耗（手动）" }
+      ]
+    }
+  ],
+  "triggers": [
+    {
+      "id": "slot-recovery",
+      "label": "自然恢复：短休恢复法术位",
+      "on": "restCompleted",
+      "role": "actor",
+      "window": "after",
+      "optional": true,
+      "when": "event.kind == 'short'",
+      "cost": [
+        { "resource": "natural-recovery-slot" }
+      ],
+      "do": [
+        { "kind": "note", "text": "选择恢复消耗的法术位：环阶总和不超过德鲁伊等级的一半（向上取整），且不能是 6 环或更高；手动恢复。" }
+      ]
+    }
+  ]
+}

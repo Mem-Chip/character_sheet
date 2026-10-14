@@ -1,0 +1,44 @@
+{
+  "name": "擒抱者",
+  "automation": "partial",
+  "text": "连擒带打已写：回合内用攻击动作的徒手打击命中后，可以额外进行一次擒抱（DC 同基础擒抱），每回合一次。优势攻击已写：你攻击受擒于你的生物时具有优势（靠受擒效应的施加者判断）。擒抱需要一只空手，这一点由人确认。高速拖行（拖动受擒生物不额外耗移动力）引擎无法处理移动消耗，需人手动处理。",
+  "triggers": [
+    {
+      "id": "grapple",
+      "label": "擒抱者：连擒带打",
+      "on": "attackHit",
+      "role": "actor",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "attack.unarmed && turn.isMine",
+      "do": [
+        {
+          "kind": "save",
+          "ability": ["str", "dex"],
+          "dc": "8 + mod.str + pb",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "XPHB:condition:受擒",
+              "state": {
+                "escapeDc": "8 + mod.str + pb"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "rollMods": [
+    {
+      "on": {
+        "kind": "attack"
+      },
+      "who": "bearer",
+      "when": "target.hasEffect('受擒') && target.effect('受擒').source != null && target.effect('受擒').source.id == self.id",
+      "op": "adv",
+      "label": "擒抱者：优势攻击"
+    }
+  ]
+}

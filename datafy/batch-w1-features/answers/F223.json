@@ -1,0 +1,113 @@
+{
+ "name": "卫护斩",
+ "automation": "full",
+ "text": "每当你施展至圣斩（含圣武斩的免费施展），直到你的下个回合开始，守护灵光内的你和盟友具有半掩护（AC +2、敏捷豁免 +2）。守护灵光半径 10 尺，18 级起 30 尺。灵光在你失能时不生效。",
+ "triggers": [
+  {
+   "id": "ward",
+   "label": "卫护斩",
+   "on": "spellCast",
+   "role": "actor",
+   "window": "after",
+   "when": "event.spell == '至圣斩' || event.key == 'XPHB:spell:至圣斩' || event.key == 'XPHB:圣武士:圣武斩:2'",
+   "do": [
+    {
+     "kind": "if",
+     "when": "self.levelOf('圣武士') >= 18",
+     "then": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "卫护斩（30 尺）"
+      }
+     ],
+     "else": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "卫护斩"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "卫护斩": {
+   "text": "直到你的下个回合开始，守护灵光（10 尺）内的你和盟友具有半掩护：AC +2，敏捷豁免 +2。",
+   "duration": {
+    "until": {
+     "at": "turnStart",
+     "of": "bearer",
+     "nth": 1
+    }
+   },
+   "aura": {
+    "id": "ward10",
+    "radius": 10,
+    "affects": "allies",
+    "includeSelf": true,
+    "requires": "!self.has('失能')",
+    "stackKey": "卫护斩",
+    "grant": {
+     "statics": [
+      {
+       "kind": "ac",
+       "bonus": 2
+      }
+     ],
+     "rollMods": [
+      {
+       "on": {
+        "kind": "save",
+        "ability": "dex"
+       },
+       "who": "bearer",
+       "op": "add",
+       "value": 2,
+       "label": "卫护斩：半掩护"
+      }
+     ]
+    }
+   }
+  },
+  "卫护斩（30 尺）": {
+   "text": "直到你的下个回合开始，守护灵光（30 尺）内的你和盟友具有半掩护：AC +2，敏捷豁免 +2。",
+   "duration": {
+    "until": {
+     "at": "turnStart",
+     "of": "bearer",
+     "nth": 1
+    }
+   },
+   "aura": {
+    "id": "ward30",
+    "radius": 30,
+    "affects": "allies",
+    "includeSelf": true,
+    "requires": "!self.has('失能')",
+    "stackKey": "卫护斩",
+    "grant": {
+     "statics": [
+      {
+       "kind": "ac",
+       "bonus": 2
+      }
+     ],
+     "rollMods": [
+      {
+       "on": {
+        "kind": "save",
+        "ability": "dex"
+       },
+       "who": "bearer",
+       "op": "add",
+       "value": 2,
+       "label": "卫护斩：半掩护"
+      }
+     ]
+    }
+   }
+  }
+ }
+}

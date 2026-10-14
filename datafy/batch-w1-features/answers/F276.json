@@ -1,0 +1,30 @@
+{
+  "name": "摔绊",
+  "automation": "partial",
+  "text": "狡诈打击选项，花费 1d6 偷袭骰。偷袭骰减 1d6 由人手动处理（引擎无法减少偷袭骰），由人确认是否使用。仅对大型及以下目标生效；目标进行敏捷豁免（DC 为狡诈打击通用公式 8 + 敏捷调整值 + 熟练加值），失败则倒地，直到移除。",
+  "triggers": [
+    {
+      "id": "trip",
+      "label": "摔绊（花费：1d6）",
+      "on": "attackHit",
+      "role": "actor",
+      "limit": "oncePerTurn",
+      "when": "target.size != '巨型' && target.size != '超巨型' && ask('这次命中是否造成了偷袭伤害，并用 1d6 偷袭骰选择摔绊？')",
+      "do": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "8 + mod.dex + pb",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "XPHB:condition:倒地",
+              "duration": { "manual": true }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

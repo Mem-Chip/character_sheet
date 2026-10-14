@@ -1,0 +1,21 @@
+{
+  "name": "协同舞步",
+  "automation": "partial",
+  "text": "自己的先攻加值已自动：投先攻时可选花一次诗人激励，加上诗人骰。30 尺内能听见或看见你的盟友，其先攻同样加上该骰值，需手动处理（引擎不能把同一骰值分享给其他人的先攻）。未失能时才可用。",
+  "triggers": [
+    {
+      "id": "coordinated-steps",
+      "label": "协同舞步：先攻加诗人骰",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "(roll.kind == 'initiative' || roll.sub == 'initiative') && !self.has('失能')",
+      "cost": [{ "resource": "诗人激励" }],
+      "modify": [{ "op": "addToRoll", "value": "classTable('诗人骰')" }],
+      "do": [
+        { "kind": "note", "text": "协同舞步：30 尺内能听见或看见你的盟友，其先攻也加上同一骰值（手动处理）" }
+      ]
+    }
+  ]
+}

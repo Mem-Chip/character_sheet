@@ -1,0 +1,123 @@
+{
+  "name": "雾隐遁行",
+  "automation": "partial",
+  "text": "受到伤害后可以用反应施展迷踪步（施法用的法术位或妖精步伐次数请手动扣除）；迷踪步（无论怎么施展）另有「无踪步伐」「惊惧步伐」两个选项。非反应施展迷踪步时选「惊惧步伐」只能提示，豁免与伤害需要手动结算：传送前或传送后的空间（你选）5 尺内的生物进行感知豁免（DC = 你的法术豁免 DC），失败受到 2d10 心灵伤害。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "雾隐遁行：反应施展迷踪步",
+      "activation": "reaction",
+      "tags": ["spell", "magical"],
+      "trigger": { "on": "damageTaken", "role": "target", "window": "after" },
+      "root": [
+        { "kind": "move", "mode": "teleport", "ft": 30 },
+        {
+          "kind": "choose",
+          "prompt": "迷踪步的额外选项",
+          "options": [
+            {
+              "label": "无额外效果",
+              "do": [{ "kind": "note", "text": "雾隐遁行：只传送，不选额外效果" }]
+            },
+            {
+              "label": "无踪步伐：隐形，到你的下一回合开始（或攻击、造成伤害、施法后结束）",
+              "do": [{ "kind": "applyEffect", "to": "self", "template": "无踪步伐" }]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dreadful",
+      "name": "雾隐遁行：反应施展迷踪步（惊惧步伐）",
+      "activation": "reaction",
+      "tags": ["spell", "magical"],
+      "text": "范围选在传送前或传送后的空间（由你选择）周围 5 尺。",
+      "trigger": { "on": "damageTaken", "role": "target", "window": "after" },
+      "targeting": { "type": "area", "range": 30, "area": { "shape": "sphere", "radius": 5 } },
+      "root": [
+        { "kind": "move", "mode": "teleport", "ft": 30 },
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": "self.spell.dc",
+              "onFail": [{ "kind": "damage", "id": "dread", "dice": "2d10", "type": "心灵" }]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "triggers": [
+    {
+      "id": "fey-options",
+      "label": "雾隐遁行：迷踪步的额外选项",
+      "on": "spellCast",
+      "role": "actor",
+      "window": "after",
+      "optional": true,
+      "when": "event.spell == '迷踪步' || event.key == 'XPHB:spell:迷踪步'",
+      "do": [
+        {
+          "kind": "choose",
+          "prompt": "迷踪步的额外选项（雾隐遁行）",
+          "options": [
+            {
+              "label": "无踪步伐：隐形，到你的下一回合开始（或攻击、造成伤害、施法后结束）",
+              "do": [{ "kind": "applyEffect", "to": "self", "template": "无踪步伐" }]
+            },
+            {
+              "label": "惊惧步伐（豁免与伤害手动结算）",
+              "do": [
+                {
+                  "kind": "note",
+                  "text": "惊惧步伐：传送前或传送后的空间（你选）5 尺内的生物进行感知豁免（DC = 你的法术豁免 DC），失败受到 2d10 心灵伤害"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "无踪步伐": {
+      "tags": ["magical", "spell"],
+      "text": "你处于隐形状态，持续到你的下一回合开始，或你进行攻击检定、造成伤害、施展法术之后。",
+      "implies": ["XPHB:condition:隐形"],
+      "duration": { "until": { "at": "turnStart", "of": "bearer", "nth": 1 } },
+      "triggers": [
+        {
+          "id": "end-atk",
+          "label": "无踪步伐：进行攻击检定后结束",
+          "on": "d20Rolled",
+          "role": "actor",
+          "window": "after",
+          "when": "roll.kind == 'attack'",
+          "do": [{ "kind": "removeEffect", "match": { "name": "无踪步伐" }, "from": "self" }]
+        },
+        {
+          "id": "end-dmg",
+          "label": "无踪步伐：造成伤害后结束",
+          "on": "damageTaken",
+          "role": "actor",
+          "window": "after",
+          "do": [{ "kind": "removeEffect", "match": { "name": "无踪步伐" }, "from": "self" }]
+        },
+        {
+          "id": "end-cast",
+          "label": "无踪步伐：施法后结束",
+          "on": "spellCast",
+          "role": "actor",
+          "window": "after",
+          "when": "event.spell != '迷踪步' && event.key != 'XPHB:spell:迷踪步'",
+          "do": [{ "kind": "removeEffect", "match": { "name": "无踪步伐" }, "from": "self" }]
+        }
+      ]
+    }
+  }
+}

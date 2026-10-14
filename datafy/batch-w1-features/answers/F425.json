@@ -1,0 +1,58 @@
+{
+  "name": "粉碎者",
+  "automation": "partial",
+  "text": "推离：每回合一次，以钝击攻击命中体型不比你大超过一级的生物后，可将其移动 5 尺至一处未占据空间（体型比较由 ask 确认；移动的方向与目的地由人决定，引擎只做直线推离）。强化重击已写：重击命中并造成钝击伤害后，直到你的下个回合开始前，以该生物为目标的攻击检定具有优势。",
+  "triggers": [
+    {
+      "id": "shove",
+      "label": "粉碎者：推离",
+      "on": "attackHit",
+      "role": "actor",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "attack.damageType == '钝击' && damage.amount > 0 && ask('目标体型是否不比你大超过一级？')",
+      "do": [
+        {
+          "kind": "move",
+          "mode": "push",
+          "ft": 5
+        }
+      ]
+    },
+    {
+      "id": "crush",
+      "label": "粉碎者：强化重击",
+      "on": "attackHit",
+      "role": "actor",
+      "when": "roll.crit && attack.damageType == '钝击'",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "粉碎者：强化重击"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "粉碎者：强化重击": {
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "against",
+          "op": "adv",
+          "label": "粉碎者：强化重击"
+        }
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "name": "兽力威能",
+  "automation": "partial",
+  "text": "雄狮与角羊的狂暴期间效果已写，靠询问确认本次选的是哪一项；雄狮的例外（以另一名雄狮野蛮人为目标时不生效）未写，需人手动。猎鹰（未着护甲时飞行速度等于速度）：引擎没有飞行速度，需人手动处理。",
+  "auras": [
+    {
+      "id": "lion",
+      "radius": 5,
+      "affects": "enemies",
+      "includeSelf": false,
+      "requires": "self.hasEffect('狂暴') && ask('兽力威能：本次狂暴选的是雄狮吗？')",
+      "grant": {
+        "rollMods": [
+          {
+            "on": { "kind": "attack" },
+            "who": "bearer",
+            "when": "target.id != source.id",
+            "op": "disadv",
+            "label": "兽力威能：雄狮（5 尺内的敌人）"
+          }
+        ]
+      }
+    }
+  ],
+  "triggers": [
+    {
+      "id": "goat",
+      "label": "兽力威能：角羊（倒地）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "optional": true,
+      "when": "attack.melee && target.size != '巨型' && target.size != '超巨型' && self.hasEffect('狂暴') && ask('兽力威能：本次狂暴选的是角羊吗？')",
+      "do": [
+        { "kind": "applyEffect", "to": "target", "template": "XPHB:condition:倒地" }
+      ]
+    }
+  ]
+}

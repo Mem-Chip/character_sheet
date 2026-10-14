@@ -1,0 +1,35 @@
+{
+  "name": "料敌机先",
+  "automation": "partial",
+  "text": "附赠动作查看 30 尺内可见生物的抗性、免疫与易伤：引擎没有揭示信息的节点，查看并告知使用者需要人手动处理。每次长休可用一次；可消耗 1 粒卓越骰（无需动作）重置使用权。",
+  "resources": [
+    { "id": "料敌机先", "name": "料敌机先", "formula": "1", "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "料敌机先",
+      "activation": "bonus",
+      "cost": [{ "resource": "料敌机先" }],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30,
+        "filter": "canSee(target, self)"
+      },
+      "root": [
+        { "kind": "note", "text": "查看目标是否具有抗性、免疫或易伤，并告知使用者具体内容（手动）" }
+      ]
+    },
+    {
+      "id": "reset",
+      "name": "料敌机先：卓越骰重置",
+      "activation": "free",
+      "requires": "self.resource('料敌机先') == 0",
+      "cost": [{ "resource": "卓越骰" }],
+      "root": [
+        { "kind": "resource", "id": "料敌机先", "delta": 1 }
+      ]
+    }
+  ]
+}

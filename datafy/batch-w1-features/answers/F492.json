@@ -1,0 +1,47 @@
+{
+ "name": "魔能斩",
+ "automation": "full",
+ "text": "每回合一次，用契约武器命中生物时，可消耗一枚契约法术位，额外造成 (1 + 法术位环阶) 个 d8 力场伤害；目标体型在巨型或以下时，还可令其倒地。每回合一次由人把握。",
+ "actions": [
+  {
+   "id": "smite",
+   "name": "魔能斩",
+   "activation": "free",
+   "trigger": {
+    "on": "attackHit",
+    "role": "actor",
+    "window": "before",
+    "when": "attack.weapon && ask('这是契约武器的攻击吗？')"
+   },
+   "requires": "turn.isMine",
+   "cost": [
+    {
+     "slot": {
+      "min": 1
+     }
+    }
+   ],
+   "root": [
+    {
+     "kind": "addDamage",
+     "dice": "(1 + slot.level)d8",
+     "type": "力场"
+    },
+    {
+     "kind": "if",
+     "when": "target.size != '超巨型'",
+     "then": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "XPHB:condition:倒地",
+       "duration": {
+        "manual": true
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

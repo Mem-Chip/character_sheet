@@ -1,0 +1,71 @@
+{
+  "name": "盾牌大师",
+  "automation": "partial",
+  "text": "盾击：是否属于攻击动作的一部分由人判断（目前只在自己回合、近战武器命中 5 尺内的生物时提示）。介入盾牌：引擎看不出这次伤害是否来自「敏捷豁免成功则只受一半」的效应，会问人确认；确认后伤害清零并消耗反应。",
+  "triggers": [
+    {
+      "id": "shield-bash",
+      "label": "盾牌大师：盾击",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "turn.isMine && attack.weapon && attack.melee && self.wearing('S') && within(self, target, 5) && !target.dead",
+      "do": [
+        {
+          "kind": "save",
+          "ability": "str",
+          "dc": "8 + self.mod.str + pb",
+          "onFail": [
+            {
+              "kind": "choose",
+              "prompt": "盾击的效果",
+              "options": [
+                {
+                  "label": "推离 5 尺",
+                  "do": [
+                    {
+                      "kind": "move",
+                      "mode": "push",
+                      "ft": 5
+                    }
+                  ]
+                },
+                {
+                  "label": "令其倒地",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "to": "target",
+                      "template": "XPHB:condition:倒地"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "interpose",
+      "label": "盾牌大师：介入盾牌（不受这次伤害）",
+      "on": "damageIncoming",
+      "role": "target",
+      "window": "before",
+      "optional": true,
+      "cost": [
+        {
+          "economy": "reaction"
+        }
+      ],
+      "when": "self.wearing('S') && !self.has('失能') && damage.amount > 0 && ask('这次伤害来自「敏捷豁免成功则只受一半伤害」的效应，而且你刚刚豁免成功了吗？')",
+      "modify": [
+        {
+          "op": "cancel"
+        }
+      ]
+    }
+  ]
+}

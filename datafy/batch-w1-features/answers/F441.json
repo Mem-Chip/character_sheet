@@ -1,0 +1,28 @@
+{
+ "name": "拦截",
+ "automation": "full",
+ "text": "一名你可见的生物命中你 5 尺内的另一名生物时，用反应把伤害减少 1d10 + 熟练加值（需持握盾牌或简易 / 军用武器）。",
+ "triggers": [
+  {
+   "id": "interpose",
+   "label": "拦截",
+   "on": "attackHit",
+   "role": "ally",
+   "window": "before",
+   "deferTo": "damageIncoming",
+   "optional": true,
+   "cost": [
+    {
+     "economy": "reaction"
+    }
+   ],
+   "when": "target.id != self.id && within(self, target, 5) && canSee(self, attacker) && ask('你持握着盾牌或简易/军用武器吗？')",
+   "modify": [
+    {
+     "op": "reduceDamage",
+     "value": "1d10 + pb"
+    }
+   ]
+  }
+ ]
+}

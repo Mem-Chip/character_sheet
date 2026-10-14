@@ -1,0 +1,56 @@
+{
+  "name": "神之狂暴",
+  "automation": "partial",
+  "text": "激活狂暴时可以呈现圣斗士姿态（1 分钟，生命值降至 0 时提前结束，每次长休一次）。已自动处理：暗蚀/心灵/光耀抗性、回春（反应 + 一次狂暴次数）。飞行速度（等于速度）与悬浮需要人处理；「必须在激活狂暴时使用」由人判断。",
+  "resources": [
+    { "id": "神之狂暴", "name": "神之狂暴", "formula": "1", "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "神之狂暴",
+      "activation": "free",
+      "text": "激活狂暴时才能呈现圣斗士姿态（由人判断）。持续 1 分钟，生命值降至 0 时提前结束。",
+      "cost": [
+        { "resource": "神之狂暴" }
+      ],
+      "requires": "turn.isMine && self.hasEffect('狂暴') && !self.hasEffect('圣斗士姿态')",
+      "root": [
+        { "kind": "applyEffect", "to": "self", "template": "圣斗士姿态" },
+        { "kind": "note", "text": "圣斗士姿态：获得等于速度的飞行速度并可悬浮（请手动处理）" }
+      ]
+    }
+  ],
+  "effects": {
+    "圣斗士姿态": {
+      "text": "飞行速度等于你的速度并可悬浮（手动）；暗蚀、心灵、光耀抗性；回春：30 尺内一名生物将降至 0 时，可以反应消耗一次狂暴次数，令其生命值变为你的野蛮人等级。",
+      "duration": {
+        "minutes": 1,
+        "endsOn": [
+          { "event": "damageTaken", "when": "self.hp <= 0" }
+        ]
+      },
+      "statics": [
+        { "kind": "resist", "values": ["黯蚀", "心灵", "光耀"] }
+      ],
+      "triggers": [
+        {
+          "id": "revive",
+          "label": "神之狂暴：回春",
+          "on": "reducedTo0",
+          "role": "any",
+          "window": "before",
+          "optional": true,
+          "when": "target.id != self.id && target.isAllyOf(self) && within(self, target, 30)",
+          "cost": [
+            { "economy": "reaction" },
+            { "resource": "狂暴" }
+          ],
+          "modify": [
+            { "op": "setHp", "value": "self.levelOf('野蛮人')" }
+          ]
+        }
+      ]
+    }
+  }
+}

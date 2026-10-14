@@ -1,0 +1,43 @@
+{
+  "name": "究明攻击",
+  "automation": "full",
+  "text": "攻击检定失手后，直到你的下个回合结束前，你对该生物的下一次攻击检定具有优势。",
+  "triggers": [
+    {
+      "id": "study",
+      "label": "究明攻击",
+      "on": "attackMissed",
+      "role": "actor",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "究明攻击",
+          "state": { "target": "target" }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "究明攻击": {
+      "rollMods": [
+        {
+          "on": { "kind": "attack" },
+          "who": "bearer",
+          "when": "target.id == effect.state.target",
+          "op": "adv",
+          "label": "究明攻击"
+        }
+      ],
+      "duration": {
+        "until": { "at": "turnEnd", "of": "bearer", "nth": 1 },
+        "endsOn": [
+          {
+            "event": "d20Rolled",
+            "when": "event.kind == 'attack' && event.roller == self.id && event.target == effect.state.target"
+          }
+        ]
+      }
+    }
+  }
+}

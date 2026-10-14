@@ -1,0 +1,49 @@
+{
+  "name": "刃之魔契",
+  "automation": "partial",
+  "text": "自动：连结后，连结武器的攻击检定与伤害掷骰改用魅力调整值代替力量或敏捷（每次攻击前由人确认是否为连结的武器）。手动：召唤契约武器或与魔法武器连结的选择；连结结束条件（你在 5 尺外 1 分钟或更久、你死亡、再次使用本特性的附赠动作）；熟练授予；把伤害类型改为暗蚀 / 心灵 / 光耀（引擎不能替换武器的伤害类型）。",
+  "actions": [
+    {
+      "id": "bond",
+      "name": "刃之魔契：连结武器",
+      "activation": "bonus",
+      "requires": "!self.hasEffect('刃之魔契')",
+      "root": [
+        { "kind": "applyEffect", "to": "self", "template": "刃之魔契", "duration": { "manual": true } }
+      ]
+    },
+    {
+      "id": "unbond",
+      "name": "刃之魔契：结束连结",
+      "activation": "bonus",
+      "requires": "self.hasEffect('刃之魔契')",
+      "root": [
+        { "kind": "removeEffect", "from": "self", "match": { "name": "刃之魔契" } }
+      ]
+    }
+  ],
+  "effects": {
+    "刃之魔契": {
+      "tags": ["magical"],
+      "duration": { "manual": true },
+      "rollMods": [
+        {
+          "on": { "kind": "attack", "attack": { "weapon": true } },
+          "who": "bearer",
+          "when": "ask('这次攻击用的是你连结的武器吗？')",
+          "op": "add",
+          "value": "self.mod.cha - abilityMod(attack.ability)",
+          "label": "刃之魔契：用魅力攻击"
+        },
+        {
+          "on": { "kind": "damage", "attack": { "weapon": true } },
+          "who": "bearer",
+          "when": "ask('这次伤害用的是你连结的武器吗？')",
+          "op": "add",
+          "value": "self.mod.cha - abilityMod(attack.ability)",
+          "label": "刃之魔契：用魅力伤害"
+        }
+      ]
+    }
+  }
+}

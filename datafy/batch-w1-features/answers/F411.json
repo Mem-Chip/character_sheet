@@ -1,0 +1,332 @@
+{
+  "name": "能量抗性之恩惠",
+  "automation": "partial",
+  "text": "先用「选择抗性」选两种伤害类型（长休后可以重选，再用一次即可，会替换旧的选择）。能量重导：受到所选类型的伤害后，用反应把相同类型的伤害传导给 60 尺内可见的另一名生物；对你全身掩护的生物不能选，由人判断。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "能量抗性之恩惠：选择抗性",
+      "activation": "free",
+      "text": "从强酸、寒冷、火焰、闪电、黯蚀、毒素、心灵、光耀、雷鸣里选两种获得抗性；每次长休后可以改变。",
+      "root": [
+        {
+          "kind": "removeEffect",
+          "from": "self",
+          "match": {
+            "tag": "boon-energy-resist"
+          }
+        },
+        {
+          "kind": "choose",
+          "prompt": "选择两种伤害类型获得抗性",
+          "count": 2,
+          "options": [
+            {
+              "label": "强酸",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "能量抗性：强酸",
+                  "duration": {
+                    "manual": true
+                  }
+                }
+              ]
+            },
+            {
+              "label": "寒冷",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "能量抗性：寒冷",
+                  "duration": {
+                    "manual": true
+                  }
+                }
+              ]
+            },
+            {
+              "label": "火焰",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "能量抗性：火焰",
+                  "duration": {
+                    "manual": true
+                  }
+                }
+              ]
+            },
+            {
+              "label": "闪电",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "能量抗性：闪电",
+                  "duration": {
+                    "manual": true
+                  }
+                }
+              ]
+            },
+            {
+              "label": "黯蚀",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "能量抗性：黯蚀",
+                  "duration": {
+                    "manual": true
+                  }
+                }
+              ]
+            },
+            {
+              "label": "毒素",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "能量抗性：毒素",
+                  "duration": {
+                    "manual": true
+                  }
+                }
+              ]
+            },
+            {
+              "label": "心灵",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "能量抗性：心灵",
+                  "duration": {
+                    "manual": true
+                  }
+                }
+              ]
+            },
+            {
+              "label": "光耀",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "能量抗性：光耀",
+                  "duration": {
+                    "manual": true
+                  }
+                }
+              ]
+            },
+            {
+              "label": "雷鸣",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "能量抗性：雷鸣",
+                  "duration": {
+                    "manual": true
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "redirect",
+      "name": "能量抗性之恩惠：能量重导",
+      "activation": "reaction",
+      "text": "把一次相同类型的伤害传导给你 60 尺内可见的另一名生物（不能是对你而言处于全身掩护下的生物）：目标敏捷豁免（DC = 8 + 体质调整值 + 熟练加值），失败受到 2d12 + 体质调整值伤害。",
+      "trigger": {
+        "on": "damageTaken",
+        "role": "target",
+        "when": "damage.amount > 0 && ((damage.type == '强酸' && self.hasEffect('能量抗性：强酸')) || (damage.type == '寒冷' && self.hasEffect('能量抗性：寒冷')) || (damage.type == '火焰' && self.hasEffect('能量抗性：火焰')) || (damage.type == '闪电' && self.hasEffect('能量抗性：闪电')) || (damage.type == '黯蚀' && self.hasEffect('能量抗性：黯蚀')) || (damage.type == '毒素' && self.hasEffect('能量抗性：毒素')) || (damage.type == '心灵' && self.hasEffect('能量抗性：心灵')) || (damage.type == '光耀' && self.hasEffect('能量抗性：光耀')) || (damage.type == '雷鸣' && self.hasEffect('能量抗性：雷鸣')))"
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "target.id != self.id && canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "8 + self.mod.con + pb",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "2d12 + self.mod.con",
+              "type": "damage.type"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "能量抗性：强酸": {
+      "tags": [
+        "boon-energy-resist"
+      ],
+      "text": "具有强酸伤害的抗性（能量抗性之恩惠所选类型之一）。",
+      "statics": [
+        {
+          "kind": "resist",
+          "values": [
+            "强酸"
+          ]
+        }
+      ],
+      "duration": {
+        "manual": true
+      }
+    },
+    "能量抗性：寒冷": {
+      "tags": [
+        "boon-energy-resist"
+      ],
+      "text": "具有寒冷伤害的抗性（能量抗性之恩惠所选类型之一）。",
+      "statics": [
+        {
+          "kind": "resist",
+          "values": [
+            "寒冷"
+          ]
+        }
+      ],
+      "duration": {
+        "manual": true
+      }
+    },
+    "能量抗性：火焰": {
+      "tags": [
+        "boon-energy-resist"
+      ],
+      "text": "具有火焰伤害的抗性（能量抗性之恩惠所选类型之一）。",
+      "statics": [
+        {
+          "kind": "resist",
+          "values": [
+            "火焰"
+          ]
+        }
+      ],
+      "duration": {
+        "manual": true
+      }
+    },
+    "能量抗性：闪电": {
+      "tags": [
+        "boon-energy-resist"
+      ],
+      "text": "具有闪电伤害的抗性（能量抗性之恩惠所选类型之一）。",
+      "statics": [
+        {
+          "kind": "resist",
+          "values": [
+            "闪电"
+          ]
+        }
+      ],
+      "duration": {
+        "manual": true
+      }
+    },
+    "能量抗性：黯蚀": {
+      "tags": [
+        "boon-energy-resist"
+      ],
+      "text": "具有黯蚀伤害的抗性（能量抗性之恩惠所选类型之一）。",
+      "statics": [
+        {
+          "kind": "resist",
+          "values": [
+            "黯蚀"
+          ]
+        }
+      ],
+      "duration": {
+        "manual": true
+      }
+    },
+    "能量抗性：毒素": {
+      "tags": [
+        "boon-energy-resist"
+      ],
+      "text": "具有毒素伤害的抗性（能量抗性之恩惠所选类型之一）。",
+      "statics": [
+        {
+          "kind": "resist",
+          "values": [
+            "毒素"
+          ]
+        }
+      ],
+      "duration": {
+        "manual": true
+      }
+    },
+    "能量抗性：心灵": {
+      "tags": [
+        "boon-energy-resist"
+      ],
+      "text": "具有心灵伤害的抗性（能量抗性之恩惠所选类型之一）。",
+      "statics": [
+        {
+          "kind": "resist",
+          "values": [
+            "心灵"
+          ]
+        }
+      ],
+      "duration": {
+        "manual": true
+      }
+    },
+    "能量抗性：光耀": {
+      "tags": [
+        "boon-energy-resist"
+      ],
+      "text": "具有光耀伤害的抗性（能量抗性之恩惠所选类型之一）。",
+      "statics": [
+        {
+          "kind": "resist",
+          "values": [
+            "光耀"
+          ]
+        }
+      ],
+      "duration": {
+        "manual": true
+      }
+    },
+    "能量抗性：雷鸣": {
+      "tags": [
+        "boon-energy-resist"
+      ],
+      "text": "具有雷鸣伤害的抗性（能量抗性之恩惠所选类型之一）。",
+      "statics": [
+        {
+          "kind": "resist",
+          "values": [
+            "雷鸣"
+          ]
+        }
+      ],
+      "duration": {
+        "manual": true
+      }
+    }
+  }
+}

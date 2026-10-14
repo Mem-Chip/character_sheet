@@ -1,0 +1,30 @@
+{
+  "name": "英勇战斗之恩惠",
+  "automation": "full",
+  "text": "无双锁定：攻击检定失手时可改为命中；使用后直到你的下个回合开始才能再次使用。",
+  "triggers": [
+    {
+      "id": "unstoppable",
+      "label": "英勇战斗之恩惠：无双锁定",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "roll.kind == 'attack' && roll.failing && !self.hasEffect('无双锁定')",
+      "modify": [
+        { "op": "addToRoll", "value": "roll.vs - roll.total" }
+      ],
+      "do": [
+        { "kind": "applyEffect", "to": "self", "template": "无双锁定" }
+      ]
+    }
+  ],
+  "effects": {
+    "无双锁定": {
+      "text": "本次攻击已使用无双锁定，直到你的下个回合开始前不能再次使用。",
+      "duration": {
+        "until": { "at": "turnStart", "of": "bearer", "nth": 1 }
+      }
+    }
+  }
+}

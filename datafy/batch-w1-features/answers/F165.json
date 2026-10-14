@@ -1,0 +1,51 @@
+{
+  "name": "力场壁垒",
+  "automation": "partial",
+  "text": "掩护等级（半掩护还是四分之三掩护）原文没写，引擎只记录掩护状态与 1 分钟时长，掩护带来的 AC 与敏捷豁免加值需由人判断；消耗灵能骰重置使用权由人处理。",
+  "resources": [
+    {
+      "id": "force-wall",
+      "name": "力场壁垒",
+      "formula": "1",
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "力场壁垒",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "force-wall"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": "max(1, mod.int)",
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "each",
+          "template": "力场壁垒"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "力场壁垒": {
+      "text": "1 分钟内视为处于掩护中；陷入失能状态时提前结束。",
+      "duration": {
+        "minutes": 1,
+        "endsOn": [
+          {
+            "event": "effectApplied",
+            "when": "event.bearer == self.id && self.has('失能')"
+          }
+        ]
+      }
+    }
+  }
+}

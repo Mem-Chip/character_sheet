@@ -1,0 +1,51 @@
+{
+  "name": "强力恢复之恩惠",
+  "automation": "full",
+  "text": "背水一战：生命值将降至 0 时，改为降至 1 并恢复等于生命值上限一半的生命值，长休前不能再用。重获生机：附赠动作消耗治疗池里任意枚 d10，掷出并恢复相应生命值（治疗池上限已在人物卡里）。",
+  "resources": [
+    { "id": "recovery-last-stand", "name": "背水一战", "formula": "1", "recovery": "long" }
+  ],
+  "triggers": [
+    {
+      "id": "last-stand",
+      "label": "强力恢复之恩惠：背水一战",
+      "on": "reducedTo0",
+      "role": "target",
+      "window": "before",
+      "optional": true,
+      "cost": [
+        { "resource": "recovery-last-stand" }
+      ],
+      "modify": [
+        { "op": "setHp", "value": "1 + floor(self.hpMax / 2)" }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "强力恢复之恩惠：重获生机",
+      "activation": "bonus",
+      "requires": "self.resource('healing_pool') > 0 && self.hp < self.hpMax",
+      "root": [
+        {
+          "kind": "number",
+          "prompt": "消耗治疗池里多少枚 d10？",
+          "var": "n",
+          "min": 1,
+          "max": "self.resource('healing_pool')"
+        },
+        {
+          "kind": "heal",
+          "to": "self",
+          "amount": "(vars.n)d10"
+        },
+        {
+          "kind": "resource",
+          "id": "healing_pool",
+          "delta": "-vars.n"
+        }
+      ]
+    }
+  ]
+}

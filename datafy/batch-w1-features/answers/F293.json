@@ -1,0 +1,61 @@
+{
+  "name": "法术窃贼",
+  "automation": "partial",
+  "text": "他人施展的法术以你为目标或影响到你后，用反应迫使施法者进行智力豁免（DC = 你的法术豁免 DC）。失败：该法术对你无效，你偷走它——接下来 8 小时你准备了这个法术（至少 1 环、且是你能施展的环阶；不必是法师法术），施法者 8 小时内无法施展它。法术对你的影响和偷来的法术需要手动处理；每次长休一次。",
+  "resources": [
+    {
+      "id": "spell-thief",
+      "name": "法术窃贼",
+      "formula": "1",
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "steal",
+      "name": "法术窃贼",
+      "activation": "reaction",
+      "trigger": {
+        "on": "spellCast",
+        "role": "any",
+        "window": "after",
+        "when": "ask('刚施展的法术是别的生物施展的，且以你为目标或效应范围影响到你吗？')"
+      },
+      "cost": [
+        {
+          "resource": "spell-thief"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "filter": "target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "int",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "法术被窃"
+            },
+            {
+              "kind": "note",
+              "text": "法术窃贼：这个法术对你无效；接下来 8 小时你准备了它（1 环及以上、你能施展的环阶）"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "法术被窃": {
+      "text": "法术窃贼：你被偷走了刚施展的那个法术，8 小时内无法再施展它。",
+      "duration": {
+        "hours": 8
+      }
+    }
+  }
+}

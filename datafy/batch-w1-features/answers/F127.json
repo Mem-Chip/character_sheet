@@ -1,0 +1,107 @@
+{
+  "name": "宇宙预兆",
+  "automation": "full",
+  "text": "每次长休后参照星图掷一枚骰子：偶数为吉兆，奇数为凶兆（由玩家掷骰后选择）。直到下次长休，周围 30 尺内一个可见生物将要进行 D20 检定时，可用反应投 1d6 加入（吉兆）或从结果中减去（凶兆）；次数为感知调整值（最少 1 次），长休恢复。吉兆只提供给己方生物，凶兆只提供给敌方生物（近似）。",
+  "resources": [
+    { "id": "宇宙预兆", "name": "宇宙预兆", "formula": "max(1, wis)", "recovery": "long" }
+  ],
+  "triggers": [
+    {
+      "id": "omen",
+      "label": "宇宙预兆：长休后寻找预兆",
+      "on": "restCompleted",
+      "role": "actor",
+      "when": "event.kind == 'long'",
+      "do": [
+        {
+          "kind": "removeEffect",
+          "from": "self",
+          "match": { "tag": "cosmic-omen" }
+        },
+        {
+          "kind": "choose",
+          "prompt": "参照星图寻找预兆：掷一枚骰子，结果是？",
+          "options": [
+            {
+              "label": "偶数：吉兆（加 1d6）",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "吉兆"
+                }
+              ]
+            },
+            {
+              "label": "奇数：凶兆（减 1d6）",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "凶兆"
+                }
+              ]
+            },
+            {
+              "label": "这次不寻找预兆",
+              "do": [
+                {
+                  "kind": "note",
+                  "text": "没有参照星图，不获得预兆"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "吉兆": {
+      "tags": ["cosmic-omen"],
+      "text": "吉兆（偶数）：直到下次长休，周围 30 尺内一个可见生物将要进行 D20 检定时，你可以用反应投 1d6 加入检定结果。",
+      "duration": { "manual": true },
+      "triggers": [
+        {
+          "id": "weal",
+          "label": "宇宙预兆：吉兆（+1d6）",
+          "on": "d20Rolled",
+          "role": "any",
+          "window": "before",
+          "optional": true,
+          "when": "combatant(roll.roller).side == self.side && canSee(self, combatant(roll.roller)) && within(self, combatant(roll.roller), 30)",
+          "cost": [
+            { "economy": "reaction" },
+            { "resource": "宇宙预兆" }
+          ],
+          "modify": [
+            { "op": "addToRoll", "value": "1d6" }
+          ]
+        }
+      ]
+    },
+    "凶兆": {
+      "tags": ["cosmic-omen"],
+      "text": "凶兆（奇数）：直到下次长休，周围 30 尺内一个可见生物将要进行 D20 检定时，你可以用反应投 1d6 从检定结果中减去。",
+      "duration": { "manual": true },
+      "triggers": [
+        {
+          "id": "woe",
+          "label": "宇宙预兆：凶兆（-1d6）",
+          "on": "d20Rolled",
+          "role": "any",
+          "window": "before",
+          "optional": true,
+          "when": "combatant(roll.roller).side != self.side && canSee(self, combatant(roll.roller)) && within(self, combatant(roll.roller), 30)",
+          "cost": [
+            { "economy": "reaction" },
+            { "resource": "宇宙预兆" }
+          ],
+          "modify": [
+            { "op": "addToRoll", "value": "-1d6" }
+          ]
+        }
+      ]
+    }
+  }
+}

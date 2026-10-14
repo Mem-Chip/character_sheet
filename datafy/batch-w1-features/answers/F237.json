@@ -1,0 +1,45 @@
+{
+  "name": "仇敌誓言",
+  "automation": "partial",
+  "text": "在执行攻击动作时消耗引导神力立下誓言（何时可用由人判断）。誓言目标降至 0 后换给另一个生物（无需动作）为手动处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "仇敌誓言",
+      "activation": "free",
+      "requires": "turn.isMine",
+      "cost": [
+        { "resource": "channel-divinity" }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "仇敌誓言",
+          "state": { "target": "target" }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "仇敌誓言": {
+      "text": "1 分钟内，对誓言目标的攻击检定具有优势。",
+      "duration": { "minutes": 1 },
+      "rollMods": [
+        {
+          "on": { "kind": "attack" },
+          "who": "bearer",
+          "when": "target.id == effect.state.target",
+          "op": "adv",
+          "label": "仇敌誓言"
+        }
+      ]
+    }
+  }
+}

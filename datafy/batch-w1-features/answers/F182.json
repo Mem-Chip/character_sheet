@@ -1,0 +1,44 @@
+{
+  "name": "返本还元",
+  "automation": "partial",
+  "text": "每次自己的回合结束时，可以移除魅惑、恐慌或中毒之一。不吃不喝不再提升力竭等级属于探索 / 休息时的规则，由人手动处理。",
+  "triggers": [
+    {
+      "id": "clear",
+      "label": "返本还元：移除魅惑、恐慌或中毒",
+      "on": "turnEnded",
+      "role": "actor",
+      "optional": true,
+      "when": "self.has('魅惑') || self.has('恐慌') || self.has('中毒')",
+      "do": [
+        {
+          "kind": "choose",
+          "prompt": "返本还元：移除哪个状态？",
+          "options": [
+            {
+              "label": "移除魅惑",
+              "when": "self.has('魅惑')",
+              "do": [
+                { "kind": "removeEffect", "match": { "key": "XPHB:condition:魅惑" }, "from": "self" }
+              ]
+            },
+            {
+              "label": "移除恐慌",
+              "when": "self.has('恐慌')",
+              "do": [
+                { "kind": "removeEffect", "match": { "key": "XPHB:condition:恐慌" }, "from": "self" }
+              ]
+            },
+            {
+              "label": "移除中毒",
+              "when": "self.has('中毒')",
+              "do": [
+                { "kind": "removeEffect", "match": { "key": "XPHB:condition:中毒" }, "from": "self" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

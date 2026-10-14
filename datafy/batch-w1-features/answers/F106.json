@@ -1,0 +1,74 @@
+{
+  "name": "大德鲁伊",
+  "automation": "partial",
+  "text": "不凋化形自动处理。自然术使：荒野形态次数的扣除自动处理，但新得到的法术位引擎无法生成，需要手动在法术位上加一个（环阶 = 2 × 转化次数）。青春永驻是叙事，不处理。",
+  "resources": [
+    { "id": "nature-magician", "name": "自然术使", "formula": "1", "recovery": "long" }
+  ],
+  "triggers": [
+    {
+      "id": "evergreen",
+      "label": "大德鲁伊：不凋化形",
+      "on": "initiativeRolled",
+      "role": "actor",
+      "window": "after",
+      "when": "self.resource('wildshape-uses') <= 0",
+      "do": [
+        { "kind": "resource", "id": "wildshape-uses", "delta": 1 },
+        { "kind": "note", "text": "不凋化形：投先攻时没有荒野形态次数，获得 1 次" }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "nature-magician",
+      "name": "自然术使",
+      "activation": "free",
+      "text": "无需任何动作：把未使用的荒野形态次数转化为一个法术位，每次 = 2 个环阶；转化后须长休才能再用。法术位需要手动加上。",
+      "cost": [
+        { "resource": "nature-magician" }
+      ],
+      "requires": "self.resource('wildshape-uses') > 0",
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "自然术使：转化几次未使用的荒野形态次数？（每次 = 2 个环阶）",
+          "options": [
+            {
+              "label": "转化 1 次 → 2 环法术位",
+              "when": "self.resource('wildshape-uses') >= 1",
+              "do": [
+                { "kind": "resource", "id": "wildshape-uses", "delta": -1 },
+                { "kind": "note", "text": "自然术使：手动获得一个 2 环法术位" }
+              ]
+            },
+            {
+              "label": "转化 2 次 → 4 环法术位",
+              "when": "self.resource('wildshape-uses') >= 2",
+              "do": [
+                { "kind": "resource", "id": "wildshape-uses", "delta": -2 },
+                { "kind": "note", "text": "自然术使：手动获得一个 4 环法术位" }
+              ]
+            },
+            {
+              "label": "转化 3 次 → 6 环法术位",
+              "when": "self.resource('wildshape-uses') >= 3",
+              "do": [
+                { "kind": "resource", "id": "wildshape-uses", "delta": -3 },
+                { "kind": "note", "text": "自然术使：手动获得一个 6 环法术位" }
+              ]
+            },
+            {
+              "label": "转化 4 次 → 8 环法术位",
+              "when": "self.resource('wildshape-uses') >= 4",
+              "do": [
+                { "kind": "resource", "id": "wildshape-uses", "delta": -4 },
+                { "kind": "note", "text": "自然术使：手动获得一个 8 环法术位" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

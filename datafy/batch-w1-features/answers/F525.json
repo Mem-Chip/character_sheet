@@ -1,0 +1,23 @@
+{
+  "name": "追踪法术",
+  "automation": "full",
+  "tags": ["metamagic"],
+  "text": "超魔法：为法术进行的攻击检定未命中时，消耗 1 术法点重投那个 d20，必须采用重投结果。可与其他超魔同用。",
+  "triggers": [
+    {
+      "id": "seeker",
+      "label": "追踪法术：重投攻击骰",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "roll.kind == 'attack' && attack.spell && roll.failing",
+      "cost": [
+        { "resource": "sorcery_points", "n": 1 }
+      ],
+      "modify": [
+        { "op": "reroll", "die": "d20", "keep": "new" }
+      ]
+    }
+  ]
+}

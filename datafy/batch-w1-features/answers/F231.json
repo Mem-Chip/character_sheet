@@ -1,0 +1,40 @@
+{
+  "name": "自然之怒",
+  "automation": "full",
+  "text": "豁免 DC 取圣武士的法术豁免 DC。被束缚的生物在其回合结束时可重复力量豁免。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "自然之怒",
+      "activation": "action",
+      "tags": ["magical"],
+      "cost": [
+        { "resource": "channel-divinity" }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 99,
+        "range": 15,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "str",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "XPHB:condition:束缚",
+              "duration": {
+                "minutes": 1,
+                "saveEnds": { "ability": "str", "at": "turnEnd" }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

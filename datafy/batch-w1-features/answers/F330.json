@@ -1,0 +1,87 @@
+{
+ "name": "律令之壁",
+ "automation": "partial",
+ "text": "以魔法动作消耗 1-5 点术法点，为你自己或 30 尺内一个可见生物创造屏障，获得等量的 d8。被守护者受到伤害时消耗骰子，伤害减少掷出的合计。屏障持续到长休或你再次使用本特性。简化：每次触发消耗屏障里剩余的全部骰子并结束屏障（不能只用其中几颗）；你再次使用时，原来在别的生物身上的旧屏障请手动移除。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "律令之壁",
+   "activation": "action",
+   "tags": [
+    "magical"
+   ],
+   "requires": "self.resource('sorcery_points') > 0",
+   "text": "目标选自己即为环绕自己。",
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 30
+   },
+   "root": [
+    {
+     "kind": "number",
+     "prompt": "律令之壁：消耗几点术法点（获得等量 d8）？",
+     "var": "n",
+     "min": 1,
+     "max": "min(5, self.resource('sorcery_points'))"
+    },
+    {
+     "kind": "resource",
+     "id": "sorcery_points",
+     "delta": "-vars.n"
+    },
+    {
+     "kind": "applyEffect",
+     "to": "target",
+     "template": "律令之壁",
+     "state": {
+      "dice": "vars.n"
+     }
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "律令之壁": {
+   "tags": [
+    "magical"
+   ],
+   "stackKey": "律令之壁",
+   "text": "屏障里有若干 d8；受到伤害时可以消耗骰子，伤害减少掷出的合计。持续到长休或施放者再次使用。",
+   "duration": {
+    "manual": true,
+    "endsOn": [
+     {
+      "event": "restCompleted",
+      "when": "event.kind == 'long'"
+     }
+    ]
+   },
+   "triggers": [
+    {
+     "id": "ward",
+     "label": "律令之壁：消耗剩余的 d8 减伤",
+     "on": "damageIncoming",
+     "role": "target",
+     "window": "before",
+     "optional": true,
+     "modify": [
+      {
+       "op": "reduceDamage",
+       "value": "(effect.state.dice)d8"
+      }
+     ],
+     "do": [
+      {
+       "kind": "removeEffect",
+       "from": "self",
+       "match": {
+        "name": "律令之壁"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

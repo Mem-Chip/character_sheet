@@ -1,0 +1,227 @@
+{
+ "name": "阿斯莫",
+ "automation": "partial",
+ "text": "天界抗性、黑暗视觉、光辉掌者（光亮术）是静态部分，由人物卡处理。天堂飞翼的飞行速度、内耀辉光的光照需要手动处理；内耀辉光的回合结束伤害请在自己的回合结束时用「内耀辉光（回合结束伤害）」触发。天界启示的额外伤害对攻击或法术造成的伤害都会询问，不是攻击 / 法术伤害（例如内耀辉光自己的伤害）时请拒绝。",
+ "resources": [
+  { "id": "治愈之手", "name": "治愈之手", "formula": "1", "recovery": "long" },
+  { "id": "天界启示", "name": "天界启示", "formula": "1", "recovery": "long" }
+ ],
+ "actions": [
+  {
+   "id": "healing-hands",
+   "name": "治愈之手",
+   "activation": "action",
+   "text": "魔法动作：触碰一个生物，恢复等同于熟练加值个 d4 之和的生命值。",
+   "cost": [
+    { "resource": "治愈之手" }
+   ],
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": "touch"
+   },
+   "root": [
+    {
+     "kind": "heal",
+     "amount": "(pb)d4"
+    }
+   ]
+  },
+  {
+   "id": "revelation-wings",
+   "name": "天界启示：天堂飞翼",
+   "activation": "bonus",
+   "text": "3 级起。变身 1 分钟：获得等同于速度的飞行速度；每个回合一次，攻击或法术造成伤害时额外造成等同熟练加值的光耀伤害。",
+   "requires": "self.level >= 3",
+   "cost": [
+    { "resource": "天界启示" }
+   ],
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "天堂飞翼"
+    }
+   ]
+  },
+  {
+   "id": "revelation-radiance",
+   "name": "天界启示：内耀辉光",
+   "activation": "bonus",
+   "text": "3 级起。变身 1 分钟：散发 10 尺明亮光照与其外 10 尺微光光照；每个你的回合结束时，10 尺内每个生物受到等同熟练加值的光耀伤害；每个回合一次，攻击或法术造成伤害时额外造成等同熟练加值的光耀伤害。",
+   "requires": "self.level >= 3",
+   "cost": [
+    { "resource": "天界启示" }
+   ],
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "内耀辉光"
+    }
+   ]
+  },
+  {
+   "id": "radiance-pulse",
+   "name": "天界启示：内耀辉光（回合结束伤害）",
+   "activation": "free",
+   "text": "在你的回合结束时使用：你 10 尺内的每个生物受到等同熟练加值的光耀伤害。",
+   "requires": "turn.isMine && self.hasEffect('内耀辉光')",
+   "targeting": {
+    "type": "area",
+    "range": "self",
+    "area": {
+     "shape": "emanation",
+     "radius": 10
+    }
+   },
+   "root": [
+    {
+     "kind": "forEach",
+     "in": "area",
+     "do": [
+      {
+       "kind": "if",
+       "when": "target.id != self.id",
+       "then": [
+        {
+         "kind": "damage",
+         "dice": "pb",
+         "type": "光耀"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "revelation-shroud",
+   "name": "天界启示：死灵环绕",
+   "activation": "bonus",
+   "text": "3 级起。变身 1 分钟：除盟友外、10 尺内能看见你的生物须通过魅力豁免（DC 8 + 熟练加值 + 魅力调整值），否则陷入恐慌，持续至你的下一回合结束；每个回合一次，攻击或法术造成伤害时额外造成等同熟练加值的暗蚀伤害。",
+   "requires": "self.level >= 3",
+   "cost": [
+    { "resource": "天界启示" }
+   ],
+   "targeting": {
+    "type": "area",
+    "range": "self",
+    "area": {
+     "shape": "emanation",
+     "radius": 10
+    }
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "死灵环绕"
+    },
+    {
+     "kind": "forEach",
+     "in": "area",
+     "do": [
+      {
+       "kind": "if",
+       "when": "target.id != self.id && !target.isAllyOf(self) && canSee(target, self)",
+       "then": [
+        {
+         "kind": "save",
+         "ability": "cha",
+         "dc": "8 + self.pb + self.mod.cha",
+         "onFail": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "XPHB:condition:恐慌",
+           "duration": {
+            "until": {
+             "at": "turnEnd",
+             "of": "source",
+             "nth": 1
+            }
+           }
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "end-revelation",
+   "name": "天界启示：提前结束变身",
+   "activation": "free",
+   "requires": "self.hasEffect('天堂飞翼') || self.hasEffect('内耀辉光') || self.hasEffect('死灵环绕')",
+   "root": [
+    {
+     "kind": "removeEffect",
+     "from": "self",
+     "match": { "tag": "revelation" }
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "天堂飞翼": {
+   "tags": ["revelation"],
+   "text": "获得等同于速度的飞行速度（引擎不追踪飞行，手动处理）。每个你的回合一次，攻击或法术造成伤害时额外造成等同熟练加值的光耀伤害。",
+   "duration": { "minutes": 1 },
+   "triggers": [
+    {
+     "id": "wings-bonus",
+     "label": "天界启示：额外光耀伤害",
+     "on": "damageTaken",
+     "role": "actor",
+     "optional": true,
+     "limit": "oncePerTurn",
+     "when": "turn.isMine && damage.amount > 0 && target.id != self.id",
+     "do": [
+      { "kind": "damage", "dice": "pb", "type": "光耀" }
+     ]
+    }
+   ]
+  },
+  "内耀辉光": {
+   "tags": ["revelation"],
+   "text": "散发 10 尺明亮光照与其外 10 尺微光光照。你的回合结束时，10 尺内每个生物受到等同熟练加值的光耀伤害（用「内耀辉光（回合结束伤害）」触发）。每个你的回合一次，攻击或法术造成伤害时额外造成等同熟练加值的光耀伤害。",
+   "duration": { "minutes": 1 },
+   "triggers": [
+    {
+     "id": "radiance-bonus",
+     "label": "天界启示：额外光耀伤害",
+     "on": "damageTaken",
+     "role": "actor",
+     "optional": true,
+     "limit": "oncePerTurn",
+     "when": "turn.isMine && damage.amount > 0 && target.id != self.id",
+     "do": [
+      { "kind": "damage", "dice": "pb", "type": "光耀" }
+     ]
+    }
+   ]
+  },
+  "死灵环绕": {
+   "tags": ["revelation"],
+   "text": "每个你的回合一次，攻击或法术造成伤害时额外造成等同熟练加值的暗蚀伤害。",
+   "duration": { "minutes": 1 },
+   "triggers": [
+    {
+     "id": "shroud-bonus",
+     "label": "天界启示：额外暗蚀伤害",
+     "on": "damageTaken",
+     "role": "actor",
+     "optional": true,
+     "limit": "oncePerTurn",
+     "when": "turn.isMine && damage.amount > 0 && target.id != self.id",
+     "do": [
+      { "kind": "damage", "dice": "pb", "type": "黯蚀" }
+     ]
+    }
+   ]
+  }
+ }
+}

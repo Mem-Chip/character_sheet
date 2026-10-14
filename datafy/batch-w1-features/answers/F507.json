@@ -1,0 +1,69 @@
+{
+  "name": "突刺攻击",
+  "automation": "full",
+  "text": "附赠动作：消耗卓越骰并执行疾走。本回合直线移动至少 5 尺后，紧接着以攻击动作中的一次近战攻击命中时，可以把卓越骰加到伤害上。是否满足「直线移动 ≥5 尺且紧接着攻击」由玩家判断（命中时会询问）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "突刺攻击",
+      "activation": "bonus",
+      "requires": "turn.isMine && !self.hasEffect('突刺攻击')",
+      "cost": [
+        {
+          "resource": "卓越骰"
+        }
+      ],
+      "root": [
+        {
+          "kind": "economy",
+          "move": "self.speed"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "突刺攻击",
+          "state": {
+            "die": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))"
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "突刺攻击": {
+      "text": "本回合直线移动至少 5 尺后，近战攻击命中时可以把卓越骰加到伤害上；用掉即消失。",
+      "triggers": [
+        {
+          "id": "lunge",
+          "label": "突刺攻击：直线移动 5 尺以上后近战命中，加卓越骰伤害",
+          "on": "attackHit",
+          "role": "actor",
+          "window": "before",
+          "optional": true,
+          "when": "attack.melee",
+          "do": [
+            {
+              "kind": "addDamage",
+              "dice": "effect.state.die",
+              "type": "attack.damageType"
+            },
+            {
+              "kind": "removeEffect",
+              "match": {
+                "name": "突刺攻击"
+              },
+              "from": "self"
+            }
+          ]
+        }
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 0
+        }
+      }
+    }
+  }
+}

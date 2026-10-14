@@ -1,0 +1,25 @@
+{
+  "name": "奥能冲锋",
+  "automation": "partial",
+  "text": "使用动作如潮时，可以传送至多 30 尺至一个你能看到的未占据空间，可以在动作如潮的额外动作之前或之后进行。引擎只在本回合已用过动作如潮之后提供传送；动作如潮之前的传送需人手动处理，目的地的视线与空位由人判断。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "奥能冲锋：传送",
+      "activation": "free",
+      "requires": "turn.isMine && self.hasEffect('动作如潮') && !self.hasEffect('奥能冲锋')",
+      "root": [
+        { "kind": "move", "mode": "teleport", "ft": 30 },
+        { "kind": "applyEffect", "to": "self", "template": "奥能冲锋" }
+      ]
+    }
+  ],
+  "effects": {
+    "奥能冲锋": {
+      "text": "本回合已经用过奥能冲锋的传送。",
+      "duration": {
+        "until": { "at": "turnEnd", "of": "bearer", "nth": 0 }
+      }
+    }
+  }
+}

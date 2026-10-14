@@ -1,0 +1,19 @@
+{
+  "name": "撤步",
+  "automation": "partial",
+  "text": "狡诈打击选项，花费 1d6 偷袭骰。偷袭骰减 1d6 由人手动处理（引擎无法减少偷袭骰），由人确认是否使用。攻击后可移动至多速度一半的距离，并且本回合剩余时间内不引发借机攻击（已写）。",
+  "triggers": [
+    {
+      "id": "withdraw",
+      "label": "撤步（花费：1d6）：攻击后移动",
+      "on": "attackHit",
+      "role": "actor",
+      "limit": "oncePerTurn",
+      "when": "ask('这次命中是否造成了偷袭伤害，并用 1d6 偷袭骰选择撤步？')",
+      "do": [
+        { "kind": "economy", "move": "floor(self.speed / 2)" },
+        { "kind": "applyEffect", "to": "self", "template": "XPHB:action:撤离#撤离" }
+      ]
+    }
+  ]
+}

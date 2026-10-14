@@ -1,0 +1,143 @@
+{
+  "name": "星耀形态",
+  "automation": "full",
+  "text": "附赠动作，消耗一次荒野变形，呈现星耀形态（保留游戏数据；发出 10 尺明亮光照与其外 10 尺微光光照），持续 10 分钟。你解除它（无需动作）、失能、死亡或再次使用此特性时结束。每次化身时选择射手座、圣杯座或巨龙座之一提供增益。星座的具体增益见各星座条目；星座效应命名为「星耀形态：射手座」等。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "星耀形态",
+      "activation": "bonus",
+      "cost": [
+        { "resource": "wildshape-uses" }
+      ],
+      "requires": "turn.isMine",
+      "root": [
+        {
+          "kind": "removeEffect",
+          "from": "self",
+          "match": { "tag": "starry-form" }
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "星耀形态"
+        },
+        {
+          "kind": "choose",
+          "prompt": "选择在你身上亮起的星座",
+          "options": [
+            {
+              "label": "射手座（光箭：可立刻射出一箭，之后以附赠动作射箭）",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "星耀形态：射手座"
+                },
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "射手座：初箭可用"
+                }
+              ]
+            },
+            {
+              "label": "圣杯座",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "星耀形态：圣杯座"
+                }
+              ]
+            },
+            {
+              "label": "巨龙座",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "星耀形态：巨龙座"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dismiss",
+      "name": "星耀形态：解除",
+      "activation": "free",
+      "requires": "self.hasEffect('星耀形态')",
+      "root": [
+        {
+          "kind": "removeEffect",
+          "from": "self",
+          "match": { "tag": "starry-form" }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "星耀形态": {
+      "tags": ["starry-form"],
+      "text": "星耀形态：保留游戏数据，身体明亮，发出 10 尺明亮光照与其外 10 尺微光光照。持续 10 分钟；解除、失能、死亡或再次使用星耀形态时结束。",
+      "duration": {
+        "minutes": 10,
+        "endsOn": [
+          {
+            "event": "effectApplied",
+            "when": "event.bearer == self.id && self.has('失能')"
+          }
+        ]
+      }
+    },
+    "星耀形态：射手座": {
+      "tags": ["starry-form", "starry-constellation"],
+      "text": "射手座在你身上亮起：可以用附赠动作发射光箭。",
+      "duration": {
+        "minutes": 10,
+        "endsOn": [
+          {
+            "event": "effectApplied",
+            "when": "event.bearer == self.id && self.has('失能')"
+          }
+        ]
+      }
+    },
+    "星耀形态：圣杯座": {
+      "tags": ["starry-form", "starry-constellation"],
+      "text": "圣杯座在你身上亮起。",
+      "duration": {
+        "minutes": 10,
+        "endsOn": [
+          {
+            "event": "effectApplied",
+            "when": "event.bearer == self.id && self.has('失能')"
+          }
+        ]
+      }
+    },
+    "星耀形态：巨龙座": {
+      "tags": ["starry-form", "starry-constellation"],
+      "text": "巨龙座在你身上亮起。",
+      "duration": {
+        "minutes": 10,
+        "endsOn": [
+          {
+            "event": "effectApplied",
+            "when": "event.bearer == self.id && self.has('失能')"
+          }
+        ]
+      }
+    },
+    "射手座：初箭可用": {
+      "tags": ["starry-form"],
+      "text": "化身射手座的这一回合：可以不花动作射出第一支光箭。",
+      "duration": {
+        "until": { "at": "turnEnd", "of": "bearer", "nth": 0 }
+      }
+    }
+  }
+}

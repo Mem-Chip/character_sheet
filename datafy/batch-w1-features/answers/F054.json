@@ -1,0 +1,44 @@
+{
+  "name": "超凡技艺",
+  "automation": "full",
+  "text": "属性检定或攻击检定失败时，可以消耗一次诗人激励使用次数，把诗人激励骰加到 d20 上；加完仍然失败则不消耗。",
+  "triggers": [
+    {
+      "id": "peerless",
+      "label": "超凡技艺（+诗人激励骰）",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "(roll.kind == 'check' || roll.kind == 'attack') && roll.failing",
+      "cost": [
+        {
+          "resource": "诗人激励"
+        }
+      ],
+      "modify": [
+        {
+          "op": "addToRoll",
+          "value": "classTable('诗人骰')"
+        }
+      ],
+      "do": [
+        {
+          "kind": "if",
+          "when": "roll.failing",
+          "then": [
+            {
+              "kind": "resource",
+              "id": "诗人激励",
+              "delta": 1
+            },
+            {
+              "kind": "note",
+              "text": "超凡技艺：检定仍然失败，不消耗诗人激励次数"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

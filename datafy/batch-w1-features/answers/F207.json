@@ -1,0 +1,61 @@
+{
+  "name": "散打技巧",
+  "text": "疾风连击中的一次攻击命中生物时，可迫使其承受下列效应之一：慌神（至其下个回合开始前不能使用借机攻击，借机攻击需人工执行）；推离 15 尺（力量豁免，DC 原文未写，暂按功力 DC：8 + 感知 + 熟练，请核对，失败则推离）；失衡（敏捷豁免，同上，失败则倒地）。",
+  "automation": "partial",
+  "triggers": [
+    {
+      "id": "open-hand",
+      "label": "散打技巧（疾风连击命中）",
+      "on": "attackHit",
+      "role": "actor",
+      "optional": true,
+      "when": "attack.unarmed",
+      "do": [
+        {
+          "kind": "choose",
+          "prompt": "散打技巧：选择一种效果",
+          "options": [
+            {
+              "label": "慌神",
+              "do": [
+                { "kind": "applyEffect", "to": "target", "template": "散打技巧：慌神" }
+              ]
+            },
+            {
+              "label": "推离 15 尺",
+              "do": [
+                {
+                  "kind": "save",
+                  "ability": "str",
+                  "dc": "8 + self.mod.wis + self.pb",
+                  "onFail": [
+                    { "kind": "move", "mode": "push", "ft": 15 }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "失衡",
+              "do": [
+                {
+                  "kind": "save",
+                  "ability": "dex",
+                  "dc": "8 + self.mod.wis + self.pb",
+                  "onFail": [
+                    { "kind": "applyEffect", "to": "target", "template": "XPHB:condition:倒地" }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "散打技巧：慌神": {
+      "text": "不能使用借机攻击（借机攻击未自动化，需人工执行），直至其下个回合开始。",
+      "duration": { "until": { "at": "turnStart", "of": "bearer", "nth": 1 } }
+    }
+  }
+}

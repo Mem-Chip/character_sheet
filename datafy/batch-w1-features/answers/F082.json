@@ -1,0 +1,52 @@
+{
+  "name": "光冕",
+  "automation": "partial",
+  "text": "明亮光照（60 尺）内的敌人，在抵抗黎明曙光或火焰/光耀伤害法术的豁免时具有劣势；引擎分不出豁免来源，由你确认。使用次数（光冕池，长休恢复）已在静态层，但「光冕」不在本条目可花的资源里，所以引擎不扣次数，需人工扣减。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "光冕",
+      "activation": "action",
+      "tags": ["magical"],
+      "root": [
+        { "kind": "note", "text": "消耗一次光冕使用次数（手动扣减）" },
+        { "kind": "applyEffect", "to": "self", "template": "光冕" }
+      ]
+    },
+    {
+      "id": "dismiss",
+      "name": "光冕（熄灭）",
+      "activation": "free",
+      "requires": "self.hasEffect('光冕')",
+      "root": [
+        { "kind": "removeEffect", "from": "self", "match": { "name": "光冕" } }
+      ]
+    }
+  ],
+  "effects": {
+    "光冕": {
+      "text": "你散发出半径 60 尺的明亮光照与额外 30 尺的微光，持续 1 分钟或直至解除。",
+      "duration": { "minutes": 1 }
+    }
+  },
+  "auras": [
+    {
+      "id": "corona",
+      "radius": 60,
+      "affects": "enemies",
+      "includeSelf": false,
+      "requires": "self.hasEffect('光冕')",
+      "grant": {
+        "rollMods": [
+          {
+            "on": { "kind": "save" },
+            "who": "bearer",
+            "when": "ask('这次豁免是抵抗黎明曙光，或火焰/光耀伤害的法术吗？')",
+            "op": "disadv",
+            "label": "光冕：明亮光照中的敌人"
+          }
+        ]
+      }
+    }
+  ]
+}

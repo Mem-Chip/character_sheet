@@ -1,0 +1,40 @@
+{
+  "name": "长柄武器大师",
+  "automation": "partial",
+  "text": "长柄打击：需要先执行攻击动作并用长棍、矛或同时有重型与触及词条的武器攻击过（由人判断）；命中加值按「熟练加值 + 力量调整值」算，魔法武器的加值与武器精通请手动补。反应打击：生物进入触及范围的时机引擎看不到，请直接用该武器的攻击行、选择作为反应发起。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "长柄打击（附赠动作）",
+      "activation": "bonus",
+      "text": "攻击动作后用同一武器的另一端发动一次近战攻击：伤害骰改为 d4，伤害类型为钝击。",
+      "requires": "turn.isMine",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "reach"
+      },
+      "tags": ["weapon"],
+      "root": [
+        {
+          "kind": "attack",
+          "bonus": "self.pb + self.mod.str",
+          "attack": {
+            "melee": true,
+            "weapon": true,
+            "ability": "str",
+            "damageType": "钝击",
+            "item": "长柄武器的另一端"
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "1d4 + self.mod.str",
+              "type": "钝击"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

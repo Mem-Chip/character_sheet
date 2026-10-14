@@ -1,0 +1,52 @@
+{
+  "name": "守御闪光",
+  "automation": "full",
+  "text": "30 尺内你可见的敌人进行攻击检定时，你以反应令其该次检定具有劣势（用「再掷一颗取低」近似劣势；该检定已有劣势时不再询问）。次数 = 感知调整值（至少 1），长休恢复。6 级的「精通守御之光」：使用时可以给予被攻击的目标 2d6 + 感知调整值点临时生命值——这部分按牧师等级写在本条里。",
+  "resources": [
+    {
+      "id": "守御闪光",
+      "name": "守御闪光",
+      "formula": "max(1, wis)",
+      "recovery": "long"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "warding-flare",
+      "label": "守御闪光：令攻击具有劣势",
+      "on": "d20Rolled",
+      "role": "any",
+      "window": "before",
+      "optional": true,
+      "when": "roll.kind == 'attack' && !roll.disadv && attacker.isEnemyOf(self) && within(self, attacker, 30) && canSee(self, attacker)",
+      "cost": [
+        {
+          "economy": "reaction"
+        },
+        {
+          "resource": "守御闪光"
+        }
+      ],
+      "modify": [
+        {
+          "op": "reroll",
+          "die": "d20",
+          "keep": "lower"
+        }
+      ],
+      "do": [
+        {
+          "kind": "if",
+          "when": "self.levelOf('牧师') >= 6 && ask('精通守御之光：给予被攻击的目标 2d6 + 感知调整值点临时生命值？')",
+          "then": [
+            {
+              "kind": "tempHp",
+              "amount": "2d6 + self.mod.wis",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

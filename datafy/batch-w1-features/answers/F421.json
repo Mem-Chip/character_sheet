@@ -1,0 +1,59 @@
+{
+  "name": "冲锋手",
+  "automation": "full",
+  "text": "进阶疾走：疾走动作的移动力 +10 尺（作为动作的疾走，由下方动作体现）。冲锋攻击：攻击动作中的近战攻击命中前，若你直线向目标移动了 10 尺以上，可选择伤害骰加 1d8，或将目标推离 10 尺（体型不比你大超过一级）。每个你自己的回合至多一次。直线移动距离与体型比较由 ask 询问确认。",
+  "actions": [
+    {
+      "id": "dash",
+      "name": "冲锋手：疾走",
+      "activation": "action",
+      "root": [
+        {
+          "kind": "economy",
+          "move": "self.speed + 10"
+        }
+      ]
+    }
+  ],
+  "triggers": [
+    {
+      "id": "charge",
+      "label": "冲锋手：冲锋攻击",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "attack.melee && turn.isMine && ask('你是否在此次攻击前直线向目标移动了至少 10 尺？')",
+      "do": [
+        {
+          "kind": "choose",
+          "prompt": "冲锋攻击：选择一个效果",
+          "options": [
+            {
+              "label": "伤害掷骰获得 1d8 的加值",
+              "do": [
+                {
+                  "kind": "addDamage",
+                  "dice": "1d8",
+                  "type": "attack.damageType"
+                }
+              ]
+            },
+            {
+              "label": "将目标推离 10 尺（目标体型不比你大超过一级）",
+              "when": "ask('目标体型是否不比你大超过一级？')",
+              "do": [
+                {
+                  "kind": "move",
+                  "mode": "push",
+                  "ft": 10
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

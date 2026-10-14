@@ -1,0 +1,133 @@
+{
+  "name": "元能爆发",
+  "text": "魔法动作，消耗 2 点功力，在 120 尺内一点产生半径 20 尺的球形能量爆发，选择强酸、寒冷、火焰、闪电或雷鸣。区域内生物进行敏捷豁免（DC 原文未写，暂按功力 DC：8 + 感知 + 熟练，请核对），失败受到 3 个武艺骰的所选类型伤害，成功减半。",
+  "automation": "partial",
+  "actions": [
+    {
+      "id": "use",
+      "name": "元能爆发",
+      "activation": "action",
+      "tags": ["magical"],
+      "cost": [{ "resource": "功力", "n": 2 }],
+      "targeting": { "type": "area", "range": 120, "area": { "shape": "sphere", "radius": 20 } },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "元能爆发的伤害类型",
+          "options": [
+            {
+              "label": "强酸",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "dex",
+                      "dc": "8 + self.mod.wis + self.pb",
+                      "onFail": [
+                        { "kind": "damage", "id": "burst", "dice": "classTable('武艺') + classTable('武艺') + classTable('武艺')", "type": "强酸" }
+                      ],
+                      "onSuccess": [
+                        { "kind": "damage", "ref": "burst", "scale": 0.5 }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "寒冷",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "dex",
+                      "dc": "8 + self.mod.wis + self.pb",
+                      "onFail": [
+                        { "kind": "damage", "id": "burst", "dice": "classTable('武艺') + classTable('武艺') + classTable('武艺')", "type": "寒冷" }
+                      ],
+                      "onSuccess": [
+                        { "kind": "damage", "ref": "burst", "scale": 0.5 }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "火焰",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "dex",
+                      "dc": "8 + self.mod.wis + self.pb",
+                      "onFail": [
+                        { "kind": "damage", "id": "burst", "dice": "classTable('武艺') + classTable('武艺') + classTable('武艺')", "type": "火焰" }
+                      ],
+                      "onSuccess": [
+                        { "kind": "damage", "ref": "burst", "scale": 0.5 }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "闪电",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "dex",
+                      "dc": "8 + self.mod.wis + self.pb",
+                      "onFail": [
+                        { "kind": "damage", "id": "burst", "dice": "classTable('武艺') + classTable('武艺') + classTable('武艺')", "type": "闪电" }
+                      ],
+                      "onSuccess": [
+                        { "kind": "damage", "ref": "burst", "scale": 0.5 }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "雷鸣",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "dex",
+                      "dc": "8 + self.mod.wis + self.pb",
+                      "onFail": [
+                        { "kind": "damage", "id": "burst", "dice": "classTable('武艺') + classTable('武艺') + classTable('武艺')", "type": "雷鸣" }
+                      ],
+                      "onSuccess": [
+                        { "kind": "damage", "ref": "burst", "scale": 0.5 }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

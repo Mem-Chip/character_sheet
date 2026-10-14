@@ -1,0 +1,25 @@
+{
+ "name": "战术预估",
+ "automation": "full",
+ "text": "进行智力（历史、调查）或感知（洞悉）检定时，可消耗一枚卓越骰，把骰子加到检定结果上。只在检定按现在的结果会失败时才询问。",
+ "triggers": [
+  {
+   "id": "tactical-assessment",
+   "label": "战术预估：检定加卓越骰",
+   "on": "d20Rolled",
+   "role": "actor",
+   "window": "before",
+   "optional": true,
+   "when": "roll.kind == 'check' && roll.failing && (roll.skill == '历史' || roll.skill == '调查' || roll.skill == '洞悉')",
+   "cost": [
+    { "resource": "卓越骰" }
+   ],
+   "modify": [
+    {
+     "op": "addToRoll",
+     "value": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))"
+    }
+   ]
+  }
+ ]
+}

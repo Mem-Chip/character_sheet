@@ -1,0 +1,53 @@
+{
+ "name": "语出惊人",
+ "automation": "full",
+ "text": "你可见的 60 尺内的生物伤害掷骰、成功于属性检定或攻击检定时，以反应消耗一次诗人激励，从其结果中减去一颗诗人激励骰。只对非盟友提供；检定类只在这次检定按现在的结果会成功时询问；距离和视线由人确认。",
+ "triggers": [
+  {
+   "id": "cut-roll",
+   "label": "语出惊人：削减检定",
+   "on": "d20Rolled",
+   "role": "any",
+   "window": "before",
+   "optional": true,
+   "when": "(roll.kind == 'attack' || roll.kind == 'check') && !roll.failing && roll.roller != self.id && !combatant(roll.roller).isAllyOf(self) && canSee(self, combatant(roll.roller)) && within(self, combatant(roll.roller), 60)",
+   "cost": [
+    {
+     "economy": "reaction"
+    },
+    {
+     "resource": "诗人激励"
+    }
+   ],
+   "modify": [
+    {
+     "op": "addToRoll",
+     "value": "-classTable('诗人骰')"
+    }
+   ]
+  },
+  {
+   "id": "cut-damage",
+   "label": "语出惊人：削减伤害",
+   "on": "damageIncoming",
+   "role": "any",
+   "window": "before",
+   "optional": true,
+   "when": "damage.amount > 0 && attacker != null && !attacker.isAllyOf(self) && attacker.id != self.id && canSee(self, attacker) && within(self, attacker, 60)",
+   "cost": [
+    {
+     "economy": "reaction"
+    },
+    {
+     "resource": "诗人激励"
+    }
+   ],
+   "modify": [
+    {
+     "op": "reduceDamage",
+     "value": "classTable('诗人骰')"
+    }
+   ]
+  }
+ ]
+}

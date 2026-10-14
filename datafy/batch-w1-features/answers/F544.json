@@ -1,0 +1,42 @@
+{
+ "name": "兽人",
+ "automation": "full",
+ "text": "黑暗视觉由人物卡处理。坚韧不屈只在伤害没有大到立即死亡（溢出伤害 ≥ 生命值上限）时才提供。",
+ "resources": [
+  { "id": "激昂冲锋", "name": "激昂冲锋", "formula": "pb", "recovery": "short" },
+  { "id": "坚韧不屈", "name": "坚韧不屈", "formula": "1", "recovery": "long" }
+ ],
+ "actions": [
+  {
+   "id": "adrenaline-rush",
+   "name": "激昂冲锋",
+   "activation": "bonus",
+   "text": "以附赠动作执行疾走，并获得等同于熟练加值的临时生命值。短休或长休恢复全部次数。",
+   "requires": "turn.isMine",
+   "cost": [
+    { "resource": "激昂冲锋" }
+   ],
+   "root": [
+    { "kind": "economy", "move": "self.speed" },
+    { "kind": "tempHp", "to": "self", "amount": "pb" }
+   ]
+  }
+ ],
+ "triggers": [
+  {
+   "id": "relentless",
+   "label": "坚韧不屈：改为降到 1 点生命值",
+   "on": "reducedTo0",
+   "role": "target",
+   "window": "before",
+   "optional": true,
+   "when": "damage.amount - self.hp < self.hpMax",
+   "cost": [
+    { "resource": "坚韧不屈" }
+   ],
+   "modify": [
+    { "op": "setHp", "value": 1 }
+   ]
+  }
+ ]
+}

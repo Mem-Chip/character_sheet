@@ -1,0 +1,50 @@
+{
+  "name": "导引打击",
+  "automation": "full",
+  "text": "你或 30 尺内的盟友攻击检定失手时，消耗一次引导神力，给该次检定 +10；为他人使用时还要花费你的反应。",
+  "triggers": [
+    {
+      "id": "guided-self",
+      "label": "导引打击：自己的攻击 +10",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "roll.kind == 'attack' && roll.failing && roll.natural != 1",
+      "cost": [
+        {
+          "resource": "引导神力"
+        }
+      ],
+      "modify": [
+        {
+          "op": "addToRoll",
+          "value": 10
+        }
+      ]
+    },
+    {
+      "id": "guided-ally",
+      "label": "导引打击：30 尺内盟友的攻击 +10",
+      "on": "d20Rolled",
+      "role": "any",
+      "window": "before",
+      "optional": true,
+      "when": "roll.kind == 'attack' && roll.failing && roll.natural != 1 && attacker.id != self.id && attacker.isAllyOf(self) && within(self, attacker, 30)",
+      "cost": [
+        {
+          "resource": "引导神力"
+        },
+        {
+          "economy": "reaction"
+        }
+      ],
+      "modify": [
+        {
+          "op": "addToRoll",
+          "value": 10
+        }
+      ]
+    }
+  ]
+}

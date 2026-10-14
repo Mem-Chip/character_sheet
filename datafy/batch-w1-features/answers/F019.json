@@ -1,0 +1,31 @@
+{
+  "name": "兽性狂暴",
+  "automation": "partial",
+  "text": "熊、鹰的狂暴期间效果已写，靠询问确认本次狂暴选的是哪一项。狼（盟友对位于你 5 尺内敌人的攻击具有优势）：光环半径无法表达「任意盟友、目标在你 5 尺内」，需人手动处理。鹰的「进入狂暴时作为附赠动作的一部分免费执行撤离与疾走」：引擎没有进入狂暴的时机，需人手动处理。",
+  "auras": [
+    {
+      "id": "bear",
+      "radius": 0,
+      "affects": "allies",
+      "includeSelf": true,
+      "requires": "self.hasEffect('狂暴') && ask('兽性狂暴：本次狂暴选的是熊吗？')",
+      "grant": {
+        "statics": [
+          { "kind": "resist", "values": ["钝击", "穿刺", "挥砍", "火焰", "寒冷", "闪电", "雷鸣", "强酸", "毒素"] }
+        ]
+      }
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "兽性狂暴：鹰（撤离与疾走）",
+      "activation": "bonus",
+      "requires": "self.hasEffect('狂暴') && ask('兽性狂暴：本次狂暴选的是鹰吗？')",
+      "root": [
+        { "kind": "economy", "move": "self.speed" },
+        { "kind": "applyEffect", "to": "self", "template": "XPHB:action:撤离#撤离" }
+      ]
+    }
+  ]
+}

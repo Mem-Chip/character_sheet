@@ -1,0 +1,124 @@
+{
+ "name": "血肉启示",
+ "automation": "partial",
+ "text": "附赠动作，消耗 1 点或更多术法点转变形态 10 分钟；每消耗 1 点选一项（水栖适应、闪耀飞翔、识破隐形、蠕行移动）。游泳/飞行速度、水下呼吸、60 尺识破隐形、挤过窄缝和脱离非魔法束缚（耗 5 尺移动）引擎不能自动处理：这里只扣术法点、记下选中的形态并计 10 分钟，具体效果手动处理。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "血肉启示",
+   "activation": "bonus",
+   "tags": [
+    "magical"
+   ],
+   "requires": "self.resource('sorcery_points') > 0",
+   "root": [
+    {
+     "kind": "number",
+     "prompt": "血肉启示：消耗几点术法点（每点选一项形态）？",
+     "var": "n",
+     "min": 1,
+     "max": "min(4, self.resource('sorcery_points'))"
+    },
+    {
+     "kind": "resource",
+     "id": "sorcery_points",
+     "delta": "-vars.n"
+    },
+    {
+     "kind": "repeat",
+     "n": "vars.n",
+     "do": [
+      {
+       "kind": "choose",
+       "prompt": "血肉启示：选择一项形态",
+       "options": [
+        {
+         "label": "水栖适应",
+         "when": "!self.hasEffect('血肉启示：水栖适应')",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "self",
+           "template": "血肉启示：水栖适应"
+          }
+         ]
+        },
+        {
+         "label": "闪耀飞翔",
+         "when": "!self.hasEffect('血肉启示：闪耀飞翔')",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "self",
+           "template": "血肉启示：闪耀飞翔"
+          }
+         ]
+        },
+        {
+         "label": "识破隐形",
+         "when": "!self.hasEffect('血肉启示：识破隐形')",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "self",
+           "template": "血肉启示：识破隐形"
+          }
+         ]
+        },
+        {
+         "label": "蠕行移动",
+         "when": "!self.hasEffect('血肉启示：蠕行移动')",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "self",
+           "template": "血肉启示：蠕行移动"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "血肉启示：水栖适应": {
+   "tags": [
+    "magical"
+   ],
+   "text": "游泳速度等于你速度的两倍，且能在水下呼吸（手动处理）。",
+   "duration": {
+    "minutes": 10
+   }
+  },
+  "血肉启示：闪耀飞翔": {
+   "tags": [
+    "magical"
+   ],
+   "text": "飞行速度等于你的速度，并能悬浮（手动处理）。",
+   "duration": {
+    "minutes": 10
+   }
+  },
+  "血肉启示：识破隐形": {
+   "tags": [
+    "magical"
+   ],
+   "text": "能看见周围 60 尺内处于隐形状态的生物，前提是其对你来说不处于掩护（手动处理）。",
+   "duration": {
+    "minutes": 10
+   }
+  },
+  "血肉启示：蠕行移动": {
+   "tags": [
+    "magical"
+   ],
+   "text": "能穿过最窄 1 寸宽的狭窄空间；可以消耗 5 尺移动力脱离非魔法的束缚或受擒状态（手动处理）。",
+   "duration": {
+    "minutes": 10
+   }
+  }
+ }
+}

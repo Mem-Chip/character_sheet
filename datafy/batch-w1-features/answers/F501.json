@@ -1,0 +1,24 @@
+{
+  "name": "守护馈赠",
+  "automation": "partial",
+  "text": "影之书的新书页：写名字（一个动作，数量为魅力调整值，至少 1）和用魔法动作触碰消除名字，请手动处理。名字在页上的生物生命值降为 0 且未当场死亡时变为 1，长休前不能再次触发：命中时询问该生物的名字是否在书页上。",
+  "resources": [
+    { "id": "protectors-gift", "name": "守护馈赠", "formula": "1", "recovery": "long" }
+  ],
+  "triggers": [
+    {
+      "id": "gift",
+      "label": "守护馈赠：书页上的名字，生命值变为 1",
+      "on": "reducedTo0",
+      "role": "any",
+      "window": "before",
+      "when": "(target.id == self.id || target.isAllyOf(self)) && ask('降至 0 生命值的生物，名字在你的影之书这一页上吗（且没有当场死亡）？')",
+      "cost": [
+        { "resource": "protectors-gift" }
+      ],
+      "modify": [
+        { "op": "setHp", "value": 1 }
+      ]
+    }
+  ]
+}

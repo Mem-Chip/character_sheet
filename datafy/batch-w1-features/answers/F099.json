@@ -1,0 +1,41 @@
+{
+  "name": "荒野复苏",
+  "automation": "partial",
+  "text": "每个你的回合一次，没有荒野形态次数时可消耗一个法术位（无需动作）获得一次荒野形态次数；也可消耗一次荒野形态次数（无需动作）获得一个 1 环法术位，长休前不能再次这样做（获得的法术位请手动加上）。",
+  "actions": [
+    {
+      "id": "slot-to-wildshape",
+      "name": "荒野复苏：法术位换荒野形态次数",
+      "activation": "free",
+      "requires": "turn.isMine && self.resource('wildshape-uses') <= 0 && !self.hasEffect('荒野复苏：本回合已用')",
+      "cost": [
+        { "slot": { "min": 1 } }
+      ],
+      "root": [
+        { "kind": "resource", "id": "wildshape-uses", "delta": 1 },
+        { "kind": "applyEffect", "to": "self", "template": "荒野复苏：本回合已用" }
+      ]
+    },
+    {
+      "id": "wildshape-to-slot",
+      "name": "荒野复苏：荒野形态次数换 1 环法术位",
+      "activation": "free",
+      "requires": "self.resource('wildshape-uses') > 0",
+      "cost": [
+        { "resource": "wildshape-uses" },
+        { "resource": "wild-resurgence-slot" }
+      ],
+      "root": [
+        { "kind": "note", "text": "荒野复苏：获得一个 1 环法术位（请手动加到法术位上），完成一次长休前不能再次这样做。" }
+      ]
+    }
+  ],
+  "effects": {
+    "荒野复苏：本回合已用": {
+      "text": "本回合已经用法术位换过荒野形态次数。",
+      "duration": {
+        "until": { "at": "turnEnd", "of": "bearer", "nth": 0 }
+      }
+    }
+  }
+}

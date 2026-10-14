@@ -1,0 +1,239 @@
+{
+ "name": "元素亲和",
+ "automation": "partial",
+ "text": "选择强酸、寒冷、火焰、闪电或毒素之一：获得该伤害类型的抗性；施展造成该类型伤害的法术时，可以把魅力调整值加到其中一次伤害掷骰上。使用「元素亲和」动作选定类型后，抗性自动生效，法术攻击命中时可以加魅力调整值（每回合一次）。需要豁免的法术（如火球术）的伤害加值引擎做不到，请手动加。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "元素亲和",
+   "activation": "free",
+   "text": "选定你的元素亲和伤害类型（只需选一次）。",
+   "requires": "!self.hasEffect('元素亲和：强酸') && !self.hasEffect('元素亲和：寒冷') && !self.hasEffect('元素亲和：火焰') && !self.hasEffect('元素亲和：闪电') && !self.hasEffect('元素亲和：毒素')",
+   "root": [
+    {
+     "kind": "choose",
+     "prompt": "元素亲和：选择伤害类型",
+     "options": [
+      {
+       "label": "强酸",
+       "do": [
+        {
+         "kind": "applyEffect",
+         "to": "self",
+         "template": "元素亲和：强酸"
+        }
+       ]
+      },
+      {
+       "label": "寒冷",
+       "do": [
+        {
+         "kind": "applyEffect",
+         "to": "self",
+         "template": "元素亲和：寒冷"
+        }
+       ]
+      },
+      {
+       "label": "火焰",
+       "do": [
+        {
+         "kind": "applyEffect",
+         "to": "self",
+         "template": "元素亲和：火焰"
+        }
+       ]
+      },
+      {
+       "label": "闪电",
+       "do": [
+        {
+         "kind": "applyEffect",
+         "to": "self",
+         "template": "元素亲和：闪电"
+        }
+       ]
+      },
+      {
+       "label": "毒素",
+       "do": [
+        {
+         "kind": "applyEffect",
+         "to": "self",
+         "template": "元素亲和：毒素"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "元素亲和：强酸": {
+   "text": "强酸抗性；造成强酸伤害的法术攻击命中时可加魅力调整值（每回合一次）。",
+   "duration": {
+    "manual": true
+   },
+   "statics": [
+    {
+     "kind": "resist",
+     "values": [
+      "强酸"
+     ]
+    }
+   ],
+   "triggers": [
+    {
+     "id": "cha",
+     "label": "元素亲和：强酸伤害加魅力调整值",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "limit": "oncePerTurn",
+     "when": "attack.spell && attack.damageType == '强酸' && self.mod.cha > 0",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "self.mod.cha",
+       "type": "强酸"
+      }
+     ]
+    }
+   ]
+  },
+  "元素亲和：寒冷": {
+   "text": "寒冷抗性；造成寒冷伤害的法术攻击命中时可加魅力调整值（每回合一次）。",
+   "duration": {
+    "manual": true
+   },
+   "statics": [
+    {
+     "kind": "resist",
+     "values": [
+      "寒冷"
+     ]
+    }
+   ],
+   "triggers": [
+    {
+     "id": "cha",
+     "label": "元素亲和：寒冷伤害加魅力调整值",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "limit": "oncePerTurn",
+     "when": "attack.spell && attack.damageType == '寒冷' && self.mod.cha > 0",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "self.mod.cha",
+       "type": "寒冷"
+      }
+     ]
+    }
+   ]
+  },
+  "元素亲和：火焰": {
+   "text": "火焰抗性；造成火焰伤害的法术攻击命中时可加魅力调整值（每回合一次）。",
+   "duration": {
+    "manual": true
+   },
+   "statics": [
+    {
+     "kind": "resist",
+     "values": [
+      "火焰"
+     ]
+    }
+   ],
+   "triggers": [
+    {
+     "id": "cha",
+     "label": "元素亲和：火焰伤害加魅力调整值",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "limit": "oncePerTurn",
+     "when": "attack.spell && attack.damageType == '火焰' && self.mod.cha > 0",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "self.mod.cha",
+       "type": "火焰"
+      }
+     ]
+    }
+   ]
+  },
+  "元素亲和：闪电": {
+   "text": "闪电抗性；造成闪电伤害的法术攻击命中时可加魅力调整值（每回合一次）。",
+   "duration": {
+    "manual": true
+   },
+   "statics": [
+    {
+     "kind": "resist",
+     "values": [
+      "闪电"
+     ]
+    }
+   ],
+   "triggers": [
+    {
+     "id": "cha",
+     "label": "元素亲和：闪电伤害加魅力调整值",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "limit": "oncePerTurn",
+     "when": "attack.spell && attack.damageType == '闪电' && self.mod.cha > 0",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "self.mod.cha",
+       "type": "闪电"
+      }
+     ]
+    }
+   ]
+  },
+  "元素亲和：毒素": {
+   "text": "毒素抗性；造成毒素伤害的法术攻击命中时可加魅力调整值（每回合一次）。",
+   "duration": {
+    "manual": true
+   },
+   "statics": [
+    {
+     "kind": "resist",
+     "values": [
+      "毒素"
+     ]
+    }
+   ],
+   "triggers": [
+    {
+     "id": "cha",
+     "label": "元素亲和：毒素伤害加魅力调整值",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "limit": "oncePerTurn",
+     "when": "attack.spell && attack.damageType == '毒素' && self.mod.cha > 0",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "self.mod.cha",
+       "type": "毒素"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

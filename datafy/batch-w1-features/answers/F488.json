@@ -1,0 +1,38 @@
+{
+  "name": "缴械攻击",
+  "automation": "full",
+  "text": "攻击命中时消耗一枚卓越骰：加到伤害上，目标须通过力量豁免，否则丢下一件你选择的手持物品（掉落在其所在空间，物品掉落由人处理）。",
+  "triggers": [
+    {
+      "id": "disarm",
+      "label": "缴械攻击",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "cost": [
+        {
+          "resource": "卓越骰"
+        }
+      ],
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))",
+          "type": "attack.damageType"
+        },
+        {
+          "kind": "save",
+          "ability": "str",
+          "dc": "8 + self.pb + max(self.mod.str, self.mod.dex)",
+          "onFail": [
+            {
+              "kind": "note",
+              "text": "缴械攻击：目标丢下一件由你选择的手持物品，掉落在其所在的空间"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

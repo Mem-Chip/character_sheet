@@ -1,0 +1,33 @@
+{
+  "name": "狂热威仪",
+  "automation": "full",
+  "resources": [
+    { "id": "frenzied-presence", "name": "狂热威仪", "formula": 1, "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "狂热威仪",
+      "activation": "bonus",
+      "cost": [{ "resource": "frenzied-presence" }],
+      "targeting": { "type": "creature", "count": 10, "range": 60 },
+      "root": [{ "kind": "applyEffect", "to": "each", "template": "狂热威仪" }]
+    },
+    {
+      "id": "reset",
+      "name": "狂热威仪：重置",
+      "activation": "free",
+      "requires": "self.resource('frenzied-presence') < 1",
+      "cost": [{ "resource": "狂暴" }],
+      "root": [{ "kind": "resource", "id": "frenzied-presence", "delta": 1 }]
+    }
+  ],
+  "effects": {
+    "狂热威仪": {
+      "rollMods": [
+        { "on": { "kind": ["attack", "save"] }, "who": "bearer", "op": "adv", "label": "狂热威仪" }
+      ],
+      "duration": { "until": { "at": "turnStart", "of": "source", "nth": 1 } }
+    }
+  }
+}

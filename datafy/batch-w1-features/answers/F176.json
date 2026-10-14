@@ -1,0 +1,45 @@
+{
+ "name": "拨挡攻击",
+ "automation": "partial",
+ "text": "被伤害含钝击/穿刺/挥砍的攻击命中时，用反应把伤害减少 1d10 + 敏捷调整值 + 武僧等级。伤害被减到 0 后消耗 1 点功力重新定向的部分需要人处理。",
+ "triggers": [
+  {
+   "id": "deflect",
+   "label": "拨挡攻击",
+   "on": "attackHit",
+   "role": "target",
+   "window": "before",
+   "deferTo": "damageIncoming",
+   "optional": true,
+   "cost": [
+    {
+     "economy": "reaction"
+    }
+   ],
+   "when": "attack.damageType == '钝击' || attack.damageType == '穿刺' || attack.damageType == '挥砍'",
+   "modify": [
+    {
+     "op": "reduceDamage",
+     "value": "1d10 + self.mod.dex + self.levelOf('武僧')"
+    }
+   ],
+   "do": [
+    {
+     "kind": "if",
+     "when": "self.resource('功力') >= 1 && ask('拨挡攻击：伤害被减到 0 了吗？要消耗 1 点功力重新定向吗？')",
+     "then": [
+      {
+       "kind": "resource",
+       "id": "功力",
+       "delta": -1
+      },
+      {
+       "kind": "note",
+       "text": "拨挡攻击：重新定向。近战攻击选你 5 尺内、你可见的一个生物；远程攻击选 60 尺内、不在掩护后、你可见的一个生物。该生物进行敏捷豁免（DC 8 + 敏捷调整值 + 熟练加值），失败则受到 2 个武艺骰 + 你的敏捷调整值的伤害，类型与原攻击相同。请手动结算。"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

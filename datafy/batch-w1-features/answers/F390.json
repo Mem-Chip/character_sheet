@@ -1,0 +1,37 @@
+{
+  "name": "天眼通",
+  "automation": "partial",
+  "text": "用附赠动作从三项增益中选一项，持续到你开始短休或长休（引擎以完成休息结束近似），每次休息只能用一次。黑暗视觉与读懂任何语言需人工记录；识破隐形需人工不消耗法术位施展。",
+  "resources": [
+    { "id": "third-eye", "name": "天眼通", "formula": 1, "recovery": "short" }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "天眼通",
+      "activation": "bonus",
+      "cost": [{ "resource": "third-eye" }],
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "天眼通：选择一项增益",
+          "options": [
+            { "label": "黑暗视觉（120 尺）", "do": [{ "kind": "note", "text": "获得 120 尺黑暗视觉，直到开始短休或长休（人工记录）" }] },
+            { "label": "高等通晓（读懂任何语言）", "do": [{ "kind": "note", "text": "可以读懂任何语言，直到开始短休或长休（人工记录）" }] },
+            { "label": "识破隐形（不消耗法术位）", "do": [{ "kind": "note", "text": "不消耗法术位施展识破隐形（人工施展）" }] }
+          ]
+        },
+        { "kind": "applyEffect", "to": "self", "template": "天眼通" }
+      ]
+    }
+  ],
+  "effects": {
+    "天眼通": {
+      "text": "直到开始短休或长休，所选的天眼通增益有效。",
+      "duration": {
+        "manual": true,
+        "endsOn": [{ "event": "restCompleted" }]
+      }
+    }
+  }
+}

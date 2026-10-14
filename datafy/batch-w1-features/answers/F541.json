@@ -1,0 +1,167 @@
+{
+ "name": "歌利亚",
+ "automation": "partial",
+ "text": "巨人先祖：六种恩惠共用「巨人先祖」次数（等于熟练加值），实际只能使用你所选的那一种，请只选你有的。命中时的恩惠（火之燃烧、霜之刺骨、山之翻撞）在一次询问里选择；石之坚韧用反应减伤（1d12 + 体质调整值）。大型形态的体型变化、强力构筑的载重加成由人手动处理。",
+ "resources": [
+  { "id": "巨人先祖", "name": "巨人先祖", "formula": "pb", "recovery": "long" },
+  { "id": "大型形态", "name": "大型形态", "formula": "1", "recovery": "long" }
+ ],
+ "actions": [
+  {
+   "id": "cloud-jaunt",
+   "name": "巨人先祖：云之远迹",
+   "activation": "bonus",
+   "text": "云巨人恩惠：魔法性地传送到 30 尺内一处你可见的未占据空间。",
+   "cost": [
+    { "resource": "巨人先祖" }
+   ],
+   "root": [
+    { "kind": "move", "mode": "teleport", "ft": 30 }
+   ]
+  },
+  {
+   "id": "storm-thunder",
+   "name": "巨人先祖：岚之暴鸣",
+   "activation": "reaction",
+   "text": "风暴巨人恩惠：被你 60 尺内的生物造成伤害时，对该生物造成 1d8 雷鸣伤害。选择伤害你的那个生物作为目标。",
+   "trigger": {
+    "on": "damageTaken",
+    "role": "target",
+    "when": "damage.amount > 0"
+   },
+   "cost": [
+    { "resource": "巨人先祖" }
+   ],
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 60,
+    "filter": "target.id != self.id"
+   },
+   "root": [
+    { "kind": "damage", "dice": "1d8", "type": "雷鸣" }
+   ]
+  },
+  {
+   "id": "large-form",
+   "name": "大型形态",
+   "activation": "bonus",
+   "text": "5 级起。10 分钟内体型变为大型（空间足够时）：力量检定具有优势，速度增加 10 尺。",
+   "requires": "self.level >= 5 && !self.hasEffect('大型形态')",
+   "cost": [
+    { "resource": "大型形态" }
+   ],
+   "root": [
+    { "kind": "applyEffect", "to": "self", "template": "大型形态" }
+   ]
+  },
+  {
+   "id": "large-form-end",
+   "name": "大型形态：结束",
+   "activation": "free",
+   "requires": "self.hasEffect('大型形态')",
+   "root": [
+    { "kind": "removeEffect", "from": "self", "match": { "name": "大型形态" } }
+   ]
+  }
+ ],
+ "triggers": [
+  {
+   "id": "giant-ancestry",
+   "label": "巨人先祖：命中时的恩惠",
+   "on": "attackHit",
+   "role": "actor",
+   "window": "after",
+   "optional": true,
+   "when": "damage.amount > 0",
+   "cost": [
+    { "resource": "巨人先祖" }
+   ],
+   "do": [
+    {
+     "kind": "choose",
+     "prompt": "巨人先祖：选择你所拥有的恩惠",
+     "options": [
+      {
+       "label": "火之燃烧：额外 1d10 火焰伤害",
+       "do": [
+        { "kind": "damage", "dice": "1d10", "type": "火焰" }
+       ]
+      },
+      {
+       "label": "霜之刺骨：额外 1d6 寒冷伤害，速度降低 10 尺",
+       "do": [
+        { "kind": "damage", "dice": "1d6", "type": "寒冷" },
+        { "kind": "applyEffect", "to": "target", "template": "霜之刺骨" }
+       ]
+      },
+      {
+       "label": "山之翻撞：令目标倒地（体型不超过大型）",
+       "when": "target.size != '巨型' && target.size != '超巨型'",
+       "do": [
+        {
+         "kind": "applyEffect",
+         "to": "target",
+         "template": "XPHB:condition:倒地",
+         "duration": { "manual": true }
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "stone-endurance",
+   "label": "巨人先祖：石之坚韧",
+   "on": "damageIncoming",
+   "role": "target",
+   "window": "before",
+   "optional": true,
+   "when": "damage.amount > 0",
+   "cost": [
+    { "economy": "reaction" },
+    { "resource": "巨人先祖" }
+   ],
+   "modify": [
+    { "op": "reduceDamage", "value": "1d12 + self.mod.con" }
+   ]
+  }
+ ],
+ "rollMods": [
+  {
+   "on": { "kind": "check" },
+   "who": "bearer",
+   "when": "self.has('受擒') && roll.sub == null && ask('这个检定是为了结束受擒状态吗？')",
+   "op": "adv",
+   "label": "强力构筑：结束受擒的检定"
+  }
+ ],
+ "effects": {
+  "霜之刺骨": {
+   "text": "速度降低 10 尺，持续至施加者的下一回合开始。",
+   "stackKey": "歌利亚:霜之刺骨",
+   "statics": [
+    { "kind": "speed", "bonus": -10 }
+   ],
+   "duration": {
+    "until": { "at": "turnStart", "of": "source", "nth": 1 }
+   }
+  },
+  "大型形态": {
+   "text": "体型变为大型（手动处理）；力量检定具有优势，速度增加 10 尺。",
+   "duration": { "minutes": 10 },
+   "statics": [
+    { "kind": "speed", "bonus": 10 }
+   ],
+   "rollMods": [
+    {
+     "on": { "kind": "check", "ability": "str" },
+     "who": "bearer",
+     "op": "adv",
+     "label": "大型形态：力量检定"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "格挡",
+  "automation": "full",
+  "text": "其他生物以近战攻击检定对你造成伤害时，用反应消耗一枚卓越骰，伤害减少 卓越骰骰值 + 力量或敏捷调整值（取高）。",
+  "triggers": [
+    {
+      "id": "parry",
+      "label": "格挡：减少近战伤害",
+      "on": "attackHit",
+      "role": "target",
+      "window": "before",
+      "deferTo": "damageIncoming",
+      "optional": true,
+      "when": "attack.melee",
+      "cost": [
+        { "economy": "reaction" },
+        { "resource": "卓越骰" }
+      ],
+      "modify": [
+        {
+          "op": "reduceDamage",
+          "value": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8)) + max(self.mod.str, self.mod.dex)"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "name": "领导风范",
+  "automation": "full",
+  "text": "魅力（威吓、表演或游说）检定时，可以消耗一枚卓越骰加到检定上。",
+  "triggers": [
+    {
+      "id": "leadership",
+      "label": "领导风范：加卓越骰",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "roll.kind == 'check' && roll.ability == 'cha' && (roll.skill == '威吓' || roll.skill == '表演' || roll.skill == '游说')",
+      "cost": [
+        {
+          "resource": "卓越骰"
+        }
+      ],
+      "modify": [
+        {
+          "op": "addToRoll",
+          "value": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))"
+        }
+      ]
+    }
+  ]
+}

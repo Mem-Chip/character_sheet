@@ -1,0 +1,36 @@
+{
+  "name": "根击千钧",
+  "automation": "partial",
+  "text": "回合内武器触及增加 10 尺：引擎没有武器触及修正，需人手动处理。推离与失衡的额外激活已写，靠询问确认该武器是重型或多用武器。",
+  "triggers": [
+    {
+      "id": "push",
+      "label": "根击千钧：推离",
+      "on": "attackHit",
+      "role": "actor",
+      "optional": true,
+      "when": "turn.isMine && attack.weapon && attack.melee && attack.mastery != '推离' && target.size != '巨型' && target.size != '超巨型' && ask('根击千钧：这把武器是重型或多用武器吗？')",
+      "do": [
+        { "kind": "move", "mode": "push", "ft": 10 }
+      ]
+    },
+    {
+      "id": "topple",
+      "label": "根击千钧：失衡",
+      "on": "attackHit",
+      "role": "actor",
+      "optional": true,
+      "when": "turn.isMine && attack.weapon && attack.melee && attack.mastery != '失衡' && ask('根击千钧：这把武器是重型或多用武器吗？')",
+      "do": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "8 + abilityMod(attack.ability) + pb",
+          "onFail": [
+            { "kind": "applyEffect", "to": "target", "template": "XPHB:condition:倒地" }
+          ]
+        }
+      ]
+    }
+  ]
+}

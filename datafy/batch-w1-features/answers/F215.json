@@ -1,0 +1,38 @@
+{
+  "name": "弃绝众敌",
+  "automation": "partial",
+  "text": "以魔法动作消耗一次引导神力，对 60 尺内至多 max(1, 魅力调整值) 个可见生物进行感知豁免（DC 为法术豁免 DC），失败则陷入恐慌 1 分钟或直到受到任何伤害。陷入恐慌的目标每回合只能移动、执行一个动作或一个附赠动作三选一，这一限制需人手动处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "弃绝众敌",
+      "activation": "action",
+      "tags": ["magical"],
+      "cost": [{ "resource": "channel-divinity" }],
+      "targeting": {
+        "type": "creature",
+        "count": "max(1, self.mod.cha)",
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "XPHB:condition:恐慌",
+              "duration": {
+                "minutes": 1,
+                "endsOn": [{ "event": "damageTaken" }]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "name": "守护",
+  "automation": "full",
+  "text": "触发的这次攻击检定按「取低」近似劣势（再掷一次 d20 取较低）；之后只要你仍在目标 5 尺内，其他对该目标的攻击检定具有劣势，持续到你的下个回合开始。",
+  "triggers": [
+    {
+      "id": "protect",
+      "label": "守护：用盾牌挡下这次攻击",
+      "on": "d20Rolled",
+      "role": "ally",
+      "window": "before",
+      "optional": true,
+      "cost": [
+        {
+          "economy": "reaction"
+        }
+      ],
+      "when": "roll.kind == 'attack' && target.id != self.id && self.wearing('S') && !self.has('失能') && !roll.failing && !roll.disadv && within(self, target, 5) && canSee(self, attacker)",
+      "modify": [
+        {
+          "op": "reroll",
+          "die": "d20",
+          "keep": "lower"
+        }
+      ],
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "守护"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "守护": {
+      "text": "守护者仍在你 5 尺内时，对你的其他攻击检定具有劣势，持续到守护者的下回合开始。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "against",
+          "when": "source != null && within(source, self, 5)",
+          "op": "disadv",
+          "label": "守护：目标被盾牌护住"
+        }
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        }
+      }
+    }
+  }
+}

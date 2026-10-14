@@ -1,0 +1,40 @@
+{
+  "name": "暗杀",
+  "automation": "full",
+  "rollMods": [
+    {
+      "on": {
+        "kind": "initiative"
+      },
+      "who": "bearer",
+      "op": "adv",
+      "label": "暗杀：先攻具有优势"
+    },
+    {
+      "on": {
+        "kind": "attack"
+      },
+      "who": "bearer",
+      "when": "round == 1 && ask('目标在这一轮还没有轮到自己的回合吗？')",
+      "op": "adv",
+      "label": "暗杀：惊扰突袭（目标尚未行动）"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "surprise",
+      "label": "暗杀：惊扰突袭额外伤害",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "round == 1 && (attack.finesse || attack.ranged) && (roll.adv || (allyWithin(target, 5, { exclude: [self], notCond: '失能' }) && !roll.disadv))",
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "self.levelOf('游荡者')",
+          "type": "attack.damageType"
+        }
+      ]
+    }
+  ]
+}

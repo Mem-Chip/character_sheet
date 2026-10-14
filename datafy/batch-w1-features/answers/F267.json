@@ -1,0 +1,70 @@
+{
+  "name": "如影随形",
+  "automation": "full",
+  "text": "有生物对你发动攻击检定时，用反应令这次检定具有劣势（按「多掷一颗取低」处理）；不管命中还是失手，攻击结算后你可以传送至 30 尺内一处你可见的未被占据的空间。只在这次攻击现在会命中、且尚无劣势时才询问。",
+  "triggers": [
+    {
+      "id": "shadowy",
+      "label": "如影随形：令攻击具有劣势",
+      "on": "d20Rolled",
+      "role": "target",
+      "window": "before",
+      "optional": true,
+      "when": "roll.kind == 'attack' && !roll.failing && !roll.disadv",
+      "cost": [
+        {
+          "economy": "reaction"
+        }
+      ],
+      "modify": [
+        {
+          "op": "reroll",
+          "die": "d20",
+          "keep": "lower"
+        }
+      ],
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "如影随形：传送"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "如影随形：传送": {
+      "text": "这次攻击结算（命中或失手）之后，你可以传送至 30 尺内一处你可见的未被占据的空间。",
+      "duration": {
+        "rounds": 1
+      },
+      "triggers": [
+        {
+          "id": "jump",
+          "label": "如影随形：传送",
+          "on": [
+            "attackHit",
+            "attackMissed"
+          ],
+          "role": "target",
+          "window": "after",
+          "optional": true,
+          "do": [
+            {
+              "kind": "move",
+              "mode": "teleport",
+              "ft": 30
+            },
+            {
+              "kind": "removeEffect",
+              "from": "self",
+              "match": {
+                "name": "如影随形：传送"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
