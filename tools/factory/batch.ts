@@ -148,8 +148,31 @@ function lintOne(dir: string, id: string): { problems: string[]; answer?: Answer
   let answer: Answer;
   try { answer = read(file) as Answer; } catch (e) { return { problems: [`不是合法的 JSON：${(e as Error).message}`] }; }
   if (isSkip(answer)) return { problems: typeof answer.skip === 'string' && answer.skip.trim() ? [] : ['skip 要写一句原因'], answer };
-  const problems = lintEntry(ctx.key, answer, { files: [...GOLDEN, ...allAi()], resourceIds: ctx.resourceIds, classTableColumns: ctx.classTableColumns });
+  const resourceIds = [...new Set([...ctx.resourceIds, ...siblingPools(dir, ctx.key)])];
+  const problems = lintEntry(ctx.key, answer, { files: [...GOLDEN, ...allAi()], resourceIds, classTableColumns: ctx.classTableColumns });
   return { problems, answer };
+}
+
+/**
+ * 同一职业的其他条目声明的资源池（出题之后才有的）：守御闪光由 6 级的条目声明，
+ * 精通守御之光要花它。人物卡数据里已经合并的、别的答卷里刚声明的都算。
+ */
+function siblingPools(dir: string, key: string): string[] {
+  const parts = key.split(':');
+  if (parts.length !== 4) return [];
+  const prefix = `${parts[0]}:${parts[1]}:`;
+  const out: string[] = [];
+  const abilities = read(ABILITIES_FILE) as { entries: Record<string, Json> };
+  for (const [k, e] of Object.entries(abilities.entries)) {
+    if (k.startsWith(prefix)) for (const r of e.resources ?? []) if (r.id) out.push(r.id);
+  }
+  for (const f of readdirSync(resolve(dir, 'answers'))) {
+    const id = f.replace(/\.json$/, '');
+    const ctxFile = resolve(dir, 'tasks', `${id}.ctx.json`);
+    if (!existsSync(ctxFile) || !(read(ctxFile).key as string).startsWith(prefix)) continue;
+    try { out.push(...declaredResources(read(resolve(dir, 'answers', f))).map((d) => d.id)); } catch { /* 坏答卷由它自己的检查报 */ }
+  }
+  return out;
 }
 
 const ABILITIES_FILE = resolve(ROOT, 'data', 'abilities-2024.json');
