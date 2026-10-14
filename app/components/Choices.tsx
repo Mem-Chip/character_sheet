@@ -94,6 +94,8 @@ function Choice(p: { engine: Engine; id: string; char: CharData; sheet: Json; ch
 
   const res = choiceOptions(engine.env, char, sheet, ch);
   const vals = asList(cur);
+  // 别处已经有了的（背景给的技能、另一项选择选过的语言…）：不能再选，标出来
+  const taken = takenElsewhere(sheet, ch, vals);
   return (
     <div className="choice">
       {head}{from}
@@ -102,18 +104,19 @@ function Choice(p: { engine: Engine; id: string; char: CharData; sheet: Json; ch
           {res.options.map((o) => {
             const on = vals.includes(o.value);
             const full = !on && vals.length >= need;
+            const had = !on && taken.has(o.value);
             return (
               <button
                 key={o.value}
                 className={'chip' + (on ? ' on' : '')}
-                disabled={full && need > 1}
-                title={o.label}
+                disabled={(full && need > 1) || had}
+                title={had ? `${o.label}：别处已经有了` : o.label}
                 onClick={() => {
                   if (need === 1) write(on ? null : (isSub || ch.pick ? o.value : [o.value]));
                   else write(on ? vals.filter((x) => x !== o.value) : [...vals, o.value]);
                 }}
               >
-                {o.label}
+                {o.label}{had && <span className="faint">（已有）</span>}
               </button>
             );
           })}
@@ -121,6 +124,19 @@ function Choice(p: { engine: Engine; id: string; char: CharData; sheet: Json; ch
       )}
     </div>
   );
+}
+
+/** 这一项选择之外已经拥有的（这一项自己选的不算） */
+function takenElsewhere(sheet: Json, ch: Json, own: string[]): Set<string> {
+  const pool = String(ch.pool ?? '');
+  let have: Iterable<string> = [];
+  if (ch.kind === 'expertise' || pool === 'profSkill' || pool === 'anyProfSkill') have = sheet.skillExpSet ?? [];
+  else if (ch.kind === 'skill' || pool === 'skill' || pool === 'skillOrTool') have = [...(sheet.skillProfSet ?? []), ...(pool === 'skillOrTool' ? sheet.tools ?? [] : [])];
+  else if (ch.kind === 'language' || pool === 'language') have = sheet.languages ?? [];
+  else if (ch.kind === 'tool' || ['tool', 'artisan', 'instrument'].includes(pool)) have = sheet.tools ?? [];
+  const out = new Set(have);
+  for (const v of own) out.delete(v);
+  return out;
 }
 
 export function Choices(p: { engine: Engine; id: string; char: CharData; sheet: Json; title?: string }) {

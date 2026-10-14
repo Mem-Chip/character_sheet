@@ -1,7 +1,7 @@
 /** 战斗日志：按事务分组，新的在上面。掷骰带回执；DM 可以事后改某次检定的结果或某次伤害 */
 import { useState } from 'react';
 import type { GameEvent, Session } from '../../../src/combat';
-import { Panel } from '../../components/ui';
+import { NumInput, Panel } from '../../components/ui';
 import { combat } from '../../lib/combat';
 import { describe, txTitle, type Line } from '../../lib/events';
 import type { Namer } from './shared';
@@ -107,7 +107,7 @@ function DamageRule({ byType, onSet }: { byType: Record<string, number>; onSet: 
       <span className="tiny faint">伤害改为</span>
       {Object.keys(byType).map((t) => (
         <label key={t} className="row tiny" style={{ gap: 4 }}>
-          <input type="number" min={0} value={vals[t]} onChange={(e) => setVals({ ...vals, [t]: Math.max(0, Number(e.target.value) || 0) })} aria-label={`${t}伤害`} />
+          <NumInput min={0} value={vals[t]} onChange={(n) => setVals({ ...vals, [t]: n })} aria-label={`${t}伤害`} />
           {t}
         </label>
       ))}

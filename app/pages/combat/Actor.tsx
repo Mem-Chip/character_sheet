@@ -6,7 +6,7 @@ import {
   actionCosts, canPay, concentrationOf, describeCost, weaponAction,
   type Action, type ActiveEffect, type Cost, type Duration, type RuleBook, type Session,
 } from '../../../src/combat';
-import { Panel, Pips, Stat, Tag, sgn } from '../../components/ui';
+import { NumInput, Panel, Pips, Stat, Tag, sgn } from '../../components/ui';
 import { combat, type CombatUi } from '../../lib/combat';
 import type { Engine } from '../../lib/engine';
 import { DAMAGE_TYPES, type Namer } from './shared';
@@ -202,7 +202,10 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
         <div className="stats" style={{ border: 0, borderRadius: 0 }}>
           <Stat k="护甲等级" v={v.ac} s={v.ac !== c.base.ac ? `基础 ${c.base.ac}` : undefined} />
           <Stat k="生命值" v={<>{c.live.hp}<small>/{v.hpMax}</small></>} s={c.live.tempHp ? `临时 ${c.live.tempHp}` : undefined} />
-          <Stat k="速度" v={<>{v.speed}<small>尺</small></>} s={inCombat ? `剩 ${econ.move} 尺` : undefined} />
+          {/* 战斗中主数字是这回合还能走多远（疾走之后会比速度多），速度放在下面 */}
+          {inCombat
+            ? <Stat k="剩余移动" v={<>{econ.move}<small>尺</small></>} s={`速度 ${v.speed} 尺`} />
+            : <Stat k="速度" v={<>{v.speed}<small>尺</small></>} />}
           <Stat k="先攻" v={c.initiative ?? sgn(v.initiative)} s={c.initiative != null ? `加值 ${sgn(v.initiative)}` : undefined} />
           {v.spell && <Stat k="法术 DC" v={v.spell.dc} s={`攻击 ${sgn(v.spell.atk)}`} />}
         </div>
@@ -295,7 +298,7 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
 
       <Panel title="手动调整" aside={<span className="tiny">都会记进日志，可以撤销</span>}>
         <div className="row">
-          <input type="number" min={0} value={amt} onChange={(e) => setAmt(Math.max(0, Number(e.target.value) || 0))} aria-label="数值" />
+          <NumInput min={0} value={amt} onChange={setAmt} aria-label="数值" />
           <select value={dtype} onChange={(e) => setDtype(e.target.value)} aria-label="伤害类型">
             {DAMAGE_TYPES.map((t) => <option key={t}>{t}</option>)}
           </select>

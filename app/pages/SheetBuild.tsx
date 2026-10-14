@@ -4,7 +4,7 @@ import {
   ABILS, ABIL_CN, CLASS_SLUG_BY_NAME, SKILLS, STANDARD_ARRAY, backgroundBonusFrom, backgroundOriginFeat, featNames,
   pointBuyCost, subclassCandidates, subclassLabel, type CharData, type Json,
 } from '../../src/sheet';
-import { Field, Panel, Tag, sgn } from '../components/ui';
+import { Field, NumInput, Panel, Tag, sgn } from '../components/ui';
 import type { Engine } from '../lib/engine';
 import { actions } from '../lib/store';
 
@@ -114,7 +114,7 @@ function Abilities({ id, char, sheet }: Props) {
           const fin = sheet['score:' + a];
           return (
             <Field key={a} label={ABIL_CN[a]}>
-              <input type="number" min={1} max={30} value={base} onChange={(e) => upd(id, (c) => { c.abilities[a] = Math.max(1, Math.min(30, Math.round(+e.target.value || 8))); })} />
+              <NumInput min={1} max={30} value={base} onChange={(n) => upd(id, (c) => { c.abilities[a] = n; })} />
               <span className="tiny faint">{fin !== base ? `→ ${fin}（${sgn(fin - base)}）` : ' '} 调整 {sgn(sheet['mod:' + a])}</span>
             </Field>
           );
@@ -150,7 +150,7 @@ function Classes({ id, char }: Props) {
                   </select>
                 </Field>
                 <Field label="等级">
-                  <input type="number" min={1} max={20} value={k.level} onChange={(e) => upd(id, (c) => { c.classes[i].level = Math.max(1, Math.min(20, Math.round(+e.target.value || 1))); })} />
+                  <NumInput min={1} max={20} value={k.level} onChange={(n) => upd(id, (c) => { c.classes[i].level = n; })} />
                 </Field>
                 <Field label={k.level >= 3 ? '子职' : '子职（3 级）'}>
                   <select value={k.subclass || ''} disabled={k.level < 3 || !subs.length} onChange={(e) => upd(id, (c) => { c.classes[i].subclass = e.target.value; })}>
@@ -291,7 +291,7 @@ function Equipment({ engine, id, char, sheet }: Props) {
               return (
                 <tr key={i} className={e.equipped ? '' : 'dim'}>
                   <td className="serif">{e.name}{!res?._ent && <span className="warnline tiny"> 数据里找不到</span>}</td>
-                  <td style={{ width: 70 }}><input type="number" min={1} value={e.qty ?? 1} onChange={(ev) => upd(id, (c) => { c.equipment[i].qty = Math.max(1, Math.round(+ev.target.value || 1)); })} style={{ width: 56 }} /></td>
+                  <td style={{ width: 70 }}><NumInput min={1} value={e.qty ?? 1} onChange={(n) => upd(id, (c) => { c.equipment[i].qty = n; })} style={{ width: 56 }} /></td>
                   <td className="r">
                     <button className={'btn sm' + (e.equipped ? ' on' : '')} onClick={() => upd(id, (c) => { c.equipment[i].equipped = !e.equipped; })}>{e.equipped ? '已装备' : '未装备'}</button>
                     <button className="btn ghost sm" onClick={() => upd(id, (c) => { c.equipment.splice(i, 1); })}>移除</button>

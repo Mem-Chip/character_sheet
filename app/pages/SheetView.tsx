@@ -232,17 +232,41 @@ function Resources({ engine, id, char, sheet }: Props) {
   );
 }
 
-function Features({ sheet }: Props) {
+/**
+ * 特性：按来源分组（种族 / 每个职业 / 每个子职），组里按等级排；组和条目都能折叠。
+ * 像 5etools 的职业页一样，子职是职业下面的一个大条目，它的特性是小条目。
+ */
+function Features({ sheet, char }: Props) {
   const list: Json[] = sheet.features || [];
+  const groups: Array<{ key: string; title: string; sub?: boolean; items: Json[] }> = [];
+  const groupOf = (key: string, title: string, sub?: boolean) => {
+    let g = groups.find((x) => x.key === key);
+    if (!g) groups.push(g = { key, title, sub, items: [] });
+    return g;
+  };
+  for (const f of list) {
+    if (f._origin === 'race') { groupOf('race', `种族 · ${char.race || '种族特质'}`).items.push(f); continue; }
+    const cls = (char.classes || []).find((k: Json) => k.name === f._cls);
+    if (f._sub) groupOf(`sub:${f._cls}`, `${cls?.subclass || '子职'}`, true).items.push(f);
+    else groupOf(`cls:${f._cls}`, `${f._cls}${cls?.level ? ` ${cls.level} 级` : ''}`).items.push(f);
+  }
+  // 子职紧跟在它的职业后面
+  const ordered = groups.filter((g) => !g.sub).flatMap((g) => [g, ...groups.filter((x) => x.sub && x.key === 'sub:' + g.key.slice(4))]);
+  for (const g of groups) if (!ordered.includes(g)) ordered.push(g);
   return (
     <Panel title="特性" aside={<span>{list.length} 条</span>} flush>
-      {list.map((f, i) => (
-        <details className="feature" key={i}>
-          <summary>
-            <span className="nm">{f.name}</span>
-            <span className="tiny faint">{f._origin === 'race' ? '种族' : `${f._cls}${f._sub ? '·子职' : ''} ${f.level} 级`}</span>
-          </summary>
-          <div className="prose"><Entries entries={f.entries || []} /></div>
+      {ordered.map((g) => (
+        <details className={'fgroup' + (g.sub ? ' sub' : '')} key={g.key} open>
+          <summary><span className="nm">{g.sub ? '子职 · ' : ''}{g.title}</span><span className="tiny faint">{g.items.length} 条</span></summary>
+          {[...g.items].sort((a, b) => (a.level ?? 0) - (b.level ?? 0)).map((f, i) => (
+            <details className="feature" key={i}>
+              <summary>
+                <span className="nm">{f.name}</span>
+                {f._origin !== 'race' && <span className="tiny faint">{f.level} 级</span>}
+              </summary>
+              <div className="prose"><Entries entries={f.entries || []} /></div>
+            </details>
+          ))}
         </details>
       ))}
     </Panel>
@@ -281,6 +305,7 @@ export function SheetView(p: Props) {
       <div className="stack">
         <AbilitiesPanel {...p} />
         <SavesSkills {...p} />
+        <Profs {...p} />
       </div>
       <div className="stack">
         <div className="stats">
@@ -293,16 +318,15 @@ export function SheetView(p: Props) {
         </div>
         <Vitals {...p} />
         <Attacks {...p} />
+        <Features {...p} />
         <Spells {...p} />
-        <Resources {...p} />
       </div>
       <div className="stack">
         {(sheet._pending || []).some((c: Json) => !c.decided) && <Choices {...p} />}
         {warnings.length > 0 && (
           <Panel title="提示">{warnings.map((w, i) => <div key={i} className="warnline">{w}</div>)}</Panel>
         )}
-        <Profs {...p} />
-        <Features {...p} />
+        <Resources {...p} />
       </div>
     </div>
   );

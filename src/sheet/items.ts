@@ -46,7 +46,10 @@ export class ToolRules {
       seen.add(x.name);
       out.push({ name: x.name, type: t, source: x.source });
     }
-    out.sort((a, b) => a.name.localeCompare(b.name, 'zh'));
+    // 按规则书的顺序：先标准语言（通用语、通用手语、龙语、矮人语…），再稀有语言；
+    // 站点数据本身就是规则书的顺序（英文字母序），同一类里保持原样
+    const rank = (t: string) => (t === 'standard' ? 0 : t === 'rare' ? 1 : 2);
+    out.sort((a, b) => rank(a.type) - rank(b.type));
     return out;
   }
 
@@ -99,7 +102,10 @@ export class LanguageRules {
       seen.add(l.name);
       out.push({ name: l.name, type: l.type, origin: l.origin });
     }
-    out.sort((a, b) => a.name.localeCompare(b.name, 'zh'));
+    // 按规则书的顺序：先标准语言（通用语、通用手语、龙语、矮人语…），再稀有语言；
+    // 站点数据本身就是规则书的顺序（英文字母序），同一类里保持原样
+    const rank = (t: string) => (t === 'standard' ? 0 : t === 'rare' ? 1 : 2);
+    out.sort((a, b) => rank(a.type) - rank(b.type));
     return out;
   }
 }

@@ -1,7 +1,7 @@
 /** 战斗页的对话框：等待中的决定、加角色、加怪物、遭遇设置 */
 import { useState } from 'react';
 import type { Decision, Session, Settings, ViewInit } from '../../../src/combat';
-import { Dialog, Field } from '../../components/ui';
+import { Dialog, Field, NumInput } from '../../components/ui';
 import { combat, type CombatUi, type DiceMode } from '../../lib/combat';
 import type { Engine } from '../../lib/engine';
 import { useApp } from '../../lib/store';
@@ -210,7 +210,6 @@ export function AddMonsterDialog({ onClose }: { onClose: () => void }) {
     atkName: '短剑', atkBonus: 4, atkDamage: '1d6 + 2', atkType: '穿刺', perAction: 1, ranged: false,
   });
   const set = (p: Partial<MonsterForm>) => setF({ ...f, ...p });
-  const num = (k: keyof MonsterForm) => (e: React.ChangeEvent<HTMLInputElement>) => set({ [k]: Number(e.target.value) || 0 } as Partial<MonsterForm>);
   const add = () => {
     const view: ViewInit = {
       name: f.name.trim() || '怪物', type: f.type, ac: f.ac, hpMax: Math.max(1, f.hp), speed: f.speed,
@@ -231,7 +230,7 @@ export function AddMonsterDialog({ onClose }: { onClose: () => void }) {
       </div>
       <div className="formgrid">
         <Field label="名字"><input value={f.name} onChange={(e) => set({ name: e.target.value })} /></Field>
-        <Field label="数量"><input type="number" min={1} max={20} value={f.count} onChange={num('count')} /></Field>
+        <Field label="数量"><NumInput min={1} max={20} value={f.count} onChange={(n) => set({ count: n })} /></Field>
         <Field label="阵营">
           <select value={f.side} onChange={(e) => set({ side: e.target.value })}>
             <option value="enemy">敌方</option>
@@ -240,17 +239,17 @@ export function AddMonsterDialog({ onClose }: { onClose: () => void }) {
           </select>
         </Field>
         <Field label="类型"><select value={f.type} onChange={(e) => set({ type: e.target.value })}>{CREATURE_TYPES.map((t) => <option key={t}>{t}</option>)}</select></Field>
-        <Field label="AC"><input type="number" value={f.ac} onChange={num('ac')} /></Field>
-        <Field label="生命值"><input type="number" min={1} value={f.hp} onChange={num('hp')} /></Field>
-        <Field label="先攻加值"><input type="number" value={f.init} onChange={num('init')} /></Field>
-        <Field label="速度"><input type="number" value={f.speed} onChange={num('speed')} /></Field>
+        <Field label="AC"><NumInput value={f.ac} onChange={(n) => set({ ac: n })} /></Field>
+        <Field label="生命值"><NumInput min={1} value={f.hp} onChange={(n) => set({ hp: n })} /></Field>
+        <Field label="先攻加值"><NumInput value={f.init} onChange={(n) => set({ init: n })} /></Field>
+        <Field label="速度"><NumInput value={f.speed} onChange={(n) => set({ speed: n })} /></Field>
       </div>
       <div className="formgrid">
         <Field label="攻击（留空 = 没有）"><input value={f.atkName} onChange={(e) => set({ atkName: e.target.value })} /></Field>
-        <Field label="命中加值"><input type="number" value={f.atkBonus} onChange={num('atkBonus')} /></Field>
+        <Field label="命中加值"><NumInput value={f.atkBonus} onChange={(n) => set({ atkBonus: n })} /></Field>
         <Field label="伤害"><input value={f.atkDamage} onChange={(e) => set({ atkDamage: e.target.value })} style={{ width: 90 }} /></Field>
         <Field label="伤害类型"><select value={f.atkType} onChange={(e) => set({ atkType: e.target.value })}>{DAMAGE_TYPES.map((t) => <option key={t}>{t}</option>)}</select></Field>
-        <Field label="每个攻击动作"><input type="number" min={1} value={f.perAction} onChange={num('perAction')} /></Field>
+        <Field label="每个攻击动作"><NumInput min={1} value={f.perAction} onChange={(n) => set({ perAction: n })} /></Field>
         <Field label="远程"><input type="checkbox" checked={f.ranged} onChange={(e) => set({ ranged: e.target.checked })} style={{ height: 28 }} /></Field>
       </div>
       <div className="tiny faint">怪物数据卡的导入还没做；先用这里手填，数值都可以在战斗中手动调整。</div>

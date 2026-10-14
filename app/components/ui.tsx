@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 
 export function Panel(p: { title: ReactNode; aside?: ReactNode; flush?: boolean; children?: ReactNode; className?: string }) {
   return (
@@ -68,4 +68,36 @@ export function Dialog(p: { title: ReactNode; children: ReactNode; footer?: Reac
 
 export function Field(p: { label: ReactNode; children: ReactNode; style?: React.CSSProperties }) {
   return <label className="field" style={p.style}><span>{p.label}</span>{p.children}</label>;
+}
+
+/**
+ * 数字输入框：打字的时候可以先删空再输（不在每次按键时夹到最小值），
+ * 输入落在范围内就立刻生效；离开或回车时，空的恢复原值，越界的夹到范围内。
+ */
+export function NumInput(p: {
+  value: number; onChange: (n: number) => void; min?: number; max?: number;
+  style?: React.CSSProperties; title?: string; placeholder?: string; 'aria-label'?: string; autoFocus?: boolean;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const clamp = (n: number) => Math.max(p.min ?? -Infinity, Math.min(p.max ?? Infinity, Math.round(n)));
+  const commit = (s: string) => {
+    const n = Number(s);
+    if (s.trim() !== '' && Number.isFinite(n) && clamp(n) !== p.value) p.onChange(clamp(n));
+    setDraft(null);
+  };
+  return (
+    <input
+      type="number" min={p.min} max={p.max} style={p.style} title={p.title} placeholder={p.placeholder}
+      aria-label={p['aria-label']} autoFocus={p.autoFocus}
+      value={draft ?? String(p.value)}
+      onChange={(e) => {
+        const s = e.target.value;
+        setDraft(s);
+        const n = Number(s);
+        if (s.trim() !== '' && Number.isFinite(n) && clamp(n) === Math.round(n) && Math.round(n) !== p.value) p.onChange(Math.round(n));
+      }}
+      onBlur={(e) => commit(e.target.value)}
+      onKeyDown={(e) => { if (e.key === 'Enter') commit((e.target as HTMLInputElement).value); }}
+    />
+  );
 }
