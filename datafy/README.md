@@ -10,6 +10,7 @@
 |---|---|---|
 | `batch-w2-spells/` | 2024 玩家手册的法术，384 条，分 44 批（`batches.json`） | **全部要做** |
 | `batch-w1-features/` | 职业 / 子职特性、专长、可选特性、种族，545 条 | 已经做完了，只剩 `retry.md` 里列的 13 条要重做 / 改进 |
+| `batch-w3-books/` | 玩家手册以外的书：XGE、TCE、AU、FRHoF 的子职（68 个）、专长、可选特性、种族、法术，687 条，分 88 批 | **全部要做**（建议在法术之后做，法术里的写法可以直接参考） |
 
 每个文件夹里：
 
@@ -41,6 +42,12 @@
 - 需要新的次数池（「每次长休一次」）才在答案顶层写 `resources` 声明（见 `spec.md`）；任务里列了的资源直接用，不要重复声明。
 - 法术的升环：伤害骰写成 `(2 + slot.level)d6` 这种，跟着原文的「每高一环」算；戏法按角色等级增长见 `spec.md`。
 - **只写 `answers/` 里的文件**。不要改仓库里的其他文件（引擎代码、手写数据、测试）。觉得引擎缺了某种能力，记到 `datafy/notes.md` 里（写清楚是哪条、缺什么）。
+
+### 其他书的注意事项（`batch-w3-books`）
+
+- 条目键的第一段是书的缩写（`XGE:法师:魔力潮涌:6`、`TCE:spell:…`），lint / collect 的用法完全一样；结果写进 `data/dyn/ai/books.json`。
+- 这些书**没有人物卡层的数据**（`data/abilities-2024.json` 只覆盖 2024 核心书），所以任务里「可以花的资源」常常是空的。原文里有「每次长休 N 次」之类的次数，就在答案顶层 `resources` 里声明（见 `spec.md`）；同一个子职的几条要用同一个资源 id。
+- 老书（XGE、TCE）的子职是站点改给 2024 职业用的版本，个别特性的等级还是老版的（比如 2 级），照任务里写的等级来，不要自己改。
 
 ## 四、收集
 
@@ -81,3 +88,32 @@ npm run check:data
 - 其他测试失败：不要去改测试，把失败信息记到 `datafy/notes.md`。
 
 做完之后汇报：每个文件夹写了多少、跳过多少、没过多少，`notes.md` 和 `review.md` 里的要点。不用提交 git，人会看过之后再提交。
+
+## 七、附：怎么从 5etools 抓更多的书
+
+数据来自 5etools 的中文镜像 `https://5e.kiwee.top`（站点外面有 HTTP 基本认证的话，用 `DND_DATA_BASE` 换成别的镜像）。缓存在 `data/5etools/`（不进 git）。
+
+**站点的数据是怎么放的**
+
+| 内容 | 文件 | 说明 |
+|---|---|---|
+| 法术 | `/data/spells/index.json` → `/data/spells/spells-<书>.json` | **每本书一个文件**，index.json 是「书的缩写 → 文件名」 |
+| 职业、子职、职业 / 子职特性 | `/data/class/index.json` → `/data/class/class-<职业>.json` | 一个职业一个文件，**里面已经有所有书的子职** |
+| 专长、可选特性、种族、背景、物品 | `/data/feats.json`、`optionalfeatures.json`、`races.json`… | **所有书在一个文件里**，靠每条的 `source` 区分 |
+| 怪物 | `/data/bestiary/index.json` → `bestiary-<书>.json` | 每本书一个文件（这次不做） |
+
+每一条都有 `source`（书的缩写）。两个要注意的字段：
+
+- `reprintedAs`：这一条在新书里重印过（比如塔莎的「星辰结社」→ 2024 玩家手册）。**有这个字段的不做**，做重印后的那一版。
+- 子职的 `classSource`：老书的子职有两份，`PHB` 是给 2014 职业的，`XPHB` 是站点改给 2024 职业的。**只做 `XPHB` 那份**。改版的那份只重写了少数几条特性，其余沿用老版（`classSource = PHB`）的特性 —— 出题程序已经处理了。
+
+**加一本书**
+
+```bash
+# 1. 抓数据：法术按书抓；职业、专长、可选特性、种族的文件本来就是全的
+BOOKS=XGE,TCE,AU,FRHoF,EGW npx tsx tools/fetch-data.ts
+# 2. 出题：排除重印过的和已经做过的（已经在 data/dyn/ 里的不会再出）
+BOOKS=EGW npx tsx tools/factory/batch.ts plan 3 datafy/batch-w3-egw
+```
+
+然后照第二到第六节做。新文件夹名里必须有 `batch-w3`（collect 靠它认这是哪一波）。书的缩写看站点的 `/data/spells/index.json`、`/data/class/class-*.json` 里的 `source` 字段，或者 5etools 网页上每条右下角的来源。

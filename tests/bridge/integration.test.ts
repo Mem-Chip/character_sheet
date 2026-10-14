@@ -14,6 +14,7 @@ import spellsJson from '../../data/dyn/spells.json';
 import featuresJson from '../../data/dyn/features.json';
 import aiFeatures from '../../data/dyn/ai/features.json';
 import aiSpells from '../../data/dyn/ai/spells.json';
+import aiBooks from '../../data/dyn/ai/books.json';
 import { buildTask } from '../../tools/factory/sources';
 
 const chars = JSON.parse(readFileSync(resolve(import.meta.dirname, '..', 'fixtures', 'chars.json'), 'utf8')) as Array<{ id: string; char: object }>;
@@ -53,7 +54,7 @@ describe.skipIf(!hasLocalData())('真实角色卡进战斗', () => {
   });
 
   it('动态条目里花的资源，在拥有它的测试角色身上都有对应的资源池（id 对得上、上限算得出来）', async () => {
-    const rules = new RuleBook([aiFeatures, aiSpells, ...FILES] as unknown as RuleFile[]);   // 手写 + AI 生成的都查
+    const rules = new RuleBook([aiBooks, aiFeatures, aiSpells, ...FILES] as unknown as RuleFile[]);   // 手写 + AI 生成的都查
     const spends = (x: unknown, out: Set<string>): Set<string> => {
       if (Array.isArray(x)) x.forEach((y) => spends(y, out));
       else if (x && typeof x === 'object') {
@@ -83,7 +84,7 @@ describe.skipIf(!hasLocalData())('真实角色卡进战斗', () => {
   });
 
   it('每条动态数据的键都对得上站点数据里真实的法术 / 特性 / 专长 / 种族（名字写错就永远不会生效）', async () => {
-    const keys = [spellsJson, featuresJson, aiFeatures, aiSpells].flatMap((f) => Object.keys((f as { entries: object }).entries))
+    const keys = [spellsJson, featuresJson, aiFeatures, aiSpells, aiBooks].flatMap((f) => Object.keys((f as { entries: object }).entries))
       .filter((k) => !k.startsWith('XPHB:rule:'));
     for (const k of keys) await expect(buildTask(env, 'x', k), k).resolves.toMatchObject({ key: k });
   });

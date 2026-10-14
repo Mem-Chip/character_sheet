@@ -16,6 +16,31 @@ const read = (p: string): Json => JSON.parse(readFileSync(resolve(DATA, p), 'utf
 const abilities = (JSON.parse(readFileSync(resolve(import.meta.dirname, '..', '..', 'data', 'abilities-2024.json'), 'utf8')) as Json).entries as Record<string, Json>;
 
 let classFiles: Json[] | null = null;
+/** 法术文件：XPHB 以外的书按站点的 spells/index.json 找 */
+export function spellsOf(source: string): Json[] {
+  if (source === 'XPHB') return read('spells/spells-xphb.json').spell;
+  const idx = read('spells/index.json') as Record<string, string>;
+  const file = idx[source];
+  if (!file) throw new Error(`站点没有 ${source} 的法术文件`);
+  return read(`spells/${file}`).spell;
+}
+/** 职业特性 / 子职特性：同名同级的几份里，优先给 2024 职业用的（classSource = XPHB） */
+export function findClassFeature(src: string, cls: string, name: string, level: number): { hit: Json; sub: Json | null; sf: boolean } | null {
+  for (const file of classes()) {
+    const pickOne = (arr: Json[]) => {
+      const hits = arr.filter((f) => f.source === src && f.className === cls && f.name === name && f.level === level);
+      return hits.find((f) => f.classSource === 'XPHB') ?? hits[0] ?? null;
+    };
+    const cf = pickOne(file.classFeature || []);
+    const sf = cf ? null : pickOne(file.subclassFeature || []);
+    const hit = cf ?? sf;
+    if (!hit) continue;
+    const sub = sf ? (file.subclass || []).find((x: Json) => x.className === cls && x.shortName === sf.subclassShortName && x.source === sf.subclassSource && x.classSource === sf.classSource) ?? null : null;
+    return { hit, sub, sf: !!sf };
+  }
+  return null;
+}
+
 const classes = (): Json[] => (classFiles ??= readdirSync(resolve(DATA, 'class')).filter((f) => f.startsWith('class-')).map((f) => read(`class/${f}`)));
 
 const UNIT: Record<string, string> = { action: '动作', bonus: '附赠动作', reaction: '反应', minute: '分钟', hour: '小时', round: '轮' };
@@ -85,27 +110,22 @@ async function probeOnce(env: SheetEnv, cls: string, subclass?: string): Promise
 export async function ownerView(env: SheetEnv, key: string): Promise<CombatantView | null> {
   const parts = key.split(':');
   if (parts.length === 4) {
-    const [, cls, name, lv] = parts;
-    for (const file of classes()) {
-      const sf = (file.subclassFeature || []).find((f: Json) => f.source === 'XPHB' && f.className === cls && f.name === name && f.level === Number(lv));
-      const sub = sf ? (file.subclass || []).find((s: Json) => s.className === cls && s.shortName === sf.subclassShortName && s.source === sf.subclassSource) : null;
-      if (sf || (file.classFeature || []).some((f: Json) => f.source === 'XPHB' && f.className === cls && f.name === name)) {
-        return (await probe(env, cls, sub?.name)).view;
-      }
-    }
-    return null;
+    const [src, cls, name, lv] = parts;
+    const f = findClassFeature(src, cls, name, Number(lv));
+    return f ? (await probe(env, cls, f.sub?.name)).view : null;
   }
-  const opt = (read('optionalfeatures.json').optionalfeature as Json[]).find((f) => f.source === 'XPHB' && f.name === parts.slice(1).join(':'));
+  const opt = (read('optionalfeatures.json').optionalfeature as Json[]).find((f) => f.source === parts[0] && f.name === parts.slice(1).join(':'));
   const host = opt ? OPT_HOST[(opt.featureType || [])[0]] : undefined;
   return host ? (await probe(env, host.cls, host.subclass)).view : null;
 }
 
 export async function buildTask(env: SheetEnv, id: string, key: string, iface?: TaskInterface): Promise<Task> {
   const parts = key.split(':');
-  // 法术
+  const src = parts[0];
+  // 法术：<来源>:spell:<名字>
   if (parts[1] === 'spell') {
     const name = parts.slice(2).join(':');
-    const sp = (read('spells/spells-xphb.json').spell as Json[]).find((s) => s.name === name);
+    const sp = spellsOf(src).find((s) => s.name === name);
     if (!sp) throw new Error(`找不到法术「${name}」`);
     return {
       id, key, name, kind: 'spell', where: sp.level ? `${sp.level} 环法术` : '戏法',
@@ -118,39 +138,33 @@ export async function buildTask(env: SheetEnv, id: string, key: string, iface?: 
       resources: {}, ...staticOf(key), interface: iface,
     };
   }
-  // 职业 / 子职特性：XPHB:<职业>:<特性>:<等级>
+  // 职业 / 子职特性：<来源>:<职业>:<特性>:<等级>
   if (parts.length === 4) {
     const [, cls, name, lv] = parts;
     const level = Number(lv);
-    for (const file of classes()) {
-      const cf = (file.classFeature || []).find((f: Json) => f.source === 'XPHB' && f.className === cls && f.name === name && f.level === level);
-      const sf = cf ? null : (file.subclassFeature || []).find((f: Json) => f.source === 'XPHB' && f.className === cls && f.name === name && f.level === level);
-      const hit = cf ?? sf;
-      if (!hit) continue;
-      const sub = sf ? (file.subclass || []).find((s: Json) => s.className === cls && s.shortName === sf.subclassShortName && s.source === sf.subclassSource) : null;
-      const p = await probe(env, cls, sub?.name);
-      return {
-        id, key, name, kind: sf ? 'subclassFeature' : 'classFeature',
-        where: `${cls} ${level} 级${sub ? `（${sub.name}）` : ''}`,
-        text: flattenEntries(hit.entries), classTable: p.classTable, resources: p.resources,
-        ...staticOf(key), interface: iface,
-      };
-    }
-    throw new Error(`找不到职业特性「${key}」`);
+    const f = findClassFeature(src, cls, name, level);
+    if (!f) throw new Error(`找不到职业特性「${key}」`);
+    const p = await probe(env, cls, f.sub?.name);
+    return {
+      id, key, name, kind: f.sf ? 'subclassFeature' : 'classFeature',
+      where: `${cls} ${level} 级${f.sub ? `（${f.sub.name}${src !== 'XPHB' ? `，${src}` : ''}）` : ''}`,
+      text: flattenEntries(f.hit.entries), classTable: p.classTable, resources: p.resources,
+      ...staticOf(key), interface: iface,
+    };
   }
   // 专长 / 可选特性 / 种族：XPHB:<名字>
   const name = parts.slice(1).join(':');
   const own: Record<string, string> = {};
   for (const r of abilities[key]?.resources || []) if (r.id) own[r.id] = r.name;
 
-  const feat = (read('feats.json').feat as Json[]).find((f) => f.source === 'XPHB' && f.name === name);
+  const feat = (read('feats.json').feat as Json[]).find((f) => f.source === src && f.name === name);
   if (feat) {
     return {
       id, key, name, kind: 'feat', where: `专长${feat.category ? `（${FEAT_CAT[feat.category] ?? feat.category}）` : ''}`,
       text: flattenEntries(feat.entries), resources: own, ...staticOf(key), interface: iface,
     };
   }
-  const opt = (read('optionalfeatures.json').optionalfeature as Json[]).find((f) => f.source === 'XPHB' && f.name === name);
+  const opt = (read('optionalfeatures.json').optionalfeature as Json[]).find((f) => f.source === src && f.name === name);
   if (opt) {
     // 可选特性挂在哪个职业上：用那个职业（子职）的探针取资源
     const type = (opt.featureType || [])[0] as string;
@@ -163,7 +177,7 @@ export async function buildTask(env: SheetEnv, id: string, key: string, iface?: 
       extra: host?.extra,
     };
   }
-  const race = ((read('races.json').race || []) as Json[]).find((r) => r.source === 'XPHB' && r.name === name);
+  const race = ((read('races.json').race || []) as Json[]).find((r) => r.source === src && r.name === name);
   if (race) {
     return {
       id, key, name, kind: 'race', where: '种族（下面是这个种族的全部特质，写成一个条目）',

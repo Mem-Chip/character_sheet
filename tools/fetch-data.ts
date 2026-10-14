@@ -24,6 +24,9 @@ const FILES = [
   '/data/optionalfeatures.json',
   '/data/spells/spells-xphb.json',
   '/data/spells/sources.json',
+  '/data/spells/index.json',
+  // 其他书的法术（数据化第 3 波用）：BOOKS=XGE,TCE,AU,FRHoF 可以改；文件名按站点的 spells/index.json
+  ...(process.env.BOOKS ?? 'XGE,TCE,AU,FRHoF').split(',').map((b) => `/data/spells/spells-${b.trim().toLowerCase()}.json`),
   '/data/bestiary/bestiary-xmm.json',
 ];
 

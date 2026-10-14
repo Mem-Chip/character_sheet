@@ -1,7 +1,8 @@
 /**
  * 数据化工厂：批量生产（核心数据）。
  *
- *   npx tsx tools/factory/batch.ts plan <wave> [目录]   出任务：wave 1 = 职业 / 子职特性、专长、可选特性、种族；wave 2 = 法术
+ *   npx tsx tools/factory/batch.ts plan <wave> [目录]   出任务：wave 1 = 职业 / 子职特性、专长、可选特性、种族；wave 2 = 法术；
+ *                                                       wave 3 = 其他书（BOOKS=XGE,TCE,AU,FRHoF）的子职、专长、可选特性、种族、法术
  *                                                       目录名里要有 batch-w<wave>（collect 靠它认是哪一波），缺省放在 .factory/ 下
  *   npx tsx tools/factory/batch.ts refresh <目录>        按现在的代码重写这个目录的 spec.md 和 examples.json（引擎改过之后用）
  *   npx tsx tools/factory/batch.ts lint <目录> <题号>     检查一份答案（子代理自己跑）；{ "skip": "…" } 直接算通过
@@ -19,12 +20,12 @@ import { buildSpec, declaredResources, flattenEntries, lintEntry, renderTask, ty
 import type { Json } from '../../src/sheet';
 import { createNodeEnv } from '../../src/sheet/node-env';
 import { genericOwner, smoke } from './smoke';
-import { buildTask, ownerView } from './sources';
+import { buildTask, ownerView, spellsOf } from './sources';
 
 const ROOT = resolve(import.meta.dirname, '..', '..');
 const DATA = resolve(ROOT, 'data', '5etools', 'data');
 const AI_DIR = resolve(ROOT, 'data', 'dyn', 'ai');
-const AI_FILES: Record<string, string> = { 1: 'features.json', 2: 'spells.json' };
+const AI_FILES: Record<string, string> = { 1: 'features.json', 2: 'spells.json', 3: 'books.json' };
 const read = (p: string): Json => JSON.parse(readFileSync(p, 'utf8'));
 const GOLDEN = [rulesJson, spellsJson, featuresJson] as unknown as RuleFile[];
 
@@ -75,6 +76,48 @@ function planWave1(): Planned[] {
   return out;
 }
 
+/**
+ * 第 3 波：XPHB 以外的书（缺省 XGE、TCE、AU、FRHoF；环境变量 BOOKS=XGE,TCE 可以改）。
+ * - 被重印过的（5etools 标了 reprintedAs，比如塔莎的星辰结社重印进了 2024 玩家手册）不出题；
+ * - 老书的子职在站点上有两份：给 2014 职业的（classSource = PHB）和改给 2024 职业的（classSource = XPHB），只要后者；
+ * - 法术在 spells-<书>.json 里（npm run fetch:data 会按 BOOKS 抓）。
+ */
+export const BOOKS = (process.env.BOOKS ?? 'XGE,TCE,AU,FRHoF').split(',').map((x) => x.trim()).filter(Boolean);
+
+function planWave3(): Planned[] {
+  const out: Planned[] = [];
+  const books = new Set(BOOKS);
+  const fresh = (x: Json) => books.has(x.source) && !x.reprintedAs;
+  for (const f of readdirSync(resolve(DATA, 'class')).filter((x) => x.startsWith('class-'))) {
+    const j = read(resolve(DATA, 'class', f));
+    for (const sub of (j.subclass || []).filter((x: Json) => fresh(x) && x.classSource === 'XPHB')) {
+      const seen = new Set<string>();
+      // 改给 2024 职业的那份只重写了少数几条（开头那条、等级变了的），其余沿用老版的特性（classSource = PHB）：
+      // 同名的取 XPHB 那份，没有才用老版
+      const all = (j.subclassFeature || []).filter((x: Json) => x.subclassShortName === sub.shortName && x.subclassSource === sub.source && x.className === sub.className);
+      const newer = new Set(all.filter((x: Json) => x.classSource === 'XPHB').map((x: Json) => x.name));
+      for (const sf of all.filter((x: Json) => x.classSource === 'XPHB' || !newer.has(x.name))) {
+        if (sf.name === sub.name || sf.name === sub.shortName) continue;
+        const key = `${sf.source}:${sf.className}:${sf.name}:${sf.level}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push({ key, group: `${sub.className}·${sub.name}（${sub.source}）` });
+      }
+    }
+  }
+  for (const ft of (read(resolve(DATA, 'feats.json')).feat as Json[]).filter(fresh)) out.push({ key: `${ft.source}:${ft.name}`, group: `专长·${ft.source}` });
+  for (const of of (read(resolve(DATA, 'optionalfeatures.json')).optionalfeature as Json[]).filter(fresh)) {
+    out.push({ key: `${of.source}:${of.name}`, group: `可选特性·${(of.featureType || [])[0]}·${of.source}` });
+  }
+  for (const r of ((read(resolve(DATA, 'races.json')).race || []) as Json[]).filter(fresh)) out.push({ key: `${r.source}:${r.name}`, group: `种族·${r.source}` });
+  for (const b of BOOKS) {
+    let spells: Json[] = [];
+    try { spells = spellsOf(b); } catch { console.warn(`没有 ${b} 的法术文件（先 npm run fetch:data）`); }
+    for (const sp of spells.filter(fresh).sort((x, y) => x.level - y.level)) out.push({ key: `${b}:spell:${sp.name}`, group: `法术·${b}·${sp.level ? `${sp.level} 环` : '戏法'}` });
+  }
+  return out;
+}
+
 function planWave2(): Planned[] {
   return (read(resolve(DATA, 'spells', 'spells-xphb.json')).spell as Json[])
     .sort((a, b) => a.level - b.level || String(a.name).localeCompare(String(b.name), 'zh'))
@@ -112,7 +155,7 @@ function writeSpec(dir: string): void {
 
 async function plan(wave: string, outDir?: string): Promise<void> {
   const done = new Set([...GOLDEN, ...allAi()].flatMap((f) => Object.keys(f.entries)));
-  const items = (wave === '1' ? planWave1() : planWave2()).filter((x) => !done.has(x.key));
+  const items = (wave === '1' ? planWave1() : wave === '2' ? planWave2() : planWave3()).filter((x) => !done.has(x.key));
   const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 13).replace('T', '-');
   const dir = outDir ? resolve(outDir) : resolve(ROOT, '.factory', `batch-w${wave}-${stamp}`);
   if (!/batch-w\d/.test(dir)) throw new Error(`目录名里要有 batch-w${wave}：${dir}`);
@@ -121,7 +164,7 @@ async function plan(wave: string, outDir?: string): Promise<void> {
   writeSpec(dir);
 
   const env = await createNodeEnv();
-  const prefix = wave === '1' ? 'F' : 'S';
+  const prefix = wave === '1' ? 'F' : wave === '2' ? 'S' : 'B';
   const manifest: Array<{ id: string; key: string; group: string; name: string }> = [];
   const failed: string[] = [];
   let n = 0;
@@ -271,7 +314,7 @@ async function collect(dir: string): Promise<void> {
 }
 
 const [cmd, a, b] = process.argv.slice(2);
-if (cmd === 'plan' && (a === '1' || a === '2')) await plan(a, b);
+if (cmd === 'plan' && (a === '1' || a === '2' || a === '3')) await plan(a, b);
 else if (cmd === 'refresh' && a) { writeSpec(resolve(a)); console.log(`已重写 ${a}/spec.md 和 examples.json`); }
 else if (cmd === 'lint' && a && b) {
   const { problems, answer } = lintOne(resolve(a), b);
@@ -280,4 +323,4 @@ else if (cmd === 'lint' && a && b) {
   process.exitCode = problems.length ? 1 : 0;
 } else if (cmd === 'collect' && a) await collect(resolve(a));
 else if (cmd === 'text' && a) console.log(flattenEntries(JSON.parse(a)));
-else console.log('用法：batch.ts plan <1|2> [目录] | refresh <目录> | lint <目录> <题号> | collect <目录>');
+else console.log('用法：batch.ts plan <1|2|3> [目录] | refresh <目录> | lint <目录> <题号> | collect <目录>');
