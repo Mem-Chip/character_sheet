@@ -7,7 +7,7 @@
 import { normType } from '../combat/damage';
 import { freshEconomy } from '../combat/view';
 import type { AttackRow, Combatant, CombatantView, LiveState } from '../combat/types';
-import { ABILS, COUNT_ONLY, SIZE_CN, type CharData, type Json, type SheetEnv } from '../sheet';
+import { ABILS, COUNT_ONLY, SIZE_CN, sourceKeyOf, type CharData, type Json, type SheetEnv } from '../sheet';
 import type { Ability } from '../expr';
 
 export const CREATURE_TYPE_CN: Record<string, string> = {
@@ -57,10 +57,7 @@ const EXTRA_ATTACK: Record<string, number> = { 额外攻击: 2, '额外攻击（
 /** 规则条目键：职业特性 `<来源>:<职业>:<名字>:<等级>`，其余 `<来源>:<名字>`，家规 `HR:<id>` */
 export function sourceKeys(env: SheetEnv, char: CharData): string[] {
   const keys: string[] = [];
-  for (const s of env.abilities.collectSources(char)) {
-    if (s.kind === 'classFeature' || s.kind === 'subclassFeature') keys.push(`${s.source}:${s.cls}:${s.name}:${s.level}`);
-    else keys.push(`${s.source}:${s.name}`);
-  }
+  for (const s of env.abilities.collectSources(char)) keys.push(sourceKeyOf(s));
   // 能用的法术：已准备的（或没标 prepared 的）、戏法、能力授予的
   const spells = new Set<string>();
   for (const sp of char.spells || []) if (sp?.name && sp.prepared !== false) spells.add(sp.name);

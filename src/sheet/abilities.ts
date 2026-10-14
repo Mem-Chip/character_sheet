@@ -220,11 +220,19 @@ export interface HomeRuleEntry {
   grants?: Json[];
   choices?: Json[];
   resources?: Json[];
+  /** 从规则库导入的：5etools 原文和出处（只用来显示） */
+  entries?: Json[];
+  ref?: { kind: string; source: string; name: string };
   _scope?: string;
   _shadowedBy?: string;
 }
 
 export const hrKeyOf = (e: { id?: string } | null | undefined) => HR_SOURCE + ':' + (e && e.id);
+
+/** 能力来源的条目键：职业特性 `<来源>:<职业>:<名字>:<等级>`，其余 `<来源>:<名字>`（家规的 covers 也写这个） */
+export function sourceKeyOf(s: SourceSpec): string {
+  return s.kind === 'classFeature' || s.kind === 'subclassFeature' ? `${s.source}:${s.cls}:${s.name}:${s.level}` : `${s.source}:${s.name}`;
+}
 
 /* ============================================================================
  * AbilityBook
@@ -651,7 +659,7 @@ export class AbilityBook {
       const a = this.hrTable[HR_SOURCE + ':' + e.id];
       const off = a && a._hrOffKey;
       if (off) {
-        const i = out.findIndex((x) => `${x.source}:${x.name}` === off);
+        const i = out.findIndex((x) => sourceKeyOf(x) === off || `${x.source}:${x.name}` === off);
         if (i >= 0) out.splice(i, 1);
       }
       if (!out.some((x) => x.source === HR_SOURCE && x.name === e.id)) out.push(this.hrSpec(e));

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { ABILS, ABIL_CN, SCHOOL_CN, classSpells, type CharData, type Json } from '../../src/sheet';
 import { Choices } from '../components/Choices';
+import { SpellBrowser } from '../components/SpellBrowser';
 import { Entries } from '../components/Entries';
 import { Panel, Pips, Stat, Tag, sgn } from '../components/ui';
 import type { Engine } from '../lib/engine';
@@ -132,22 +133,23 @@ function Attacks({ sheet }: Props) {
 
 function Spells({ engine, id, char, sheet }: Props) {
   const sc = sheet.spell || {};
-  const [pick, setPick] = useState('');
+  const [browse, setBrowse] = useState(false);
   if (!sc.casters?.length && !(char.spells || []).length && !sc.granted?.length) return null;
   const all: Json[] = engine.env.store.data.spellsXphb?.spell || [];
   const ent = (n: string) => all.find((s) => s.name === n);
-  const maxSlot = Math.max(0, ...(sc.slots || []).map((v: number, i: number) => (v ? i + 1 : 0)), sc.pact?.level ?? 0);
-  const pool = sc.casters?.length
-    ? [...new Map(sc.casters.flatMap((k: Json) => classSpells(engine.env, k.name, { maxLevel: maxSlot })).map((s: Json) => [s.name, s])).values()] as Json[]
-    : [];
-  const have = new Set((char.spells || []).map((s: Json) => s.name));
+  // 按环阶排（戏法在前），同环按名字
+  const order = (char.spells || []).map((s: Json, i: number) => ({ s, i, lv: ent(s.name)?.level ?? 1 }))
+    .sort((a: Json, b: Json) => a.lv - b.lv || String(a.s.name).localeCompare(String(b.s.name), 'zh'));
   const slotsUsed = (lvl: number) => char.slots?.[lvl]?.used ?? 0;
   const setSlot = (lvl: number, used: number) => actions.update(id, (c) => { c.slots = { ...(c.slots || {}), [lvl]: { used } }; });
   const prepared = (char.spells || []).filter((s: Json) => s.prepared !== false && (ent(s.name)?.level ?? 1) > 0).length;
   return (
     <Panel
       title="法术"
-      aside={sc.dc != null && <span>豁免 DC <b className="serif">{sc.dc}</b> · 攻击 <b className="serif">{sgn(sc.atk)}</b> · {ABIL_CN[sc.ability as keyof typeof ABIL_CN]}</span>}
+      aside={<>
+        {sc.dc != null && <span>豁免 DC <b className="serif">{sc.dc}</b> · 攻击 <b className="serif">{sgn(sc.atk)}</b> · {ABIL_CN[sc.ability as keyof typeof ABIL_CN]}</span>}
+        {sc.casters?.length > 0 && <button className="btn sm primary" onClick={() => setBrowse(true)}>选法术…</button>}
+      </>}
     >
       {(sc.slots || []).some((v: number) => v) && (
         <div className="row" style={{ marginBottom: 8 }}>
@@ -165,12 +167,12 @@ function Spells({ engine, id, char, sheet }: Props) {
       )}
       <table className="rows">
         <tbody>
-          {(char.spells || []).map((s: Json, i: number) => {
+          {order.map(({ s, i }: Json) => {
             const e = ent(s.name);
             return (
               <tr key={s.name + i} className={s.prepared === false ? 'dim' : ''}>
                 <td className="serif">{s.name}</td>
-                <td className="small muted">{e ? (e.level ? `${e.level} 环` : '戏法') + ' · ' + (SCHOOL_CN[e.school] ?? '') : ''}</td>
+                <td className="small muted">{e ? (e.level ? `${e.level} 环` : '戏法') + ' · ' + (SCHOOL_CN[e.school] ?? '') : ''}{sc.casters?.length > 1 && s.cls ? ` · ${s.cls}` : ''}</td>
                 <td className="r">
                   {e?.level ? (
                     <button className={'btn sm' + (s.prepared !== false ? ' on' : '')} onClick={() => actions.update(id, (c) => { c.spells[i].prepared = s.prepared === false; })}>
@@ -187,15 +189,7 @@ function Spells({ engine, id, char, sheet }: Props) {
           ))}
         </tbody>
       </table>
-      {pool.length > 0 && (
-        <div className="row" style={{ marginTop: 8 }}>
-          <select value={pick} onChange={(e) => setPick(e.target.value)} style={{ flex: 1 }}>
-            <option value="">从职业法表添加法术…</option>
-            {pool.filter((s) => !have.has(s.name)).map((s) => <option key={s.name} value={s.name}>{s.level ? `${s.level} 环` : '戏法'} · {s.name}</option>)}
-          </select>
-          <button className="btn sm" disabled={!pick} onClick={() => { actions.update(id, (c) => { c.spells = [...(c.spells || []), { name: pick, prepared: true }]; }); setPick(''); }}>添加</button>
-        </div>
-      )}
+      {browse && <SpellBrowser engine={engine} id={id} char={char} sheet={sheet} onClose={() => setBrowse(false)} />}
     </Panel>
   );
 }
@@ -250,6 +244,10 @@ function Features({ sheet, char }: Props) {
     if (f._sub) groupOf(`sub:${f._cls}`, `${cls?.subclass || '子职'}`, true).items.push(f);
     else groupOf(`cls:${f._cls}`, `${f._cls}${cls?.level ? ` ${cls.level} 级` : ''}`).items.push(f);
   }
+  for (const h of (char.homerules || []) as Json[]) {
+    if (h.covers || h.pickable) continue;
+    groupOf('hr', '导入与家规').items.push({ name: h.name, entries: h.entries?.length ? h.entries : h.text ? [h.text] : [], _origin: 'hr' });
+  }
   // 子职紧跟在它的职业后面
   const ordered = groups.filter((g) => !g.sub).flatMap((g) => [g, ...groups.filter((x) => x.sub && x.key === 'sub:' + g.key.slice(4))]);
   for (const g of groups) if (!ordered.includes(g)) ordered.push(g);
@@ -262,7 +260,7 @@ function Features({ sheet, char }: Props) {
             <details className="feature" key={i}>
               <summary>
                 <span className="nm">{f.name}</span>
-                {f._origin !== 'race' && <span className="tiny faint">{f.level} 级</span>}
+                {f.level ? <span className="tiny faint">{f.level} 级</span> : null}
               </summary>
               <div className="prose"><Entries entries={f.entries || []} /></div>
             </details>

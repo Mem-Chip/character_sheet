@@ -169,7 +169,8 @@ export class Resources {
   collect(char: CharData, sheet: Json): Json[] {
     const out = new Map<string, Json>();
     const covered = this.env.abilities.hrCoverKeys(char);
-    const isCovered = (nm: string) => covered.some((k) => k.slice(k.indexOf(':') + 1) === nm);
+    // 家规覆盖的键可以是 `<来源>:<名字>`，也可以是职业特性的 `<来源>:<职业>:<名字>:<等级>`
+    const isCovered = (nm: string) => covered.some((k) => { const p = k.split(':'); return p.length === 4 ? p[2] === nm : k.slice(k.indexOf(':') + 1) === nm; });
     for (const k of char._resolved?.classes || []) {
       const clsCovered = [...(k.features || []), ...(k.subFeatures || [])].some((f: Json) => isCovered(f.name));
       if (clsCovered) continue;
