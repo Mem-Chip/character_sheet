@@ -1,10 +1,12 @@
+import { AccountButton } from './components/Account';
+import { CampaignsPage } from './pages/Campaigns';
 import { CombatPage } from './pages/Combat';
 import { Library } from './pages/Library';
 import { SheetPage } from './pages/Sheet';
 import { actions, useApp, type Page } from './lib/store';
 import { useEngine } from './lib/useSheet';
 
-const NAV: Array<[Page, string]> = [['library', '卡片库'], ['sheet', '人物卡'], ['combat', '战斗']];
+const NAV: Array<[Page, string]> = [['library', '卡片库'], ['sheet', '人物卡'], ['combat', '战斗'], ['campaigns', '战役']];
 
 export function App() {
   const app = useApp();
@@ -23,13 +25,15 @@ export function App() {
         <button className="btn sm" onClick={() => actions.setTheme(app.theme === 'dark' ? 'light' : 'dark')}>
           {app.theme === 'dark' ? '浅色' : '深色'}
         </button>
+        <AccountButton />
       </header>
       <main className="main">
         {error ? <div className="page dangerline">规则数据装载失败：{error}</div>
           : !engine ? <div className="page empty">正在装载规则数据…</div>
             : app.page === 'library' ? <Library />
               : app.page === 'sheet' ? <SheetPage engine={engine} />
-                : <CombatPage engine={engine} />}
+                : app.page === 'campaigns' ? <CampaignsPage />
+                  : <CombatPage engine={engine} />}
       </main>
     </div>
   );

@@ -5,14 +5,27 @@
 import { useSyncExternalStore } from 'react';
 import { blankCharacter, type CharData } from '../../src/sheet';
 
-export type Page = 'library' | 'sheet' | 'combat';
+export type Page = 'library' | 'sheet' | 'combat' | 'campaigns';
 export type Theme = 'light' | 'dark';
 
 export interface Card {
   id: string;
   char: CharData;
   updatedAt: number;
+  /** 服务器上的修订号（没有 = 只在本机） */
+  rev?: number;
+  /** 本机改过、还没传上去 */
+  dirty?: boolean;
+  /** 卡主（登录后从服务器来；没有 = 自己的本机卡） */
+  owner?: { id: number; name: string };
+  campaignId?: string | null;
+  /** 登录时选了「不上传」的本机卡 */
+  localOnly?: boolean;
 }
+
+/** 同步层（sync.ts）挂进来的回调：卡变了 / 删了 */
+const hooks = { changed: () => {}, removed: (_card: Card) => {} };
+export function setStoreHooks(h: Partial<typeof hooks>): void { Object.assign(hooks, h); }
 
 export interface AppState {
   cards: Record<string, Card>;
@@ -59,6 +72,12 @@ function set(next: Partial<AppState>): void {
   state = { ...state, ...next };
   persist();
   for (const l of listeners) l();
+  if (next.cards) hooks.changed();
+}
+
+/** 同步层用：直接换掉卡（不标「改过」） */
+export function setCards(cards: Record<string, Card>, order: string[]): void {
+  set({ cards, order, currentId: state.currentId && cards[state.currentId] ? state.currentId : null });
 }
 
 export function useApp(): AppState {
@@ -66,7 +85,7 @@ export function useApp(): AppState {
 }
 export const getApp = () => state;
 
-const newId = () => 'c-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+export const newId = () => 'c-' + crypto.randomUUID();
 
 export const actions = {
   go(page: Page) { set({ page }); },
@@ -79,7 +98,7 @@ export const actions = {
   create(seed: Partial<CharData> = {}): string {
     const id = newId();
     const char = { ...blankCharacter(), name: '新角色', ...seed };
-    set({ cards: { ...state.cards, [id]: { id, char, updatedAt: Date.now() } }, order: [id, ...state.order], currentId: id, page: 'sheet' });
+    set({ cards: { ...state.cards, [id]: { id, char, updatedAt: Date.now(), dirty: true } }, order: [id, ...state.order], currentId: id, page: 'sheet' });
     return id;
   },
 
@@ -89,18 +108,20 @@ export const actions = {
     if (!card) return;
     const char = structuredClone(stripDerived(card.char));
     fn(char);
-    set({ cards: { ...state.cards, [id]: { ...card, char, updatedAt: Date.now() } } });
+    set({ cards: { ...state.cards, [id]: { ...card, char, updatedAt: Date.now(), dirty: true } } });
   },
 
   replace(id: string, char: CharData): void {
     const card = state.cards[id];
     if (!card) return;
-    set({ cards: { ...state.cards, [id]: { ...card, char: stripDerived(char), updatedAt: Date.now() } } });
+    set({ cards: { ...state.cards, [id]: { ...card, char: stripDerived(char), updatedAt: Date.now(), dirty: true } } });
   },
 
   remove(id: string): void {
     const cards = { ...state.cards };
+    const gone = cards[id];
     delete cards[id];
+    if (gone) hooks.removed(gone);
     set({ cards, order: state.order.filter((x) => x !== id), currentId: state.currentId === id ? null : state.currentId });
   },
 

@@ -4,12 +4,15 @@ import samples from '../../tests/fixtures/chars.json';
 import type { Json } from '../../src/sheet';
 import { Panel } from '../components/ui';
 import { actions, useApp } from '../lib/store';
+import { uploadOne, useSync } from '../lib/sync';
+import { Tag } from '../components/ui';
 import { download } from './Sheet';
 
 const SAMPLE_IDS = ['fighter5-plate', 'rogue5', 'wizard3-evoker', 'barbarian3-unarmored', 'paladin6', 'cleric1-hprolls'];
 
 export function Library() {
   const app = useApp();
+  const sync = useSync();
   const file = useRef<HTMLInputElement>(null);
   const [msg, setMsg] = useState('');
   const cards = app.order.map((id) => app.cards[id]).filter(Boolean);
@@ -45,11 +48,22 @@ export function Library() {
                 <div className="spread"><span className="nm">{ch.name || '未命名'}</span><span className="tiny faint">{new Date(c.updatedAt).toLocaleDateString('zh-CN')}</span></div>
                 <div className="small muted">{[ch.race, ch.background].filter(Boolean).join(' · ') || '—'}</div>
                 <div className="small">{cls || '还没选职业'}</div>
+                {sync.user && (
+                  <div className="row" style={{ gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
+                    {c.owner && c.owner.id !== sync.user.id && <Tag tone="accent">来自 {c.owner.name}</Tag>}
+                    {!c.rev && !c.dirty && <Tag tone="warn">只在本机</Tag>}
+                    {c.dirty && !c.localOnly && <Tag>未同步</Tag>}
+                    {c.campaignId && <Tag>在战役中</Tag>}
+                  </div>
+                )}
                 <div className="row" style={{ marginTop: 8 }} onClick={(e) => e.stopPropagation()}>
                   <button className="btn sm" onClick={() => actions.open(c.id)}>打开</button>
                   <button className="btn sm" onClick={() => actions.duplicate(c.id)}>复制</button>
                   <button className="btn sm" onClick={() => download(`${ch.name || '人物卡'}.json`, actions.exportJson(c.id))}>导出</button>
-                  <button className="btn ghost sm danger" onClick={() => { if (confirm(`删除「${ch.name || '未命名'}」？这一步不能撤销。`)) actions.remove(c.id); }}>删除</button>
+                  {sync.user && !c.rev && !c.dirty && <button className="btn sm" onClick={() => uploadOne(c.id)}>传到账户</button>}
+                  {(!c.owner || c.owner.id === sync.user?.id) && (
+                    <button className="btn ghost sm danger" onClick={() => { if (confirm(`删除「${ch.name || '未命名'}」？${c.rev ? '账户里的这张也会删掉。' : ''}这一步不能撤销。`)) actions.remove(c.id); }}>删除</button>
+                  )}
                 </div>
               </div>
             );

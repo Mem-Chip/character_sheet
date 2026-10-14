@@ -5,7 +5,8 @@
 #   DEPLOY_HOST=user@host     DEPLOY_KEY=~/.ssh/xxx.key     DEPLOY_DIR=/www/wwwroot/<站点>/v2
 #   DEPLOY_OWNER=www:www（可选，网站文件的属主）
 #
-# 做的事：构建 → 打包上传到服务器的临时目录 → 备份线上目录到 ~/backups/ → 换上新的 → 检查。
+# 做的事：构建 → 打包上传到服务器的临时目录 → 备份线上目录到 ~/backups/ → 换上新的 → 检查；
+# 后端装过的话（tools/setup-server.sh），顺带上传 server/main.ts 并重启 dnd-v2 服务。
 # 页面本身是纯静态的（数据在 dist/5etools 里），站点外面那道 HTTP 基本认证不受影响。
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -46,5 +47,13 @@ sudo mv "$STAGE" "$DIR"
 sudo rm -rf "$DIR.old"
 echo "  已替换：$(sudo find "$DIR" -type f | wc -l) 个文件，$(sudo du -sh "$DIR" | cut -f1)"
 REMOTE
+
+# 后端（server/main.ts）：服务装过了（tools/setup-server.sh）才更新
+if "${SSH[@]}" "$DEPLOY_HOST" 'systemctl cat dnd-v2 >/dev/null 2>&1'; then
+  echo "更新后端 …"
+  "${SSH[@]}" "$DEPLOY_HOST" "sudo tee /opt/dnd-v2/main.ts >/dev/null && sudo systemctl restart dnd-v2 && sleep 1 && curl -sf http://127.0.0.1:${API_PORT:-8789}/api/health >/dev/null && echo '  后端已重启'" < server/main.ts
+else
+  echo "（服务器上还没装后端：先跑一次 bash tools/setup-server.sh）"
+fi
 
 echo "完成。打开站点后强制刷新一次（Ctrl+F5）。"

@@ -33,5 +33,6 @@ export default defineConfig({
   // 相对路径：构建产物放在任何子路径下都能用（线上在 /v2/）
   base: './',
   plugins: [react(), localData()],
-  server: { port: 5280 },
+  // 后端（server/main.ts，默认 8789）：开发时把 /api 转过去
+  server: { port: 5280, proxy: { '/api': 'http://127.0.0.1:8789' } },
 });

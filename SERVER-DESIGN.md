@@ -1,6 +1,9 @@
 # 上线设计：账户、内容、战役与同步（讨论稿 v2）
 
-> 状态：**还没实现**。v2 合进了已经拍板的决定，重写了「内容」一节（条目 / 包 / 版本）和「数据化」一节。
+> 状态：**第 2 步（账户 + 卡同步）和第 3 步的一部分（战役：建团、邀请码、带卡进团、DM 看到并能写回队伍的卡）已经上线**，
+> 代码在 `server/main.ts`（一个文件，Node 直接跑，SQLite）和 `app/lib/sync.ts`、`app/pages/Campaigns.tsx`。
+> 还没做：内容入库（第 1 步）、挂包与规则清单、服务器跑遭遇（第 4 步，现在遭遇仍在 DM 的浏览器里跑）。
+> 管理员重置密码：服务器上 `sudo -u www DB=/var/lib/dnd-v2/server.db node /opt/dnd-v2/main.ts reset-password 名字 新密码`。
 > 相关：[COMBAT-DESIGN.md](COMBAT-DESIGN.md) §10.4（服务器跑同一份静态管线）、§15.5（房规分层）、§15.6（自定义内容导入）。
 
 ## 一、已经定下来的
