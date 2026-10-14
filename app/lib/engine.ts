@@ -5,12 +5,8 @@
  */
 import abilities2024 from '../../data/abilities-2024.json';
 import abilitiesBuiltin from '../../data/abilities-builtin.json';
-import featuresDyn from '../../data/dyn/features.json';
-import rules2024 from '../../data/rules-2024.json';
-import spellsDyn from '../../data/dyn/spells.json';
-import aiFeatures from '../../data/dyn/ai/features.json';
-import aiSpells from '../../data/dyn/ai/spells.json';
-import { RuleBook, type RuleFile } from '../../src/combat';
+import { RuleBook } from '../../src/combat';
+import { RULE_FILES } from '../../src/bridge/rule-files';
 import { BASE_URL, SheetEnv, type DataProvider } from '../../src/sheet';
 
 const memo = new Map<string, Promise<unknown>>();
@@ -39,8 +35,7 @@ const browserProvider: DataProvider = {
   },
 };
 
-/** AI 生成的数据（未审）在前，手写的在后：同键时手写的覆盖 */
-export const RULE_FILES = [aiFeatures, aiSpells, rules2024, spellsDyn, featuresDyn] as unknown as RuleFile[];
+export { RULE_FILES };
 
 export interface Engine {
   env: SheetEnv;

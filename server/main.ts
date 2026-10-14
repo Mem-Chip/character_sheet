@@ -1,21 +1,22 @@
 /**
  * 后端：账户、人物卡同步、战役（SERVER-DESIGN.md 第四、五、七节的第一步）。
  *
- * 一个文件、不装依赖：Node 22+ 直接跑 TypeScript（类型擦除），数据在 SQLite（node:sqlite）里。
- *   node server/main.ts                       起服务（PORT、DB 见下面的环境变量）
- *   node server/main.ts reset-password 名字 新密码
- *   node server/main.ts users                 列出所有用户
+ * 不装依赖，数据在 SQLite（node:sqlite）里。遭遇用的是和浏览器同一份战斗引擎（src/combat），
+ * 所以部署时先打包成一个文件（npm run build:server → dist-server/main.js），开发时用 tsx 直接跑：
+ *   npx tsx server/main.ts                    起服务（PORT、DB 见下面的环境变量）
+ *   node main.js reset-password 名字 新密码     （服务器上：/opt/dnd-v2/main.js）
+ *   node main.js users                        列出所有用户
  *
  * 只监听 127.0.0.1；外面是 nginx 和站点的 HTTP 基本认证。私人站点，默认用户都是好人：
  * 注册不验证，账户只用来区分「你是谁」。
  *
- * 写法限制：只用能直接擦掉的 TypeScript（不用 enum、参数属性、namespace）。
  */
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { createHash, randomBytes, randomUUID, scryptSync, timingSafeEqual } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
+import { createEncounters } from './encounters';
 
 const PORT = Number(process.env.PORT ?? 8789);
 const DB_FILE = resolve(process.env.DB ?? 'data/server.db');
@@ -222,6 +223,8 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
     return send(res, 200, { ok: true });
   }
 
+  if (await encounters(req, res, u, path, method)) return;
+
   /* 人物卡 */
   if (method === 'GET' && path === '/api/cards') return send(res, 200, { cards: visibleCards(u).map(cardJson) });
 
@@ -330,6 +333,11 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
   }
   throw new HttpError(404, '没有这个接口');
 }
+
+const encounters = createEncounters({
+  one, all, run, exec: (sql) => db.exec(sql), bodyOf, send, roleIn,
+  fail: (status, message) => new HttpError(status, message),
+});
 
 /* ───────────── 命令行 ───────────── */
 

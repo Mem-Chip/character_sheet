@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# 一次性：在服务器上装后端（server/main.ts）的 systemd 服务，并让 nginx 把 /v2/api/ 转给它。
-# 之后的更新走 npm run deploy（会顺带上传 main.ts 并重启服务）。
+# 一次性：在服务器上装后端（打包后的 dist-server/main.js）的 systemd 服务，并让 nginx 把 /v2/api/ 转给它。
+# 之后的更新走 npm run deploy（会顺带打包、上传 main.js 并重启服务）。
+# 再跑一次也安全：会重写 systemd 单元，nginx 已经配过就跳过。
 #
 # 用 .deploy.env 里的 DEPLOY_HOST / DEPLOY_KEY；另外可以设：
 #   API_PORT=8789（8787 是原项目的卡片库后端，8788 是音频转播）
@@ -29,7 +30,7 @@ After=network.target
 [Service]
 Type=simple
 # 只监听 127.0.0.1；外面是 nginx 和站点的 HTTP 基本认证
-ExecStart=/usr/bin/node --disable-warning=ExperimentalWarning /opt/dnd-v2/main.ts
+ExecStart=/usr/bin/node --disable-warning=ExperimentalWarning /opt/dnd-v2/main.js
 Environment=NODE_ENV=production
 Environment=PORT=$PORT
 Environment=DB=/var/lib/dnd-v2/server.db

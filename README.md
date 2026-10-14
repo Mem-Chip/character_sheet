@@ -8,7 +8,8 @@ D&D 2024 人物卡 + 战斗引擎。静态规则逻辑移植自 `dsh-p/dnd/dnd20
 ```bash
 npm run dev          # 界面：http://localhost:5280（卡片库 / 人物卡 / 战斗）
 npm run deploy       # 测试 + 构建 + 部署到服务器（配置在 .deploy.env，见 .deploy.env.example）；顺带更新后端
-node server/main.ts  # 后端（账户、卡同步、战役），开发时 vite 把 /api 转给它；服务器上第一次先跑 bash tools/setup-server.sh
+npm run server       # 后端（账户、卡同步、战役、战役遭遇），开发时 vite 把 /api 转给它
+npm run build:server # 后端打包成 dist-server/main.js（部署用）；服务器上第一次先跑 bash tools/setup-server.sh
 npm run fetch:data   # 先抓 5etools 数据到 data/5etools/（静态层测试要用；界面没有本地数据时直接从站点取）
 npm test             # 全部测试
 npm run typecheck    # 类型检查
