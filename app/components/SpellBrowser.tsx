@@ -76,7 +76,7 @@ export function SpellBrowser({ engine, id, char, sheet, onClose }: Props) {
           <span style={{ flex: 1 }} />
           <input placeholder="筛选名字" value={q} onChange={(e) => setQ(e.target.value)} style={{ width: 130 }} />
         </div>
-        {wizard && <div className="small muted">法师：先勾「书」把法术抄进法术书，再勾「备」准备；戏法不用进书。</div>}
+        {wizard && <div className="small muted">法师：先「抄进书」，再点法术准备；戏法不用进书。</div>}
         <div className="spelllevels">
           {levels.map((lv) => {
             const rows = list.filter((s) => s.level === lv && (!query || String(s.name).includes(query)));
@@ -92,19 +92,25 @@ export function SpellBrowser({ engine, id, char, sheet, onClose }: Props) {
                   const conc = JSON.stringify(s.duration || '').includes('concentration');
                   const ritual = !!s.meta?.ritual;
                   return (
-                    <div key={s.name} className={'spellrow' + (on ? ' on' : '')}>
+                    <div key={s.name} className={'spellrow' + (on || locked ? ' on' : '')}>
                       {wizard && lv > 0 && (
-                        <label className="ck" title="抄进法术书"><input type="checkbox" aria-label={`${s.name}：抄进法术书`} checked={inBook} onChange={() => toggleBook(s.name)} />书</label>
+                        <button type="button" className={'bk' + (inBook ? ' in' : '')} title={inBook ? '从法术书里划掉' : '抄进法术书'} onClick={() => toggleBook(s.name)}>{inBook ? '书 ✓' : '抄进书'}</button>
                       )}
-                      <label className="ck" title={locked ? '常备法术，不占名额' : wizard && lv > 0 && !inBook ? '先抄进法术书' : ''}>
-                        <input type="checkbox" aria-label={`${s.name}：${lv ? '准备' : '学会'}`} checked={on || locked} disabled={locked || (wizard && lv > 0 && !inBook)} onChange={() => toggle(s.name, lv)} />
-                        {wizard && lv > 0 ? '备' : ''}
-                      </label>
-                      <button type="button" className="nm" onClick={() => setPeek(peek === s.name ? null : s.name)}>{s.name}</button>
-                      <span className="tiny faint">{SCHOOL_CN[s.school] ?? ''}</span>
-                      {conc && <Tag>专注</Tag>}
-                      {ritual && <Tag>仪式</Tag>}
-                      {locked && <Tag tone="accent">常备</Tag>}
+                      {/* 整行就是「选 / 不选」 */}
+                      <button
+                        type="button" className="pick" aria-pressed={on || locked}
+                        disabled={locked || (wizard && lv > 0 && !inBook)}
+                        title={locked ? '常备法术，不占名额' : wizard && lv > 0 && !inBook ? '先抄进法术书' : on ? '点一下取消' : lv ? '点一下准备' : '点一下学会'}
+                        onClick={() => toggle(s.name, lv)}
+                      >
+                        <span className="box">{on || locked ? '✓' : ''}</span>
+                        <span className="nm">{s.name}</span>
+                        <span className="tiny faint">{SCHOOL_CN[s.school] ?? ''}</span>
+                        {conc && <Tag>专注</Tag>}
+                        {ritual && <Tag>仪式</Tag>}
+                        {locked && <Tag tone="accent">常备</Tag>}
+                      </button>
+                      <button type="button" className="btn ghost sm" onClick={() => setPeek(peek === s.name ? null : s.name)}>{peek === s.name ? '收起' : '原文'}</button>
                       {peek === s.name && <div className="prose small peek"><Entries entries={s.entries || []} /></div>}
                     </div>
                   );

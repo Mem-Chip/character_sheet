@@ -124,8 +124,9 @@ export function choiceOptions(env: SheetEnv, char: CharData, sheet: Json, choice
     case 'artisan': return ok(env.tools.items('artisan').map((x) => ({ value: x.name, label: x.name })));
     case 'tool': return ok(env.tools.items('anyTool').map((x) => ({ value: x.name, label: x.name })));
     case 'language': return ok(env.languages.list().map((l) => ({ value: l.name, label: l.name })));
-    case 'weapon':
-    case 'weaponMastery': return ok(env.store.weapons2024.map((x) => ({ value: x.name, label: x.name })));
+    case 'weapon': return ok(env.store.weapons2024.map((x) => ({ value: x.name, label: x.name })));
+    // 枪械（城主指南）一般没有角色熟练，不列
+    case 'weaponMastery': return ok(env.store.weapons2024.filter((x) => x.mastery?.length && !x.firearm).map((x) => ({ value: x.name, label: x.name })));
     case 'subclass': {
       const out: PoolOption[] = [];
       for (const k of char._resolved?.classes || []) {

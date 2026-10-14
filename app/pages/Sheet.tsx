@@ -7,6 +7,7 @@ import { actions, useApp } from '../lib/store';
 import { useComputed } from '../lib/useSheet';
 import { SheetBuild } from './SheetBuild';
 import { SheetData } from './SheetData';
+import { SheetLevelUp } from './SheetLevelUp';
 import { SheetView } from './SheetView';
 
 export function download(name: string, text: string) {
@@ -22,7 +23,7 @@ export function SheetPage({ engine }: { engine: Engine }) {
   const id = app.currentId;
   const card = id ? app.cards[id] : null;
   const computed = useComputed(engine, id, card?.char ?? null);
-  const [tab, setTab] = useState<'view' | 'build' | 'data'>(card && !card.char.race && !card.char.classes?.[0]?.name ? 'build' : 'view');
+  const [tab, setTab] = useState<'view' | 'levelup' | 'build' | 'data'>(card && !card.char.race && !card.char.classes?.[0]?.name ? 'build' : 'view');
 
   if (!card || !id) {
     return <div className="page"><div className="empty">还没有打开角色。去 <button className="btn sm" onClick={() => actions.go('library')}>卡片库</button> 选一张，或者新建。</div></div>;
@@ -31,7 +32,8 @@ export function SheetPage({ engine }: { engine: Engine }) {
 
   const { char, sheet } = computed;
   const classes = (char.classes || []).filter((k: Json) => k.name).map((k: Json) => `${k.name} ${k.level}${k.subclass ? `（${k.subclass}）` : ''}`).join(' / ');
-  const pending = (sheet._pending || []).filter((c: Json) => !c.decided).length;
+  const pendingList: Json[] = (sheet._pending || []).filter((c: Json) => !c.decided);
+  const pending = pendingList.length;
   return (
     <div className="page">
       <div className="sheet-head">
@@ -41,7 +43,11 @@ export function SheetPage({ engine }: { engine: Engine }) {
         </div>
         <div className="row">
           <Tag>{sheet.level || 0} 级</Tag>
-          {pending > 0 && <Tag tone="warn">{pending} 项待决定</Tag>}
+          {pending > 0 && (
+            <button className="pendingtag" onClick={() => setTab('levelup')} title="点一下去选">
+              <Tag tone="warn">待决定：{pendingList.slice(0, 3).map((c) => c.label || c.id).join('、')}{pending > 3 ? ` 等 ${pending} 项` : ''}</Tag>
+            </button>
+          )}
         </div>
         <div className="tools row">
           <button className="btn sm" onClick={() => download(`${char.name || '人物卡'}.json`, actions.exportJson(id))}>导出 JSON</button>
@@ -49,10 +55,12 @@ export function SheetPage({ engine }: { engine: Engine }) {
       </div>
       <div className="tabs" role="tablist">
         <button role="tab" aria-selected={tab === 'view'} onClick={() => setTab('view')}>卡面</button>
-        <button role="tab" aria-selected={tab === 'build'} onClick={() => setTab('build')}>建卡{pending > 0 && <span className="count">●{pending}</span>}</button>
+        <button role="tab" aria-selected={tab === 'levelup'} onClick={() => setTab('levelup')}>升级</button>
+        <button role="tab" aria-selected={tab === 'build'} onClick={() => setTab('build')}>建卡 / 编辑{pending > 0 && <span className="count">●{pending}</span>}</button>
         <button role="tab" aria-selected={tab === 'data'} onClick={() => setTab('data')}>数据</button>
       </div>
       {tab === 'view' ? <SheetView engine={engine} id={id} char={char} sheet={sheet} />
+        : tab === 'levelup' ? <SheetLevelUp engine={engine} id={id} char={char} sheet={sheet} />
         : tab === 'data' ? <SheetData engine={engine} id={id} char={char} sheet={sheet} />
           : <SheetBuild engine={engine} id={id} char={char} sheet={sheet} />}
     </div>

@@ -151,12 +151,22 @@ function Spells({ engine, id, char, sheet }: Props) {
         {sc.casters?.length > 0 && <button className="btn sm primary" onClick={() => setBrowse(true)}>选法术…</button>}
       </>}
     >
-      {(sc.slots || []).some((v: number) => v) && (
-        <div className="row" style={{ marginBottom: 8 }}>
-          {(sc.slots as number[]).map((v, i) => v ? (
-            <span key={i} className="row" style={{ gap: 4 }}><span className="small faint">{i + 1} 环</span><Pips max={v} used={slotsUsed(i + 1)} onChange={(u) => setSlot(i + 1, u)} /></span>
+      {((sc.slots || []).some((v: number) => v) || sc.pact) && (
+        <div className="slots">
+          {(sc.slots || []).map((v: number, i: number) => v ? (
+            <div key={i} className="slot">
+              <span className="lv">{i + 1} 环</span>
+              <Pips max={v} used={slotsUsed(i + 1)} onChange={(u) => setSlot(i + 1, u)} />
+              <span className="left">剩 {Math.max(0, v - slotsUsed(i + 1))}</span>
+            </div>
           ) : null)}
-          {sc.pact && <span className="row" style={{ gap: 4 }}><span className="small faint">契约 {sc.pact.level} 环</span><Pips max={sc.pact.count} used={slotsUsed(sc.pact.level)} onChange={(u) => setSlot(sc.pact.level, u)} /></span>}
+          {sc.pact && (
+            <div className="slot">
+              <span className="lv">契约 {sc.pact.level} 环</span>
+              <Pips max={sc.pact.count} used={slotsUsed(sc.pact.level)} onChange={(u) => setSlot(sc.pact.level, u)} />
+              <span className="left">剩 {Math.max(0, sc.pact.count - slotsUsed(sc.pact.level))}</span>
+            </div>
+          )}
         </div>
       )}
       {sc.casters?.length > 0 && (
@@ -316,8 +326,8 @@ export function SheetView(p: Props) {
         </div>
         <Vitals {...p} />
         <Attacks {...p} />
-        <Features {...p} />
         <Spells {...p} />
+        <Features {...p} />
       </div>
       <div className="stack">
         {(sheet._pending || []).some((c: Json) => !c.decided) && <Choices {...p} />}
