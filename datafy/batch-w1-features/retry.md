@@ -2,6 +2,8 @@
 
 这一批其余的都做完了。下面每条：旧答案在 answers/<题号>.json，任务原文在 tasks/<题号>.md，后面是它没过的原因。改完照常 lint，全部改完再 collect。
 
+**注意**：「试算：」开头的问题是 collect 的模拟战斗里才出现的，lint 本来就能过 —— 改完一定要跑 collect，看 failures.json 里还有没有它。
+
 常见原因：
 - 「当前上下文没有 event / target / attack / slot」：在那个时机里用了不存在的名字。查 spec.md 里「每个时机能用什么」的表，换成那个时机有的（比如 d20 检定的时机用 roll）。
 - 「两边应该是数字，实际是骰子」：classTable 的骰子列（诗人激励骰、灵能骰…）是骰子，不能拿来做乘法；伤害、addToRoll、reduceDamage 可以直接带骰子。
