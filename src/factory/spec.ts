@@ -54,7 +54,7 @@ const WINDOWS: Array<[string, string, string, string, string]> = [
   ['attackHit', 'after', '同上', 'attack、roll、damage（已结算）', '—'],
   ['attackMissed', 'after', '攻击者 / 目标', 'attack、roll', '—'],
   ['saveForced', 'after', '迫使豁免的人 / 豁免的人', '—', '—'],
-  ['damageIncoming', 'before', '伤害来源 / 承受者', 'damage（掷出来的总数）、attack', 'reduceDamage、halveDamage、cancel'],
+  ['damageIncoming', 'before', '伤害来源 / 承受者', 'damage（掷出来的总数）、attack', 'reduceDamage（值可以带骰子，掷一次）、halveDamage、cancel'],
   ['damageTaken', 'after', '来源 / 承受者', 'damage', '—'],
   ['reducedTo0', 'before', '来源 / 承受者', 'damage', 'setHp（「改为降到 1」这类）'],
   ['turnStarted / turnEnded', 'after', '回合的主人', '—', '—'],

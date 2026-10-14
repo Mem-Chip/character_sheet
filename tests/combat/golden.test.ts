@@ -225,6 +225,17 @@ describe('#9 伤害调整顺序：加减值 → 抗性 → 易伤', () => {
     expect(a.byType).toEqual({ 火焰: 12 });
     expect(a.notes.join('；')).toMatch(/抗性.*易伤/);
   });
+
+  it('减伤可以带骰子（拦截 1d10 + 2）：掷一次', () => {
+    const { s, dice } = setup([goblin('x', { hpMax: 50 })]);
+    done(s.dispatch({
+      type: 'applyEffect', to: 'x', name: '拦截',
+      inline: { triggers: [{ id: 'r', label: '拦截', on: 'damageIncoming', role: 'target', window: 'before', modify: [{ op: 'reduceDamage', value: '1d10 + 2' }] }] },
+    }));
+    dice.push(5);
+    done(s.dispatch({ type: 'damage', id: 'x', amount: 15, damageType: '挥砍' }));
+    expect(last(s, 'damageApplied').total).toBe(15 - 7);
+  });
 });
 
 describe('#10 0 生命值时受到重击 → 2 次死亡豁免失败', () => {

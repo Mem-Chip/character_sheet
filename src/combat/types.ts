@@ -127,6 +127,7 @@ export interface TriggerSpec {
 export type Modify =
   | { op: 'reroll'; die: 'd20'; keep: 'new' | 'higher' | 'lower' }
   | { op: 'addToRoll'; value: ExprSrc }
+  /** value 可以带骰子（1d10 + pb），由能力持有者掷一次 */
   | { op: 'reduceDamage'; value: ExprSrc; types?: string[] }
   | { op: 'halveDamage' }
   | { op: 'setHp'; value: ExprSrc }

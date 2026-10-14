@@ -163,7 +163,7 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
     nodes(t.do, `${at}.do`);
     for (const m of t.modify ?? []) {
       if (!MODIFY_OPS.has(m.op)) out.push(`${where(at)}：未知修改「${m.op}」`);
-      if ('value' in m) expr(m.value, 'trigger', m.op === 'addToRoll' ? DICE : NUM, `${at}.modify`);
+      if ('value' in m) expr(m.value, 'trigger', m.op === 'addToRoll' || m.op === 'reduceDamage' ? DICE : NUM, `${at}.modify`);
     }
     if (t.modify?.length && (t.window ?? 'after') === 'after' && !t.deferTo) {
       out.push(`${where(at)}：modify 只能用在 before 窗口（after 时结果已经定了）`);

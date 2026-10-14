@@ -1,4 +1,4 @@
-import { Dice, Unknown, runInt, type Value } from '../expr';
+import { Dice, Unknown, runDice, runInt, type Value } from '../expr';
 import { rollModsOf } from './collect';
 import { controllerOf, d20Test, evaluateMods, filterMatches } from './d20';
 import { applyEffect, concentrationOf, effectiveView, effectsOf, endConcentration, endEffect } from './effects';
@@ -138,8 +138,13 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
       if (m.op === 'halveDamage') p.halve = true;
       else if (m.op === 'cancel') p.cancel = true;
       else if (m.op === 'reduceDamage') {
-        const v = runInt(m.value, makeEnv(tx, { self: by.owner, source: by.source, effect: by.effect }));
-        if (typeof v === 'number') p.reduce.push({ value: v, types: m.types });
+        // 可以带骰子（拦截 1d10 + 熟练加值）：由能力持有者的控制者掷一次
+        const v = runDice(m.value, makeEnv(tx, { self: by.owner, source: by.source, effect: by.effect }));
+        if (v instanceof Unknown) return;
+        const fs = v.isConstant ? [] : tx.roll(v.terms.map((t) => ({ faces: t.faces, count: t.count })), controllerOf(tx, by.owner), by.label);
+        let total = v.flat;
+        v.terms.forEach((t, i) => { total += t.sign * fs[i].reduce((a, b) => a + b, 0); });
+        p.reduce.push({ value: Math.max(0, total), types: m.types });
       }
     },
   });
