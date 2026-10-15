@@ -1,10 +1,11 @@
 /*
  * 视觉约定：典籍的骨架 + 现代工具的克制（design/styles/ 里 01 × 02 的结合）。
- * - 两套主题：浅色（旧纸）/ 深色（烛光下的旧书）。只换颜色 token，不换布局。
- * - 面板是带柔阴影的纸卡（圆角 8px）；标题用衬线体、朱砂色、略拉开字距，下面一道细双线。
+ * - 三套配色（灰蓝 / 灰绿 / 典籍，data-palette）× 浅色 / 深色（data-theme）。只换颜色 token，不换布局。
+ *   下面 :root 里是典籍的值；灰蓝、灰绿在文件末尾覆盖。
+ * - 面板是带柔阴影的卡片（圆角 8px）；标题用衬线体、强调色、略拉开字距，下面一道细双线。
  * - 不用花哨形状：属性、徽章都是方块；装饰只有纸纹、双线和少量金色细节。
  * - 名字、标题用衬线体；大数字用 EB Garamond；正文、表格、控件用无衬线；掷骰明细用等宽。
- * - 颜色语义：朱砂 = 强调 / 选中 / 当前；绿 = 友方、命中、治疗、生命；深红 = 伤害 / 危险 / 敌方；
+ * - 颜色语义：强调色（钢蓝 / 鼠尾草绿 / 朱砂）= 强调 / 选中 / 当前；绿 = 友方、命中、治疗、生命；深红 = 伤害 / 危险 / 敌方；
  *   琥珀 = 重击 / 警告；金 = 次要装饰。
  */
 
@@ -592,3 +593,101 @@ polyline.erasing { opacity: .25; }
 }
 .drawer-body .panel > header h3 { display: none; }
 .drawer-body .panel > header { border-bottom: 1px solid var(--line); }
+
+/* ───────── 配色：灰蓝 / 灰绿（典籍是上面 :root 的默认值）─────────
+ * 冷静的中性灰底，不用纸纹；强调色是低饱和的钢蓝 / 鼠尾草绿。深色版接近 03 魔典的夜色，但不发光、不用紫。 */
+:root[data-palette="slate"], :root[data-palette="sage"] {
+  --grain: none;
+  --shadow: 0 1px 2px rgba(20, 30, 45, .06), 0 3px 10px rgba(20, 30, 45, .06);
+  --shadow-lg: 0 4px 22px rgba(15, 25, 40, .16);
+  --gold: #8a7444;
+  --gold-bg: #efe9da;
+  --danger: #b03a4a;
+  --danger-bg: #f6e0e3;
+  --warn: #8a6416;
+  --warn-bg: #f4e9cc;
+}
+:root[data-palette="slate"] {
+  --bg: #e8ecf0;
+  --panel: #f7f9fb;
+  --panel-2: #e9eef3;
+  --field: #ffffff;
+  --ink: #1f2933;
+  --ink-2: #4a5866;
+  --ink-3: #7c8a98;
+  --line: #d6dee6;
+  --line-2: #b4c1ce;
+  --accent: #3a5f86;
+  --accent-ink: #f4f8fc;
+  --accent-bg: #dfe9f4;
+  --accent-line: #9fb7d0;
+  --good: #3d7a58;
+  --good-bg: #dcece2;
+  --focus: #3a5f86;
+}
+:root[data-palette="sage"] {
+  --bg: #e7ebe6;
+  --panel: #f7f9f6;
+  --panel-2: #e8ede5;
+  --field: #fdfefc;
+  --ink: #1e2924;
+  --ink-2: #4b5a52;
+  --ink-3: #7d8b83;
+  --line: #d5ddd4;
+  --line-2: #b2c0b4;
+  --accent: #3b6a5d;
+  --accent-ink: #f3f8f5;
+  --accent-bg: #dce9e3;
+  --accent-line: #9dbcaf;
+  /* 强调已经是绿的：友方 / 命中 / 治疗换成偏黄的橄榄绿，免得分不开 */
+  --good: #5d7d2a;
+  --good-bg: #e6edd3;
+  --focus: #3b6a5d;
+}
+:root[data-palette="slate"][data-theme="dark"], :root[data-palette="sage"][data-theme="dark"] {
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 3px 10px rgba(0, 0, 0, .25);
+  --shadow-lg: 0 6px 26px rgba(0, 0, 0, .5);
+  --gold: #c8ae72;
+  --gold-bg: #2c2818;
+  --danger: #ee8a96;
+  --danger-bg: #3a1f25;
+  --warn: #e0b868;
+  --warn-bg: #33291a;
+}
+:root[data-palette="slate"][data-theme="dark"] {
+  --bg: #12161c;
+  --panel: #1a2029;
+  --panel-2: #222a35;
+  --field: #151a21;
+  --ink: #e2e8ef;
+  --ink-2: #a8b4c2;
+  --ink-3: #74818f;
+  --line: #29323e;
+  --line-2: #3b4655;
+  --accent: #8fb2da;
+  --accent-ink: #0f1620;
+  --accent-bg: #1f2c3c;
+  --accent-line: #3f5874;
+  --good: #84c39b;
+  --good-bg: #1c2c23;
+  --focus: #8fb2da;
+}
+:root[data-palette="sage"][data-theme="dark"] {
+  --bg: #121614;
+  --panel: #1a201d;
+  --panel-2: #222a26;
+  --field: #151a17;
+  --ink: #e1e9e4;
+  --ink-2: #a7b5ac;
+  --ink-3: #73817a;
+  --line: #28322d;
+  --line-2: #3a4741;
+  --accent: #8cc3ad;
+  --accent-ink: #0f1814;
+  --accent-bg: #1e2e28;
+  --accent-line: #3f6355;
+  --good: #b4cd7c;
+  --good-bg: #262d1a;
+  --focus: #8cc3ad;
+}
+.palette-sel { height: 24px; font-size: 12px; padding: 0 4px; }

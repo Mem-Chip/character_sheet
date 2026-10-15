@@ -33,17 +33,26 @@ export interface AppState {
   currentId: string | null;
   page: Page;
   theme: Theme;
+  palette: Palette;
 }
+
+/** 配色（和浅色 / 深色独立）：灰蓝、灰绿、典籍（旧纸 + 朱砂） */
+export type Palette = 'slate' | 'sage' | 'codex';
+export const PALETTES: Array<[Palette, string]> = [['slate', '灰蓝'], ['sage', '灰绿'], ['codex', '典籍']];
 
 const KEY = 'dnd2024-engine:v1';
 const THEME_KEY = 'dnd2024-engine:theme';
+const PALETTE_KEY = 'dnd2024-engine:palette';
 
 export const stripDerived = (c: CharData): CharData =>
   Object.fromEntries(Object.entries(c).filter(([k]) => !k.startsWith('_'))) as CharData;
 
 function load(): AppState {
   let theme: Theme = 'light';
+  let palette: Palette = 'slate';
   try {
+    const p = localStorage.getItem(PALETTE_KEY);
+    if (PALETTES.some(([k]) => k === p)) palette = p as Palette;
     const t = localStorage.getItem(THEME_KEY);
     if (t === 'dark' || t === 'light') theme = t;
     else if (matchMedia('(prefers-color-scheme: dark)').matches) theme = 'dark';
@@ -52,10 +61,10 @@ function load(): AppState {
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const s = JSON.parse(raw) as Partial<AppState>;
-      return { cards: s.cards ?? {}, order: s.order ?? [], currentId: s.currentId ?? null, page: s.page ?? 'library', theme };
+      return { cards: s.cards ?? {}, order: s.order ?? [], currentId: s.currentId ?? null, page: s.page ?? 'library', theme, palette };
     }
   } catch { /* 坏了就从空的开始 */ }
-  return { cards: {}, order: [], currentId: null, page: 'library', theme };
+  return { cards: {}, order: [], currentId: null, page: 'library', theme, palette };
 }
 
 let state: AppState = load();
@@ -65,6 +74,7 @@ function persist(): void {
   try {
     localStorage.setItem(KEY, JSON.stringify({ cards: state.cards, order: state.order, currentId: state.currentId, page: state.page }));
     localStorage.setItem(THEME_KEY, state.theme);
+    localStorage.setItem(PALETTE_KEY, state.palette);
   } catch { /* 存不下（配额）：这次会话照常用 */ }
 }
 
@@ -92,6 +102,10 @@ export const actions = {
   setTheme(theme: Theme) {
     document.documentElement.dataset.theme = theme;
     set({ theme });
+  },
+  setPalette(palette: Palette) {
+    document.documentElement.dataset.palette = palette;
+    set({ palette });
   },
   open(id: string) { set({ currentId: id, page: 'sheet' }); },
 
@@ -145,4 +159,7 @@ export const actions = {
   },
 };
 
-if (typeof document !== 'undefined') document.documentElement.dataset.theme = state.theme;
+if (typeof document !== 'undefined') {
+  document.documentElement.dataset.theme = state.theme;
+  document.documentElement.dataset.palette = state.palette;
+}
