@@ -411,6 +411,10 @@ export function freeSlots(s: Session, id: string, min: number, max = 9): number[
 }
 
 /** 执行一个动作。slotLevel 没给或者用不了 → 用最低的可用环阶 */
+/** 射程（尺）：触及 / 触及范围 = 5 尺；自身或没写 = 不查 */
+const rangeOf = (r: number | 'touch' | 'self' | 'reach' | undefined): number | null =>
+  typeof r === 'number' ? r : r === 'touch' || r === 'reach' ? 5 : null;
+
 export function runAction(s: Session, ui: CombatUi, id: string, it: ActItem, slotPick?: number, asReaction = false): void {
   // 付不起代价的动作也能点：DM 可以强制执行（不检查代价和次数）
   const force = !it.ok;
@@ -439,7 +443,11 @@ export function runAction(s: Session, ui: CombatUi, id: string, it: ActItem, slo
   if (it.needsTargets) {
     const t = it.action.targeting;
     const max = t?.type === 'creature' ? s.peek((tx) => maxTargets(tx, id, it.action, slotLevel)) : null;
-    combat.startAim({ actor: id, ref: it.ref, name: it.name, max, repeat: !!t?.repeat, cmd });
+    const area = t?.type === 'area' && t.area
+      // 锥和线都从施法者身上出发（数据里个别写了数字射程的也是）
+      ? { area: t.area, self: t.range === 'self' || t.area.shape === 'cone' || t.area.shape === 'line' }
+      : undefined;
+    combat.startAim({ actor: id, ref: it.ref, name: it.name, max, repeat: !!t?.repeat, cmd, range: rangeOf(t?.range), area });
     return;
   }
   combat.dispatch(cmd);

@@ -7,10 +7,12 @@
 import { useSyncExternalStore } from 'react';
 import { combatantFromSheet, syncLiveToChar, viewFromSheet } from '../../src/bridge/from-sheet';
 import {
-  Session, createEncounter, defaultDiceMode, diceSourceFor, makeCombatant, makeView, chatEntry, physicalDice, type ChatRoll,
+  Session, createEncounter, defaultDiceMode, diceSourceFor, footprint, gridSpatial, makeCombatant, makeView, chatEntry, physicalDice, type ChatRoll,
+  type Area, type Positions,
   type Command, type DispatchResult, type EngineCtx, type OverridePatch, type SessionSave, type ViewInit,
 } from '../../src/combat';
 import { api } from './api';
+import type { Tpl } from './area';
 import type { Engine } from './engine';
 import { actions as cardActions, getApp, stripDerived } from './store';
 
@@ -50,6 +52,10 @@ export interface Aim {
   picks: string[];
   /** 确认时发出去的命令（targets 那一项由 picks 填） */
   cmd: Command;
+  /** 射程（尺）：地图上量得出距离时，超出的点不进来；null = 不查 */
+  range: number | null;
+  /** 范围法术：在地图上放模板，圈里的人自动选中；self = 从施法者身上出发 */
+  area?: { area: Area; self: boolean };
 }
 
 export interface Remote {
@@ -66,6 +72,8 @@ export interface Remote {
   hidden: string[];
   map: MapState;
   chat: ChatRoll[];
+  /** DM 正在替这个控制者操作（这一笔里的决定归 DM） */
+  actingAs: string | null;
   connected: boolean;
 }
 
@@ -75,10 +83,14 @@ export interface MapState {
   bg: { img: string; w: number; h: number } | null;
   strokes: Stroke[];
   tokens: Record<string, { x: number; y: number }>;
+  /** 测量用的形状（大家都看得到） */
+  shapes?: Array<{ id: string; by: number; color: string; tpl: Tpl }>;
+  /** 当前回合的人这一回合走过的格子；key = 轮次:先攻位置 */
+  trail?: { id: string; key: string; cells: Array<{ x: number; y: number }> } | null;
 }
 interface RemoteState {
   save: SessionSave; owners: Record<string, number>; cards: Record<string, string>; name: string;
-  dice?: Record<string, DiceMode>; hidden?: string[]; map?: MapState; chat?: ChatRoll[];
+  dice?: Record<string, DiceMode>; hidden?: string[]; map?: MapState; chat?: ChatRoll[]; actingAs?: string | null;
 }
 
 let ui: CombatUi = { session: null, version: 0, links: {}, dice: {}, selected: null, targets: [], aim: null, chat: [], toast: null, remote: null };
@@ -198,7 +210,7 @@ function applyRemote(data: RemoteState): void {
     const cur = st.round !== null ? st.order[st.turnIndex] : null;
     const selected = ui.selected && st.combatants[ui.selected] ? ui.selected : cur ?? Object.keys(st.combatants)[0] ?? null;
     set({ session, links: data.cards, selected, targets: ui.targets.filter((t) => st.combatants[t]), remote: {
-      ...ui.remote, owners: data.owners, name: data.name, dice: data.dice ?? {}, hidden: data.hidden ?? [], map: data.map ?? ui.remote.map, chat: data.chat ?? ui.remote.chat, connected: true,
+      ...ui.remote, owners: data.owners, name: data.name, dice: data.dice ?? {}, hidden: data.hidden ?? [], map: data.map ?? ui.remote.map, chat: data.chat ?? ui.remote.chat, actingAs: data.actingAs ?? null, connected: true,
     } }, false);
   } catch (e) {
     toast('同步遭遇失败：' + (e as Error).message);
@@ -213,7 +225,7 @@ export const combat = {
     const info = await api<RemoteState & { role: 'dm' | 'player'; me: number; campaignId: string; map: MapState }>('GET', `encounters/${encounterId}`);
     ui = {
       ...ui, selected: null, targets: [],
-      remote: { id: encounterId, name: info.name, campaignId: info.campaignId, role: info.role, me: info.me, owners: info.owners, dice: {}, hidden: [], map: info.map, chat: [], connected: false },
+      remote: { id: encounterId, name: info.name, campaignId: info.campaignId, role: info.role, me: info.me, owners: info.owners, dice: {}, hidden: [], map: info.map, chat: [], actingAs: null, connected: false },
     };
     applyRemote(info);
     stream = new EventSource(new URL('api/', document.baseURI).pathname + `encounters/${encounterId}/stream`);
@@ -230,6 +242,23 @@ export const combat = {
     initCombat(engine);
   },
   /** 这个参与者我能不能操作（本地遭遇：都能） */
+  /** 地图上的棋子位置（战役遭遇才有地图） */
+  positions(): Positions | null {
+    const r = ui.remote, st = ui.session?.state;
+    if (!r || !st) return null;
+    const out: Positions = {};
+    for (const [id, t] of Object.entries(r.map.tokens)) {
+      const c = st.combatants[id];
+      if (c) out[id] = { x: t.x, y: t.y, s: footprint(c.base.size) };
+    }
+    return out;
+  },
+  /** 两个参与者之间多少尺（不在地图上 → null） */
+  distance(a: string, b: string): number | null {
+    const pos = combat.positions();
+    if (!pos || !ui.session) return null;
+    return gridSpatial(pos, ui.session.state, ui.remote?.map.grid.diagonal ?? '5').distance(a, b);
+  },
   canControl(combatantId: string | null): boolean {
     const r = ui.remote;
     if (!r || r.role === 'dm' || !combatantId) return true;
@@ -243,6 +272,8 @@ export const combat = {
     if (!p) return false;
     if (!r) return true;
     const owner = r.owners[p.decision.to];
+    // DM 替玩家操作时，这一笔里问那个角色的事归 DM
+    if (r.actingAs === p.decision.to) return r.role === 'dm';
     return r.role === 'dm' ? owner === undefined : owner === r.me;
   },
   /** 玩家视角下藏起来的参与者（DM 和本地遭遇：没有） */
@@ -327,7 +358,14 @@ export const combat = {
     if (!a) return;
     if (!a.repeat && a.picks.includes(id)) { set({ aim: { ...a, picks: a.picks.filter((x) => x !== id) } }, false); return; }
     if (a.max != null && a.picks.length >= a.max) { toast(`「${a.name}」最多 ${a.max} 个目标`); return; }
+    const d = a.range != null && id !== a.actor ? combat.distance(a.actor, id) : null;
+    if (d != null && d > a.range!) { toast(`${ui.session?.state.combatants[id]?.name ?? id} 相距 ${d} 尺，超出「${a.name}」的射程 ${a.range} 尺`); return; }
     set({ aim: { ...a, picks: [...a.picks, id] } }, false);
+  },
+  /** 范围模板圈到的人：整个换掉 */
+  aimSet(ids: string[]): void {
+    const a = ui.aim;
+    if (a) set({ aim: { ...a, picks: ids } }, false);
   },
   /** 去掉一份 */
   aimUnpick(id: string): void {
@@ -340,7 +378,7 @@ export const combat = {
   aimConfirm(): void {
     const a = ui.aim;
     if (!a || !a.picks.length) return;
-    set({ aim: null, targets: [...new Set(a.picks)] });
+    set({ aim: null, targets: [] });
     combat.dispatch({ ...a.cmd, targets: a.picks } as Command);
   },
   /** 点了参与者（地图棋子、先攻条、列表）：选目标模式里是加目标，平时是选中 */

@@ -205,6 +205,17 @@ export function gridFeet(dx: number, dy: number, diagonal: Diagonal = '5'): numb
   return (straight + diag + (diagonal === '5-10-5' ? Math.floor(diag / 2) : 0)) * 5;
 }
 
+/** 折线（一串格子）的总长：5-10-5 时斜走的单双数跨段累计 */
+export function pathFeet(cells: Array<{ x: number; y: number }>, diagonal: Diagonal = '5'): number {
+  let straight = 0, diag = 0;
+  for (let i = 1; i < cells.length; i++) {
+    const a = Math.abs(cells[i].x - cells[i - 1].x), b = Math.abs(cells[i].y - cells[i - 1].y);
+    diag += Math.min(a, b);
+    straight += Math.max(a, b) - Math.min(a, b);
+  }
+  return (straight + diag + (diagonal === '5-10-5' ? Math.floor(diag / 2) : 0)) * 5;
+}
+
 /**
  * 按格子算的空间查询。距离 = 两者占的格子之间最近的那两格之间走过去的距离（gridFeet）。
  * 不在地图上的 → null（问人）。

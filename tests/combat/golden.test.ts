@@ -3,7 +3,7 @@
  * 骰面全部预先写好：多掷一颗或少掷一颗都会让测试失败 —— 那本身就是规则 bug。
  */
 import { describe, expect, it } from 'vitest';
-import { Session, createEncounter, gridFeet, gridSpatial, makeView, type Positions } from '../../src/combat';
+import { Session, createEncounter, gridFeet, gridSpatial, pathFeet, makeView, type Positions } from '../../src/combat';
 import { barbarian, cleric, done, effectNames, evs, fighter, goblin, has, last, pending, rogue, setup, wizard } from './helpers';
 
 describe('#1 倒地：5 尺内优势，5 尺外劣势', () => {
@@ -445,6 +445,13 @@ describe('地图：按棋子位置自动判断距离', () => {
     expect(gridFeet(3, 3, '5-10-5')).toBe(20);
     expect(gridFeet(-2, 3, '5-10-5')).toBe(20);
     expect(gridFeet(1, 1, '5-10-5')).toBe(5);
+  });
+
+  it('折线总长：5-10-5 的单双数跨段累计（斜 1 + 斜 1 = 15 尺，不是 10 尺）', () => {
+    const p = [{ x: 0, y: 0 }, { x: 1, y: 1 }, { x: 2, y: 2 }, { x: 2, y: 5 }];
+    expect(pathFeet(p)).toBe(25);
+    expect(pathFeet(p, '5-10-5')).toBe(30);
+    expect(pathFeet([{ x: 0, y: 0 }])).toBe(0);
   });
 });
 

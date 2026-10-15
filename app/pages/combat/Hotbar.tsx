@@ -33,11 +33,16 @@ export function AimBar({ ui, name }: { ui: CombatUi; name: Namer }) {
       <div className="aim-head">
         <b className="serif">「{a.name}」选目标</b>
         <span className="num">{a.picks.length}{a.max != null ? ` / ${a.max}` : ''}</span>
-        <span className="tiny faint">{a.repeat ? '同一个可以选好几次 · ' : ''}点棋子或先攻条里的人加进来，右键去掉{a.max != null && a.max > 1 ? '；可以少选' : ''}</span>
+        <span className="tiny faint">
+          {a.area
+            ? `在地图上点一下放范围${a.area.self ? (a.area.area.shape === 'emanation' || a.area.area.shape === 'sphere' || a.area.area.shape === 'cylinder' ? '（以你为中心）' : '（从你身上出发，跟着鼠标转向）') : ''}，圈里的人自动选中；先攻条里点人可以加减`
+            : `${a.repeat ? '同一个可以选好几次 · ' : ''}点棋子或先攻条里的人加进来，右键去掉${a.max != null && a.max > 1 ? '；可以少选' : ''}`}
+          {a.range != null && !a.area?.self ? ` · 射程 ${a.range} 尺` : ''}
+        </span>
       </div>
       <div className="aim-picks">
         {[...counts].map(([id, n]) => (
-          <button key={id} className="tag" onClick={() => combat.aimUnpick(id)} title="去掉一个">{name(id)}{n > 1 ? ` ×${n}` : ''} ✕</button>
+          <button key={id} className="tag" onClick={() => combat.aimUnpick(id)} title="去掉一个">{combat.isHidden(id) ? '看不见的东西' : name(id)}{n > 1 ? ` ×${n}` : ''} ✕</button>
         ))}
         {!a.picks.length && <span className="faint small">还没选。</span>}
         <span style={{ flex: 1 }} />

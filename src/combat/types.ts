@@ -256,6 +256,8 @@ export interface AttackRow {
   ability: Ability;
   mastery?: string | null;
   range?: number;
+  /** 远射程（劣势也能打到的最远距离） */
+  long?: number;
 }
 
 /** 静态数值快照（PC 来自人物卡管线，怪物来自数据卡，测试里手搓） */

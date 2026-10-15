@@ -537,7 +537,8 @@ export function weaponAction(row: AttackRow): Action {
     name: row.name,
     activation: 'none',
     cost: [{ economy: 'attack' }],
-    targeting: { type: 'creature', count: 1, range: row.range },
+    // 射程：近战按触及（5 / 10 尺），能投掷 / 远程的按远射程
+    targeting: { type: 'creature', count: 1, range: Math.max(row.melee ? (row.reach ? 10 : 5) : 0, row.long ?? row.range ?? 0) || undefined },
     root: [{ kind: 'attack', bonus: row.bonus, attack, onHit: [{ kind: 'damage', dice: row.damage, type: normType(row.damageType) }] }],
     tags: ['weapon'],
   };

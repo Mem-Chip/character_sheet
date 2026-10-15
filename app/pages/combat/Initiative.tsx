@@ -26,7 +26,7 @@ export function Initiative({ s, ui, name }: { s: Session; ui: CombatUi; name: Na
 
   let status: string;
   const verb = pending?.decision.kind === 'physicalDice' ? '掷骰' : '决定';
-  if (pending) status = combat.isMyDecision() && r?.role !== 'dm' ? `该你${verb}` : `等${name(pending.decision.to)}${verb}`;
+  if (pending) status = combat.isMyDecision() && (r?.role !== 'dm' || r.actingAs === pending.decision.to) ? `该你${verb}` : `等${name(pending.decision.to)}${verb}`;
   else if (!inCombat) status = ids.length ? '战斗未开始' : '还没有参与者';
   else {
     // 谁在操作：归我的 → 轮到你了；没归属的（怪物、NPC）→ DM；归别的玩家 → 等那个人

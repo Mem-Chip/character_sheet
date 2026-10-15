@@ -35,6 +35,10 @@ export interface Deps {
 }
 
 export interface Stroke { id: string; by: number; color: string; width: number; pts: number[] }
+/** 测量用的形状（app/lib/area.ts 的 Tpl：圆 / 方 / 锥 / 线，世界坐标） */
+export interface Shape { id: string; by: number; color: string; tpl: Record<string, number | string> }
+/** 当前回合的人这一回合走过的格子（key = 轮次:先攻位置，换人就作废） */
+export interface Trail { id: string; key: string; cells: Array<{ x: number; y: number }> }
 export interface MapState {
   /** 一格多少像素（底图坐标）、格子原点偏移、格子铺多大、显不显示 */
   grid: { size: number; ox: number; oy: number; cols: number; rows: number; show: boolean; diagonal?: Diagonal; paper?: string; line?: string };
@@ -42,11 +46,15 @@ export interface MapState {
   strokes: Stroke[];
   /** 参与者 id → 格子坐标（占的左上角那一格） */
   tokens: Record<string, { x: number; y: number }>;
+  shapes: Shape[];
+  trail: Trail | null;
 }
 /** '#abc' / '#aabbcc' / '#aabbcc80'；'' 清掉；其余保持原值 */
 const hexOr = (v: unknown, old?: string): string | undefined =>
   v === '' ? undefined : typeof v === 'string' && /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(v) ? v : old;
-const newMap = (): MapState => ({ grid: { size: 50, ox: 0, oy: 0, cols: 30, rows: 20, show: true }, bg: null, strokes: [], tokens: {} });
+const newMap = (): MapState => ({ grid: { size: 50, ox: 0, oy: 0, cols: 30, rows: 20, show: true }, bg: null, strokes: [], tokens: {}, shapes: [], trail: null });
+const SHAPE_KEYS: Record<string, string[]> = { circle: ['cx', 'cy', 'r'], rect: ['x', 'y', 'w', 'h'], cone: ['x', 'y', 'len', 'dir'], line: ['x', 'y', 'len', 'width', 'dir'] };
+const MAX_SHAPES = 200;
 const MAX_STROKES = 3000;
 const MAX_PTS = 4000;
 
@@ -66,6 +74,8 @@ interface Live {
   map: MapState;
   /** 指令框掷的骰（/r、/pr），最近 300 条 */
   chat: ChatRoll[];
+  /** DM 在替玩家的角色操作：这一笔里问这个控制者的事（掷骰、选项）都算 DM 的，骰子按 DM 的设置 */
+  actingAs: string | null;
   ctx: EngineCtx;
   seq: number;
   watchers: Set<ServerResponse>;
@@ -89,10 +99,11 @@ export function createEncounters(d: Deps) {
   const live = new Map<string, Live>();
 
   /** 每场遭遇自己的引擎上下文：骰子按这场的设置，棋子位置按这场的地图 */
-  function ctxOf(e: { dice: Live['dice']; map: MapState; session?: Session }): EngineCtx {
+  function ctxOf(e: { dice: Live['dice']; map: MapState; session?: Session; actingAs?: string | null }): EngineCtx {
+    const modeOf = (user: string) => e.dice[user] ?? e.dice['*'] ?? defaultDiceMode(user);
     return {
       rules,
-      diceFor: (user) => diceSourceFor(e.dice[user] ?? e.dice['*'] ?? defaultDiceMode(user)),
+      diceFor: (user) => diceSourceFor(e.actingAs === user ? modeOf('dm') : modeOf(user)),
       positions: () => {
         const st = e.session?.state;
         if (!st) return null;
@@ -116,7 +127,7 @@ export function createEncounters(d: Deps) {
     const e = {
       id, campaignId: String(r.campaign_id), name: String(r.name),
       owners: meta.owners ?? {}, cards: meta.cards ?? {}, dice: meta.dice ?? {}, hidden: meta.hidden ?? [], chat: meta.chat ?? [],
-      map: { ...newMap(), ...(meta.map ?? {}) }, seq: 0, watchers: new Set(),
+      actingAs: meta.actingAs ?? null, map: { ...newMap(), ...(meta.map ?? {}) }, seq: 0, watchers: new Set(),
     } as unknown as Live;
     e.ctx = ctxOf(e);
     e.session = Session.restore(JSON.parse(String(r.save)) as SessionSave, e.ctx);
@@ -126,9 +137,9 @@ export function createEncounters(d: Deps) {
 
   const stateOf = (e: Live) => ({
     id: e.id, name: e.name, campaignId: e.campaignId, seq: e.seq, owners: e.owners, cards: e.cards,
-    dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, save: e.session.save(),
+    dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, save: e.session.save(),
   });
-  const metaOf = (e: Live) => JSON.stringify({ owners: e.owners, cards: e.cards, dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat });
+  const metaOf = (e: Live) => JSON.stringify({ owners: e.owners, cards: e.cards, dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs });
   const broadcast = (e: Live, event: string, data: unknown) => {
     const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
     for (const w of e.watchers) w.write(msg);
@@ -182,8 +193,17 @@ export function createEncounters(d: Deps) {
         const id = String(b.id ?? '');
         if (!e.session.state.combatants[id]) return '没有这个参与者';
         if (!dm && ownerOf(e, id) !== u.id) return '只能移动自己的棋子';
-        if (b.x == null) delete m.tokens[id];
-        else m.tokens[id] = { x: num(b.x, -200, 1000), y: num(b.y, -200, 1000) };
+        const from = m.tokens[id];
+        if (b.x == null) { delete m.tokens[id]; return null; }
+        const to = { x: num(b.x, -200, 1000), y: num(b.y, -200, 1000) };
+        m.tokens[id] = to;
+        // 回合中，轮到的人移动：记下这一回合走过的路（换人、换轮就重新开始）
+        const st = e.session.state;
+        if (from && st.round !== null && st.order[st.turnIndex] === id) {
+          const key = `${st.round}:${st.turnIndex}`;
+          if (m.trail?.id === id && m.trail.key === key) m.trail.cells = [...m.trail.cells, to].slice(-200);
+          else m.trail = { id, key, cells: [from, to] };
+        }
         return null;
       }
       case 'stroke': {
@@ -194,16 +214,34 @@ export function createEncounters(d: Deps) {
         m.strokes.push({ id: randomUUID().slice(0, 8), by: u.id, color, width: num(b.width, 1, 40), pts });
         return null;
       }
+      case 'shape': {
+        const t = (b.tpl ?? {}) as Row;
+        const keys = SHAPE_KEYS[String(t.shape)];
+        if (!keys) return '不认识的形状';
+        const tpl: Shape['tpl'] = { shape: String(t.shape) };
+        for (const k of keys) {
+          const v = Math.round(Number(t[k]) * 1000) / 1000;
+          if (!Number.isFinite(v) || Math.abs(v) > 1e6) return '形状的数不对';
+          tpl[k] = v;
+        }
+        if (m.shapes.length >= MAX_SHAPES) return '形状太多了，先擦掉一些';
+        const color = /^#[0-9a-f]{6}$/i.test(String(b.color)) ? String(b.color) : '#1f5f99';
+        m.shapes.push({ id: randomUUID().slice(0, 8), by: u.id, color, tpl });
+        return null;
+      }
       case 'erase': {
+        // 线和形状一起擦
         const ids = new Set((Array.isArray(b.ids) ? b.ids : [b.id]).map(String));
-        const hit = m.strokes.filter((x) => ids.has(x.id));
+        const hit = [...m.strokes, ...m.shapes].filter((x) => ids.has(x.id));
         if (!dm && hit.some((x) => x.by !== u.id)) return '只能擦自己画的';
         m.strokes = m.strokes.filter((x) => !ids.has(x.id));
+        m.shapes = m.shapes.filter((x) => !ids.has(x.id));
         return null;
       }
       case 'clear':
-        // DM 清全部；玩家（或 DM 选「只清我的」）清自己画的
+        // DM 清全部；玩家（或 DM 选「只清我的」）清自己画的（线和形状）
         m.strokes = dm && !b.mine ? [] : m.strokes.filter((x) => x.by !== u.id);
+        m.shapes = dm && !b.mine ? [] : m.shapes.filter((x) => x.by !== u.id);
         return null;
       case 'grid':
         if (!dm) return '只有 DM 能调格子';
@@ -251,7 +289,7 @@ export function createEncounters(d: Deps) {
         const now = Date.now();
         // 从上一场复制地图（底图、格子、画笔；棋子不带）
         const src = typeof b.copyMapFrom === 'string' ? load(b.copyMapFrom) : null;
-        const map = src && src.campaignId === m[1] ? { ...structuredClone(src.map), tokens: {} } : null;
+        const map = src && src.campaignId === m[1] ? { ...structuredClone(src.map), tokens: {}, trail: null } : null;
         if (map?.bg) map.bg.img = randomUUID();
         d.run('INSERT INTO encounters (id, campaign_id, name, save, meta, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?)',
           id, m[1], name, JSON.stringify(s.save()), map ? JSON.stringify({ map }) : '{}', now, now);
@@ -312,6 +350,10 @@ export function createEncounters(d: Deps) {
         const why = check(e, u, role, cmd);
         if (why) return reject(why);
         if (s.pending) return reject('还有一个决定没做完');
+        // DM 动玩家的角色：这一笔里 DM 就是它的主人
+        const subj = subjectOf(cmd);
+        const ctl = subj ? e.session.state.combatants[subj]?.controller ?? subj : null;
+        e.actingAs = role === 'dm' && ctl && e.owners[ctl] != null ? ctl : null;
         r = s.dispatch(cmd);
         if (r.status !== 'rejected' && cmd.type === 'addCombatant') {
           const ctl = cmd.combatant.controller ?? cmd.combatant.id;
@@ -335,7 +377,7 @@ export function createEncounters(d: Deps) {
         if (role !== 'dm') return reject('只有 DM 能撤销、裁定、清空');
         if (op === 'undo') s.undo(Math.max(1, Number(b.n ?? 1)));
         else if (op === 'override') r = s.override(Number(b.txIndex), b.patch as OverridePatch);
-        else { e.owners = {}; e.cards = {}; e.hidden = []; e.chat = []; e.map.tokens = {}; e.session = new Session(createEncounter(e.id), e.ctx); }
+        else { e.owners = {}; e.cards = {}; e.hidden = []; e.chat = []; e.map.tokens = {}; e.map.trail = null; e.session = new Session(createEncounter(e.id), e.ctx); }
       } else if (op === 'setDice') {
         // 玩家只能改自己控制的；DM 什么都能改（包括默认 '*' 和怪物 'dm'）
         const who = String(b.user ?? '');

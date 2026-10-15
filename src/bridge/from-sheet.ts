@@ -109,7 +109,7 @@ export function viewFromSheet(env: SheetEnv, char: CharData, sheet: Json): Comba
     const props: string[] = (row.ent?.property || []).map((p: unknown) => String(p).split('|')[0]);
     const dmgMod = (sheet['mod:' + row.abil] || 0) + (Number(/([+-]\s*\d+)$/.exec(String(row.ent?.dmg1 || ''))?.[1]?.replace(/\s/g, '')) || 0);
     const damage = row.dmg === '—' ? '0' : `${row.dmg}${dmgMod ? (dmgMod > 0 ? ` + ${dmgMod}` : ` - ${-dmgMod}`) : ''}`;
-    const range = Number(String(row.range ?? '').split('/')[0]) || undefined;
+    const [range, long] = String(row.range ?? '').split('/').map((x) => Number(x) || undefined);
     return {
       id: `${row.name}#${i}`,
       name: row.name,
@@ -123,6 +123,7 @@ export function viewFromSheet(env: SheetEnv, char: CharData, sheet: Json): Comba
       ability: row.abil as Ability,
       mastery: masteries.has(row.name) ? (row.mastery?.[0] ?? null) : null,
       range,
+      long,
     };
   });
 

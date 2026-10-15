@@ -414,14 +414,12 @@ pre.json { margin: 0; max-height: 320px; overflow: auto; font-family: var(--font
 .swatch { width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--line-2); padding: 0; cursor: pointer; }
 .swatch.on { outline: 2px solid var(--accent); outline-offset: 1px; }
 polyline.erasing { opacity: .25; }
-.token circle { stroke-width: 2; fill: var(--panel); stroke: var(--ink-3); }
+.token circle.body { stroke-width: 2; fill: var(--panel); stroke: var(--ink-3); }
 .token text { text-anchor: middle; fill: var(--ink); font-family: var(--font-ui); pointer-events: none; }
-.token.party circle { fill: var(--good-bg); stroke: var(--good); }
-.token.enemy circle { fill: var(--danger-bg); stroke: var(--danger); }
+.token.party circle.body { fill: var(--good-bg); stroke: var(--good); }
+.token.enemy circle.body { fill: var(--danger-bg); stroke: var(--danger); }
 .token.mine { cursor: move; }
-.token.sel circle { stroke-width: 4; stroke: var(--accent); }
-.token.turn circle { stroke-dasharray: 6 3; stroke-width: 4; }
-.token.tgt circle { stroke: var(--danger); stroke-width: 5; }
+.token.turn circle.body { stroke-dasharray: 6 3; stroke-width: 4; }
 .token.dead { opacity: .45; }
 .token.hid { opacity: .5; }
 .map-dist { fill: var(--ink); paint-order: stroke; stroke: var(--panel); stroke-width: 3px; text-anchor: middle; font-family: var(--font-ui); }
@@ -816,3 +814,20 @@ polyline.erasing { opacity: .25; }
 /* 窄布局：左栏别被内容撑宽、压到右栏上 */
 .sheet-grid > * { min-width: 0; }
 :root[data-width="narrow"] .sheet-grid { grid-template-columns: 280px minmax(0, 1fr); }
+/* 选中 = 外面一圈黄；目标 = 外面一圈红虚线（和敌方的红色本体分开） */
+:root { --sel: #e3b341; }
+.token circle.ring-sel { fill: none; stroke: var(--sel); stroke-width: 3; pointer-events: none; }
+.token circle.ring-tgt { fill: none; stroke: var(--danger); stroke-width: 2.5; stroke-dasharray: 5 3; pointer-events: none; }
+.ini-chip.sel .ini-dot { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--sel); }
+.ini-chip.tgt .ini-dot { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--danger); }
+.ini-chip.sel.tgt .ini-dot { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--sel), 0 0 0 6px var(--danger); }
+.hot-econ span:not(.on) .cost-ic { filter: grayscale(1); opacity: .45; }
+/* 形状、这回合走过的路、范围法术模板 */
+.map-shape text, .map-aoe text { text-anchor: middle; dominant-baseline: middle; }
+.map-trail polyline { stroke: var(--sel); opacity: .9; }
+.map-trail text { fill: var(--sel); }
+.map-aoe path { fill: var(--accent); fill-opacity: .14; stroke: var(--accent); stroke-dasharray: 6 4; pointer-events: none; }
+.map-aoe.fixed path { fill-opacity: .22; stroke-dasharray: none; }
+.map-aoe.bad path { fill: var(--danger); stroke: var(--danger); }
+.map-aoe text { pointer-events: none; }
+.map-measure polyline { stroke: var(--warn); }
