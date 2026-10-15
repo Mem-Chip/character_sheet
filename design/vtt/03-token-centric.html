@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VTT 布局 03 · 棋子为中心</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#1d1a16;--panel:rgba(38,33,28,.95);--panel2:#332d26;--panel3:#403830;--line:#51473b;--ink:#f2eadb;--mute:#b0a490;--faint:#80766a;--accent:#e0a93b;--accent-ink:#2a1d05;--danger:#d9604a;--ok:#84b373;--info:#68a3cf;--pc:#4f8cb8;--mon:#b8523d;--r:10px}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#12100d;color:var(--ink);font:14px/1.4 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+b{font-weight:600}
+.num{font-variant-numeric:tabular-nums}
+/* mock chrome (not part of the design) */
+.mockbar{position:fixed;top:0;left:0;right:0;height:38px;background:#0c0a08;border-bottom:1px solid #2b251e;display:flex;align-items:center;gap:10px;padding:0 12px;z-index:10000;font-size:13px;color:#cfc4ae}
+.mockbar .ttl{font-weight:700;color:#fff;margin-right:6px}
+.mockbar a{color:#9fb7cc;text-decoration:none;padding:2px 6px;border-radius:5px}.mockbar a:hover{background:#1f1a14}.mockbar a.on{color:#e0a93b}
+.mockbar .seg{display:flex;border:1px solid #3a3228;border-radius:7px;overflow:hidden}
+.mockbar .seg button{padding:4px 11px;background:#17130f;color:#cfc4ae}.mockbar .seg button.on{background:#e0a93b;color:#2a1d05;font-weight:600}
+.mockbar label{display:flex;gap:5px;align-items:center;cursor:pointer}
+.mockbar .sp{flex:1}
+.stage-wrap{position:fixed;top:38px;left:0;right:0;bottom:0;overflow:hidden;background:#12100d}
+.stage{position:absolute;left:50%;top:50%;width:1440px;height:900px;margin:-450px 0 0 -720px;overflow:hidden;background:#d6ccb4;transform-origin:center center;box-shadow:0 0 0 1px #000,0 20px 60px #000}
+.legend{position:fixed;top:46px;right:8px;width:330px;max-height:calc(100vh - 56px);overflow:auto;background:#fff9e3;color:#2b2418;border-radius:10px;padding:12px 14px;z-index:10001;box-shadow:0 8px 30px rgba(0,0,0,.5);font-size:12.5px;display:none}
+body.notes-on .legend{display:block}
+.legend h4{margin:0 0 6px;font-size:14px}.legend p{margin:0 0 8px;color:#6b5d44}
+.legend li{margin:0 0 7px;list-style:none;display:flex;gap:8px}.legend ol{margin:0;padding:0}
+.legend li i{flex:none;width:20px;height:20px;border-radius:50%;background:#e8344c;color:#fff;font-style:normal;font-weight:700;display:grid;place-items:center;font-size:11px;margin-top:1px}
+.pin{position:absolute;z-index:9000;width:24px;height:24px;border-radius:50%;background:#e8344c;color:#fff;font-weight:700;font-size:12px;display:none;place-items:center;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.5);pointer-events:none}
+body.notes-on .pin{display:grid}
+body:not(.view-me) .only-me,body:not(.view-wait) .only-wait,body:not(.view-dm) .only-dm,body.view-dm .only-pl,body:not(.prompt-on) .only-prompt,body.prompt-on .no-prompt,body:not(.view-wait):not(.view-dm) .only-wd{display:none!important}
+/* shared widgets */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 6px 24px rgba(0,0,0,.35);backdrop-filter:blur(6px)}
+.btn{padding:6px 12px;border-radius:8px;background:var(--panel3);border:1px solid var(--line);color:var(--ink);white-space:nowrap}
+.btn:hover{background:#4c4237}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:#f1c46a;font-weight:700}
+.btn.danger{color:#ffb3a5}.btn.ghost{background:transparent;border-color:transparent;color:var(--mute)}
+.btn.sm{padding:3px 8px;font-size:12px;border-radius:6px}
+.btn[disabled],.btn.dis{opacity:.45;cursor:not-allowed}
+.tag{display:inline-block;padding:0 6px;border-radius:5px;font-size:11px;line-height:18px;background:var(--panel3);color:var(--mute);border:1px solid var(--line);white-space:nowrap}
+.tag.accent{background:rgba(224,169,59,.18);color:#f1c46a;border-color:rgba(224,169,59,.5)}
+.tag.danger{background:rgba(217,96,74,.18);color:#ffb3a5;border-color:rgba(217,96,74,.5)}
+.tag.info{background:rgba(104,163,207,.18);color:#a9d2ee;border-color:rgba(104,163,207,.5)}
+.tag.ok{background:rgba(132,179,115,.18);color:#bfe0b0;border-color:rgba(132,179,115,.5)}
+.muted{color:var(--mute)}.faint{color:var(--faint)}.tiny{font-size:11px}.small{font-size:12px}
+.pip{display:inline-block;width:10px;height:10px;border-radius:50%;border:1.5px solid var(--accent);margin-right:3px;vertical-align:middle}.pip.on{background:var(--accent)}
+.pip.sq{border-radius:3px}
+.hpbar{height:8px;border-radius:5px;background:#1a1612;overflow:hidden;border:1px solid #000}.hpbar i{display:block;height:100%;background:var(--ok)}.hpbar i.mid{background:#d8b04a}.hpbar i.low{background:var(--danger)}
+kbd{font:11px monospace;background:#17130f;border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--mute)}
+/* tokens / map */
+.map{position:absolute;top:0;width:1440px;height:900px}
+.map svg{position:absolute;left:0;top:0}
+.tok{position:absolute;width:48px;height:48px;margin:0;z-index:20}
+.tok .disc{position:absolute;left:3px;top:3px;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:18px;color:#fff;border:3px solid var(--pc);background:radial-gradient(circle at 35% 30%,#6aa6cf,#35698f);box-shadow:0 3px 6px rgba(0,0,0,.4)}
+.tok.mon .disc{border-color:var(--mon);background:radial-gradient(circle at 35% 30%,#d17a63,#8c3a2a)}
+.tok.hid .disc{border-style:dashed;border-color:#6b6b6b;background:rgba(80,80,80,.7);opacity:.85}
+.tok .nm{position:absolute;left:50%;top:50px;transform:translateX(-50%);white-space:nowrap;font-size:11px;font-weight:600;color:#fff;background:rgba(30,25,20,.82);padding:0 6px;border-radius:5px;line-height:17px}
+.tok .hb{position:absolute;left:4px;right:4px;top:-9px;height:6px}
+.tok .bd{position:absolute;left:50%;top:69px;transform:translateX(-50%);white-space:nowrap;font-size:10px;line-height:15px;padding:0 5px;border-radius:4px;background:#8c3a2a;color:#fff}
+.tok .bd.hurt{background:#8a6a2a}.tok .bd.ok{background:#4a6b3e}
+.tok .cd{position:absolute;right:-8px;top:-6px;display:flex;gap:2px}
+.tok .cd b{font-size:9px;background:#2b2418;color:#f1c46a;border:1px solid #f1c46a;border-radius:4px;padding:0 3px;line-height:14px}
+.tok.cur .disc{box-shadow:0 0 0 4px rgba(224,169,59,.95),0 0 18px 8px rgba(224,169,59,.55)}
+.tok.cur::before{content:"";position:absolute;left:-7px;top:-7px;right:-7px;bottom:-7px;border-radius:50%;border:2px solid var(--accent);animation:pulse 1.8s infinite}
+.tok .mark{display:none;position:absolute;left:50%;top:-30px;transform:translateX(-50%);color:var(--accent);font-size:15px;text-shadow:0 1px 2px #000}
+.tok.cur .mark{display:block}
+.tok.sel .disc{outline:3px solid #fff;outline-offset:2px}
+.tok.tgt::after{content:"";position:absolute;left:-9px;top:-9px;right:-9px;bottom:-9px;background:
+ linear-gradient(var(--danger),var(--danger)) 0 0/12px 3px no-repeat,linear-gradient(var(--danger),var(--danger)) 0 0/3px 12px no-repeat,
+ linear-gradient(var(--danger),var(--danger)) 100% 0/12px 3px no-repeat,linear-gradient(var(--danger),var(--danger)) 100% 0/3px 12px no-repeat,
+ linear-gradient(var(--danger),var(--danger)) 0 100%/12px 3px no-repeat,linear-gradient(var(--danger),var(--danger)) 0 100%/3px 12px no-repeat,
+ linear-gradient(var(--danger),var(--danger)) 100% 100%/12px 3px no-repeat,linear-gradient(var(--danger),var(--danger)) 100% 100%/3px 12px no-repeat;}
+.tok.hl .disc{animation:hl 1.2s infinite}
+.tok.ghost{opacity:.55;pointer-events:none}.tok.ghost .disc{border-style:dashed}
+.tok .bm{position:absolute;left:-7px;top:-6px;font-size:13px;filter:drop-shadow(0 1px 1px #000)}
+@keyframes pulse{0%{transform:scale(.92);opacity:1}100%{transform:scale(1.35);opacity:0}}
+@keyframes hl{0%,100%{box-shadow:0 0 0 0 rgba(104,163,207,.9)}50%{box-shadow:0 0 0 10px rgba(104,163,207,0)}}
+@keyframes ping{0%{transform:translate(-50%,-50%) scale(.2);opacity:1}100%{transform:translate(-50%,-50%) scale(1.6);opacity:0}}
+.pingm{position:absolute;z-index:15;pointer-events:none}
+.pingm i{position:absolute;left:0;top:0;width:60px;height:60px;border:3px solid #1d9db2;border-radius:50%;animation:ping 2s infinite}
+.pingm i:nth-child(2){animation-delay:.7s}
+.pingm span{position:absolute;left:14px;top:-38px;white-space:nowrap;background:#1d9db2;color:#fff;font-size:11px;font-weight:700;padding:1px 7px;border-radius:5px}
+.mlab{position:absolute;z-index:16;transform:translate(-50%,-50%);background:rgba(30,25,20,.92);color:#fff;font-size:12px;padding:1px 8px;border-radius:6px;white-space:nowrap;border:1px solid rgba(255,255,255,.2)}
+.mlab.amber{border-color:var(--accent);color:#f6d58b}.mlab.red{border-color:var(--danger);color:#ffc6bb}
+.hc{position:absolute;z-index:5000;width:236px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 11px;box-shadow:0 8px 24px rgba(0,0,0,.45);pointer-events:none;display:none;font-size:12.5px}
+.hc .h1{display:flex;justify-content:space-between;gap:6px;align-items:baseline;margin-bottom:4px}.hc .h1 b{font-size:14px}
+.hc .r{display:flex;gap:10px;color:var(--mute);margin:2px 0}.hc .r b{color:var(--ink)}
+.hc .ft{margin-top:5px;padding-top:5px;border-top:1px solid var(--line);color:var(--faint);font-size:11px}
+
+[hidden]{display:none!important}
+body.notes-on .stage-wrap{right:344px}
+*{scrollbar-width:thin;scrollbar-color:#5a4e41 transparent}
+.legend{scrollbar-color:#c9b98f transparent}
+
+/* ===== 03 · 棋子为中心：几乎没有常驻面板，操作贴在棋子旁边 ===== */
+.A{position:absolute}
+.edge{position:absolute;inset:0;pointer-events:none;z-index:50}
+body.view-me .edge{box-shadow:inset 0 0 0 3px rgba(224,169,59,.8),inset 0 0 90px rgba(224,169,59,.3)}
+body.prompt-on.view-wait .edge{box-shadow:inset 0 0 0 3px rgba(104,163,207,.85),inset 0 0 90px rgba(104,163,207,.3)}
+.topl{left:12px;top:12px;display:flex;gap:8px;padding:6px 8px;align-items:center;z-index:60}
+.topl .menu{width:30px;height:30px;border-radius:8px;background:var(--panel3);display:grid;place-items:center;font-size:18px}
+.topl .rd{padding:0 8px;font-size:13px}.topl .rd b{font-size:17px}
+.topr{right:12px;top:12px;display:flex;gap:6px;padding:6px 8px;z-index:61}
+.strip{left:50%;top:10px;transform:translateX(-50%);display:flex;align-items:center;gap:7px;padding:8px 14px;z-index:60;border-radius:999px}
+.pi{position:relative;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:16px;flex:none;background:conic-gradient(var(--c) calc(var(--p)*1%),#2b241d 0)}
+.pi::before{content:"";position:absolute;inset:3px;border-radius:50%;background:#2d5575}
+.pi.mon::before{background:#7b3326}.pi.hid{opacity:.75}.pi.hid::before{background:#555}.pi.hid{outline:1.5px dashed #888;outline-offset:2px}
+.pi span{position:relative}
+.pi .iv{position:absolute;left:-3px;top:-6px;font-size:9px;line-height:13px;background:#17130f;border:1px solid var(--line);border-radius:6px;padding:0 4px;color:var(--mute);font-weight:400;z-index:2}
+.pi.cur{width:58px;height:58px;font-size:22px;box-shadow:0 0 0 3px var(--accent),0 0 18px rgba(224,169,59,.6)}
+.pi.cur::before{inset:4px}
+.pi.nxt::after{content:"▸";position:absolute;right:-10px;top:12px;color:var(--accent);font-size:11px}
+.pw{color:var(--faint);font-size:11px;writing-mode:vertical-rl}
+.sline{left:50%;top:94px;transform:translateX(-50%);padding:3px 14px;border-radius:999px;font-size:13px;white-space:nowrap;display:flex;gap:8px;align-items:center;z-index:60}
+body.view-me .sline{background:rgba(76,56,18,.96);border-color:var(--accent)}
+body.prompt-on.view-wait .sline,body.prompt-on.view-dm .sline{background:rgba(28,48,66,.96);border-color:var(--info)}
+.sline .bg{font-weight:700;color:#f1c46a}body.prompt-on:not(.view-me) .sline .bg{color:#a9d2ee}
+.toast{left:50%;top:165px;transform:translateX(-50%);z-index:80;font-size:30px;font-weight:700;color:#2a1d05;background:var(--accent);padding:6px 34px;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.4);animation:toast 3.2s forwards;pointer-events:none}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-14px)}12%{opacity:1;transform:translate(-50%,0)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-6px)}}
+/* 棋子旁的环形菜单 */
+.radial{left:360px;top:456px;width:0;height:0;z-index:40}
+.radial button{position:absolute;width:60px;height:60px;border-radius:50%;transform:translate(-50%,-50%);background:var(--panel);border:2px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;line-height:1.1;color:var(--ink);box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.radial button i{font-style:normal;font-size:20px}.radial button small{font-size:9px;color:var(--mute)}
+.radial button:hover{border-color:var(--accent)}.radial button.on{background:var(--accent);color:var(--accent-ink);border-color:#fff}.radial button.on small{color:#4d3a10}
+.radial button.end{background:#4a3a18;border-color:var(--accent);color:#f6d58b}
+.rring{position:absolute;left:-86px;top:-86px;width:172px;height:172px;border-radius:50%;border:1.5px dashed rgba(60,45,20,.5);pointer-events:none}
+.pop{position:absolute;z-index:45;width:300px;padding:8px}
+.pop .ph{display:flex;justify-content:space-between;align-items:center;padding:2px 6px 6px;font-size:12px;color:var(--mute)}.pop .ph b{color:var(--ink);font-size:14px}
+.pi2{display:flex;align-items:center;gap:9px;height:42px;padding:0 8px;border-radius:8px;margin-bottom:3px;background:var(--panel2);border:1px solid transparent;width:100%;text-align:left}
+.pi2:hover{background:var(--panel3)}.pi2.sel{border-color:var(--accent);background:rgba(76,56,18,.9)}
+.pi2 .ic{font-size:17px;width:22px;text-align:center}.pi2 .tx{flex:1;min-width:0;line-height:1.2}.pi2 .tx b{display:block;font-size:13.5px}.pi2 .tx small{display:block;font-size:11px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pi2 .rt{font-size:11px;color:var(--mute)}
+.conn{position:absolute;z-index:44;height:2px;background:var(--accent);transform-origin:0 50%}
+.pill{position:absolute;z-index:46;display:flex;gap:10px;align-items:center;padding:6px 8px 6px 14px;border-radius:999px;font-size:12.5px;border-color:var(--accent);white-space:nowrap}
+.pill b{color:var(--ink)}.pill .btn{padding:5px 14px}
+.pill::before{content:"";position:absolute;left:-7px;top:50%;margin-top:-6px;border:6px solid transparent;border-right-color:var(--accent);border-left:0}
+.bub{position:absolute;z-index:47;padding:11px 13px;width:340px;border-color:var(--info);box-shadow:0 0 0 2px rgba(104,163,207,.3),0 12px 34px rgba(0,0,0,.5)}
+.bub.amber{border-color:var(--accent);box-shadow:0 0 0 2px rgba(224,169,59,.3),0 12px 34px rgba(0,0,0,.5)}
+.bub h3{margin:0 0 3px;font-size:15px;display:flex;justify-content:space-between;align-items:center}.bub h3 span{font-size:12px;font-weight:400;color:#a9d2ee}
+.bub p{margin:0 0 6px;font-size:12.5px;color:var(--mute)}.bub .eff{background:var(--panel2);border-radius:8px;padding:5px 9px;font-size:12.5px;margin-bottom:8px}.bub .eff b{color:#f1c46a}
+.bub .row{display:flex;gap:8px}.bub .row .btn{flex:1;padding:8px 6px}
+.bub .opt{flex:1;padding:6px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);text-align:center;font-size:13px;line-height:1.25}.bub .opt.on{border-color:var(--accent);background:rgba(76,56,18,.9)}.bub .opt small{display:block;font-size:10.5px;color:var(--mute)}
+.bub .tail{position:absolute;width:14px;height:14px;background:inherit;border:inherit;border-left:0;border-top:0;transform:rotate(45deg)}
+.bub.tr_{}
+.chipR{z-index:45;padding:3px 12px;border-radius:999px;font-size:12px;border-color:var(--info);color:#a9d2ee;background:rgba(28,48,66,.96);white-space:nowrap;position:absolute}
+.hudl{left:12px;bottom:12px;display:flex;gap:10px;padding:8px 14px 8px 10px;align-items:center;z-index:60;width:312px}
+.ring{position:relative;width:62px;height:62px;border-radius:50%;flex:none;display:grid;place-items:center;background:conic-gradient(#d8b04a calc(var(--p)*1%),#2b241d 0)}
+.ring::before{content:"";position:absolute;inset:5px;border-radius:50%;background:#2d5575}.ring span{position:relative;font-weight:700;font-size:22px}
+.hudl .nm{font-weight:700}.hudl .ln{font-size:12px;color:var(--mute);display:flex;gap:8px;align-items:center;margin-top:1px}
+.hudl .ln b{color:var(--ink);font-size:15px}
+.edots{display:flex;gap:5px;margin-top:3px}.edots span{display:inline-flex;gap:3px;align-items:center;font-size:11px;color:var(--mute)}.edots i{width:9px;height:9px;border-radius:50%;background:var(--ok)}.edots .off{opacity:.45}.edots .off i{background:#666}
+.sl{display:flex;gap:7px;font-size:10.5px;color:var(--mute);margin-top:3px}
+.tk{left:50%;bottom:12px;transform:translateX(-50%);width:620px;z-index:60}
+.tkm{display:flex;align-items:center;gap:10px;padding:8px 14px;cursor:pointer;border-radius:12px}
+.tkm .tg{font-size:11px;padding:0 7px;border-radius:5px;background:var(--accent);color:var(--accent-ink);font-weight:700;flex:none}
+.tkm.pend .tg{background:var(--info);color:#06202e}
+.tkm .tx{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13.5px}.tkm .tx b{color:var(--ink)}.tkm .tx .ou{color:#f1c46a;margin-left:8px}
+.tkm .more{color:var(--mute);font-size:12px}
+.tkl{display:none;margin-bottom:6px;padding:6px 8px}
+body.log-open .tkl{display:block}
+.lg{padding:4px 10px;font-size:12.5px;border-left:3px solid var(--line);margin-bottom:3px;border-radius:5px;background:rgba(255,255,255,.03)}.lg.hit{border-left-color:var(--accent)}.lg.crit{border-left-color:var(--danger)}.lg.heal{border-left-color:var(--ok)}.lg.pend{border-left-color:var(--info)}.lg.miss{border-left-color:#6b6256}
+.lg .m{color:var(--mute)}.lg .ou{color:#f1c46a}.lg.sys{border:0;text-align:center;color:var(--faint);font-size:11px;background:none;padding:0}.lg .rule{float:right}.lg .dt{font-size:11px;color:var(--faint)}
+.tools{right:12px;bottom:12px;display:flex;gap:6px;z-index:60;align-items:center}
+.tools button{width:46px;height:46px;border-radius:50%;background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9.5px;color:var(--mute);position:relative;box-shadow:0 4px 12px rgba(0,0,0,.35)}
+.tools button i{font-style:normal;font-size:17px;color:var(--ink);line-height:1.1}.tools button.on{background:var(--accent);color:var(--accent-ink)}.tools button.on i{color:var(--accent-ink)}
+.tools .nw{position:absolute;right:-2px;top:-2px;font-size:8px;background:#e8344c;color:#fff;border-radius:4px;padding:0 3px}
+.hudd{left:12px;bottom:12px;display:flex;gap:6px;padding:8px;z-index:60}
+.insp{left:812px;top:548px;width:380px;z-index:46;padding:11px 13px}
+.insp .r1{display:flex;gap:10px;align-items:center;margin-bottom:6px}.insp .pt{width:38px;height:38px;border-radius:50%;border:3px solid var(--mon);background:#7b3326;display:grid;place-items:center;font-weight:700;font-size:17px;flex:none}
+.insp .hpl{display:flex;align-items:center;gap:6px;margin-bottom:6px}.insp .hpl b{font-size:20px}.insp .hpl .hpbar{flex:1;height:12px}
+.insp .st{display:flex;gap:6px;margin-bottom:7px}.insp .st span{background:var(--panel2);border-radius:7px;padding:2px 9px;font-size:12px}.insp .st b{font-size:14px}
+.ctx{left:1166px;top:262px;width:170px;z-index:46;padding:5px}
+.ctx div{padding:5px 10px;border-radius:6px;font-size:13px}.ctx div:hover{background:var(--panel3)}.ctx hr{border:0;border-top:1px solid var(--line);margin:3px 0}.ctx small{color:var(--faint);font-size:10px;padding:2px 10px;display:block}
+</style>
+</head>
+<body>
+<div class="stage-wrap"><div class="stage" id="stage">
+  <div id="mapHost" style="position:absolute;inset:0"></div>
+  <div class="edge"></div>
+
+  <div class="panel A topl"><button class="menu" title="菜单：布局 / 设置 / 离开 / 底图（DM）">≡</button><span class="rd muted">第 <b>3</b> 轮</span></div>
+  <div class="panel A strip" id="strip"></div>
+  <div class="panel A sline" id="sline"></div>
+  <div class="panel A topr"><button class="btn only-pl">我的骰子</button><button class="btn only-dm primary">下一回合 ▶</button><button class="btn only-dm">撤销</button><button class="btn ghost">⚙</button></div>
+
+  <div id="toastHost"></div>
+  <!-- 我的回合：环形菜单 + 法术列表 + 目标旁确认条 -->
+  <div class="A radial only-me no-prompt" id="radial"></div>
+  <div class="A radial only-me only-prompt" id="radial2"></div>
+  <div class="panel pop only-me no-prompt" id="pop"></div>
+  <div class="panel pill only-me no-prompt" id="pill" style="left:742px;top:578px"></div>
+  <div class="chipR only-wait no-prompt" style="left:312px;top:392px">反应可用 ● 护盾术</div>
+
+  <!-- 选择法术位：气泡贴在目标旁 -->
+  <div class="panel bub amber only-prompt only-me" style="left:742px;top:520px;width:350px">
+    <div class="tail" style="left:-8px;top:68px;transform:rotate(135deg)"></div>
+    <h3>选择法术位 · 魔法飞弹 → 冬狼 <span style="color:var(--mute)">Esc</span></h3><p>35 尺，射程内。高环位多 1 发飞弹。</p>
+    <div class="row" style="margin-bottom:8px"><div class="opt on"><b>1 环</b><small>3/4 · 3 发</small></div><div class="opt"><b>2 环</b><small>3/3 · 4 发</small></div><div class="opt"><b>3 环</b><small>1/2 · 5 发</small></div></div>
+    <div class="row"><button class="btn">取消</button><button class="btn primary">施放（1 环）</button></div>
+  </div>
+  <!-- 反应：气泡贴在被攻击的棋子旁 -->
+  <div class="panel bub only-prompt only-wait" style="left:40px;top:196px">
+    <div class="tail" style="left:313px;bottom:-8px"></div>
+    <h3>⚡ 你可以做出反应 <span>⏳ 0:12</span></h3><p><b>哥布林队长</b> 的标枪命中了你（<b>15</b> vs AC 12）</p>
+    <div class="eff"><b>护盾术</b>（1 环 · 反应）：AC → <b>17</b>，这次攻击<b>将未命中</b>。消耗 1 个 1 环位（3 → 2）。</div>
+    <div class="row"><button class="btn">不用</button><button class="btn primary" style="flex:2">使用护盾术</button></div>
+  </div>
+  <div class="panel bub only-prompt only-dm" style="left:40px;top:250px">
+    <div class="tail" style="left:313px;bottom:-8px"></div>
+    <h3>⏳ 等待 艾拉·晨星 的反应 <span>0:12</span></h3><p>护盾术：哥布林队长的标枪 15 vs AC 12。玩家在线。</p>
+    <div class="row"><button class="btn">催一下</button><button class="btn">代答：不用</button><button class="btn primary">代答：使用</button></div>
+  </div>
+
+  <!-- DM：选中怪物的检视卡 + 右键菜单示意 -->
+  <div class="panel A insp only-dm">
+    <div class="r1"><div class="pt">队</div><div style="flex:1"><b style="font-size:15px">哥布林队长</b> <span class="tag danger">浴血</span> <span class="tag accent">恐慌</span><div class="muted small">小型 类人生物 · 先攻 16 · 当前行动者</div></div><span class="faint tiny">×</span></div>
+    <div class="hpl"><b class="num">9</b><span class="muted">/ 27</span><span class="hpbar"><i class="low" style="width:33%"></i></span><button class="btn sm">−5</button><button class="btn sm">−1</button><button class="btn sm">+1</button><button class="btn sm">+5</button></div>
+    <div class="st"><span>AC <b>17</b></span><span>移动 <b>30/30</b></span><span>● 动作</span><span>● 附赠</span><span>● 反应</span></div>
+    <div class="pi2"><span class="ic">🗡</span><span class="tx"><b>弯刀</b><small>+4 · 1d6+2 挥砍 · 5 尺</small></span></div>
+    <div class="pi2 sel"><span class="ic">🏹</span><span class="tx"><b>标枪 → 艾拉·晨星</b><small>55 尺 · +4 · 1d6+2 穿刺 · 射程 30/120</small></span><button class="btn primary sm">执行 ▶</button></div>
+    <div style="display:flex;gap:6px;margin-top:5px"><button class="btn sm">＋ 状态</button><button class="btn sm">手动调整</button><button class="btn sm ghost">更多动作 ›</button></div>
+  </div>
+  <div class="panel A ctx only-dm"><small>右键 食人魔（示意）</small><div>设为目标</div><div>查看完整数据</div><hr><div>伤害 / 治疗…</div><div>施加状态…</div><hr><div style="color:#f1c46a">亮出（玩家可见）</div><div style="color:#ffb3a5">移出遭遇</div></div>
+
+  <!-- 底部 -->
+  <div class="panel A hudl only-pl" id="hudl"></div>
+  <div class="panel A hudd only-dm"><button class="btn">参与者 7 ▸</button><button class="btn">＋ 怪物</button><button class="btn">🎲 发起检定 <span class="tag" style="background:#e8344c;color:#fff;border:0">新</span></button></div>
+  <div class="A tk" id="tk"></div>
+  <div class="A tools">
+    <button class="on"><i>✥</i>移动</button><button><i>📏</i>测距</button><button><i>📍</i>标记<span class="nw">新</span></button><button><i>✎</i>画笔</button><button><i>⌫</i>橡皮</button>
+  </div>
+</div></div>
+
+<script>
+(function () {
+  const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const CELL = 48;
+  const TOKENS = [
+    { id: 'ayla', name: '艾拉·晨星', short: '艾', side: 'pc', x: 7, y: 9, cls: '人类 法师 5', hp: 24, max: 31, ac: 12, init: 18, conds: ['专注'], tags: ['专注：蛛网'] },
+    { id: 'grom', name: '格罗姆', short: '格', side: 'pc', x: 11, y: 10, cls: '半兽人 战士 5', hp: 44, max: 52, ac: 18, init: 14, conds: [], tags: [] },
+    { id: 'lily', name: '莉莉安', short: '莉', side: 'pc', x: 8, y: 6, cls: '精灵 游荡者 5', hp: 33, max: 33, ac: 15, init: 21, conds: [], tags: ['隐匿'] },
+    { id: 'bran', name: '布兰', short: '布', side: 'pc', x: 6, y: 11, cls: '矮人 牧师 5', hp: 36, max: 40, ac: 18, init: 9, conds: [], tags: [] },
+    { id: 'boss', name: '哥布林队长', short: '队', side: 'mon', x: 18, y: 9, cls: '小型 类人生物', hp: 9, max: 27, ac: 17, init: 16, conds: ['恐慌'], tags: ['恐慌'] },
+    { id: 'wolf', name: '冬狼', short: '狼', side: 'mon', x: 14, y: 12, cls: '大型 野兽', hp: 30, max: 37, ac: 13, init: 12, conds: [], tags: [] },
+    { id: 'ogre', name: '食人魔', short: '魔', side: 'mon', x: 23, y: 6, cls: '大型 巨人', hp: 59, max: 59, ac: 11, init: 7, conds: [], tags: [], hidden: true },
+  ];
+  const BY = Object.fromEntries(TOKENS.map((t) => [t.id, t]));
+  const INIT = ['lily', 'ayla', 'boss', 'grom', 'wolf', 'bran', 'ogre'];
+  const CUR = { me: 'ayla', wait: 'boss', dm: 'boss' };
+  const TGT = { me: 'wolf', wait: 'ayla', dm: 'ayla' };
+  const SEL = { me: 'ayla', wait: 'ayla', dm: 'boss' };
+  const S = { view: 'me', prompt: false, notes: false };
+  const word = (t) => (t.hp <= 0 ? '倒地' : t.hp >= t.max ? '完好' : t.hp * 2 <= t.max ? '浴血' : '受伤');
+  const pct = (t) => Math.round((t.hp / t.max) * 100);
+  const hpCls = (t) => (t.hp * 2 <= t.max ? 'low' : t.hp * 4 <= t.max * 3 ? 'mid' : '');
+  const dist = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y)) * 5;
+  const isDM = () => S.view === 'dm';
+  const visible = () => TOKENS.filter((t) => isDM() || !t.hidden);
+  const order = () => {
+    const ids = INIT.filter((id) => isDM() || !BY[id].hidden);
+    const i = ids.indexOf(CUR[S.view]);
+    return ids.slice(i).concat(ids.slice(0, i));
+  };
+  /** 玩家能看到的伤势：PC 给数字，怪物给说法；DM 都给数字 */
+  const hpText = (t) => (t.side === 'pc' || isDM() ? `${t.hp}/${t.max}` : word(t));
+
+  const ACTIONS = {
+    attack: [
+      { n: '匕首', sub: '+5 · 1d4+3 穿刺', tag: '近战 / 投掷', ico: '🗡' },
+      { n: '橡木杖', sub: '+2 · 1d6 钝击', tag: '近战', ico: '🏑' },
+    ],
+    spell: [
+      { n: '火焰箭', sub: '+7 · 1d10 火焰', tag: '戏法 · 120 尺', ico: '🔥', hot: 1 },
+      { n: '魔法飞弹', sub: '3 发 · 1d4+1 力场', tag: '1 环 · 120 尺', ico: '✦', slot: 1 },
+      { n: '灼热射线', sub: '3 道 · +7 · 2d6 火焰', tag: '2 环 · 120 尺', ico: '☄', slot: 2 },
+      { n: '火球术', sub: '敏捷 DC15 · 8d6 火焰', tag: '3 环 · 150 尺 · 20 尺球', ico: '💥', slot: 3 },
+      { n: '迷踪步', sub: '传送 30 尺', tag: '2 环 · 附赠', ico: '✧', slot: 2 },
+      { n: '法师护甲', sub: 'AC → 15 · 8 小时', tag: '1 环 · 动作', ico: '🛡', slot: 1 },
+    ],
+    feature: [
+      { n: '奥术结界', sub: '结界 HP 10/10', tag: '防护学派 · 触发', ico: '◎' },
+      { n: '奥术回复', sub: '短休后 · 1/1', tag: '休息时', ico: '↻' },
+    ],
+    general: [
+      { n: '疾走', sub: '本回合移动 +30 尺', tag: '动作', ico: '⇥' },
+      { n: '撤离', sub: '移动不引发借机', tag: '动作', ico: '↩' },
+      { n: '躲避', sub: '攻击你有劣势', tag: '动作', ico: '◐' },
+      { n: '协助', sub: '给队友优势', tag: '动作', ico: '✋' },
+      { n: '搜索', sub: '感知（察觉/调查）', tag: '动作', ico: '🔍' },
+      { n: '使用物品', sub: '药水、卷轴…', tag: '动作', ico: '⚗' },
+    ],
+    trigger: [
+      { n: '护盾术', sub: '被命中时 · AC +5', tag: '1 环 · 反应', ico: '🛡' },
+      { n: '奥术结界', sub: '受伤时吸收伤害', tag: '免费', ico: '◎' },
+    ],
+  };
+  const SLOTS = [[1, 3, 4], [2, 3, 3], [3, 1, 2]]; // 环、剩余、总数
+
+  const LOG = {
+    me: [
+      { k: 'hit', head: '莉莉安 → 冬狼', body: '短弓 · 命中（19 vs AC 13）', out: '12 点穿刺 · 冬狼 受伤', det: 'd20 14 +5 · 偷袭 2d6 + 1d6+4', big: 1 },
+      { k: 'sys', head: '第 3 轮 · 莉莉安的回合', body: '' },
+      { k: 'miss', head: '冬狼 → 格罗姆', body: '撕咬 · 未命中（15 vs AC 18）', out: '', det: 'd20 11 +4' },
+      { k: 'heal', head: '布兰 → 格罗姆', body: '治疗真言 · 恢复 9 点生命值', out: '格罗姆 44/52', det: '2 环位 · 2d8' },
+      { k: 'crit', head: '格罗姆 → 哥布林队长', body: '巨斧 · 重击！（20）', out: '16 点挥砍 · 哥布林队长 浴血', det: 'd20 20 · 1d12+4 ×2' },
+    ],
+    wait: [
+      { k: 'pend', head: '哥布林队长 → 艾拉', body: '标枪 · 掷出 15 …等待你的反应', out: '', det: 'd20 11 +4', big: 1 },
+      { k: 'hit', head: '艾拉 → 冬狼', body: '火焰箭 · 命中（21 vs AC 13）', out: '7 点火焰 · 冬狼 受伤', det: 'd20 14 +7 · 1d10' },
+      { k: 'sys', head: '第 3 轮 · 艾拉的回合', body: '' },
+      { k: 'hit', head: '莉莉安 → 冬狼', body: '短弓 · 命中（19 vs AC 13）', out: '12 点穿刺 · 冬狼 受伤', det: 'd20 14 +5' },
+    ],
+    dm: [
+      { k: 'pend', head: '哥布林队长 → 艾拉', body: '标枪 · 15 vs AC 12 → 命中；等待艾拉的反应（护盾术）', out: '', det: 'd20 11 +4 = 15 · 若用护盾术 AC 17 → 未命中', big: 1 },
+      { k: 'hit', head: '艾拉 → 冬狼', body: '火焰箭 · 命中（21 vs AC 13）', out: '7 点火焰 · 冬狼 30/37', det: 'd20 14 +7 · 1d10=7', rule: 1 },
+      { k: 'sys', head: '第 3 轮 · 艾拉的回合', body: '' },
+      { k: 'hit', head: '莉莉安 → 冬狼', body: '短弓 · 命中（19 vs AC 13）', out: '12 点穿刺 · 冬狼 37→30？', det: 'd20 14 +5 · 偷袭', rule: 1 },
+    ],
+  };
+  const SCENE = {
+    me: { badge: '轮到你了', line: '艾拉的回合', sub: '移动 30 尺 · 动作 · 附赠 · 反应 都可用' },
+    wait: { badge: '等待中', line: '哥布林队长的回合', sub: '由 DM 操作 · 你排在先攻第 2 位' },
+    dm: { badge: 'DM 操作', line: '哥布林队长的回合', sub: '下一位：格罗姆' },
+  };
+
+  const MAPSVG = (() => {
+    const rnd = (() => { let s = 7; return () => ((s = (s * 9301 + 49297) % 233280) / 233280); })();
+    let flags = '';
+    for (let r = 0; r < 19; r++) for (let c = 0; c < 30; c++) { const v = rnd(); if (v < .22) flags += `<rect x="${c * 48 + 2}" y="${r * 48 + 2}" width="44" height="44" fill="rgba(110,90,55,${(0.05 + v * .3).toFixed(2)})"/>`; }
+    const torch = (x, y) => `<circle cx="${x}" cy="${y}" r="90" fill="url(#glow)"/><circle cx="${x}" cy="${y}" r="5" fill="#f4b84a" stroke="#6b3f10" stroke-width="2"/>`;
+    return `<svg width="1440" height="900" viewBox="0 0 1440 900" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="rgba(70,52,30,.30)" stroke-width="1"/></pattern>
+<pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="10" stroke="rgba(110,80,40,.5)" stroke-width="3"/></pattern>
+<linearGradient id="pool" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fb0c4"/><stop offset="1" stop-color="#4a8299"/></linearGradient>
+<radialGradient id="glow"><stop offset="0" stop-color="rgba(255,190,90,.45)"/><stop offset="1" stop-color="rgba(255,190,90,0)"/></radialGradient>
+</defs>
+<rect width="1440" height="900" fill="#d6ccb4"/>${flags}
+<rect x="192" y="288" width="240" height="144" rx="6" fill="rgba(150,60,50,.22)" stroke="rgba(120,40,30,.35)" stroke-width="2"/>
+<rect x="576" y="336" width="240" height="192" rx="70" fill="url(#pool)" stroke="#2f5a6c" stroke-width="3"/>
+<ellipse cx="696" cy="432" rx="60" ry="28" fill="rgba(255,255,255,.12)"/>
+<text x="696" y="440" text-anchor="middle" font-size="13" fill="rgba(255,255,255,.7)">深水池</text>
+<rect x="1008" y="384" width="288" height="192" rx="10" fill="url(#hatch)" stroke="rgba(110,80,40,.5)" stroke-dasharray="6 4"/>
+<text x="1152" y="480" text-anchor="middle" font-size="13" fill="rgba(80,55,25,.8)">乱石堆（困难地形）</text>
+<rect x="240" y="144" width="96" height="48" rx="3" fill="#8a6a3f" stroke="#523a1b" stroke-width="2"/><rect x="288" y="192" width="48" height="48" rx="3" fill="#7b5c34" stroke="#523a1b" stroke-width="2"/>
+<g fill="#5d5146" stroke="#2f2820" stroke-width="3"><rect x="432" y="240" width="48" height="48" rx="6"/><rect x="432" y="576" width="48" height="48" rx="6"/><rect x="960" y="240" width="48" height="48" rx="6"/><rect x="960" y="576" width="48" height="48" rx="6"/></g>
+<g fill="#4b4036" stroke="#271f18" stroke-width="3"><rect x="0" y="0" width="1440" height="96"/><rect x="0" y="0" width="48" height="900"/><rect x="1392" y="0" width="48" height="900"/><rect x="0" y="852" width="1440" height="48"/><rect x="1056" y="96" width="48" height="144"/></g>
+<rect x="672" y="60" width="96" height="40" fill="#8f6a3a" stroke="#4a3118" stroke-width="3"/><text x="720" y="85" text-anchor="middle" font-size="12" fill="#fff">木门</text>
+<rect x="0" y="0" width="1440" height="900" fill="url(#grid)"/>
+${torch(430, 108)}${torch(1010, 108)}${torch(60, 500)}
+</svg>`;
+  })();
+
+  const ov = []; // 本次叠加层元素
+  let mapHost = null, OX = 0, hcard = null;
+
+  function tokHTML(t) {
+    const cur = CUR[S.view] === t.id, tgt = TGT[S.view] === t.id, sel = SEL[S.view] === t.id;
+    const hl = S.prompt && ((S.view !== 'me' && (t.id === 'boss' || t.id === 'ayla')) || (S.view === 'me' && t.id === 'wolf'));
+    const cls = ['tok', t.side, cur ? 'cur' : '', tgt ? 'tgt' : '', sel ? 'sel' : '', t.hidden ? 'hid' : '', hl ? 'hl' : ''].join(' ');
+    const showBar = t.side === 'pc' || isDM();
+    const bloody = t.hp * 2 <= t.max;
+    const w = word(t);
+    let under = '';
+    if (!showBar && w !== '完好') under = `<span class="bd ${w === '浴血' ? '' : 'hurt'}">${w}</span>`;
+    if (isDM() && t.hidden) under = `<span class="bd" style="background:#555">隐藏中 · 玩家看不到</span>`;
+    return `<div class="${cls}" data-id="${t.id}" style="left:${t.x * CELL}px;top:${t.y * CELL}px">
+      <span class="mark">▼</span>
+      ${showBar ? `<div class="hpbar hb"><i class="${hpCls(t)}" style="width:${pct(t)}%"></i></div>` : ''}
+      <div class="disc">${t.short}</div>
+      ${bloody ? '<span class="bm">🩸</span>' : ''}
+      ${t.conds.length ? `<div class="cd">${t.conds.map((c) => `<b>${c}</b>`).join('')}</div>` : ''}
+      <div class="nm">${t.name}</div>${under}</div>`;
+  }
+  const C = (t) => ({ x: t.x * CELL + CELL / 2, y: t.y * CELL + CELL / 2 });
+  function overlay() {
+    const v = S.view;
+    let svg = '', lab = '';
+    const A = C(BY.ayla), W = C(BY.wolf), B = C(BY.boss);
+    if (v === 'me') {
+      svg += `<rect x="144" y="240" width="432" height="432" rx="14" fill="rgba(224,169,59,.10)" stroke="rgba(190,130,20,.7)" stroke-width="2" stroke-dasharray="8 6"/>`;
+      lab += `<div class="mlab amber" style="left:196px;top:256px">可移动范围 · 剩 20 尺</div>`;
+      svg += `<polyline points="${A.x},${A.y} 312,408 312,360" fill="none" stroke="#e0a93b" stroke-width="4" stroke-dasharray="2 8" stroke-linecap="round"/>`;
+      lab += `<div class="tok ghost mine" style="left:288px;top:336px"><div class="disc">艾</div></div><div class="mlab amber" style="left:312px;top:312px">已走 10 尺 · 剩 10 尺</div>`;
+      svg += `<line x1="${A.x}" y1="${A.y}" x2="${W.x}" y2="${W.y}" stroke="#d9604a" stroke-width="3" stroke-dasharray="10 6"/>`;
+      lab += `<div class="mlab red" style="left:${(A.x + W.x) / 2}px;top:${(A.y + W.y) / 2 + 22}px">35 尺 · 火焰箭射程 120 ✓</div>`;
+    } else {
+      svg += `<defs><marker id="ah" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0L8 4L0 8z" fill="#d9604a"/></marker></defs><line x1="${B.x - 26}" y1="${B.y}" x2="${A.x + 30}" y2="${A.y}" stroke="#d9604a" stroke-width="3" stroke-dasharray="10 6" marker-end="url(#ah)"/>`;
+      lab += `<div class="mlab red" style="left:${(A.x + B.x) / 2 + 20}px;top:${A.y - 28}px">标枪 · 55 尺（射程 30/120）</div>`;
+    }
+    lab += `<div class="pingm" style="left:648px;top:264px"><i></i><i></i><span>莉莉安 · 标记</span></div>`;
+    return `<svg width="1440" height="900" style="z-index:10;pointer-events:none">${svg}</svg>${lab}`;
+  }
+  function renderMap() {
+    if (!mapHost) return;
+    mapHost.innerHTML = `<div class="map" style="left:${-OX}px">${MAPSVG}<div class="ovlay">${overlay()}</div>${visible().map(tokHTML).join('')}</div>`;
+    $$('.tok[data-id]', mapHost).forEach((el) => {
+      el.addEventListener('mouseenter', () => showCard(el.dataset.id));
+      el.addEventListener('mouseleave', () => (hcard.style.display = 'none'));
+      el.addEventListener('click', () => { if (VTT.onTokenClick) VTT.onTokenClick(el.dataset.id); });
+    });
+  }
+  function showCard(id) {
+    const t = BY[id], me = BY[SEL[S.view]];
+    const full = t.side === 'pc' || isDM();
+    const d = t.id === me.id ? '' : `<div class="r">距离 ${me.name.split('·')[0]}：<b>${dist(t, me)} 尺</b></div>`;
+    hcard.innerHTML = `<div class="h1"><b>${t.name}</b><span class="faint tiny">${t.cls}</span></div>
+      <div class="r">${full ? `AC <b>${t.ac}</b>` : ''}<span>生命 <b class="num">${hpText(t)}</b></span>${isDM() ? `<span>先攻 <b>${t.init}</b></span>` : ''}</div>
+      <div class="r">${t.tags.length ? t.tags.map((x) => `<span class="tag accent">${x}</span>`).join(' ') : '<span class="faint">没有状态</span>'}</div>${d}
+      <div class="ft">${t.side === 'mon' ? '右键：设为目标 · ' : ''}${t.side === 'pc' ? '点击：看详情 · ' : ''}${isDM() ? '拖动：移动棋子' : ''}</div>`;
+    const x = Math.min(1440 - 250, t.x * CELL - OX + 56), y = Math.max(8, Math.min(900 - 150, t.y * CELL - 10));
+    hcard.style.left = x + 'px'; hcard.style.top = y + 'px'; hcard.style.display = 'block';
+  }
+
+  const VTT = {
+    S, TOKENS, BY, INIT, CUR, TGT, SEL, ACTIONS, SLOTS, LOG, SCENE, word, pct, hpCls, dist, isDM, order, hpText, visible, $, $$,
+    handlers: [],
+    onChange(fn) { this.handlers.push(fn); },
+    set(patch) {
+      Object.assign(S, patch);
+      document.body.classList.remove('view-me', 'view-wait', 'view-dm');
+      document.body.classList.add('view-' + S.view);
+      document.body.classList.toggle('prompt-on', S.prompt);
+      document.body.classList.toggle('notes-on', S.notes);
+      $$('.mockbar .seg button').forEach((b) => b.classList.toggle('on', b.dataset.v === S.view));
+      $('#ckPrompt').checked = S.prompt; $('#ckNotes').checked = S.notes;
+      $$('.pin').forEach((p) => { p.style.display = ''; const vv = p.dataset.view; p.hidden = !!(vv && vv.split(' ').indexOf(S.view) < 0); });
+      $$('.legend li').forEach((p) => { const vv = p.dataset.view; p.hidden = !!(vv && vv.split(' ').indexOf(S.view) < 0); });
+      if (this.fit) this.fit();
+      renderMap();
+      this.handlers.forEach((f) => f(S));
+      try { history.replaceState(null, '', '#' + S.view + (S.prompt ? '+p' : '') + (S.notes ? '+n' : '')); } catch (e) {}
+    },
+    init(o) {
+      OX = o.ox || 0;
+      const stage = $('#stage');
+      mapHost = $('#mapHost');
+      hcard = document.createElement('div'); hcard.className = 'hc'; stage.appendChild(hcard);
+      const links = [['01-bottom-hotbar.html', '01 底部指挥台'], ['02-right-sidebar.html', '02 右侧栏'], ['03-token-centric.html', '03 棋子为中心']]
+        .map(([h, n]) => `<a href="${h}" class="${n.startsWith(o.num) ? 'on' : ''}">${n}</a>`).join('');
+      const bar = document.createElement('div'); bar.className = 'mockbar';
+      bar.innerHTML = `<span class="ttl">VTT 布局草图</span>${links}<span class="sp"></span>
+        <div class="seg"><button data-v="me">玩家 · 我的回合 <kbd>1</kbd></button><button data-v="wait">玩家 · 等待中 <kbd>2</kbd></button><button data-v="dm">DM 视角 <kbd>3</kbd></button></div>
+        <label><input type="checkbox" id="ckPrompt"> 反应 / 决策提示 <kbd>P</kbd></label>
+        <label><input type="checkbox" id="ckNotes"> 标注与说明 <kbd>N</kbd></label>`;
+      document.body.prepend(bar);
+      $$('.seg button', bar).forEach((b) => b.addEventListener('click', () => this.set({ view: b.dataset.v })));
+      $('#ckPrompt').addEventListener('change', (e) => this.set({ prompt: e.target.checked }));
+      $('#ckNotes').addEventListener('change', (e) => this.set({ notes: e.target.checked }));
+      addEventListener('keydown', (e) => {
+        if (/input|textarea|select/i.test(e.target.tagName)) return;
+        if (e.key === '1') this.set({ view: 'me' }); if (e.key === '2') this.set({ view: 'wait' }); if (e.key === '3') this.set({ view: 'dm' });
+        if (e.key === 'p' || e.key === 'P') this.set({ prompt: !S.prompt }); if (e.key === 'n' || e.key === 'N') this.set({ notes: !S.notes });
+      });
+      // 标注
+      const lg = document.createElement('div'); lg.className = 'legend';
+      lg.innerHTML = `<h4>${o.legendTitle}</h4><p>${o.legendIntro}</p><ol>${o.notes.map((n) => `<li data-view="${n.view || ''}"><i>${n.n}</i><div>${n.text}</div></li>`).join('')}</ol>`;
+      document.body.appendChild(lg);
+      o.notes.forEach((n) => { const p = document.createElement('div'); p.className = 'pin'; p.textContent = n.n; p.style.left = n.x + 'px'; p.style.top = n.y + 'px'; p.dataset.view = n.view || ''; stage.appendChild(p); });
+      const fit = () => { const w = $('.stage-wrap'); const s = Math.min(w.clientWidth / 1440, w.clientHeight / 900, 1.4); stage.style.transform = `scale(${s})`; };
+      this.fit = fit; addEventListener('resize', fit); fit();
+      const h = (location.hash || '').replace('#', '').split('+');
+      this.set({ view: ['me', 'wait', 'dm'].includes(h[0]) ? h[0] : 'me', prompt: h.includes('p'), notes: h.includes('n') });
+    },
+  };
+  window.VTT = VTT; window.$ = $; window.$$ = $$;
+})();
+
+const NOTES = [
+  { n: 1, x: 340, y: 8, text: '<b>先攻 = 一排头像</b>：当前行动者放大 + 琥珀光环，边缘的圆环是血量（怪物只有颜色）。顺序一眼可见，不占面板；名字、先攻值悬停才出。最大化地图，代价是信息密度低——所以关键的「等谁」用下面那行字补上。' },
+  { n: 2, x: 428, y: 82, text: '<b>一行状态字</b>：「轮到你了 / 哥布林队长的回合 · 等 DM / 等 艾拉 的反应」。我的回合再叠加屏幕边缘发光、大号「轮到你了」提示（淡出，3 秒）、标签页标题闪与提示音（新）。' },
+  { n: 3, x: 296, y: 394, view: 'me', text: '<b>棋子旁的环形菜单</b>：轮到我并选中自己的棋子，操作环直接长在棋子周围：攻击 / 法术 / 特性 / 动作 / 结束回合。眼睛不离开棋子，移动鼠标距离最短；「结束回合」在左上，和主菜单一样需要刻意点击，不会误触。' },
+  { n: 4, x: 438, y: 104, view: 'me', text: '<b>类别展开成浮动列表</b>，紧挨环形菜单；列表里法术位环数就在每行右侧。只有选中的类别才展开，不常驻。再点别的类别会替换内容。' },
+  { n: 5, x: 724, y: 560, view: 'me', text: '<b>目标旁的确认条</b>：选好动作后，目标棋子右侧出现「→ 冬狼 · 35 尺 ✓ · +7 · 1d10 [施放]」。距离、射程、命中、伤害骰、动作按钮在目标旁，不用回头看面板。' },
+  { n: 6, x: 24, y: 786, view: 'me wait', text: '<b>左下「我」小卡</b>：圆环 HP（颜色随血量）、AC、移动、动作/附赠/反应、法术位——尺寸最小的常驻 HUD。点开是完整角色面板（资源、效应、手动调整）。DM 视角换成「参与者 / 加怪物 / 发起检定」。' },
+  { n: 7, x: 330, y: 842, text: '<b>日志 = 底部单行通栏</b>：只显示最新一笔（谁→谁 · 结果 · 数值）；点开向上展开最近 6–8 条（DM 带撤销/裁定）；新结果时高亮一下。适合不想读日志的桌。' },
+  { n: 8, x: 40, y: 190, view: 'wait dm', text: '<b>决策提示 = 贴在相关棋子旁的气泡</b>：护盾术提示就挂在被攻击的我的棋子上，并脉冲高亮攻击者与我；大小 340×170，不盖住战场中央。DM 看到同位置的「等待 艾拉 · 代答」。' },
+  { n: 9, x: 724, y: 504, view: 'me', text: '选法术位这类需要选项的决定，气泡则贴在目标旁（有尾巴指向冬狼）。' },
+  { n: 10, x: 800, y: 540, view: 'dm', text: '<b>DM 的检视卡</b>：选中怪物后，卡片贴在棋子旁——HP 数字与 ±、AC、动作、状态。不需要底栏。' },
+  { n: 11, x: 1156, y: 252, view: 'dm', text: '<b>右键菜单</b>：设为目标、查看数据、伤害/治疗、状态、亮出/藏起、移出。把今天埋在列表里的低频管理动作都放到棋子上。' },
+  { n: 12, x: 1388, y: 842, text: '<b>地图工具</b>缩成右下 5 个圆钮（移动/测距/标记（新）/画笔/橡皮）。' },
+  { n: 13, x: 706, y: 590, text: '悬停任意棋子出卡片（新）：试试把鼠标放上去。' },
+];
+VTT.init({ num: '03', ox: 0, notes: NOTES, legendTitle: '03 · 棋子为中心', legendIntro: '地图 100%。常驻只有三小块（顶部头像带、左下「我」、底部单行日志）；所有操作和决定都贴在棋子旁边，需要时才出现。' });
+const T = VTT.BY;
+let rad = '法术', sel = '火焰箭';
+const CAT = { 攻击: 'attack', 法术: 'spell', 特性: 'feature', 动作: 'general' };
+function strip() {
+  const ids = VTT.order(), v = VTT.S.view, p = VTT.S.prompt, cur = VTT.CUR[v];
+  const full = VTT.INIT.filter((id) => VTT.isDM() || !T[id].hidden), wf = full.indexOf(cur);
+  let h = '';
+  ids.forEach((id, i) => {
+    const t = T[id], oi = full.indexOf(id);
+    if (i > 0 && oi < wf && full.indexOf(ids[i - 1]) >= wf) h += '<span class="pw">↻ 下一轮</span>';
+    const c = t.side === 'pc' || VTT.isDM() ? (t.hp * 2 <= t.max ? '#d9604a' : '#84b373') : (VTT.word(t) === '浴血' ? '#d9604a' : VTT.word(t) === '受伤' ? '#d8b04a' : '#84b373');
+    h += `<div class="pi ${t.side} ${i === 0 ? 'cur' : ''} ${i === 1 ? 'nxt' : ''} ${t.hidden ? 'hid' : ''}" style="--c:${c};--p:${t.side === 'pc' || VTT.isDM() ? VTT.pct(t) : 100}" title="${t.name}"><span class="iv">${t.side === 'pc' || VTT.isDM() ? t.init : ''}</span><span>${t.short}</span></div>`;
+  });
+  $('#strip').innerHTML = h;
+  const sc = VTT.SCENE[v];
+  $('#sline').innerHTML = p && v === 'wait' ? '<span class="bg">等待你的决定</span><b>哥布林队长的标枪命中了你</b><span class="muted">⏳ 0:12</span>'
+    : p && v === 'dm' ? '<span class="bg">等待玩家</span><b>艾拉的反应：护盾术</b><span class="muted">⏳ 0:12</span>'
+    : `<span class="bg">${sc.badge}</span><b>${sc.line}</b><span class="muted">· ${sc.sub}</span>`;
+}
+function radial() {
+  const pos = { 攻击: [0, -78], 法术: [74, -24], 特性: [46, 63], 动作: [-46, 63], 结束回合: [-74, -24] };
+  const ic = { 攻击: '⚔', 法术: '✦', 特性: '◎', 动作: '⇥', 结束回合: '⏎' };
+  const cnt = { 攻击: 2, 法术: 6, 特性: 2, 动作: 6, 结束回合: '' };
+  const h = '<div class="rring"></div>' + Object.keys(pos).map((k) => `<button class="${k === rad ? 'on' : ''} ${k === '结束回合' ? 'end' : ''}" data-r="${k}" style="left:${pos[k][0]}px;top:${pos[k][1]}px"><i>${ic[k]}</i>${k}${cnt[k] ? `<small>${cnt[k]}</small>` : ''}</button>`).join('');
+  $('#radial').innerHTML = h;
+  $('#radial2').innerHTML = '<div class="rring"></div>';
+  $$('[data-r]').forEach((b) => (b.onclick = () => { if (b.dataset.r !== '结束回合') { rad = b.dataset.r; pop(); radial(); } }));
+}
+function pop() {
+  const A = VTT.ACTIONS, rows = A[CAT[rad]] || [];
+  const sl = (r) => VTT.SLOTS.find((s) => s[0] === r);
+  const head = rad === '法术' ? `<span><b>法术</b> · 位 ${VTT.SLOTS.map(([l, r, t]) => `${l}:${r}/${t}`).join(' ')}</span>` : `<span><b>${rad}</b></span>`;
+  $('#pop').style.cssText = 'left:454px;top:104px';
+  $('#pop').innerHTML = `<div class="ph">${head}<span>点击 = 选中 → 点目标</span></div>` + rows.map((x) => `<button class="pi2 ${x.n === sel ? 'sel' : ''}" data-n="${x.n}"><span class="ic">${x.ico}</span><span class="tx"><b>${x.n}</b><small>${x.sub} · ${x.tag}</small></span><span class="rt">${x.slot ? sl(x.slot)[1] + '/' + sl(x.slot)[2] : ''}</span></button>`).join('');
+  $$('#pop .pi2').forEach((b) => (b.onclick = () => { sel = b.dataset.n; pop(); pill(); }));
+}
+function pill() {
+  $('#pill').innerHTML = `<span>→ <b style="color:#ffb3a5">冬狼</b></span><span>35 尺 <span style="color:#84b373">射程 120 ✓</span></span><span><b>+7</b> 命中 · <b>1d10</b> 火焰</span><button class="btn primary">${sel} · 施放 ▶</button>`;
+}
+function hudl() {
+  const a = T.ayla, v = VTT.S.view, turn = v === 'me';
+  $('#hudl').innerHTML = `<div class="ring" style="--p:${VTT.pct(a)}"><span>艾</span></div><div style="flex:1"><div class="nm">艾拉·晨星 <span class="tag accent">专注</span></div><div class="ln"><b class="num">${a.hp}</b>/${a.max} HP <span>· AC <b>12</b></span><span>· 移动 <b>${turn ? '20' : '—'}</b>/30</span></div>
+   <div class="edots"><span class="${turn ? '' : 'off'}"><i></i>动作</span><span class="${turn ? '' : 'off'}"><i></i>附赠</span><span><i></i>反应</span></div>
+   <div class="sl">${VTT.SLOTS.map(([l, r, t]) => `<span>${l}环 ${'<i class="pip on"></i>'.repeat(r)}${'<i class="pip"></i>'.repeat(t - r)}</span>`).join('')}</div></div>`;
+}
+function tk() {
+  const L = VTT.LOG[VTT.S.view], e = L[0], dm = VTT.isDM();
+  const list = L.slice(1, 6).map((x) => x.k === 'sys' ? `<div class="lg sys">— ${x.head} —</div>` : `<div class="lg ${x.k}">${dm && x.rule ? '<button class="btn sm rule">裁定</button>' : ''}<b>${x.head}</b> <span class="m">${x.body}</span> <span class="ou">${x.out}</span>${dm ? `<div class="dt">${x.det}</div>` : ''}</div>`).join('');
+  $('#tk').innerHTML = `<div class="panel tkl">${dm ? '<div style="display:flex;justify-content:space-between;padding:0 4px 6px"><span class="muted small">日志 · 最近</span><button class="btn sm">撤销最后一笔</button></div>' : ''}${list}<div class="lg sys"><button class="btn sm ghost">显示更早的 14 笔</button></div></div>
+   <div class="panel tkm ${e.k === 'pend' ? 'pend' : ''}" id="tkm"><span class="tg">${e.k === 'pend' ? '进行中' : '最新'}</span><span class="tx"><b>${e.head}</b>　${e.body}<span class="ou">${e.out}</span></span><span class="more">${document.body.classList.contains('log-open') ? '收起 ▾' : '展开 ▴'}</span></div>`;
+  $('#tkm').onclick = () => { document.body.classList.toggle('log-open'); tk(); };
+}
+let lastView = null;
+function toast() {
+  const h = $('#toastHost');
+  if (VTT.S.view === 'me' && lastView !== 'me') { h.innerHTML = '<div class="A toast">▶ 轮到你了，艾拉</div>'; }
+  else if (VTT.S.view !== 'me') h.innerHTML = '';
+  lastView = VTT.S.view;
+}
+function draw() { strip(); radial(); pop(); pill(); hudl(); tk(); toast(); }
+VTT.onChange(draw); draw();
+</script>
+</body>
+</html>

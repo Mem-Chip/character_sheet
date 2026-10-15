@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>设计稿 01-codex — 典籍 · 朱批手抄本</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* 01 典籍 · 朱批手抄本：羊皮纸 + 朱砂 + 金，双线框，印章 */
+:root{
+  --f-disp:"Noto Serif SC","Source Han Serif SC","Songti SC",serif;
+  --f-ui:"Noto Sans SC","PingFang SC","Microsoft YaHei UI",sans-serif;
+  --f-num:"EB Garamond","Noto Serif SC",serif;
+  --f-mono:"JetBrains Mono",Consolas,monospace;
+  --bg:#eadfc4;--panel:#f7efd9;--panel2:#ece0c0;--field:#fffaea;
+  --ink:#2a1e12;--ink2:#5f4e38;--ink3:#8f7d60;--line:#d9c9a0;--line2:#b9a373;
+  --accent:#8b2a1b;--accent-ink:#fbf1da;--accent-bg:#f0dcc0;--accent-line:#c98f77;
+  --gold:#a47c22;--good:#4d6b3a;--danger:#a3281a;--danger-bg:#f3d9cb;--warn:#8a5c10;--warn-bg:#f1e2b8;
+  color-scheme:light;
+}
+:root[data-theme=dark]{
+  --bg:#14100b;--panel:#1d1710;--panel2:#271f15;--field:#17120c;
+  --ink:#eadfc2;--ink2:#bfae8c;--ink3:#8a7a5c;--line:#35291b;--line2:#55432a;
+  --accent:#d9694d;--accent-ink:#1a0f08;--accent-bg:#35201a;--accent-line:#7d3a2b;
+  --gold:#d4ab52;--good:#8fae6c;--danger:#e8836d;--danger-bg:#3a1f19;--warn:#dcb25e;--warn-bg:#352a14;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:13.5px/1.5 var(--f-ui);-webkit-font-smoothing:antialiased;min-height:100vh}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+em{font-style:normal}
+h1,h2{margin:0;font-weight:inherit}
+.n{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.top{display:flex;align-items:center;gap:18px;padding:0 20px;height:46px;white-space:nowrap}
+.brand{font-family:var(--f-disp);font-size:17px}
+.brand small{font-family:var(--f-ui);font-size:11px;color:var(--ink3);margin-left:8px}
+.nav{display:flex;gap:2px;height:100%}
+.nav button{border:0;background:none;padding:0 12px;color:var(--ink2)}
+.spacer{flex:1}
+.who-on{font-size:12px;color:var(--ink3)}
+.tg{border:1px solid var(--line2);background:transparent;padding:4px 10px;font-size:12px;color:var(--ink2)}
+.page{max-width:1400px;margin:0 auto;padding:16px 20px 40px;display:grid;gap:14px}
+.hero{display:grid;grid-template-columns:auto minmax(220px,1fr) auto;gap:18px;align-items:center;padding:14px 18px}
+.id .sub{color:var(--ink2);font-size:13px;margin-top:2px}
+.subtags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.vitals{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;justify-content:flex-end}
+.v{padding:6px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-width:70px}
+.v.hp{align-items:stretch;text-align:left;min-width:230px}
+.v i{font-style:normal;font-size:11px;color:var(--ink3);letter-spacing:.04em}
+.v b.n{font-size:26px;line-height:1.15;font-weight:600}
+.v b.n span{font-size:14px;color:var(--ink3);font-weight:400}
+.v b.n u{text-decoration:none;font-size:12px;color:var(--accent);margin-left:8px;font-family:var(--f-ui);font-weight:500}
+.v em{font-size:11px;color:var(--ink3)}
+.hpbar{height:7px;background:var(--panel2);border:1px solid var(--line);display:flex;overflow:hidden;margin:4px 0}
+.hpbar .cur{background:var(--good)}.hpbar .tmp{background:var(--accent)}
+.hpbar.sm{height:5px;margin:2px 0 0}
+.hpbtns{display:flex;gap:4px;align-items:center}
+.hpbtns input{width:52px;border:1px solid var(--line2);background:var(--field);padding:2px 6px;text-align:center}
+.cols{display:grid;grid-template-columns:262px minmax(0,1fr) 390px;gap:14px;align-items:start}
+.col{display:grid;gap:14px;min-width:0}
+.panel{background:var(--panel);border:1px solid var(--line);min-width:0}
+.panel h2{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:7px 12px}
+.panel h2 small{font-size:11.5px;color:var(--ink3);font-weight:400}
+.bd{padding:10px 12px}.bd.flush{padding:0}
+.btn{border:1px solid var(--line2);background:var(--panel);padding:5px 12px;color:var(--ink)}
+.btn.sm{padding:1px 8px;font-size:12px}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--ink2)}
+.tag{display:inline-block;font-size:11px;line-height:1.5;padding:0 6px;border:1px solid var(--line2);color:var(--ink2);white-space:nowrap}
+.tag.conc{color:var(--accent);border-color:var(--accent-line);background:var(--accent-bg)}
+.tag.rit{color:var(--warn);border-color:var(--warn-line,var(--line2));background:var(--warn-bg)}
+.tag.warn{color:var(--warn);background:var(--warn-bg)}
+.tag.bld{color:var(--danger);background:var(--danger-bg);border-color:var(--danger)}
+.chip{font-size:11px;padding:0 6px;border-radius:99px;background:var(--accent-bg);color:var(--accent);white-space:nowrap}
+.chip.bad{background:var(--danger-bg);color:var(--danger)}
+.abilities{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ab{text-align:center;padding:5px 2px 4px}
+.ab .k{font-size:11.5px;color:var(--ink2)}
+.ab .m{font-size:25px;line-height:1.1;font-weight:600}
+.ab .s{font-size:12px;color:var(--ink3)}
+.rows{display:grid}
+.rows.two{grid-template-columns:1fr 1fr}
+.r{display:grid;grid-template-columns:14px 1fr auto;align-items:center;gap:6px;padding:2px 12px;min-height:25px;border-bottom:1px solid var(--line)}
+.r:last-child{border-bottom:0}
+.rows.two .r:nth-last-child(2){border-bottom:0}
+.r:not(.on){color:var(--ink2)}
+.r em{font-size:10.5px;color:var(--ink3);margin-left:2px}
+.r b.n{font-weight:600}
+.dot{width:9px;height:9px;border:1px solid var(--ink3);border-radius:50%;display:block}
+.r.on .dot{background:var(--accent);border-color:var(--accent)}
+.r.ex .dot{box-shadow:0 0 0 2px var(--panel),0 0 0 3px var(--accent)}
+.slots{display:grid;gap:6px}
+.sl{display:grid;grid-template-columns:90px 1fr auto;align-items:center;gap:8px}
+.sl .lv{color:var(--ink2)}
+.sl.dim{color:var(--ink3);font-size:12px}
+.pips{display:flex;gap:6px}
+.pip{width:20px;height:14px;border:1.5px solid var(--accent);background:var(--accent);display:block}
+.pip.used{background:transparent;opacity:.55}
+.sphd{padding:4px 12px;font-size:11.5px;color:var(--ink3);background:var(--panel2);border-bottom:1px solid var(--line);letter-spacing:.08em}
+.sp{display:grid;grid-template-columns:22px minmax(0,1.25fr) minmax(0,1fr) auto;gap:8px;align-items:center;padding:5px 12px;border-bottom:1px solid var(--line)}
+.sp:last-child{border-bottom:0}
+.sp .lvl{font-style:normal;font-size:12px;color:var(--ink3);text-align:center}
+.sp .nm{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.sp .meta{font-size:12px;color:var(--ink3)}
+.feat{padding:3px 0}
+.feat+.feat{border-top:1px dashed var(--line);margin-top:6px;padding-top:8px}
+.ft{display:flex;gap:8px;align-items:center}
+.desc{color:var(--ink2);font-size:13px;margin-top:1px}
+.desc u{text-decoration:none;color:var(--accent);font-weight:500}
+.sub{margin:6px 0 2px 5px;padding-left:12px;border-left:2px solid var(--line2)}
+.sub .feat+.feat{border-top:0;margin-top:0;padding-top:3px}
+.init{list-style:none;margin:0;padding:0}
+.init li{display:grid;grid-template-columns:18px 28px minmax(0,1fr) 62px 28px;gap:8px;align-items:center;padding:6px 12px;border-bottom:1px solid var(--line);position:relative}
+.init li:last-child{border-bottom:0}
+.init .mk{font-style:normal;color:var(--accent);text-align:center;font-size:12px}
+.init .ini{font-size:17px;color:var(--ink2);text-align:center;font-weight:600}
+.init .who{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.init .chips{display:inline-flex;gap:4px}
+.init .hpm{font-size:12px;color:var(--ink2);text-align:right}
+.init .ac{text-align:center;font-size:13px;color:var(--ink3)}
+.init li.cur{background:var(--accent-bg)}
+.init li.cur .who b{color:var(--accent)}
+.init li.target{box-shadow:inset 0 0 0 1.5px var(--danger)}
+.init li.target .mk{color:var(--danger)}
+.init li.blood .hpbar .cur{background:var(--danger)}
+.init li.target .hpbar .cur{background:var(--danger)}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.act{text-align:left;border:1px solid var(--line2);background:var(--panel);padding:6px 9px;display:flex;flex-direction:column;line-height:1.3}
+.act b{font-weight:600}
+.act span{font-size:11.5px;color:var(--ink3)}
+.act.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.act.primary span{color:var(--accent-ink);opacity:.8}
+.endrow{display:flex;gap:8px;align-items:center;margin-top:10px}
+.faint{color:var(--ink3);font-size:12px;margin-left:auto}
+.tx{padding:6px 12px 7px;border-bottom:1px solid var(--line)}
+.tx:last-child{border-bottom:0}
+.tx .hd{display:flex;gap:8px;align-items:baseline}
+.tx .no{font-size:11px;color:var(--ink3)}
+.ln{display:grid;grid-template-columns:36px 1fr;gap:6px;margin-top:3px;font-size:12.5px;color:var(--ink2);align-items:baseline}
+.ln b{color:var(--ink)}.ln b.bad{color:var(--danger)}
+.k{font-size:10.5px;text-align:center;padding:0 2px;border:1px solid var(--line2);color:var(--ink2)}
+.k.hit{color:var(--accent);border-color:var(--accent-line);background:var(--accent-bg)}
+.k.dmg{color:var(--danger);border-color:var(--danger);background:var(--danger-bg)}
+.k.crit{color:var(--warn);border-color:var(--warn);background:var(--warn-bg)}
+.k.cond{color:var(--accent);border-color:var(--accent-line)}
+.die{display:inline-block;font-family:var(--f-mono);font-size:11px;padding:0 5px;border:1px solid var(--line2);background:var(--field);color:var(--ink);line-height:1.5}
+.logp{grid-column:auto}
+@media (max-width:1180px){
+  .hero{grid-template-columns:auto 1fr}
+  .vitals{grid-column:1/-1}
+  .cols{grid-template-columns:250px minmax(0,1fr)}
+  .col.c{grid-column:1/-1;grid-template-columns:1fr 1fr}
+  .col.c .logp{grid-column:1/-1}
+  .nav button{padding:0 8px}
+}
+@media (max-width:860px){
+  .page{padding:12px}
+  .cols{grid-template-columns:1fr}
+  .col.c{grid-template-columns:1fr}
+  .vitals{justify-content:flex-start}
+  .sp{grid-template-columns:22px 1fr auto}.sp .meta{display:none}
+  .who-on,.brand small{display:none}
+}
+
+body{background:var(--bg);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .25 0 0 0 0 .1 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");background-attachment:fixed}
+:root[data-theme=dark] body{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .9 0 0 0 0 .75 0 0 0 0 .5 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E")}
+.top{background:var(--panel);border-bottom:3px double var(--line2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--accent)}
+.nav button{font-family:var(--f-disp);font-size:14px;border-bottom:2px solid transparent;border-top:2px solid transparent}
+.nav button[aria-current]{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.tg{font-family:var(--f-disp)}
+.panel{border:1px solid var(--line2);box-shadow:inset 0 0 0 3px var(--panel),inset 0 0 0 4px var(--line);position:relative;padding:4px}
+.panel>h2{font-family:var(--f-disp);font-weight:700;font-size:15px;letter-spacing:.3em;color:var(--accent);padding:6px 12px 6px;position:relative}
+.panel>h2 span::before{content:"❦";color:var(--gold);margin-right:8px;letter-spacing:0;font-size:13px}
+.panel>h2::after{content:"";position:absolute;left:12px;right:12px;bottom:0;height:3px;border-top:1px solid var(--line2);border-bottom:1px solid var(--line)}
+.panel>h2 small{font-family:var(--f-ui);letter-spacing:0;font-style:italic}
+.bd{padding:10px 12px 8px}
+.hero{padding:16px 22px;background:linear-gradient(180deg,var(--panel),var(--panel2))}
+.portrait{width:76px;height:76px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--f-disp);font-weight:900;font-size:44px;border-radius:4px;box-shadow:0 0 0 2px var(--panel),0 0 0 3px var(--accent);transform:rotate(-2deg);position:relative}
+.portrait::after{content:"";position:absolute;inset:4px;border:1.5px solid color-mix(in srgb,var(--accent-ink) 55%,transparent)}
+.id h1{font-family:var(--f-disp);font-weight:900;font-size:32px;letter-spacing:.1em;line-height:1.2}
+.id h1::first-letter{color:var(--accent)}
+.id .sub .n{font-weight:600;font-size:15px}
+.tag{border-radius:0;font-family:var(--f-disp);font-size:11px}
+.v{border:1px solid var(--line2);background:var(--field);position:relative}
+.v::before,.v::after{content:"";position:absolute;width:6px;height:6px;border:1px solid var(--gold)}
+.v::before{top:2px;left:2px;border-right:0;border-bottom:0}.v::after{bottom:2px;right:2px;border-left:0;border-top:0}
+.v i{font-family:var(--f-disp);letter-spacing:.15em}
+.v b.n{font-size:30px;font-weight:600;color:var(--ink)}
+.v.ac{border-radius:6px 6px 22px 22px;border-width:2px;border-color:var(--accent)}
+.v.ac b.n{color:var(--accent)}
+.hpbar{border-radius:0;height:8px;border-color:var(--line2)}
+.hpbar .cur{background:repeating-linear-gradient(90deg,var(--good) 0 6px,color-mix(in srgb,var(--good) 80%,#000) 6px 7px)}
+.hpbar .tmp{background:var(--gold)}
+.v b.n u{color:var(--gold)}
+.btn{font-family:var(--f-disp);border-color:var(--ink3);background:var(--field)}
+.btn:hover,.act:hover{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.abilities{gap:10px 6px}
+.ab{position:relative;aspect-ratio:1/1.05;border-radius:50% 50% 46% 46%/40% 40% 56% 56%;border:1.5px solid var(--line2);background:var(--field);box-shadow:0 0 0 3px var(--panel),0 0 0 4px var(--line2);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0}
+.ab .k{font-family:var(--f-disp);letter-spacing:.2em;font-size:11px;color:var(--accent)}
+.ab .m{font-size:27px;font-weight:600;line-height:1}
+.ab.hi{border-color:var(--accent)}
+.ab.hi .m{color:var(--accent)}
+.ab .s{font-size:12px;border-top:1px solid var(--line2);padding:0 8px;margin-top:2px}
+.dot{border-radius:0;transform:rotate(45deg);width:8px;height:8px;border-color:var(--ink2)}
+.r.on .dot{background:var(--accent);border-color:var(--accent)}
+.r.ex .dot{box-shadow:0 0 0 2px var(--panel),0 0 0 3px var(--gold)}
+.r b.n{font-size:15px}
+.pip{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--accent) 70%,#fff),var(--accent) 60%);border:1.5px solid var(--accent)}
+.pip.used{background:transparent;opacity:.5;border-style:dashed}
+.sphd{font-family:var(--f-disp);letter-spacing:.3em;color:var(--accent);background:transparent;border-bottom:1px solid var(--line2)}
+.sp .nm b{font-family:var(--f-disp);font-weight:700;font-size:14px}
+.sp .lvl{font-family:var(--f-num);font-weight:600;color:var(--gold);font-size:15px}
+.ft b{font-family:var(--f-disp);font-weight:700;font-size:14px}
+.feat>.ft::before{content:"◆";color:var(--accent);font-size:8px}
+.sub .feat>.ft::before{content:"◇";color:var(--gold)}
+.sub{border-left:1px solid var(--gold)}
+.init li.cur{background:linear-gradient(90deg,var(--accent-bg),transparent)}
+.init li.cur::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
+.init .ini{font-family:var(--f-num);font-size:20px}
+.init li.target{box-shadow:inset 0 0 0 1px var(--danger),inset 0 0 0 3px var(--panel),inset 0 0 0 4px var(--danger)}
+.act{font-family:var(--f-ui);background:var(--field)}
+.act b{font-family:var(--f-disp)}
+.act.primary{background:var(--accent)}
+.tx .hd b{font-family:var(--f-disp);font-weight:700}
+.k{border-radius:0;font-family:var(--f-disp)}
+.die{border-radius:2px;background:var(--panel2)}
+@media (max-width:860px){.ab{aspect-ratio:auto;border-radius:12px;padding:6px 0}}
+
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top">
+  <div class="brand">龙与地下城<small>2024 · 私人战桌</small></div>
+  <nav class="nav"><button>人物卡</button><button aria-current="page">战斗</button><button>地图</button><button>法术</button><button>怪物</button></nav>
+  <div class="spacer"></div>
+  <span class="who-on">3 人在线</span>
+  <button class="tg" id="tg" type="button">切换明 / 暗</button>
+</header>
+
+<main class="page">
+
+<section class="hero panel">
+  <div class="portrait"><span>莱</span></div>
+  <div class="id">
+    <h1>莱雅·夜歌</h1>
+    <div class="sub">木精灵 · 游侠（猎人之道）<b class="n">5</b> 级 · 守序善良 · 背景：护林人</div>
+    <div class="subtags"><span class="tag">经验 6,500 / 14,000</span><span class="tag">灵感 ✦</span><span class="tag warn">力竭 1</span></div>
+  </div>
+  <div class="vitals">
+    <div class="v ac"><i>护甲等级</i><b class="n">16</b><em>皮甲 + 敏捷</em></div>
+    <div class="v hp">
+      <i>生命值</i>
+      <b class="n">41<span> / 44</span><u>+5 临时</u></b>
+      <div class="hpbar"><span class="cur" style="width:70%"></span><span class="tmp" style="width:11%"></span></div>
+      <div class="hpbtns"><input value="6" aria-label="数值"><button class="btn sm">伤害</button><button class="btn sm">治疗</button><button class="btn sm">临时</button></div>
+    </div>
+    <div class="v"><i>速度</i><b class="n">35</b><em>尺</em></div>
+    <div class="v"><i>先攻</i><b class="n">+3</b><em>敏捷</em></div>
+    <div class="v"><i>熟练加值</i><b class="n">+3</b><em>5 级</em></div>
+    <div class="v"><i>被动察觉</i><b class="n">15</b><em>熟练</em></div>
+  </div>
+</section>
+
+<div class="cols">
+
+<div class="col a">
+  <section class="panel t1"><h2><span>属性</span></h2>
+    <div class="bd"><div class="abilities">
+      <div class="ab"><div class="k">力量</div><div class="m n">+0</div><div class="s n">10</div></div>
+      <div class="ab hi"><div class="k">敏捷</div><div class="m n">+3</div><div class="s n">17</div></div>
+      <div class="ab"><div class="k">体质</div><div class="m n">+2</div><div class="s n">14</div></div>
+      <div class="ab"><div class="k">智力</div><div class="m n">+0</div><div class="s n">11</div></div>
+      <div class="ab hi"><div class="k">感知</div><div class="m n">+2</div><div class="s n">15</div></div>
+      <div class="ab"><div class="k">魅力</div><div class="m n">−1</div><div class="s n">9</div></div>
+    </div></div>
+  </section>
+
+  <section class="panel t2"><h2><span>豁免</span></h2>
+    <div class="bd flush"><div class="rows two">
+      <div class="r on"><i class="dot"></i><span>力量</span><b class="n">+3</b></div>
+      <div class="r on"><i class="dot"></i><span>敏捷</span><b class="n">+6</b></div>
+      <div class="r"><i class="dot"></i><span>体质</span><b class="n">+2</b></div>
+      <div class="r"><i class="dot"></i><span>智力</span><b class="n">+0</b></div>
+      <div class="r"><i class="dot"></i><span>感知</span><b class="n">+2</b></div>
+      <div class="r"><i class="dot"></i><span>魅力</span><b class="n">−1</b></div>
+    </div></div>
+  </section>
+
+  <section class="panel t3"><h2><span>技能</span><small>被动察觉 15</small></h2>
+    <div class="bd flush"><div class="rows">
+      <div class="r"><i class="dot"></i><span>杂技 <em>敏</em></span><b class="n">+3</b></div>
+      <div class="r"><i class="dot"></i><span>驯兽 <em>感</em></span><b class="n">+2</b></div>
+      <div class="r"><i class="dot"></i><span>奥秘 <em>智</em></span><b class="n">+0</b></div>
+      <div class="r on"><i class="dot"></i><span>运动 <em>力</em></span><b class="n">+3</b></div>
+      <div class="r"><i class="dot"></i><span>欺瞒 <em>魅</em></span><b class="n">−1</b></div>
+      <div class="r"><i class="dot"></i><span>历史 <em>智</em></span><b class="n">+0</b></div>
+      <div class="r"><i class="dot"></i><span>洞悉 <em>感</em></span><b class="n">+2</b></div>
+      <div class="r"><i class="dot"></i><span>威吓 <em>魅</em></span><b class="n">−1</b></div>
+      <div class="r"><i class="dot"></i><span>调查 <em>智</em></span><b class="n">+0</b></div>
+      <div class="r"><i class="dot"></i><span>医药 <em>感</em></span><b class="n">+2</b></div>
+      <div class="r on"><i class="dot"></i><span>自然 <em>智</em></span><b class="n">+3</b></div>
+      <div class="r on"><i class="dot"></i><span>察觉 <em>感</em></span><b class="n">+5</b></div>
+      <div class="r"><i class="dot"></i><span>表演 <em>魅</em></span><b class="n">−1</b></div>
+      <div class="r"><i class="dot"></i><span>游说 <em>魅</em></span><b class="n">−1</b></div>
+      <div class="r"><i class="dot"></i><span>宗教 <em>智</em></span><b class="n">+0</b></div>
+      <div class="r"><i class="dot"></i><span>妙手 <em>敏</em></span><b class="n">+3</b></div>
+      <div class="r on ex"><i class="dot"></i><span>隐匿 <em>敏</em></span><b class="n">+9</b></div>
+      <div class="r on"><i class="dot"></i><span>求生 <em>感</em></span><b class="n">+5</b></div>
+    </div></div>
+  </section>
+</div>
+
+<div class="col b">
+  <section class="panel t4"><h2><span>法术位</span><small>长休恢复</small></h2>
+    <div class="bd"><div class="slots">
+      <div class="sl"><span class="lv">1 环</span><span class="pips"><i class="pip"></i><i class="pip"></i><i class="pip"></i><i class="pip used"></i></span><span class="cnt n">3 / 4</span></div>
+      <div class="sl"><span class="lv">2 环</span><span class="pips"><i class="pip"></i><i class="pip"></i></span><span class="cnt n">2 / 2</span></div>
+      <div class="sl dim"><span class="lv">施法 DC / 攻击</span><span class="cnt n">DC 13 · +5</span></div>
+    </div></div>
+  </section>
+
+  <section class="panel t1"><h2><span>法术</span><small>已准备 5 / 5</small></h2>
+    <div class="bd flush">
+      <div class="sphd">1 环</div>
+      <div class="sp"><i class="lvl n">1</i><div class="nm"><b>猎人印记</b><span class="tag conc">专注</span></div><div class="meta">附赠动作 · 90 尺 · 1 小时</div><button class="btn sm">施放</button></div>
+      <div class="sp"><i class="lvl n">1</i><div class="nm"><b>缠绕打击</b><span class="tag conc">专注</span></div><div class="meta">附赠动作 · 自身 · 1 分钟</div><button class="btn sm">施放</button></div>
+      <div class="sp"><i class="lvl n">1</i><div class="nm"><b>侦测魔法</b><span class="tag conc">专注</span><span class="tag rit">仪式</span></div><div class="meta">动作 · 自身 · 10 分钟</div><button class="btn sm">施放</button></div>
+      <div class="sp"><i class="lvl n">1</i><div class="nm"><b>动物交谈</b><span class="tag rit">仪式</span></div><div class="meta">动作 · 自身 · 10 分钟</div><button class="btn sm">施放</button></div>
+      <div class="sphd">2 环</div>
+      <div class="sp"><i class="lvl n">2</i><div class="nm"><b>无痕步</b><span class="tag conc">专注</span></div><div class="meta">动作 · 自身 · 1 小时</div><button class="btn sm">施放</button></div>
+    </div>
+  </section>
+
+  <section class="panel t2"><h2><span>职业与种族特性</span><small>共 9 项</small></h2>
+    <div class="bd">
+      <div class="feat">
+        <div class="ft"><b>宿敌</b><span class="tag">长休 · 3 / 3</span></div>
+        <div class="desc">无需占用法术位，每长休可施放 <u>猎人印记</u> 3 次；你对被印记的目标造成的伤害额外 +1d6。</div>
+        <div class="sub">
+          <div class="feat">
+            <div class="ft"><b>猎人之道：巨物杀手</b></div>
+            <div class="desc">每回合一次，你的武器攻击命中已受伤的生物时，额外造成 1d8 伤害。</div>
+            <div class="sub"><div class="feat"><div class="ft"><b>防御战术</b><span class="tag">被动</span></div><div class="desc">被你命中的生物对你以外的目标进行攻击检定具有劣势。</div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="feat"><div class="ft"><b>额外攻击</b><span class="tag">被动</span></div><div class="desc">执行攻击动作时，可以攻击两次而非一次。</div></div>
+      <div class="feat"><div class="ft"><b>木精灵 · 黑暗视觉</b></div><div class="desc">在 60 尺内，你能在昏暗光照中如同明亮光照般视物。</div></div>
+    </div>
+  </section>
+</div>
+
+<div class="col c">
+  <section class="panel t3"><h2><span>先攻</span><small>第 <b class="n">2</b> 轮</small></h2>
+    <div class="bd flush"><ul class="init">
+      <li class="cur"><i class="mk">▶</i><b class="ini n">19</b><div class="who"><b>莱雅·夜歌</b><span class="chips"><span class="chip">猎人印记</span></span></div><div class="hpm"><span class="n">41/44</span><div class="hpbar sm"><span class="cur" style="width:93%"></span></div></div><span class="ac n">16</span></li>
+      <li class="target"><i class="mk">◎</i><b class="ini n">17</b><div class="who"><b>豺狼人弓手</b><span class="chips"><span class="chip bad">受束缚</span></span></div><div class="hpm"><span class="n">5/18</span><div class="hpbar sm"><span class="cur" style="width:28%"></span></div></div><span class="ac n">15</span></li>
+      <li class="blood"><i class="mk"></i><b class="ini n">12</b><div class="who"><b>洛兰·铁炉</b><span class="tag bld">重伤</span></div><div class="hpm"><span class="n">11/44</span><div class="hpbar sm"><span class="cur" style="width:25%"></span></div></div><span class="ac n">19</span></li>
+      <li><i class="mk"></i><b class="ini n">8</b><div class="who"><b>熊地精头目</b></div><div class="hpm"><span class="n">??</span><div class="hpbar sm"><span class="cur" style="width:100%"></span></div></div><span class="ac n">?</span></li>
+    </ul></div>
+  </section>
+
+  <section class="panel t4"><h2><span>行动</span><small>动作 ● 附赠 ● 反应 ○</small></h2>
+    <div class="bd">
+      <div class="acts">
+        <button class="act primary"><b>长弓</b><span class="n">+6 · 1d8+3 穿刺</span></button>
+        <button class="act"><b>短剑 ×2</b><span class="n">+6 · 1d6+3 穿刺</span></button>
+        <button class="act"><b>猎人印记</b><span>附赠 · 转移目标</span></button>
+        <button class="act"><b>疾走</b><span>附赠 · 移动 +35</span></button>
+        <button class="act"><b>闪避</b><span>动作</span></button>
+        <button class="act"><b>冲刺</b><span>动作</span></button>
+      </div>
+      <div class="endrow"><button class="btn">结束回合</button><button class="btn ghost">撤销</button><span class="faint">空格 = 下一位</span></div>
+    </div>
+  </section>
+
+  <section class="panel t1 logp"><h2><span>日志</span><small class="n">24 笔</small></h2>
+    <div class="bd flush"><div class="log">
+      <div class="tx"><div class="hd"><span class="no n">#24</span><b>莱雅 开始回合</b></div></div>
+      <div class="tx"><div class="hd"><span class="no n">#25</span><b>莱雅 长弓 → 豺狼人弓手</b></div>
+        <div class="ln"><span class="k hit">命中</span><span><span class="die">d20 14</span> +6 = <b class="n">20</b> vs AC 15</span></div>
+        <div class="ln"><span class="k dmg">伤害</span><span><span class="die">d8 6</span> +3 <span class="die">d6 4</span> = <b class="n">13</b> 穿刺 · 弓手 18 → <b class="n">5</b></span></div>
+      </div>
+      <div class="tx"><div class="hd"><span class="no n">#26</span><b>莱雅 缠绕打击（附赠）</b></div>
+        <div class="ln"><span class="k sv">豁免</span><span>豺狼人弓手 力量 <span class="die">d20 7</span> +1 = <b class="n">8</b> vs DC 13 <b class="bad">失败</b></span></div>
+        <div class="ln"><span class="k cond">状态</span><span>豺狼人弓手 <span class="chip bad">受束缚</span> 1 分钟 · 莱雅专注中</span></div>
+      </div>
+      <div class="tx"><div class="hd"><span class="no n">#27</span><b>洛兰·铁炉 受到攻击</b></div>
+        <div class="ln"><span class="k crit">重击</span><span><span class="die">d20 20</span> +5 = <b class="n">25</b> vs AC 19 · <span class="die">2d6 3,5</span> +3 = <b class="n">11</b> 挥砍</span></div>
+        <div class="ln"><span class="k dmg">伤害</span><span>洛兰 22 → <b class="n">11</b> · 进入重伤</span></div>
+      </div>
+    </div></div>
+  </section>
+</div>
+
+</div>
+</main>
+</div>
+<script>
+(function(){var r=document.documentElement,b=document.getElementById('tg');
+b.addEventListener('click',function(){r.setAttribute('data-theme',r.getAttribute('data-theme')==='dark'?'light':'dark');});})();
+</script>
+
+</body>
+</html>

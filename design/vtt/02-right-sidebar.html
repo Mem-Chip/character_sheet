@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VTT 布局 02 · 右侧栏</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#1d1a16;--panel:rgba(38,33,28,.95);--panel2:#332d26;--panel3:#403830;--line:#51473b;--ink:#f2eadb;--mute:#b0a490;--faint:#80766a;--accent:#e0a93b;--accent-ink:#2a1d05;--danger:#d9604a;--ok:#84b373;--info:#68a3cf;--pc:#4f8cb8;--mon:#b8523d;--r:10px}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#12100d;color:var(--ink);font:14px/1.4 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+b{font-weight:600}
+.num{font-variant-numeric:tabular-nums}
+/* mock chrome (not part of the design) */
+.mockbar{position:fixed;top:0;left:0;right:0;height:38px;background:#0c0a08;border-bottom:1px solid #2b251e;display:flex;align-items:center;gap:10px;padding:0 12px;z-index:10000;font-size:13px;color:#cfc4ae}
+.mockbar .ttl{font-weight:700;color:#fff;margin-right:6px}
+.mockbar a{color:#9fb7cc;text-decoration:none;padding:2px 6px;border-radius:5px}.mockbar a:hover{background:#1f1a14}.mockbar a.on{color:#e0a93b}
+.mockbar .seg{display:flex;border:1px solid #3a3228;border-radius:7px;overflow:hidden}
+.mockbar .seg button{padding:4px 11px;background:#17130f;color:#cfc4ae}.mockbar .seg button.on{background:#e0a93b;color:#2a1d05;font-weight:600}
+.mockbar label{display:flex;gap:5px;align-items:center;cursor:pointer}
+.mockbar .sp{flex:1}
+.stage-wrap{position:fixed;top:38px;left:0;right:0;bottom:0;overflow:hidden;background:#12100d}
+.stage{position:absolute;left:50%;top:50%;width:1440px;height:900px;margin:-450px 0 0 -720px;overflow:hidden;background:#d6ccb4;transform-origin:center center;box-shadow:0 0 0 1px #000,0 20px 60px #000}
+.legend{position:fixed;top:46px;right:8px;width:330px;max-height:calc(100vh - 56px);overflow:auto;background:#fff9e3;color:#2b2418;border-radius:10px;padding:12px 14px;z-index:10001;box-shadow:0 8px 30px rgba(0,0,0,.5);font-size:12.5px;display:none}
+body.notes-on .legend{display:block}
+.legend h4{margin:0 0 6px;font-size:14px}.legend p{margin:0 0 8px;color:#6b5d44}
+.legend li{margin:0 0 7px;list-style:none;display:flex;gap:8px}.legend ol{margin:0;padding:0}
+.legend li i{flex:none;width:20px;height:20px;border-radius:50%;background:#e8344c;color:#fff;font-style:normal;font-weight:700;display:grid;place-items:center;font-size:11px;margin-top:1px}
+.pin{position:absolute;z-index:9000;width:24px;height:24px;border-radius:50%;background:#e8344c;color:#fff;font-weight:700;font-size:12px;display:none;place-items:center;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.5);pointer-events:none}
+body.notes-on .pin{display:grid}
+body:not(.view-me) .only-me,body:not(.view-wait) .only-wait,body:not(.view-dm) .only-dm,body.view-dm .only-pl,body:not(.prompt-on) .only-prompt,body.prompt-on .no-prompt,body:not(.view-wait):not(.view-dm) .only-wd{display:none!important}
+/* shared widgets */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 6px 24px rgba(0,0,0,.35);backdrop-filter:blur(6px)}
+.btn{padding:6px 12px;border-radius:8px;background:var(--panel3);border:1px solid var(--line);color:var(--ink);white-space:nowrap}
+.btn:hover{background:#4c4237}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:#f1c46a;font-weight:700}
+.btn.danger{color:#ffb3a5}.btn.ghost{background:transparent;border-color:transparent;color:var(--mute)}
+.btn.sm{padding:3px 8px;font-size:12px;border-radius:6px}
+.btn[disabled],.btn.dis{opacity:.45;cursor:not-allowed}
+.tag{display:inline-block;padding:0 6px;border-radius:5px;font-size:11px;line-height:18px;background:var(--panel3);color:var(--mute);border:1px solid var(--line);white-space:nowrap}
+.tag.accent{background:rgba(224,169,59,.18);color:#f1c46a;border-color:rgba(224,169,59,.5)}
+.tag.danger{background:rgba(217,96,74,.18);color:#ffb3a5;border-color:rgba(217,96,74,.5)}
+.tag.info{background:rgba(104,163,207,.18);color:#a9d2ee;border-color:rgba(104,163,207,.5)}
+.tag.ok{background:rgba(132,179,115,.18);color:#bfe0b0;border-color:rgba(132,179,115,.5)}
+.muted{color:var(--mute)}.faint{color:var(--faint)}.tiny{font-size:11px}.small{font-size:12px}
+.pip{display:inline-block;width:10px;height:10px;border-radius:50%;border:1.5px solid var(--accent);margin-right:3px;vertical-align:middle}.pip.on{background:var(--accent)}
+.pip.sq{border-radius:3px}
+.hpbar{height:8px;border-radius:5px;background:#1a1612;overflow:hidden;border:1px solid #000}.hpbar i{display:block;height:100%;background:var(--ok)}.hpbar i.mid{background:#d8b04a}.hpbar i.low{background:var(--danger)}
+kbd{font:11px monospace;background:#17130f;border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--mute)}
+/* tokens / map */
+.map{position:absolute;top:0;width:1440px;height:900px}
+.map svg{position:absolute;left:0;top:0}
+.tok{position:absolute;width:48px;height:48px;margin:0;z-index:20}
+.tok .disc{position:absolute;left:3px;top:3px;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:18px;color:#fff;border:3px solid var(--pc);background:radial-gradient(circle at 35% 30%,#6aa6cf,#35698f);box-shadow:0 3px 6px rgba(0,0,0,.4)}
+.tok.mon .disc{border-color:var(--mon);background:radial-gradient(circle at 35% 30%,#d17a63,#8c3a2a)}
+.tok.hid .disc{border-style:dashed;border-color:#6b6b6b;background:rgba(80,80,80,.7);opacity:.85}
+.tok .nm{position:absolute;left:50%;top:50px;transform:translateX(-50%);white-space:nowrap;font-size:11px;font-weight:600;color:#fff;background:rgba(30,25,20,.82);padding:0 6px;border-radius:5px;line-height:17px}
+.tok .hb{position:absolute;left:4px;right:4px;top:-9px;height:6px}
+.tok .bd{position:absolute;left:50%;top:69px;transform:translateX(-50%);white-space:nowrap;font-size:10px;line-height:15px;padding:0 5px;border-radius:4px;background:#8c3a2a;color:#fff}
+.tok .bd.hurt{background:#8a6a2a}.tok .bd.ok{background:#4a6b3e}
+.tok .cd{position:absolute;right:-8px;top:-6px;display:flex;gap:2px}
+.tok .cd b{font-size:9px;background:#2b2418;color:#f1c46a;border:1px solid #f1c46a;border-radius:4px;padding:0 3px;line-height:14px}
+.tok.cur .disc{box-shadow:0 0 0 4px rgba(224,169,59,.95),0 0 18px 8px rgba(224,169,59,.55)}
+.tok.cur::before{content:"";position:absolute;left:-7px;top:-7px;right:-7px;bottom:-7px;border-radius:50%;border:2px solid var(--accent);animation:pulse 1.8s infinite}
+.tok .mark{display:none;position:absolute;left:50%;top:-30px;transform:translateX(-50%);color:var(--accent);font-size:15px;text-shadow:0 1px 2px #000}
+.tok.cur .mark{display:block}
+.tok.sel .disc{outline:3px solid #fff;outline-offset:2px}
+.tok.tgt::after{content:"";position:absolute;left:-9px;top:-9px;right:-9px;bottom:-9px;background:
+ linear-gradient(var(--danger),var(--danger)) 0 0/12px 3px no-repeat,linear-gradient(var(--danger),var(--danger)) 0 0/3px 12px no-repeat,
+ linear-gradient(var(--danger),var(--danger)) 100% 0/12px 3px no-repeat,linear-gradient(var(--danger),var(--danger)) 100% 0/3px 12px no-repeat,
+ linear-gradient(var(--danger),var(--danger)) 0 100%/12px 3px no-repeat,linear-gradient(var(--danger),var(--danger)) 0 100%/3px 12px no-repeat,
+ linear-gradient(var(--danger),var(--danger)) 100% 100%/12px 3px no-repeat,linear-gradient(var(--danger),var(--danger)) 100% 100%/3px 12px no-repeat;}
+.tok.hl .disc{animation:hl 1.2s infinite}
+.tok.ghost{opacity:.55;pointer-events:none}.tok.ghost .disc{border-style:dashed}
+.tok .bm{position:absolute;left:-7px;top:-6px;font-size:13px;filter:drop-shadow(0 1px 1px #000)}
+@keyframes pulse{0%{transform:scale(.92);opacity:1}100%{transform:scale(1.35);opacity:0}}
+@keyframes hl{0%,100%{box-shadow:0 0 0 0 rgba(104,163,207,.9)}50%{box-shadow:0 0 0 10px rgba(104,163,207,0)}}
+@keyframes ping{0%{transform:translate(-50%,-50%) scale(.2);opacity:1}100%{transform:translate(-50%,-50%) scale(1.6);opacity:0}}
+.pingm{position:absolute;z-index:15;pointer-events:none}
+.pingm i{position:absolute;left:0;top:0;width:60px;height:60px;border:3px solid #1d9db2;border-radius:50%;animation:ping 2s infinite}
+.pingm i:nth-child(2){animation-delay:.7s}
+.pingm span{position:absolute;left:14px;top:-38px;white-space:nowrap;background:#1d9db2;color:#fff;font-size:11px;font-weight:700;padding:1px 7px;border-radius:5px}
+.mlab{position:absolute;z-index:16;transform:translate(-50%,-50%);background:rgba(30,25,20,.92);color:#fff;font-size:12px;padding:1px 8px;border-radius:6px;white-space:nowrap;border:1px solid rgba(255,255,255,.2)}
+.mlab.amber{border-color:var(--accent);color:#f6d58b}.mlab.red{border-color:var(--danger);color:#ffc6bb}
+.hc{position:absolute;z-index:5000;width:236px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 11px;box-shadow:0 8px 24px rgba(0,0,0,.45);pointer-events:none;display:none;font-size:12.5px}
+.hc .h1{display:flex;justify-content:space-between;gap:6px;align-items:baseline;margin-bottom:4px}.hc .h1 b{font-size:14px}
+.hc .r{display:flex;gap:10px;color:var(--mute);margin:2px 0}.hc .r b{color:var(--ink)}
+.hc .ft{margin-top:5px;padding-top:5px;border-top:1px solid var(--line);color:var(--faint);font-size:11px}
+
+[hidden]{display:none!important}
+body.notes-on .stage-wrap{right:344px}
+*{scrollbar-width:thin;scrollbar-color:#5a4e41 transparent}
+.legend{scrollbar-color:#c9b98f transparent}
+
+/* ===== 02 · 左边地图 + 右侧固定栏（先攻 / 我 / 最新结果 / 标签页 / 主操作区） ===== */
+.top{position:absolute;left:0;right:0;top:0;height:46px;background:#211c17;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:0 12px;z-index:60}
+.top .menu{width:30px;height:30px;border-radius:8px;background:var(--panel3);display:grid;place-items:center;font-size:18px}
+.top h1{margin:0;font-size:14px}.top small{color:var(--faint);font-size:11px;margin-left:4px}
+.banner{position:absolute;left:0;width:1060px;top:0;height:46px;display:flex;align-items:center;justify-content:center;gap:12px;pointer-events:none;z-index:61}
+.banner>div{pointer-events:auto;display:flex;gap:10px;align-items:center;padding:4px 18px;border-radius:999px;background:var(--panel3);border:1px solid var(--line);white-space:nowrap}
+.banner .bg{font-weight:700;padding:0 10px;border-radius:999px;background:#17130f}
+body.view-me .banner>div{background:rgba(76,56,18,1);border-color:var(--accent)}body.view-me .banner .bg{background:var(--accent);color:var(--accent-ink)}
+body.prompt-on.view-wait .banner>div,body.prompt-on.view-dm .banner>div{background:rgba(28,48,66,1);border-color:var(--info)}
+body.prompt-on.view-wait .banner .bg,body.prompt-on.view-dm .banner .bg{background:var(--info);color:#06202e}
+.edge{position:absolute;left:0;top:46px;bottom:0;width:1060px;pointer-events:none;z-index:50}
+body.view-me .edge{box-shadow:inset 0 0 0 3px rgba(224,169,59,.85),inset 0 0 70px rgba(224,169,59,.3)}
+body.prompt-on.view-wait .edge{box-shadow:inset 0 0 0 3px rgba(104,163,207,.85),inset 0 0 70px rgba(104,163,207,.3)}
+.mapclip{position:absolute;left:0;top:46px;width:1060px;bottom:0;overflow:hidden}
+.mapclip #mapHost{position:absolute;left:0;top:-46px;width:1060px;height:900px}
+.tools{position:absolute;left:530px;bottom:14px;transform:translateX(-50%);display:flex;gap:2px;padding:5px 8px;z-index:60;align-items:center}
+.tools button{width:48px;height:44px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;color:var(--mute);position:relative}
+.tools button i{font-style:normal;font-size:18px;line-height:1.1;color:var(--ink)}.tools button.on{background:var(--accent);color:var(--accent-ink)}.tools button.on i{color:var(--accent-ink)}
+.tools .sepv{width:1px;height:30px;background:var(--line);margin:0 4px}
+.tools .nw{position:absolute;right:0;top:0;font-size:8px;background:#e8344c;color:#fff;border-radius:4px;padding:0 3px}
+.mv{position:absolute;left:12px;bottom:14px;z-index:60;padding:7px 12px;display:flex;gap:10px;align-items:center}
+.mv .mvbar{width:90px;height:6px;background:#17130f;border-radius:3px;overflow:hidden}.mv .mvbar i{display:block;height:100%;width:66%;background:var(--accent)}
+/* sidebar */
+.side{position:absolute;right:0;top:46px;bottom:0;width:380px;background:#272119;border-left:1px solid var(--line);z-index:55;display:flex;flex-direction:column}
+.side .sec{border-bottom:1px solid var(--line)}
+.ihd{display:flex;justify-content:space-between;align-items:center;padding:5px 12px 2px;font-size:12px;color:var(--mute)}
+.ihd b{color:var(--ink);font-size:13px}
+.irows{padding:0 8px 5px;display:flex;flex-direction:column;gap:1px;position:relative}
+.ir{display:flex;align-items:center;gap:8px;height:27px;padding:0 8px;border-radius:7px;position:relative}
+.ir .n{width:20px;text-align:right;color:var(--faint);font-size:12px}
+.ir .d{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;border:2px solid var(--pc);background:#2d5575;flex:none}
+.ir.mon .d{border-color:var(--mon);background:#7b3326}
+.ir .nm{width:100px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ir .hp{flex:1;display:flex;align-items:center;gap:6px;min-width:0}.ir .hp .hpbar{flex:1;height:6px}.ir .hp span{font-size:11px;color:var(--mute);min-width:44px;text-align:right}
+.ir .cd{font-size:10px;color:#f1c46a;border:1px solid rgba(224,169,59,.5);border-radius:4px;padding:0 4px}
+.ir.cur{height:42px;background:rgba(76,56,18,.95);border:1px solid var(--accent);margin:2px 0}
+.ir.cur .d{width:32px;height:32px;font-size:15px}.ir.cur .nm{font-size:15px;font-weight:700;width:112px}
+.ir.cur::before{content:"▶";position:absolute;left:-1px;color:var(--accent);font-size:10px;top:2px}
+.ir.next .n::after{content:""}.ir .nx{font-size:10px;color:#f1c46a;border:1px solid var(--accent);border-radius:5px;padding:0 5px;line-height:15px}
+.ir.hid{border:1px dashed #6b6b6b;opacity:.8}
+.ir.me .nm::after{content:" (我)";color:var(--faint);font-size:11px}
+.ir .wt{font-size:11px;color:#a9d2ee}
+.iwrap{text-align:center;color:var(--faint);font-size:10px;margin:1px 0}
+.mecard{padding:6px 12px;display:flex;flex-direction:column;gap:4px}
+.mecard .r1{display:flex;gap:10px;align-items:center}
+.mecard .pt{width:34px;height:34px;border-radius:50%;border:3px solid var(--pc);background:#2d5575;display:grid;place-items:center;font-weight:700;font-size:18px;flex:none}
+.mecard.mon .pt{border-color:var(--mon);background:#7b3326}
+.mecard .r1 b{font-size:15px}.mecard .hpline{display:flex;align-items:center;gap:8px}.mecard .hpline .hpbar{flex:1;height:12px}.mecard .hpline b{font-size:17px}
+.mecard .r3{display:flex;gap:6px;align-items:center;font-size:12px}
+.mecard .chip{background:var(--panel3);border-radius:6px;padding:1px 8px;display:inline-flex;gap:5px;align-items:center}.mecard .chip b{font-size:13px}
+.eco{display:inline-flex;gap:3px;align-items:center;padding:1px 7px;border-radius:6px;background:var(--panel3);font-size:12px}.eco i{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block}.eco.off{opacity:.45}.eco.off i{background:#666}
+.res{margin:6px 10px;padding:5px 10px;border-radius:8px;background:var(--panel2);border-left:4px solid var(--accent)}
+.res.e.pend{border-left-color:var(--info);background:rgba(28,48,66,.8)}
+.res .hd{font-weight:600;font-size:13.5px;display:flex;justify-content:space-between;gap:6px}.res .bd2{font-size:12.5px;color:var(--mute)}.res .ou{font-size:13px;color:#f1c46a}
+.e{border-left:3px solid var(--line)}.e.hit{border-left-color:var(--accent)}.e.crit{border-left-color:var(--danger)}.e.heal{border-left-color:var(--ok)}.e.miss{border-left-color:#6b6256}.e.pend{border-left-color:var(--info)}
+.tabs2{display:flex;padding:0 8px;gap:2px;border-bottom:1px solid var(--line);background:#211c17}
+.tabs2 button{padding:8px 12px 7px;font-size:13px;color:var(--mute);border-bottom:3px solid transparent}.tabs2 button.on{color:var(--ink);border-bottom-color:var(--accent);font-weight:700}
+.tabs2 .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--info);margin-left:4px}
+.content{flex:1;overflow:auto;padding:8px 10px;min-height:0}
+.grp{font-size:11px;color:var(--faint);letter-spacing:.06em;margin:8px 2px 4px;display:flex;justify-content:space-between;align-items:center}.grp:first-child{margin-top:0}
+.ar{display:flex;align-items:center;gap:9px;height:42px;padding:0 10px;border-radius:9px;background:var(--panel2);border:1px solid transparent;margin-bottom:4px;text-align:left;width:100%}
+.ar:hover{background:var(--panel3)}.ar .ic{font-size:18px;width:24px;text-align:center}.ar .tx{flex:1;min-width:0;line-height:1.2}.ar .tx b{font-size:14px;display:block}.ar .tx small{color:var(--mute);font-size:11.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ar .rt{font-size:11px;color:var(--mute);text-align:right;flex:none}
+.ar.sel{border-color:var(--accent);background:rgba(76,56,18,.9);border-bottom-left-radius:0;border-bottom-right-radius:0;margin-bottom:0}
+.arx{background:rgba(76,56,18,.55);border:1px solid var(--accent);border-top:0;border-radius:0 0 9px 9px;padding:7px 10px;margin-bottom:4px;font-size:12.5px;display:flex;align-items:center;gap:8px}.arx b{color:var(--ink)}.arx .btn{margin-left:auto}
+.ar.dis{opacity:.4}.ar.react{border-color:var(--info);opacity:1;background:rgba(28,48,66,.8)}
+.chips{display:flex;flex-wrap:wrap;gap:5px}.chips .btn{padding:4px 10px}
+.foot{flex:none;border-top:1px solid var(--line);padding:10px;background:#211c17}
+.foot .big{flex:1;height:50px;font-size:18px;border-radius:12px}.foot .fr{display:flex;gap:6px}.foot .fr .sq{width:50px;height:50px;font-size:20px;padding:0}
+.foot .sub{display:flex;gap:6px;margin-top:6px}.foot .sub .btn{flex:1;padding:5px}
+.pcard{border:1px solid var(--info);background:rgba(28,48,66,.92);border-radius:12px;padding:10px 12px;box-shadow:0 0 0 2px rgba(104,163,207,.25)}
+.pcard.amber{border-color:var(--accent);background:rgba(76,56,18,.85);box-shadow:0 0 0 2px rgba(224,169,59,.25)}
+.pcard h3{margin:0 0 3px;font-size:15px;display:flex;justify-content:space-between;align-items:center}.pcard h3 span{font-size:12px;font-weight:400;color:#a9d2ee}
+.pcard p{margin:0 0 6px;font-size:12.5px;color:var(--mute)}.pcard .eff{background:rgba(0,0,0,.25);border-radius:8px;padding:5px 9px;font-size:12.5px;margin-bottom:8px}.pcard .eff b{color:#f1c46a}
+.pcard .row{display:flex;gap:8px}.pcard .row .btn{flex:1;padding:8px 6px}
+.pcard .opt{flex:1;padding:6px;border-radius:8px;background:rgba(0,0,0,.25);border:1px solid var(--line);text-align:center;font-size:13px;line-height:1.25}.pcard .opt.on{border-color:var(--accent)}.pcard .opt small{display:block;font-size:10.5px;color:var(--mute)}
+.lg{padding:6px 10px;border-radius:7px;background:var(--panel2);margin-bottom:5px}.lg .hd{font-weight:600;font-size:13px}.lg .bd2{font-size:12px;color:var(--mute)}.lg .ou{font-size:12.5px;color:#f1c46a}.lg .dt{font-size:11px;color:var(--faint)}.lg.sys{background:none;text-align:center;color:var(--faint);font-size:11px;padding:0;border:0}
+.lg .rule{float:right}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:6px}.kv div{background:var(--panel2);border-radius:8px;padding:6px 10px}.kv small{display:block;color:var(--faint);font-size:11px}
+.rr{display:flex;align-items:center;gap:8px;height:36px;padding:0 8px;border-radius:7px;background:var(--panel2);margin-bottom:4px;font-size:13px}.rr .sp{flex:1}
+</style>
+</head>
+<body>
+<div class="stage-wrap"><div class="stage" id="stage">
+  <div class="mapclip"><div id="mapHost"></div></div>
+  <div class="edge"></div>
+  <div class="top">
+    <button class="menu" title="菜单：布局切换 / 设置 / 离开 / 底图与格子（DM）">≡</button>
+    <h1>霜牙洞窟<small>● 已连接 · 5 人在线</small></h1>
+    <div style="flex:1"></div>
+    <button class="btn only-pl">我的骰子</button><button class="btn ghost">⚙</button>
+    <span style="width:380px"></span>
+  </div>
+  <div class="banner"><div id="bnr"></div></div>
+
+  <div class="panel mv only-me"><span class="muted small">剩余移动</span><b class="num">20 / 30 尺</b><span class="mvbar"><i></i></span></div>
+  <div class="panel tools">
+    <button class="on"><i>✥</i>移动</button><button><i>📏</i>测距</button><button><i>📍</i>标记<span class="nw">新</span></button><button><i>✎</i>画笔</button><button><i>⌫</i>橡皮</button><button><i>⤢</i>适应</button>
+    <span class="sepv only-dm"></span><button class="only-dm"><i>🗺</i>底图</button><button class="only-dm"><i>＋</i>怪物</button><button class="only-dm"><i>🎲</i>检定<span class="nw">新</span></button>
+  </div>
+
+  <aside class="side" id="side">
+    <div class="sec" id="init"></div>
+    <div class="sec mecard" id="mecard"></div>
+    <div id="resbox"></div>
+    <div class="tabs2" id="tabs2"></div>
+    <div class="content" id="content"></div>
+    <div class="foot" id="foot"></div>
+  </aside>
+</div></div>
+
+<script>
+(function () {
+  const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const CELL = 48;
+  const TOKENS = [
+    { id: 'ayla', name: '艾拉·晨星', short: '艾', side: 'pc', x: 7, y: 9, cls: '人类 法师 5', hp: 24, max: 31, ac: 12, init: 18, conds: ['专注'], tags: ['专注：蛛网'] },
+    { id: 'grom', name: '格罗姆', short: '格', side: 'pc', x: 11, y: 10, cls: '半兽人 战士 5', hp: 44, max: 52, ac: 18, init: 14, conds: [], tags: [] },
+    { id: 'lily', name: '莉莉安', short: '莉', side: 'pc', x: 8, y: 6, cls: '精灵 游荡者 5', hp: 33, max: 33, ac: 15, init: 21, conds: [], tags: ['隐匿'] },
+    { id: 'bran', name: '布兰', short: '布', side: 'pc', x: 6, y: 11, cls: '矮人 牧师 5', hp: 36, max: 40, ac: 18, init: 9, conds: [], tags: [] },
+    { id: 'boss', name: '哥布林队长', short: '队', side: 'mon', x: 18, y: 9, cls: '小型 类人生物', hp: 9, max: 27, ac: 17, init: 16, conds: ['恐慌'], tags: ['恐慌'] },
+    { id: 'wolf', name: '冬狼', short: '狼', side: 'mon', x: 14, y: 12, cls: '大型 野兽', hp: 30, max: 37, ac: 13, init: 12, conds: [], tags: [] },
+    { id: 'ogre', name: '食人魔', short: '魔', side: 'mon', x: 23, y: 6, cls: '大型 巨人', hp: 59, max: 59, ac: 11, init: 7, conds: [], tags: [], hidden: true },
+  ];
+  const BY = Object.fromEntries(TOKENS.map((t) => [t.id, t]));
+  const INIT = ['lily', 'ayla', 'boss', 'grom', 'wolf', 'bran', 'ogre'];
+  const CUR = { me: 'ayla', wait: 'boss', dm: 'boss' };
+  const TGT = { me: 'wolf', wait: 'ayla', dm: 'ayla' };
+  const SEL = { me: 'ayla', wait: 'ayla', dm: 'boss' };
+  const S = { view: 'me', prompt: false, notes: false };
+  const word = (t) => (t.hp <= 0 ? '倒地' : t.hp >= t.max ? '完好' : t.hp * 2 <= t.max ? '浴血' : '受伤');
+  const pct = (t) => Math.round((t.hp / t.max) * 100);
+  const hpCls = (t) => (t.hp * 2 <= t.max ? 'low' : t.hp * 4 <= t.max * 3 ? 'mid' : '');
+  const dist = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y)) * 5;
+  const isDM = () => S.view === 'dm';
+  const visible = () => TOKENS.filter((t) => isDM() || !t.hidden);
+  const order = () => {
+    const ids = INIT.filter((id) => isDM() || !BY[id].hidden);
+    const i = ids.indexOf(CUR[S.view]);
+    return ids.slice(i).concat(ids.slice(0, i));
+  };
+  /** 玩家能看到的伤势：PC 给数字，怪物给说法；DM 都给数字 */
+  const hpText = (t) => (t.side === 'pc' || isDM() ? `${t.hp}/${t.max}` : word(t));
+
+  const ACTIONS = {
+    attack: [
+      { n: '匕首', sub: '+5 · 1d4+3 穿刺', tag: '近战 / 投掷', ico: '🗡' },
+      { n: '橡木杖', sub: '+2 · 1d6 钝击', tag: '近战', ico: '🏑' },
+    ],
+    spell: [
+      { n: '火焰箭', sub: '+7 · 1d10 火焰', tag: '戏法 · 120 尺', ico: '🔥', hot: 1 },
+      { n: '魔法飞弹', sub: '3 发 · 1d4+1 力场', tag: '1 环 · 120 尺', ico: '✦', slot: 1 },
+      { n: '灼热射线', sub: '3 道 · +7 · 2d6 火焰', tag: '2 环 · 120 尺', ico: '☄', slot: 2 },
+      { n: '火球术', sub: '敏捷 DC15 · 8d6 火焰', tag: '3 环 · 150 尺 · 20 尺球', ico: '💥', slot: 3 },
+      { n: '迷踪步', sub: '传送 30 尺', tag: '2 环 · 附赠', ico: '✧', slot: 2 },
+      { n: '法师护甲', sub: 'AC → 15 · 8 小时', tag: '1 环 · 动作', ico: '🛡', slot: 1 },
+    ],
+    feature: [
+      { n: '奥术结界', sub: '结界 HP 10/10', tag: '防护学派 · 触发', ico: '◎' },
+      { n: '奥术回复', sub: '短休后 · 1/1', tag: '休息时', ico: '↻' },
+    ],
+    general: [
+      { n: '疾走', sub: '本回合移动 +30 尺', tag: '动作', ico: '⇥' },
+      { n: '撤离', sub: '移动不引发借机', tag: '动作', ico: '↩' },
+      { n: '躲避', sub: '攻击你有劣势', tag: '动作', ico: '◐' },
+      { n: '协助', sub: '给队友优势', tag: '动作', ico: '✋' },
+      { n: '搜索', sub: '感知（察觉/调查）', tag: '动作', ico: '🔍' },
+      { n: '使用物品', sub: '药水、卷轴…', tag: '动作', ico: '⚗' },
+    ],
+    trigger: [
+      { n: '护盾术', sub: '被命中时 · AC +5', tag: '1 环 · 反应', ico: '🛡' },
+      { n: '奥术结界', sub: '受伤时吸收伤害', tag: '免费', ico: '◎' },
+    ],
+  };
+  const SLOTS = [[1, 3, 4], [2, 3, 3], [3, 1, 2]]; // 环、剩余、总数
+
+  const LOG = {
+    me: [
+      { k: 'hit', head: '莉莉安 → 冬狼', body: '短弓 · 命中（19 vs AC 13）', out: '12 点穿刺 · 冬狼 受伤', det: 'd20 14 +5 · 偷袭 2d6 + 1d6+4', big: 1 },
+      { k: 'sys', head: '第 3 轮 · 莉莉安的回合', body: '' },
+      { k: 'miss', head: '冬狼 → 格罗姆', body: '撕咬 · 未命中（15 vs AC 18）', out: '', det: 'd20 11 +4' },
+      { k: 'heal', head: '布兰 → 格罗姆', body: '治疗真言 · 恢复 9 点生命值', out: '格罗姆 44/52', det: '2 环位 · 2d8' },
+      { k: 'crit', head: '格罗姆 → 哥布林队长', body: '巨斧 · 重击！（20）', out: '16 点挥砍 · 哥布林队长 浴血', det: 'd20 20 · 1d12+4 ×2' },
+    ],
+    wait: [
+      { k: 'pend', head: '哥布林队长 → 艾拉', body: '标枪 · 掷出 15 …等待你的反应', out: '', det: 'd20 11 +4', big: 1 },
+      { k: 'hit', head: '艾拉 → 冬狼', body: '火焰箭 · 命中（21 vs AC 13）', out: '7 点火焰 · 冬狼 受伤', det: 'd20 14 +7 · 1d10' },
+      { k: 'sys', head: '第 3 轮 · 艾拉的回合', body: '' },
+      { k: 'hit', head: '莉莉安 → 冬狼', body: '短弓 · 命中（19 vs AC 13）', out: '12 点穿刺 · 冬狼 受伤', det: 'd20 14 +5' },
+    ],
+    dm: [
+      { k: 'pend', head: '哥布林队长 → 艾拉', body: '标枪 · 15 vs AC 12 → 命中；等待艾拉的反应（护盾术）', out: '', det: 'd20 11 +4 = 15 · 若用护盾术 AC 17 → 未命中', big: 1 },
+      { k: 'hit', head: '艾拉 → 冬狼', body: '火焰箭 · 命中（21 vs AC 13）', out: '7 点火焰 · 冬狼 30/37', det: 'd20 14 +7 · 1d10=7', rule: 1 },
+      { k: 'sys', head: '第 3 轮 · 艾拉的回合', body: '' },
+      { k: 'hit', head: '莉莉安 → 冬狼', body: '短弓 · 命中（19 vs AC 13）', out: '12 点穿刺 · 冬狼 37→30？', det: 'd20 14 +5 · 偷袭', rule: 1 },
+    ],
+  };
+  const SCENE = {
+    me: { badge: '轮到你了', line: '艾拉的回合', sub: '移动 30 尺 · 动作 · 附赠 · 反应 都可用' },
+    wait: { badge: '等待中', line: '哥布林队长的回合', sub: '由 DM 操作 · 你排在先攻第 2 位' },
+    dm: { badge: 'DM 操作', line: '哥布林队长的回合', sub: '下一位：格罗姆' },
+  };
+
+  const MAPSVG = (() => {
+    const rnd = (() => { let s = 7; return () => ((s = (s * 9301 + 49297) % 233280) / 233280); })();
+    let flags = '';
+    for (let r = 0; r < 19; r++) for (let c = 0; c < 30; c++) { const v = rnd(); if (v < .22) flags += `<rect x="${c * 48 + 2}" y="${r * 48 + 2}" width="44" height="44" fill="rgba(110,90,55,${(0.05 + v * .3).toFixed(2)})"/>`; }
+    const torch = (x, y) => `<circle cx="${x}" cy="${y}" r="90" fill="url(#glow)"/><circle cx="${x}" cy="${y}" r="5" fill="#f4b84a" stroke="#6b3f10" stroke-width="2"/>`;
+    return `<svg width="1440" height="900" viewBox="0 0 1440 900" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="rgba(70,52,30,.30)" stroke-width="1"/></pattern>
+<pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="10" stroke="rgba(110,80,40,.5)" stroke-width="3"/></pattern>
+<linearGradient id="pool" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fb0c4"/><stop offset="1" stop-color="#4a8299"/></linearGradient>
+<radialGradient id="glow"><stop offset="0" stop-color="rgba(255,190,90,.45)"/><stop offset="1" stop-color="rgba(255,190,90,0)"/></radialGradient>
+</defs>
+<rect width="1440" height="900" fill="#d6ccb4"/>${flags}
+<rect x="192" y="288" width="240" height="144" rx="6" fill="rgba(150,60,50,.22)" stroke="rgba(120,40,30,.35)" stroke-width="2"/>
+<rect x="576" y="336" width="240" height="192" rx="70" fill="url(#pool)" stroke="#2f5a6c" stroke-width="3"/>
+<ellipse cx="696" cy="432" rx="60" ry="28" fill="rgba(255,255,255,.12)"/>
+<text x="696" y="440" text-anchor="middle" font-size="13" fill="rgba(255,255,255,.7)">深水池</text>
+<rect x="1008" y="384" width="288" height="192" rx="10" fill="url(#hatch)" stroke="rgba(110,80,40,.5)" stroke-dasharray="6 4"/>
+<text x="1152" y="480" text-anchor="middle" font-size="13" fill="rgba(80,55,25,.8)">乱石堆（困难地形）</text>
+<rect x="240" y="144" width="96" height="48" rx="3" fill="#8a6a3f" stroke="#523a1b" stroke-width="2"/><rect x="288" y="192" width="48" height="48" rx="3" fill="#7b5c34" stroke="#523a1b" stroke-width="2"/>
+<g fill="#5d5146" stroke="#2f2820" stroke-width="3"><rect x="432" y="240" width="48" height="48" rx="6"/><rect x="432" y="576" width="48" height="48" rx="6"/><rect x="960" y="240" width="48" height="48" rx="6"/><rect x="960" y="576" width="48" height="48" rx="6"/></g>
+<g fill="#4b4036" stroke="#271f18" stroke-width="3"><rect x="0" y="0" width="1440" height="96"/><rect x="0" y="0" width="48" height="900"/><rect x="1392" y="0" width="48" height="900"/><rect x="0" y="852" width="1440" height="48"/><rect x="1056" y="96" width="48" height="144"/></g>
+<rect x="672" y="60" width="96" height="40" fill="#8f6a3a" stroke="#4a3118" stroke-width="3"/><text x="720" y="85" text-anchor="middle" font-size="12" fill="#fff">木门</text>
+<rect x="0" y="0" width="1440" height="900" fill="url(#grid)"/>
+${torch(430, 108)}${torch(1010, 108)}${torch(60, 500)}
+</svg>`;
+  })();
+
+  const ov = []; // 本次叠加层元素
+  let mapHost = null, OX = 0, hcard = null;
+
+  function tokHTML(t) {
+    const cur = CUR[S.view] === t.id, tgt = TGT[S.view] === t.id, sel = SEL[S.view] === t.id;
+    const hl = S.prompt && ((S.view !== 'me' && (t.id === 'boss' || t.id === 'ayla')) || (S.view === 'me' && t.id === 'wolf'));
+    const cls = ['tok', t.side, cur ? 'cur' : '', tgt ? 'tgt' : '', sel ? 'sel' : '', t.hidden ? 'hid' : '', hl ? 'hl' : ''].join(' ');
+    const showBar = t.side === 'pc' || isDM();
+    const bloody = t.hp * 2 <= t.max;
+    const w = word(t);
+    let under = '';
+    if (!showBar && w !== '完好') under = `<span class="bd ${w === '浴血' ? '' : 'hurt'}">${w}</span>`;
+    if (isDM() && t.hidden) under = `<span class="bd" style="background:#555">隐藏中 · 玩家看不到</span>`;
+    return `<div class="${cls}" data-id="${t.id}" style="left:${t.x * CELL}px;top:${t.y * CELL}px">
+      <span class="mark">▼</span>
+      ${showBar ? `<div class="hpbar hb"><i class="${hpCls(t)}" style="width:${pct(t)}%"></i></div>` : ''}
+      <div class="disc">${t.short}</div>
+      ${bloody ? '<span class="bm">🩸</span>' : ''}
+      ${t.conds.length ? `<div class="cd">${t.conds.map((c) => `<b>${c}</b>`).join('')}</div>` : ''}
+      <div class="nm">${t.name}</div>${under}</div>`;
+  }
+  const C = (t) => ({ x: t.x * CELL + CELL / 2, y: t.y * CELL + CELL / 2 });
+  function overlay() {
+    const v = S.view;
+    let svg = '', lab = '';
+    const A = C(BY.ayla), W = C(BY.wolf), B = C(BY.boss);
+    if (v === 'me') {
+      svg += `<rect x="144" y="240" width="432" height="432" rx="14" fill="rgba(224,169,59,.10)" stroke="rgba(190,130,20,.7)" stroke-width="2" stroke-dasharray="8 6"/>`;
+      lab += `<div class="mlab amber" style="left:196px;top:256px">可移动范围 · 剩 20 尺</div>`;
+      svg += `<polyline points="${A.x},${A.y} 312,408 312,360" fill="none" stroke="#e0a93b" stroke-width="4" stroke-dasharray="2 8" stroke-linecap="round"/>`;
+      lab += `<div class="tok ghost mine" style="left:288px;top:336px"><div class="disc">艾</div></div><div class="mlab amber" style="left:312px;top:312px">已走 10 尺 · 剩 10 尺</div>`;
+      svg += `<line x1="${A.x}" y1="${A.y}" x2="${W.x}" y2="${W.y}" stroke="#d9604a" stroke-width="3" stroke-dasharray="10 6"/>`;
+      lab += `<div class="mlab red" style="left:${(A.x + W.x) / 2}px;top:${(A.y + W.y) / 2 + 22}px">35 尺 · 火焰箭射程 120 ✓</div>`;
+    } else {
+      svg += `<defs><marker id="ah" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0L8 4L0 8z" fill="#d9604a"/></marker></defs><line x1="${B.x - 26}" y1="${B.y}" x2="${A.x + 30}" y2="${A.y}" stroke="#d9604a" stroke-width="3" stroke-dasharray="10 6" marker-end="url(#ah)"/>`;
+      lab += `<div class="mlab red" style="left:${(A.x + B.x) / 2 + 20}px;top:${A.y - 28}px">标枪 · 55 尺（射程 30/120）</div>`;
+    }
+    lab += `<div class="pingm" style="left:648px;top:264px"><i></i><i></i><span>莉莉安 · 标记</span></div>`;
+    return `<svg width="1440" height="900" style="z-index:10;pointer-events:none">${svg}</svg>${lab}`;
+  }
+  function renderMap() {
+    if (!mapHost) return;
+    mapHost.innerHTML = `<div class="map" style="left:${-OX}px">${MAPSVG}<div class="ovlay">${overlay()}</div>${visible().map(tokHTML).join('')}</div>`;
+    $$('.tok[data-id]', mapHost).forEach((el) => {
+      el.addEventListener('mouseenter', () => showCard(el.dataset.id));
+      el.addEventListener('mouseleave', () => (hcard.style.display = 'none'));
+      el.addEventListener('click', () => { if (VTT.onTokenClick) VTT.onTokenClick(el.dataset.id); });
+    });
+  }
+  function showCard(id) {
+    const t = BY[id], me = BY[SEL[S.view]];
+    const full = t.side === 'pc' || isDM();
+    const d = t.id === me.id ? '' : `<div class="r">距离 ${me.name.split('·')[0]}：<b>${dist(t, me)} 尺</b></div>`;
+    hcard.innerHTML = `<div class="h1"><b>${t.name}</b><span class="faint tiny">${t.cls}</span></div>
+      <div class="r">${full ? `AC <b>${t.ac}</b>` : ''}<span>生命 <b class="num">${hpText(t)}</b></span>${isDM() ? `<span>先攻 <b>${t.init}</b></span>` : ''}</div>
+      <div class="r">${t.tags.length ? t.tags.map((x) => `<span class="tag accent">${x}</span>`).join(' ') : '<span class="faint">没有状态</span>'}</div>${d}
+      <div class="ft">${t.side === 'mon' ? '右键：设为目标 · ' : ''}${t.side === 'pc' ? '点击：看详情 · ' : ''}${isDM() ? '拖动：移动棋子' : ''}</div>`;
+    const x = Math.min(1440 - 250, t.x * CELL - OX + 56), y = Math.max(8, Math.min(900 - 150, t.y * CELL - 10));
+    hcard.style.left = x + 'px'; hcard.style.top = y + 'px'; hcard.style.display = 'block';
+  }
+
+  const VTT = {
+    S, TOKENS, BY, INIT, CUR, TGT, SEL, ACTIONS, SLOTS, LOG, SCENE, word, pct, hpCls, dist, isDM, order, hpText, visible, $, $$,
+    handlers: [],
+    onChange(fn) { this.handlers.push(fn); },
+    set(patch) {
+      Object.assign(S, patch);
+      document.body.classList.remove('view-me', 'view-wait', 'view-dm');
+      document.body.classList.add('view-' + S.view);
+      document.body.classList.toggle('prompt-on', S.prompt);
+      document.body.classList.toggle('notes-on', S.notes);
+      $$('.mockbar .seg button').forEach((b) => b.classList.toggle('on', b.dataset.v === S.view));
+      $('#ckPrompt').checked = S.prompt; $('#ckNotes').checked = S.notes;
+      $$('.pin').forEach((p) => { p.style.display = ''; const vv = p.dataset.view; p.hidden = !!(vv && vv.split(' ').indexOf(S.view) < 0); });
+      $$('.legend li').forEach((p) => { const vv = p.dataset.view; p.hidden = !!(vv && vv.split(' ').indexOf(S.view) < 0); });
+      if (this.fit) this.fit();
+      renderMap();
+      this.handlers.forEach((f) => f(S));
+      try { history.replaceState(null, '', '#' + S.view + (S.prompt ? '+p' : '') + (S.notes ? '+n' : '')); } catch (e) {}
+    },
+    init(o) {
+      OX = o.ox || 0;
+      const stage = $('#stage');
+      mapHost = $('#mapHost');
+      hcard = document.createElement('div'); hcard.className = 'hc'; stage.appendChild(hcard);
+      const links = [['01-bottom-hotbar.html', '01 底部指挥台'], ['02-right-sidebar.html', '02 右侧栏'], ['03-token-centric.html', '03 棋子为中心']]
+        .map(([h, n]) => `<a href="${h}" class="${n.startsWith(o.num) ? 'on' : ''}">${n}</a>`).join('');
+      const bar = document.createElement('div'); bar.className = 'mockbar';
+      bar.innerHTML = `<span class="ttl">VTT 布局草图</span>${links}<span class="sp"></span>
+        <div class="seg"><button data-v="me">玩家 · 我的回合 <kbd>1</kbd></button><button data-v="wait">玩家 · 等待中 <kbd>2</kbd></button><button data-v="dm">DM 视角 <kbd>3</kbd></button></div>
+        <label><input type="checkbox" id="ckPrompt"> 反应 / 决策提示 <kbd>P</kbd></label>
+        <label><input type="checkbox" id="ckNotes"> 标注与说明 <kbd>N</kbd></label>`;
+      document.body.prepend(bar);
+      $$('.seg button', bar).forEach((b) => b.addEventListener('click', () => this.set({ view: b.dataset.v })));
+      $('#ckPrompt').addEventListener('change', (e) => this.set({ prompt: e.target.checked }));
+      $('#ckNotes').addEventListener('change', (e) => this.set({ notes: e.target.checked }));
+      addEventListener('keydown', (e) => {
+        if (/input|textarea|select/i.test(e.target.tagName)) return;
+        if (e.key === '1') this.set({ view: 'me' }); if (e.key === '2') this.set({ view: 'wait' }); if (e.key === '3') this.set({ view: 'dm' });
+        if (e.key === 'p' || e.key === 'P') this.set({ prompt: !S.prompt }); if (e.key === 'n' || e.key === 'N') this.set({ notes: !S.notes });
+      });
+      // 标注
+      const lg = document.createElement('div'); lg.className = 'legend';
+      lg.innerHTML = `<h4>${o.legendTitle}</h4><p>${o.legendIntro}</p><ol>${o.notes.map((n) => `<li data-view="${n.view || ''}"><i>${n.n}</i><div>${n.text}</div></li>`).join('')}</ol>`;
+      document.body.appendChild(lg);
+      o.notes.forEach((n) => { const p = document.createElement('div'); p.className = 'pin'; p.textContent = n.n; p.style.left = n.x + 'px'; p.style.top = n.y + 'px'; p.dataset.view = n.view || ''; stage.appendChild(p); });
+      const fit = () => { const w = $('.stage-wrap'); const s = Math.min(w.clientWidth / 1440, w.clientHeight / 900, 1.4); stage.style.transform = `scale(${s})`; };
+      this.fit = fit; addEventListener('resize', fit); fit();
+      const h = (location.hash || '').replace('#', '').split('+');
+      this.set({ view: ['me', 'wait', 'dm'].includes(h[0]) ? h[0] : 'me', prompt: h.includes('p'), notes: h.includes('n') });
+    },
+  };
+  window.VTT = VTT; window.$ = $; window.$$ = $$;
+})();
+
+const NOTES = [
+  { n: 1, x: 530, y: 12, text: '<b>顶部回合横幅</b>：地图上方一条固定细条，永远回答「现在是谁的回合 / 我要不要动」。我的回合 = 琥珀色 + 地图边缘发光；有待决反应 = 蓝色并写明在等谁（DM 看到等的是哪个玩家）。' },
+  { n: 2, x: 1062, y: 58, text: '<b>先攻列表在侧栏最上方，永不折叠</b>：当前行动者那一行放大（头像+名字+HP），其他行每行 30px。末尾的「↻ 下一轮」是回绕标记。怪物只给伤势词；隐藏怪物玩家端不出现。比 01 更适合「想一眼看全队血量」的桌。' },
+  { n: 3, x: 1062, y: 296, text: '<b>「我」卡永远可见</b>：与标签页无关——HP、AC、剩余移动、动作/附赠/反应灯、专注标签。切到日志或角色页也不会丢掉自己的状态。DM 视角这里换成当前选中的怪物，含数字和 ±HP 快捷。' },
+  { n: 4, x: 1062, y: 370, text: '<b>最新结果条</b>：永远钉在标签页上方的一张小卡；点它直接跳到「日志」页。' },
+  { n: 5, x: 1062, y: 445, text: '<b>标签页</b>：行动 / 日志 / 角色 / 遭遇（DM）。非自己回合时「行动」页会把「反应」置顶、其余变灰；有待决提示时标签上亮蓝点。' },
+  { n: 6, x: 1062, y: 480, text: '<b>行动页 = 带分组的纵向清单</b>，每行 42px：图标 + 名 + 一行数值。点选一行就在原地展开「目标 · 距离 · 命中/伤害 · 【施放】」（手风琴），不用在地图和面板之间来回找。通用动作压缩成一排小按钮。' },
+  { n: 7, x: 1062, y: 820, text: '<b>主操作区（侧栏最底）</b>：平时 = 巨大的「结束回合」；有待决提示时，提示卡<b>取代</b>这个区域（因为此时唯一该做的事就是回应它）。提示在侧栏里，所以不盖地图；地图上相关棋子脉冲高亮。' },
+  { n: 8, x: 46, y: 828, text: '<b>地图底部悬浮工具条</b>（居中小条）：移动/测距/标记（新）/画笔/橡皮/适应，DM 多出底图/加怪物/检定。地图区域 1060×854，约占屏幕 74%。' },
+  { n: 9, x: 40, y: 780, view: 'me', text: '<b>剩余移动</b>悬浮在地图左下，拖棋子时同时在棋子旁显示路径与已走/剩余尺数（新）。' },
+  { n: 10, x: 830, y: 480, text: '悬停任意棋子出现卡片（新）。地图为了让出侧栏而整体左移，棋子仍在可见区。' },
+];
+VTT.init({ num: '02', ox: 140, notes: NOTES, legendTitle: '02 · 右侧栏', legendIntro: '更传统：地图 74% + 右侧 380px 固定栏，信息按「谁在行动 → 我是谁 → 刚发生什么 → 我能做什么 → 主按钮」从上到下。' });
+const T = VTT.BY;
+let tab = '行动', sel = '火焰箭';
+const eco = (on, l) => `<span class="eco ${on ? '' : 'off'}"><i></i>${l}</span>`;
+function init() {
+  const ids = VTT.order(), v = VTT.S.view, cur = VTT.CUR[v];
+  const full = VTT.INIT.filter((id) => VTT.isDM() || !T[id].hidden), wf = full.indexOf(cur);
+  let h = `<div class="ihd"><span><b>先攻</b> · 第 3 轮</span><span id="wt" class="wt"></span></div><div class="irows">`;
+  ids.forEach((id, i) => {
+    const t = T[id], oi = full.indexOf(id);
+    if (i > 0 && oi < wf && full.indexOf(ids[i - 1]) >= wf) h += `<div class="iwrap">— ↻ 下一轮 —</div>`;
+    const pc = t.side === 'pc' || VTT.isDM();
+    h += `<div class="ir ${t.side} ${i === 0 ? 'cur' : ''} ${i === 1 ? 'next' : ''} ${t.hidden ? 'hid' : ''} ${id === 'ayla' && v !== 'dm' ? 'me' : ''}">
+      <span class="n">${pc ? t.init : ''}</span><span class="d">${t.short}</span><span class="nm">${t.name}</span>
+      <span class="hp">${pc ? `<span class="hpbar"><i class="${VTT.hpCls(t)}" style="width:${VTT.pct(t)}%"></i></span>` : '<span style="flex:1"></span>'}<span>${t.hidden ? '隐藏' : VTT.hpText(t)}</span></span>
+      ${t.conds.length ? `<span class="cd">${t.conds[0]}</span>` : ''}${i === 1 ? '<span class="nx">下一位</span>' : ''}</div>`;
+  });
+  h += '</div>';
+  $('#init').innerHTML = h;
+  const p = VTT.S.prompt;
+  $('#wt').textContent = v === 'me' ? '轮到你 · 你可以行动' : v === 'wait' ? (p ? '⏳ 等你选择反应' : '等 DM 操作 · 你是下一个') : (p ? '⏳ 等 艾拉 的反应' : 'DM 操作中');
+}
+function mecard() {
+  const v = VTT.S.view, el = $('#mecard'), turn = v === 'me';
+  if (v === 'dm') {
+    el.className = 'sec mecard mon';
+    el.innerHTML = `<div class="r1"><div class="pt">队</div><div style="flex:1"><b>哥布林队长</b> <span class="tag danger">浴血</span> <span class="tag accent">恐慌</span><div class="muted small">小型 类人生物 · 选中 · 当前行动者</div></div></div>
+      <div class="hpline"><b class="num">9</b><span class="muted">/ 27</span><span class="hpbar"><i class="low" style="width:33%"></i></span><button class="btn sm">−5</button><button class="btn sm">−1</button><button class="btn sm">+1</button><button class="btn sm">+5</button></div>
+      <div class="r3"><span class="chip">AC <b>17</b></span><span class="chip">移动 <b>30/30</b></span>${eco(1, '动作')}${eco(1, '附赠')}${eco(1, '反应')}</div>`;
+    return;
+  }
+  const a = T.ayla; el.className = 'sec mecard';
+  el.innerHTML = `<div class="r1"><div class="pt">艾</div><div style="flex:1"><b>艾拉·晨星</b> <span class="tag accent">专注：蛛网</span><div class="muted small">人类 法师 5</div></div><button class="btn sm ghost">详情 ›</button></div>
+    <div class="hpline"><b class="num">${a.hp}</b><span class="muted">/ ${a.max}</span><span class="hpbar"><i class="mid" style="width:${VTT.pct(a)}%"></i></span></div>
+    <div class="r3"><span class="chip">AC <b>12</b></span><span class="chip">移动 <b>${turn ? '20' : '—'}/30</b></span>${eco(turn, '动作')}${eco(turn, '附赠')}${eco(1, '反应')}</div>`;
+}
+function resbox() {
+  const L = VTT.LOG[VTT.S.view][0];
+  $('#resbox').innerHTML = `<div class="res e ${L.k}" id="resc" style="cursor:pointer"><div class="hd"><span>${L.head}</span><span class="faint tiny">最新 ›</span></div><div class="bd2" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${L.body}${L.out ? ' → <span class="ou">' + L.out + '</span>' : ''}</div></div>`;
+  $('#resc').onclick = () => { tab = '日志'; render(); };
+}
+function tabs() {
+  const dm = VTT.isDM(), names = dm ? ['行动', '日志', '状态与调整', '遭遇'] : ['行动', '日志', '角色'];
+  $('#tabs2').innerHTML = names.map((n) => `<button class="${n === tab ? 'on' : ''}" data-t="${n}">${n}${n === '行动' && VTT.S.prompt && VTT.S.view !== 'dm' ? '<i class="dot"></i>' : ''}</button>`).join('');
+  $$('[data-t]').forEach((b) => (b.onclick = () => { tab = b.dataset.t; render(); }));
+}
+const row = (x, o = {}) => `<button class="ar ${o.sel ? 'sel' : ''} ${o.dis ? 'dis' : ''} ${o.react ? 'react' : ''}" data-n="${x.n}"><span class="ic">${x.ico}</span><span class="tx"><b>${x.n}</b><small>${x.sub} · ${x.tag}</small></span><span class="rt">${o.rt || ''}</span></button>${o.sel ? `<div class="arx"><span>→ <b style="color:#ffb3a5">冬狼</b> · 35 尺（射程 120 ✓）· <b>+7</b> 命中 · <b>${x.sub.split('· ')[1] || ''}</b></span><button class="btn primary sm">施放 ▶</button></div>` : ''}`;
+function actions() {
+  const v = VTT.S.view, A = VTT.ACTIONS, turn = v === 'me';
+  if (v === 'dm') {
+    return `<div class="grp"><span>动作</span><span>DM 可强制执行</span></div>
+    ${row({ n: '弯刀', sub: '+4 · 1d6+2 挥砍', tag: '近战 5 尺', ico: '🗡' })}
+    ${row({ n: '标枪', sub: '+4 · 1d6+2 穿刺', tag: '30/120 尺', ico: '🏹' }, { sel: 1 }).replace('冬狼', '艾拉·晨星').replace('35 尺（射程 120 ✓）', '55 尺（超出 30，射程 120）')}
+    <div class="grp"><span>附赠动作</span></div>
+    ${row({ n: '号令', sub: '友军优势', tag: '附赠', ico: '📣' })}${row({ n: '躲藏', sub: '敏捷（隐匿）', tag: '附赠', ico: '◐' })}
+    <div class="grp"><span>通用动作</span></div><div class="chips"><button class="btn sm">疾走</button><button class="btn sm">撤离</button><button class="btn sm">躲避</button><button class="btn sm">协助</button><button class="btn sm">搜索</button></div>`;
+  }
+  let h = '';
+  const trig = A.trigger.map((x) => row(x, { react: v === 'wait', dis: turn, rt: v === 'wait' ? '可用' : '被动' })).join('');
+  if (!turn) h += `<div class="grp"><span>时机到了会问</span><span>你的反应可用</span></div>${trig}`;
+  h += `<div class="grp"><span>法术位</span><span>${VTT.SLOTS.map(([l, r, t]) => `${l}环 ${'<i class="pip on"></i>'.repeat(r)}${'<i class="pip"></i>'.repeat(t - r)}`).join('　')}</span></div>`;
+  h += A.spell.map((x) => row(x, { sel: turn && x.n === sel, dis: !turn, rt: x.slot ? `${VTT.SLOTS[x.slot - 1][1]}/${VTT.SLOTS[x.slot - 1][2]}` : '戏法' })).join('');
+  h += `<div class="grp"><span>武器攻击</span></div>` + A.attack.map((x) => row(x, { dis: !turn })).join('');
+  h += `<div class="grp"><span>特性</span></div>` + A.feature.map((x) => row(x, { dis: !turn })).join('');
+  h += `<div class="grp"><span>通用动作</span></div><div class="chips" style="${turn ? '' : 'opacity:.4'}">${A.general.map((x) => `<button class="btn sm">${x.n}</button>`).join('')}</div>`;
+  if (turn) h += `<div class="grp"><span>时机到了会问</span></div>${trig}`;
+  return h;
+}
+function logTab() {
+  const L = VTT.LOG[VTT.S.view], dm = VTT.isDM();
+  return `<div class="grp"><span>共 ${L.length + 14} 笔 · 新的在上</span><span>${dm ? '<button class="btn sm">撤销最后一笔</button>' : ''}</span></div>` + L.map((e) => e.k === 'sys' ? `<div class="lg sys">— ${e.head} —</div>` :
+    `<div class="lg e ${e.k}"><div class="hd">${e.head}${dm && e.rule ? '<button class="btn sm rule">裁定</button>' : ''}</div><div class="bd2">${e.body}</div>${e.out ? `<div class="ou">${e.out}</div>` : ''}<div class="dt">${e.det}</div></div>`).join('') + '<div class="lg sys"><button class="btn sm">显示更早的 14 笔</button></div>';
+}
+function charTab() {
+  if (VTT.isDM()) return `<div class="grp"><span>手动调整（记进日志，可撤销）</span></div><div class="rr">数值 <input value="6" style="width:50px;background:#17130f;border:1px solid var(--line);border-radius:6px;color:var(--ink);padding:2px 6px"><button class="btn sm">伤害</button><button class="btn sm">治疗</button><button class="btn sm">临时</button></div>
+    <div class="grp"><span>效应与状态</span></div><div class="rr"><span class="tag accent">恐慌</span><span class="faint tiny">来自 格罗姆 · 到其下回合结束</span><span class="sp"></span><button class="btn sm ghost">移除</button></div><div class="rr"><select style="background:#17130f;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:2px"><option>施加状态…</option></select><button class="btn sm">施加</button></div>
+    <div class="grp"><span>掷骰</span></div><div class="rr">豁免 ▾ 敏捷 ▾ <button class="btn sm">掷骰</button></div>`;
+  return `<div class="grp"><span>属性 · 数值</span></div><div class="kv"><div><small>法术攻击 / DC</small><b>+7 / 15</b></div><div><small>先攻</small><b>18</b></div><div><small>速度</small><b>30 尺</b></div><div><small>被动察觉</small><b>14</b></div></div>
+   <div class="grp"><span>资源</span></div><div class="rr">奥术结界 <span class="sp"></span><i class="pip on sq"></i><i class="pip on sq"></i><i class="pip on sq"></i><i class="pip sq"></i><span class="tiny faint">10/10</span></div><div class="rr">奥术回复 <span class="sp"></span><i class="pip on sq"></i></div>
+   <div class="grp"><span>效应</span></div><div class="rr"><span class="tag accent">专注：蛛网</span><span class="sp"></span><button class="btn sm ghost">终止专注</button></div>
+   <div class="grp"><span>快速检定 / 豁免 <span style="background:#e8344c;color:#fff;border-radius:4px;padding:0 4px;font-size:9px">新</span></span></div><div class="chips"><button class="btn sm">察觉</button><button class="btn sm">调查</button><button class="btn sm">奥秘</button><button class="btn sm">先攻</button><button class="btn sm">敏捷豁免</button><button class="btn sm">体质豁免</button><button class="btn sm">自定义…</button></div>`;
+}
+function enc() {
+  const rows = VTT.visible().map((t) => `<div class="rr"><span class="ir ${t.side}" style="padding:0;height:auto"><span class="d">${t.short}</span></span><b style="width:90px">${t.name}</b><span class="muted tiny">${t.init}</span><span class="sp"></span>${t.side === 'mon' ? `<button class="btn sm ghost">${t.hidden ? '亮出' : '藏起'}</button>` : ''}<button class="btn sm ghost">目标</button></div>`).join('');
+  return `<div class="grp"><span>参与者管理</span><span><button class="btn sm">＋ 角色</button> <button class="btn sm">＋ 怪物</button></span></div>${rows}`;
+}
+function foot() {
+  const v = VTT.S.view, p = VTT.S.prompt, el = $('#foot');
+  if (v === 'me' && p) el.innerHTML = `<div class="pcard amber"><h3>选择法术位 · 魔法飞弹 → 冬狼 <span style="color:var(--mute)">Esc 取消</span></h3><p>冬狼在 35 尺外，射程内。高环位多 1 发。</p><div class="row" style="margin-bottom:8px"><div class="opt on"><b>1 环</b><small>3/4 · 3 发</small></div><div class="opt"><b>2 环</b><small>3/3 · 4 发</small></div><div class="opt"><b>3 环</b><small>1/2 · 5 发</small></div></div><div class="row"><button class="btn">取消</button><button class="btn primary">施放（1 环）</button></div></div>`;
+  else if (v === 'wait' && p) el.innerHTML = `<div class="pcard"><h3>⚡ 你可以做出反应 <span>⏳ 0:12</span></h3><p><b>哥布林队长</b> 的标枪命中了你（<b>15</b> vs AC 12）</p><div class="eff"><b>护盾术</b>（1 环 · 反应）：AC → <b>17</b>，这次攻击<b>将未命中</b>。消耗 1 个 1 环位（3 → 2）。</div><div class="row"><button class="btn">不用</button><button class="btn primary" style="flex:2">使用护盾术</button></div></div>`;
+  else if (v === 'dm' && p) el.innerHTML = `<div class="pcard"><h3>⏳ 等待 艾拉·晨星 的反应 <span>0:12</span></h3><p>护盾术：哥布林队长的标枪 15 vs AC 12。玩家在线。</p><div class="row"><button class="btn">催一下</button><button class="btn">代答：不用</button><button class="btn primary">代答：使用</button></div></div>`;
+  else if (v === 'me') el.innerHTML = `<div class="fr"><button class="btn primary big">结束我的回合 ⏎</button><button class="btn sq" title="快速检定 / 豁免（新）">🎲</button></div>`;
+  else if (v === 'wait') el.innerHTML = `<div class="fr"><button class="btn big dis">等待哥布林队长…</button><button class="btn sq" title="快速检定 / 豁免">🎲</button><button class="btn sq" title="举手：请 DM 暂停（新）">✋</button></div>`;
+  else el.innerHTML = `<div class="fr"><button class="btn primary big">下一回合 ▶</button><button class="btn sq" title="发起检定 / 豁免（新）">🎲</button><button class="btn sq" title="撤销最后一笔">↶</button></div>`;
+}
+function bnr() {
+  const v = VTT.S.view, p = VTT.S.prompt, sc = VTT.SCENE[v];
+  $('#bnr').innerHTML = p && v === 'wait' ? `<span class="bg">等待你的决定</span><b>哥布林队长的标枪命中了你</b><span class="muted small">⏳ 0:12</span>`
+    : p && v === 'dm' ? `<span class="bg">等待玩家</span><b>艾拉的反应：护盾术</b><span class="muted small">⏳ 0:12</span>`
+    : p && v === 'me' ? `<span class="bg">${sc.badge}</span><b>${sc.line}</b><span class="muted small">选择魔法飞弹的法术位</span>`
+    : `<span class="bg">${sc.badge}</span><b>${sc.line}</b><span class="muted small">${sc.sub}</span>`;
+}
+function render() {
+  bnr(); init(); mecard(); resbox(); tabs(); foot();
+  const dm = VTT.isDM();
+  $('#content').innerHTML = tab === '行动' ? actions() : tab === '日志' ? logTab() : tab === '角色' || tab === '状态与调整' ? charTab() : enc();
+  $$('#content .ar[data-n]').forEach((b) => (b.onclick = () => { if (!b.classList.contains('dis') && !dm) { sel = b.dataset.n; render(); } }));
+}
+VTT.onChange(() => { if (!VTT.isDM() && (tab === '遭遇' || tab === '状态与调整')) tab = '行动'; render(); });
+render();
+</script>
+</body>
+</html>
