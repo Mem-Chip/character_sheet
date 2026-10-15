@@ -40,6 +40,7 @@ export function describe(ev: GameEvent, name: (id: unknown) => string, secret: S
   switch (ev.type) {
     case 'combatantAdded': return L(`${p.combatant.name} 加入遭遇`);
     case 'combatantRemoved': return L(`${name(p.id)} 离开遭遇`);
+    case 'baseRefreshed': return L(`${name(p.id)} 的数值按人物卡更新${p.hpMaxBefore !== p.base.hpMax && !secret(p.id) ? `（生命值上限 ${p.hpMaxBefore} → ${p.base.hpMax}）` : ''}`);
     case 'combatStarted': return L(`战斗开始。先攻顺序：${(p.order as string[]).map(name).join('、')}`, 'head');
     case 'combatEnded': return L('战斗结束', 'head');
     case 'roundStarted': return L(`第 ${p.round} 轮`, 'head');
@@ -152,6 +153,7 @@ export function txTitle(cmd: { type: string } & P, name: (id: unknown) => string
   switch (cmd.type) {
     case 'addCombatant': return `加入 ${cmd.combatant.name}`;
     case 'removeCombatant': return `移除 ${name(cmd.id)}`;
+    case 'refreshCombatant': return `${name(cmd.id)} 按人物卡更新`;
     case 'startCombat': return '开始战斗';
     case 'nextTurn': return '下一回合';
     case 'endCombat': return '结束战斗';

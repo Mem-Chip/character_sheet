@@ -393,6 +393,8 @@ export interface GameEvent {
 export type Command =
   | { type: 'addCombatant'; combatant: Combatant }
   | { type: 'removeCombatant'; id: Id }
+  /** 人物卡改了（升级、换装备）：换掉参与者的数值，当前生命值和已用次数留着 */
+  | { type: 'refreshCombatant'; id: Id; view: CombatantView }
   | { type: 'startCombat'; order?: Id[] }
   | { type: 'nextTurn' }
   | { type: 'endCombat' }

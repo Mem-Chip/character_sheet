@@ -3,7 +3,7 @@
  * 骰面全部预先写好：多掷一颗或少掷一颗都会让测试失败 —— 那本身就是规则 bug。
  */
 import { describe, expect, it } from 'vitest';
-import { Session, createEncounter, gridFeet, gridSpatial, type Positions } from '../../src/combat';
+import { Session, createEncounter, gridFeet, gridSpatial, makeView, type Positions } from '../../src/combat';
 import { barbarian, cleric, done, effectNames, evs, fighter, goblin, has, last, pending, rogue, setup, wizard } from './helpers';
 
 describe('#1 倒地：5 尺内优势，5 尺外劣势', () => {
@@ -445,5 +445,22 @@ describe('地图：按棋子位置自动判断距离', () => {
     expect(gridFeet(3, 3, '5-10-5')).toBe(20);
     expect(gridFeet(-2, 3, '5-10-5')).toBe(20);
     expect(gridFeet(1, 1, '5-10-5')).toBe(5);
+  });
+});
+
+describe('从人物卡刷新', () => {
+  it('换掉数值、留着当前生命值；撤销能回到旧数值', () => {
+    const { s } = setup([fighter()]);
+    done(s.dispatch({ type: 'adjustHp', id: 'f', set: 20 }));
+    const before = s.state.combatants.f.base;
+    done(s.dispatch({ type: 'refreshCombatant', id: 'f', view: makeView({ ...before, name: '战士（升级）', hpMax: 60, ac: 19 }) }));
+    const c = s.state.combatants.f;
+    expect(c.base.ac).toBe(19);
+    expect(c.name).toBe('战士（升级）');
+    expect(c.live.hp).toBe(20);
+    done(s.dispatch({ type: 'refreshCombatant', id: 'f', view: makeView({ ...before, hpMax: 10 }) }));
+    expect(s.state.combatants.f.live.hp).toBe(10);
+    s.undo(2);
+    expect(s.state.combatants.f.base.ac).toBe(before.ac);
   });
 });

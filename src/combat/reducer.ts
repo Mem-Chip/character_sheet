@@ -23,6 +23,13 @@ export function applyEvent(s: EncounterState, ev: GameEvent): void {
       if (s.round !== null && !s.order.includes(cb.id)) s.order.push(cb.id);
       break;
     }
+    case 'baseRefreshed': {
+      const cb = c(p.id as string);
+      cb.base = structuredClone(p.base as Combatant['base']);
+      cb.name = cb.base.name;
+      cb.live.hp = Math.min(cb.live.hp, cb.base.hpMax);
+      break;
+    }
     case 'combatantRemoved': {
       const id = p.id as string;
       delete s.combatants[id];
@@ -114,7 +121,7 @@ export function applyEvent(s: EncounterState, ev: GameEvent): void {
 
 /** 会改状态的事件类型（审计与测试用：其余类型必须是纯叙事） */
 export const STATE_EVENTS = new Set([
-  'combatantAdded', 'combatantRemoved', 'combatStarted', 'turnChanged', 'combatEnded', 'initiativeSet',
+  'combatantAdded', 'combatantRemoved', 'baseRefreshed', 'combatStarted', 'turnChanged', 'combatEnded', 'initiativeSet',
   'economyReset', 'economyChanged', 'onceUsed', 'hpChanged', 'deathSavesChanged', 'stableChanged', 'deadChanged',
   'resourceUsed', 'slotUsed', 'heroicInspirationChanged', 'effectApplied', 'effectEnded', 'effectUpdated',
   'answersRemembered', 'settingsChanged',

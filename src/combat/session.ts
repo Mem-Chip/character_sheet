@@ -73,6 +73,12 @@ function handle(tx: Tx, cmd: Command): void {
     case 'removeCombatant':
       tx.emit('combatantRemoved', { id: cmd.id });
       return;
+    case 'refreshCombatant': {
+      const c = tx.state.combatants[cmd.id];
+      if (!c) throw new Rejected(`没有参与者 ${cmd.id}`);
+      tx.emit('baseRefreshed', { id: cmd.id, base: cmd.view, hpMaxBefore: c.base.hpMax });
+      return;
+    }
     case 'startCombat':
       startCombat(tx, cmd.order, null);
       return;

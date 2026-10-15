@@ -5,7 +5,7 @@
  * 所以刷新页面、等待中的决定、撤销历史都不丢。
  */
 import { useSyncExternalStore } from 'react';
-import { combatantFromSheet, syncLiveToChar } from '../../src/bridge/from-sheet';
+import { combatantFromSheet, syncLiveToChar, viewFromSheet } from '../../src/bridge/from-sheet';
 import {
   Session, createEncounter, engineDice, makeCombatant, makeView, physicalDice,
   type Command, type DispatchResult, type EngineCtx, type OverridePatch, type SessionSave, type ViewInit,
@@ -71,6 +71,38 @@ function set(next: Partial<CombatUi>, persistNow = true): void {
   ui = { ...ui, ...next, version: ui.version + 1 };
   if (persistNow) persist();
   for (const l of listeners) l();
+  scheduleAutoWrite();
+}
+
+/* ───── 战斗 → 人物卡：自动写回 ─────
+ * 关联了人物卡的参与者，记账字段（生命值、临时生命值、法术位、资源、死亡豁免）一变就写回卡上。
+ * 只在这台电脑「管」这张卡时写：本地遭遇都写；战役遭遇里只写自己的卡（DM 不替玩家写，免得两边打架）。
+ * 第一次看到某个参与者时只记下现状、不写 —— 打开一场旧遭遇不应该把卡上的血量改回去。 */
+const lastLive = new Map<string, string>();
+let autoTimer: ReturnType<typeof setTimeout> | undefined;
+const liveKey = (c: { live: { hp: number; tempHp: number; deathSaves: unknown; resourcesUsed: unknown; slotsUsed: unknown } }) =>
+  JSON.stringify([c.live.hp, c.live.tempHp, c.live.deathSaves, c.live.resourcesUsed, c.live.slotsUsed]);
+
+function scheduleAutoWrite(): void {
+  clearTimeout(autoTimer);
+  autoTimer = setTimeout(autoWrite, 600);
+}
+function autoWrite(): void {
+  const s = ui.session;
+  if (!s || !engineRef || s.pending) return;
+  const r = ui.remote;
+  for (const [id, cardId] of Object.entries(ui.links)) {
+    const c = s.state.combatants[id];
+    const card = getApp().cards[cardId];
+    if (!c || !card) continue;
+    if (r && !(card.owner ? card.owner.id === r.me : r.owners[c.controller] === r.me)) continue;
+    const k = `${r?.id ?? 'local'}:${id}`;
+    const now = liveKey(c);
+    const prev = lastLive.get(k);
+    lastLive.set(k, now);
+    if (prev === undefined || prev === now) continue;
+    void combat.writeBack(engineRef, id, true);
+  }
 }
 
 function persist(): void {
@@ -290,6 +322,18 @@ export const combat = {
     after(r);
   },
 
+  /** 人物卡 → 战斗：按卡上现在的样子重算数值（升级、换装备之后），作为一笔操作记进日志 */
+  async refreshFromCard(engine: Engine, id: string): Promise<void> {
+    const card = getApp().cards[ui.links[id]];
+    if (!card) { toast('这个参与者没有对应的人物卡（或者卡不在这台电脑上）'); return; }
+    const work = structuredClone(stripDerived(card.char));
+    const sheet = await engine.env.compute(work);
+    const view = viewFromSheet(engine.env, work, sheet);
+    if (!view.name) view.name = card.char.name || '未命名';
+    const r = combat.dispatch({ type: 'refreshCombatant', id, view });
+    if (r.status === 'done' && !ui.remote) toast('已按人物卡更新', 'ok');
+  },
+
   addMonster(view: ViewInit, count: number, side = 'enemy', hidden = false): void {
     const s = ui.session!;
     for (let i = 1; i <= count; i++) {
@@ -302,12 +346,12 @@ export const combat = {
     after({ status: 'done', events: [] });
   },
 
-  /** 战斗结果写回人物卡：HP、临时生命值、法术位、资源、死亡豁免 */
-  async writeBack(engine: Engine, id: string): Promise<boolean> {
+  /** 战斗结果写回人物卡：HP、临时生命值、法术位、资源、死亡豁免（quiet：自动写回，出错不弹提示） */
+  async writeBack(engine: Engine, id: string, quiet = false): Promise<boolean> {
     const cardId = ui.links[id];
     const card = cardId ? getApp().cards[cardId] : null;
     const c = ui.session!.state.combatants[id];
-    if (!card || !c) { toast('这个参与者没有对应的人物卡'); return false; }
+    if (!card || !c) { if (!quiet) toast('这个参与者没有对应的人物卡'); return false; }
     const work = structuredClone(stripDerived(card.char));
     const sheet = await engine.env.compute(work);
     syncLiveToChar(work, sheet, c);

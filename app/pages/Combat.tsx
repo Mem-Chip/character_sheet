@@ -56,7 +56,7 @@ export function CombatPage({ engine }: { engine: Engine }) {
         {remote && <button className="btn" onClick={() => setShowMap(!showMap)} title="地图布局 / 三栏列表布局">{showMap ? '列表布局' : '地图布局'}</button>}
         <button className="btn" onClick={() => setDlg('settings')}>{dm ? '设置' : '我的骰子'}</button>
         {dm && <button className="btn ghost danger" onClick={() => {
-          if (confirm('清空这场遭遇，开一场新的？日志和撤销记录都会丢掉（人物卡不受影响，要保留结果先「写回人物卡」）。')) combat.reset(engine);
+          if (confirm('清空这场遭遇，开一场新的？日志和撤销记录都会丢掉（人物卡不受影响：生命值、法术位这些已经自动写回卡上了）。')) combat.reset(engine);
         }}>{remote ? '清空' : '新遭遇'}</button>}
         {remote
           ? <button className="btn" onClick={() => combat.leave(engine)}>回到本地遭遇</button>

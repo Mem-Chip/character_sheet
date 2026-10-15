@@ -10,6 +10,7 @@ import { NumInput, Panel, Pips, Stat, Tag, sgn } from '../../components/ui';
 import { Term } from '../../components/Term';
 import { termOfKey, type TermRef } from '../../lib/terms';
 import { combat, type CombatUi } from '../../lib/combat';
+import { getApp } from '../../lib/store';
 import type { Engine } from '../../lib/engine';
 import { DAMAGE_TYPES, type Namer } from './shared';
 
@@ -218,7 +219,10 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
         title={<>{c.name} <span className="faint small">{c.kind === 'pc' ? '角色' : c.kind === 'npc' ? 'NPC' : '怪物'} · {v.size} {v.type}</span></>}
         aside={<>
           {isTurn && <Tag tone="accent">当前回合</Tag>}
-          {ui.links[id] && <button className="btn sm" onClick={() => void combat.writeBack(engine, id).then((ok) => ok && combat.toast('已写回人物卡', 'ok'))} title="把生命值、法术位、资源、死亡豁免写回卡片库里的这张卡">写回人物卡</button>}
+          {/* 战斗 → 卡是自动的（生命值、法术位、资源、死亡豁免）；卡 → 战斗要点这个（升级、换装备之后） */}
+          {ui.links[id] && getApp().cards[ui.links[id]] && combat.canControl(id) && (
+            <button className="btn sm" onClick={() => void combat.refreshFromCard(engine, id)} title="人物卡改过（升级、换装备）之后，按卡上现在的样子更新数值；当前生命值和已用次数不变。会记进日志，可以撤销">从人物卡刷新</button>
+          )}
           <button className="btn ghost sm danger" onClick={() => { if (confirm(`把 ${c.name} 移出遭遇？`)) combat.dispatch({ type: 'removeCombatant', id }); }}>移出</button>
         </>}
         flush
