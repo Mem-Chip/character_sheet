@@ -241,7 +241,7 @@ export function d20Test(tx: Tx, req: RollRequest): RollResult {
   const n = adv || disadv ? 2 : 1;
   const user = controllerOf(tx, req.roller);
   const reqs = [{ faces: 20, count: n }, ...extraDice.flatMap((x) => x.dice.terms.map((t) => ({ faces: t.faces, count: t.count })))];
-  const faces = tx.roll(reqs, user, `${nameOf(tx, req.roller)} 的${req.label}`);
+  const faces = tx.roll(reqs, user, `${nameOf(tx, req.roller)} 的${req.label}`, 'd20');
   const d20 = faces[0];
   let natural = n === 1 ? d20[0] : adv ? Math.max(...d20) : Math.min(...d20);
   const extra: RollResult['extra'] = [];
@@ -277,7 +277,7 @@ export function d20Test(tx: Tx, req: RollRequest): RollResult {
     cause: req.cause,
     modify: (m, by) => {
       if (m.op === 'reroll') {
-        const [[f]] = tx.roll([{ faces: 20, count: 1 }], controllerOf(tx, by.owner), `${nameOf(tx, req.roller)} 重骰`);
+        const [[f]] = tx.roll([{ faces: 20, count: 1 }], controllerOf(tx, by.owner), `${nameOf(tx, req.roller)} 重骰`, 'd20');
         result.natural = m.keep === 'higher' ? Math.max(result.natural, f) : m.keep === 'lower' ? Math.min(result.natural, f) : f;
         result.d20 = [...result.d20, f];
         result.mods.push({ op: 'add', label: `${by.label}：重骰 → ${f}`, owner: by.owner, from: by.from });

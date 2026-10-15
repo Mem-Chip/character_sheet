@@ -9,9 +9,12 @@ export interface DiceRequest {
   count: number;
 }
 
+/** 掷的是什么：d20（攻击、豁免、检定）/ 伤害 / 其他（治疗、减伤……） */
+export type RollKind = 'd20' | 'damage' | 'other';
+
 export interface DiceSource {
   readonly id: string;
-  roll(reqs: DiceRequest[], purpose: string): number[][] | null;
+  roll(reqs: DiceRequest[], purpose: string, kind?: RollKind): number[][] | null;
 }
 
 /** mulberry32：小、快、可复现。测试和「同一个种子重放」用 */
@@ -35,6 +38,30 @@ export function engineDice(rng: () => number = Math.random): DiceSource {
 
 /** 实体骰：永远等输入 */
 export const physicalDice: DiceSource = { id: 'physical', roll: () => null };
+
+/**
+ * 骰子设置（按人）：
+ * - engine：全自动（引擎直接掷）
+ * - confirm：每颗都停下来等人点「掷！」（也可以填实体骰）
+ * - confirmNoDamage：伤害骰自动，其余停下来确认
+ * - physical：实体骰，等人填骰面
+ * 「停下来确认」和实体骰走同一个决定（physicalDice）；回答 'roll' 就由引擎来掷。
+ */
+export type DiceMode = 'engine' | 'confirm' | 'confirmNoDamage' | 'physical';
+export const DICE_MODES: DiceMode[] = ['confirmNoDamage', 'confirm', 'engine', 'physical'];
+export function diceSourceFor(mode: DiceMode): DiceSource {
+  if (mode === 'physical') return physicalDice;
+  if (mode === 'confirm') return { id: 'confirm', roll: () => null };
+  if (mode === 'confirmNoDamage') {
+    const auto = engineDice();
+    return { id: 'confirm', roll: (reqs, purpose, kind) => (kind === 'damage' ? auto.roll(reqs, purpose) : null) };
+  }
+  return engineDice();
+}
+/** 没设置时的默认：DM（怪物）全自动；玩家伤害骰自动、其余确认 */
+export function defaultDiceMode(user: string): DiceMode {
+  return user === 'dm' ? 'engine' : 'confirmNoDamage';
+}
 
 /**
  * 测试用：按顺序吐出预先写好的骰面。面数不对、用完了都直接报错 ——

@@ -15,7 +15,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import {
-  RuleBook, Session, createEncounter, engineDice, footprint, physicalDice,
+  DICE_MODES, RuleBook, Session, createEncounter, defaultDiceMode, diceSourceFor, footprint, type DiceMode,
   type Command, type DispatchResult, type EngineCtx, type Diagonal, type OverridePatch, type Positions, type SessionSave,
 } from '../src/combat';
 import { RULE_FILES } from '../src/bridge/rule-files';
@@ -56,7 +56,7 @@ interface Live {
   /** 参与者 id → 人物卡 id（写回用） */
   cards: Record<string, string>;
   /** 控制者 id（'*' = 默认，'dm' = DM 和怪物）→ 骰子来源 */
-  dice: Record<string, 'engine' | 'physical'>;
+  dice: Record<string, DiceMode>;
   /** DM 藏起来的参与者 */
   hidden: string[];
   map: MapState;
@@ -86,7 +86,7 @@ export function createEncounters(d: Deps) {
   function ctxOf(e: { dice: Live['dice']; map: MapState; session?: Session }): EngineCtx {
     return {
       rules,
-      diceFor: (user) => ((e.dice[user] ?? e.dice['*'] ?? 'engine') === 'physical' ? physicalDice : engineDice()),
+      diceFor: (user) => diceSourceFor(e.dice[user] ?? e.dice['*'] ?? defaultDiceMode(user)),
       positions: () => {
         const st = e.session?.state;
         if (!st) return null;
@@ -333,7 +333,7 @@ export function createEncounters(d: Deps) {
         const who = String(b.user ?? '');
         if (!who) throw d.fail(400, '缺 user');
         if (role !== 'dm' && e.owners[who] !== u.id) return reject('只能改自己的骰子');
-        if (b.mode === 'engine' || b.mode === 'physical') e.dice[who] = b.mode;
+        if (DICE_MODES.includes(b.mode as DiceMode)) e.dice[who] = b.mode as DiceMode;
         else delete e.dice[who];
       } else if (op === 'setHidden') {
         if (role !== 'dm') return reject('只有 DM 能藏人');

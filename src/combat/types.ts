@@ -442,6 +442,8 @@ export interface Decision {
   max?: number;
   /** physicalDice：要输入几颗几面骰 */
   dice?: Array<{ faces: number; count: number }>;
+  /** physicalDice：是「点一下掷」的确认（true），还是实体骰（填骰面）。两种都能回答 'roll' 让引擎掷 */
+  confirm?: boolean;
   multi?: boolean;
   default: unknown;
 }

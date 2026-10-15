@@ -10,7 +10,7 @@ import { CREATURE_TYPES, DAMAGE_TYPES, type Namer } from './shared';
 
 /* ------------------------------ 决定 ------------------------------ */
 
-const KIND_CN: Record<string, string> = { optionalTrigger: '可以做出反应', ask: '需要确认', choose: '请选择', physicalDice: '输入骰子结果', slotLevel: '选择法术位', targets: '选择目标', number: '选择数值' };
+const KIND_CN: Record<string, string> = { optionalTrigger: '可以做出反应', ask: '需要确认', choose: '请选择', physicalDice: '掷骰', slotLevel: '选择法术位', targets: '选择目标', number: '选择数值' };
 
 /** onClose：DM 代玩家回答时可以关掉，回去等玩家自己答 */
 export function DecisionDialog({ s, name, onClose, docked }: { s: Session; name: Namer; onClose?: () => void; docked?: boolean }) {
@@ -122,8 +122,18 @@ function AskQuestions({ d }: { d: Decision }) {
 function DiceInput({ d }: { d: Decision }) {
   const reqs = d.dice ?? [];
   const [faces, setFaces] = useState<string[][]>(reqs.map((r) => Array.from({ length: r.count }, () => '')));
+  // 确认掷骰：一个大按钮；想用实体骰再展开输入框
+  const [manual, setManual] = useState(!d.confirm);
   const valid = reqs.every((r, i) => faces[i].every((f) => Number.isInteger(Number(f)) && Number(f) >= 1 && Number(f) <= r.faces && f !== ''));
-  const random = () => setFaces(reqs.map((r) => Array.from({ length: r.count }, () => String(1 + Math.floor(Math.random() * r.faces)))));
+  const sig = reqs.map((r) => `${r.count}d${r.faces}`).join(' + ');
+  if (!manual) {
+    return (
+      <div className="dice-go">
+        <button className="btn primary dice-roll" autoFocus onClick={() => combat.decide('roll')} onKeyDown={(e) => { if (e.key === ' ') e.preventDefault(); }}>掷！<small>{sig}</small></button>
+        <button className="btn ghost sm" onClick={() => setManual(true)}>用实体骰填</button>
+      </div>
+    );
+  }
   return (
     <>
       <div className="stack" style={{ gap: 6 }}>
@@ -148,7 +158,7 @@ function DiceInput({ d }: { d: Decision }) {
         ))}
       </div>
       <div className="row" style={{ justifyContent: 'flex-end' }}>
-        <button className="btn" onClick={random} title="不想掷了：让引擎替你掷">随机填</button>
+        <button className="btn" onClick={() => combat.decide('roll')}>让网页掷</button>
         <button className="btn primary" disabled={!valid} onClick={() => combat.decide(faces.map((row) => row.map(Number)))}>确定</button>
       </div>
     </>
@@ -274,11 +284,13 @@ export function SettingsDialog({ s, ui, onClose }: { s: Session; ui: CombatUi; o
   const diceSel = (user: string, label: string, inherit: boolean) => (
     <Field key={user} label={label}>
       <select
-        value={dice[user] ?? (inherit ? '' : 'engine')}
+        value={dice[user] ?? ''}
         onChange={(e) => combat.setDice(user, e.target.value as DiceMode)}
       >
-        {inherit && <option value="">跟随默认</option>}
-        <option value="engine">{remote ? '网页掷骰' : '引擎掷骰'}</option>
+        <option value="">{inherit ? '跟随默认' : '按身份（玩家：伤害骰自动、其余确认；DM：全自动）'}</option>
+        <option value="confirmNoDamage">伤害骰自动，其余点一下确认</option>
+        <option value="confirm">每颗骰子都点一下确认</option>
+        <option value="engine">全自动</option>
         <option value="physical">实体骰（手动输入）</option>
       </select>
     </Field>

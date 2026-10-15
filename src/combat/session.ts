@@ -3,6 +3,7 @@ import { applyDamagePacket, applyHeal, grantTempHp } from './damage';
 import { d20Test } from './d20';
 import { applyEffect, checkEndsOn, effectiveView, endConcentration, endEffect } from './effects';
 import { Dice } from '../expr';
+import { engineDice } from './dice';
 import { executeAction, findAction } from './exec';
 import { advanceTime, nextTurn, rest, startCombat } from './turns';
 import { NeedDecision, Rejected, Tx, setPostEmit, type EngineCtx, type TapeEntry, type TxInput } from './tx';
@@ -256,10 +257,12 @@ export class Session {
     if (p.decision.kind === 'physicalDice') {
       const idx = Number(p.decision.id.split(':')[1]);
       const reqs = p.decision.dice ?? [];
-      const faces = value as number[][];
+      // 'roll'：确认掷骰 —— 由引擎（战役遭遇里是服务器）来掷
+      const auto = value === 'roll';
+      const faces = auto ? engineDice().roll(reqs, '')! : value as number[][];
       const bad = reqs.some((r, i) => !Array.isArray(faces?.[i]) || faces[i].length !== r.count || faces[i].some((f) => !Number.isInteger(f) || f < 1 || f > r.faces));
       if (bad) return { status: 'rejected', reason: '骰面不合法（个数或点数不对）' };
-      input.tape[idx] = { sig: reqs.map((r) => `${r.count}d${r.faces}`).join('+'), faces, source: 'physical' };
+      input.tape[idx] = { sig: reqs.map((r) => `${r.count}d${r.faces}`).join('+'), faces, source: auto ? 'engine' : 'physical' };
     } else {
       input.answers[p.decision.id] = { kind: p.decision.kind, value };
     }

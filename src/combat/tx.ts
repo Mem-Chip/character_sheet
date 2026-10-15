@@ -1,4 +1,4 @@
-import { diceSig, type DiceRequest, type DiceSource } from './dice';
+import { diceSig, type DiceRequest, type DiceSource, type RollKind } from './dice';
 import { applyEvent } from './reducer';
 import type { RuleBook } from './rulebook';
 import type { Command, Decision, DecisionKind, EncounterState, GameEvent, OverridePatch, UserId } from './types';
@@ -132,7 +132,7 @@ export class Tx {
    * 一旦有一格对不上（事后改结果导致结算路径变了），从这里往后全部重新掷 ——
    * 宁可重掷，也不能把一颗 d6 的结果塞给 d20。
    */
-  roll(reqs: DiceRequest[], user: UserId, purpose: string): number[][] {
+  roll(reqs: DiceRequest[], user: UserId, purpose: string, kind: RollKind = 'other'): number[][] {
     const sig = diceSig(reqs);
     const idx = this.tapeIdx++;
     const rec = this.input.tape[idx];
@@ -142,13 +142,15 @@ export class Tx {
     }
     if (rec) this.diverged = true;
     const src = this.ctx.diceFor(user);
-    const faces = src.roll(reqs, purpose);
+    const faces = src.roll(reqs, purpose, kind);
     if (faces === null) {
+      const confirm = src.id === 'confirm';
       throw new NeedDecision({
         id: `dice:${idx}`,
         kind: 'physicalDice',
         to: user,
-        prompt: `请输入骰子结果：${purpose}（${sig}）`,
+        confirm,
+        prompt: confirm ? `${purpose}（${sig}）` : `请输入骰子结果：${purpose}（${sig}）`,
         options: [],
         dice: reqs,
         default: null,

@@ -67,7 +67,7 @@ export function rollComponent(tx: Tx, c: DamageComponent, crit: boolean, user: s
   const mode = crit ? tx.rules.coreParam<string>('critDamage') : 'none';
   const dice = mode === 'doubleDice' ? c.dice.doubled() : c.dice;
   if (dice.isConstant) return { faces: [], total: dice.flat };
-  const faces = tx.roll(dice.terms.map((t) => ({ faces: t.faces, count: t.count })), user, `${c.from}（${c.type}）`);
+  const faces = tx.roll(dice.terms.map((t) => ({ faces: t.faces, count: t.count })), user, `${c.from}（${c.type}）`, 'damage');
   const adj = faces.map((fs) => fs.map((f) => Math.max(f, minDie)));
   let total = dice.flat;
   dice.terms.forEach((t, i) => { total += t.sign * sum(adj[i]); });

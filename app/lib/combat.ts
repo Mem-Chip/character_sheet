@@ -7,7 +7,7 @@
 import { useSyncExternalStore } from 'react';
 import { combatantFromSheet, syncLiveToChar, viewFromSheet } from '../../src/bridge/from-sheet';
 import {
-  Session, createEncounter, engineDice, makeCombatant, makeView, physicalDice,
+  Session, createEncounter, defaultDiceMode, diceSourceFor, makeCombatant, makeView, physicalDice,
   type Command, type DispatchResult, type EngineCtx, type OverridePatch, type SessionSave, type ViewInit,
 } from '../../src/combat';
 import { api } from './api';
@@ -16,7 +16,8 @@ import { actions as cardActions, getApp, stripDerived } from './store';
 
 const KEY = 'dnd2024-engine:combat';
 
-export type DiceMode = 'engine' | 'physical';
+export type { DiceMode } from '../../src/combat';
+import type { DiceMode } from '../../src/combat';
 
 export interface CombatUi {
   session: Session | null;
@@ -77,7 +78,7 @@ interface RemoteState {
   dice?: Record<string, DiceMode>; hidden?: string[]; map?: MapState;
 }
 
-let ui: CombatUi = { session: null, version: 0, links: {}, dice: { '*': 'engine' }, selected: null, targets: [], aim: null, toast: null, remote: null };
+let ui: CombatUi = { session: null, version: 0, links: {}, dice: {}, selected: null, targets: [], aim: null, toast: null, remote: null };
 let engineRef: Engine | null = null;
 let stream: EventSource | null = null;
 const listeners = new Set<() => void>();
@@ -137,7 +138,7 @@ function ctxFor(engine: Engine): EngineCtx {
     rules: engine.rules,
     // 读档重跑时磁带里有骰面，不会走到这里；只有新掷的骰子按当前设置取来源。
     // 战役遭遇：骰子只由服务器掷。服务器那边正停着等骰面时，本地重放也必须停在同一处，不能自己补一颗
-    diceFor: (user) => (ui.remote || (ui.dice[user] ?? ui.dice['*'] ?? 'engine') === 'physical' ? physicalDice : engineDice()),
+    diceFor: (user) => (ui.remote ? physicalDice : diceSourceFor(ui.dice[user] ?? ui.dice['*'] ?? defaultDiceMode(user))),
   };
 }
 
@@ -150,7 +151,7 @@ export function initCombat(engine: Engine): void {
     if (raw) saved = JSON.parse(raw);
   } catch { /* 坏了就开新遭遇 */ }
   if (saved?.save) {
-    ui = { ...ui, links: saved.links ?? {}, dice: saved.dice ?? { '*': 'engine' }, selected: saved.selected ?? null, targets: saved.targets ?? [] };
+    ui = { ...ui, links: saved.links ?? {}, dice: legacyDice(saved.dice), selected: saved.selected ?? null, targets: saved.targets ?? [] };
     try {
       set({ session: Session.restore(saved.save, ctxFor(engine)) }, false);
       return;
@@ -417,4 +418,11 @@ function uniqueId(prefix: string): string {
     const id = `${prefix}-${Math.random().toString(36).slice(2, 7)}`;
     if (!taken[id]) return id;
   }
+}
+
+/** 以前默认存的是 { '*': 'engine' }（那时只有两种）：当没设置，用新的默认（玩家确认、DM 全自动） */
+function legacyDice(d: Record<string, DiceMode> | undefined): Record<string, DiceMode> {
+  const out = { ...(d ?? {}) };
+  if (out['*'] === 'engine' && Object.keys(out).length === 1) delete out['*'];
+  return out;
 }

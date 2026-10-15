@@ -1,6 +1,6 @@
 export * from './types';
 export { RuleBook, setPath, type RuleFile, type RuleLayer, type HouseRule } from './rulebook';
-export { engineDice, physicalDice, scriptedDice, seededRng, type DiceSource, type DiceRequest } from './dice';
+export { engineDice, physicalDice, scriptedDice, seededRng, diceSourceFor, defaultDiceMode, DICE_MODES, type DiceSource, type DiceRequest, type DiceMode, type RollKind } from './dice';
 export { Tx, NeedDecision, Rejected, gridSpatial, gridFeet, footprint, type Diagonal, type EngineCtx, type Positions, type Spatial, type TxInput } from './tx';
 export { Session, createEncounter, runTx, DEFAULT_SETTINGS, type DispatchResult, type SessionSave } from './session';
 export { makeView, makeCombatant, freshEconomy, freshLive, modOf, type ViewInit } from './view';
