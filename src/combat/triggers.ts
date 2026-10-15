@@ -279,13 +279,29 @@ export function fireWindow(tx: Tx, spec: WindowSpec): TriggerCand[] {
   return fired;
 }
 
+const KIND_CN: Record<string, string> = { attack: '攻击', save: '豁免', check: '检定' };
+/** 「谁的什么掷出了多少」—— 暂停时让人知道为什么停。攻击检定不写 AC（可能是怪物的，不给玩家看） */
+function rollText(spec: WindowSpec, a: string, t: string): string {
+  const r = (spec.refresh?.() ?? spec.scope.roll) as Record<string, unknown> | undefined;
+  if (!r || r.total == null) return `${a} 的检定已掷出。`;
+  const what = r.sub === 'initiative' ? '先攻' : r.sub === 'deathSave' ? '死亡豁免' : r.sub === 'concentration' ? '专注检定'
+    : r.kind === 'attack' ? `对 ${t || '目标'} 的攻击` : KIND_CN[String(r.kind)] ?? '检定';
+  const mode = r.adv ? '（优势）' : r.disadv ? '（劣势）' : '';
+  const vs = r.vs != null && r.kind !== 'attack' ? `，对 DC ${r.vs}` : '';
+  const fail = r.failing ? '，按现在会失败' : '';
+  return `${a} 的${what}掷出 d20 = ${r.natural}${mode}，总值 ${r.total}${vs}${fail}。`;
+}
+
 function windowPrompt(tx: Tx, spec: WindowSpec): string {
   const a = spec.actor ? nameOf(tx, spec.actor) : '';
   const t = spec.target ? nameOf(tx, spec.target) : '';
   switch (spec.event) {
-    case 'attackHit': return `${a} 的攻击命中了 ${t}。要使用以下能力吗？`;
+    case 'attackHit': {
+      const r = (spec.refresh?.() ?? spec.scope.roll) as Record<string, unknown> | undefined;
+      return `${a} 的攻击命中了 ${t}${r?.total != null ? `（总值 ${r.total}${r.vs != null ? ` 对 AC ${r.vs}` : ''}${r.crit ? '，重击' : ''}）` : ''}。要使用以下能力吗？`;
+    }
     case 'damageIncoming': return `${t} 即将受到伤害。要使用以下能力吗？`;
-    case 'd20Rolled': return `${a} 的检定已掷出。要使用以下能力吗？`;
+    case 'd20Rolled': return `${rollText(spec, a, t)}要使用以下能力吗？`;
     case 'damageTaken': return `${t} 受到了伤害。要使用以下能力吗？`;
     default: return `「${spec.event}」时机：要使用以下能力吗？`;
   }

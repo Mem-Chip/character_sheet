@@ -99,7 +99,6 @@ export function SpellBrowser({ engine, id, char, sheet, onClose }: Props) {
                       <button
                         type="button" className="pick" aria-pressed={on || locked}
                         disabled={locked || (wizard && lv > 0 && !inBook)}
-                        title={locked ? '常备法术，不占名额' : wizard && lv > 0 && !inBook ? '先抄进法术书' : on ? '点一下取消' : lv ? '点一下准备' : '点一下学会'}
                         onClick={() => toggle(s.name, lv)}
                       >
                         <span className="box">{on || locked ? '✓' : ''}</span>

@@ -34,7 +34,12 @@ export interface AppState {
   page: Page;
   theme: Theme;
   palette: Palette;
+  width: PageWidth;
 }
+
+/** 页面最大宽度（人物卡、卡片库这些页；地图视图总是铺满） */
+export type PageWidth = 'narrow' | 'medium' | 'wide';
+export const WIDTHS: Array<[PageWidth, string]> = [['narrow', '窄'], ['medium', '中'], ['wide', '宽']];
 
 /** 配色（和浅色 / 深色独立）：灰蓝、灰绿、典籍（旧纸 + 朱砂） */
 export type Palette = 'slate' | 'sage' | 'codex';
@@ -43,6 +48,7 @@ export const PALETTES: Array<[Palette, string]> = [['slate', '灰蓝'], ['sage',
 const KEY = 'dnd2024-engine:v1';
 const THEME_KEY = 'dnd2024-engine:theme';
 const PALETTE_KEY = 'dnd2024-engine:palette';
+const WIDTH_KEY = 'dnd2024-engine:width';
 
 export const stripDerived = (c: CharData): CharData =>
   Object.fromEntries(Object.entries(c).filter(([k]) => !k.startsWith('_'))) as CharData;
@@ -50,7 +56,10 @@ export const stripDerived = (c: CharData): CharData =>
 function load(): AppState {
   let theme: Theme = 'light';
   let palette: Palette = 'slate';
+  let width: PageWidth = 'medium';
   try {
+    const w = localStorage.getItem(WIDTH_KEY);
+    if (WIDTHS.some(([k]) => k === w)) width = w as PageWidth;
     const p = localStorage.getItem(PALETTE_KEY);
     if (PALETTES.some(([k]) => k === p)) palette = p as Palette;
     const t = localStorage.getItem(THEME_KEY);
@@ -61,10 +70,10 @@ function load(): AppState {
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const s = JSON.parse(raw) as Partial<AppState>;
-      return { cards: s.cards ?? {}, order: s.order ?? [], currentId: s.currentId ?? null, page: s.page ?? 'library', theme, palette };
+      return { cards: s.cards ?? {}, order: s.order ?? [], currentId: s.currentId ?? null, page: s.page ?? 'library', theme, palette, width };
     }
   } catch { /* 坏了就从空的开始 */ }
-  return { cards: {}, order: [], currentId: null, page: 'library', theme, palette };
+  return { cards: {}, order: [], currentId: null, page: 'library', theme, palette, width };
 }
 
 let state: AppState = load();
@@ -75,6 +84,7 @@ function persist(): void {
     localStorage.setItem(KEY, JSON.stringify({ cards: state.cards, order: state.order, currentId: state.currentId, page: state.page }));
     localStorage.setItem(THEME_KEY, state.theme);
     localStorage.setItem(PALETTE_KEY, state.palette);
+    localStorage.setItem(WIDTH_KEY, state.width);
   } catch { /* 存不下（配额）：这次会话照常用 */ }
 }
 
@@ -106,6 +116,10 @@ export const actions = {
   setPalette(palette: Palette) {
     document.documentElement.dataset.palette = palette;
     set({ palette });
+  },
+  setWidth(width: PageWidth) {
+    document.documentElement.dataset.width = width;
+    set({ width });
   },
   open(id: string) { set({ currentId: id, page: 'sheet' }); },
 
@@ -162,4 +176,5 @@ export const actions = {
 if (typeof document !== 'undefined') {
   document.documentElement.dataset.theme = state.theme;
   document.documentElement.dataset.palette = state.palette;
+  document.documentElement.dataset.width = state.width;
 }

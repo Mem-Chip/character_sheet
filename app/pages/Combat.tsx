@@ -60,6 +60,7 @@ export function CombatPage({ engine }: { engine: Engine }) {
     {s.pending && !combat.isMyDecision() && proxy !== pendingKey && (
       <div className={battle ? 'prompt-wait panel' : 'toast'} role="status">
         等{name(s.pending.decision.to)}{s.pending.decision.kind === 'physicalDice' ? '掷骰' : '决定'}：{s.pending.decision.prompt}
+        {s.pending.decision.options.length > 0 && <span className="faint">（可选：{s.pending.decision.options.map((o) => o.label).join('、')}）</span>}
         {dm && <button className="btn sm" style={{ marginLeft: 8 }} onClick={() => setProxy(pendingKey)}>DM 代答</button>}
       </div>
     )}

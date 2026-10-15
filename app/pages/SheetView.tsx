@@ -52,7 +52,7 @@ function SavesSkills({ sheet }: Props) {
         <table className="rows">
           <tbody>
             {Object.entries(sheet.skills || {}).map(([k, s]: [string, Json]) => (
-              <tr key={k} className={s.prof ? '' : 'dim'} title={s.fromAbility ? '由种族 / 背景 / 能力授予' : undefined}>
+              <tr key={k} className={s.prof ? '' : 'dim'}>
                 <td style={{ width: 16 }}><span className={'dot' + (s.prof ? ' on' : '') + (s.exp ? ' double' : '')} /></td>
                 <td><Term kind="skill" name={s.cn} /> <span className="faint tiny">{ABBR[s.ability]}</span></td>
                 <td className="r num serif">{sgn(s.total)}</td>
@@ -89,7 +89,7 @@ export function SheetHero({ id, char, sheet, tags, tools }: Omit<Props, 'engine'
       </div>
       <div className="hero-vitals">
         <div className="vt vt-ac" title={sheet.acNote}>
-          <i>护甲等级</i><b>{sheet.ac}</b><em>{String(sheet.acNote || '').split('\n')[0].replace(/^AC = /, '')}</em>
+          <i>护甲等级</i><b>{sheet.ac}</b>
         </div>
         <div className="vt vt-hp">
           <i title={sheet.hpNotes}>生命值</i>

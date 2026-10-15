@@ -4,7 +4,7 @@ import { CampaignsPage } from './pages/Campaigns';
 import { CombatPage } from './pages/Combat';
 import { Library } from './pages/Library';
 import { SheetPage } from './pages/Sheet';
-import { PALETTES, actions, useApp, type Page, type Palette } from './lib/store';
+import { PALETTES, WIDTHS, actions, useApp, type Page, type PageWidth, type Palette } from './lib/store';
 import { useEngine } from './lib/useSheet';
 
 const NAV: Array<[Page, string]> = [['library', '卡片库'], ['sheet', '人物卡'], ['combat', '战斗'], ['campaigns', '战役']];
@@ -24,6 +24,9 @@ export function App() {
         </nav>
         <div className="spacer" />
         {engine?.problems.length ? <span className="warnline" title={engine.problems.join('\n')}>数据有 {engine.problems.length} 处问题</span> : null}
+        <select className="palette-sel" value={app.width} onChange={(e) => actions.setWidth(e.target.value as PageWidth)} aria-label="页面宽度" title="页面宽度">
+          {WIDTHS.map(([k, label]) => <option key={k} value={k}>宽度：{label}</option>)}
+        </select>
         <select className="palette-sel" value={app.palette} onChange={(e) => actions.setPalette(e.target.value as Palette)} aria-label="配色" title="配色">
           {PALETTES.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
         </select>

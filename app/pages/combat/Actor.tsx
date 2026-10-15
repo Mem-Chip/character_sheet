@@ -46,6 +46,25 @@ const TIME_UNIT: Record<string, 'action' | 'bonus' | 'reaction'> = { action: 'ac
 const ACT_CN: Record<string, string> = { action: '动作', bonus: '附赠', reaction: '反应', free: '免费', none: '' };
 
 
+/** 这个动作花的是什么：动作 / 附赠 / 反应 / 免费 / 要很久（分钟级施法）/ 时机到了才问 */
+export type CostKind = 'action' | 'bonus' | 'reaction' | 'free' | 'long' | 'trigger';
+export const COST_CN: Record<CostKind, string> = { action: '动作', bonus: '附赠动作', reaction: '反应', free: '免费', long: '长时间', trigger: '时机触发' };
+export function costKind(it: ActItem, asReaction = false): CostKind {
+  if (it.passive) return 'trigger';
+  if (it.group === '武器攻击') return asReaction ? 'reaction' : 'action';
+  const a = it.action.activation;
+  if (a === 'action' || a === 'bonus' || a === 'reaction' || a === 'free') return a;
+  if (typeof a === 'object') return 'long';
+  for (const c of it.action.cost ?? []) {
+    if ('economy' in c) return c.economy === 'bonus' ? 'bonus' : c.economy === 'reaction' ? 'reaction' : c.economy === 'move' ? 'free' : 'action';
+  }
+  return 'free';
+}
+/** 动作前面的小图标：● 动作  ▲ 附赠  ◆ 反应  ○ 免费 */
+export function CostIcon({ kind }: { kind: CostKind }) {
+  return <i className={'cost-ic ' + kind} aria-label={COST_CN[kind]} />;
+}
+
 export function actionsFor(s: Session, rules: RuleBook, spells: Json[], id: string): ActItem[] {
   const c = s.state.combatants[id];
   const v = s.view(id);
@@ -245,7 +264,8 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
               {list.map((it) => {
                 const avail = it.slot ? slotsFor(it.slot.min, it.slot.max) : [];
                 return (
-                  <div key={it.ref} className={'act' + (it.ok ? '' : ' no')} title={it.why || it.action.text || ''}>
+                  <div key={it.ref} className={'act' + (it.ok ? '' : ' no')} title={it.term ? undefined : it.why || it.action.text || undefined}>
+                    <CostIcon kind={costKind(it, asReaction)} />
                     {it.passive
                       ? <span className="passive-name">{it.term ? <Term {...it.term}>{it.name}</Term> : it.name}</span>
                       : <button className="btn sm" onClick={() => use(it)}>{it.term ? <Term {...it.term} inButton>{it.name}</Term> : it.name}</button>}

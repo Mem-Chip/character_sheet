@@ -9,7 +9,7 @@ import { Term } from '../../components/Term';
 import { termOfKey } from '../../lib/terms';
 import { combat, type CombatUi } from '../../lib/combat';
 import type { Engine } from '../../lib/engine';
-import { actionsFor, freeSlots, runAction, type ActItem, type Group } from './Actor';
+import { COST_CN, CostIcon, actionsFor, costKind, freeSlots, runAction, type ActItem, type CostKind, type Group } from './Actor';
 import { woundOf } from './Initiative';
 import type { Namer } from './shared';
 
@@ -120,6 +120,7 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton }: {
             <button key={t.k} className={t.k === cur?.k ? 'on' : ''} onClick={() => { setTab(t.k); setPick(null); }}>{t.label}<small>{t.list.length}</small></button>
           ))}
           <span style={{ flex: 1 }} />
+          <span className="cost-legend">{(['action', 'bonus', 'reaction', 'free'] as CostKind[]).map((k) => <span key={k}><CostIcon kind={k} />{COST_CN[k].replace('动作', '') || '动作'}</span>)}</span>
           {cur?.k === 'weapon' && <label className="tiny faint"><input type="checkbox" checked={asReaction} onChange={(e) => setAsReaction(e.target.checked)} /> 用反应攻击</label>}
           <span className="tiny">
             {ui.targets.length ? <>目标：{ui.targets.map(name).join('、')} <button className="btn ghost sm" onClick={combat.clearTargets}>清空</button></> : <span className="faint">右键棋子选目标</span>}
@@ -134,8 +135,9 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton }: {
                 <button
                   className={'hot-act' + (it.ok ? '' : ' no') + (it.passive ? ' passive' : '') + (pick === it.ref ? ' open' : '')}
                   onClick={() => click(it)} disabled={!mine && !it.passive}
-                  title={[it.sub, it.why].filter(Boolean).join('\n')}
+                  title={it.term ? undefined : [it.sub, it.why].filter(Boolean).join('\n')}
                 >
+                  <CostIcon kind={costKind(it, asReaction)} />
                   {it.term ? <Term {...it.term} inButton>{it.name}</Term> : it.name}
                   {it.slot && <small>{avail.length ? `${avail[0]}环` : '无位'}</small>}
                 </button>
