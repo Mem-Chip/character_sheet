@@ -372,7 +372,6 @@ pre.json { margin: 0; max-height: 320px; overflow: auto; font-family: var(--font
 
 /* 术语与悬浮窗 */
 .term { cursor: help; text-decoration: underline dotted var(--ink-3); text-underline-offset: 3px; }
-.term:not(.in-btn) { cursor: pointer; }
 .term:hover { text-decoration-color: var(--accent); color: var(--accent); }
 .termwin { position: fixed; width: min(380px, calc(100vw - 16px)); max-height: min(60vh, 520px); display: flex; flex-direction: column;
   background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: 0 6px 24px rgba(0, 0, 0, .28); }
@@ -383,9 +382,6 @@ pre.json { margin: 0; max-height: 320px; overflow: auto; font-family: var(--font
 .term-closeall { position: fixed; right: 12px; bottom: 12px; z-index: 20000; background: var(--panel); }
 
 /* 地图 */
-.combat-grid.with-map { grid-template-columns: minmax(220px, 260px) minmax(0, 1fr) minmax(320px, 400px); }
-.combat-grid.with-map .side-col { max-height: calc(100vh - 120px); overflow: auto; }
-@media (max-width: 1200px) { .combat-grid.with-map { grid-template-columns: minmax(0, 1fr); } .combat-grid.with-map > :last-child { grid-column: auto; } }
 .map-box { position: relative; height: calc(100vh - 230px); min-height: 380px; overflow: hidden; background: var(--panel-2); touch-action: none; user-select: none; cursor: grab; }
 .map-box.panning { cursor: grabbing; }
 .map-box.tool-pen { cursor: crosshair; }
@@ -414,3 +410,53 @@ polyline.erasing { opacity: .25; }
 .map-box.tool-measure { cursor: crosshair; }
 .map-measure line { stroke: var(--warn); fill: none; }
 .map-measure circle { fill: var(--warn); }
+
+.termwin:not(.pinned) { pointer-events: none; }
+
+/* 地图布局：地图铺满，其他东西浮在上面 */
+.battle { position: relative; height: 100%; overflow: hidden; }
+.battle .map-root { position: absolute; inset: 0; }
+.battle .map-box { position: absolute; inset: 0; height: auto; min-height: 0; }
+.battle .combat-bar.hud-top {
+  position: absolute; top: 8px; left: 8px; right: 8px; z-index: 20; margin: 0; padding: 6px 10px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: 0 2px 10px rgba(0, 0, 0, .12);
+}
+.battle .combat-bar h2 { font-size: 18px; }
+.dock { position: absolute; z-index: 15; }
+.dock-body { height: 100%; overflow: auto; border-radius: var(--r-lg); box-shadow: 0 2px 12px rgba(0, 0, 0, .14); }
+.dock-left { top: 64px; left: 8px; bottom: 8px; width: 270px; }
+.dock-right { top: 64px; right: 8px; bottom: 8px; width: 390px; }
+.dock-bottom { left: 290px; right: 410px; bottom: 8px; height: min(42%, 380px); }
+.battle:has(.dock-left.closed) .dock-bottom { left: 8px; }
+.battle:has(.dock-right.closed) .dock-bottom { right: 8px; }
+.dock.closed { bottom: auto; width: auto; height: auto; right: auto; }
+.dock-right.closed { right: 8px; left: auto; }
+.dock-bottom.closed { top: auto; bottom: 8px; left: 50%; transform: translateX(-50%); }
+.dock-open { box-shadow: 0 2px 8px rgba(0, 0, 0, .15); background: var(--panel); }
+.dock-x { position: absolute; z-index: 1; width: 22px; padding: 0; background: var(--panel); }
+.dock-left .dock-x { right: -26px; top: 0; }
+.dock-right .dock-x { left: -26px; top: 0; }
+.dock-bottom .dock-x { right: 0; top: -26px; }
+.dock .log { max-height: none; }
+/* 底部：选中者的几块横着排，每块自己滚 */
+.dock-bottom .dock-body { overflow: hidden; box-shadow: none; }
+.dock-bottom .dock-body > .stack { display: flex; flex-direction: row; align-items: stretch; height: 100%; overflow-x: auto; gap: 8px; }
+.dock-bottom .dock-body > .stack > .panel { flex: 0 0 340px; overflow: auto; box-shadow: 0 2px 12px rgba(0, 0, 0, .14); }
+.dock-bottom .dock-body > .panel { height: 100%; overflow: auto; }
+/* 地图工具：顶栏下面居中 */
+.battle .map-tools { position: absolute; top: 64px; left: 290px; right: 410px; z-index: 16; display: flex; flex-direction: column; align-items: center; gap: 4px; pointer-events: none; }
+.battle .map-tools > * { pointer-events: auto; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: 0 2px 8px rgba(0, 0, 0, .12); max-width: 100%; }
+.battle:has(.dock-left.closed) .map-tools { left: 8px; }
+.battle:has(.dock-right.closed) .map-tools { right: 8px; }
+.map-tools .map-bar, .map-tools .map-bar:last-child { border: 0; }
+.map-ghost { fill: none; stroke: var(--warn); stroke-dasharray: 4 3; opacity: .7; }
+@media (max-width: 1000px) {
+  .dock-left, .dock-right { width: min(300px, 80vw); }
+  .dock-bottom, .battle .map-tools { left: 8px; right: 8px; }
+}
+.battle .combat-bar.hud-top { flex-wrap: nowrap; overflow-x: auto; white-space: nowrap; }
+@media (max-width: 1400px) and (min-width: 1001px) {
+  .dock-left { width: 240px; }
+  .dock-right { width: 320px; }
+  .dock-bottom, .battle .map-tools { left: 256px; right: 336px; }
+}

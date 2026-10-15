@@ -8,7 +8,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { footprint, gridFeet, type Session } from '../../../src/combat';
-import { NumInput, Panel } from '../../components/ui';
+import { NumInput } from '../../components/ui';
 import { combat, type CombatUi, type MapState, type Remote } from '../../lib/combat';
 import type { Namer } from './shared';
 
@@ -21,7 +21,7 @@ const MAX_IMG = 4096;
 interface View { x: number; y: number; k: number }
 type Drag =
   | { kind: 'pan'; sx: number; sy: number; vx: number; vy: number }
-  | { kind: 'token'; id: string; from: { x: number; y: number }; at: { x: number; y: number }; dx: number; dy: number }
+  | { kind: 'token'; id: string; n: number; from: { x: number; y: number }; at: { x: number; y: number } }
   | { kind: 'pen'; pts: number[] }
   | { kind: 'measure'; from: { x: number; y: number }; to: { x: number; y: number } }
   | { kind: 'erase'; ids: Set<string> };
@@ -135,8 +135,10 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
       const c = toCell(toWorld(e));
       if (c.x !== drag.to.x || c.y !== drag.to.y) setDrag({ ...drag, to: c });
     } else if (drag.kind === 'token') {
+      // 鼠标在哪，棋子的中心就在哪（不管当初按在棋子的哪个位置）
       const p = toWorld(e);
-      setDrag({ ...drag, at: toCell({ x: p.x - drag.dx, y: p.y - drag.dy }) });
+      const at = { x: Math.round((p.x - map.grid.ox) / g - drag.n / 2), y: Math.round((p.y - map.grid.oy) / g - drag.n / 2) };
+      if (at.x !== drag.at.x || at.y !== drag.at.y) setDrag({ ...drag, at });
     }
   };
   const onUp = () => {
@@ -172,9 +174,8 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
     combat.select(id);
     if (!combat.canControl(id)) return;
     const t = map.tokens[id];
-    const p = toWorld(e);
     box.current!.setPointerCapture(e.pointerId);
-    setDrag({ kind: 'token', id, from: t, at: t, dx: p.x - (map.grid.ox + t.x * g), dy: p.y - (map.grid.oy + t.y * g) });
+    setDrag({ kind: 'token', id, n: footprint(st.combatants[id]?.base.size), from: t, at: t });
   };
 
   /* ───── 画 ───── */
@@ -193,18 +194,17 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
   const moving = drag?.kind === 'token' ? drag : null;
   const sel = ui.selected && map.tokens[ui.selected] ? ui.selected : null;
 
+  const hint = `滚轮缩放 · 拖空白处或按住空格平移 · 点棋子选中、右键设为目标 · 每格 5 尺，斜走${diagonal === '5' ? '也算 5 尺' : '交替 5 / 10 尺'}，引擎按棋子位置自动判断距离`;
   return (
-    <Panel
-      title="地图"
-      flush
-      aside={<>
+    <div className="map-root">
+      <div className="map-tools">
+      <div className="map-bar">
         {(['move', 'measure', 'pen', 'erase'] as Tool[]).map((t) => (
-          <button key={t} className={'btn sm' + (tool === t ? ' primary' : '')} onClick={() => setTool(t)}>{TOOL_CN[t]}</button>
+          <button key={t} className={'btn sm' + (tool === t ? ' primary' : '')} onClick={() => setTool(t)} title={hint}>{TOOL_CN[t]}</button>
         ))}
         <button className="btn ghost sm" onClick={fit} title="缩放到整张图">适应</button>
         {dm && <button className={'btn ghost sm' + (setup ? ' primary' : '')} onClick={() => setSetup(!setup)}>底图与格子</button>}
-      </>}
-    >
+      </div>
       {tool === 'pen' && (
         <div className="map-bar">
           {COLORS.map((c) => <button key={c} className={'swatch' + (c === color ? ' on' : '')} style={{ background: c }} onClick={() => setColor(c)} aria-label={`颜色 ${c}`} />)}
@@ -233,6 +233,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
           )}
         </div>
       )}
+      </div>
       <div
         ref={box}
         className={'map-box tool-' + (placing ? 'place' : tool) + (drag?.kind === 'pan' ? ' panning' : '')}
@@ -275,10 +276,22 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
                 </g>
               );
             })}
+            {moving && (() => {
+              // 从哪来：原位置的中心 → 现在的中心
+              const half = (moving.n * g) / 2;
+              const c = (p: { x: number; y: number }) => ({ x: map.grid.ox + p.x * g + half, y: map.grid.oy + p.y * g + half });
+              const a = c(moving.from), b = c(moving.at);
+              return (
+                <g className="map-measure">
+                  <circle cx={a.x} cy={a.y} r={half * 0.86} className="map-ghost" />
+                  <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} strokeWidth={3 / view.k} strokeDasharray={`${8 / view.k} ${5 / view.k}`} />
+                </g>
+              );
+            })()}
             {moving && (
               <text
                 className="map-dist" fontSize={14 / view.k}
-                x={map.grid.ox + (moving.at.x + 0.5) * g} y={map.grid.oy + moving.at.y * g - 6 / view.k}
+                x={map.grid.ox + (moving.at.x + moving.n / 2) * g} y={map.grid.oy + moving.at.y * g - 6 / view.k}
               >{gridFeet(moving.at.x - moving.from.x, moving.at.y - moving.from.y, diagonal)} 尺</text>
             )}
             {drag?.kind === 'measure' && (() => {
@@ -297,10 +310,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
           </g>
         </svg>
       </div>
-      <div className="map-bar tiny faint">
-        滚轮缩放 · 拖空白处或按住空格平移 · 点棋子选中、右键设为目标 · 每格 5 尺，斜走{diagonal === '5' ? '也算 5 尺' : '交替 5 / 10 尺'}，引擎按棋子位置自动判断距离
-      </div>
-    </Panel>
+    </div>
   );
 }
 

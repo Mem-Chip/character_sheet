@@ -1,6 +1,6 @@
 /**
  * 5etools 正文渲染：字符串里的 {@tag …} 标记 + 小节 / 列表 / 表格 / 引用条目。
- * 引用标记（法术、状态、专长、职业特性…）渲染成术语：悬停弹出原文，点击固定（见 Term.tsx）。
+ * 引用标记（法术、状态、专长、职业特性…）渲染成术语：悬停弹出原文，按 Ctrl 固定（见 Term.tsx）。
  */
 import { Fragment, type ReactNode } from 'react';
 import type { Json } from '../../src/sheet';

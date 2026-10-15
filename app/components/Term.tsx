@@ -1,9 +1,10 @@
 /**
  * 术语悬浮窗（像 5etools 的悬停卡片）：
- * - 鼠标停在术语上 → 弹出一个悬浮窗（整页同时只有一个，鼠标移进窗里不会消失）；
- * - 点术语 → 变成固定窗（可以同时开好几个，拖标题栏移动，点一下放到最上面）；
- * - 窗里的正文也是术语，悬停、点击照样能开新的；
- * - 按钮里的术语：点击照常执行按钮，悬浮窗上有「固定」按钮。
+ * - 鼠标停在术语上 → 弹出一个悬浮窗（整页同时只有一个）。它不接鼠标：移开术语就消失，不挡视线；
+ * - 悬浮窗开着时按 Ctrl → 变成固定窗（可以同时开好几个，拖标题栏移动，点一下放到最上面）。
+ *   不用点击固定：术语常常在按钮里，点击要留给按钮；
+ * - 固定窗里的正文也是术语，悬停、按 Ctrl 照样能开新的；
+ * - Esc 关掉所有浮窗。
  * 窗口总在当前屏幕范围内：放在术语下面，放不下就翻到上面，左右夹在屏幕里。
  */
 import { useLayoutEffect, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
@@ -16,6 +17,8 @@ interface Win { id: number; ref: TermRef; at: Box; x?: number; y?: number; z: nu
 
 let engine: Engine | null = null;
 let hover: Win | null = null;
+/** 悬浮窗现在画在哪（按 Ctrl 固定时就固定在原地） */
+let hoverPos: { x: number; y: number } | null = null;
 let pins: Win[] = [];
 let seq = 0;
 let zTop = 100;
@@ -42,7 +45,6 @@ const popups = {
     clearTimeout(hideTimer);
     hideTimer = setTimeout(() => { if (hover) { hover = null; emit(); } }, 220);
   },
-  stay() { clearTimeout(hideTimer); },
   pin(ref: TermRef, at: Box, xy?: { x: number; y: number }) {
     clearTimeout(showTimer);
     clearTimeout(hideTimer);
@@ -51,13 +53,13 @@ const popups = {
     emit();
   },
   close(id: number) { pins = pins.filter((p) => p.id !== id); emit(); },
-  closeAll() { pins = []; hover = null; emit(); },
+  closeAll() { clearTimeout(showTimer); pins = []; hover = null; emit(); },
   front(id: number) { pins = pins.map((p) => (p.id === id ? { ...p, z: ++zTop } : p)); emit(); },
   move(id: number, x: number, y: number) { pins = pins.map((p) => (p.id === id ? { ...p, x, y } : p)); emit(); },
 };
 
 /**
- * 一个术语。`inButton`：在按钮里，点击交给按钮（悬浮窗上另有「固定」）。
+ * 一个术语。点击不做任何事（交给外面的按钮）；固定靠 Ctrl。`inButton` 只影响样式。
  * 查不到的类别不加效果，只渲染文字。
  */
 export function Term(p: { kind: string; name: string; source?: string; cls?: string; level?: number; inButton?: boolean; children?: ReactNode }) {
@@ -68,7 +70,6 @@ export function Term(p: { kind: string; name: string; source?: string; cls?: str
       className={'term' + (p.inButton ? ' in-btn' : '')}
       onMouseEnter={(e) => popups.hoverSoon(ref, e.currentTarget)}
       onMouseLeave={() => popups.leaveSoon()}
-      onClick={p.inButton ? undefined : (e) => { e.stopPropagation(); e.preventDefault(); popups.pin(ref, boxOf(e.currentTarget)); }}
     >
       {p.children ?? p.name}
     </span>
@@ -79,7 +80,10 @@ export function Term(p: { kind: string; name: string; source?: string; cls?: str
 export function TermLayer() {
   useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l); }, () => version);
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && hover) { hover = null; emit(); } };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && (hover || pins.length)) popups.closeAll();
+      else if (e.key === 'Control' && !e.repeat && hover) popups.pin(hover.ref, hover.at, hoverPos ?? undefined);
+    };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
@@ -115,6 +119,7 @@ function TermWindow({ w, pinned }: { w: Win; pinned: boolean }) {
     const above = w.at.top - 4 - box.height;
     const y = below + box.height <= vh - m ? below : above >= m ? above : Math.max(m, vh - box.height - m);
     setPos({ x, y });
+    if (!pinned) hoverPos = { x, y };
   }, [w.at, w.x, w.y, data]);
 
   const drag = (e: React.PointerEvent) => {
@@ -135,8 +140,6 @@ function TermWindow({ w, pinned }: { w: Win; pinned: boolean }) {
       ref={el}
       className={'termwin' + (pinned ? ' pinned' : '')}
       style={{ left: pos?.x ?? -9999, top: pos?.y ?? -9999, zIndex: pinned ? w.z : 10000 }}
-      onMouseEnter={pinned ? undefined : () => popups.stay()}
-      onMouseLeave={pinned ? undefined : () => popups.leaveSoon()}
       onMouseDown={pinned ? () => popups.front(w.id) : undefined}
       role={pinned ? 'dialog' : 'tooltip'}
     >
@@ -146,7 +149,7 @@ function TermWindow({ w, pinned }: { w: Win; pinned: boolean }) {
         <span style={{ flex: 1 }} />
         {pinned
           ? <button className="btn ghost sm" onPointerDown={(e) => e.stopPropagation()} onClick={() => popups.close(w.id)} aria-label="关闭">×</button>
-          : <button className="btn ghost sm" onClick={() => pos && popups.pin(w.ref, w.at, pos)}>固定</button>}
+          : <span className="tiny faint">Ctrl 固定</span>}
       </header>
       <div className="body prose small">
         {data === undefined ? <span className="faint">正在查…</span>
