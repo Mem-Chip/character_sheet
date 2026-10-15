@@ -447,6 +447,17 @@ describe('地图：按棋子位置自动判断距离', () => {
     expect(gridFeet(1, 1, '5-10-5')).toBe(5);
   });
 
+  it('移动扣移动力：不够就拒绝，DM 强制扣到 0', () => {
+    const { s } = setup([rogue(), wizard()]);
+    done(s.dispatch({ type: 'startCombat', order: ['r', 'w'] }));
+    const speed = s.state.combatants.r.economy.move;
+    done(s.dispatch({ type: 'move', id: 'r', ft: 10 }));
+    expect(s.state.combatants.r.economy.move).toBe(speed - 10);
+    expect(s.dispatch({ type: 'move', id: 'r', ft: speed }).status).toBe('rejected');
+    done(s.dispatch({ type: 'move', id: 'r', ft: speed, force: true }));
+    expect(s.state.combatants.r.economy.move).toBe(0);
+  });
+
   it('折线总长：5-10-5 的单双数跨段累计（斜 1 + 斜 1 = 15 尺，不是 10 尺）', () => {
     const p = [{ x: 0, y: 0 }, { x: 1, y: 1 }, { x: 2, y: 2 }, { x: 2, y: 5 }];
     expect(pathFeet(p)).toBe(25);

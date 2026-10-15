@@ -419,6 +419,8 @@ export type Command =
   /** 手动改次数：资源或某一环法术位「已用」多少 */
   | { type: 'setUsage'; id: Id; resource?: string; slot?: number; used: number }
   | { type: 'endConcentration'; id: Id }
+  /** 在地图上走了 ft 尺：回合中扣移动力，不够就拒绝（force = DM 不管够不够，扣到 0 为止） */
+  | { type: 'move'; id: Id; ft: number; force?: boolean }
   | { type: 'advanceTime'; minutes: number }
   | { type: 'rest'; kind: 'short' | 'long'; ids?: Id[] }
   | { type: 'setSettings'; settings: Partial<Settings> };

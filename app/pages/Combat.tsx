@@ -32,6 +32,7 @@ export function CombatPage({ engine }: { engine: Engine }) {
   const [showMap, setShowMap] = useState(true);
   const [drawer, setDrawer] = useState<Drawer>(null);
   const [logOpen, setLogOpen] = useState(() => { try { return localStorage.getItem('dnd2024-engine:dock:log') !== '0'; } catch { return true; } });
+  const [hotOpen, setHotOpen] = useState(() => { try { return localStorage.getItem('dnd2024-engine:dock:hot') !== '0'; } catch { return true; } });
   // session 为空就（重新）初始化 —— 开发时热更新会把 combat.ts 的模块状态清掉
   useEffect(() => { if (!ui.session) initCombat(engine); }, [engine, ui.session]);
   // Esc：在选目标就取消选目标，否则取消选中的人和标的目标
@@ -91,8 +92,11 @@ export function CombatPage({ engine }: { engine: Engine }) {
 
   if (battle) {
     const toggleLog = () => { setLogOpen(!logOpen); try { localStorage.setItem('dnd2024-engine:dock:log', logOpen ? '0' : '1'); } catch { /* 无所谓 */ } };
+    const toggleHot = () => { setHotOpen(!hotOpen); try { localStorage.setItem('dnd2024-engine:dock:hot', hotOpen ? '0' : '1'); } catch { /* 无所谓 */ } };
+    // 选目标时总是展开（要看确认按钮）
+    const hotShown = hotOpen || !!ui.aim;
     return (
-      <div className={'battle' + (logOpen ? '' : ' log-closed') + (drawer ? ' drawer-open' : '')}>
+      <div className={'battle' + (logOpen ? '' : ' log-closed') + (hotShown ? '' : ' hot-closed') + (drawer ? ' drawer-open' : '')}>
         <MapView s={s} ui={ui} remote={remote!} name={name} />
         <div className="hud hud-top">
           <Menu label={remote!.name}>
@@ -132,7 +136,7 @@ export function CombatPage({ engine }: { engine: Engine }) {
           : <button className="btn sm hud-log-open" onClick={toggleLog}>日志 · {s.transactions.length}</button>}
 
         <div className="hud hud-hot">
-          <Hotbar s={s} ui={ui} engine={engine} name={name} onDetail={() => setDrawer(drawer === 'detail' ? null : 'detail')} turnButton={turnButton} />
+          <Hotbar s={s} ui={ui} engine={engine} name={name} onDetail={() => setDrawer(drawer === 'detail' ? null : 'detail')} turnButton={turnButton} collapsed={!hotShown} onToggle={toggleHot} />
         </div>
         <div className="hud-prompt">{prompts}</div>
         {dialogs}

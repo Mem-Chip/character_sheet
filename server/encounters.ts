@@ -16,7 +16,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import {
-  DICE_MODES, RuleBook, Session, createEncounter, defaultDiceMode, diceSourceFor, footprint, chatEntry, type ChatRoll, type DiceMode,
+  DICE_MODES, RuleBook, Session, createEncounter, defaultDiceMode, diceSourceFor, footprint, gridFeet, chatEntry, type ChatRoll, type DiceMode,
   type Command, type DispatchResult, type EngineCtx, type Diagonal, type OverridePatch, type Positions, type SessionSave,
 } from '../src/combat';
 import { RULE_FILES } from '../src/bridge/rule-files';
@@ -76,6 +76,8 @@ interface Live {
   chat: ChatRoll[];
   /** DM 在替玩家的角色操作：这一笔里问这个控制者的事（掷骰、选项）都算 DM 的，骰子按 DM 的设置 */
   actingAs: string | null;
+  /** 死了自动藏起来过的（DM 亮出来之后不再藏；活过来就清掉，再死再藏） */
+  autoHid: string[];
   ctx: EngineCtx;
   seq: number;
   watchers: Set<ServerResponse>;
@@ -127,7 +129,7 @@ export function createEncounters(d: Deps) {
     const e = {
       id, campaignId: String(r.campaign_id), name: String(r.name),
       owners: meta.owners ?? {}, cards: meta.cards ?? {}, dice: meta.dice ?? {}, hidden: meta.hidden ?? [], chat: meta.chat ?? [],
-      actingAs: meta.actingAs ?? null, map: { ...newMap(), ...(meta.map ?? {}) }, seq: 0, watchers: new Set(),
+      actingAs: meta.actingAs ?? null, autoHid: meta.autoHid ?? [], map: { ...newMap(), ...(meta.map ?? {}) }, seq: 0, watchers: new Set(),
     } as unknown as Live;
     e.ctx = ctxOf(e);
     e.session = Session.restore(JSON.parse(String(r.save)) as SessionSave, e.ctx);
@@ -139,7 +141,7 @@ export function createEncounters(d: Deps) {
     id: e.id, name: e.name, campaignId: e.campaignId, seq: e.seq, owners: e.owners, cards: e.cards,
     dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, save: e.session.save(),
   });
-  const metaOf = (e: Live) => JSON.stringify({ owners: e.owners, cards: e.cards, dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs });
+  const metaOf = (e: Live) => JSON.stringify({ owners: e.owners, cards: e.cards, dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, autoHid: e.autoHid });
   const broadcast = (e: Live, event: string, data: unknown) => {
     const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
     for (const w of e.watchers) w.write(msg);
@@ -147,6 +149,14 @@ export function createEncounters(d: Deps) {
 
   function changed(e: Live): void {
     e.seq++;
+    // 怪物、NPC 死了：在玩家那边藏起来（DM 那边变淡，可以再亮出来）
+    for (const c of Object.values(e.session.state.combatants)) {
+      if (c.kind === 'pc') continue;
+      if (c.live.dead && !e.autoHid.includes(c.id)) {
+        e.autoHid.push(c.id);
+        if (!e.hidden.includes(c.id)) e.hidden.push(c.id);
+      } else if (!c.live.dead && e.autoHid.includes(c.id)) e.autoHid = e.autoHid.filter((x) => x !== c.id);
+    }
     d.run('UPDATE encounters SET save = ?, meta = ?, updated = ? WHERE id = ?', JSON.stringify(e.session.save()), metaOf(e), Date.now(), e.id);
     broadcast(e, 'state', stateOf(e));
   }
@@ -184,7 +194,8 @@ export function createEncounters(d: Deps) {
   }
 
   /** 地图操作；返回拒绝原因 */
-  function mapOp(e: Live, u: User, role: 'dm' | 'player', b: Row): string | null {
+  /** out.state：这次地图操作也动了战斗（扣了移动力），要整场重发 */
+  function mapOp(e: Live, u: User, role: 'dm' | 'player', b: Row, out: { state: boolean }): string | null {
     const m = e.map;
     const dm = role === 'dm';
     const num = (v: unknown, lo: number, hi: number) => Math.max(lo, Math.min(hi, Math.round(Number(v) || 0)));
@@ -196,10 +207,19 @@ export function createEncounters(d: Deps) {
         const from = m.tokens[id];
         if (b.x == null) { delete m.tokens[id]; return null; }
         const to = { x: num(b.x, -200, 1000), y: num(b.y, -200, 1000) };
-        m.tokens[id] = to;
-        // 回合中，轮到的人移动：记下这一回合走过的路（换人、换轮就重新开始）
         const st = e.session.state;
-        if (from && st.round !== null && st.order[st.turnIndex] === id) {
+        const turn = !!from && st.round !== null && st.order[st.turnIndex] === id && (from.x !== to.x || from.y !== to.y);
+        // 回合中，轮到的人移动：扣移动力（不够就不让走）。DM 按住 Shift 拖 = 不扣（推开、传送之类）
+        if (turn && !(dm && b.free)) {
+          if (e.session.pending) return '还有一个决定没做完';
+          const ft = gridFeet(to.x - from.x, to.y - from.y, m.grid.diagonal ?? '5');
+          const r = e.session.dispatch({ type: 'move', id, ft });
+          if (r.status === 'rejected') return r.reason + (dm ? '（按住 Shift 拖不扣移动）' : '');
+          out.state = true;
+        }
+        m.tokens[id] = to;
+        // 记下这一回合走过的路（换人、换轮就重新开始）
+        if (turn) {
           const key = `${st.round}:${st.turnIndex}`;
           if (m.trail?.id === id && m.trail.key === key) m.trail.cells = [...m.trail.cells, to].slice(-200);
           else m.trail = { id, key, cells: [from, to] };
@@ -227,6 +247,17 @@ export function createEncounters(d: Deps) {
         if (m.shapes.length >= MAX_SHAPES) return '形状太多了，先擦掉一些';
         const color = /^#[0-9a-f]{6}$/i.test(String(b.color)) ? String(b.color) : '#1f5f99';
         m.shapes.push({ id: randomUUID().slice(0, 8), by: u.id, color, tpl });
+        return null;
+      }
+      case 'shapeMove': {
+        // 挪形状：平移 dx, dy（世界像素）。自己放的，或者 DM
+        const sh = m.shapes.find((x) => x.id === String(b.id ?? ''));
+        if (!sh) return '没有这个形状';
+        if (!dm && sh.by !== u.id) return '只能挪自己放的形状';
+        const dx = Number(b.dx), dy = Number(b.dy);
+        if (!Number.isFinite(dx) || !Number.isFinite(dy) || Math.abs(dx) > 1e5 || Math.abs(dy) > 1e5) return '挪的距离不对';
+        const t = sh.tpl;
+        if (t.shape === 'circle') { t.cx = Number(t.cx) + dx; t.cy = Number(t.cy) + dy; } else { t.x = Number(t.x) + dx; t.y = Number(t.y) + dy; }
         return null;
       }
       case 'erase': {
@@ -377,7 +408,7 @@ export function createEncounters(d: Deps) {
         if (role !== 'dm') return reject('只有 DM 能撤销、裁定、清空');
         if (op === 'undo') s.undo(Math.max(1, Number(b.n ?? 1)));
         else if (op === 'override') r = s.override(Number(b.txIndex), b.patch as OverridePatch);
-        else { e.owners = {}; e.cards = {}; e.hidden = []; e.chat = []; e.map.tokens = {}; e.map.trail = null; e.session = new Session(createEncounter(e.id), e.ctx); }
+        else { e.owners = {}; e.cards = {}; e.hidden = []; e.chat = []; e.autoHid = []; e.map.tokens = {}; e.map.trail = null; e.session = new Session(createEncounter(e.id), e.ctx); }
       } else if (op === 'setDice') {
         // 玩家只能改自己控制的；DM 什么都能改（包括默认 '*' 和怪物 'dm'）
         const who = String(b.user ?? '');
@@ -403,9 +434,11 @@ export function createEncounters(d: Deps) {
         d.send(res, 200, { status: 'done' });
         return true;
       } else if (op === 'map') {
-        const why = mapOp(e, u, role, b);
+        const out = { state: false };
+        const why = mapOp(e, u, role, b, out);
         if (why) return reject(why);
-        mapChanged(e);
+        if (out.state) changed(e);
+        else mapChanged(e);
         d.send(res, 200, { status: 'done' });
         return true;
       } else throw d.fail(400, '不认识的操作');

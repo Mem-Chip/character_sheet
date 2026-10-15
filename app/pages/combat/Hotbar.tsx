@@ -53,8 +53,8 @@ export function AimBar({ ui, name }: { ui: CombatUi; name: Namer }) {
   );
 }
 
-export function Hotbar({ s, ui, engine, name, onDetail, turnButton }: {
-  s: Session; ui: CombatUi; engine: Engine; name: Namer; onDetail: () => void; turnButton: React.ReactNode;
+export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, onToggle }: {
+  s: Session; ui: CombatUi; engine: Engine; name: Namer; onDetail: () => void; turnButton: React.ReactNode; collapsed: boolean; onToggle: () => void;
 }) {
   const id = ui.selected && s.state.combatants[ui.selected] && !combat.isHidden(ui.selected) ? ui.selected : null;
   const spells: Json[] = engine.env.store.data.spellsXphb?.spell || [];
@@ -63,7 +63,24 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton }: {
   const [pick, setPick] = useState<string | null>(null);
   const [asReaction, setAsReaction] = useState(false);
 
-  if (!id) return <div className="hotbar"><div className="hot-empty muted small">点地图上的棋子或者先攻条里的人，选中谁就在这里操作谁。</div><div className="hot-end">{turnButton}</div></div>;
+  const fold = <button className="btn ghost sm hot-fold" onClick={onToggle} title={collapsed ? '展开行动栏' : '收起行动栏'}>{collapsed ? '展开' : '收起'}</button>;
+  // 收起：一行，只剩名字、生命值和结束回合
+  if (collapsed) {
+    const c0 = id ? s.state.combatants[id] : null;
+    const secret = !!id && combat.isSecret(id);
+    return (
+      <div className="hotbar folded">
+        <div className="hot-fold-row">
+          {c0 ? <><b className="serif">{c0.name}</b>{!secret && <span className="num">{c0.live.hp}/{s.view(id!).hpMax}</span>}</> : <span className="muted small">没选中人</span>}
+          <span style={{ flex: 1 }} />
+          {turnButton}
+          {fold}
+        </div>
+      </div>
+    );
+  }
+
+  if (!id) return <div className="hotbar"><div className="hot-empty muted small">点地图上的棋子或者先攻条里的人，选中谁就在这里操作谁。</div><div className="hot-end">{turnButton}{fold}</div></div>;
 
   const c = s.state.combatants[id];
   const v = s.view(id);
@@ -93,7 +110,7 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton }: {
           {effTags}
         </div>
         <div className="hot-actions muted small" style={{ alignSelf: 'center' }}>具体数值只有 DM 看得到。</div>
-        <div className="hot-end">{turnButton}</div>
+        <div className="hot-end">{turnButton}{fold}</div>
       </div>
     );
   }
@@ -182,6 +199,7 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton }: {
       <div className="hot-end">
         {turnButton}
         <button className="btn sm" onClick={onDetail} title="效应、手动调整、资源明细、检定">详情</button>
+        {fold}
       </div>
     </div>
   );

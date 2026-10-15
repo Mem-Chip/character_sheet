@@ -180,6 +180,17 @@ function handle(tx: Tx, cmd: Command): void {
     case 'endConcentration':
       endConcentration(tx, cmd.id, '主动终止', null);
       return;
+    case 'move': {
+      const c = tx.state.combatants[cmd.id];
+      if (!c) throw new Rejected(`没有参与者 ${cmd.id}`);
+      const ft = Math.max(0, Math.round(cmd.ft));
+      if (tx.state.round === null) return;
+      const left = c.economy.move;
+      if (ft > left && !cmd.force) throw new Rejected(`${c.name} 只剩 ${left} 尺移动，这一步要 ${ft} 尺`);
+      const seq = tx.emit('note', { text: `${c.name} 移动 ${ft} 尺（剩 ${Math.max(0, left - ft)} 尺）`, owner: cmd.id });
+      tx.emit('economyChanged', { id: cmd.id, patch: { move: Math.max(0, left - ft) } }, seq);
+      return;
+    }
     case 'advanceTime':
       advanceTime(tx, cmd.minutes, null);
       return;

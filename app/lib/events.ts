@@ -168,6 +168,7 @@ export function txTitle(cmd: { type: string } & P, name: (id: unknown) => string
     case 'manualCast': return `${name(cmd.actor)} 施放「${cmd.spell}」`;
     case 'setUsage': return '调整次数';
     case 'endConcentration': return `${name(cmd.id)} 终止专注`;
+    case 'move': return `${name(cmd.id)} 移动`;
     case 'advanceTime': return `时间流逝 ${cmd.minutes} 分钟`;
     case 'rest': return cmd.kind === 'long' ? '长休' : '短休';
     case 'setSettings': return '设置';
