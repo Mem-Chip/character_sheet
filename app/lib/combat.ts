@@ -119,8 +119,9 @@ export function useCombat(): CombatUi {
 function ctxFor(engine: Engine): EngineCtx {
   return {
     rules: engine.rules,
-    // 读档重跑时磁带里有骰面，不会走到这里；只有新掷的骰子按当前设置取来源
-    diceFor: (user) => ((ui.dice[user] ?? ui.dice['*'] ?? 'engine') === 'physical' ? physicalDice : engineDice()),
+    // 读档重跑时磁带里有骰面，不会走到这里；只有新掷的骰子按当前设置取来源。
+    // 战役遭遇：骰子只由服务器掷。服务器那边正停着等骰面时，本地重放也必须停在同一处，不能自己补一颗
+    diceFor: (user) => (ui.remote || (ui.dice[user] ?? ui.dice['*'] ?? 'engine') === 'physical' ? physicalDice : engineDice()),
   };
 }
 

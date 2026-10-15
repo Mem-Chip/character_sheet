@@ -14,8 +14,8 @@ import { getApp } from '../../lib/store';
 import type { Engine } from '../../lib/engine';
 import { DAMAGE_TYPES, type Namer } from './shared';
 
-type Group = '武器攻击' | '法术' | '法术（未自动化）' | '特性' | '通用动作' | '时机到了会问';
-const GROUPS: Group[] = ['武器攻击', '法术', '法术（未自动化）', '特性', '通用动作', '时机到了会问'];
+export type Group = '武器攻击' | '法术' | '法术（未自动化）' | '特性' | '通用动作' | '时机到了会问';
+export const GROUPS: Group[] = ['武器攻击', '法术', '法术（未自动化）', '特性', '通用动作', '时机到了会问'];
 
 /** 触发时机的说法（「时机到了会问」那一组用） */
 const EVENT_CN: Record<string, string> = {
@@ -23,7 +23,7 @@ const EVENT_CN: Record<string, string> = {
   saveForced: '迫使豁免时', turnStart: '回合开始时', turnEnd: '回合结束时', spellCast: '施法后',
 };
 
-interface ActItem {
+export interface ActItem {
   /** 有动态数据的：useAction 的动作引用；没有的：manual:<法术名> */
   ref: string;
   group: Group;
@@ -46,7 +46,7 @@ const TIME_UNIT: Record<string, 'action' | 'bonus' | 'reaction'> = { action: 'ac
 const ACT_CN: Record<string, string> = { action: '动作', bonus: '附赠', reaction: '反应', free: '免费', none: '' };
 
 
-function actionsFor(s: Session, rules: RuleBook, spells: Json[], id: string): ActItem[] {
+export function actionsFor(s: Session, rules: RuleBook, spells: Json[], id: string): ActItem[] {
   const c = s.state.combatants[id];
   const v = s.view(id);
   const names = v.resourceNames ?? {};
@@ -182,35 +182,8 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
   const conditions = engine.rules.keys().filter((k) => k.startsWith('XPHB:condition:'));
   const tnames = ui.targets.map(name);
 
-  const slotsFor = (min: number, max = 9) => Object.keys(v.slots).map(Number)
-    .filter((L) => L >= min && L <= max && (v.slots[L] ?? 0) - (c.live.slotsUsed[L] ?? 0) > 0).sort((a, b) => a - b);
-
-  const use = (it: ActItem) => {
-    if (it.needsTargets && !ui.targets.length) { combat.toast('先在左边给这个动作选目标（点参与者右边的「目标」）'); return; }
-    // 付不起代价的动作也能点：DM 可以强制执行（不检查代价和次数）
-    const force = !it.ok;
-    if (force && !confirm(`${it.why}。\n仍然执行？（DM 强制：不检查代价）`)) return;
-    let slotLevel: number | undefined;
-    if (it.slot) {
-      const avail = slotsFor(it.slot.min, it.slot.max);
-      slotLevel = slotPick[it.ref] && avail.includes(slotPick[it.ref]) ? slotPick[it.ref] : avail[0];
-    }
-    if (it.manual) {
-      if (it.slot && slotLevel === undefined && !force) { combat.toast(`没有可用的 ${it.slot.min} 环或更高的法术位`); return; }
-      combat.dispatch({
-        type: 'manualCast', actor: id, spell: it.name, slotLevel,
-        activation: it.manual.activation, concentration: it.manual.concentration, targets: ui.targets, force: force || undefined,
-      });
-      return;
-    }
-    combat.dispatch({
-      type: 'useAction', actor: id, action: it.ref,
-      targets: it.needsTargets ? ui.targets : [id],
-      slotLevel,
-      options: asReaction && it.group === '武器攻击' ? { as: 'reaction' } : undefined,
-      force: force || undefined,
-    });
-  };
+  const slotsFor = (min: number, max = 9) => freeSlots(s, id, min, max);
+  const use = (it: ActItem) => runAction(s, ui, id, it, slotPick[it.ref], asReaction);
 
   const econ = c.economy;
   return (
@@ -405,4 +378,40 @@ function Usage({ max, used, onChange }: { max: number; used: number; onChange: (
       <span className="tiny faint num">/ {max}</span>
     </span>
   );
+}
+
+/** 还有剩的法术位（环阶从低到高） */
+export function freeSlots(s: Session, id: string, min: number, max = 9): number[] {
+  const c = s.state.combatants[id];
+  const v = s.view(id);
+  return Object.keys(v.slots).map(Number)
+    .filter((L) => L >= min && L <= max && (v.slots[L] ?? 0) - (c.live.slotsUsed[L] ?? 0) > 0).sort((a, b) => a - b);
+}
+
+/** 执行一个动作。slotLevel 没给或者用不了 → 用最低的可用环阶 */
+export function runAction(s: Session, ui: CombatUi, id: string, it: ActItem, slotPick?: number, asReaction = false): void {
+  if (it.needsTargets && !ui.targets.length) { combat.toast('先选目标：右键地图上的棋子，或者点参与者右边的「目标」'); return; }
+  // 付不起代价的动作也能点：DM 可以强制执行（不检查代价和次数）
+  const force = !it.ok;
+  if (force && !confirm(`${it.why}。\n仍然执行？（DM 强制：不检查代价）`)) return;
+  let slotLevel: number | undefined;
+  if (it.slot) {
+    const avail = freeSlots(s, id, it.slot.min, it.slot.max);
+    slotLevel = slotPick && avail.includes(slotPick) ? slotPick : avail[0];
+  }
+  if (it.manual) {
+    if (it.slot && slotLevel === undefined && !force) { combat.toast(`没有可用的 ${it.slot.min} 环或更高的法术位`); return; }
+    combat.dispatch({
+      type: 'manualCast', actor: id, spell: it.name, slotLevel,
+      activation: it.manual.activation, concentration: it.manual.concentration, targets: ui.targets, force: force || undefined,
+    });
+    return;
+  }
+  combat.dispatch({
+    type: 'useAction', actor: id, action: it.ref,
+    targets: it.needsTargets ? ui.targets : [id],
+    slotLevel,
+    options: asReaction && it.group === '武器攻击' ? { as: 'reaction' } : undefined,
+    force: force || undefined,
+  });
 }

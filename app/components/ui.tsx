@@ -51,10 +51,10 @@ export function Tag(p: { tone?: 'accent' | 'danger' | 'warn'; children: ReactNod
   );
 }
 
-export function Dialog(p: { title: ReactNode; children: ReactNode; footer?: ReactNode; onClose?: () => void }) {
-  return (
-    <div className="overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) p.onClose?.(); }}>
-      <section className="panel dialog" role="dialog" aria-modal="true">
+/** docked：不盖遮罩、不居中，贴在页面给它留的位置（地图布局里要做的决定用，不挡地图） */
+export function Dialog(p: { title: ReactNode; children: ReactNode; footer?: ReactNode; onClose?: () => void; docked?: boolean }) {
+  const box = (
+      <section className={'panel dialog' + (p.docked ? ' docked' : '')} role="dialog" aria-modal={!p.docked}>
         <header>
           <h3>{p.title}</h3>
           {p.onClose && <div className="aside"><button className="btn ghost sm" onClick={p.onClose} aria-label="关闭">关闭</button></div>}
@@ -62,8 +62,9 @@ export function Dialog(p: { title: ReactNode; children: ReactNode; footer?: Reac
         <div className="body">{p.children}</div>
         {p.footer && <footer>{p.footer}</footer>}
       </section>
-    </div>
   );
+  if (p.docked) return box;
+  return <div className="overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) p.onClose?.(); }}>{box}</div>;
 }
 
 export function Field(p: { label: ReactNode; children: ReactNode; style?: React.CSSProperties }) {

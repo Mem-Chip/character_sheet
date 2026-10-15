@@ -13,13 +13,13 @@ import { CREATURE_TYPES, DAMAGE_TYPES, type Namer } from './shared';
 const KIND_CN: Record<string, string> = { optionalTrigger: '可以做出反应', ask: '需要确认', choose: '请选择', physicalDice: '输入骰子结果', slotLevel: '选择法术位', targets: '选择目标', number: '选择数值' };
 
 /** onClose：DM 代玩家回答时可以关掉，回去等玩家自己答 */
-export function DecisionDialog({ s, name, onClose }: { s: Session; name: Namer; onClose?: () => void }) {
+export function DecisionDialog({ s, name, onClose, docked }: { s: Session; name: Namer; onClose?: () => void; docked?: boolean }) {
   const p = s.pending!;
   const d = p.decision;
   const preview = previewLines(p.preview, name);
   const who = s.state.combatants[d.to]?.name ?? (d.to === 'dm' ? 'DM' : name(d.to));
   return (
-    <Dialog title={<>{KIND_CN[d.kind] ?? '需要决定'} <span className="faint small">· 交给 {who}{onClose ? '（DM 代答）' : ''}</span></>} onClose={onClose}>
+    <Dialog title={<>{KIND_CN[d.kind] ?? '需要决定'} <span className="faint small">· 交给 {who}{onClose ? '（DM 代答）' : ''}</span></>} onClose={onClose} docked={docked}>
       {preview.length > 0 && (
         <div className="preview">
           {preview.map((l) => (

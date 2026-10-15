@@ -12,7 +12,7 @@ const OUTCOMES: Record<string, Array<[string, string]>> = {
   check: [['success', '成功'], ['fail', '失败']],
 };
 
-export function Log({ s, name }: { s: Session; name: Namer }) {
+export function Log({ s, name, onCollapse }: { s: Session; name: Namer; onCollapse?: () => void }) {
   const ui = useCombat();
   const dm = !ui.remote || ui.remote.role === 'dm';
   // 玩家视角：DM 藏起来的参与者相关的整笔都不显示；怪物的数值不显示
@@ -31,6 +31,7 @@ export function Log({ s, name }: { s: Session; name: Namer }) {
       aside={<>
         <span className="tiny">{txs.length} 笔</span>
         {dm && <button className="btn sm" disabled={!txs.length} onClick={() => combat.undo()} title="撤销最后一笔（从起点重放其余的）">撤销</button>}
+        {onCollapse && <button className="btn ghost sm" onClick={onCollapse} title="收起日志">收起</button>}
       </>}
     >
       <div className="log">
@@ -49,7 +50,7 @@ export function Log({ s, name }: { s: Session; name: Namer }) {
             .map((e) => describe(e, name, secret)).filter((x): x is Line => !!x);
           const overridden = t.input.overrides.length > 0;
           return (
-            <div key={i} className="tx">
+            <div key={i} className={'tx' + (i === txs.length - 1 ? ' latest' : '')}>
               <div className="hd">
                 <span className="tiny faint num">#{i + 1}</span>
                 <span className="who">{txTitle(t.input.cmd as never, name)}</span>

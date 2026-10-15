@@ -14,6 +14,7 @@ import type { Namer } from './shared';
 
 type Tool = 'move' | 'measure' | 'pen' | 'erase';
 const TOOL_CN: Record<Tool, string> = { move: '移动', measure: '测距', pen: '画笔', erase: '橡皮' };
+const TOOL_TIP: Record<Tool, string> = { move: '拖棋子；拖空白处平移', measure: '量两格之间多远', pen: '在地图上画（所有人看得到）', erase: '擦掉画的线' };
 const COLORS = ['#c0392b', '#2f5241', '#1f5f99', '#8a5a12', '#2b241a', '#ffffff'];
 const WIDTHS = [3, 6, 12];
 const MAX_IMG = 4096;
@@ -197,34 +198,35 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
   const hint = `滚轮缩放 · 拖空白处或按住空格平移 · 点棋子选中、右键设为目标 · 每格 5 尺，斜走${diagonal === '5' ? '也算 5 尺' : '交替 5 / 10 尺'}，引擎按棋子位置自动判断距离`;
   return (
     <div className="map-root">
-      <div className="map-tools">
-      <div className="map-bar">
+      <div className="hud map-rail" title={hint}>
         {(['move', 'measure', 'pen', 'erase'] as Tool[]).map((t) => (
-          <button key={t} className={'btn sm' + (tool === t ? ' primary' : '')} onClick={() => setTool(t)} title={hint}>{TOOL_CN[t]}</button>
+          <button key={t} className={tool === t ? 'on' : ''} onClick={() => setTool(t)} title={TOOL_TIP[t]}>{TOOL_CN[t]}</button>
         ))}
-        <button className="btn ghost sm" onClick={fit} title="缩放到整张图">适应</button>
-        {dm && <button className={'btn ghost sm' + (setup ? ' primary' : '')} onClick={() => setSetup(!setup)}>底图与格子</button>}
+        <hr />
+        <button onClick={fit} title="缩放到整张图">适应</button>
+        {dm && <button className={setup ? 'on' : ''} onClick={() => setSetup(!setup)} title="上传底图、对齐格子、斜走规则">底图</button>}
       </div>
+      <div className="map-fly">
       {tool === 'pen' && (
-        <div className="map-bar">
+        <div className="hud map-bar">
           {COLORS.map((c) => <button key={c} className={'swatch' + (c === color ? ' on' : '')} style={{ background: c }} onClick={() => setColor(c)} aria-label={`颜色 ${c}`} />)}
-          <span style={{ width: 8 }} />
-          {WIDTHS.map((w) => <button key={w} className={'btn sm' + (w === width ? ' primary' : '')} onClick={() => setWidth(w)}>{w === 3 ? '细' : w === 6 ? '中' : '粗'}</button>)}
-          <span style={{ flex: 1 }} />
+          <span style={{ width: 4 }} />
+          {WIDTHS.map((w) => <button key={w} className={'btn sm' + (w === width ? ' on' : '')} onClick={() => setWidth(w)}>{w === 3 ? '细' : w === 6 ? '中' : '粗'}</button>)}
+          <span style={{ width: 4 }} />
           <button className="btn ghost sm" onClick={() => { if (confirm('擦掉你画的所有线？')) void combat.map({ action: 'clear', mine: true }); }}>擦掉我画的</button>
           {dm && <button className="btn ghost sm danger" onClick={() => { if (confirm('擦掉所有人画的线？')) void combat.map({ action: 'clear' }); }}>全部擦掉</button>}
         </div>
       )}
-      {tool === 'erase' && <div className="map-bar tiny faint">按住拖过线条就擦掉。{dm ? '' : '只能擦你自己画的。'}</div>}
+      {tool === 'erase' && <div className="hud map-bar tiny faint">按住拖过线条就擦掉。{dm ? '' : '只能擦你自己画的。'}</div>}
+      {tool === 'measure' && <div className="hud map-bar tiny faint">按住从一格拖到另一格。只有你自己看得到。</div>}
       {setup && dm && <MapSetup map={map} />}
-      {(offMap.length > 0 || sel) && (
-        <div className="map-bar">
+      {(offMap.length > 0 || (sel && combat.canControl(sel))) && (
+        <div className="hud map-bar">
           {offMap.length > 0 && <span className="tiny faint">还没上图：</span>}
           {offMap.map((id) => (
-            <button key={id} className={'btn sm' + (placing === id ? ' primary' : '')} onClick={() => setPlacing(placing === id ? null : id)}>{name(id)}</button>
+            <button key={id} className={'btn sm' + (placing === id ? ' on' : '')} onClick={() => setPlacing(placing === id ? null : id)}>{name(id)}</button>
           ))}
-          {placing && <span className="tiny">点地图上的一格放下 {name(placing)}</span>}
-          <span style={{ flex: 1 }} />
+          {placing && <span className="tiny">点一格放下 {name(placing)}</span>}
           {sel && combat.canControl(sel) && (
             <button className="btn ghost sm" onClick={() => {
               combat.patchMap((m) => { delete m.tokens[sel]; });
@@ -338,7 +340,7 @@ function MapSetup({ map }: { map: MapState }) {
     } finally { setBusy(false); }
   };
   return (
-    <div className="map-bar wrap">
+    <div className="hud map-bar wrap">
       <label className="btn sm">
         {busy ? '上传中…' : map.bg ? '换底图' : '上传底图'}
         <input type="file" accept="image/*" hidden disabled={busy} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void upload(f); }} />

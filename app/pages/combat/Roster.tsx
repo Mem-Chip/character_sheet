@@ -2,6 +2,7 @@
 import type { Session } from '../../../src/combat';
 import { Panel, Tag } from '../../components/ui';
 import { combat, type CombatUi } from '../../lib/combat';
+import { woundOf } from './Initiative';
 import { rosterOrder } from './shared';
 
 export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: CombatUi; onAddPc: () => void; onAddMonster: () => void }) {
@@ -76,9 +77,3 @@ export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: Comba
   );
 }
 
-/** 不给玩家看具体数字时的伤势说法（2024 规则里「浴血」= 生命值不到一半） */
-function woundOf(hp: number, max: number): string {
-  if (hp <= 0) return '倒地';
-  if (hp >= max) return '完好';
-  return hp * 2 <= max ? '浴血' : '受伤';
-}
