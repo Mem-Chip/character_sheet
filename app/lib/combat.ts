@@ -88,7 +88,7 @@ export interface Remote {
 
 export interface Stroke { id: string; by: number; color: string; width: number; pts: number[] }
 export interface MapState {
-  grid: { size: number; ox: number; oy: number; cols: number; rows: number; show: boolean; diagonal?: '5' | '5-10-5'; paper?: string; line?: string };
+  grid: { size: number; ox: number; oy: number; cols: number; rows: number; show: boolean; diagonal?: '5' | '5-10-5'; paper?: string; line?: string; cover?: 'center' | 'corners'; coverK?: number };
   bg: { img: string; w: number; h: number } | null;
   strokes: Stroke[];
   tokens: Record<string, { x: number; y: number }>;

@@ -41,7 +41,7 @@ export interface Shape { id: string; by: number; color: string; tpl: Record<stri
 export interface Trail { id: string; key: string; cells: Array<{ x: number; y: number }> }
 export interface MapState {
   /** 一格多少像素（底图坐标）、格子原点偏移、格子铺多大、显不显示 */
-  grid: { size: number; ox: number; oy: number; cols: number; rows: number; show: boolean; diagonal?: Diagonal; paper?: string; line?: string };
+  grid: { size: number; ox: number; oy: number; cols: number; rows: number; show: boolean; diagonal?: Diagonal; paper?: string; line?: string; cover?: 'center' | 'corners'; coverK?: number };
   bg: { img: string; w: number; h: number } | null;
   strokes: Stroke[];
   /** 参与者 id → 格子坐标（占的左上角那一格） */
@@ -292,6 +292,9 @@ export function createEncounters(d: Deps) {
           diagonal: b.diagonal === '5-10-5' ? '5-10-5' : b.diagonal === '5' ? '5' : m.grid.diagonal ?? '5',
           // 没底图时的底色、格线颜色：hex，空字符串 = 默认
           paper: hexOr(b.paper, m.grid.paper), line: hexOr(b.line, m.grid.line),
+          // 范围判定：格子中心 / 中心或小方格（coverK 倍边长）的角
+          cover: b.cover === 'corners' ? 'corners' : b.cover === 'center' ? 'center' : m.grid.cover,
+          coverK: b.coverK == null ? m.grid.coverK : Math.max(0.1, Math.min(1, Number(b.coverK) || 0.75)),
         };
         return null;
       case 'bg': {

@@ -14,7 +14,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { footprint, gridFeet, pathFeet, type Session } from '../../../src/combat';
-import { cellCenters, coveredCells, directional, inside, snapLen, snapPt, spellTpl, tplLabel, tplOrigin, tplPath, type Tpl } from '../../lib/area';
+import { cellHit, coveredCells, directional, snapLen, snapPt, spellTpl, tplLabel, tplOrigin, tplPath, type Tpl } from '../../lib/area';
 import { PING_LIFE } from '../../lib/combat';
 import { tokenMenu } from './TokenMenu';
 import { NumInput } from '../../components/ui';
@@ -175,7 +175,9 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
   const caught = (t: Tpl) => Object.entries(map.tokens).filter(([id, tk]) => {
     const c = st.combatants[id];
     if (!c || c.live.dead || (areaAim?.self && id === aim?.actor)) return false;
-    return cellCenters(map.grid, tk, footprint(c.base.size)).some(([x, y]) => inside(t, x, y));
+    const n = footprint(c.base.size);
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (cellHit(t, map.grid, tk.x + i, tk.y + j)) return true;
+    return false;
   }).map(([id]) => id);
   const fix = (t: Tpl) => { setFixed(t); combat.aimSet(caught(t)); };
   // 换了动作：模板重来；不用选方向的贴身范围（光环、身边一圈）直接定下来
@@ -650,6 +652,14 @@ function MapSetup({ map }: { map: MapState }) {
       {!map.bg && <label className="row tiny" style={{ gap: 4 }}>大小<NumInput min={1} max={200} value={gr.cols} onChange={(n) => put({ cols: n })} />×<NumInput min={1} max={200} value={gr.rows} onChange={(n) => put({ rows: n })} />格</label>}
       {!map.bg && <HexInput label="底色" value={gr.paper} onChange={(v) => put({ paper: v })} />}
       <HexInput label="格线" value={gr.line} onChange={(v) => put({ line: v })} />
+      <label className="row tiny" style={{ gap: 4 }} title="形状、范围法术盖住哪些格子（选人也按这个）">
+        范围判定
+        <select value={gr.cover ?? 'center'} onChange={(e) => put({ cover: e.target.value as 'center' | 'corners' })}>
+          <option value="center">格子中心</option>
+          <option value="corners">中心或小方格的角</option>
+        </select>
+        {gr.cover === 'corners' && <><NumInput min={10} max={100} value={Math.round((gr.coverK ?? 0.75) * 100)} onChange={(n) => put({ coverK: n / 100 })} />%</>}
+      </label>
       <label className="row tiny" style={{ gap: 4 }}><input type="checkbox" checked={gr.show} onChange={(e) => put({ show: e.target.checked })} />显示格子</label>
       <label className="row tiny" style={{ gap: 4 }}>
         斜走

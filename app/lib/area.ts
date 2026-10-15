@@ -72,7 +72,20 @@ export function tplLabel(t: Tpl, g: number): { text: string; x: number; y: numbe
   }
 }
 
-export interface Grid { size: number; ox: number; oy: number }
+/**
+ * cover：格子怎么算被盖住。center = 格子中心在形状里；corners = 中心，或者格子里居中放一个 coverK 倍边长的小方格，
+ * 它的四个角碰到形状也算（差一点点打不到的格子也算上）。
+ */
+export interface Grid { size: number; ox: number; oy: number; cover?: 'center' | 'corners'; coverK?: number }
+
+/** 第 (i, j) 格算不算被形状盖住 */
+export function cellHit(t: Tpl, gr: Grid, i: number, j: number): boolean {
+  const cx = gr.ox + (i + 0.5) * gr.size, cy = gr.oy + (j + 0.5) * gr.size;
+  if (inside(t, cx, cy)) return true;
+  if (gr.cover !== 'corners') return false;
+  const h = (Math.max(0, Math.min(1, gr.coverK ?? 0.75)) * gr.size) / 2;
+  return inside(t, cx - h, cy - h) || inside(t, cx + h, cy - h) || inside(t, cx - h, cy + h) || inside(t, cx + h, cy + h);
+}
 /** 吸附到最近的格线交点 */
 export const snapPt = (gr: Grid, x: number, y: number) => ({
   x: gr.ox + Math.round((x - gr.ox) / gr.size) * gr.size,
@@ -162,7 +175,7 @@ export function tplBounds(t: Tpl): { x0: number; y0: number; x1: number; y1: num
   }
 }
 
-/** 被覆盖的格子（格子中心在形状里）：和范围法术选人用同一条规则 */
+/** 被覆盖的格子（按 cellHit）：和范围法术选人用同一条规则 */
 export function coveredCells(t: Tpl, gr: Grid, max = 4000): Array<{ x: number; y: number }> {
   const b = tplBounds(t);
   const out: Array<{ x: number; y: number }> = [];
@@ -170,7 +183,7 @@ export function coveredCells(t: Tpl, gr: Grid, max = 4000): Array<{ x: number; y
   const j0 = Math.floor((b.y0 - gr.oy) / gr.size), j1 = Math.ceil((b.y1 - gr.oy) / gr.size);
   for (let i = i0; i <= i1; i++) {
     for (let j = j0; j <= j1; j++) {
-      if (inside(t, gr.ox + (i + 0.5) * gr.size, gr.oy + (j + 0.5) * gr.size)) out.push({ x: i, y: j });
+      if (cellHit(t, gr, i, j)) out.push({ x: i, y: j });
       if (out.length >= max) return out;
     }
   }

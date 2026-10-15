@@ -1,6 +1,6 @@
 // 地图范围模板的几何（app/lib/area.ts）：一格 50 像素 = 5 尺
 import { describe, expect, it } from 'vitest';
-import { cellCenters, inside, spellTpl, type Tpl } from '../../app/lib/area';
+import { cellCenters, cellHit, inside, spellTpl, type Tpl } from '../../app/lib/area';
 
 const gr = { size: 50, ox: 0, oy: 0 };
 const hits = (t: Tpl, x: number, y: number, n = 1) => cellCenters(gr, { x, y }, n).some(([px, py]) => inside(t, px, py));
@@ -37,5 +37,14 @@ describe('范围模板', () => {
     const t: Tpl = { shape: 'circle', cx: 0, cy: 0, r: 60 };
     expect(hits(t, 0, 0, 2)).toBe(true);
     expect(hits(t, 1, -3, 2)).toBe(false);
+  });
+
+  it('宽松判定：中心没进、小方格的角碰到也算', () => {
+    // 半径 20 尺的圆；(13,12) 那格中心离圆心 ≈ 215，0.75 小方格最近的角 ≈ 189，0.2 的 ≈ 208
+    const t: Tpl = { shape: 'circle', cx: 500, cy: 500, r: 200 };
+    expect(cellHit(t, gr, 13, 12)).toBe(false);
+    expect(cellHit(t, { ...gr, cover: 'corners', coverK: 0.75 }, 13, 12)).toBe(true);
+    expect(cellHit(t, { ...gr, cover: 'corners', coverK: 0.2 }, 13, 12)).toBe(false);
+    expect(cellHit(t, { ...gr, cover: 'corners', coverK: 0.75 }, 13, 13)).toBe(false); // 角也 ≈ 221
   });
 });
