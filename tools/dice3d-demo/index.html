@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>dice3d demo</title>
+    <style>
+      :root { color-scheme: light; --bg: #e9e4d8; --grid: rgba(60, 50, 30, 0.12); --panel: rgba(255,255,255,0.9); --fg: #1d1d22; --muted: #6a6a72; --btn: #fff; --btn-border: #cfcabe; }
+      :root[data-theme='dark'] { color-scheme: dark; --bg: #1f2329; --grid: rgba(255,255,255,0.06); --panel: rgba(30,33,40,0.92); --fg: #eceef2; --muted: #9aa0ab; --btn: #2b3039; --btn-border: #3d434e; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; }
+      body {
+        font: 14px/1.4 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        color: var(--fg);
+        background-color: var(--bg);
+        background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+        background-size: 48px 48px;
+      }
+      .panel { position: fixed; left: 16px; bottom: 16px; width: min(440px, calc(100% - 32px)); background: var(--panel); border: 1px solid var(--btn-border); border-radius: 12px; padding: 14px; box-shadow: 0 6px 24px rgba(0,0,0,0.12); }
+      h1 { font-size: 15px; margin: 0 0 10px; }
+      .row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; align-items: center; }
+      button { font: inherit; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--btn-border); background: var(--btn); color: var(--fg); cursor: pointer; }
+      button:hover { filter: brightness(0.96); }
+      button.primary { background: #4f5bd5; border-color: #4f5bd5; color: #fff; }
+      label { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); }
+      input[type='number'] { width: 90px; font: inherit; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--btn-border); background: var(--btn); color: var(--fg); }
+      input[type='color'] { width: 32px; height: 26px; padding: 0; border: none; background: none; }
+      #log { margin: 0; max-height: 150px; overflow: auto; font: 12px/1.5 ui-monospace, Consolas, monospace; color: var(--muted); white-space: pre-wrap; }
+      .tune { position: fixed; right: 16px; top: 16px; width: 300px; max-height: calc(100% - 32px); overflow: auto; background: var(--panel); border: 1px solid var(--btn-border); border-radius: 12px; padding: 12px 14px; box-shadow: 0 6px 24px rgba(0,0,0,0.12); font-size: 13px; }
+      .tune summary { cursor: pointer; font-weight: 600; }
+      .tune h2 { font-size: 12px; margin: 12px 0 4px; color: var(--muted); font-weight: 600; }
+      .tune .ctl { display: grid; grid-template-columns: 96px 1fr 44px; gap: 6px; align-items: center; margin: 3px 0; }
+      .tune .ctl span:last-child { text-align: right; font: 12px ui-monospace, Consolas, monospace; color: var(--muted); }
+      .tune input[type='range'] { width: 100%; }
+      .tune select { font: inherit; }
+      .tune .warn { color: #c0392b; font-size: 11px; margin-left: 4px; }
+      .tune textarea { width: 100%; height: 120px; font: 11px/1.4 ui-monospace, Consolas, monospace; background: var(--btn); color: var(--fg); border: 1px solid var(--btn-border); border-radius: 6px; }
+      @media (max-width: 760px) { .tune { top: auto; bottom: 16px; right: 16px; left: 16px; width: auto; max-height: 40%; } }
+      .token { position: fixed; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.3); cursor: pointer; user-select: none; }
+    </style>
+  </head>
+  <body>
+    <!-- 假装是地图上的棋子：覆盖层不挡鼠标，点得到 -->
+    <div class="token" style="left: 30%; top: 30%; background: #c0392b" title="点我：覆盖层不挡鼠标">F5</div>
+    <div class="token" style="left: 62%; top: 42%; background: #16a085" title="点我：覆盖层不挡鼠标">G2</div>
+
+    <details class="tune" id="tune" data-dice-noskip>
+      <summary>画面参数</summary>
+      <div id="tuneBody"></div>
+      <h2>当前参数（只列出改过的，可直接传给 mountDice）</h2>
+      <textarea id="tuneOut" readonly></textarea>
+      <div class="row" style="margin-top: 6px"><button id="tuneReset">恢复默认</button></div>
+    </details>
+
+    <div class="panel">
+      <h1>dice3d demo <span style="font-weight: 400; color: var(--muted)">· 点击任意处或 Esc 跳过</span></h1>
+      <div class="row">
+        <button class="primary" data-roll="d20">1d20</button>
+        <button class="primary" data-roll="adv">2d20 优势</button>
+        <button class="primary" data-roll="8d6">8d6</button>
+        <button class="primary" data-roll="4d6">4d6 取高 3</button>
+        <button class="primary" data-roll="d100">1d100</button>
+      </div>
+      <div class="row">
+        <button data-roll="all">全部种类</button>
+        <button data-roll="20d20">20d20</button>
+        <button data-roll="queue">连掷 3 次（排队）</button>
+      </div>
+      <div class="row">
+        <label>颜色 <input id="color" type="color" value="#4f5bd5" /></label>
+        <label><input id="useSeed" type="checkbox" /> 种子</label>
+        <input id="seed" type="number" value="42" />
+        <button id="theme">切换主题</button>
+      </div>
+      <pre id="log"></pre>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

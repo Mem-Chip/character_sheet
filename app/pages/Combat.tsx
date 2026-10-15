@@ -16,8 +16,10 @@ import { Log } from './combat/Log';
 import { MapView } from './combat/MapView';
 import { OnlineDialog } from './combat/Online';
 import { TokenMenu } from './combat/TokenMenu';
-import { Roster } from './combat/Roster';
+import { diceColor, scanChat, scanTape } from '../lib/dicefx';
+import { txTitle } from '../lib/events';
 import { namer } from './combat/shared';
+import { Roster } from './combat/Roster';
 import { Tag } from '../components/ui';
 
 type Drawer = null | 'roster' | 'detail';
@@ -47,6 +49,24 @@ export function CombatPage({ engine }: { engine: Engine }) {
     window.addEventListener('keydown', esc);
     return () => window.removeEventListener('keydown', esc);
   }, []);
+  // 3D 掷骰动画：新掷出来的骰子（引擎掷的、指令框 /r）播一下
+  useEffect(() => {
+    const ss = ui.session;
+    if (!ss) return;
+    const r = ui.remote;
+    const nm = namer(ss);
+    const ctlOf = (id: string | null) => (id ? ss.state.combatants[id]?.controller ?? id : null);
+    scanTape(ss, {
+      encounter: r ? r.id : 'local',
+      physics: r?.dicePhys,
+      subject: (cmd) => { const c = cmd as Record<string, unknown>; return String(c.actor ?? c.roller ?? c.id ?? '') || null; },
+      visible: (id) => !id || !combat.isSecret(id),
+      mine: (id) => !r || (!!id && r.owners[ctlOf(id) ?? ''] === r.me) || (!id && r.role === 'dm'),
+      color: (id) => diceColor(r ? r.owners[ctlOf(id) ?? ''] : null),
+      label: (cmd) => txTitle(cmd as { type: string }, nm),
+    });
+    scanChat(r ? r.chat : ui.chat, r ? r.me : 0, r?.dicePhys);
+  });
 
   const s = ui.session;
   if (!s) return <div className="page empty">正在准备遭遇…</div>;

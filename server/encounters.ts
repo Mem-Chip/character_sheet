@@ -78,6 +78,8 @@ interface Live {
   actingAs: string | null;
   /** 死了自动藏起来过的（DM 亮出来之后不再藏；活过来就清掉，再死再藏） */
   autoHid: string[];
+  /** 3D 骰子的物理参数（会改变滚法，各端必须一样，所以存在遭遇上、只有 DM 能改） */
+  dicePhys: { tableWidth?: number; tableDepth?: number; dieScale?: number; layFlat?: boolean };
   ctx: EngineCtx;
   seq: number;
   watchers: Set<ServerResponse>;
@@ -129,7 +131,7 @@ export function createEncounters(d: Deps) {
     const e = {
       id, campaignId: String(r.campaign_id), name: String(r.name),
       owners: meta.owners ?? {}, cards: meta.cards ?? {}, dice: meta.dice ?? {}, hidden: meta.hidden ?? [], chat: meta.chat ?? [],
-      actingAs: meta.actingAs ?? null, autoHid: meta.autoHid ?? [], map: { ...newMap(), ...(meta.map ?? {}) }, seq: 0, watchers: new Set(),
+      actingAs: meta.actingAs ?? null, autoHid: meta.autoHid ?? [], dicePhys: meta.dicePhys ?? {}, map: { ...newMap(), ...(meta.map ?? {}) }, seq: 0, watchers: new Set(),
     } as unknown as Live;
     e.ctx = ctxOf(e);
     e.session = Session.restore(JSON.parse(String(r.save)) as SessionSave, e.ctx);
@@ -139,9 +141,9 @@ export function createEncounters(d: Deps) {
 
   const stateOf = (e: Live) => ({
     id: e.id, name: e.name, campaignId: e.campaignId, seq: e.seq, owners: e.owners, cards: e.cards,
-    dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, save: e.session.save(),
+    dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, dicePhys: e.dicePhys, save: e.session.save(),
   });
-  const metaOf = (e: Live) => JSON.stringify({ owners: e.owners, cards: e.cards, dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, autoHid: e.autoHid });
+  const metaOf = (e: Live) => JSON.stringify({ owners: e.owners, cards: e.cards, dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, autoHid: e.autoHid, dicePhys: e.dicePhys });
   const broadcast = (e: Live, event: string, data: unknown) => {
     const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
     for (const w of e.watchers) w.write(msg);
@@ -429,6 +431,14 @@ export function createEncounters(d: Deps) {
         if (role !== 'dm' && e.owners[who] !== u.id) return reject('只能改自己的骰子');
         if (DICE_MODES.includes(b.mode as DiceMode)) e.dice[who] = b.mode as DiceMode;
         else delete e.dice[who];
+      } else if (op === 'dicePhys') {
+        // 3D 骰子的物理参数：空值 = 用默认
+        if (role !== 'dm') return reject('只有 DM 能改骰子的物理参数');
+        const n = (v: unknown, lo: number, hi: number) => (v == null || v === '' || !Number.isFinite(Number(v)) ? undefined : Math.max(lo, Math.min(hi, Number(v))));
+        e.dicePhys = Object.fromEntries(Object.entries({
+          tableWidth: n(b.tableWidth, 4, 200), tableDepth: n(b.tableDepth, 4, 200), dieScale: n(b.dieScale, 0.2, 5),
+          layFlat: typeof b.layFlat === 'boolean' ? b.layFlat : undefined,
+        }).filter(([, v]) => v !== undefined));
       } else if (op === 'setHidden') {
         if (role !== 'dm') return reject('只有 DM 能藏人');
         const id = String(b.id ?? '');

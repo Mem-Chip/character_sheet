@@ -4,6 +4,7 @@ import type { Decision, Session, Settings, ViewInit } from '../../../src/combat'
 import { Dialog, Field, NumInput } from '../../components/ui';
 import { combat, type CombatUi, type DiceMode } from '../../lib/combat';
 import type { Engine } from '../../lib/engine';
+import { diceFxScope, setDiceFxScope, type DiceFxScope, type DicePhysics } from '../../lib/dicefx';
 import { useApp } from '../../lib/store';
 import { previewLines } from './Log';
 import { CREATURE_TYPES, DAMAGE_TYPES, type Namer } from './shared';
@@ -331,6 +332,51 @@ export function SettingsDialog({ s, ui, onClose }: { s: Session; ui: CombatUi; o
         骰子来源按人设置，只影响之后新掷的骰子；撤销、重放、事后裁定都复用已经掷出的骰面。
         {remote && '选「实体骰」后，轮到你掷骰时会弹出框让你填骰面。'}
       </div>
+      <hr className="rule" />
+      <DiceFxSettings dm={dm} remote={!!remote} phys={remote?.dicePhys ?? {}} />
     </Dialog>
+  );
+}
+
+/** 3D 掷骰动画：自己看不看（本机）；物理参数（会改变滚法，大家共用，只有 DM 能改） */
+function DiceFxSettings({ dm, remote, phys }: { dm: boolean; remote: boolean; phys: DicePhysics }) {
+  const [scope, setScope] = useState<DiceFxScope>(diceFxScope);
+  const num = (k: 'tableWidth' | 'tableDepth' | 'dieScale', label: string, ph: string, step: number) => (
+    <Field label={label}>
+      <input
+        type="number" step={step} placeholder={`默认 ${ph}`} defaultValue={phys[k] ?? ''}
+        onBlur={(e) => { const v = e.target.value.trim(); combat.setDicePhys({ ...phys, [k]: v === '' ? undefined : Number(v) }); }}
+      />
+    </Field>
+  );
+  return (
+    <>
+      <div className="formgrid">
+        <Field label="3D 掷骰动画（只影响你自己的屏幕）">
+          <select value={scope} onChange={(e) => { const v = e.target.value as DiceFxScope; setScope(v); setDiceFxScope(v); }}>
+            <option value="all">播所有人的</option>
+            <option value="mine">只播我的</option>
+            <option value="off">不播</option>
+          </select>
+        </Field>
+      </div>
+      {remote && dm && (
+        <>
+          <div className="formgrid">
+            {num('tableWidth', '桌面宽', '17', 0.5)}
+            {num('tableDepth', '桌面纵深', '10.6', 0.5)}
+            {num('dieScale', '骰子大小倍数', '1', 0.1)}
+            <Field label="停下后放平斜靠的骰子">
+              <select value={phys.layFlat === false ? 'n' : 'y'} onChange={(e) => combat.setDicePhys({ ...phys, layFlat: e.target.value === 'y' })}>
+                <option value="y">放平（默认）</option>
+                <option value="n">不放平</option>
+              </select>
+            </Field>
+          </div>
+          <div className="tiny faint">这几项会改变骰子怎么滚，所有人共用这一套（只有 DM 能改）；不管怎么滚，停下来的点数都是已经掷好的结果。空着 = 默认。</div>
+        </>
+      )}
+      <div className="tiny faint">动画播放时点一下屏幕或按 Esc 跳过。手填的实体骰不播；玩家看不到怪物的骰子。</div>
+    </>
   );
 }
