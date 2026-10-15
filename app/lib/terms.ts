@@ -8,7 +8,7 @@
 import { CLASS_SLUG_BY_NAME, SCHOOL_CN, fmtPrereq, type Json } from '../../src/sheet';
 import type { Engine } from './engine';
 
-export interface TermRef { kind: string; name: string; source?: string; cls?: string; level?: number }
+export interface TermRef { kind: string; name: string; source?: string; cls?: string; level?: number; /** 英文原名（只在搜索结果里有） */ en?: string }
 export interface TermData { kind: string; name: string; source: string; kindLabel: string; meta: string[]; entries: Json[] }
 
 export const KIND_LABEL: Record<string, string> = {
@@ -136,10 +136,11 @@ async function find(engine: Engine, ref: TermRef): Promise<TermData | null> {
   return null;
 }
 
-/** 指令框的 /match：按名字找条目（先完全一样的，再包含这几个字的），最多 limit 条 */
+/** 指令框的 /match：按名字找条目，中文名或英文原名都行（先完全一样的，再包含的），最多 limit 条 */
 export async function searchTerms(engine: Engine, q: string, limit = 12): Promise<TermRef[]> {
   const want = q.trim();
   if (!want) return [];
+  const low = want.toLowerCase();
   const store = engine.env.store;
   const exact: TermRef[] = [], part: TermRef[] = [];
   const seen = new Set<string>();
@@ -149,11 +150,12 @@ export async function searchTerms(engine: Engine, q: string, limit = 12): Promis
       const d = await store.ensure(file).catch(() => null);
       for (const x of (d?.[arr] || []) as Json[]) {
         const nm = String(x?.name ?? '');
-        if (!nm || !nm.includes(want)) continue;
+        const en = String(x?.ENG_name ?? '');
+        if (!nm || !(nm.includes(want) || en.toLowerCase().includes(low))) continue;
         const k = `${kind}|${nm}`;
         if (seen.has(k)) continue;
         seen.add(k);
-        (nm === want ? exact : part).push({ kind, name: nm });
+        (nm === want || en.toLowerCase() === low ? exact : part).push({ kind, name: nm, ...(en ? { en } : {}) });
       }
     }
   }

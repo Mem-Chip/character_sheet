@@ -444,9 +444,19 @@ export function createEncounters(d: Deps) {
       } else if (op === 'chat') {
         // 指令框：骰子由服务器掷；私密的照样发给所有人，界面上只给本人（和点开的 DM）看
         let entry: ChatRoll | null;
-        try {
-          entry = chatEntry(String(b.text ?? ''), { id: randomUUID().slice(0, 8), by: u.id, byName: u.name, at: Date.now(), afterTx: e.session.transactions.length });
-        } catch (err) { return reject((err as Error).message); }
+        const who = { id: randomUUID().slice(0, 8), by: u.id, byName: u.name, at: Date.now(), afterTx: e.session.transactions.length };
+        const t = b.term as Row | undefined;
+        if (t && typeof t === 'object') {
+          // /match 分享条目：只存引用，各自的客户端按引用查原文
+          const str = (v: unknown) => (typeof v === 'string' && v.length <= 80 ? v : undefined);
+          const kind = str(t.kind), name = str(t.name);
+          if (!kind || !name) return reject('条目不对');
+          entry = { ...who, private: false, note: '', results: [], term: { kind, name, ...(str(t.source) ? { source: str(t.source) } : {}) } };
+        } else {
+          try {
+            entry = chatEntry(String(b.text ?? ''), who);
+          } catch (err) { return reject((err as Error).message); }
+        }
         if (!entry) return reject('空的');
         e.chat = [...e.chat, entry].slice(-300);
         d.run('UPDATE encounters SET meta = ?, updated = ? WHERE id = ?', metaOf(e), Date.now(), e.id);

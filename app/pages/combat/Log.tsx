@@ -1,10 +1,11 @@
 /** 战斗日志：按事务分组，新的在上面。掷骰带回执；DM 可以事后改某次检定的结果或某次伤害 */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { describeRoll, type ChatRoll, type GameEvent, type Session } from '../../../src/combat';
 import { NumInput, Panel } from '../../components/ui';
 import { combat, useCombat } from '../../lib/combat';
-import { KIND_LABEL, searchTerms, type TermRef } from '../../lib/terms';
-import { Term, openTerm, termEngine } from '../../components/Term';
+import { KIND_LABEL, lookupTerm, searchTerms, type TermData, type TermRef } from '../../lib/terms';
+import { Term, termEngine } from '../../components/Term';
+import { Entries } from '../../components/Entries';
 import { describe, txTitle, type Line } from '../../lib/events';
 import type { Namer } from './shared';
 
@@ -150,10 +151,40 @@ export function previewLines(events: GameEvent[], name: Namer): Line[] {
   return events.map((e) => describe(e, name)).filter((x): x is Line => !!x).slice(-8);
 }
 
+/** /match 分享的条目：标题 + 原文（长的先折起来） */
+function TermLine({ c }: { c: ChatRoll }) {
+  const t = c.term!;
+  const [data, setData] = useState<TermData | null | undefined>(undefined);
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const eng = termEngine();
+    let alive = true;
+    if (eng) void lookupTerm(eng, t).then((d) => alive && setData(d));
+    else setData(null);
+    return () => { alive = false; };
+  }, [t.kind, t.name, t.source]);
+  return (
+    <div className="chatroll termmsg">
+      <div className="evline">
+        <span className="txt"><b>{c.byName}</b> 分享了 <Term {...t}>「{t.name}」</Term><span className="tiny faint"> {data ? `${data.kindLabel}${data.source ? ` · ${data.source}` : ''}` : KIND_LABEL[t.kind] ?? t.kind}</span></span>
+      </div>
+      {data === null && <div className="tiny faint">查不到这条的原文。</div>}
+      {data && (
+        <div className={'prose small term-body' + (open ? ' open' : '')}>
+          {data.meta.length > 0 && <div className="meta">{data.meta.map((m, i) => <div key={i}>{m}</div>)}</div>}
+          <Entries entries={data.entries} />
+        </div>
+      )}
+      {data && <button className="btn ghost sm" onClick={() => setOpen(!open)}>{open ? '收起' : '展开全文'}</button>}
+    </div>
+  );
+}
+
 /** 指令框掷的一次骰。私密的：别人只看到「掷了骰子」；DM 可以点开看 */
 function ChatLine({ c, mine, dm }: { c: ChatRoll; mine: boolean; dm: boolean }) {
   const [peek, setPeek] = useState(false);
   const visible = !c.private || mine || peek;
+  if (c.term) return <TermLine c={c} />;
   if (c.text != null) return <div className="chatroll said"><div className="evline"><span className="txt"><b>{c.byName}</b>：{c.text}</span></div></div>;
   return (
     <div className={'chatroll' + (c.private ? ' private' : '')}>
@@ -190,9 +221,13 @@ function CommandBox() {
     if (!eng) return;
     const list = await searchTerms(eng, q);
     if (!list.length) { setErr(`没找到「${q}」`); setFound(null); return; }
-    if (list.length === 1 || list[0].name === q) { openTerm(list[0]); setFound(list.length > 1 ? list : null); }
-    else setFound(list);
+    // 只有一条、或者名字完全对上：直接发；否则列出来让人挑
+    const low = q.toLowerCase();
+    const exact = list.filter((r) => r.name === q || r.en?.toLowerCase() === low);
+    if (list.length === 1 || exact.length === 1) { share((exact[0] ?? list[0])); return; }
+    setFound(list);
   };
+  const share = (r: TermRef) => { combat.shareTerm({ kind: r.kind, name: r.name, ...(r.source ? { source: r.source } : {}) }); setFound(null); };
   const send = () => {
     const t = text.trim();
     if (!t) return;
@@ -215,7 +250,7 @@ function CommandBox() {
   return (
     <div className="cmdbox">
       <input
-        value={text} title={['直接打字 = 说一句话', '/r 1d20+5, 2d6+3 说明 · ad20 优势 · dd20 劣势 · 4d6kh3 取高', '/pr 私密掷骰', '/match 名字：查法术、状态、专长、物品……'].join('\n')}
+        value={text} title={['直接打字 = 说一句话', '/r 1d20+5, 2d6+3 说明 · ad20 优势 · dd20 劣势 · 4d6kh3 取高', '/pr 私密掷骰', '/match 名字（中文或英文）：把法术、状态、专长、物品……的原文发到日志'].join('\n')}
         onChange={(e) => { setText(e.target.value); setErr(''); }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') send();
@@ -229,11 +264,11 @@ function CommandBox() {
       {found && (
         <div className="match-list">
           {found.map((r) => (
-            <button key={r.kind + r.name} className="tag" onClick={() => openTerm(r)}>
-              <Term {...r} inButton>{r.name}</Term><small>{KIND_LABEL[r.kind] ?? r.kind}</small>
+            <button key={r.kind + r.name} className="tag" onClick={() => share(r)} title="发到日志">
+              <Term {...r} inButton>{r.name}</Term>{r.en && <small>{r.en}</small>}<small>{KIND_LABEL[r.kind] ?? r.kind}</small>
             </button>
           ))}
-          <button className="btn ghost sm" onClick={() => setFound(null)}>收起</button>
+          <button className="btn ghost sm" onClick={() => setFound(null)}>不发了</button>
         </div>
       )}
     </div>

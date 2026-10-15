@@ -419,6 +419,15 @@ export const combat = {
     return null;
   },
 
+  /** /match：把一个条目发进日志（所有人看得到原文） */
+  shareTerm(term: { kind: string; name: string; source?: string }): void {
+    if (ui.remote) { act({ op: 'chat', term }); return; }
+    const entry: ChatRoll = {
+      id: Math.random().toString(36).slice(2, 10), by: 0, byName: '我', at: Date.now(), afterTx: ui.session?.transactions.length ?? 0,
+      private: false, note: '', results: [], term,
+    };
+    set({ chat: [...ui.chat, entry].slice(-100) });
+  },
   clearTargets(): void {
     set({ targets: [] });
   },

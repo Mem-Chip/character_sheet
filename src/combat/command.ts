@@ -123,6 +123,8 @@ export interface ChatRoll {
   results: RolledExpr[];
   /** 不是指令、只是说了一句话（这时 results 为空） */
   text?: string;
+  /** /match 分享的条目（法术、状态……），日志里显示原文 */
+  term?: { kind: string; name: string; source?: string };
 }
 
 /** 指令框发出的一行 → 日志条目（掷骰或一句话）；写错了抛 Error，空行返回 null */
