@@ -5,13 +5,18 @@
  * - 工具：移动（拖棋子，拖空白处平移）、测距（只在自己屏幕上；拖的时候按 Q 打个折点接着量）、形状（方 / 圆 / 锥，大家都看得到）、
  *   画笔、橡皮。滚轮缩放，按住中键 / 空格随时平移。
  * - 回合中，轮到的人这一回合走过的路画成虚线，换人就没了。
+ * - 双击地图 = 标点；测距时按 Ctrl = 把这条线分享给所有人。两样都过几秒自己淡出。
+ * - 形状和范围法术都把盖住的格子（格子中心在里面）涂上颜色；选中的锥 / 线末端有个把手，拖着转。
+ * - 右键棋子开菜单（设为目标、状态、拿下地图、藏起）；棋子右下角的数字 = 身上有几个状态。
  * - 选目标模式里的范围法术：模板跟着鼠标走（锥 / 线 / 贴身立方跟着鼠标转向），点一下定下来，圈里的人自动选中。
  * - 棋子：点一下选中，右键设为目标；能控制的才拖得动，松手吸附到格子，拖的时候显示走了多少尺。
  * - 改动先在本地生效（乐观更新），再发给服务器；服务器广播回来的地图为准。
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { footprint, gridFeet, pathFeet, type Session } from '../../../src/combat';
-import { cellCenters, directional, inside, snapLen, snapPt, spellTpl, tplLabel, tplOrigin, tplPath, type Tpl } from '../../lib/area';
+import { cellCenters, coveredCells, directional, inside, snapLen, snapPt, spellTpl, tplLabel, tplOrigin, tplPath, type Tpl } from '../../lib/area';
+import { PING_LIFE } from '../../lib/combat';
+import { tokenMenu } from './TokenMenu';
 import { NumInput } from '../../components/ui';
 import { combat, type CombatUi, type MapState, type Remote } from '../../lib/combat';
 import type { Namer } from './shared';
@@ -36,6 +41,7 @@ type Drag =
   | { kind: 'measure'; pts: Array<{ x: number; y: number }>; to: { x: number; y: number } }
   | { kind: 'shape'; from: { x: number; y: number }; to: { x: number; y: number } }
   | { kind: 'shapeMove'; id: string; start: { x: number; y: number }; d: { x: number; y: number } }
+  | { kind: 'shapeRot'; id: string; dir: number }
   | { kind: 'erase'; ids: Set<string> };
 
 export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; remote: Remote; name: Namer }) {
@@ -63,6 +69,10 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
   const selShapeRef = useRef<string | null>(null);
   selShapeRef.current = selShape;
   const space = useRef(false);
+  /** 范围法术：按住拖着调（转向 / 挪位置），松手定下来 */
+  const aimDrag = useRef(false);
+  const dragRef = useRef<Drag | null>(null);
+  dragRef.current = drag;
 
   // 第一次打开、换了底图：缩放到正好放得下
   const fitKey = `${worldW}x${worldH}`;
@@ -79,6 +89,11 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.code === 'Space') space.current = true;
       if (e.key === 'Escape') setSelShape(null);
+      // 测距时按 Ctrl：把现在这条线分享给所有人
+      if (e.key === 'Control' && !e.repeat) {
+        const d = dragRef.current;
+        if (d?.kind === 'measure' && !(d.pts.length === 1 && sameCell(d.pts[0], d.to))) { combat.ping({ kind: 'measure', cells: [...d.pts, d.to] }); combat.toast('测距已经分享给所有人'); }
+      }
       // 测距时按 Q：在当前格打个折点，接着量
       if (e.code === 'KeyQ') setDrag((d) => (d?.kind === 'measure' && !sameCell(d.to, d.pts[d.pts.length - 1]) ? { ...d, pts: [...d.pts, d.to] } : d));
     };
@@ -174,10 +189,11 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
     if (e.button === 2) return;
     const p = toWorld(e);
     if (areaAim && e.button === 0 && !space.current) {
-      const t = tplAt(p);
-      if (!t) { combat.toast('施法者不在地图上，在先攻条 / 列表里点人选目标'); return; }
-      if (outOfRange(t)) { combat.toast(`超出「${aim!.name}」的射程 ${aim!.range} 尺`); return; }
-      fix(t);
+      if (!tplAt(p)) { combat.toast('施法者不在地图上，在先攻条 / 列表里点人选目标'); return; }
+      (e.currentTarget as Element).setPointerCapture(e.pointerId);
+      aimDrag.current = true;
+      setFixed(null);
+      setPt(p);
       return;
     }
     if (placing) {
@@ -227,6 +243,10 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
       if (!sameCell(c, drag.to)) setDrag({ ...drag, to: c });
     } else if (drag.kind === 'shape') {
       setDrag({ ...drag, to: toWorld(e) });
+    } else if (drag.kind === 'shapeRot') {
+      const sh = (map.shapes ?? []).find((x) => x.id === drag.id);
+      const p = toWorld(e);
+      if (sh && 'dir' in sh.tpl) setDrag({ ...drag, dir: Math.atan2(p.y - sh.tpl.y, p.x - sh.tpl.x) });
     } else if (drag.kind === 'shapeMove') {
       // 按整格挪，形状和格子的相对位置不变
       const p = toWorld(e);
@@ -240,6 +260,13 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
     }
   };
   const onUp = (e?: React.PointerEvent) => {
+    if (aimDrag.current) {
+      aimDrag.current = false;
+      const t = e ? tplAt(toWorld(e)) : pt ? tplAt(pt) : null;
+      if (t && outOfRange(t)) combat.toast(`超出「${aim!.name}」的射程 ${aim!.range} 尺`);
+      else if (t) fix(t);
+      return;
+    }
     if (!drag) return;
     if (drag.kind === 'pen' && drag.pts.length >= 4) {
       const pts = drag.pts.map((v) => Math.round(v * 10) / 10);
@@ -249,6 +276,10 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
       const ids = [...drag.ids];
       combat.patchMap((m) => { m.strokes = m.strokes.filter((x) => !drag.ids.has(x.id)); });
       void combat.map({ action: 'erase', ids });
+    } else if (drag.kind === 'shapeRot') {
+      const { id, dir } = drag;
+      combat.patchMap((m) => { m.shapes = (m.shapes ?? []).map((x) => (x.id === id && 'dir' in x.tpl ? { ...x, tpl: { ...x.tpl, dir } } : x)); });
+      void combat.map({ action: 'shapeRotate', id, dir });
     } else if (drag.kind === 'shapeMove' && (drag.d.x || drag.d.y)) {
       const { id, d } = drag;
       combat.patchMap((m) => { m.shapes = (m.shapes ?? []).map((x) => (x.id === id ? { ...x, tpl: shiftTpl(x.tpl, d.x, d.y) } : x)); });
@@ -300,6 +331,18 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
     box.current!.setPointerCapture(e.pointerId);
     setDrag({ kind: 'shapeMove', id, start: toWorld(e), d: { x: 0, y: 0 } });
   };
+  const rotDown = (e: React.PointerEvent, id: string, dir: number) => {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    box.current!.setPointerCapture(e.pointerId);
+    setDrag({ kind: 'shapeRot', id, dir });
+  };
+  /** 双击空白处：标点（所有人看得到） */
+  const onDbl = (e: React.MouseEvent) => {
+    if (ui.aim || placing || (e.target as Element).closest('[data-token]')) return;
+    const p = toWorld(e);
+    combat.ping({ kind: 'point', x: p.x, y: p.y });
+  };
   const tokenDown = (e: React.PointerEvent, id: string) => {
     if (e.button !== 0 || placing || space.current) return;
     // 范围法术：交给地图（放模板）
@@ -328,6 +371,15 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
 
   const bgUrl = map.bg ? new URL('api/', document.baseURI).pathname + `encounters/${remote.id}/bg?v=${map.bg.img}` : null;
   const moving = drag?.kind === 'token' ? drag : null;
+  /** 形状现在的样子（正在拖 / 转的按拖到的算） */
+  const tplOf = (x: { id: string; tpl: Tpl }): Tpl => {
+    if (drag?.kind === 'shapeMove' && drag.id === x.id) return shiftTpl(x.tpl, drag.d.x, drag.d.y);
+    if (drag?.kind === 'shapeRot' && drag.id === x.id && 'dir' in x.tpl) return { ...x.tpl, dir: drag.dir };
+    return x.tpl;
+  };
+  /** 每个人身上的状态名（棋子角标用；专注不算） */
+  const effOf: Record<string, string[]> = {};
+  for (const e of Object.values(st.effects)) if (e.key !== 'concentration') (effOf[e.bearer] ??= []).push(e.name);
   // 当前回合的人这一回合走过的路（服务器记的；换人 / 换轮作废）
   const trail = (() => {
     const tr = map.trail;
@@ -337,7 +389,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
   const aimed: Record<string, number> = {};
   for (const p of ui.aim?.picks ?? []) aimed[p] = (aimed[p] ?? 0) + 1;
 
-  const hint = `滚轮缩放 · 拖空白处或按住空格平移 · 点棋子选中、右键设为目标、Delete 拿下地图、Esc 取消选中 · 形状可以点选拖动，Delete 删 · DM 按住 Shift 拖棋子不扣移动力 · 每格 5 尺，斜走${diagonal === '5' ? '也算 5 尺' : '交替 5 / 10 尺'}，引擎按棋子位置自动判断距离`;
+  const hint = `滚轮缩放 · 拖空白处或按住空格平移 · 点棋子选中、右键开菜单、Delete 拿下地图、Esc 取消选中 · 双击地图标点 · 测距时按 Q 打折点、按 Ctrl 分享 · 形状可以点选拖动，Delete 删 · DM 按住 Shift 拖棋子不扣移动力 · 每格 5 尺，斜走${diagonal === '5' ? '也算 5 尺' : '交替 5 / 10 尺'}，引擎按棋子位置自动判断距离`;
   return (
     <div className="map-root">
       <div className="hud map-rail" title={hint}>
@@ -389,6 +441,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
         onPointerCancel={onUp}
         onPointerLeave={() => { if (areaAim && !fixed) setPt(null); }}
         onContextMenu={(e) => e.preventDefault()}
+        onDoubleClick={onDbl}
       >
         <svg width="100%" height="100%">
           <g transform={`translate(${view.x} ${view.y}) scale(${view.k})`}>
@@ -403,15 +456,20 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
               />
             ))}
             {(map.shapes ?? []).map((x) => {
-              const tpl = drag?.kind === 'shapeMove' && drag.id === x.id ? shiftTpl(x.tpl, drag.d.x, drag.d.y) : x.tpl;
+              const tpl = tplOf(x);
               const lb = tplLabel(tpl, g);
               const mine = dm || x.by === remote.me;
               return (
                 <g key={x.id} className={'map-shape' + (drag?.kind === 'erase' && drag.ids.has(x.id) ? ' erasing' : '') + (selShape === x.id ? ' sel' : '') + (mine && tool === 'move' ? ' mine' : '')}>
+                  <path d={cellsPath(coveredCells(tpl, map.grid), map.grid)} fill={x.color} fillOpacity={0.16} className="cells" />
                   <path d={tplPath(tpl)} data-shape={x.id} fill={x.color} fillOpacity={0.14} stroke={x.color} strokeWidth={(selShape === x.id ? 3 : 2) / view.k}
                     onPointerDown={(e) => shapeDown(e, x.id, x.by)}
                     style={{ pointerEvents: tool === 'erase' || (tool === 'move' && !ui.aim && !placing) ? 'visiblePainted' : 'none' }} />
                   <text className="map-dist" fontSize={12 / view.k} x={lb.x} y={lb.y}>{lb.text}</text>
+                  {selShape === x.id && mine && tool === 'move' && 'dir' in tpl && (
+                    <circle className="rot-handle" cx={tpl.x + tpl.len * Math.cos(tpl.dir)} cy={tpl.y + tpl.len * Math.sin(tpl.dir)} r={7 / view.k}
+                      strokeWidth={2 / view.k} onPointerDown={(e) => rotDown(e, x.id, tpl.dir)}><title>拖着转</title></circle>
+                  )}
                 </g>
               );
             })}
@@ -421,6 +479,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
               const lb = tplLabel(t, g);
               return (
                 <g className="map-shape">
+                  <path d={cellsPath(coveredCells(t, map.grid), map.grid)} fill={color} fillOpacity={0.16} className="cells" />
                   <path d={tplPath(t)} fill={color} fillOpacity={0.14} stroke={color} strokeWidth={2 / view.k} strokeDasharray={`${6 / view.k} ${4 / view.k}`} />
                   <text className="map-dist" fontSize={14 / view.k} x={lb.x} y={lb.y}>{lb.text}</text>
                 </g>
@@ -451,13 +510,20 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
                   key={id} data-token={id} className={cls}
                   transform={`translate(${map.grid.ox + at.x * g + r} ${map.grid.oy + at.y * g + r})`}
                   onPointerDown={(e) => tokenDown(e, id)}
-                  onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); if (ui.aim) combat.aimUnpick(id); else combat.toggleTarget(id); }}
+                  onContextMenu={(e) => tokenMenu(e, id, ui)}
                 >
-                  <title>{c.name}</title>
+                  <title>{c.name}{effOf[id]?.length ? `：${effOf[id].join('、')}` : ''}</title>
                   {id === ui.selected && <circle className="ring-sel" r={r * 0.86 + 5} />}
                   {ui.targets.includes(id) && <circle className="ring-tgt" r={r * 0.86 + (id === ui.selected ? 10 : 5)} />}
                   <circle className="body" r={r * 0.86} />
                   <text dy="0.35em" fontSize={Math.max(10, r * 0.62)}>{c.name.slice(0, n > 1 ? 4 : 2)}</text>
+                  {effOf[id]?.length > 0 && (
+                    <g className="eff-badge" transform={`translate(${r * 0.62} ${r * 0.62})`}>
+                      <title>{effOf[id].join('、')}</title>
+                      <circle r={Math.max(7, r * 0.28)} />
+                      <text dy="0.35em" fontSize={Math.max(9, r * 0.3)}>{effOf[id].length}</text>
+                    </g>
+                  )}
                   {aimed[id] && (
                     <g className="aim-badge" transform={`translate(${r * 0.62} ${-r * 0.62})`}>
                       <circle r={Math.max(7, r * 0.3)} />
@@ -500,7 +566,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
                   <polyline points={all.map((c) => `${cx(c)},${cy(c)}`).join(' ')} fill="none" strokeWidth={3 / view.k} strokeDasharray={`${8 / view.k} ${5 / view.k}`} />
                   {drag.pts.map((c, i) => <circle key={i} cx={cx(c)} cy={cy(c)} r={5 / view.k} />)}
                   <text className="map-dist" fontSize={16 / view.k} x={cx(drag.to)} y={cy(drag.to) - g * 0.6}>
-                    {pathFeet(all, diagonal)} 尺{drag.pts.length > 1 ? `（这段 ${gridFeet(drag.to.x - last.x, drag.to.y - last.y, diagonal)}）` : ''}
+                    {pathFeet(all, diagonal)} 尺{drag.pts.length > 1 ? `（${gridFeet(drag.to.x - last.x, drag.to.y - last.y, diagonal)}）` : ''}
                   </text>
                 </g>
               );
@@ -513,11 +579,35 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
               const lb = tplLabel(t, g);
               return (
                 <g className={'map-aoe' + (fixed ? ' fixed' : '') + (bad ? ' bad' : '')}>
+                  <path d={cellsPath(coveredCells(t, map.grid), map.grid)} className="cells" />
                   <path d={tplPath(t)} strokeWidth={2 / view.k} />
                   <text className="map-dist" fontSize={13 / view.k} x={lb.x} y={lb.y}>{lb.text}{d != null ? ` · 距你 ${d} 尺` : ''}</text>
                 </g>
               );
             })()}
+            {remote.pings.map((p) => {
+              const life = PING_LIFE[p.kind];
+              const style = { animationDuration: `${life}ms` };
+              if (p.kind === 'point') {
+                return (
+                  <g key={p.id} className="map-ping" style={style} transform={`translate(${p.x} ${p.y})`}>
+                    <circle className="wave" r={g * 0.9} strokeWidth={3 / view.k} />
+                    <circle r={5 / view.k} />
+                    <text className="map-dist" fontSize={12 / view.k} y={-g * 0.6}>{p.byName}</text>
+                  </g>
+                );
+              }
+              const cx = (c: { x: number }) => map.grid.ox + (c.x + 0.5) * g;
+              const cy = (c: { y: number }) => map.grid.oy + (c.y + 0.5) * g;
+              const end = p.cells[p.cells.length - 1];
+              return (
+                <g key={p.id} className="map-ping measure" style={style}>
+                  <polyline points={p.cells.map((c) => `${cx(c)},${cy(c)}`).join(' ')} fill="none" strokeWidth={3 / view.k} strokeDasharray={`${8 / view.k} ${5 / view.k}`} />
+                  {p.cells.slice(0, -1).map((c, i) => <circle key={i} cx={cx(c)} cy={cy(c)} r={5 / view.k} />)}
+                  <text className="map-dist" fontSize={14 / view.k} x={cx(end)} y={cy(end) - g * 0.6}>{p.byName}：{pathFeet(p.cells, diagonal)} 尺</text>
+                </g>
+              );
+            })}
           </g>
         </svg>
       </div>
@@ -602,3 +692,7 @@ const sameCell = (a: { x: number; y: number }, b: { x: number; y: number }) => a
 
 /** 平移一个形状 */
 const shiftTpl = (t: Tpl, dx: number, dy: number): Tpl => (t.shape === 'circle' ? { ...t, cx: t.cx + dx, cy: t.cy + dy } : { ...t, x: t.x + dx, y: t.y + dy });
+
+/** 一串格子 → 一条 SVG 路径（每格一个方块） */
+const cellsPath = (cells: Array<{ x: number; y: number }>, gr: { size: number; ox: number; oy: number }) =>
+  cells.map((c) => `M${gr.ox + c.x * gr.size} ${gr.oy + c.y * gr.size}h${gr.size}v${gr.size}h${-gr.size}Z`).join('');

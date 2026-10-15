@@ -31,6 +31,7 @@ let version = 0;
 const emit = () => { version++; for (const l of listeners) l(); };
 
 export function setTermEngine(e: Engine): void { engine = e; }
+export const termEngine = (): Engine | null => engine;
 
 const boxOf = (el: Element): Box => { const r = el.getBoundingClientRect(); return { left: r.left, top: r.top, bottom: r.bottom, right: r.right }; };
 const sameRef = (a: TermRef, b: TermRef) => a.kind === b.kind && a.name === b.name && a.source === b.source && a.cls === b.cls && a.level === b.level;
@@ -67,6 +68,12 @@ const popups = {
   front(id: number) { pins = pins.map((p) => (p.id === id ? { ...p, z: ++zTop } : p)); emit(); },
   move(id: number, x: number, y: number) { pins = pins.map((p) => (p.id === id ? { ...p, x, y } : p)); emit(); },
 };
+
+/** 直接开一个固定窗（/match 用），放在屏幕中间偏上 */
+export function openTerm(ref: TermRef): void {
+  const x = Math.max(8, window.innerWidth / 2 - 220), y = Math.max(8, window.innerHeight * 0.18);
+  popups.pin(ref, { left: x, top: y, bottom: y, right: x }, { x, y });
+}
 
 /**
  * 一个术语。点击不做任何事（交给外面的按钮）；固定靠 Ctrl。`inButton` 只影响样式。

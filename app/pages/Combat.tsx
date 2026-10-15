@@ -15,6 +15,7 @@ import { Initiative } from './combat/Initiative';
 import { Log } from './combat/Log';
 import { MapView } from './combat/MapView';
 import { OnlineDialog } from './combat/Online';
+import { TokenMenu } from './combat/TokenMenu';
 import { Roster } from './combat/Roster';
 import { namer } from './combat/shared';
 import { Tag } from '../components/ui';
@@ -140,6 +141,7 @@ export function CombatPage({ engine }: { engine: Engine }) {
         </div>
         <div className="hud-prompt">{prompts}</div>
         {dialogs}
+        <TokenMenu s={s} ui={ui} engine={engine} name={name} />
       </div>
     );
   }
@@ -174,6 +176,7 @@ export function CombatPage({ engine }: { engine: Engine }) {
       </div>
       {prompts}
       {dialogs}
+      <TokenMenu s={s} ui={ui} engine={engine} name={name} />
     </div>
   );
 }

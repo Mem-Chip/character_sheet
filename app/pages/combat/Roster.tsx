@@ -1,4 +1,5 @@
 /** 参与者列表：先攻顺序、生命值、状态；点一下选中，点「目标」切换目标 */
+import { tokenMenu } from './TokenMenu';
 import type { Session } from '../../../src/combat';
 import { Panel, Tag } from '../../components/ui';
 import { combat, type CombatUi } from '../../lib/combat';
@@ -35,6 +36,7 @@ export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: Comba
             key={id}
             className={['cbt', id === ui.selected && 'sel', id === current && 'turn', c.live.dead && 'dead', isTarget && 'is-tgt', hiddenNow && 'is-hidden'].filter(Boolean).join(' ')}
             onClick={() => combat.clickCombatant(id)}
+            onContextMenu={(e) => tokenMenu(e, id, ui)}
           >
             <span className="init">{c.initiative ?? '—'}</span>
             <span className="nm">

@@ -58,6 +58,13 @@ export interface Aim {
   area?: { area: Area; self: boolean };
 }
 
+/** 标点 / 分享的测距（不存，广播完过几秒就淡出） */
+export type Ping = { id: string; by: number; byName: string; at: number } & (
+  | { kind: 'point'; x: number; y: number }
+  | { kind: 'measure'; cells: Array<{ x: number; y: number }> }
+);
+export const PING_LIFE: Record<Ping['kind'], number> = { point: 4000, measure: 8000 };
+
 export interface Remote {
   id: string;
   name: string;
@@ -74,6 +81,8 @@ export interface Remote {
   chat: ChatRoll[];
   /** DM 正在替这个控制者操作（这一笔里的决定归 DM） */
   actingAs: string | null;
+  /** 别人（和自己）的标点、分享的测距：过一会儿自己消失 */
+  pings: Ping[];
   connected: boolean;
 }
 
@@ -225,11 +234,17 @@ export const combat = {
     const info = await api<RemoteState & { role: 'dm' | 'player'; me: number; campaignId: string; map: MapState }>('GET', `encounters/${encounterId}`);
     ui = {
       ...ui, selected: null, targets: [],
-      remote: { id: encounterId, name: info.name, campaignId: info.campaignId, role: info.role, me: info.me, owners: info.owners, dice: {}, hidden: [], map: info.map, chat: [], actingAs: null, connected: false },
+      remote: { id: encounterId, name: info.name, campaignId: info.campaignId, role: info.role, me: info.me, owners: info.owners, dice: {}, hidden: [], map: info.map, chat: [], actingAs: null, pings: [], connected: false },
     };
     applyRemote(info);
     stream = new EventSource(new URL('api/', document.baseURI).pathname + `encounters/${encounterId}/stream`);
     stream.addEventListener('state', (ev) => applyRemote(JSON.parse((ev as MessageEvent).data)));
+    stream.addEventListener('ping', (ev) => {
+      if (!ui.remote) return;
+      const p = { ...JSON.parse((ev as MessageEvent).data), at: Date.now() } as Ping;
+      set({ remote: { ...ui.remote, pings: [...ui.remote.pings, p].slice(-20) } }, false);
+      setTimeout(() => { if (ui.remote) set({ remote: { ...ui.remote, pings: ui.remote.pings.filter((x) => x.id !== p.id) } }, false); }, PING_LIFE[p.kind]);
+    });
     stream.addEventListener('chat', (ev) => { if (ui.remote) set({ remote: { ...ui.remote, chat: [...ui.remote.chat, JSON.parse((ev as MessageEvent).data)].slice(-300) } }, false); });
     stream.addEventListener('map', (ev) => { if (ui.remote) set({ remote: { ...ui.remote, map: JSON.parse((ev as MessageEvent).data) } }, false); });
     stream.onerror = () => { if (ui.remote) set({ remote: { ...ui.remote, connected: false } }, false); };
@@ -299,6 +314,11 @@ export const combat = {
     if (!r) return Promise.resolve(false);
     return api<{ status: string; reason?: string }>('POST', `encounters/${r.id}/act`, { op: 'map', ...body })
       .then((x) => { if (x.status === 'rejected') toast(x.reason || '被拒绝了'); return x.status !== 'rejected'; }, (e: Error) => { toast(e.message); return false; });
+  },
+  /** 标点 / 分享测距（发给所有人，包括自己，等广播回来再画） */
+  ping(body: { kind: 'point'; x: number; y: number } | { kind: 'measure'; cells: Array<{ x: number; y: number }> }): void {
+    const r = ui.remote;
+    if (r) void api('POST', `encounters/${r.id}/act`, { op: 'ping', ...body }).catch((e: Error) => toast(e.message));
   },
   /** 乐观更新地图（拖棋子、画线不用等服务器回来） */
   patchMap(fn: (m: MapState) => void): void {

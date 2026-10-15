@@ -1,7 +1,8 @@
 /**
  * 地图布局顶上的先攻条：当前行动者排第一个、展开显示名字和伤势；其余的折叠成小圆片，悬停才展开名字。
- * 点一下选中，右键设为 / 取消目标（和地图上的棋子一样）。前面一行写清楚「第几轮、轮到谁、在等谁」。
+ * 点一下选中，右键开菜单（和地图上的棋子一样）。前面一行写清楚「第几轮、轮到谁、在等谁」。
  */
+import { tokenMenu } from './TokenMenu';
 import type { Session } from '../../../src/combat';
 import { combat, type CombatUi } from '../../lib/combat';
 import { rosterOrder, type Namer } from './shared';
@@ -55,7 +56,7 @@ export function Initiative({ s, ui, name }: { s: Session; ui: CombatUi; name: Na
             <button
               key={id} className={cls} title={`${c.name} · ${hp}${c.initiative != null ? ` · 先攻 ${c.initiative}` : ''}`}
               onClick={() => combat.clickCombatant(id)}
-              onContextMenu={(e) => { e.preventDefault(); if (ui.aim) combat.aimUnpick(id); else combat.toggleTarget(id); }}
+              onContextMenu={(e) => tokenMenu(e, id, ui)}
             >
               <span className="ini-dot">{c.name.slice(0, 1)}</span>
               <span className="ini-name">{c.name}<small>{c.live.dead ? '死亡' : hp}</small></span>

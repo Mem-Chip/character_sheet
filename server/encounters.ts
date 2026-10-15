@@ -260,6 +260,16 @@ export function createEncounters(d: Deps) {
         if (t.shape === 'circle') { t.cx = Number(t.cx) + dx; t.cy = Number(t.cy) + dy; } else { t.x = Number(t.x) + dx; t.y = Number(t.y) + dy; }
         return null;
       }
+      case 'shapeRotate': {
+        // 转锥 / 线：只改朝向
+        const sh = m.shapes.find((x) => x.id === String(b.id ?? ''));
+        if (!sh) return '没有这个形状';
+        if (!dm && sh.by !== u.id) return '只能转自己放的形状';
+        const dir = Number(b.dir);
+        if (!Number.isFinite(dir) || (sh.tpl.shape !== 'cone' && sh.tpl.shape !== 'line')) return '这个形状不能转';
+        sh.tpl.dir = Math.round(dir * 1000) / 1000;
+        return null;
+      }
       case 'erase': {
         // 线和形状一起擦
         const ids = new Set((Array.isArray(b.ids) ? b.ids : [b.id]).map(String));
@@ -421,6 +431,16 @@ export function createEncounters(d: Deps) {
         const id = String(b.id ?? '');
         e.hidden = e.hidden.filter((x) => x !== id);
         if (b.hidden) e.hidden.push(id);
+      } else if (op === 'ping') {
+        // 标点 / 分享测距：只广播，不存（客户端过一会儿淡出）
+        const n = (v: unknown) => { const x = Math.round(Number(v) * 10) / 10; return Number.isFinite(x) && Math.abs(x) < 1e6 ? x : 0; };
+        const ping = b.kind === 'measure'
+          ? { kind: 'measure', cells: (Array.isArray(b.cells) ? b.cells : []).slice(0, 50).map((c: Row) => ({ x: Math.round(n(c?.x)), y: Math.round(n(c?.y)) })) }
+          : { kind: 'point', x: n(b.x), y: n(b.y) };
+        if (ping.kind === 'measure' && (ping.cells as unknown[]).length < 2) return reject('量的线太短');
+        broadcast(e, 'ping', { ...ping, id: randomUUID().slice(0, 8), by: u.id, byName: u.name });
+        d.send(res, 200, { status: 'done' });
+        return true;
       } else if (op === 'chat') {
         // 指令框：骰子由服务器掷；私密的照样发给所有人，界面上只给本人（和点开的 DM）看
         let entry: ChatRoll | null;

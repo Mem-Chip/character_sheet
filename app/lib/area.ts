@@ -148,3 +148,31 @@ export function tplOrigin(t: Tpl): { x: number; y: number } {
     default: return { x: t.x, y: t.y };
   }
 }
+
+/** 外接框（世界像素） */
+export function tplBounds(t: Tpl): { x0: number; y0: number; x1: number; y1: number } {
+  switch (t.shape) {
+    case 'circle': return { x0: t.cx - t.r, y0: t.cy - t.r, x1: t.cx + t.r, y1: t.cy + t.r };
+    case 'rect': return { x0: t.x, y0: t.y, x1: t.x + t.w, y1: t.y + t.h };
+    default: {
+      // 锥 / 线：最远不超过 长度 + 半宽 的圆
+      const R = t.shape === 'cone' ? t.len / Math.cos(CONE_HALF) : Math.hypot(t.len, t.width / 2);
+      return { x0: t.x - R, y0: t.y - R, x1: t.x + R, y1: t.y + R };
+    }
+  }
+}
+
+/** 被覆盖的格子（格子中心在形状里）：和范围法术选人用同一条规则 */
+export function coveredCells(t: Tpl, gr: Grid, max = 4000): Array<{ x: number; y: number }> {
+  const b = tplBounds(t);
+  const out: Array<{ x: number; y: number }> = [];
+  const i0 = Math.floor((b.x0 - gr.ox) / gr.size), i1 = Math.ceil((b.x1 - gr.ox) / gr.size);
+  const j0 = Math.floor((b.y0 - gr.oy) / gr.size), j1 = Math.ceil((b.y1 - gr.oy) / gr.size);
+  for (let i = i0; i <= i1; i++) {
+    for (let j = j0; j <= j1; j++) {
+      if (inside(t, gr.ox + (i + 0.5) * gr.size, gr.oy + (j + 0.5) * gr.size)) out.push({ x: i, y: j });
+      if (out.length >= max) return out;
+    }
+  }
+  return out;
+}

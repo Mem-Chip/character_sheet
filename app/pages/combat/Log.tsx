@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { describeRoll, type ChatRoll, type GameEvent, type Session } from '../../../src/combat';
 import { NumInput, Panel } from '../../components/ui';
 import { combat, useCombat } from '../../lib/combat';
+import { KIND_LABEL, searchTerms, type TermRef } from '../../lib/terms';
+import { Term, openTerm, termEngine } from '../../components/Term';
 import { describe, txTitle, type Line } from '../../lib/events';
 import type { Namer } from './shared';
 
@@ -180,9 +182,29 @@ function CommandBox() {
   const [err, setErr] = useState('');
   const [hist, setHist] = useState<string[]>([]);
   const [h, setH] = useState(-1);
+  /** /match 找到好几条时列出来，点一个打开 */
+  const [found, setFound] = useState<TermRef[] | null>(null);
+  const match = async (q: string) => {
+    const eng = termEngine();
+    if (!q) { setErr('要写名字，比如 /match 魔法飞弹'); return; }
+    if (!eng) return;
+    const list = await searchTerms(eng, q);
+    if (!list.length) { setErr(`没找到「${q}」`); setFound(null); return; }
+    if (list.length === 1 || list[0].name === q) { openTerm(list[0]); setFound(list.length > 1 ? list : null); }
+    else setFound(list);
+  };
   const send = () => {
     const t = text.trim();
     if (!t) return;
+    const mm = t.match(/^\/match(?:\s+([\s\S]*))?$/i);
+    if (mm) {
+      void match((mm[1] ?? '').trim());
+      setHist([t, ...hist.filter((x) => x !== t)].slice(0, 20));
+      setH(-1);
+      setText('');
+      return;
+    }
+    setFound(null);
     const e = combat.say(t);
     if (e) { setErr(e); return; }
     setErr('');
@@ -193,7 +215,7 @@ function CommandBox() {
   return (
     <div className="cmdbox">
       <input
-        value={text} title={['直接打字 = 说一句话', '/r 1d20+5, 2d6+3 说明 · ad20 优势 · dd20 劣势 · 4d6kh3 取高', '/pr 私密掷骰'].join('\n')}
+        value={text} title={['直接打字 = 说一句话', '/r 1d20+5, 2d6+3 说明 · ad20 优势 · dd20 劣势 · 4d6kh3 取高', '/pr 私密掷骰', '/match 名字：查法术、状态、专长、物品……'].join('\n')}
         onChange={(e) => { setText(e.target.value); setErr(''); }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') send();
@@ -204,6 +226,16 @@ function CommandBox() {
         aria-label="指令"
       />
       {err && <div className="dangerline tiny">{err}</div>}
+      {found && (
+        <div className="match-list">
+          {found.map((r) => (
+            <button key={r.kind + r.name} className="tag" onClick={() => openTerm(r)}>
+              <Term {...r} inButton>{r.name}</Term><small>{KIND_LABEL[r.kind] ?? r.kind}</small>
+            </button>
+          ))}
+          <button className="btn ghost sm" onClick={() => setFound(null)}>收起</button>
+        </div>
+      )}
     </div>
   );
 }

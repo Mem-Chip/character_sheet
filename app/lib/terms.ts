@@ -135,3 +135,29 @@ async function find(engine: Engine, ref: TermRef): Promise<TermData | null> {
   }
   return null;
 }
+
+/** 指令框的 /match：按名字找条目（先完全一样的，再包含这几个字的），最多 limit 条 */
+export async function searchTerms(engine: Engine, q: string, limit = 12): Promise<TermRef[]> {
+  const want = q.trim();
+  if (!want) return [];
+  const store = engine.env.store;
+  const exact: TermRef[] = [], part: TermRef[] = [];
+  const seen = new Set<string>();
+  for (const [kind, tables] of Object.entries(TABLES)) {
+    if (kind === 'status') continue;
+    for (const [file, arr] of tables) {
+      const d = await store.ensure(file).catch(() => null);
+      for (const x of (d?.[arr] || []) as Json[]) {
+        const nm = String(x?.name ?? '');
+        if (!nm || !nm.includes(want)) continue;
+        const k = `${kind}|${nm}`;
+        if (seen.has(k)) continue;
+        seen.add(k);
+        (nm === want ? exact : part).push({ kind, name: nm });
+      }
+    }
+  }
+  // 短的名字排前面（「火球术」比「延迟爆裂火球」更可能是要找的）
+  part.sort((a, b) => a.name.length - b.name.length);
+  return [...exact, ...part].slice(0, limit);
+}
