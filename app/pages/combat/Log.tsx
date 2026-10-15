@@ -165,17 +165,22 @@ function TermLine({ c }: { c: ChatRoll }) {
   }, [t.kind, t.name, t.source]);
   return (
     <div className="chatroll termmsg">
-      <div className="evline">
-        <span className="txt"><b>{c.byName}</b> 分享了 <Term {...t}>「{t.name}」</Term><span className="tiny faint"> {data ? `${data.kindLabel}${data.source ? ` · ${data.source}` : ''}` : KIND_LABEL[t.kind] ?? t.kind}</span></span>
-      </div>
-      {data === null && <div className="tiny faint">查不到这条的原文。</div>}
-      {data && (
-        <div className={'prose small term-body' + (open ? ' open' : '')}>
-          {data.meta.length > 0 && <div className="meta">{data.meta.map((m, i) => <div key={i}>{m}</div>)}</div>}
-          <Entries entries={data.entries} />
+      <div className="evline"><span className="txt"><b>{c.byName}</b> 分享了</span></div>
+      {/* 条目本身框起来：标题、类别、原文 */}
+      <div className="term-card">
+        <div className="term-head">
+          <b className="serif"><Term {...t}>{t.name}</Term></b>
+          <span className="tiny faint">{data ? `${data.kindLabel}${data.source ? ` · ${data.source}` : ''}` : KIND_LABEL[t.kind] ?? t.kind}</span>
         </div>
-      )}
-      {data && <button className="btn ghost sm" onClick={() => setOpen(!open)}>{open ? '收起' : '展开全文'}</button>}
+        {data === null && <div className="tiny faint">查不到这条的原文。</div>}
+        {data && (
+          <div className={'prose small term-body' + (open ? ' open' : '')}>
+            {data.meta.length > 0 && <div className="meta">{data.meta.map((m, i) => <div key={i}>{m}</div>)}</div>}
+            <Entries entries={data.entries} />
+          </div>
+        )}
+        {data && <button className="btn ghost sm" onClick={() => setOpen(!open)}>{open ? '收起' : '展开全文'}</button>}
+      </div>
     </div>
   );
 }
