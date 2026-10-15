@@ -9,3 +9,4 @@ export { scopeDef, REF_SHAPE, type ScopeKind } from './scope';
 export { weaponAction, canPay, describeCost, actionCosts, maxTargets } from './exec';
 export { normType } from './damage';
 export { auditRuleBook, WINDOW_EVENTS, EMITTED_EVENTS } from './audit';
+export * from './command';

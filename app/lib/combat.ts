@@ -7,7 +7,7 @@
 import { useSyncExternalStore } from 'react';
 import { combatantFromSheet, syncLiveToChar, viewFromSheet } from '../../src/bridge/from-sheet';
 import {
-  Session, createEncounter, defaultDiceMode, diceSourceFor, makeCombatant, makeView, physicalDice,
+  Session, createEncounter, defaultDiceMode, diceSourceFor, makeCombatant, makeView, parseCommand, physicalDice, rollExpr, type ChatRoll,
   type Command, type DispatchResult, type EngineCtx, type OverridePatch, type SessionSave, type ViewInit,
 } from '../../src/combat';
 import { api } from './api';
@@ -31,6 +31,8 @@ export interface CombatUi {
   targets: string[];
   /** 选目标模式：点了一个要目标的动作之后，点棋子 / 先攻条里的人把他加进来，最后确认 */
   aim: Aim | null;
+  /** 本地遭遇的指令框掷骰（战役遭遇的在 remote.chat） */
+  chat: ChatRoll[];
   toast: { text: string; tone: 'danger' | 'ok' } | null;
   /** 战役遭遇（在服务器上跑）：本地的 session 只是镜像，所有操作发给服务器 */
   remote: Remote | null;
@@ -63,6 +65,7 @@ export interface Remote {
   /** DM 藏起来的参与者 */
   hidden: string[];
   map: MapState;
+  chat: ChatRoll[];
   connected: boolean;
 }
 
@@ -75,10 +78,10 @@ export interface MapState {
 }
 interface RemoteState {
   save: SessionSave; owners: Record<string, number>; cards: Record<string, string>; name: string;
-  dice?: Record<string, DiceMode>; hidden?: string[]; map?: MapState;
+  dice?: Record<string, DiceMode>; hidden?: string[]; map?: MapState; chat?: ChatRoll[];
 }
 
-let ui: CombatUi = { session: null, version: 0, links: {}, dice: {}, selected: null, targets: [], aim: null, toast: null, remote: null };
+let ui: CombatUi = { session: null, version: 0, links: {}, dice: {}, selected: null, targets: [], aim: null, chat: [], toast: null, remote: null };
 let engineRef: Engine | null = null;
 let stream: EventSource | null = null;
 const listeners = new Set<() => void>();
@@ -125,7 +128,7 @@ function autoWrite(): void {
 function persist(): void {
   if (!ui.session || ui.remote) return;   // 战役遭遇存在服务器上
   try {
-    localStorage.setItem(KEY, JSON.stringify({ save: ui.session.save(), links: ui.links, dice: ui.dice, selected: ui.selected, targets: ui.targets }));
+    localStorage.setItem(KEY, JSON.stringify({ save: ui.session.save(), links: ui.links, dice: ui.dice, selected: ui.selected, targets: ui.targets, chat: ui.chat.slice(-100) }));
   } catch { /* 存不下：这次会话照常用 */ }
 }
 
@@ -145,13 +148,13 @@ function ctxFor(engine: Engine): EngineCtx {
 export function initCombat(engine: Engine): void {
   engineRef = engine;
   if (ui.session) return;
-  let saved: { save: SessionSave; links?: Record<string, string>; dice?: Record<string, DiceMode>; selected?: string | null; targets?: string[] } | null = null;
+  let saved: { save: SessionSave; links?: Record<string, string>; dice?: Record<string, DiceMode>; selected?: string | null; targets?: string[]; chat?: ChatRoll[] } | null = null;
   try {
     const raw = localStorage.getItem(KEY);
     if (raw) saved = JSON.parse(raw);
   } catch { /* 坏了就开新遭遇 */ }
   if (saved?.save) {
-    ui = { ...ui, links: saved.links ?? {}, dice: legacyDice(saved.dice), selected: saved.selected ?? null, targets: saved.targets ?? [] };
+    ui = { ...ui, links: saved.links ?? {}, dice: legacyDice(saved.dice), chat: saved.chat ?? [], selected: saved.selected ?? null, targets: saved.targets ?? [] };
     try {
       set({ session: Session.restore(saved.save, ctxFor(engine)) }, false);
       return;
@@ -195,7 +198,7 @@ function applyRemote(data: RemoteState): void {
     const cur = st.round !== null ? st.order[st.turnIndex] : null;
     const selected = ui.selected && st.combatants[ui.selected] ? ui.selected : cur ?? Object.keys(st.combatants)[0] ?? null;
     set({ session, links: data.cards, selected, targets: ui.targets.filter((t) => st.combatants[t]), remote: {
-      ...ui.remote, owners: data.owners, name: data.name, dice: data.dice ?? {}, hidden: data.hidden ?? [], map: data.map ?? ui.remote.map, connected: true,
+      ...ui.remote, owners: data.owners, name: data.name, dice: data.dice ?? {}, hidden: data.hidden ?? [], map: data.map ?? ui.remote.map, chat: data.chat ?? ui.remote.chat, connected: true,
     } }, false);
   } catch (e) {
     toast('同步遭遇失败：' + (e as Error).message);
@@ -210,11 +213,12 @@ export const combat = {
     const info = await api<RemoteState & { role: 'dm' | 'player'; me: number; campaignId: string; map: MapState }>('GET', `encounters/${encounterId}`);
     ui = {
       ...ui, selected: null, targets: [],
-      remote: { id: encounterId, name: info.name, campaignId: info.campaignId, role: info.role, me: info.me, owners: info.owners, dice: {}, hidden: [], map: info.map, connected: false },
+      remote: { id: encounterId, name: info.name, campaignId: info.campaignId, role: info.role, me: info.me, owners: info.owners, dice: {}, hidden: [], map: info.map, chat: [], connected: false },
     };
     applyRemote(info);
     stream = new EventSource(new URL('api/', document.baseURI).pathname + `encounters/${encounterId}/stream`);
     stream.addEventListener('state', (ev) => applyRemote(JSON.parse((ev as MessageEvent).data)));
+    stream.addEventListener('chat', (ev) => { if (ui.remote) set({ remote: { ...ui.remote, chat: [...ui.remote.chat, JSON.parse((ev as MessageEvent).data)].slice(-300) } }, false); });
     stream.addEventListener('map', (ev) => { if (ui.remote) set({ remote: { ...ui.remote, map: JSON.parse((ev as MessageEvent).data) } }, false); });
     stream.onerror = () => { if (ui.remote) set({ remote: { ...ui.remote, connected: false } }, false); };
   },
@@ -343,6 +347,21 @@ export const combat = {
   clickCombatant(id: string): void {
     if (ui.aim) combat.aimPick(id);
     else combat.select(id);
+  },
+
+  /** 指令框：/r 公开、/pr 私密。写错了返回错误信息；不是指令返回 'not-command' */
+  say(text: string): string | null {
+    let p;
+    try { p = parseCommand(text); } catch (e) { return (e as Error).message; }
+    if (!p) return '目前只有 /r（公开掷骰）和 /pr（私密掷骰），比如 /r 1d20+5';
+    const r = ui.remote;
+    if (r) { act({ op: 'chat', text }); return null; }
+    const entry: ChatRoll = {
+      id: Math.random().toString(36).slice(2, 10), by: 0, byName: '我', at: Date.now(), afterTx: ui.session?.transactions.length ?? 0,
+      private: p.cmd === 'pr', note: p.note, results: p.exprs.map((x) => rollExpr(x)),
+    };
+    set({ chat: [...ui.chat, entry].slice(-100) });
+    return null;
   },
 
   clearTargets(): void {

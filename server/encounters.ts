@@ -9,13 +9,14 @@
  * - 骰子：每个控制者选「服务器掷 / 实体骰」（dice）；实体骰会停下来等那个人填骰面。
  * - 隐藏：DM 可以把参与者藏起来（hidden），怪物的数值也只给 DM 看。只在界面上藏 ——
  *   数据照样发给所有人，私人网站够用了。
+ * - 指令框（chat）：/r、/pr 掷骰，服务器掷，单独的 SSE 事件 `chat`，不进战斗事务。
  * - 地图（map）：格子、底图、画笔、棋子。和战斗规则分开存，改地图不进撤销记录，走单独的 SSE 事件 `map`。
  *   新操作发起时把棋子位置拍进事务（TxInput.positions），引擎据此自动算距离。
  */
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import {
-  DICE_MODES, RuleBook, Session, createEncounter, defaultDiceMode, diceSourceFor, footprint, type DiceMode,
+  DICE_MODES, RuleBook, Session, createEncounter, defaultDiceMode, diceSourceFor, footprint, parseCommand, rollExpr, type ChatRoll, type DiceMode,
   type Command, type DispatchResult, type EngineCtx, type Diagonal, type OverridePatch, type Positions, type SessionSave,
 } from '../src/combat';
 import { RULE_FILES } from '../src/bridge/rule-files';
@@ -60,6 +61,8 @@ interface Live {
   /** DM 藏起来的参与者 */
   hidden: string[];
   map: MapState;
+  /** 指令框掷的骰（/r、/pr），最近 300 条 */
+  chat: ChatRoll[];
   ctx: EngineCtx;
   seq: number;
   watchers: Set<ServerResponse>;
@@ -109,7 +112,7 @@ export function createEncounters(d: Deps) {
     const meta = JSON.parse(String(r.meta || '{}'));
     const e = {
       id, campaignId: String(r.campaign_id), name: String(r.name),
-      owners: meta.owners ?? {}, cards: meta.cards ?? {}, dice: meta.dice ?? {}, hidden: meta.hidden ?? [],
+      owners: meta.owners ?? {}, cards: meta.cards ?? {}, dice: meta.dice ?? {}, hidden: meta.hidden ?? [], chat: meta.chat ?? [],
       map: { ...newMap(), ...(meta.map ?? {}) }, seq: 0, watchers: new Set(),
     } as unknown as Live;
     e.ctx = ctxOf(e);
@@ -120,9 +123,9 @@ export function createEncounters(d: Deps) {
 
   const stateOf = (e: Live) => ({
     id: e.id, name: e.name, campaignId: e.campaignId, seq: e.seq, owners: e.owners, cards: e.cards,
-    dice: e.dice, hidden: e.hidden, map: e.map, save: e.session.save(),
+    dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, save: e.session.save(),
   });
-  const metaOf = (e: Live) => JSON.stringify({ owners: e.owners, cards: e.cards, dice: e.dice, hidden: e.hidden, map: e.map });
+  const metaOf = (e: Live) => JSON.stringify({ owners: e.owners, cards: e.cards, dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat });
   const broadcast = (e: Live, event: string, data: unknown) => {
     const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
     for (const w of e.watchers) w.write(msg);
@@ -327,7 +330,7 @@ export function createEncounters(d: Deps) {
         if (role !== 'dm') return reject('只有 DM 能撤销、裁定、清空');
         if (op === 'undo') s.undo(Math.max(1, Number(b.n ?? 1)));
         else if (op === 'override') r = s.override(Number(b.txIndex), b.patch as OverridePatch);
-        else { e.owners = {}; e.cards = {}; e.hidden = []; e.map.tokens = {}; e.session = new Session(createEncounter(e.id), e.ctx); }
+        else { e.owners = {}; e.cards = {}; e.hidden = []; e.chat = []; e.map.tokens = {}; e.session = new Session(createEncounter(e.id), e.ctx); }
       } else if (op === 'setDice') {
         // 玩家只能改自己控制的；DM 什么都能改（包括默认 '*' 和怪物 'dm'）
         const who = String(b.user ?? '');
@@ -340,6 +343,20 @@ export function createEncounters(d: Deps) {
         const id = String(b.id ?? '');
         e.hidden = e.hidden.filter((x) => x !== id);
         if (b.hidden) e.hidden.push(id);
+      } else if (op === 'chat') {
+        // 指令框：骰子由服务器掷；私密的照样发给所有人，界面上只给本人（和点开的 DM）看
+        let p;
+        try { p = parseCommand(String(b.text ?? '')); } catch (err) { return reject((err as Error).message); }
+        if (!p) return reject('只认识 /r 和 /pr');
+        const entry: ChatRoll = {
+          id: randomUUID().slice(0, 8), by: u.id, byName: u.name, at: Date.now(), afterTx: e.session.transactions.length,
+          private: p.cmd === 'pr', note: p.note.slice(0, 80), results: p.exprs.map((x) => rollExpr(x)),
+        };
+        e.chat = [...e.chat, entry].slice(-300);
+        d.run('UPDATE encounters SET meta = ?, updated = ? WHERE id = ?', metaOf(e), Date.now(), e.id);
+        broadcast(e, 'chat', entry);
+        d.send(res, 200, { status: 'done' });
+        return true;
       } else if (op === 'map') {
         const why = mapOp(e, u, role, b);
         if (why) return reject(why);

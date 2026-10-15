@@ -1,6 +1,6 @@
 /** 战斗日志：按事务分组，新的在上面。掷骰带回执；DM 可以事后改某次检定的结果或某次伤害 */
 import { useState } from 'react';
-import type { GameEvent, Session } from '../../../src/combat';
+import { describeRoll, type ChatRoll, type GameEvent, type Session } from '../../../src/combat';
 import { NumInput, Panel } from '../../components/ui';
 import { combat, useCombat } from '../../lib/combat';
 import { describe, txTitle, type Line } from '../../lib/events';
@@ -23,8 +23,13 @@ export function Log({ s, name, onCollapse }: { s: Session; name: Namer; onCollap
   const [open, setOpen] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
   const shown = showAll ? txs.length : Math.min(txs.length, 40);
+  // 指令框掷的骰：按「掷的时候有几笔事务」插进去
+  const chat: ChatRoll[] = ui.remote ? ui.remote.chat : ui.chat;
+  const chatAt = (n: number) => chat.filter((c) => (n === txs.length ? c.afterTx >= n : c.afterTx === n)).reverse();
+  const me = ui.remote ? ui.remote.me : 0;
 
   return (
+    <div className="logwrap">
     <Panel
       title="日志"
       flush
@@ -35,12 +40,14 @@ export function Log({ s, name, onCollapse }: { s: Session; name: Namer; onCollap
       </>}
     >
       <div className="log">
-        {!txs.length && <div className="empty">还没有发生任何事。</div>}
+        {!txs.length && !chat.length && <div className="empty">还没有发生任何事。</div>}
+        {chatAt(txs.length).map((c) => <ChatLine key={c.id} c={c} mine={c.by === me} dm={dm} />)}
         {txs.slice(-shown).map((t, k) => {
           const i = txs.length - shown + k;
           return { t, i };
         }).reverse().map(({ t, i }) => {
-          if (mentionsHidden(t.input.cmd)) return null;
+          const chats = chatAt(i).map((c) => <ChatLine key={c.id} c={c} mine={c.by === me} dm={dm} />);
+          if (mentionsHidden(t.input.cmd)) return chats.length ? <div key={i}>{chats}</div> : null;
           // 「加入 xx」的标题已经说了，不再重复那一行
           const lines = t.events
             .filter((e) => e.type !== 'combatantAdded')
@@ -50,7 +57,8 @@ export function Log({ s, name, onCollapse }: { s: Session; name: Namer; onCollap
             .map((e) => describe(e, name, secret)).filter((x): x is Line => !!x);
           const overridden = t.input.overrides.length > 0;
           return (
-            <div key={i} className={'tx' + (i === txs.length - 1 ? ' latest' : '')}>
+            <div key={i}>
+            <div className={'tx' + (i === txs.length - 1 ? ' latest' : '')}>
               <div className="hd">
                 <span className="tiny faint num">#{i + 1}</span>
                 <span className="who">{txTitle(t.input.cmd as never, name)}</span>
@@ -67,11 +75,15 @@ export function Log({ s, name, onCollapse }: { s: Session; name: Namer; onCollap
                 />
               ))}
             </div>
+            {chats}
+            </div>
           );
         })}
         {txs.length > shown && <div className="empty"><button className="btn sm" onClick={() => setShowAll(true)}>显示更早的 {txs.length - shown} 笔</button></div>}
       </div>
     </Panel>
+    <CommandBox />
+    </div>
   );
 }
 
@@ -134,4 +146,63 @@ function DamageRule({ byType, onSet }: { byType: Record<string, number>; onSet: 
 /** 决定对话框里预览「停下来之前发生了什么」用 */
 export function previewLines(events: GameEvent[], name: Namer): Line[] {
   return events.map((e) => describe(e, name)).filter((x): x is Line => !!x).slice(-8);
+}
+
+/** 指令框掷的一次骰。私密的：别人只看到「掷了骰子」；DM 可以点开看 */
+function ChatLine({ c, mine, dm }: { c: ChatRoll; mine: boolean; dm: boolean }) {
+  const [peek, setPeek] = useState(false);
+  const visible = !c.private || mine || peek;
+  return (
+    <div className={'chatroll' + (c.private ? ' private' : '')}>
+      <div className="evline">
+        <span className="txt">
+          <b>{c.byName}</b> 掷骰{c.private && <span className="tag">私密</span>}
+          {visible && c.note && <span className="muted">：{c.note}</span>}
+          {visible && <> → {c.results.map((r, i) => <b key={i} className="num roll-total">{r.total}</b>)}</>}
+        </span>
+        {!visible && dm && <button className="btn ghost sm" onClick={() => setPeek(true)}>看</button>}
+        {c.private && !mine && peek && <button className="btn ghost sm" onClick={() => setPeek(false)}>收起</button>}
+      </div>
+      {visible && c.results.map((r, i) => (
+        <div key={i} className="receipt">
+          {/* 没取的骰子（~5~）画删除线 */}
+          {describeRoll(r).split(/(~\d+~)/).map((part, k) => (part.startsWith('~') ? <s key={k} className="faint">{part.slice(1, -1)}</s> : part))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** 日志下面的指令框。回车发出；写错了在下面提示 */
+function CommandBox() {
+  const [text, setText] = useState('');
+  const [err, setErr] = useState('');
+  const [hist, setHist] = useState<string[]>([]);
+  const [h, setH] = useState(-1);
+  const send = () => {
+    const t = text.trim();
+    if (!t) return;
+    const e = combat.say(t);
+    if (e) { setErr(e); return; }
+    setErr('');
+    setHist([t, ...hist.filter((x) => x !== t)].slice(0, 20));
+    setH(-1);
+    setText('');
+  };
+  return (
+    <div className="cmdbox">
+      <input
+        value={text} placeholder="/r 1d20+5, 2d6+3 说明 · ad20 优势 · dd20 劣势 · /pr 私密"
+        onChange={(e) => { setText(e.target.value); setErr(''); }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') send();
+          // 上下键翻之前发过的
+          else if (e.key === 'ArrowUp' && hist.length) { const k = Math.min(hist.length - 1, h + 1); setH(k); setText(hist[k]); e.preventDefault(); }
+          else if (e.key === 'ArrowDown' && h >= 0) { const k = h - 1; setH(k); setText(k >= 0 ? hist[k] : ''); e.preventDefault(); }
+        }}
+        aria-label="指令"
+      />
+      {err && <div className="dangerline tiny">{err}</div>}
+    </div>
+  );
 }
