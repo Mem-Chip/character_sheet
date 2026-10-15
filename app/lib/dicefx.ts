@@ -4,12 +4,15 @@
  * - 结果从来不由动画决定：引擎 / 服务器先掷好，这里只是把「掷了什么、各是几」交给 dice3d 去演。
  * - 播什么：战斗事务 tape 里新出现的、由引擎掷的骰子（source = engine；手填的实体骰不播），
  *   以及指令框的 /r（/pr 只给本人播）。玩家看不到怪物的骰子（和日志一样保密）。
- * - 种子按「遭遇 + 第几笔 + 第几次掷」算，各端滚法一样。物理参数（会改变滚法）由 DM 在遭遇上设，大家共用。
- * - 个人设置（开关、只播自己的）存在本机。
+ * - 种子按「遭遇 + 第几笔 + 第几次掷」算，各端滚法一样。物理参数（会改变滚法）在战役遭遇里由 DM 设、存在遭遇上，
+ *   大家共用；本地遭遇存在本机。
+ * - 骰子颜色每人一种：战役里存在遭遇上（别人看到的也是这个颜色），本地存在本机。
+ * - 其余参数（镜头、灯光、外观、时长、播谁的）只影响自己的屏幕，存在本机。
  * - dice3d 连同 three.js 一起按需加载：第一次要播的时候才下载。
  */
 import type { ChatRoll, RolledExpr, Session } from '../../src/combat';
-import type { DieSpec, RollRequest } from './dice3d';
+import type { DiceOptions, DieSpec, RollRequest } from './dice3d';
+import { DEFAULT_DICE_OPTIONS } from './dice3d/options';
 
 export type DiceFxScope = 'all' | 'mine' | 'off';
 const PREF_KEY = 'dnd2024-engine:dice3d';
@@ -24,8 +27,42 @@ export function setDiceFxScope(v: DiceFxScope): void {
   try { localStorage.setItem(PREF_KEY, v); } catch { /* 无所谓 */ }
 }
 
-/** DM 设的物理参数（各端必须一样，否则同一个种子滚法不同） */
-export interface DicePhysics { tableWidth?: number; tableDepth?: number; dieScale?: number; layFlat?: boolean }
+/** 会改变滚法的物理参数（各端必须一样，否则同一个种子滚法不同）；没给的用默认 */
+export interface DicePhysics { tableWidth?: number; tableDepth?: number; tableGrow?: boolean; dieScale?: number; layFlat?: boolean }
+export const PHYS_KEYS = ['tableWidth', 'tableDepth', 'tableGrow', 'dieScale', 'layFlat'] as const;
+
+/** 只影响自己屏幕的参数（dice3d 的 DiceOptions 去掉物理、主题；maxDice 不影响同步，也算个人的） */
+export type DiceLocal = Omit<DiceOptions, 'physics' | 'theme'> & { physics?: { maxDice?: number } };
+const LOCAL_KEY = 'dnd2024-engine:dice3d:opts';
+const PHYS_KEY = 'dnd2024-engine:dice3d:phys';
+const COLOR_KEY = 'dnd2024-engine:dice3d:color';
+const readJson = <T,>(k: string, d: T): T => { try { return JSON.parse(localStorage.getItem(k) || 'null') ?? d; } catch { return d; } };
+const writeJson = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* 无所谓 */ } };
+
+export const diceLocal = (): DiceLocal => readJson<DiceLocal>(LOCAL_KEY, {});
+export function setDiceLocal(v: DiceLocal): void {
+  writeJson(LOCAL_KEY, v);
+  if (mod) void mod.then((m) => m.configureDice(localFull(v)));
+}
+/** 本地遭遇用的物理参数 */
+export const diceLocalPhys = (): DicePhysics => readJson<DicePhysics>(PHYS_KEY, {});
+export const setDiceLocalPhys = (v: DicePhysics): void => writeJson(PHYS_KEY, v);
+/** 本地遭遇里自己的骰子颜色 */
+export const diceLocalColor = (): string | null => readJson<string | null>(COLOR_KEY, null);
+export const setDiceLocalColor = (v: string | null): void => writeJson(COLOR_KEY, v);
+
+/** 个人参数叠在默认值上（清空的项要能退回默认，所以每次给全） */
+function localFull(v: DiceLocal): DiceOptions {
+  const d = DEFAULT_DICE_OPTIONS;
+  return {
+    camera: { ...d.camera, ...v.camera },
+    // shadowOpacity 默认是 null（按主题），dice3d 认 null
+    lighting: { ...d.lighting, ...v.lighting } as DiceOptions['lighting'],
+    look: { ...d.look, ...v.look },
+    timing: { ...d.timing, ...v.timing },
+    physics: { maxDice: v.physics?.maxDice ?? d.physics.maxDice },
+  };
+}
 
 type Mod = typeof import('./dice3d');
 let mod: Promise<Mod> | null = null;
@@ -33,7 +70,7 @@ let applied = '';
 function load(): Promise<Mod> {
   if (!mod) {
     mod = import('./dice3d').then((m) => {
-      m.mountDice(document.body, { theme: themeNow() });
+      m.mountDice(document.body, { ...localFull(diceLocal()), theme: themeNow() });
       // 跟着页面的深浅色走
       new MutationObserver(() => m.configureDice({ theme: themeNow() })).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
       return m;
@@ -51,7 +88,7 @@ async function play(req: RollRequest, physics?: DicePhysics): Promise<void> {
     applied = key;
     // 没设的回到默认（DM 清掉某项时要能退回去）
     const d = m.DEFAULT_DICE_OPTIONS.physics;
-    m.configureDice({ physics: { ...d, ...(physics ?? {}) } });
+    m.configureDice({ physics: { ...d, ...(physics ?? {}), maxDice: diceLocal().physics?.maxDice ?? d.maxDice } });
   }
   await m.rollDice(req);
 }
@@ -63,9 +100,16 @@ function seedOf(s: string): number {
   return h >>> 0;
 }
 
-/** 每个玩家一种颜色（按用户 id 挑），DM / 本地用主题蓝 */
+/** 每个人一种颜色：自己选的优先，没选按用户 id 挑一个 */
 const COLORS = ['#4f5bd5', '#2f8f5b', '#c0392b', '#b7791f', '#7b4bb7', '#1f7a99', '#b0436e', '#5c6b2f'];
-export const diceColor = (user: number | null | undefined): string => (user ? COLORS[user % COLORS.length] : COLORS[0]);
+export const diceColor = (user: number | 'dm' | null | undefined, chosen?: Record<string, string>): string =>
+  (user != null && chosen?.[user]) || (typeof user === 'number' && user ? COLORS[user % COLORS.length] : COLORS[0]);
+
+/** 设置界面的「试掷一下」 */
+export function previewDice(color: string, physics?: DicePhysics): void {
+  const r = (n: number) => 1 + Math.floor(Math.random() * n);
+  void play({ dice: [{ faces: 20, value: r(20), color }, { faces: 20, value: r(20), color, dropped: true }, { faces: 6, value: r(6), color }, { faces: 8, value: r(8), color }], label: '试掷' }, physics);
+}
 
 const SUPPORTED = new Set([4, 6, 8, 10, 12, 20, 100]);
 
@@ -82,11 +126,14 @@ function diceOfExpr(r: RolledExpr, color: string): DieSpec[] {
 
 /* ───── 指令框 ───── */
 const seenChat = new Set<string>();
-let chatPrimed = false;
+let chatPrimed = '';
 
-/** 新出现的 /r 播一下。第一次调用只记下已有的（刚打开页面不补播历史） */
-export function scanChat(chat: ReadonlyArray<ChatRoll>, me: number, physics?: DicePhysics): void {
-  if (!chatPrimed) { chatPrimed = true; for (const c of chat) seenChat.add(c.id); return; }
+/**
+ * 新出现的 /r 播一下。换了遭遇（或第一次打开）只记下已有的，不补播历史。
+ * 调用方要保证这时候拿到的是完整的记录（战役遭遇：服务器的状态到了之后再调）。
+ */
+export function scanChat(encounter: string, chat: ReadonlyArray<ChatRoll>, me: number, physics?: DicePhysics, colors?: Record<string, string>): void {
+  if (chatPrimed !== encounter) { chatPrimed = encounter; for (const c of chat) seenChat.add(c.id); return; }
   const scope = diceFxScope();
   for (const c of chat) {
     if (seenChat.has(c.id)) continue;
@@ -94,7 +141,7 @@ export function scanChat(chat: ReadonlyArray<ChatRoll>, me: number, physics?: Di
     if (scope === 'off' || !c.results.length) continue;
     const mine = c.by === me;
     if ((c.private || scope === 'mine') && !mine) continue;
-    const color = diceColor(c.by);
+    const color = diceColor(c.by, colors);
     const dice = c.results.flatMap((r) => diceOfExpr(r, color));
     void play({ dice, seed: seedOf('chat:' + c.id), label: `${c.byName}${c.note ? `：${c.note}` : ''}` }, physics);
   }

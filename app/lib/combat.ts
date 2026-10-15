@@ -13,7 +13,7 @@ import {
 } from '../../src/combat';
 import { api } from './api';
 import type { Tpl } from './area';
-import type { DicePhysics } from './dicefx';
+import { setDiceLocalColor, setDiceLocalPhys, type DicePhysics } from './dicefx';
 import type { Engine } from './engine';
 import { actions as cardActions, getApp, stripDerived } from './store';
 
@@ -84,6 +84,8 @@ export interface Remote {
   actingAs: string | null;
   /** 3D 骰子的物理参数（DM 设，各端共用） */
   dicePhys: DicePhysics;
+  /** 每个人的骰子颜色（用户 id / 'dm' → hex） */
+  diceColors: Record<string, string>;
   /** 别人（和自己）的标点、分享的测距：过一会儿自己消失 */
   pings: Ping[];
   connected: boolean;
@@ -102,7 +104,7 @@ export interface MapState {
 }
 interface RemoteState {
   save: SessionSave; owners: Record<string, number>; cards: Record<string, string>; name: string;
-  dice?: Record<string, DiceMode>; hidden?: string[]; map?: MapState; chat?: ChatRoll[]; actingAs?: string | null; dicePhys?: DicePhysics;
+  dice?: Record<string, DiceMode>; hidden?: string[]; map?: MapState; chat?: ChatRoll[]; actingAs?: string | null; dicePhys?: DicePhysics; diceColors?: Record<string, string>;
 }
 
 let ui: CombatUi = { session: null, version: 0, links: {}, dice: {}, selected: null, targets: [], aim: null, chat: [], toast: null, remote: null };
@@ -222,7 +224,7 @@ function applyRemote(data: RemoteState): void {
     const cur = st.round !== null ? st.order[st.turnIndex] : null;
     const selected = ui.selected && st.combatants[ui.selected] ? ui.selected : cur ?? Object.keys(st.combatants)[0] ?? null;
     set({ session, links: data.cards, selected, targets: ui.targets.filter((t) => st.combatants[t]), remote: {
-      ...ui.remote, owners: data.owners, name: data.name, dice: data.dice ?? {}, hidden: data.hidden ?? [], map: data.map ?? ui.remote.map, chat: data.chat ?? ui.remote.chat, actingAs: data.actingAs ?? null, dicePhys: data.dicePhys ?? {}, connected: true,
+      ...ui.remote, owners: data.owners, name: data.name, dice: data.dice ?? {}, hidden: data.hidden ?? [], map: data.map ?? ui.remote.map, chat: data.chat ?? ui.remote.chat, actingAs: data.actingAs ?? null, dicePhys: data.dicePhys ?? {}, diceColors: data.diceColors ?? {}, connected: true,
     } }, false);
   } catch (e) {
     toast('同步遭遇失败：' + (e as Error).message);
@@ -237,7 +239,7 @@ export const combat = {
     const info = await api<RemoteState & { role: 'dm' | 'player'; me: number; campaignId: string; map: MapState }>('GET', `encounters/${encounterId}`);
     ui = {
       ...ui, selected: null, targets: [],
-      remote: { id: encounterId, name: info.name, campaignId: info.campaignId, role: info.role, me: info.me, owners: info.owners, dice: {}, hidden: [], map: info.map, chat: [], actingAs: null, pings: [], dicePhys: {}, connected: false },
+      remote: { id: encounterId, name: info.name, campaignId: info.campaignId, role: info.role, me: info.me, owners: info.owners, dice: {}, hidden: [], map: info.map, chat: [], actingAs: null, pings: [], dicePhys: {}, diceColors: {}, connected: false },
     };
     applyRemote(info);
     stream = new EventSource(new URL('api/', document.baseURI).pathname + `encounters/${encounterId}/stream`);
@@ -326,6 +328,12 @@ export const combat = {
   /** DM：3D 骰子的物理参数 */
   setDicePhys(p: DicePhysics): void {
     if (ui.remote) act({ op: 'dicePhys', ...p });
+    else { setDiceLocalPhys(p); set({}, false); }
+  },
+  /** 自己的骰子颜色（空 = 默认） */
+  setDiceColor(color: string): void {
+    if (ui.remote) act({ op: 'diceColor', color });
+    else { setDiceLocalColor(color || null); set({}, false); }
   },
   /** 乐观更新地图（拖棋子、画线不用等服务器回来） */
   patchMap(fn: (m: MapState) => void): void {

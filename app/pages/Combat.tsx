@@ -16,7 +16,7 @@ import { Log } from './combat/Log';
 import { MapView } from './combat/MapView';
 import { OnlineDialog } from './combat/Online';
 import { TokenMenu } from './combat/TokenMenu';
-import { diceColor, scanChat, scanTape } from '../lib/dicefx';
+import { diceColor, diceLocalColor, diceLocalPhys, scanChat, scanTape } from '../lib/dicefx';
 import { txTitle } from '../lib/events';
 import { namer } from './combat/shared';
 import { Roster } from './combat/Roster';
@@ -52,20 +52,25 @@ export function CombatPage({ engine }: { engine: Engine }) {
   // 3D 掷骰动画：新掷出来的骰子（引擎掷的、指令框 /r）播一下
   useEffect(() => {
     const ss = ui.session;
-    if (!ss) return;
     const r = ui.remote;
+    // 战役遭遇：服务器的状态到了再扫（不然先记下的是空的历史，状态一到就把旧骰子全播一遍）
+    if (!ss || (r && !r.connected)) return;
+    const enc = r ? r.id : 'local';
+    const phys = r ? r.dicePhys : diceLocalPhys();
+    const colors: Record<string, string> = r ? r.diceColors : { 0: diceLocalColor() ?? '', dm: diceLocalColor() ?? '' };
     const nm = namer(ss);
     const ctlOf = (id: string | null) => (id ? ss.state.combatants[id]?.controller ?? id : null);
     scanTape(ss, {
-      encounter: r ? r.id : 'local',
-      physics: r?.dicePhys,
+      encounter: enc,
+      physics: phys,
       subject: (cmd) => { const c = cmd as Record<string, unknown>; return String(c.actor ?? c.roller ?? c.id ?? '') || null; },
       visible: (id) => !id || !combat.isSecret(id),
       mine: (id) => !r || (!!id && r.owners[ctlOf(id) ?? ''] === r.me) || (!id && r.role === 'dm'),
-      color: (id) => diceColor(r ? r.owners[ctlOf(id) ?? ''] : null),
+      // 玩家的角色用玩家的颜色，其余（怪物、DM 的 NPC）用 DM 的
+      color: (id) => diceColor(r ? r.owners[ctlOf(id) ?? ''] ?? 'dm' : 0, colors),
       label: (cmd) => txTitle(cmd as { type: string }, nm),
     });
-    scanChat(r ? r.chat : ui.chat, r ? r.me : 0, r?.dicePhys);
+    scanChat(enc, r ? r.chat : ui.chat, r ? r.me : 0, phys, colors);
   });
 
   const s = ui.session;
