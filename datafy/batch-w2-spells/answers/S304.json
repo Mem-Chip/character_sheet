@@ -1,0 +1,63 @@
+{
+  "name": "剑刃护壁",
+  "automation": "partial",
+  "text": "专注至多 10 分钟。在 90 尺内创造旋转剑刃之墙，可选直墙（长至多 100 尺、高 20 尺、厚 5 尺）或环形墙（直径至多 60 尺、高 20 尺、厚 5 尺）。墙体提供四分之三掩护，占据空间视为困难地形。出现时位于护壁空间内的生物须进行敏捷豁免，失败受到 6d10 点力场伤害，成功半数。生物进入护壁或在其内结束回合时同样须进行该豁免（每回合限一次）。掩护、困难地形与入内/结束回合触发需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "剑刃护壁",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 6
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "area",
+        "range": 90,
+        "area": {
+          "shape": "line",
+          "length": 100,
+          "width": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "d",
+                  "dice": "6d10",
+                  "type": "力场"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "d",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

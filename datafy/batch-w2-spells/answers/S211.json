@@ -1,0 +1,70 @@
+{
+  "name": "防死结界",
+  "automation": "partial",
+  "text": "持续 8 小时；目标生命值降至 0 时改为降至 1 并结束法术；直接致死而不造成伤害的效应使其失效并结束法术需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "防死结界",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "防死结界"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "防死结界": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "hours": 8
+      },
+      "triggers": [
+        {
+          "id": "ward",
+          "label": "防死结界：免死并降为 1 生命值",
+          "on": "reducedTo0",
+          "role": "target",
+          "window": "before",
+          "modify": [
+            {
+              "op": "setHp",
+              "value": 1
+            }
+          ],
+          "do": [
+            {
+              "kind": "removeEffect",
+              "match": {
+                "name": "防死结界"
+              },
+              "from": "self"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

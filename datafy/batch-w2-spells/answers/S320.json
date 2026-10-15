@@ -1,0 +1,153 @@
+{
+  "name": "阳炎射线",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。发射 5 尺宽、60 尺长的线状光芒，区域内生物进行体质豁免，失败受到 6d8 光耀伤害且在施法者下一回合开始前陷入目盲，成功受半数伤害。手中散发 30 尺明亮光照与 30 尺微光光照（视为阳光）。持续时间内每回合可以动作再次发射射线（阳光与光线方向需手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "阳炎射线",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 6
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "line",
+          "length": 60,
+          "width": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "阳炎射线",
+          "to": "self"
+        },
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "d",
+                  "dice": "6d8",
+                  "type": "光耀"
+                },
+                {
+                  "kind": "applyEffect",
+                  "template": "阳炎射线：目盲",
+                  "to": "target"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "d",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "阳炎射线：重现射线",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating && turn.isMine",
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "line",
+          "length": 60,
+          "width": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "d",
+                  "dice": "6d8",
+                  "type": "光耀"
+                },
+                {
+                  "kind": "applyEffect",
+                  "template": "阳炎射线：目盲",
+                  "to": "target"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "d",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "阳炎射线": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 1
+      },
+      "text": "手中散发 30 尺明亮光照与 30 尺微光光照（等同于阳光）。持续时间内每回合可以动作再次发射阳炎射线。"
+    },
+    "阳炎射线：目盲": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        }
+      },
+      "implies": [
+        "XPHB:condition:目盲"
+      ]
+    }
+  }
+}

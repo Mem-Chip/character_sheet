@@ -1,0 +1,74 @@
+{
+  "name": "艾伐黑触手",
+  "automation": "partial",
+  "text": "使 20 尺立方区域地面变为困难地形；区域内生物进行力量豁免，失败受 3d6 钝击伤害并陷入束缚状态；后续进入或在其中结束其回合的豁免、以及以动作进行力量（运动）检定挣脱需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "艾伐黑触手",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 90,
+        "area": {
+          "shape": "cube",
+          "size": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "str",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "dice": "3d6",
+                  "type": "钝击"
+                },
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "黑触手束缚"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "区域地面变为困难地形；生物进入区域或在其中结束其回合也须进行该力量豁免；被束缚生物可用动作通过力量（运动）检定挣脱"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "黑触手束缚": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:束缚"
+      ]
+    }
+  }
+}

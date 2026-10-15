@@ -1,0 +1,73 @@
+{
+  "name": "地震术",
+  "automation": "partial",
+  "text": "500 尺内以一点为中心 100 尺圆形范围持续震颤（专注 1 分钟）。地面为困难地形。施展及施法者回合结束时，地面生物敏捷豁免，失败倒地且专注被打断；裂缝与建筑崩塌效应需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "地震术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 8
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 500,
+        "area": {
+          "shape": "cylinder",
+          "radius": 100
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "地震震颤"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "区域内地面视为困难地形。施法者每个回合结束时，区域地面生物必须重复进行敏捷豁免，失败倒地且专注打断；撕开裂缝与破坏建筑需手动判定处理"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "地震震颤": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:倒地"
+      ],
+      "flags": {
+        "breaksConcentration": true
+      },
+      "text": "陷入倒地状态，专注被打断。"
+    }
+  }
+}

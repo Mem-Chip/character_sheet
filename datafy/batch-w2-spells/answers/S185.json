@@ -1,0 +1,59 @@
+{
+  "name": "闪电束",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "闪电束",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "line",
+          "length": 100,
+          "width": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "lb",
+                  "dice": "(5 + slot.level)d6",
+                  "type": "闪电"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "lb",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

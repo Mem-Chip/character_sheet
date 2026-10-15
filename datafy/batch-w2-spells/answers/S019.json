@@ -1,0 +1,44 @@
+{
+  "name": "鸣雷破",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "鸣雷破",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "emanation",
+          "radius": 5
+        },
+        "filter": "target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "dice": "(1 + floor((self.level + 1) / 6))d6",
+                  "type": "雷鸣"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "name": "浓酸球",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "浓酸球",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 150,
+        "area": {
+          "shape": "sphere",
+          "radius": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "vs",
+                  "dice": "(2 + 2 * slot.level)d4",
+                  "type": "强酸"
+                },
+                {
+                  "kind": "applyEffect",
+                  "template": "浓酸球：持续强酸",
+                  "to": "target"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "vs",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "浓酸球：持续强酸": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "triggers": [
+        {
+          "id": "acid-end",
+          "label": "浓酸球：回合结束强酸伤害",
+          "on": "turnEnded",
+          "role": "actor",
+          "do": [
+            {
+              "kind": "damage",
+              "dice": "5d4",
+              "type": "强酸",
+              "to": "self"
+            }
+          ]
+        }
+      ],
+      "text": "豁免失败残留强酸，下个回合结束时受到 5d4 强酸伤害。"
+    }
+  }
+}

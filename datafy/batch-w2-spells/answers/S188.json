@@ -1,0 +1,205 @@
+{
+  "name": "守卫刻文",
+  "automation": "partial",
+  "text": "施法耗时 1 小时。在表面或物件上刻画刻纹并设定触发条件。可选择爆炸符文（触发时 20 尺半径球状区域内每个生物进行敏捷豁免，失败受 (2 + slot.level)d8 点强酸/寒冷/火焰/闪电/雷鸣伤害，成功减半）或法术刻纹（储存一道已准备且环阶不超过此法术位的法术，触发时释放）。符文触发判定与法术储存需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "守卫刻文",
+      "activation": {
+        "minutes": 60
+      },
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "touch",
+        "area": {
+          "shape": "sphere",
+          "radius": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "选择守卫刻文效果",
+          "options": [
+            {
+              "label": "爆炸符文：火焰",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "dex",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        {
+                          "kind": "damage",
+                          "id": "gow_fire",
+                          "dice": "(2 + slot.level)d8",
+                          "type": "火焰"
+                        }
+                      ],
+                      "onSuccess": [
+                        {
+                          "kind": "damage",
+                          "ref": "gow_fire",
+                          "scale": 0.5
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "爆炸符文：寒冷",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "dex",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        {
+                          "kind": "damage",
+                          "id": "gow_cold",
+                          "dice": "(2 + slot.level)d8",
+                          "type": "寒冷"
+                        }
+                      ],
+                      "onSuccess": [
+                        {
+                          "kind": "damage",
+                          "ref": "gow_cold",
+                          "scale": 0.5
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "爆炸符文：闪电",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "dex",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        {
+                          "kind": "damage",
+                          "id": "gow_lightning",
+                          "dice": "(2 + slot.level)d8",
+                          "type": "闪电"
+                        }
+                      ],
+                      "onSuccess": [
+                        {
+                          "kind": "damage",
+                          "ref": "gow_lightning",
+                          "scale": 0.5
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "爆炸符文：雷鸣",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "dex",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        {
+                          "kind": "damage",
+                          "id": "gow_thunder",
+                          "dice": "(2 + slot.level)d8",
+                          "type": "雷鸣"
+                        }
+                      ],
+                      "onSuccess": [
+                        {
+                          "kind": "damage",
+                          "ref": "gow_thunder",
+                          "scale": 0.5
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "爆炸符文：强酸",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "dex",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        {
+                          "kind": "damage",
+                          "id": "gow_acid",
+                          "dice": "(2 + slot.level)d8",
+                          "type": "强酸"
+                        }
+                      ],
+                      "onSuccess": [
+                        {
+                          "kind": "damage",
+                          "ref": "gow_acid",
+                          "scale": 0.5
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "法术刻纹",
+              "do": [
+                {
+                  "kind": "note",
+                  "text": "储存一道已准备且环阶不超过此法术位的法术，触发时以触发者为目标或中心释放"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

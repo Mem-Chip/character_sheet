@@ -1,0 +1,73 @@
+{
+  "name": "雪雨暴",
+  "automation": "partial",
+  "text": "在 150 尺内指定一点产生高 40 尺、半径 20 尺柱状区域，造成重度遮蔽并浇熄明火，地面为困难地形；生物在一个回合内首次进入或在其中开始回合时进行敏捷豁免，失败陷入倒地状态并失去专注（地形、遮蔽与进出判定需手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "雪雨暴",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 150,
+        "area": {
+          "shape": "cylinder",
+          "radius": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "template": "雪雨暴",
+                  "to": "target"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "区域造成重度遮蔽并浇熄明火，地面为困难地形；生物一回合内首次进入或在其中开始回合时须进行敏捷豁免，失败倒地且打断专注"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "雪雨暴": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:倒地"
+      ],
+      "flags": {
+        "breaksConcentration": true
+      },
+      "text": "陷入倒地状态并失去专注"
+    }
+  }
+}

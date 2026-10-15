@@ -1,0 +1,47 @@
+{
+  "name": "匕首之云",
+  "automation": "partial",
+  "text": "在 60 尺内指定一点咒唤 5 尺立方的旋转匕首，专注至多 1 分钟。区域内的每名生物受到 (2 * slot.level)d4 点挥砍伤害。一名生物进入立方区域、在区域结束其回合或立方移动至其占据空间时，同样受到此伤害（每回合每名生物限一次）。后续回合中可以一个魔法动作将立方传送至多 30 尺。进入/结束回合伤害、传送立方及每回合一次限制需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "匕首之云",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": {
+          "shape": "cube",
+          "size": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "damage",
+              "dice": "(2 * slot.level)d4",
+              "type": "挥砍"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

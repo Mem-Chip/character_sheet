@@ -1,0 +1,53 @@
+{
+  "name": "雷鸣斩",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "雷鸣斩",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "trigger": {
+        "on": "attackHit",
+        "role": "actor",
+        "window": "before",
+        "when": "attack.melee && (attack.weapon || attack.unarmed)"
+      },
+      "requires": "turn.isMine",
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "root": [
+        {
+          "kind": "addDamage",
+          "dice": "(1 + slot.level)d6",
+          "type": "雷鸣"
+        },
+        {
+          "kind": "save",
+          "ability": "str",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "move",
+              "mode": "push",
+              "ft": 10
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "XPHB:condition:倒地"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "name": "心灵尖刺",
+  "automation": "partial",
+  "text": "向 120 尺内可见生物造成心灵伤害。目标进行感知豁免，失败受到 3d8（升环每环+1d8）心灵伤害，专注至多 1 小时内施法者时刻得知其位置且无法对施法者躲藏，对抗施法者时不能从隐形状态受益（位置与隐形无效需手动处理）；豁免成功受到半数伤害且不附加追踪效应。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "心灵尖刺",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "concentration": {
+        "hours": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 120
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "(1 + slot.level)d8",
+              "type": "心灵",
+              "id": "d"
+            },
+            {
+              "kind": "applyEffect",
+              "template": "心灵尖刺",
+              "to": "target"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "d",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "心灵尖刺": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "hours": 1
+      },
+      "text": "施法者时刻得知目标位置（只要处于同位面），目标不能对施法者躲藏，且若处于隐形状态对抗施法者时不能从中受益。"
+    }
+  }
+}

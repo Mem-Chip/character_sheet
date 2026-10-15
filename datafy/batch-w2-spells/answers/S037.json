@@ -1,0 +1,60 @@
+{
+  "name": "冰刃",
+  "automation": "partial",
+  "text": "远程法术攻击命中目标造成 1d10 穿刺伤害；无论命中与否，目标均需进行敏捷豁免，失败受到 (1 + slot.level)d6 寒冷伤害；目标周围 5 尺内其他生物的豁免与伤害需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "冰刃",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "ranged": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "1d10",
+              "type": "穿刺"
+            }
+          ]
+        },
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "(1 + slot.level)d6",
+              "type": "寒冷"
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "目标周围 5 尺内的其他生物也必须进行敏捷豁免，失败受到相同寒冷伤害（手动处理）"
+        }
+      ]
+    }
+  ]
+}

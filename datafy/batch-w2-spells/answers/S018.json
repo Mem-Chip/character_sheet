@@ -1,0 +1,62 @@
+{
+  "name": "冷冻射线",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "冷冻射线",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "ranged": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "(1 + floor((self.level + 1) / 6))d8",
+              "type": "寒冷"
+            },
+            {
+              "kind": "applyEffect",
+              "template": "冷冻射线",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "冷冻射线": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        }
+      },
+      "statics": [
+        {
+          "kind": "speed",
+          "bonus": -10
+        }
+      ]
+    }
+  }
+}

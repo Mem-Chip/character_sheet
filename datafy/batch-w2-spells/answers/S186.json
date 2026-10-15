@@ -1,0 +1,59 @@
+{
+  "name": "闪现术",
+  "automation": "partial",
+  "text": "在法术持续时间内每次自己回合结束时掷 1d6，4~6 消失前往以太位面（原位面生物无法观测或影响你）；下一回合开始时返回原先位置 10 尺内未被占据空间。位面转移与空间位移需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "闪现术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "闪现术",
+          "to": "self"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "闪现术": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 1
+      },
+      "triggers": [
+        {
+          "id": "blink-turn-end",
+          "label": "闪现术：回合结束掷骰",
+          "on": "turnEnded",
+          "role": "actor",
+          "do": [
+            {
+              "kind": "note",
+              "text": "闪现术：掷 1d6，若为 4~6 则消失并进入以太位面；下个回合开始时返回原位 10 尺内可见的未被占据空间"
+            }
+          ]
+        }
+      ],
+      "text": "每次自己回合结束时掷 1d6，结果 4~6 时消失进入以太位面；下一回合开始时返回原位 10 尺内未被占据空间"
+    }
+  }
+}

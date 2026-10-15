@@ -1,0 +1,69 @@
+{
+  "name": "变形术",
+  "automation": "partial",
+  "text": "目标进行感知豁免，失败被变形为野兽形态（无法施法与说话；替换为野兽数据、赋予临时生命值需手动处理；临时生命值耗尽时法术提前结束）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "变形术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "concentration": {
+        "hours": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "变形术"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "变形术": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "flags": {
+        "cannot": [
+          "castSpells",
+          "speak"
+        ]
+      },
+      "duration": {
+        "endsOn": [
+          {
+            "event": "damageApplied",
+            "when": "self.tempHp <= 0"
+          }
+        ]
+      },
+      "text": "变形为野兽形态；获得等同于野兽生命值的临时生命值（手动填入）；临时生命值耗尽时提前结束；替换为野兽数据由人处理"
+    }
+  }
+}

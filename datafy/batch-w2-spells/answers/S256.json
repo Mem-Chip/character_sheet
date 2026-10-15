@@ -1,0 +1,104 @@
+{
+  "name": "高等复原术",
+  "automation": "partial",
+  "text": "触碰一名生物，选择并移除其身上的下列效应之一：1 级力竭；魅惑或石化状态；一道诅咒（含同调诅咒）；一项属性值减损；生命值上限的降低。属性减损与生命上限恢复需手动调整。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "高等复原术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "高等复原术：选择移除的效应",
+          "options": [
+            {
+              "label": "移除 1 级力竭",
+              "do": [
+                {
+                  "kind": "removeEffect",
+                  "match": {
+                    "key": "XPHB:condition:力竭",
+                    "name": "力竭"
+                  },
+                  "from": "target"
+                }
+              ]
+            },
+            {
+              "label": "解除魅惑",
+              "when": "target.has('魅惑')",
+              "do": [
+                {
+                  "kind": "removeEffect",
+                  "match": {
+                    "key": "XPHB:condition:魅惑",
+                    "name": "魅惑"
+                  },
+                  "from": "target"
+                }
+              ]
+            },
+            {
+              "label": "解除石化",
+              "when": "target.has('石化')",
+              "do": [
+                {
+                  "kind": "removeEffect",
+                  "match": {
+                    "key": "XPHB:condition:石化",
+                    "name": "石化"
+                  },
+                  "from": "target"
+                }
+              ]
+            },
+            {
+              "label": "解除诅咒",
+              "do": [
+                {
+                  "kind": "note",
+                  "text": "移除目标身上的一道诅咒（含被诅咒魔法物品同调）"
+                }
+              ]
+            },
+            {
+              "label": "恢复属性值减损",
+              "do": [
+                {
+                  "kind": "note",
+                  "text": "恢复对目标某项属性值的减损"
+                }
+              ]
+            },
+            {
+              "label": "恢复生命上限降低",
+              "do": [
+                {
+                  "kind": "note",
+                  "text": "恢复目标生命值上限的降低"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

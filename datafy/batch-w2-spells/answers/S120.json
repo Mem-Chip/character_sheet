@@ -1,0 +1,80 @@
+{
+  "name": "马友夫强酸箭",
+  "automation": "partial",
+  "text": "远程法术攻击，命中造成 4d4（升环每环+1d4）强酸伤害，目标在其下一回合结束时再受到 2d4 强酸伤害（升环后续额外伤害需手动调整）；未命中则造成初始伤害的一半。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "马友夫强酸箭",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 90
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "ranged": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "id": "acid",
+              "dice": "(2 + slot.level)d4",
+              "type": "强酸"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "强酸附着",
+              "duration": {
+                "until": {
+                  "at": "turnEnd",
+                  "of": "bearer",
+                  "nth": 1
+                }
+              }
+            }
+          ],
+          "onMiss": [
+            {
+              "kind": "damage",
+              "ref": "acid",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "强酸附着": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "在其回合结束时受到 2d4 强酸伤害（高环法术位施展时每高一环增加 1d4）。",
+      "onEnd": [
+        {
+          "kind": "damage",
+          "dice": "2d4",
+          "type": "强酸"
+        }
+      ]
+    }
+  }
+}

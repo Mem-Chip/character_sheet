@@ -1,0 +1,60 @@
+{
+  "name": "医疗术",
+  "automation": "full",
+  "text": "指定 60 尺内一个你能看见的生物，使其恢复 70 点生命值（升环每比 6 环高一环治疗量增加 10 点），并终止正在影响目标的目盲、耳聋和中毒状态。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "医疗术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 6
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "heal",
+          "amount": "70 + 10 * (slot.level - 6)",
+          "to": "target"
+        },
+        {
+          "kind": "removeEffect",
+          "match": {
+            "key": "XPHB:condition:目盲",
+            "name": "目盲"
+          },
+          "from": "target"
+        },
+        {
+          "kind": "removeEffect",
+          "match": {
+            "key": "XPHB:condition:耳聋",
+            "name": "耳聋"
+          },
+          "from": "target"
+        },
+        {
+          "kind": "removeEffect",
+          "match": {
+            "key": "XPHB:condition:中毒",
+            "name": "中毒"
+          },
+          "from": "target"
+        }
+      ]
+    }
+  ]
+}

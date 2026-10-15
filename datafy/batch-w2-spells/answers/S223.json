@@ -1,0 +1,76 @@
+{
+  "name": "困惑术",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。90 尺内 10 尺球状区域生物进行感知豁免，失败陷入困惑（禁止反应和附赠动作，回合结束可做感知豁免尝试结束效应）。回合开始掷 1d10 决定行为以及升环增加半径需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "困惑术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 90,
+        "area": {
+          "shape": "sphere",
+          "radius": 10
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "困惑"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "困惑": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "flags": {
+        "blocks": [
+          "reaction",
+          "bonus"
+        ]
+      },
+      "duration": {
+        "minutes": 1,
+        "saveEnds": {
+          "ability": "wis",
+          "at": "turnEnd"
+        }
+      },
+      "text": "不能执行反应和附赠动作。每个回合开始时掷 1d10 决定行为：1-向随机方向移动；2~6-不移动也不行动；7~8-对触及内随机生物发动近战攻击；9~10-自由行动。回合结束时可重做感知豁免。"
+    }
+  }
+}

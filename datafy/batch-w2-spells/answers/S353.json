@@ -1,0 +1,73 @@
+{
+  "name": "摧心术",
+  "automation": "partial",
+  "text": "目标进行智力豁免，失败受 10d12 心灵伤害并无法施法与执行魔法动作（每 30 日可重复豁免，高等复原术/医疗术/祈愿术可解除）；成功受半数伤害。无法执行魔法动作与 30 日重复豁免需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "摧心术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 8
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 150,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "int",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "d",
+              "dice": "10d12",
+              "type": "心灵"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "摧心术"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "d",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "摧心术": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "flags": {
+        "cannot": [
+          "castSpells"
+        ]
+      },
+      "duration": {
+        "manual": true
+      },
+      "text": "无法施展法术也无法执行魔法动作。受术生物每过 30 日可在当日结束时重复智力豁免，成功则终止；也可被高等复原术、医疗术、祈愿术终止。"
+    }
+  }
+}

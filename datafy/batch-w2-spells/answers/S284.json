@@ -1,0 +1,69 @@
+{
+  "name": "焰击术",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "焰击术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": {
+          "shape": "cylinder",
+          "radius": 10
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "fire",
+                  "dice": "(slot.level)d6",
+                  "type": "火焰"
+                },
+                {
+                  "kind": "damage",
+                  "id": "radiant",
+                  "dice": "(slot.level)d6",
+                  "type": "光耀"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "fire",
+                  "scale": 0.5
+                },
+                {
+                  "kind": "damage",
+                  "ref": "radiant",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

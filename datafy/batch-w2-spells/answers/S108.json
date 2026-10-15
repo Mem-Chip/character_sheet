@@ -1,0 +1,59 @@
+{
+  "name": "粉碎音波",
+  "automation": "partial",
+  "text": "以该点为中心半径 10 尺球状区域内的所有生物进行体质豁免，失败受到 3d8（每升一环 +1d8）雷鸣伤害，成功受到半数伤害。构装生物进行该豁免具有劣势以及未被携带的非魔法物件受损需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "粉碎音波",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": {
+          "shape": "sphere",
+          "radius": 10
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "shatter",
+                  "dice": "(1 + slot.level)d8",
+                  "type": "雷鸣"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "shatter",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

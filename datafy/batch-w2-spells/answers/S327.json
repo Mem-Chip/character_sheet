@@ -1,0 +1,73 @@
+{
+  "name": "重伤术",
+  "automation": "partial",
+  "text": "指定 60 尺内可见的一个生物进行体质豁免。豁免失败受到 14d6 点暗蚀伤害，且生命值上限降低等同所受暗蚀伤害点数（不能降至 1 以下，持续至完成长休）；豁免成功受到半数伤害。生命值上限降低需手动调整。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "重伤术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 6
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "harmDmg",
+              "dice": "14d6",
+              "type": "黯蚀"
+            },
+            {
+              "kind": "applyEffect",
+              "template": "重伤术",
+              "to": "target"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "harmDmg",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "重伤术": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "endsOn": [
+          {
+            "event": "restCompleted",
+            "when": "event.kind == 'long'"
+          }
+        ]
+      },
+      "text": "生命值上限降低等同于受到的暗蚀伤害点数（不能降至 1 以下），持续至完成长休（生命值上限降低需手动调整）。"
+    }
+  }
+}

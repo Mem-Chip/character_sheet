@@ -1,0 +1,54 @@
+{
+  "name": "禁锢术",
+  "automation": "partial",
+  "text": "施法时间 1 分钟。30 尺内可见生物进行感知豁免，成功不受影响且 24 小时内免疫此法术；失败则被永久禁锢（无需呼吸吃喝、不衰老、无法传送、预言无法定位感知），并承受埋葬、锁链（束缚）、避世监牢、微缩牢笼或沉睡（昏迷）之一。具体监禁形式、定制解除条件与 9 环解除魔法交互需人工处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "禁锢术",
+      "activation": {
+        "minutes": 1
+      },
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 9
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "禁锢术"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "禁锢术": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "被魔法禁锢永久封印；无需呼吸吃喝、不衰老、无法传送、免疫预言定位；承受选定的禁锢形态（由DM与玩家设定释放条件与具体形式）"
+    }
+  }
+}

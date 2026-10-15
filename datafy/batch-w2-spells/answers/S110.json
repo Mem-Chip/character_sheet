@@ -1,0 +1,67 @@
+{
+  "name": "浮空术",
+  "automation": "partial",
+  "text": "专注至多 10 分钟。60 尺内一名生物或未固定物件垂直上升至多 20 尺并悬浮。非自愿生物进行体质豁免以避免受影响。目标只能通过推拉固定表面攀爬移动。施法者可在其回合改变目标悬浮高度至多 20 尺（自身为目标则为移动的一部分，他人则需动作）。垂直高度与空间移动需在地图上手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "浮空术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "if",
+          "when": "target.id == self.id",
+          "then": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "浮空术"
+            }
+          ],
+          "else": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "浮空术"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "浮空术": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "处于悬浮状态，垂直上升至多 20 尺。只能通过推拉固定表面来移动（视同攀爬）。施法者可在其回合改变其高度至多 20 尺；法术终止时缓缓飘落到地面。"
+    }
+  }
+}

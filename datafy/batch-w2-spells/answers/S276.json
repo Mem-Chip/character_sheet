@@ -1,0 +1,93 @@
+{
+  "name": "突触静止",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "突触静止",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "sphere",
+          "radius": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "int",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "dice": "8d6",
+                  "type": "心灵",
+                  "id": "d"
+                },
+                {
+                  "kind": "applyEffect",
+                  "template": "突触静止",
+                  "to": "target"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "d",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "突触静止": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 1,
+        "saveEnds": {
+          "ability": "int",
+          "at": "turnEnd"
+        }
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": [
+              "attack",
+              "check",
+              "concentration"
+            ]
+          },
+          "who": "bearer",
+          "op": "addDice",
+          "value": "-1d6",
+          "label": "突触静止"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "name": "假象术",
+  "automation": "partial",
+  "text": "自身获得隐形状态并创造一个幻象分身，持续至多 1 小时（专注）。发动攻击、造成伤害或施展法术会结束自身隐形（分身仍持续存在）。可以动作操纵分身移动与言行，并通过其感官视听（需手动在地图与叙事中操控）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "假象术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "hours": 1
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "假象术"
+        },
+        {
+          "kind": "note",
+          "text": "自身获得隐形，原地出现幻象分身。攻击、造成伤害或施法会终止隐形，但分身持续保留。可以动作操控分身移动与交互。"
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "假象术：操控分身",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating && self.hasEffect('假象术')",
+      "root": [
+        {
+          "kind": "note",
+          "text": "以一个魔法动作令幻象分身以至多两倍于你的速度移动，并操纵其言行举止或通过其感官视听。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "假象术": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:隐形"
+      ],
+      "text": "处于隐形状态并在原地留有幻象分身。若发动攻击、造成伤害或施展法术，隐形随之结束（分身仍持续直至专注结束）。可用动作操控分身移动两倍速度并视听。"
+    }
+  }
+}

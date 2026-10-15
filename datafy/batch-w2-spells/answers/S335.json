@@ -1,0 +1,56 @@
+{
+  "name": "虹光喷射",
+  "automation": "partial",
+  "text": "向 60 尺锥状区域喷射彩光。区域内每名生物进行一次敏捷豁免，并掷 1d8 决定受到的射线（1红:12d6火焰; 2橙:12d6强酸; 3黄:12d6闪电; 4绿:12d6毒素; 5蓝:12d6寒冷，成功均半伤; 6靛:束缚及石化判定; 7紫:目盲及位面放逐; 8特殊:承受两道射线）。具体射线类型与多阶段状态需手动结算。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "虹光喷射",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 7
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": {
+          "shape": "cone",
+          "length": 60
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "note",
+                  "text": "豁免失败：掷 1d8 结算射线（1~5 受 12d6 对应属性伤害；6 陷入束缚并进行后续体质豁免；7 陷入目盲并进行后续感知豁免；8 掷两道射线）"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "note",
+                  "text": "豁免成功：若为 1~5 号射线则受到 12d6 对应属性伤害的一半；6~7 号射线不承受不良状态"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

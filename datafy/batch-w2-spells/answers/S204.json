@@ -1,0 +1,60 @@
+{
+  "name": "致盲斩",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "致盲斩",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "trigger": {
+        "on": "attackHit",
+        "role": "actor",
+        "window": "before",
+        "when": "attack.melee && (attack.weapon || attack.unarmed)"
+      },
+      "requires": "turn.isMine",
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "root": [
+        {
+          "kind": "addDamage",
+          "dice": "(slot.level)d8",
+          "type": "光耀"
+        },
+        {
+          "kind": "applyEffect",
+          "template": "致盲斩",
+          "to": "target"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "致盲斩": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:目盲"
+      ],
+      "duration": {
+        "minutes": 1,
+        "saveEnds": {
+          "ability": "con",
+          "dc": "source.spell.dc",
+          "at": "turnEnd"
+        }
+      }
+    }
+  }
+}

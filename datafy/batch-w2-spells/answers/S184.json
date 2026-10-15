@@ -1,0 +1,57 @@
+{
+  "name": "闪电箭矢",
+  "automation": "partial",
+  "text": "使用武器发动远程攻击命中或失手后立即以附赠动作施展。替代该次攻击的原有伤害与效果，命中时目标受到 4d8（每升一环 +1d8）闪电伤害，失手时受到半数伤害；无论命中与否，目标周围 10 尺内的每个生物须进行敏捷豁免，失败受到 2d8（每升一环 +1d8）闪电伤害，成功半数。原攻击伤害替代与周围生物溅射豁免伤害需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "闪电箭矢",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "trigger": {
+        "on": [
+          "attackHit",
+          "attackMissed"
+        ],
+        "role": "actor",
+        "when": "attack.ranged && attack.weapon"
+      },
+      "requires": "turn.isMine",
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "root": [
+        {
+          "kind": "if",
+          "when": "!roll.failing",
+          "then": [
+            {
+              "kind": "damage",
+              "dice": "(1 + slot.level)d8",
+              "type": "闪电"
+            }
+          ],
+          "else": [
+            {
+              "kind": "damage",
+              "dice": "(1 + slot.level)d8",
+              "scale": 0.5,
+              "type": "闪电"
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "闪电箭矢：目标周围 10 尺内的每个生物必须进行敏捷豁免对抗法术 DC，失败受到等同于 (slot.level - 1)d8 的闪电伤害，成功受到半数伤害。"
+        }
+      ]
+    }
+  ]
+}

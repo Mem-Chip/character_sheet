@@ -1,0 +1,62 @@
+{
+  "name": "延迟爆裂火球",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。在 150 尺内指定一点凝结成一颗光珠，法术终止时（专注结束或引爆）在 20 尺半径球状区域爆炸。区域内生物进行敏捷豁免，失败受 (5 + slot.level)d6 点火焰伤害（若在你回合结束时法术尚未终止，每轮额外累积 1d6 伤害），成功受到半数伤害。生物触碰光珠或投掷碰撞提前引爆需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "延迟爆裂火球",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 7
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 150,
+        "area": {
+          "shape": "sphere",
+          "radius": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "dbf",
+                  "dice": "(5 + slot.level)d6",
+                  "type": "火焰"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "dbf",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

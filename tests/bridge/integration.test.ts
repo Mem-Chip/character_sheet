@@ -87,7 +87,7 @@ describe.skipIf(!hasLocalData())('真实角色卡进战斗', () => {
     const keys = [spellsJson, featuresJson, aiFeatures, aiSpells, aiBooks].flatMap((f) => Object.keys((f as { entries: object }).entries))
       .filter((k) => !k.startsWith('XPHB:rule:'));
     for (const k of keys) await expect(buildTask(env, 'x', k), k).resolves.toMatchObject({ key: k });
-  });
+  }, 30_000);   // 动态数据多了以后要几秒
 
   it('选出来的可选特性（魔能祈唤）是能力来源：静态授予生效，战斗引擎也看得到', async () => {
     const char = fixture('warlock2-invocations');

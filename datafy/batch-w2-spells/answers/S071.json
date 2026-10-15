@@ -1,0 +1,103 @@
+{
+  "name": "塔莎狂笑术",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。目标感知豁免失败陷入倒地和失能，且无法结束倒地状态。每回合结束或受到伤害时可再次进行感知豁免（因伤害所致具有优势），成功则法术终止。无法起身由玩家注意。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "塔莎狂笑术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": "slot.level",
+        "range": 30,
+        "filter": "target.id != self.id && canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "塔莎狂笑术",
+              "state": {
+                "dc": "self.spell.dc"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "塔莎狂笑术": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:倒地",
+        "XPHB:condition:失能"
+      ],
+      "duration": {
+        "saveEnds": {
+          "ability": "wis",
+          "at": "turnEnd"
+        }
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save",
+            "ability": "wis"
+          },
+          "who": "bearer",
+          "when": "ask('这是因受到伤害而进行的豁免吗？')",
+          "op": "adv",
+          "label": "塔莎狂笑术：受伤害豁免具有优势"
+        }
+      ],
+      "triggers": [
+        {
+          "id": "dmg-save",
+          "label": "塔莎狂笑术：受伤害豁免",
+          "on": "damageTaken",
+          "role": "target",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": "effect.state.dc",
+              "onSuccess": [
+                {
+                  "kind": "removeEffect",
+                  "from": "self",
+                  "match": {
+                    "name": "塔莎狂笑术"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "text": "陷入倒地和失能状态，无法结束自身的倒地状态。每回合结束或受到伤害时可再次进行感知豁免（因伤害所致具有优势），成功则法术终止。"
+    }
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "name": "睡眠术",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。以 60 尺内一点为源点 5 尺半径球状区域内所选生物须进行感知豁免，失败则失能至其下回合结束；届时须重复豁免，失败陷入昏迷。目标受到伤害或专注结束时法术终止。免疫力竭、无需睡眠的生物自动成功，以及用动作摇醒需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "睡眠术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": {
+          "shape": "sphere",
+          "radius": 5
+        },
+        "filter": "ask('这是你选择的目标吗？')"
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "template": "睡眠术：失能",
+                  "state": {
+                    "dc": "self.spell.dc"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "睡眠术：失能": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:失能"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        },
+        "endsOn": [
+          {
+            "event": "damageTaken"
+          }
+        ]
+      },
+      "triggers": [
+        {
+          "id": "second-save",
+          "label": "睡眠术：昏迷豁免",
+          "on": "turnEnded",
+          "role": "actor",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": "effect.state.dc",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "template": "睡眠术：昏迷"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "text": "陷入失能状态，下回合结束时须再次进行感知豁免，失败则陷入昏迷。受到伤害或被摇醒时结束。"
+    },
+    "睡眠术：昏迷": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:昏迷"
+      ],
+      "duration": {
+        "endsOn": [
+          {
+            "event": "damageTaken"
+          }
+        ]
+      },
+      "text": "陷入昏迷状态。受到伤害或被摇醒时结束。"
+    }
+  }
+}

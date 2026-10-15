@@ -1,0 +1,58 @@
+{
+  "name": "放逐术",
+  "automation": "partial",
+  "text": "魅力豁免失败被放逐至半位面并陷入失能状态；目标离开战场、返回战场或异怪/天族/元素/妖精/邪魔维持满 1 分钟后不返回需人手动处理移出/移入。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "放逐术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": "slot.level - 3",
+        "range": 30,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "cha",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "放逐"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "放逐": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:失能"
+      ],
+      "text": "被放逐至半位面并陷入失能状态；法术终止时返回原地；异怪/天族/元素/妖精/邪魔在专注维持满 1 分钟后永久放逐不返回"
+    }
+  }
+}

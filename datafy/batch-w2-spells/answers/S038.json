@@ -1,0 +1,55 @@
+{
+  "name": "不谐低语",
+  "automation": "partial",
+  "text": "指定 60 尺内可见生物进行感知豁免，失败受 (2 + slot.level)d6 心灵伤害，并需立即使用其反应尽可能远离施法者移动（反应与移动需手动处理）；成功受半数伤害。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "不谐低语",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "dw",
+              "dice": "(2 + slot.level)d6",
+              "type": "心灵"
+            },
+            {
+              "kind": "note",
+              "text": "目标必须立即执行其反应（若可用）尽可能往远离施法者的方向移动"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "dw",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "name": "死亡一指",
+  "automation": "partial",
+  "text": "60 尺内可见生物进行体质豁免，失败受到 7d8 + 30 点暗蚀伤害，成功则伤害减半。若杀死了类人生物，在施法者下一回合开始时将其唤起为受其控制的丧尸（丧尸召唤与操控需手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "死亡一指",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 7
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "d",
+              "dice": "7d8 + 30",
+              "type": "暗蚀"
+            },
+            {
+              "kind": "note",
+              "text": "死亡一指：若目标类人生物被杀死，在施法者下一回合开始时将其唤起为一只受控丧尸。"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "d",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

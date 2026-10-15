@@ -1,0 +1,77 @@
+{
+  "name": "诱捕打击",
+  "automation": "partial",
+  "text": "武器命中后以附赠动作施展，专注至多 1 分钟。目标进行力量豁免（大型及更大体型生物具有优势需手动处理），失败陷入束缚状态。处于束缚期间每回合开始受到 1d6（升环每环+1d6）穿刺伤害。目标或触及内生物可用动作进行力量（运动）检定对抗法术 DC 挣脱（挣脱检定需手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "诱捕打击",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "trigger": {
+        "on": "attackHit",
+        "role": "actor",
+        "window": "before",
+        "when": "attack.weapon"
+      },
+      "requires": "turn.isMine",
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "str",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "诱捕打击",
+              "state": {
+                "dice": "(slot.level)d6"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "诱捕打击": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:束缚"
+      ],
+      "triggers": [
+        {
+          "id": "turnStartDamage",
+          "label": "诱捕打击：缠绕伤害",
+          "on": "turnStarted",
+          "role": "actor",
+          "do": [
+            {
+              "kind": "damage",
+              "dice": "effect.state.dice",
+              "type": "穿刺"
+            }
+          ]
+        }
+      ],
+      "text": "陷入束缚状态；在每回合开始受到穿刺伤害（数值等于 环阶 d6）；可用动作进行力量（运动）检定对抗法术 DC，成功则解除法术。"
+    }
+  }
+}

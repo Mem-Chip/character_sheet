@@ -1,0 +1,59 @@
+{
+  "name": "万箭齐发",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "万箭齐发",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 150,
+        "area": {
+          "shape": "cylinder",
+          "radius": 40
+        },
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "dice": "8d8",
+                  "type": "力场",
+                  "id": "d"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "d",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

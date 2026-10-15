@@ -1,0 +1,185 @@
+{
+  "name": "摄心目光",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。双眼变为虚空，指定 60 尺内可见的一名生物进行感知豁免，失败承受所选效应之一（沉睡/惊慌/患病）直至法术结束。专注期间每回合可用动作指定另一名生物（不能指定已豁免成功的生物）。疾走逃离、脱离视线距离及摇晃唤醒需手动配合处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "摄心目光",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 6
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "choose",
+              "prompt": "选择摄心目光效应",
+              "options": [
+                {
+                  "label": "沉睡（陷入昏迷，受伤害或被动作摇晃时醒来）",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "template": "摄心目光：沉睡",
+                      "to": "target"
+                    }
+                  ]
+                },
+                {
+                  "label": "惊慌（陷入恐慌，必须疾走远离，脱离 60 尺且无视线时终止）",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "template": "摄心目光：惊慌",
+                      "to": "target"
+                    }
+                  ]
+                },
+                {
+                  "label": "患病（陷入中毒状态）",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "template": "摄心目光：患病",
+                      "to": "target"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "摄心目光：凝视",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating && turn.isMine",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "choose",
+              "prompt": "选择摄心目光效应",
+              "options": [
+                {
+                  "label": "沉睡（陷入昏迷，受伤害或被动作摇晃时醒来）",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "template": "摄心目光：沉睡",
+                      "to": "target"
+                    }
+                  ]
+                },
+                {
+                  "label": "惊慌（陷入恐慌，必须疾走远离，脱离 60 尺且无视线时终止）",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "template": "摄心目光：惊慌",
+                      "to": "target"
+                    }
+                  ]
+                },
+                {
+                  "label": "患病（陷入中毒状态）",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "template": "摄心目光：患病",
+                      "to": "target"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "摄心目光：沉睡": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:昏迷"
+      ],
+      "duration": {
+        "minutes": 1,
+        "endsOn": [
+          {
+            "event": "damageApplied",
+            "when": "event.target == self.id && event.total > 0"
+          }
+        ]
+      },
+      "text": "陷入昏迷状态。受到任何伤害，或另一生物用动作摇晃它时醒来。"
+    },
+    "摄心目光：惊慌": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:恐慌"
+      ],
+      "duration": {
+        "minutes": 1
+      },
+      "text": "陷入恐慌状态。每回合必须执行疾走动作并以最短最安全路径逃离施法者；若移至距施法者至少 60 尺远且看不见施法者的空间则效应终止。"
+    },
+    "摄心目光：患病": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:中毒"
+      ],
+      "duration": {
+        "minutes": 1
+      },
+      "text": "陷入中毒状态。"
+    }
+  }
+}

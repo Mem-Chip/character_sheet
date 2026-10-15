@@ -1,0 +1,83 @@
+{
+  "name": "巫术箭",
+  "automation": "partial",
+  "text": "远程法术攻击，命中造成 2d12（升环每环+1d12）闪电伤害。持续时间内无论初次攻击是否命中，后续每回合可用附赠动作对目标造成 1d12 闪电伤害；超出 60 尺或全掩护时法术终止（距离及掩护中断需手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "巫术箭",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "ranged": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "(1 + slot.level)d12",
+              "type": "闪电"
+            }
+          ]
+        },
+        {
+          "kind": "applyEffect",
+          "template": "巫术箭",
+          "to": "target"
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "巫术箭：电弧伤害",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "damage",
+          "dice": "1d12",
+          "type": "闪电"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "巫术箭": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "施法者每回合可用附赠动作对目标造成 1d12 闪电伤害；若超出 60 尺或处于全掩护则法术提前终止。"
+    }
+  }
+}

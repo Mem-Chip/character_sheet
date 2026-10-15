@@ -1,0 +1,116 @@
+{
+  "name": "擒抱藤",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。召唤藤蔓并对 30 尺内生物进行近战法术攻击，命中造成 4d8 钝击伤害并拉近 30 尺；体型不超过巨型者陷入受擒（逃脱 DC 为法术 DC）。后续回合可用附赠动作「擒抱藤：藤蔓攻击」再次攻击。藤蔓位置、朝藤蔓拉近及擒抱数量上限需在地图上手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "擒抱藤",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "melee": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "4d8",
+              "type": "钝击"
+            },
+            {
+              "kind": "move",
+              "mode": "pull",
+              "ft": 30
+            },
+            {
+              "kind": "if",
+              "when": "target.size != '超巨型'",
+              "then": [
+                {
+                  "kind": "applyEffect",
+                  "template": "擒抱藤：受擒",
+                  "to": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "strike",
+      "name": "擒抱藤：藤蔓攻击",
+      "activation": "bonus",
+      "requires": "self.concentrating",
+      "targeting": {
+        "type": "creature",
+        "count": 1
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "melee": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "4d8",
+              "type": "钝击"
+            },
+            {
+              "kind": "move",
+              "mode": "pull",
+              "ft": 30
+            },
+            {
+              "kind": "if",
+              "when": "target.size != '超巨型'",
+              "then": [
+                {
+                  "kind": "applyEffect",
+                  "template": "擒抱藤：受擒",
+                  "to": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "擒抱藤：受擒": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:受擒"
+      ],
+      "text": "陷入受擒状态，逃脱 DC 等同于施法者的法术豁免 DC。"
+    }
+  }
+}

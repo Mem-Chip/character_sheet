@@ -1,0 +1,77 @@
+{
+  "name": "生命灵光",
+  "automation": "partial",
+  "text": "专注至多 10 分钟。以自身为中心 30 尺光环内，你与盟友获得暗蚀伤害抗性；0 生命值的盟友在灵光范围内开始其回合时恢复 1 点生命值。生命值上限无法被降低需由玩家手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "生命灵光",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "生命灵光",
+          "to": "self"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "生命灵光": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "aura": {
+        "id": "aura-of-life",
+        "radius": 30,
+        "affects": "allies",
+        "includeSelf": true,
+        "grant": {
+          "statics": [
+            {
+              "kind": "resist",
+              "values": [
+                "暗蚀"
+              ]
+            }
+          ],
+          "triggers": [
+            {
+              "id": "heal-0hp",
+              "label": "生命灵光：恢复生命",
+              "on": "turnStarted",
+              "role": "actor",
+              "when": "self.hp == 0",
+              "do": [
+                {
+                  "kind": "heal",
+                  "amount": 1,
+                  "to": "self"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "text": "30 尺灵光内的你和盟友获得暗蚀伤害抗性；生命值为 0 的盟友在灵光内开始回合时恢复 1 点生命值；生命值上限无法被降低。"
+    }
+  }
+}

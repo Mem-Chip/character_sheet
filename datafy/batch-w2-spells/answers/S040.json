@@ -1,0 +1,67 @@
+{
+  "name": "脆弱诅咒",
+  "automation": "partial",
+  "text": "命中受诅咒目标的攻击额外造成 1d6 暗蚀伤害；所选属性检定劣势、目标生命值降至 0 后转移诅咒及升环延长专注时间需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "脆弱诅咒",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "concentration": {
+        "hours": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 90,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "脆弱诅咒",
+          "state": {
+            "curse": "target"
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "脆弱诅咒": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "triggers": [
+        {
+          "id": "dmg",
+          "label": "脆弱诅咒",
+          "on": "attackHit",
+          "role": "actor",
+          "window": "before",
+          "when": "target.id == effect.state.curse",
+          "do": [
+            {
+              "kind": "addDamage",
+              "dice": "1d6",
+              "type": "暗蚀"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

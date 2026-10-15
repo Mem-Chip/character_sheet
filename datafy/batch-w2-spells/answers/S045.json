@@ -1,0 +1,67 @@
+{
+  "name": "防护善恶",
+  "automation": "partial",
+  "text": "自愿生物获得针对异怪、天界生物、元素生物、精类、邪魔、不死生物的防护：这些生物对目标的攻击检定具有劣势；目标不能被其附身、魅惑或恐慌（免疫需手动处理）；若已受其影响，后续豁免具有优势。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "防护善恶",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "防护善恶",
+          "to": "target"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "防护善恶": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "异怪、天界生物、元素生物、精类、邪魔、不死生物对目标的攻击检定具有劣势；对抗其附身、魅惑或恐慌的豁免具有优势；不能被其附身、魅惑或恐慌。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "against",
+          "when": "attacker != null && (attacker.type == '异怪' || attacker.type == '天界生物' || attacker.type == '元素生物' || attacker.type == '精类' || attacker.type == '邪魔' || attacker.type == '不死生物')",
+          "op": "disadv",
+          "label": "防护善恶：攻击劣势"
+        },
+        {
+          "on": {
+            "kind": "save"
+          },
+          "who": "bearer",
+          "when": "source != null && (source.type == '异怪' || source.type == '天界生物' || source.type == '元素生物' || source.type == '精类' || source.type == '邪魔' || source.type == '不死生物') && ask('这是对抗来自该生物的附身、魅惑或恐慌的豁免吗？')",
+          "op": "adv",
+          "label": "防护善恶：豁免优势"
+        }
+      ]
+    }
+  }
+}

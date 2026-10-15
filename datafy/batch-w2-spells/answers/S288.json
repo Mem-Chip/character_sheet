@@ -1,0 +1,59 @@
+{
+  "name": "疫病术",
+  "automation": "partial",
+  "text": "以触碰传染魔法疫病。目标进行体质豁免，失败受 11d8 黯蚀伤害并陷入中毒状态，且施法时指定的属性豁免具有劣势。目标每回合结束时重复体质豁免，累计 3 次成功则法术终止；累计 3 次失败则效应持续 7 日。受到结束中毒的效应作用时须通过体质豁免否则中毒不结束（指定属性劣势、豁免次数累计与后续解毒判定需手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "疫病术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "11d8",
+              "type": "黯蚀"
+            },
+            {
+              "kind": "applyEffect",
+              "template": "疫病",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "疫病": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:中毒"
+      ],
+      "text": "陷入中毒状态，施法时指定的一项属性豁免检定具有劣势。目标在每回合结束时重复体质豁免对抗法术 DC，累计 3 次成功则效应结束，累计 3 次失败则持续 7 日。受到结束中毒状态的效应时须通过体质豁免否则中毒不结束。"
+    }
+  }
+}

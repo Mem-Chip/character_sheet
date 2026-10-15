@@ -1,0 +1,58 @@
+{
+  "name": "电爪",
+  "automation": "partial",
+  "text": "近战法术攻击。命中造成 1d8（随等级增长）闪电伤害，且在其下一回合开始前不能执行借机攻击（借机攻击限制需手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "电爪",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "melee": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "(1 + floor((self.level + 1) / 6))d8",
+              "type": "闪电"
+            },
+            {
+              "kind": "applyEffect",
+              "template": "电爪",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "电爪": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "text": "不能执行借机攻击"
+    }
+  }
+}

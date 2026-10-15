@@ -1,0 +1,174 @@
+{
+  "name": "命令术",
+  "automation": "partial",
+  "text": "目标进行感知豁免，失败在其下一回合必须服从指定命令（过来、放下、走开、趴下、阻拦）。趴下附带倒地，阻拦限制动作和附赠动作；移动路径与提前结束回合需手动配合处理。升环每高一环可多选一个目标。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "命令术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": "slot.level",
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "choose",
+              "prompt": "选择命令术指令",
+              "options": [
+                {
+                  "label": "趴下（陷入倒地并结束回合）",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "to": "target",
+                      "template": "命令术：趴下"
+                    }
+                  ]
+                },
+                {
+                  "label": "阻拦（不进行移动，不作动作和附赠动作）",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "to": "target",
+                      "template": "命令术：阻拦"
+                    }
+                  ]
+                },
+                {
+                  "label": "过来（向施法者移动，5 尺时结束回合）",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "to": "target",
+                      "template": "命令术：过来"
+                    }
+                  ]
+                },
+                {
+                  "label": "放下（放下持握物并结束回合）",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "to": "target",
+                      "template": "命令术：放下"
+                    }
+                  ]
+                },
+                {
+                  "label": "走开（以最快方式远离施法者）",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "to": "target",
+                      "template": "命令术：走开"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "命令术：趴下": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:倒地"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "text": "命令术：目标陷入倒地状态并结束其回合。"
+    },
+    "命令术：阻拦": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "flags": {
+        "blocks": [
+          "action",
+          "bonus"
+        ]
+      },
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "text": "命令术：目标不进行移动且不作任何动作和附赠动作。"
+    },
+    "命令术：过来": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "text": "命令术：目标以最短最直接路线向施法者移动，并在到达距施法者 5 尺时结束回合。"
+    },
+    "命令术：放下": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "text": "命令术：目标放下手中持握物并结束其回合。"
+    },
+    "命令术：走开": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "text": "命令术：目标在其回合内以最快最有效方式远离施法者。"
+    }
+  }
+}

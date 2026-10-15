@@ -1,0 +1,69 @@
+{
+  "name": "海啸术",
+  "automation": "partial",
+  "text": "施法时间 1 分钟。升起至多长 300 尺、高 300 尺、厚 50 尺的水墙（专注至多 6 轮）。出现时区域内生物进行力量豁免，失败受 6d10 钝击伤害，成功半数；水墙后续推进移动、生物卷入力量豁免（受 5d10 递减伤害）、水下运动检定移动与掉落需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "海啸术",
+      "activation": {
+        "minutes": 1
+      },
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 8
+          }
+        }
+      ],
+      "concentration": {
+        "rounds": 6
+      },
+      "targeting": {
+        "type": "area",
+        "range": 5280,
+        "area": {
+          "shape": "line",
+          "length": 300,
+          "width": 50
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "str",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "d",
+                  "dice": "6d10",
+                  "type": "钝击"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "d",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "每回合开始水墙带着其中生物向远离施法者方向移动 50 尺；进入或处于墙内生物需进行力量豁免，失败受 5d10 钝击伤害（每轮递减 1d10）；在水墙内移动需通过对抗法术 DC 的力量（运动）检定；水墙高度每轮递减 50 尺，降至 0 时结束"
+        }
+      ]
+    }
+  ]
+}

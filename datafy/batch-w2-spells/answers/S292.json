@@ -1,0 +1,84 @@
+{
+  "name": "支配类人",
+  "automation": "partial",
+  "text": "对 60 尺内可见类人生物施展（若正在与其战斗豁免具优势，由人判定）。目标感知豁免失败陷入被支配的魅惑状态，专注至多 1 分钟（升环 6 环 10 分钟、7 环 1 小时、8 环+ 8 小时）。目标每次受到伤害时可重复豁免，成功则法术终止。心灵感应指挥与升环专注时长需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "支配类人",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "target.type == '类人生物'"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "支配类人",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "支配类人": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:魅惑"
+      ],
+      "triggers": [
+        {
+          "id": "damage-save",
+          "label": "支配类人：受伤重复豁免",
+          "on": "damageTaken",
+          "role": "target",
+          "window": "after",
+          "when": "damage.amount > 0",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": "source.spell.dc",
+              "onSuccess": [
+                {
+                  "kind": "removeEffect",
+                  "from": "self",
+                  "match": {
+                    "name": "支配类人"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "text": "陷入被支配的魅惑状态。与施法者处于同位面时可被心灵感应命令；每次受到伤害时可重复感知豁免，成功则终止。"
+    }
+  }
+}

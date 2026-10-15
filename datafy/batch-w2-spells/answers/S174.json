@@ -1,0 +1,178 @@
+{
+  "name": "降咒",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。触碰生物进行感知豁免，失败被诅咒并承受四种效应之一：1. 对施法者攻击劣势；2. 某属性检定与豁免劣势；3. 每回合开始感知豁免，失败被迫回避；4. 施法者伤害目标时额外 1d8 暗蚀伤害。升环施法可延长专注或免除专注（需手动调整专注与持续时间；属性选定与被迫回避需人工裁定）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "降咒",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "choose",
+              "prompt": "降咒：选择一项诅咒效应",
+              "options": [
+                {
+                  "label": "攻击劣势：目标对你的攻击检定具有劣势",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "template": "降咒：攻击劣势",
+                      "to": "target"
+                    }
+                  ]
+                },
+                {
+                  "label": "属性劣势：选择属性的检定和豁免劣势",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "template": "降咒：属性劣势",
+                      "to": "target"
+                    }
+                  ]
+                },
+                {
+                  "label": "行动受阻：回合开始豁免，失败被迫回避",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "template": "降咒：行动受阻",
+                      "to": "target"
+                    }
+                  ]
+                },
+                {
+                  "label": "额外伤害：你对其造成伤害时额外受到 1d8 暗蚀伤害",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "template": "降咒：额外伤害",
+                      "to": "target"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "降咒：攻击劣势": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "目标对施法者的攻击检定具有劣势。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "bearer",
+          "when": "target != null && source != null && target.id == source.id",
+          "op": "disadv",
+          "label": "降咒：对施法者攻击劣势"
+        }
+      ]
+    },
+    "降咒：属性劣势": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "目标使用所选属性进行的属性检定和豁免检定具有劣势（需手动选择属性）。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": [
+              "check",
+              "save"
+            ]
+          },
+          "who": "bearer",
+          "when": "ask('这是被降咒指定属性的检定或豁免吗？')",
+          "op": "disadv",
+          "label": "降咒：属性检定/豁免劣势"
+        }
+      ]
+    },
+    "降咒：行动受阻": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "目标在其每回合开始时必须进行一次感知豁免，豁免失败则在该回合中被迫执行回避动作（需手动限制动作）。",
+      "triggers": [
+        {
+          "id": "turn-save",
+          "label": "降咒：回合开始感知豁免",
+          "on": "turnStarted",
+          "role": "actor",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": "source.spell.dc",
+              "onFail": [
+                {
+                  "kind": "note",
+                  "text": "降咒：感知豁免失败，本回合被迫执行回避动作。"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "降咒：额外伤害": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "若施法者的攻击检定或法术对目标造成了伤害，则目标还会额外受到 1d8 暗蚀伤害（需手动添加或通过触发器结算）。",
+      "triggers": [
+        {
+          "id": "extra-damage",
+          "label": "降咒：额外暗蚀伤害",
+          "on": "damageTaken",
+          "role": "target",
+          "when": "source != null && attacker != null && attacker.id == source.id",
+          "limit": "oncePerTurn",
+          "do": [
+            {
+              "kind": "note",
+              "text": "降咒：受到来自施法者的伤害，额外受到 1d8 暗蚀伤害。"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

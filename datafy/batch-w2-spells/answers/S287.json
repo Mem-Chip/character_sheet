@@ -1,0 +1,66 @@
+{
+  "name": "疫病虫群",
+  "automation": "partial",
+  "text": "专注至多 10 分钟。在 300 尺内指定一点创造半径 20 尺球状噬人蝗虫虫群（困难地形且轻度遮蔽）。显现时区域内每个生物进行体质豁免，失败受 4d10（升环每比五环高一环+1d10）穿刺伤害，成功半数。生物一回合内首次进入或在其中结束回合也须进行该豁免（每回合限一次）。持续进出与地形效果需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "疫病虫群",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "area",
+        "range": 300,
+        "area": {
+          "shape": "sphere",
+          "radius": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "plague_dmg",
+                  "dice": "(-1 + slot.level)d10",
+                  "type": "穿刺"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "plague_dmg",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "区域视为困难地形并处于轻度遮蔽。生物在一个回合内第一次进入该区域或在其中结束回合同样须进行该体质豁免（每回合每名生物限一次）"
+        }
+      ]
+    }
+  ]
+}

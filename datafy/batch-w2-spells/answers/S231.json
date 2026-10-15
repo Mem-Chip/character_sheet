@@ -1,0 +1,82 @@
+{
+  "name": "欧提路克弹力法球",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。30 尺内大型或更小的生物进行敏捷豁免，失败则被封在发光的弹力法球内（自愿生物自动被封入）。法球内生物免受一切伤害，任何实体或法术无法进出，且无法对球外造成伤害。被困者可用动作以半速滚动法球。实体进出阻隔、滚动移动与解离术摧毁需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "欧提路克弹力法球",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30,
+        "filter": "target.size != '巨型' && target.size != '超巨型'"
+      },
+      "root": [
+        {
+          "kind": "if",
+          "when": "ask('目标是非自愿生物吗？')",
+          "then": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "template": "弹力法球",
+                  "to": "target"
+                }
+              ]
+            }
+          ],
+          "else": [
+            {
+              "kind": "applyEffect",
+              "template": "弹力法球",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "弹力法球": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "triggers": [
+        {
+          "id": "immune-dmg",
+          "label": "弹力法球：免受伤害",
+          "on": "damageIncoming",
+          "role": "target",
+          "window": "before",
+          "modify": [
+            {
+              "op": "cancel"
+            }
+          ]
+        }
+      ],
+      "text": "被封在弹力法球内，免疫并取消一切伤害。任何物理实体、能量与法术无法穿透法球进出；不能对球外事物造成伤害；可用动作推动法球以半速滚动。"
+    }
+  }
+}

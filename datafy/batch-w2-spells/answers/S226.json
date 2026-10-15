@@ -1,0 +1,92 @@
+{
+  "name": "魅影杀手",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。目标进行感知豁免，失败受到 4d10（每升一环 +1d10）心灵伤害，且持续期间所有属性检定与攻击检定具有劣势；成功则受半数伤害且法术终止。持续期间目标每回合结束时重新进行感知豁免（成功自动解除效应；失败再次受伤害需手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "魅影杀手",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 120
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "psi",
+              "dice": "(slot.level)d10",
+              "type": "心灵"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "魅影杀手"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "psi",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "魅影杀手": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 1,
+        "saveEnds": {
+          "ability": "wis",
+          "at": "turnEnd"
+        }
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "check"
+          },
+          "who": "bearer",
+          "op": "disadv",
+          "label": "魅影杀手：属性检定劣势"
+        },
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "bearer",
+          "op": "disadv",
+          "label": "魅影杀手：攻击检定劣势"
+        }
+      ],
+      "text": "属性检定与攻击检定具有劣势。每回合结束时重新进行感知豁免，成功法术终止，失败再次受到心灵伤害。"
+    }
+  }
+}

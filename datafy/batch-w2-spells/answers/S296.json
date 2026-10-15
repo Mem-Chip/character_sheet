@@ -1,0 +1,119 @@
+{
+  "name": "奥图迷舞",
+  "automation": "partial",
+  "text": "指定 30 尺内可见的一名生物进行感知豁免。豁免成功时，目标在原地跳舞至其下个回合结束（消耗所有移动力）；豁免失败则在专注至多 1 分钟内陷入魅惑状态，必须在原地跳舞（移动力归零），敏捷豁免与攻击检定具有劣势，且受到攻击检定具有优势。目标在其每个自己回合可以动作重复豁免以终止法术（以动作重投豁免需手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "奥图迷舞",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 6
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onSuccess": [
+            {
+              "kind": "applyEffect",
+              "template": "奥图迷舞（成功）",
+              "to": "target"
+            }
+          ],
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "奥图迷舞",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "奥图迷舞": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:魅惑"
+      ],
+      "duration": {
+        "minutes": 1
+      },
+      "statics": [
+        {
+          "kind": "speedSet",
+          "value": 0
+        }
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save",
+            "ability": "dex"
+          },
+          "who": "bearer",
+          "op": "disadv",
+          "label": "奥图迷舞：敏捷豁免劣势"
+        },
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "bearer",
+          "op": "disadv",
+          "label": "奥图迷舞：攻击检定劣势"
+        },
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "against",
+          "op": "adv",
+          "label": "奥图迷舞：受击检定优势"
+        }
+      ],
+      "text": "目标必须消耗所有移动力在原地跳舞。在目标的每个自己回合，可以动作尝试镇定并重复感知豁免，成功则法术终止。"
+    },
+    "奥图迷舞（成功）": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer"
+        }
+      },
+      "statics": [
+        {
+          "kind": "speedSet",
+          "value": 0
+        }
+      ],
+      "text": "目标跳起滑稽的舞蹈直到其下个回合结束，必须消耗所有移动力在原地跳舞。"
+    }
+  }
+}

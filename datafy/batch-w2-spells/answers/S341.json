@@ -1,0 +1,92 @@
+{
+  "name": "魔邓肯之剑",
+  "automation": "partial",
+  "text": "动作在 90 尺内创造悬浮的灵体剑刃（专注至多 1 分钟）并对该剑 5 尺内目标发动近战法术攻击，命中造成 4d12 + 施法属性调整值点力场伤害。后续回合可用附赠动作将剑移动至多 30 尺并重复攻击（剑的位置移动在地图上手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "魔邓肯之剑",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 7
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 90
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "melee": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "4d12 + self.spell.mod",
+              "type": "力场"
+            }
+          ]
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "魔邓肯之剑"
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "魔邓肯之剑：移动并攻击",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating && self.hasEffect('魔邓肯之剑')",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 90
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "melee": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "4d12 + self.spell.mod",
+              "type": "力场"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "魔邓肯之剑": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "悬浮的幽灵剑刃持续存在。后续回合可用附赠动作将剑移动至多 30 尺并对 5 尺内目标发动近战法术攻击。"
+    }
+  }
+}

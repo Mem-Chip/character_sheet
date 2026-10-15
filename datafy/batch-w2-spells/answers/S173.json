@@ -1,0 +1,58 @@
+{
+  "name": "箭如雨下",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "箭如雨下",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "cone",
+          "length": 60
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "cb",
+                  "dice": "(2 + slot.level)d8",
+                  "type": "力场"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "cb",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

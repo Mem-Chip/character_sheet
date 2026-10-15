@@ -1,0 +1,87 @@
+{
+  "name": "律令震慑",
+  "automation": "full",
+  "text": "压垮 60 尺内一名可见生物的心灵。若目标生命值不超过 150 点，则其陷入震慑状态（每个其回合结束时体质豁免成功则终止）；否则其速度直至你下个回合开始前变为 0。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "律令震慑",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 8
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "if",
+          "when": "target.hp <= 150",
+          "then": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "律令震慑：震慑"
+            }
+          ],
+          "else": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "律令震慑：定身"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "律令震慑：震慑": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:震慑"
+      ],
+      "duration": {
+        "saveEnds": {
+          "ability": "con",
+          "at": "turnEnd"
+        }
+      },
+      "text": "陷入震慑状态。在每个其回合结束时进行一次体质豁免，成功则终止此状态。"
+    },
+    "律令震慑：定身": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "statics": [
+        {
+          "kind": "speedSet",
+          "value": 0
+        }
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        }
+      },
+      "text": "速度直至施法者下一回合开始前变为 0。"
+    }
+  }
+}

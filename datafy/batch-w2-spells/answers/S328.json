@@ -1,0 +1,124 @@
+{
+  "name": "咒唤妖精",
+  "automation": "partial",
+  "text": "专注至多 10 分钟。在 60 尺内可见未占据空间召唤中型妖精精魂，显现时可对精魂 5 尺内一名生物进行近战法术攻击，命中造成 3d12 + 施法属性调整值的心灵伤害（升环每高一环 +1d12），且目标陷入恐慌直至你的下个回合开始（你与精魂均为恐惧源）。后续回合可以附赠动作传送精魂至多 30 尺并重复该攻击。精魂位置、传送与恐惧源距离限制需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "咒唤妖精",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 6
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "咒唤妖精",
+          "to": "self",
+          "state": {
+            "slot": "slot.level"
+          }
+        },
+        {
+          "kind": "attack",
+          "attack": {
+            "melee": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "(slot.level - 3)d12 + self.spell.mod",
+              "type": "心灵"
+            },
+            {
+              "kind": "applyEffect",
+              "template": "咒唤妖精：恐慌",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "咒唤妖精：传送并攻击",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating && self.hasEffect('咒唤妖精') && turn.isMine",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "melee": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "3d12 + self.spell.mod",
+              "type": "心灵"
+            },
+            {
+              "kind": "applyEffect",
+              "template": "咒唤妖精：恐慌",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "咒唤妖精": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "中型妖精精魂存在于场上。后续回合可以附赠动作将精魂传送至多 30 尺并对 5 尺内生物发动近战法术攻击。"
+    },
+    "咒唤妖精：恐慌": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        }
+      },
+      "implies": [
+        "XPHB:condition:恐慌"
+      ],
+      "text": "处于恐慌状态，施法者与妖精精魂均是恐惧源。"
+    }
+  }
+}

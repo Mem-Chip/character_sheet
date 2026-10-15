@@ -1,0 +1,55 @@
+{
+  "name": "造风术",
+  "automation": "partial",
+  "text": "从自身向指定方向吹出长 60 尺、宽 10 尺的风线，持续至多 1 分钟（专注）。区域内生物须进行力量豁免，失败被推离施法者 15 尺。在风线中结束回合同样需豁免。迎风移动需额外移动力、吹散气体、吹灭火焰及后续以附赠动作改变方向需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "造风术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "line",
+          "length": 60,
+          "width": 10
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "str",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "move",
+                  "mode": "push",
+                  "ft": 15
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

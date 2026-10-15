@@ -1,0 +1,44 @@
+{
+  "name": "酸液飞溅",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "酸液飞溅",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": {
+          "shape": "sphere",
+          "radius": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "acid",
+                  "dice": "(1 + floor((self.level + 1) / 6))d6",
+                  "type": "强酸"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

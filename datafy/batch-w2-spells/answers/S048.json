@@ -1,0 +1,62 @@
+{
+  "name": "化兽为友",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "化兽为友",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": "slot.level",
+        "range": 30,
+        "filter": "target.type == '野兽'"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "化兽为友",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "化兽为友": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:魅惑"
+      ],
+      "duration": {
+        "hours": 24,
+        "endsOn": [
+          {
+            "event": "damageApplied",
+            "when": "event.target == self.id && event.total > 0 && (event.source == source.id || (event.source != null && combatant(event.source).isAllyOf(source)))"
+          }
+        ]
+      }
+    }
+  }
+}

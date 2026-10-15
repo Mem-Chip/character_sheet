@@ -1,0 +1,65 @@
+{
+  "name": "定身怪物",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "定身怪物",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": "slot.level - 4",
+        "range": 90,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "定身怪物",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "定身怪物": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:麻痹"
+      ],
+      "duration": {
+        "minutes": 1,
+        "saveEnds": {
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "at": "turnEnd"
+        }
+      },
+      "text": "目标陷入麻痹状态，其在每回合结束时可以重新进行感知豁免，豁免成功则终止该效应。"
+    }
+  }
+}

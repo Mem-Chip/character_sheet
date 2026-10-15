@@ -1,0 +1,69 @@
+{
+  "name": "七彩喷射",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "七彩喷射",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 15,
+        "area": {
+          "shape": "cone",
+          "length": 15
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "七彩喷射"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "七彩喷射": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:目盲"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "source",
+          "nth": 1
+        }
+      },
+      "text": "陷入目盲状态，持续至施法者下一回合结束。"
+    }
+  }
+}

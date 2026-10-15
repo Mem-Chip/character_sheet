@@ -1,0 +1,63 @@
+{
+  "name": "魅惑类人",
+  "automation": "partial",
+  "text": "30 尺内类人生物进行感知豁免（若正在与其战斗则豁免具有优势，需手动处理）。失败陷入魅惑状态，持续至多 1 小时或受到伤害时提前结束。升环每高一环可多选一个目标。友好态度与知晓被魅惑需手动 RP 处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "魅惑类人",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": "slot.level",
+        "range": 30,
+        "filter": "target.type == '类人生物'"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "魅惑类人"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "魅惑类人": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:魅惑"
+      ],
+      "duration": {
+        "hours": 1,
+        "endsOn": [
+          {
+            "event": "damageTaken"
+          }
+        ]
+      },
+      "text": "陷入魅惑状态，视施法者为友好同伴。受到伤害时此效应提前终止。"
+    }
+  }
+}

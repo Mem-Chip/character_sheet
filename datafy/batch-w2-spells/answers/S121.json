@@ -1,0 +1,76 @@
+{
+  "name": "魅影之力",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。60 尺内一名生物进行智力豁免，失败则受 10 尺立方内的魅影幻象影响并认定其为真实。目标可用研究动作进行智力（调查）检定对抗法术 DC，成功则法术终止。若魅影代表危险现象，施法者在自己的每回合可对处于魅影 5 尺内的目标造成 2d8 心灵伤害。调查检定与叙事互动需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "魅影之力",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "int",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "魅影之力"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "魅影之力：幻觉伤害",
+      "activation": "none",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "damage",
+          "dice": "2d8",
+          "type": "心灵"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "魅影之力": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "受魅影幻觉影响并深信不疑。目标可用研究动作进行智力（调查）检定对抗法术 DC，成功则法术终止；处于危险魅影 5 尺内时，施法者在自身回合可对其造成 2d8 心灵伤害。"
+    }
+  }
+}

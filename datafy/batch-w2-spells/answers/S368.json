@@ -1,0 +1,83 @@
+{
+  "name": "支配怪物",
+  "automation": "partial",
+  "text": "选择 60 尺内你可见的一名生物（若正在与其战斗豁免具优势，由人判定）。目标感知豁免失败陷入被支配的魅惑状态，专注至多 1 小时（9 环至多 8 小时）。目标每次受到伤害时可重复豁免，成功则法术终止。心灵感应指挥与 9 环专注时长需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "支配怪物",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 8
+          }
+        }
+      ],
+      "concentration": {
+        "hours": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "支配怪物",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "支配怪物": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:魅惑"
+      ],
+      "triggers": [
+        {
+          "id": "damage-save",
+          "label": "支配怪物：受伤重复豁免",
+          "on": "damageTaken",
+          "role": "target",
+          "window": "after",
+          "when": "damage.amount > 0",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": "source.spell.dc",
+              "onSuccess": [
+                {
+                  "kind": "removeEffect",
+                  "from": "self",
+                  "match": {
+                    "name": "支配怪物"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

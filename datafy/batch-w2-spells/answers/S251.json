@@ -1,0 +1,68 @@
+{
+  "name": "篡改记忆",
+  "automation": "partial",
+  "text": "30 尺内指定一可见生物进行感知豁免（若正与该生物战斗则其豁免具有优势，优势需手动指定）。失败陷入魅惑与失能状态（专注至多 1 分钟）。受到任何伤害或成为另一法术的目标时法术提前终止。具体记忆重塑与升环追溯范围需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "篡改记忆",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "篡改记忆",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "篡改记忆": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:魅惑",
+        "XPHB:condition:失能"
+      ],
+      "duration": {
+        "minutes": 1,
+        "endsOn": [
+          {
+            "event": "damageApplied",
+            "when": "event.target == self.id && event.total > 0"
+          }
+        ]
+      },
+      "text": "陷入魅惑与失能状态且无法感知周边事物（但能听到施法者声音）。受到任何伤害或成为另一法术目标时法术终止。"
+    }
+  }
+}

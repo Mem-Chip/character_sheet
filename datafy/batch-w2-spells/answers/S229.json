@@ -1,0 +1,84 @@
+{
+  "name": "魔邓肯忠犬",
+  "automation": "partial",
+  "text": "创造幻影守护犬（持续 8 小时，相距超 300 尺终止）。守护犬拥有 30 尺真实视觉，有生物进入 30 尺且无口令时吠叫。施法者每回合开始时守护犬尝试啮咬 5 尺内一名敌人（通过「魔邓肯忠犬：啮咬」敏捷豁免对抗法术 DC，失败受 4d8 力场伤害）；后续回合可用动作令守护犬移动至多 30 尺。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "魔邓肯忠犬",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "魔邓肯忠犬",
+          "duration": {
+            "hours": 8
+          }
+        }
+      ]
+    },
+    {
+      "id": "bite",
+      "name": "魔邓肯忠犬：啮咬",
+      "activation": "none",
+      "requires": "self.hasEffect('魔邓肯忠犬')",
+      "targeting": {
+        "type": "creature",
+        "count": 1
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "4d8",
+              "type": "力场"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "move",
+      "name": "魔邓肯忠犬：移动",
+      "activation": "action",
+      "requires": "self.hasEffect('魔邓肯忠犬')",
+      "root": [
+        {
+          "kind": "note",
+          "text": "魔邓肯忠犬：以动作令守护犬移动至多 30 尺（需在地图上移动）"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "魔邓肯忠犬": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "hours": 8
+      },
+      "text": "守护犬拥有 30 尺真实视觉；回合开始时可用「魔邓肯忠犬：啮咬」对 5 尺内一名敌人造成伤害；后续回合可以动作令其移动 30 尺。"
+    }
+  }
+}

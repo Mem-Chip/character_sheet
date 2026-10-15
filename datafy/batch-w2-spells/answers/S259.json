@@ -1,0 +1,77 @@
+{
+  "name": "贾拉兹光辉风暴",
+  "automation": "partial",
+  "text": "以一个动作在 120 尺内创造 10 尺半径、40 尺高的风暴柱，持续至多 1 分钟（专注）。区域内生物陷入目盲与耳聋状态且无法施展含有声音成分的法术。出现时、首次进入或在区域内结束回合的生物须进行体质豁免，失败受到 (slot.level - 3)d10 光耀伤害与 (slot.level - 3)d10 雷鸣伤害，成功半数；每名生物每回合限一次豁免（持续区域状态与后续触发需在地图上手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "贾拉兹光辉风暴",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "cylinder",
+          "radius": 10
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "dr",
+                  "dice": "(slot.level - 3)d10",
+                  "type": "光耀"
+                },
+                {
+                  "kind": "damage",
+                  "id": "dt",
+                  "dice": "(slot.level - 3)d10",
+                  "type": "雷鸣"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "dr",
+                  "scale": 0.5
+                },
+                {
+                  "kind": "damage",
+                  "ref": "dt",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "风暴持续 1 分钟（专注）：区域内生物目盲、耳聋且不能施展含声音成分法术；首次进入或在区域内结束其回合时须进行体质豁免承受光耀与雷鸣伤害（每回合限一次）。"
+        }
+      ]
+    }
+  ]
+}

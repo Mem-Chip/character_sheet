@@ -1,0 +1,85 @@
+{
+  "name": "灼热金属",
+  "automation": "partial",
+  "text": "指定 60 尺内可见人造金属物件，与其接触的生物承受 (slot.level)d8 火焰伤害，且须进行体质豁免，失败若能丢下物件则必须丢下；若未丢下，直至施法者下一回合开始前攻击检定与属性检定具有劣势。持续时间内后续回合以附赠动作造成伤害及丢下物件需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "灼热金属",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "damage",
+          "dice": "(slot.level)d8",
+          "type": "火焰"
+        },
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "灼热灼伤"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "灼热灼伤": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        }
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "bearer",
+          "op": "disadv",
+          "label": "灼热金属"
+        },
+        {
+          "on": {
+            "kind": "check"
+          },
+          "who": "bearer",
+          "op": "disadv",
+          "label": "灼热金属"
+        }
+      ],
+      "text": "若能丢下物件则必须丢下；若未丢下，攻击检定与属性检定具有劣势。"
+    }
+  }
+}

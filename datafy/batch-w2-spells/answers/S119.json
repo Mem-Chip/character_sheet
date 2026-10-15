@@ -1,0 +1,227 @@
+{
+  "name": "龙息术",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。触碰一名自愿生物，使其可用动作呼出 15 尺锥状龙息，区域内生物敏捷豁免失败受 3d6（升环每环+1d6）对应属性伤害，成功半数。施加给盟友时需由盟友使用，升环额外伤害需手动调整。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "龙息术",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "龙息术"
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "龙息术：喷吐",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "cone",
+          "size": 15
+        }
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "选择龙息伤害类型",
+          "options": [
+            {
+              "label": "强酸",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "dex",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        {
+                          "kind": "damage",
+                          "id": "d_acid",
+                          "dice": "3d6",
+                          "type": "强酸"
+                        }
+                      ],
+                      "onSuccess": [
+                        {
+                          "kind": "damage",
+                          "ref": "d_acid",
+                          "scale": 0.5
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "寒冷",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "dex",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        {
+                          "kind": "damage",
+                          "id": "d_cold",
+                          "dice": "3d6",
+                          "type": "寒冷"
+                        }
+                      ],
+                      "onSuccess": [
+                        {
+                          "kind": "damage",
+                          "ref": "d_cold",
+                          "scale": 0.5
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "火焰",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "dex",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        {
+                          "kind": "damage",
+                          "id": "d_fire",
+                          "dice": "3d6",
+                          "type": "火焰"
+                        }
+                      ],
+                      "onSuccess": [
+                        {
+                          "kind": "damage",
+                          "ref": "d_fire",
+                          "scale": 0.5
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "闪电",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "dex",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        {
+                          "kind": "damage",
+                          "id": "d_lightning",
+                          "dice": "3d6",
+                          "type": "闪电"
+                        }
+                      ],
+                      "onSuccess": [
+                        {
+                          "kind": "damage",
+                          "ref": "d_lightning",
+                          "scale": 0.5
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "毒素",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "dex",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        {
+                          "kind": "damage",
+                          "id": "d_poison",
+                          "dice": "3d6",
+                          "type": "毒素"
+                        }
+                      ],
+                      "onSuccess": [
+                        {
+                          "kind": "damage",
+                          "ref": "d_poison",
+                          "scale": 0.5
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "龙息术": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "可用动作呼出 15 尺锥状吐息，造成 3d6（所选强酸/寒冷/火焰/闪电/毒素）伤害，敏捷豁免半数。"
+    }
+  }
+}

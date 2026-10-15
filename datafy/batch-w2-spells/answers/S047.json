@@ -1,0 +1,85 @@
+{
+  "name": "哈达之臂",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "哈达之臂",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "emanation",
+          "radius": 10
+        },
+        "filter": "target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "str",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "d",
+                  "dice": "(1 + slot.level)d6",
+                  "type": "暗蚀"
+                },
+                {
+                  "kind": "applyEffect",
+                  "template": "哈达之臂",
+                  "to": "target"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "d",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "哈达之臂": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "flags": {
+        "blocks": [
+          "reaction"
+        ]
+      },
+      "text": "无法执行反应"
+    }
+  }
+}

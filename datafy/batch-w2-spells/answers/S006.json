@@ -1,0 +1,58 @@
+{
+  "name": "点点星芒",
+  "automation": "partial",
+  "text": "远程法术攻击。命中造成 1d8（随等级增长）光耀伤害，直到施法者下个回合结束前散发出 10 尺微光光照，且无法受益于隐形状态（微光与无法受益于隐形状态需手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "点点星芒",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "ranged": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "(1 + floor((self.level + 1) / 6))d8",
+              "type": "光耀"
+            },
+            {
+              "kind": "applyEffect",
+              "template": "点点星芒",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "点点星芒": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "source",
+          "nth": 1
+        }
+      },
+      "text": "散发出 10 尺微光光照，且无法受益于隐形状态"
+    }
+  }
+}

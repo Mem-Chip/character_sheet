@@ -1,0 +1,66 @@
+{
+  "name": "蛛网术",
+  "automation": "partial",
+  "text": "在 60 尺内指定一点召唤 20 尺立方蛛网，持续至多 1 小时（专注），区域内视为困难地形且轻度遮蔽。区域内生物须进行敏捷豁免，失败陷入束缚状态。被束缚生物可用动作进行力量（运动）检定对抗法术 DC 挣脱。每回合首次进入与开始回合豁免、坍塌机制、挣脱及易燃燃烧需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "蛛网术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "concentration": {
+        "hours": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": {
+          "shape": "cube",
+          "size": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "蛛网束缚"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "蛛网束缚": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:束缚"
+      ],
+      "text": "陷入束缚状态。可用动作进行对抗法术 DC 的力量（运动）检定，成功则挣脱束缚。"
+    }
+  }
+}

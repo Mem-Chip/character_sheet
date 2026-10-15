@@ -1,0 +1,74 @@
+{
+  "name": "流星爆",
+  "automation": "partial",
+  "text": "在 1 英里（5280 尺）内指定至多 4 处不同地点，以每个点为中心 40 尺半径球状区域内的生物进行敏捷豁免。豁免失败受 20d6 点火焰伤害和 20d6 点钝击伤害，豁免成功受一半伤害。同时处于多个区域内的生物仅受一次影响。4 处落点位置选定、重叠排除及未着装可燃物件引燃需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "流星爆",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 9
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 5280,
+        "area": {
+          "shape": "sphere",
+          "radius": 40
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "fire",
+                  "dice": "20d6",
+                  "type": "火焰"
+                },
+                {
+                  "kind": "damage",
+                  "id": "bludg",
+                  "dice": "20d6",
+                  "type": "钝击"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "fire",
+                  "scale": 0.5
+                },
+                {
+                  "kind": "damage",
+                  "ref": "bludg",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "流星爆：可在 1 英里内指定 4 处落点（各 40 尺半径球状区域），重叠区域生物仅受一次影响；区域内未被着装或携带的非魔法物件也会承受伤害并引燃可燃物。"
+        }
+      ]
+    }
+  ]
+}

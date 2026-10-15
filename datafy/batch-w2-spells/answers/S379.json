@@ -1,0 +1,61 @@
+{
+  "name": "完全变形术",
+  "automation": "partial",
+  "text": "选择 30 尺内可见的一名生物或未被着装携带的非魔法物件。非自愿生物进行感知豁免，失败变形成 CR 不高于其等级/CR 的生物（获得等同新形态生命值的临时生命值，不能施法或说话）或物件；也可将物件变形成 CR 不高于 9 的生物。若维持满 1 小时专注则持续时间变为直至被解除（数据卡替换、临时生命值赋予与物件变形由人工处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "完全变形术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 9
+          }
+        }
+      ],
+      "concentration": {
+        "hours": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "完全变形术"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "完全变形术": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "flags": {
+        "cannot": [
+          "castSpells",
+          "speak"
+        ]
+      },
+      "text": "变形成新形态；无法施法与说话；获得等同于新形态生命值的临时生命值（需手动赋予）；数据卡替换及维持 1 小时专注转为永久需人工处理"
+    }
+  }
+}

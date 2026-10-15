@@ -1,0 +1,133 @@
+{
+  "name": "湮灭波",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "湮灭波",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "emanation",
+          "radius": 30
+        },
+        "filter": "target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "选择附加伤害类型",
+          "options": [
+            {
+              "label": "光耀伤害",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "con",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        {
+                          "kind": "damage",
+                          "id": "dw_thunder_rad",
+                          "dice": "5d6",
+                          "type": "雷鸣"
+                        },
+                        {
+                          "kind": "damage",
+                          "id": "dw_radiant",
+                          "dice": "5d6",
+                          "type": "光耀"
+                        },
+                        {
+                          "kind": "applyEffect",
+                          "to": "target",
+                          "template": "XPHB:condition:倒地"
+                        }
+                      ],
+                      "onSuccess": [
+                        {
+                          "kind": "damage",
+                          "ref": "dw_thunder_rad",
+                          "scale": 0.5
+                        },
+                        {
+                          "kind": "damage",
+                          "ref": "dw_radiant",
+                          "scale": 0.5
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "暗蚀伤害",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "con",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        {
+                          "kind": "damage",
+                          "id": "dw_thunder_nec",
+                          "dice": "5d6",
+                          "type": "雷鸣"
+                        },
+                        {
+                          "kind": "damage",
+                          "id": "dw_necrotic",
+                          "dice": "5d6",
+                          "type": "黯蚀"
+                        },
+                        {
+                          "kind": "applyEffect",
+                          "to": "target",
+                          "template": "XPHB:condition:倒地"
+                        }
+                      ],
+                      "onSuccess": [
+                        {
+                          "kind": "damage",
+                          "ref": "dw_thunder_nec",
+                          "scale": 0.5
+                        },
+                        {
+                          "kind": "damage",
+                          "ref": "dw_necrotic",
+                          "scale": 0.5
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

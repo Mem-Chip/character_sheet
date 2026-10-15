@@ -1,0 +1,120 @@
+{
+  "name": "心灵遥控",
+  "automation": "partial",
+  "text": "专注至多 10 分钟。施展该法术时以及后续回合中可用动作以思想移动或操纵 60 尺内不超过巨型的生物或巨型及更小的物件。对生物：目标进行力量豁免，失败则被朝任意方向移动至多 30 尺并在你的下个回合结束前陷入束缚（悬停空中）。对物件：未被携带的物件可直接移动至多 30 尺；被着装携带的物件持有者须力量豁免对抗 DC 否则被夺走移动；亦可进行精细操作。物件移动与操纵需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "心灵遥控",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "心灵遥控",
+          "to": "self"
+        },
+        {
+          "kind": "save",
+          "ability": "str",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "念力束缚",
+              "to": "target",
+              "duration": {
+                "until": {
+                  "at": "turnEnd",
+                  "of": "source",
+                  "nth": 1
+                }
+              }
+            },
+            {
+              "kind": "note",
+              "text": "可将目标生物朝任意方向移动至多 30 尺；被举到空中的生物悬停在半空中"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "心灵遥控：操控生物",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating && self.hasEffect('心灵遥控')",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "str",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "念力束缚",
+              "to": "target",
+              "duration": {
+                "until": {
+                  "at": "turnEnd",
+                  "of": "source",
+                  "nth": 1
+                }
+              }
+            },
+            {
+              "kind": "note",
+              "text": "可将目标生物朝任意方向移动至多 30 尺；被举到空中的生物悬停在半空中"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "心灵遥控": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "专注至多 10 分钟。每个回合可用动作操纵 60 尺内生物或物件（操纵物件需手动处理）。"
+    },
+    "念力束缚": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:束缚"
+      ],
+      "text": "处于束缚状态，被举到空中时在半空中悬停，直到施法者下个回合结束。"
+    }
+  }
+}

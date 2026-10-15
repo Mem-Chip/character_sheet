@@ -1,0 +1,77 @@
+{
+  "name": "魔化武器",
+  "automation": "partial",
+  "text": "附赠动作触碰一件非魔法武器，使其成为魔法武器，并在攻击检定和伤害掷骰时具有 +1 加值（3~5 环 +2，6 环及以上 +3），持续 1 小时。是否使用受术武器需在攻击时确认；再次施展时需手动移除先前的效应。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "魔化武器",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "魔化武器",
+          "to": "target",
+          "state": {
+            "bonus": "cond(slot.level >= 6, 3, cond(slot.level >= 3, 2, 1))"
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "魔化武器": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "hours": 1
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack",
+            "attack": {
+              "weapon": true
+            }
+          },
+          "who": "bearer",
+          "when": "ask('这次攻击使用的是被魔化武器加持的武器吗？')",
+          "op": "add",
+          "value": "effect.state.bonus",
+          "label": "魔化武器：攻击加值"
+        },
+        {
+          "on": {
+            "kind": "damage",
+            "attack": {
+              "weapon": true
+            }
+          },
+          "who": "bearer",
+          "when": "ask('这次伤害使用的是被魔化武器加持的武器吗？')",
+          "op": "add",
+          "value": "effect.state.bonus",
+          "label": "魔化武器：伤害加值"
+        }
+      ]
+    }
+  }
+}

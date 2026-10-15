@@ -1,0 +1,63 @@
+{
+  "name": "冰墙术",
+  "automation": "partial",
+  "text": "专注至多 10 分钟。在 120 尺内创造由 10 个 10×10 尺方板块构成的平面（厚 1 尺），或半径最长 10 尺的半球/球状冰墙。冰墙形成穿过生物占据空间时，生物被推向一侧并进行敏捷豁免，失败受到 10d6（升环每高一环 +2d6）寒冷伤害，成功半数。每段 10 尺长冰墙 AC 12、HP 30，免疫寒冷/毒素/心灵伤害，易伤火焰伤害。某段被摧毁后留下刺骨寒气，生物每回合首次穿过时进行体质豁免，失败受 5d6（升环每高一环 +1d6）寒冷伤害，成功半数（推移方向、冰墙承受破坏与寒气穿过判定需手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "冰墙术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 6
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "line",
+          "length": 100,
+          "width": 1
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "cold",
+                  "dice": "(-2 + 2 * slot.level)d6",
+                  "type": "寒冷"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "cold",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

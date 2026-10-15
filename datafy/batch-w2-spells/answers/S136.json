@@ -1,0 +1,118 @@
+{
+  "name": "衰弱射线",
+  "automation": "full",
+  "text": "向 60 尺内一名生物射出射线，目标进行体质豁免。成功则直到施法者下回合开始在下一次攻击掷骰上具有劣势；失败则在专注至多 1 分钟内，使用力量属性的 D20 检定具有劣势，且所有伤害掷骰获得 1d8 减值。目标在每个其回合结束时可重复豁免，成功则终止。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "衰弱射线",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "onSuccess": [
+            {
+              "kind": "applyEffect",
+              "template": "削弱攻击",
+              "to": "target"
+            }
+          ],
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "衰弱",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "削弱攻击": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        },
+        "endsOn": [
+          {
+            "event": "d20Rolled",
+            "when": "event.kind == 'attack' && event.roller == self.id"
+          }
+        ]
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "bearer",
+          "op": "disadv",
+          "label": "衰弱射线：攻击劣势"
+        }
+      ],
+      "text": "直到施法者下个回合开始，在下一次攻击掷骰上具有劣势。"
+    },
+    "衰弱": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 1,
+        "saveEnds": {
+          "ability": "con",
+          "at": "turnEnd"
+        }
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "d20",
+            "ability": "str"
+          },
+          "who": "bearer",
+          "op": "disadv",
+          "label": "衰弱射线：力量检定劣势"
+        },
+        {
+          "on": {
+            "kind": "damage"
+          },
+          "who": "bearer",
+          "op": "add",
+          "value": "-1d8",
+          "label": "衰弱射线：伤害-1d8"
+        }
+      ],
+      "text": "使用力量属性的 D20 检定具有劣势，且所有伤害掷骰获得 1d8 减值。每个回合结束时可重复体质豁免。"
+    }
+  }
+}

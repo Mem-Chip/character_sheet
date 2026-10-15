@@ -1,0 +1,85 @@
+{
+  "name": "怪影杀手",
+  "automation": "partial",
+  "text": "以 120 尺内一点为中心半径 30 尺球状区域内的生物进行感知豁免，失败受到 10d10 心灵伤害并陷入恐慌（专注至多 1 分钟），成功受半伤。恐慌目标在其每回合结束时进行感知豁免，成功终止效应，失败受到 5d10 心灵伤害（失败伤害需手动扣除）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "怪影杀手",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 9
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "sphere",
+          "radius": 30
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "weird-dmg",
+                  "dice": "10d10",
+                  "type": "心灵"
+                },
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "怪影杀手"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "weird-dmg",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "怪影杀手": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:恐慌"
+      ],
+      "duration": {
+        "saveEnds": {
+          "ability": "wis",
+          "at": "turnEnd"
+        }
+      },
+      "text": "陷入恐慌；每回合结束时感知豁免，成功终止效应，失败受到 5d10 心灵伤害（失败伤害需手动处理）"
+    }
+  }
+}

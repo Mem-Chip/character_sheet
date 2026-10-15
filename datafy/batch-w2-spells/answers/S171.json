@@ -1,0 +1,113 @@
+{
+  "name": "加速术",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。自愿生物速度翻倍、AC+2、敏捷豁免优势，且每回合获得一个额外动作（仅限发动一次攻击、或疾走/撤离/躲藏/操作动作，需手动遵守限制）。法术终止时目标陷入失能且速度为 0，持续至其下一回合结束。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "加速术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "加速",
+          "to": "target"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "加速": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "速度翻倍；AC+2；敏捷豁免具有优势；每回合获得一个额外动作（仅用于发动一次攻击、或疾走、撤离、躲藏和操作动作）。法术终止时陷入失能且速度为 0 直至下一回合结束。",
+      "statics": [
+        {
+          "kind": "speed",
+          "bonus": "self.speed"
+        },
+        {
+          "kind": "ac",
+          "bonus": 2
+        }
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save",
+            "ability": "dex"
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "加速术：敏捷豁免优势"
+        }
+      ],
+      "triggers": [
+        {
+          "id": "haste-action",
+          "label": "加速术：额外动作",
+          "on": "turnStarted",
+          "role": "actor",
+          "do": [
+            {
+              "kind": "economy",
+              "action": 1
+            }
+          ]
+        }
+      ],
+      "onEnd": [
+        {
+          "kind": "applyEffect",
+          "template": "加速倦意",
+          "to": "self",
+          "duration": {
+            "until": {
+              "at": "turnEnd",
+              "of": "bearer",
+              "nth": 1
+            }
+          }
+        }
+      ]
+    },
+    "加速倦意": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "法术终止时泛起倦意，陷入失能并且速度为 0，持续至其下一回合结束。",
+      "implies": [
+        "XPHB:condition:失能"
+      ],
+      "statics": [
+        {
+          "kind": "speedSet",
+          "value": 0
+        }
+      ]
+    }
+  }
+}

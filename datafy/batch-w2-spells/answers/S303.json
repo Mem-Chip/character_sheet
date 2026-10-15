@@ -1,0 +1,63 @@
+{
+  "name": "棘墙术",
+  "automation": "partial",
+  "text": "专注至多 10 分钟。在 120 尺内创造直墙（长至多 60 尺、高 10 尺、厚 5 尺）或环形墙（直径至多 20 尺、高 20 尺、厚 5 尺）。棘墙阻挡视线，在其中每移动 1 尺需消耗 4 尺移动力。出现时占据区域内的生物进行敏捷豁免，失败受到 7d8（升环每高一环 +1d8）穿刺伤害，成功半数。生物每回合首次进入棘墙或在其内结束回合时须进行敏捷豁免，失败受 7d8（升环每高一环 +1d8）挥砍伤害，成功半数（每生物每回合限一次）。墙体形态、阻挡视线、移动减速及入内/结束回合伤害需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "棘墙术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 6
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "line",
+          "length": 60,
+          "width": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "d",
+                  "dice": "(1 + slot.level)d8",
+                  "type": "穿刺"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "d",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

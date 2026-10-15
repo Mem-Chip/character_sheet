@@ -1,0 +1,274 @@
+{
+  "name": "徽记术",
+  "automation": "partial",
+  "text": "施法耗时 1 分钟。在表面或物件上刻下有害符纹并设定触发条件。触发时以符纹为中心照亮 60 尺半径球状区域 10 分钟。区域内的生物根据施法时选择的徽记承受对应效应：死亡（体质豁免受 10d10 暗蚀伤害，成功减半）、争斗（感知豁免，失败 1 分钟内攻击和属性检定具有劣势）、恐惧（感知豁免，失败恐慌 1 分钟且必须远离）、痛苦（体质豁免，失败失能 1 分钟）、睡眠（感知豁免，失败昏迷 10 分钟）、震慑（感知豁免，失败震慑 1 分钟）。符纹触发条件与生物移动触发需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "徽记术",
+      "activation": {
+        "minutes": 1
+      },
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 7
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "touch",
+        "area": {
+          "shape": "sphere",
+          "radius": 60
+        }
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "选择徽记承载的效应",
+          "options": [
+            {
+              "label": "死亡",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "con",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        {
+                          "kind": "damage",
+                          "id": "sym_death",
+                          "dice": "10d10",
+                          "type": "暗蚀"
+                        }
+                      ],
+                      "onSuccess": [
+                        {
+                          "kind": "damage",
+                          "ref": "sym_death",
+                          "scale": 0.5
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "争斗",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "wis",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        {
+                          "kind": "applyEffect",
+                          "template": "徽记：争斗",
+                          "to": "target"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "恐惧",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "wis",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        {
+                          "kind": "applyEffect",
+                          "template": "徽记：恐惧",
+                          "to": "target"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "痛苦",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "con",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        {
+                          "kind": "applyEffect",
+                          "template": "徽记：痛苦",
+                          "to": "target"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "睡眠",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "wis",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        {
+                          "kind": "applyEffect",
+                          "template": "徽记：睡眠",
+                          "to": "target"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "震慑",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "wis",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        {
+                          "kind": "applyEffect",
+                          "template": "徽记：震慑",
+                          "to": "target"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "徽记：争斗": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 1
+      },
+      "text": "1 分钟内不停与其他生物争吵，无法进行有意义的沟通，进行的攻击检定和属性检定具有劣势。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "bearer",
+          "op": "disadv",
+          "label": "徽记：争斗"
+        },
+        {
+          "on": {
+            "kind": "check"
+          },
+          "who": "bearer",
+          "op": "disadv",
+          "label": "徽记：争斗"
+        }
+      ]
+    },
+    "徽记：恐惧": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 1
+      },
+      "text": "陷入恐慌状态 1 分钟；在其回合内只要可能就必须向远离符纹的方向移动至少 30 尺。",
+      "implies": [
+        "XPHB:condition:恐慌"
+      ]
+    },
+    "徽记：痛苦": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 1
+      },
+      "text": "陷入失能状态 1 分钟。",
+      "implies": [
+        "XPHB:condition:失能"
+      ]
+    },
+    "徽记：睡眠": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 10,
+        "endsOn": [
+          {
+            "event": "damageTaken"
+          }
+        ]
+      },
+      "text": "陷入昏迷状态 10 分钟；受到伤害或被他人以动作摇晃可惊醒。",
+      "implies": [
+        "XPHB:condition:昏迷"
+      ]
+    },
+    "徽记：震慑": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 1
+      },
+      "text": "陷入震慑状态 1 分钟。",
+      "implies": [
+        "XPHB:condition:震慑"
+      ]
+    }
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "name": "冰风暴",
+  "automation": "partial",
+  "text": "300 尺内半径 20 尺柱状区域，生物进行敏捷豁免，失败受 (slot.level - 2)d10 钝击与 4d6 寒冷伤害，成功半数；区域地面变为困难地形至下回合结束（地图地形需手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "冰风暴",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 300,
+        "area": {
+          "shape": "cylinder",
+          "radius": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "bludg",
+                  "dice": "(slot.level - 2)d10",
+                  "type": "钝击"
+                },
+                {
+                  "kind": "damage",
+                  "id": "cold",
+                  "dice": "4d6",
+                  "type": "寒冷"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "bludg",
+                  "scale": 0.5
+                },
+                {
+                  "kind": "damage",
+                  "ref": "cold",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "区域内地面变为困难地形，直至你的下一回合结束"
+        }
+      ]
+    }
+  ]
+}

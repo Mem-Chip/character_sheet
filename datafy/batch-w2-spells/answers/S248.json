@@ -1,0 +1,153 @@
+{
+  "name": "毕格比之手",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。在 120 尺内指定一处未被占据空间创造大型魔法手掌（AC 20，生命值等于施法者生命上限）。施展时及随后的回合可以附赠动作令巨手移动至多 60 尺并执行：金刚拳（近战法术攻击，5d8 力场伤害，升环每环+2d8）、飞击掌（力量豁免，推开 5+5×施法属性调整值尺）、擒拿掌（敏捷豁免，失败陷入受擒，后续附赠动作可挤压造成 4d6+施法调整值钝击伤害，升环每环+2d6）、或护身掌（提供半掩护与困难地形）。巨手位置、生命值、移动、施展当回合的免费指挥及升环伤害调整需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "毕格比之手",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "point",
+        "range": 120
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "毕格比之手"
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "毕格比之手：指挥巨手",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating && self.hasEffect('毕格比之手')",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 120
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "毕格比之手：选择效果",
+          "options": [
+            {
+              "label": "金刚拳（近战法术攻击，5d8 力场伤害）",
+              "do": [
+                {
+                  "kind": "attack",
+                  "attack": {
+                    "melee": true,
+                    "spell": true
+                  },
+                  "onHit": [
+                    {
+                      "kind": "damage",
+                      "dice": "5d8",
+                      "type": "力场"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "飞击掌（力量豁免，推开生物）",
+              "when": "target.size != '超巨型'",
+              "do": [
+                {
+                  "kind": "save",
+                  "ability": "str",
+                  "dc": "self.spell.dc",
+                  "onFail": [
+                    {
+                      "kind": "move",
+                      "mode": "push",
+                      "ft": "5 + 5 * self.spell.mod"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "擒拿掌（敏捷豁免，造成受擒）",
+              "when": "target.size != '超巨型'",
+              "do": [
+                {
+                  "kind": "save",
+                  "ability": "dex",
+                  "dc": "self.spell.dc",
+                  "onFail": [
+                    {
+                      "kind": "applyEffect",
+                      "template": "擒拿掌：受擒",
+                      "to": "target"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "擒拿掌：挤压伤害（4d6 + 施法调整值钝击伤害）",
+              "do": [
+                {
+                  "kind": "damage",
+                  "dice": "4d6 + self.spell.mod",
+                  "type": "钝击"
+                }
+              ]
+            },
+            {
+              "label": "护身掌（为自身提供半掩护）",
+              "do": [
+                {
+                  "kind": "note",
+                  "text": "巨手为你提供半掩护（AC 与敏捷豁免 +2），且其所在空间对敌人视为困难地形"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "毕格比之手": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "创造大型魔法手掌（AC 20，生命值等于施法者生命上限）。施展时及随后的回合可用附赠动作令巨手移动 60 尺并执行金刚拳、飞击掌、擒拿掌、护身掌等效应。"
+    },
+    "擒拿掌：受擒": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:受擒"
+      ],
+      "text": "陷入受擒状态，逃脱 DC 等于施法者的法术豁免 DC。"
+    }
+  }
+}

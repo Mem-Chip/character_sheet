@@ -1,0 +1,148 @@
+{
+  "name": "元素武器",
+  "automation": "partial",
+  "text": "触碰一把非魔法武器，使其变为魔法武器并赋予所选元素类型（强酸、寒冷、火焰、闪电、雷鸣）。持续时间内武器攻击检定获得加值（3-4环+1，5-6环+2，7环+3），命中时造成额外伤害（3-4环1d4，5-6环2d4，7环3d4）。非魔法武器限制与指定单把武器需手动判定。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "元素武器",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "concentration": {
+        "hours": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "元素武器：选择伤害类型",
+          "options": [
+            {
+              "label": "强酸",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "template": "元素武器",
+                  "to": "target",
+                  "state": {
+                    "type": "'强酸'",
+                    "slot": "slot.level"
+                  }
+                }
+              ]
+            },
+            {
+              "label": "寒冷",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "template": "元素武器",
+                  "to": "target",
+                  "state": {
+                    "type": "'寒冷'",
+                    "slot": "slot.level"
+                  }
+                }
+              ]
+            },
+            {
+              "label": "火焰",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "template": "元素武器",
+                  "to": "target",
+                  "state": {
+                    "type": "'火焰'",
+                    "slot": "slot.level"
+                  }
+                }
+              ]
+            },
+            {
+              "label": "闪电",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "template": "元素武器",
+                  "to": "target",
+                  "state": {
+                    "type": "'闪电'",
+                    "slot": "slot.level"
+                  }
+                }
+              ]
+            },
+            {
+              "label": "雷鸣",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "template": "元素武器",
+                  "to": "target",
+                  "state": {
+                    "type": "'雷鸣'",
+                    "slot": "slot.level"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "元素武器": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack",
+            "attack": {
+              "weapon": true
+            }
+          },
+          "who": "bearer",
+          "op": "add",
+          "value": "cond(effect.state.slot >= 7, 3, cond(effect.state.slot >= 5, 2, 1))",
+          "label": "元素武器：攻击加值"
+        }
+      ],
+      "triggers": [
+        {
+          "id": "elementalDamage",
+          "label": "元素武器：额外伤害",
+          "on": "attackHit",
+          "role": "actor",
+          "window": "before",
+          "when": "attack.weapon",
+          "do": [
+            {
+              "kind": "addDamage",
+              "dice": "cond(effect.state.slot >= 7, 3d4, cond(effect.state.slot >= 5, 2d4, 1d4))",
+              "type": "effect.state.type"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

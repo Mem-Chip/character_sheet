@@ -1,0 +1,72 @@
+{
+  "name": "防护毒素",
+  "automation": "full",
+  "text": "触碰一名生物并结束其陷入的中毒状态。在 1 小时内，目标为避免陷入或结束中毒状态所做的豁免具有优势，且具有毒素伤害抗性。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "防护毒素",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "removeEffect",
+          "match": {
+            "key": "XPHB:condition:中毒",
+            "name": "中毒"
+          },
+          "from": "target"
+        },
+        {
+          "kind": "applyEffect",
+          "template": "防护毒素",
+          "duration": {
+            "hours": 1
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "防护毒素": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "statics": [
+        {
+          "kind": "resist",
+          "values": [
+            "毒素"
+          ]
+        }
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save"
+          },
+          "who": "bearer",
+          "when": "ask('是否为避免陷入或结束中毒状态的豁免？')",
+          "op": "adv",
+          "label": "防护毒素：避免或结束中毒豁免优势"
+        }
+      ]
+    }
+  }
+}

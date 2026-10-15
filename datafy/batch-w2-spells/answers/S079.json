@@ -1,0 +1,74 @@
+{
+  "name": "妖火",
+  "automation": "partial",
+  "text": "20 尺立方区域内的生物必须进行敏捷豁免，失败则被光芒勾勒轮廓；受术者发出 10 尺微光且无法受益于隐形状态（隐形失效需手动处理）；能看见受术者的攻击者对其发动的攻击检定具有优势。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "妖火",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": {
+          "shape": "cube",
+          "size": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "妖火"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "妖火": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "发出 10 尺半径微光光照；无法受益于隐形状态；能看见受术者的攻击者对其发动的攻击检定具有优势。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "against",
+          "when": "canSee(attacker, self)",
+          "op": "adv",
+          "label": "妖火：攻击优势"
+        }
+      ]
+    }
+  }
+}

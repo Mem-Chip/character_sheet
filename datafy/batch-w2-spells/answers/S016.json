@@ -1,0 +1,48 @@
+{
+  "name": "荆棘之鞭",
+  "automation": "full",
+  "text": "近战法术攻击，射程 30 尺。命中造成 1d6（随等级增长）穿刺伤害；目标体型不超过大型时，可将其朝你所在位置拉近至多 10 尺。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "荆棘之鞭",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "melee": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "(1 + floor((self.level + 1) / 6))d6",
+              "type": "穿刺"
+            },
+            {
+              "kind": "if",
+              "when": "target.size != '巨型' && target.size != '超巨型' && ask('是否将目标朝你所在位置拉近至多 10 尺？')",
+              "then": [
+                {
+                  "kind": "move",
+                  "mode": "pull",
+                  "ft": 10
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

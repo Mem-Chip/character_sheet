@@ -1,0 +1,92 @@
+{
+  "name": "灵体武器",
+  "automation": "partial",
+  "text": "附赠动作在 60 尺内召唤灵体武器（专注至多 1 分钟）并对 5 尺内生物发动近战法术攻击，命中造成 1d8 + 施法属性调整值的力场伤害（升环每环 +1d8）。后续回合可用附赠动作移动武器至多 20 尺并重复攻击（武器移动在地图上手动处理；后续攻击若升环需手动调整伤害）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "灵体武器",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "melee": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "(slot.level - 1)d8 + self.spell.mod",
+              "type": "力场"
+            }
+          ]
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "灵体武器"
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "灵体武器：移动并攻击",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating && self.hasEffect('灵体武器')",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "melee": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "1d8 + self.spell.mod",
+              "type": "力场"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "灵体武器": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "浮空灵体武器持续存在。后续回合可用附赠动作移动至多 20 尺并对 5 尺内目标发动攻击。"
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "name": "死云术",
+  "automation": "partial",
+  "text": "专注至多 10 分钟。在 120 尺内指定一点创造半径 20 尺球状剧毒浓雾（重度遮蔽，强风可吹散）。区域内生物进行体质豁免，失败受 5d8（每升一环 +1d8）毒素伤害，成功半数。球状区域移动到生物内、生物进入或在其内结束回合也须豁免受伤害（每回合限一次）。你每回合开始时球体会远离你移动 10 尺（浓雾移动与后续进出回合伤害需手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "死云术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "sphere",
+          "radius": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "cloudkill_dmg",
+                  "dice": "(slot.level)d8",
+                  "type": "毒素"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "cloudkill_dmg",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "区域视为重度遮蔽。在你的每个回合开始时，球状区域远离你移动 10 尺。生物进入区域或在其中结束回合同样须进行该体质豁免（每回合每名生物限一次）"
+        }
+      ]
+    }
+  ]
+}

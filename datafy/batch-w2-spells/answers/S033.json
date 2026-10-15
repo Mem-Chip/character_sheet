@@ -1,0 +1,72 @@
+{
+  "name": "心灵之楔",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "心灵之楔",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "int",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "(1 + floor((self.level + 1) / 6))d6",
+              "type": "心灵"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "心灵之楔"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "心灵之楔": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "source",
+          "nth": 1
+        },
+        "endsOn": [
+          {
+            "event": "d20Rolled",
+            "when": "event.roller == self.id && event.kind == 'save'"
+          }
+        ]
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save"
+          },
+          "who": "bearer",
+          "op": "addDice",
+          "value": "-1d4",
+          "label": "心灵之楔"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "name": "寒冰锥",
+  "automation": "full",
+  "text": "以你为源点的 60 尺锥状区域内的每名生物进行体质豁免，失败受到 8d8 点（升环每高一环 +1d8）寒冷伤害，成功受到半数伤害。被该法术杀死的生物成为冰冻塑像直至被解冻。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "寒冰锥",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "cone",
+          "length": 60
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "coc",
+                  "dice": "(3 + slot.level)d8",
+                  "type": "寒冷"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "coc",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

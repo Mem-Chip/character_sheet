@@ -1,0 +1,72 @@
+{
+  "name": "反转重力",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。以 100 尺内一点为中心创造半径 50 尺、高 100 尺的重力反转柱状区域。区域内未固定的生物和物件向上落去；生物可进行敏捷豁免抓住固定物件避免坠落。撞击固体受到坠落冲击，到达顶部悬浮；法术终止时向下坠落（撞击伤害与物理悬浮/下坠需手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "反转重力",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 7
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 100,
+        "area": {
+          "shape": "cylinder",
+          "radius": 50
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "template": "反转重力",
+                  "to": "target"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "note",
+                  "text": "成功抓住固定物件，避免向上坠落"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "反转重力": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 1
+      },
+      "text": "向上坠落至柱状区域顶端并悬浮（撞击障碍物承受相应坠落伤害）；法术终止时向下坠落恢复正常重力。"
+    }
+  }
+}

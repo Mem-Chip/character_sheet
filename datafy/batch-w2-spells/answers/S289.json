@@ -1,0 +1,91 @@
+{
+  "name": "悠兰德王者威仪",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。自身散发 10 尺光环。施法时以及光环进入可见生物占据空间、可见生物进入光环或在其中结束其回合时，你可迫使其进行感知豁免，失败受 4d6 点心灵伤害、陷入倒地状态并被推离 10 尺，成功受半数伤害（每名生物每回合限一次）。移动光环与后续进入/结束回合触发需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "悠兰德王者威仪",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "emanation",
+          "radius": 10
+        },
+        "filter": "target.id != self.id && canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "悠兰德王者威仪",
+          "to": "self"
+        },
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "yrp_dmg",
+                  "dice": "4d6",
+                  "type": "心灵"
+                },
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "XPHB:condition:倒地"
+                },
+                {
+                  "kind": "move",
+                  "mode": "push",
+                  "ft": 10
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "yrp_dmg",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "自身周围覆盖 10 尺光环。当光环进入可见生物空间、生物进入光环或在其内结束回合时，同样可迫使其进行感知豁免（每回合每名生物限一次）"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "悠兰德王者威仪": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "自身散发 10 尺光环。当光环进入可见生物占据空间，或可见生物进入光环或在其中结束回合时，可迫使其进行感知豁免，失败受 4d6 心灵伤害、倒地并被推离 10 尺，成功受半数伤害（每名生物一回合限一次）。"
+    }
+  }
+}

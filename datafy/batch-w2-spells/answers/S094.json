@@ -1,0 +1,108 @@
+{
+  "name": "安定心神",
+  "automation": "partial",
+  "text": "60 尺内 20 尺半径球状区域内的类人生物需进行魅力豁免（生物可自愿失败），失败则受所选效应影响（专注至多 1 分钟）。镇定：免疫魅惑和恐慌状态（已有状态在持续时间内被压制）。冷漠：对指定敌对生物的态度转为冷漠，受到伤害或看到盟友受伤害时提前结束。压制已有状态、态度转变及目睹盟友受伤害提前结束需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "安定心神",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": {
+          "shape": "sphere",
+          "radius": 20
+        },
+        "filter": "target.type == '类人生物'"
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "cha",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "choose",
+                  "prompt": "安定心神：选择效应",
+                  "options": [
+                    {
+                      "label": "镇定（免疫魅惑与恐慌）",
+                      "do": [
+                        {
+                          "kind": "applyEffect",
+                          "template": "镇定",
+                          "to": "target"
+                        }
+                      ]
+                    },
+                    {
+                      "label": "冷漠（对敌对生物变为冷漠态度）",
+                      "do": [
+                        {
+                          "kind": "applyEffect",
+                          "template": "冷漠",
+                          "to": "target"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "镇定": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "statics": [
+        {
+          "kind": "conditionImmune",
+          "values": [
+            "魅惑",
+            "恐慌"
+          ]
+        }
+      ],
+      "text": "免疫魅惑和恐慌状态；若已陷入这些状态，则在持续时间内被压制。"
+    },
+    "冷漠": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "endsOn": [
+          {
+            "event": "damageTaken"
+          }
+        ]
+      },
+      "text": "对指定生物的态度转为冷漠；受到伤害或看到盟友受到伤害时提前结束。"
+    }
+  }
+}

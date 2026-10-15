@@ -1,0 +1,79 @@
+{
+  "name": "强迫术",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。30 尺内可见所选生物进行感知豁免，失败陷入魅惑状态直至法术结束。施法者后续可用附赠动作「强迫术：指定方向」命令被魅惑生物沿指定方向移动；强制移动及移动后的再次感知豁免需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "强迫术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "emanation",
+          "radius": 30
+        },
+        "filter": "target.id != self.id && canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "template": "强迫术",
+                  "to": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "direct",
+      "name": "强迫术：指定方向",
+      "activation": "bonus",
+      "requires": "self.concentrating",
+      "root": [
+        {
+          "kind": "note",
+          "text": "强迫术：以附赠动作指向一个水平方向。受魅惑的目标在下一回合必须用尽移动力朝该方向移动，移动后可重新进行感知豁免对抗法术 DC，成功解除效应。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "强迫术": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:魅惑"
+      ],
+      "text": "陷入魅惑状态。施法者以附赠动作指明方向后，目标下回合必须用尽移动力向该方向移动，移动后可重新进行感知豁免，成功则法术终止。"
+    }
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "name": "吸血鬼之触",
+  "automation": "full",
+  "text": "对触及范围内一名生物发动近战法术攻击，命中造成 (slot.level)d6 点暗蚀伤害，并恢复伤害一半的生命值。持续时间内每个自己回合可用魔法动作重复发动此攻击。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "吸血鬼之触",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "reach"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "吸血鬼之触",
+          "to": "self",
+          "state": {
+            "slotLevel": "slot.level"
+          }
+        },
+        {
+          "kind": "attack",
+          "attack": {
+            "melee": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "(slot.level)d6",
+              "type": "暗蚀"
+            },
+            {
+              "kind": "heal",
+              "amount": "floor(damage.amount / 2)",
+              "to": "self"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "吸血鬼之触：攻击",
+      "activation": "action",
+      "requires": "self.hasEffect('吸血鬼之触')",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "reach"
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "melee": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "3d6",
+              "type": "暗蚀"
+            },
+            {
+              "kind": "heal",
+              "amount": "floor(damage.amount / 2)",
+              "to": "self"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "吸血鬼之触": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 1
+      },
+      "text": "法术持续时间内，你可以在每个回合用魔法动作对触及内生物进行一次近战法术攻击，造成暗蚀伤害并恢复造成伤害一半的生命值。"
+    }
+  }
+}

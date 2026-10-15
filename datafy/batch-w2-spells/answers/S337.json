@@ -1,0 +1,59 @@
+{
+  "name": "火焰风暴",
+  "automation": "partial",
+  "text": "在 150 尺内创造由至多十个相连的 10 尺立方区域组成的烈焰风暴。区域内每个生物进行敏捷豁免，失败受到 7d10 火焰伤害，成功受到半数伤害。点燃未被着装或携带的可燃物件（十个立方的拼接形态由施法者安排，需手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "火焰风暴",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 7
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 150,
+        "area": {
+          "shape": "cube",
+          "size": 10
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "fs",
+                  "dice": "7d10",
+                  "type": "火焰"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "fs",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

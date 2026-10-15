@@ -1,0 +1,68 @@
+{
+  "name": "注目术",
+  "automation": "partial",
+  "text": "指定 60 尺内可见生物进行感知豁免，若你或同伴正与其战斗则自动成功。豁免失败其感知（察觉）检定与被动察觉值获得 -10 减值，持续至法术终止（专注至多 1 分钟）。战斗中自动成功与被动察觉需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "注目术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "注目分心"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "注目分心": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": "check",
+            "ability": "wis",
+            "skill": "察觉"
+          },
+          "who": "bearer",
+          "op": "add",
+          "value": -10,
+          "label": "注目术"
+        }
+      ],
+      "text": "感知（察觉）检定与被动察觉值具有 -10 减值。"
+    }
+  }
+}

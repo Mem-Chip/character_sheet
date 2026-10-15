@@ -1,0 +1,70 @@
+{
+  "name": "活化物件",
+  "automation": "partial",
+  "text": "以一个动作在 120 尺内指定至多等同于施法属性调整值数量的非超巨型非魔法物件活化为构装生物（中型或更小计 1，大型计 2，巨型计 3），持续至多 1 分钟（专注）。活化生物在施法者先攻并在施法者回合后行动，可用附赠动作精神命令 500 尺内的活化生物；生命降至 0 时变回物件。升环增加生物猛击伤害。构装生物需在战斗中由玩家手动操控其移动与攻击。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "活化物件",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "point",
+        "range": 120
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "活化物件",
+          "to": "self"
+        },
+        {
+          "kind": "note",
+          "text": "在 120 尺内活化至多等同于施法属性调整值个物件为构装生物，持续 1 分钟（专注）。可用附赠动作精神发令，具体数据与行动在战斗中手动操控。"
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "活化物件：精神命令",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating && self.hasEffect('活化物件')",
+      "targeting": {
+        "type": "point",
+        "range": 500
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "以附赠动作向 500 尺内唤起的活化生物传达同一种精神命令。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "活化物件": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "活化的构装生物在战斗中听从精神命令（附赠动作发令），生命归 0 或专注结束时变回物件形态。"
+    }
+  }
+}

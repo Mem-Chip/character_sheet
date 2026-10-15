@@ -1,0 +1,70 @@
+{
+  "name": "复仇风暴",
+  "automation": "partial",
+  "text": "以施法距离内一点为中心创造半径 300 尺翻腾乌云。云团出现时其下生物进行体质豁免，失败受 2d6 雷鸣伤害并在持续时间内陷入耳聋。后续每回合乌云依次降下酸雨（4d6强酸）、闪电（6道各10d6敏捷半）、冰雹（2d6钝击）及冻雨狂风（1d6寒冷并阻碍远程攻击等），后续回合效应需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "复仇风暴",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 9
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 5280,
+        "area": {
+          "shape": "cylinder",
+          "radius": 300
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "dice": "2d6",
+                  "type": "雷鸣"
+                },
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "复仇风暴：耳聋"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "复仇风暴：耳聋": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:耳聋"
+      ]
+    }
+  }
+}

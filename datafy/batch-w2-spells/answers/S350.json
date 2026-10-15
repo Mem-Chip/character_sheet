@@ -1,0 +1,76 @@
+{
+  "name": "咒唤圣光",
+  "automation": "partial",
+  "text": "专注至多 10 分钟。在 90 尺内召唤半径 10 尺、高 40 尺的光之立柱。对区域内可见生物，分别选择【治愈之光】恢复等于 4d12 + 施法属性调整值生命值（每高一环 +1d12），或【灼热之光】敏捷豁免，失败受 6d12 光耀伤害（半数，每高一环 +1d12）。柱状区域移动及生物进出与回合结束照耀由玩家手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "咒唤圣光",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 7
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "area",
+        "range": 90,
+        "area": {
+          "shape": "cylinder",
+          "radius": 10
+        }
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "咒唤圣光：选择光芒效果",
+          "options": [
+            {
+              "label": "治愈之光",
+              "do": [
+                {
+                  "kind": "heal",
+                  "amount": "(-3 + slot.level)d12 + self.spell.mod"
+                }
+              ]
+            },
+            {
+              "label": "灼热之光",
+              "do": [
+                {
+                  "kind": "save",
+                  "ability": "dex",
+                  "dc": "self.spell.dc",
+                  "onFail": [
+                    {
+                      "kind": "damage",
+                      "id": "sear",
+                      "dice": "(-1 + slot.level)d12",
+                      "type": "光耀"
+                    }
+                  ],
+                  "onSuccess": [
+                    {
+                      "kind": "damage",
+                      "ref": "sear",
+                      "scale": 0.5
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

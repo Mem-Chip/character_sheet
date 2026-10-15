@@ -1,0 +1,74 @@
+{
+  "name": "十字军披风",
+  "automation": "full",
+  "text": "以自身为中心散发 30 尺灵光。位于灵光内的你和盟友以武器或徒手打击命中时额外造成 1d4 光耀伤害。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "十字军披风",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "十字军披风",
+          "to": "self"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "十字军披风": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 1
+      },
+      "text": "散发 30 尺灵光：你和盟友以武器或徒手打击命中时额外造成 1d4 光耀伤害。",
+      "aura": {
+        "id": "crusaders-mantle",
+        "radius": 30,
+        "affects": "allies",
+        "includeSelf": true,
+        "stackKey": "十字军披风",
+        "grant": {
+          "triggers": [
+            {
+              "id": "crusaders-mantle-damage",
+              "label": "十字军披风：额外光耀伤害",
+              "on": "attackHit",
+              "role": "actor",
+              "window": "before",
+              "when": "attack.weapon || attack.unarmed",
+              "do": [
+                {
+                  "kind": "addDamage",
+                  "dice": "1d4",
+                  "type": "光耀"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

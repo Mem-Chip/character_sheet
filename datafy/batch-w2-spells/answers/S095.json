@@ -1,0 +1,67 @@
+{
+  "name": "暗示术",
+  "automation": "partial",
+  "text": "30 尺内你能看见的一个生物进行感知豁免，失败在法术持续时间内陷入魅惑状态（专注至多 8 小时）。被魅惑生物尽其所能执行你描述的行动暗示（必须听起来可行且非自残自伤）。施法者或其盟友对其造成伤害时法术提前结束。暗示内容理解、行为执行及达成目标后法术终止需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "暗示术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "concentration": {
+        "hours": 8
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "暗示术",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "暗示术": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:魅惑"
+      ],
+      "duration": {
+        "hours": 8,
+        "endsOn": [
+          {
+            "event": "damageApplied",
+            "when": "event.target == self.id && event.total > 0 && (event.source == source.id || (event.source != null && combatant(event.source).isAllyOf(source)))"
+          }
+        ]
+      },
+      "text": "陷入魅惑状态，尽其所能执行暗示行为；施法者或其盟友对其造成伤害时法术提前结束；完成要求后法术终止。"
+    }
+  }
+}

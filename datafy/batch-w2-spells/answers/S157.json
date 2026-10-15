@@ -1,0 +1,81 @@
+{
+  "name": "催眠图纹",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。在 120 尺内边长 30 尺立方区域内创造彩色图纹，区域内能看见图纹的生物必须进行感知豁免，失败陷入魅惑状态，且在魅惑期间陷入失能状态、速度降为 0。受术生物受到任何伤害、或有其他生物用动作将其摇醒时提前终止（摇醒与视线需手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "催眠图纹",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "cube",
+          "size": 30
+        },
+        "filter": "ask('目标能看见催眠图纹吗？')"
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "template": "催眠图纹",
+                  "to": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "催眠图纹": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:魅惑",
+        "XPHB:condition:失能"
+      ],
+      "statics": [
+        {
+          "kind": "speedSet",
+          "value": 0
+        }
+      ],
+      "duration": {
+        "endsOn": [
+          {
+            "event": "damageTaken"
+          }
+        ]
+      },
+      "text": "陷入魅惑和失能状态，速度降为 0。受到任何伤害或被其他生物用动作摇醒时效应提前终止。"
+    }
+  }
+}

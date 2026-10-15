@@ -1,0 +1,65 @@
+{
+  "name": "疯狂冠冕",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。120 尺内一名可见类人生物进行感知豁免，失败陷入魅惑状态。目标每回合必须在移动前使用其动作对施法者精神指定的生物进行一次近战攻击。目标每回合结束可重复豁免。施法者每回合须用魔法动作维持控制（受控攻击与维持动作需手动配合处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "疯狂冠冕",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 120,
+        "filter": "target.type == '类人生物'"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "疯狂冠冕",
+              "duration": {
+                "minutes": 1,
+                "saveEnds": {
+                  "ability": "wis",
+                  "at": "turnEnd"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "疯狂冠冕": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:魅惑"
+      ],
+      "text": "陷入魅惑状态。每回合必须在移动前使用其动作对施法者精神指定的生物发动近战攻击；每回合结束时可重复豁免。"
+    }
+  }
+}

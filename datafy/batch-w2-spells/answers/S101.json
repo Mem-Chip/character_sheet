@@ -1,0 +1,72 @@
+{
+  "name": "沉默术",
+  "automation": "partial",
+  "text": "在 120 尺内指定一点创造 20 尺半径球状静音区域，持续至多 10 分钟（专注）。完全位于该区域内的生物陷入耳聋状态、免疫雷鸣伤害，且无法施展包含言语成分的法术。静音区域随生物进出区域的效应施加与移除需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "沉默术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "sphere",
+          "radius": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "applyEffect",
+              "template": "沉默术",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "沉默术": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:耳聋"
+      ],
+      "statics": [
+        {
+          "kind": "immune",
+          "values": [
+            "雷鸣"
+          ]
+        }
+      ],
+      "flags": {
+        "cannot": [
+          "speak"
+        ]
+      },
+      "text": "完全位于区域内时陷入耳聋状态，免疫雷鸣伤害，且无法施展包含言语成分的法术。"
+    }
+  }
+}

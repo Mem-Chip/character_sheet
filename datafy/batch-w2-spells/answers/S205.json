@@ -1,0 +1,92 @@
+{
+  "name": "咒唤兽群",
+  "automation": "partial",
+  "text": "在 60 尺内召唤大型虚幻兽群，持续至多 10 分钟（专注）。施法者在兽群 5 尺内时力量豁免具有优势；自身移动时可令兽群移动 30 尺。兽群移动至生物 10 尺内、生物进入兽群 10 尺内或在其中结束回合时，可迫使其进行敏捷豁免，失败受 3d10（升环每比三环高一环+1d10）挥砍伤害（每回合限一次）。兽群位置、移动、触发时机与升环伤害需手动调整判定。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "咒唤兽群",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "point",
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "咒唤兽群",
+          "to": "self"
+        },
+        {
+          "kind": "note",
+          "text": "咒唤兽群：在 60 尺内召出虚幻兽群。在兽群 5 尺内力量豁免具有优势；生物进入兽群 10 尺内或在其中结束回合时迫使其进行敏捷豁免，失败受 3d10（升环+1d10）挥砍伤害。"
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "咒唤兽群：兽群践踏",
+      "activation": "none",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "3d10",
+              "type": "挥砍"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "咒唤兽群": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save",
+            "ability": "str"
+          },
+          "who": "bearer",
+          "op": "adv",
+          "when": "ask('是否位于兽群 5 尺内？')",
+          "label": "咒唤兽群：力量豁免优势"
+        }
+      ],
+      "text": "虚幻兽群存在于 60 尺内；在兽群 5 尺内力量豁免具有优势。移动时可令兽群移动 30 尺。生物进入兽群 10 尺内或在其中结束回合须进行敏捷豁免，失败受 3d10（升环+1d10）挥砍伤害（每生物每回合限一次）。"
+    }
+  }
+}

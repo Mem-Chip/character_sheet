@@ -1,0 +1,63 @@
+{
+  "name": "火墙术",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。在 120 尺内创造直线（长 60 尺高 20 尺厚 1 尺）或环形（直径 20 尺高 20 尺厚 1 尺）火墙。出现时占据区域内的生物进行敏捷豁免，失败受到 5d8（每升一环 +1d8）火焰伤害，成功半数。选择火墙造成伤害的一侧，生物进入火墙或在伤害侧 10 尺内 / 火墙内结束回合时受到相同伤害（火墙朝向、入内及回合结束伤害需手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "火墙术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "line",
+          "length": 60,
+          "width": 1
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "fire",
+                  "dice": "(1 + slot.level)d8",
+                  "type": "火焰"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "fire",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

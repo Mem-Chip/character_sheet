@@ -1,0 +1,48 @@
+{
+  "name": "律令死亡",
+  "automation": "partial",
+  "text": "强迫 60 尺内一名可见生物死亡。若目标生命值不超过 100 点，目标立即死亡；否则目标受到 12d12 点心灵伤害（直接死亡需由 DM/手动确认处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "律令死亡",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 9
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "if",
+          "when": "target.hp <= 100",
+          "then": [
+            {
+              "kind": "note",
+              "text": "律令死亡：目标生命值不超过 100 点，目标立即死亡。"
+            }
+          ],
+          "else": [
+            {
+              "kind": "damage",
+              "dice": "12d12",
+              "type": "心灵"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

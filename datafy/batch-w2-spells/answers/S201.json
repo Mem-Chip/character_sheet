@@ -1,0 +1,122 @@
+{
+  "name": "召雷术",
+  "automation": "partial",
+  "text": "召唤半径 60 尺风暴云，持续至多 10 分钟（专注）。施法时及后续可用动作降下闪电，指定点 5 尺内生物进行敏捷豁免，失败受 3d10（升环每比三环高一环+1d10）闪电伤害，成功受半数伤害；室外暴风雨天气伤害+1d10、风暴云覆盖范围及后续动作升环伤害需手动调整判定。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "召雷术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "cylinder",
+          "radius": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "召雷术",
+          "to": "self"
+        },
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "lightning",
+                  "dice": "(slot.level)d10",
+                  "type": "闪电"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "lightning",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "召雷术：降下闪电",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating",
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "cylinder",
+          "radius": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "lightningSub",
+                  "dice": "3d10",
+                  "type": "闪电"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "lightningSub",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "召雷术": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "风暴云在头顶聚集。持续时间内可以动作降下闪电，5 尺内生物敏捷豁免对抗法术 DC，失败受闪电伤害，成功半数。"
+    }
+  }
+}

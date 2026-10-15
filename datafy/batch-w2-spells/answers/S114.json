@@ -1,0 +1,76 @@
+{
+  "name": "火焰刀",
+  "automation": "partial",
+  "text": "附赠动作召唤火焰刀（专注至多 10 分钟），发出 10 尺明亮与 10 尺微光光照。可用动作发动近战法术攻击，命中造成 3d6 + 施法属性调整值的火焰伤害（升环每环 +1d6，需手动调整）。光照与收放刀刃需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "火焰刀",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "火焰刀"
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "火焰刀：攻击",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating && self.hasEffect('火焰刀')",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 5
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "melee": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "3d6 + self.spell.mod",
+              "type": "火焰"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "火焰刀": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "手握火焰刀，散发 10 尺明亮光照与额外 10 尺微光光照。可用动作发动近战法术攻击造成火焰伤害；放下消失，附赠动作可重新唤出。"
+    }
+  }
+}

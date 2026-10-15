@@ -1,0 +1,69 @@
+{
+  "name": "信仰守卫",
+  "automation": "partial",
+  "text": "在 30 尺内召唤大型灵体守护者悬浮 8 小时。敌人在一回合内首次进入守护者 10 尺内或在其 10 尺内开始其回合时进行敏捷豁免，失败受 20 点光耀伤害，成功半数。累计造成 60 点伤害后守护者消失。守护者位置、触发时机与 60 点伤害计数需手动处理（可用「信仰守卫：守卫打击」动作结算）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "信仰守卫",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "targeting": {
+        "type": "point",
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "在 30 尺内召唤大型灵体守护者悬浮 8 小时。敌人在一回合内首次进入其 10 尺内或在其 10 尺内开始回合时触发豁免"
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "信仰守卫：守卫打击",
+      "activation": "free",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 40
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "d",
+              "dice": 20,
+              "type": "光耀"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "d",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

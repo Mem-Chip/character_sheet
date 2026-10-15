@@ -1,0 +1,76 @@
+{
+  "name": "警戒箭阵",
+  "automation": "partial",
+  "text": "持续 8 小时。将至多 4 根（升环每环 +2 根）非魔法箭矢或弩矢插在地上警戒。除指定生物外，生物首次进入 30 尺内或在其中结束回合时触发弹药射击：目标必须进行敏捷豁免，失败受到 2d4 穿刺伤害。进入触发判定、排除生物指定与弹药消耗需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "警戒箭阵",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "警戒箭阵",
+          "duration": {
+            "hours": 8
+          }
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "警戒箭阵：发射",
+      "activation": "none",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "2d4",
+              "type": "穿刺"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "警戒箭阵": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "hours": 8
+      },
+      "text": "警戒箭矢插在地上。生物进入 30 尺或在其中结束回合时触发射击，敏捷豁免失败受 2d4 穿刺伤害；所有弹药消耗完毕后法术终止。"
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "name": "月华之光",
+  "automation": "partial",
+  "text": "指定 120 尺内一点产生半径 5 尺、高 40 尺的微光圆柱，持续至多 1 分钟（专注）。出现时、进入区域或在其中结束回合的生物须进行体质豁免，失败承受 (slot.level)d10 光耀伤害且变形生物变回原形（离开前无法变形），成功伤害减半。后续回合以动作移动光柱 60 尺、变形限制及回合内触发豁免限制需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "月华之光",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "cylinder",
+          "radius": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "d",
+                  "dice": "(slot.level)d10",
+                  "type": "光耀"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "d",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

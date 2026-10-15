@@ -1,0 +1,63 @@
+{
+  "name": "欧提路克冰封法球",
+  "automation": "partial",
+  "text": "300 尺内指定一点爆炸形成 60 尺半径球状区域。区域内生物进行体质豁免，失败受 10d6（每比 6 环高 1 环 +1d6）点寒冷伤害，成功半数。若击中水面冻结 30 尺方形坚冰持续 1 分钟并使游泳者束缚；亦可凝聚为冰球投掷或用投石索弹射（水面冻结与冰球暂存投掷需手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "欧提路克冰封法球",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 6
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 300,
+        "area": {
+          "shape": "sphere",
+          "radius": 60
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "d",
+                  "dice": "(slot.level + 4)d6",
+                  "type": "寒冷"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "d",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "若击中水体，凝结 30 尺见方、6 寸厚坚冰持续 1 分钟，表面游泳生物陷入束缚（可用动作通过力量（运动）检定破冰）；亦可在施法后凝为小冰球，1 分钟内可投掷（40 尺）或弹射，撞击时产生相同爆炸。"
+        }
+      ]
+    }
+  ]
+}

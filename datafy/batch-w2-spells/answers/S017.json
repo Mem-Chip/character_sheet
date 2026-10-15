@@ -1,0 +1,45 @@
+{
+  "name": "克敌先击",
+  "automation": "partial",
+  "text": "使用武器发动一次攻击。攻击检定使用施法属性（self.spell.atk）。命中时武器伤害加值使用施法属性调整值（self.spell.mod），伤害类型可选择改为光耀伤害或维持武器原本类型（武器伤害由玩家手动结算）。5 级起额外造成的 1d6/2d6/3d6 光耀伤害由系统自动结算。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "克敌先击",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "weapon": true
+          },
+          "onHit": [
+            {
+              "kind": "if",
+              "when": "self.level >= 5",
+              "then": [
+                {
+                  "kind": "damage",
+                  "dice": "floor((self.level + 1) / 6)d6",
+                  "type": "光耀"
+                }
+              ]
+            },
+            {
+              "kind": "note",
+              "text": "克敌先击：命中！请结算武器基础伤害（使用施法属性调整值），伤害类型可选择光耀或武器原本类型。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

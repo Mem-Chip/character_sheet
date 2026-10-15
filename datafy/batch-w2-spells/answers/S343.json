@@ -1,0 +1,133 @@
+{
+  "name": "圣言术",
+  "automation": "partial",
+  "text": "附赠动作使 30 尺内指定的生物进行魅力豁免。豁免失败且生命值低于 50 时按当前生命值承受效应：0-20 点直接死亡（需手动处理）；21-30 点陷入目盲、耳聋和震慑 1 小时；31-40 点陷入目盲和耳聋 10 分钟；41-50 点陷入耳聋 1 分钟。无论生命值如何，豁免失败的天界生物、元素生物、精类、邪魔均被遣送回其起源位面（需手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "圣言术",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 7
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "cha",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "if",
+              "when": "target.hp <= 20",
+              "then": [
+                {
+                  "kind": "note",
+                  "text": "圣言术：目标生命值不超过 20，目标死亡。"
+                }
+              ]
+            },
+            {
+              "kind": "if",
+              "when": "target.hp >= 21 && target.hp <= 30",
+              "then": [
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "圣言术：目盲耳聋震慑"
+                }
+              ]
+            },
+            {
+              "kind": "if",
+              "when": "target.hp >= 31 && target.hp <= 40",
+              "then": [
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "圣言术：目盲耳聋"
+                }
+              ]
+            },
+            {
+              "kind": "if",
+              "when": "target.hp >= 41 && target.hp <= 50",
+              "then": [
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "圣言术：耳聋"
+                }
+              ]
+            },
+            {
+              "kind": "if",
+              "when": "target.type == '天界生物' || target.type == '元素生物' || target.type == '精类' || target.type == '邪魔'",
+              "then": [
+                {
+                  "kind": "note",
+                  "text": "圣言术：目标被遣送回其起源位面，24 小时内无法返回当前位面。"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "圣言术：目盲耳聋震慑": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "hours": 1
+      },
+      "implies": [
+        "XPHB:condition:目盲",
+        "XPHB:condition:耳聋",
+        "XPHB:condition:震慑"
+      ],
+      "text": "陷入目盲、耳聋和震慑状态，持续 1 小时。"
+    },
+    "圣言术：目盲耳聋": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 10
+      },
+      "implies": [
+        "XPHB:condition:目盲",
+        "XPHB:condition:耳聋"
+      ],
+      "text": "陷入目盲和耳聋状态，持续 10 分钟。"
+    },
+    "圣言术：耳聋": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 1
+      },
+      "implies": [
+        "XPHB:condition:耳聋"
+      ],
+      "text": "陷入耳聋状态，持续 1 分钟。"
+    }
+  }
+}

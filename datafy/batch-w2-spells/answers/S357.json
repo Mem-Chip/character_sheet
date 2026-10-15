@@ -1,0 +1,66 @@
+{
+  "name": "焚云术",
+  "automation": "partial",
+  "text": "150 尺内以一点为中心创造半径 20 尺球状烟云（专注至多 1 分钟）。区域被重度遮蔽。出现时处于其内的生物敏捷豁免，失败受 10d8 火焰伤害，成功半数；区域移动至生物空间、生物进入或在其中结束回合时也须进行该豁免（每回合至多一次）；施法者每回合开始烟云直线远离 10 尺。重度遮蔽、烟云移动与后续豁免需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "焚云术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 8
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 150,
+        "area": {
+          "shape": "sphere",
+          "radius": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "d",
+                  "dice": "10d8",
+                  "type": "火焰"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "d",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "烟云区域被重度遮蔽；烟云移动到生物空间、生物进入或在其中结束其回合时，该生物须进行敏捷豁免（失败 10d8 火焰伤害，成功半数，每回合至多一次）；施法者每回合开始烟云远离移动 10 尺"
+        }
+      ]
+    }
+  ]
+}

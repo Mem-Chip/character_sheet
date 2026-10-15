@@ -1,0 +1,51 @@
+{
+  "name": "神导术",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。触碰一名自愿生物并指定一项技能，受术生物在进行该技能的属性检定时具有 1d4 加值（检定时询问确认）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "神导术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "神导术"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "神导术": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": "check"
+          },
+          "who": "bearer",
+          "when": "roll.skill != null && ask('此检定使用了神导术指定的技能吗？')",
+          "op": "addDice",
+          "value": "1d4",
+          "label": "神导术"
+        }
+      ]
+    }
+  }
+}

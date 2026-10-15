@@ -1,0 +1,66 @@
+{
+  "name": "活力灵光",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。以自身为中心发散 30 尺灵光。施法创造灵光时为区域内一名生物恢复 2d6 生命值；持续期间每个自己回合开始时，可为区域内一名生物恢复 2d6 生命值（后续回合的治疗需手动结算）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "活力灵光",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "活力灵光",
+          "to": "self"
+        },
+        {
+          "kind": "heal",
+          "amount": "2d6",
+          "to": "target"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "活力灵光": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "以自身为中心 30 尺灵光。在你的每个回合开始时，你可以为区域内的一名生物恢复 2d6 生命值。",
+      "triggers": [
+        {
+          "id": "turn-heal",
+          "label": "活力灵光：回合开始恢复生命值",
+          "on": "turnStarted",
+          "role": "actor",
+          "do": [
+            {
+              "kind": "note",
+              "text": "活力灵光：回合开始，你可以为 30 尺灵光内的一名生物恢复 2d6 生命值。"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "name": "放逐斩",
+  "automation": "partial",
+  "text": "使用近战武器或徒手打击命中后以附赠动作施展，额外造成 5d10 点力场伤害（专注至多 1 分钟）。若此次攻击将目标生命值削减至 50 点或更低，目标须进行魅力豁免，失败被放逐至半位面并陷入失能状态。50 生命值门槛判断与移出/重返战场需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "放逐斩",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "trigger": {
+        "on": "attackHit",
+        "role": "actor",
+        "window": "before",
+        "when": "attack.melee && (attack.weapon || attack.unarmed)"
+      },
+      "requires": "turn.isMine",
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "root": [
+        {
+          "kind": "addDamage",
+          "dice": "5d10",
+          "type": "力场"
+        },
+        {
+          "kind": "save",
+          "ability": "cha",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "放逐斩：放逐",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "放逐斩：放逐": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:失能"
+      ],
+      "duration": {
+        "minutes": 1
+      },
+      "text": "被放逐至无害半位面并陷入失能状态。法术终止时重新出现在原位置或最近未占据空间。"
+    }
+  }
+}

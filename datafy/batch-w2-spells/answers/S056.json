@@ -1,0 +1,63 @@
+{
+  "name": "雷鸣波",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "雷鸣波",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 15,
+        "area": {
+          "shape": "cube",
+          "size": 15
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "d",
+                  "dice": "(1 + slot.level)d8",
+                  "type": "雷鸣"
+                },
+                {
+                  "kind": "move",
+                  "mode": "push",
+                  "ft": 10
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "d",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

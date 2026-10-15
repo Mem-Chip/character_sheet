@@ -1,0 +1,92 @@
+{
+  "name": "火焰护盾",
+  "automation": "partial",
+  "text": "持续 10 分钟。选择温暖护盾（寒冷抗性）或冻寒护盾（火焰抗性），抗性自动生效。散发 10 尺明亮与 10 尺微光光照。每当 5 尺内生物以近战攻击命中你时，温暖护盾对其造成 2d8 火焰伤害，冻寒护盾对其造成 2d8 寒冷伤害（反弹伤害需手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "火焰护盾",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "选择火焰护盾类型",
+          "options": [
+            {
+              "label": "温暖护盾（寒冷抗性，反弹 2d8 火焰伤害）",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "火焰护盾：温暖护盾"
+                }
+              ]
+            },
+            {
+              "label": "冻寒护盾（火焰抗性，反弹 2d8 寒冷伤害）",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "火焰护盾：冻寒护盾"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "火焰护盾：温暖护盾": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 10
+      },
+      "statics": [
+        {
+          "kind": "resist",
+          "values": [
+            "寒冷"
+          ]
+        }
+      ],
+      "text": "具有寒冷伤害抗性。每当 5 尺内生物以近战攻击命中你时受到 2d8 火焰伤害。散发 10 尺明亮光照及额外 10 尺微光光照。"
+    },
+    "火焰护盾：冻寒护盾": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 10
+      },
+      "statics": [
+        {
+          "kind": "resist",
+          "values": [
+            "火焰"
+          ]
+        }
+      ],
+      "text": "具有火焰伤害抗性。每当 5 尺内生物以近战攻击命中你时受到 2d8 寒冷伤害。散发 10 尺明亮光照及额外 10 尺微光光照。"
+    }
+  }
+}

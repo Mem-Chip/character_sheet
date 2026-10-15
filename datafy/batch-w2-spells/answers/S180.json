@@ -1,0 +1,97 @@
+{
+  "name": "气化形体",
+  "automation": "partial",
+  "text": "触碰自愿生物转化为云雾（升环每高一环可多选一个目标）：拥有钝击/穿刺/挥砍抗性，免疫倒地，力量/敏捷/体质豁免具有优势；不能攻击、施法、言语或操作物件；仅有 10 尺悬浮飞行速度；穿过狭隙与占据已有生物空间需手动处理；生命值降至 0 或自愿用魔法动作终止时法术结束。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "气化形体",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "concentration": {
+        "hours": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": "slot.level - 2",
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "气化形体",
+          "to": "target"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "气化形体": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "hours": 1,
+        "endsOn": [
+          {
+            "event": "reducedTo0"
+          }
+        ]
+      },
+      "statics": [
+        {
+          "kind": "resist",
+          "values": [
+            "钝击",
+            "穿刺",
+            "挥砍"
+          ]
+        },
+        {
+          "kind": "conditionImmune",
+          "values": [
+            "倒地"
+          ]
+        },
+        {
+          "kind": "speedSet",
+          "value": 10,
+          "lock": true
+        }
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save",
+            "ability": [
+              "str",
+              "dex",
+              "con"
+            ]
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "气化形体：力敏体豁免优势"
+        }
+      ],
+      "flags": {
+        "cannot": [
+          "speak",
+          "castSpells"
+        ]
+      },
+      "text": "拥有钝击、穿刺和挥砍伤害的抗性，对倒地状态免疫，进行力量、敏捷、体质豁免具有优势；飞行速度为 10 尺且能悬浮；不能讲话、操作物件、攻击或施法；可穿过狭隙与占据其他生物空间；生命值降至 0 或用魔法动作终止时结束。"
+    }
+  }
+}

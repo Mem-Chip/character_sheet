@@ -1,0 +1,70 @@
+{
+  "name": "恶言相加",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "恶言相加",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "(1 + floor((self.level + 1) / 6))d6",
+              "type": "心灵"
+            },
+            {
+              "kind": "applyEffect",
+              "template": "恶言相加",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "恶言相加": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        },
+        "endsOn": [
+          {
+            "event": "d20Rolled",
+            "when": "event.kind == 'attack' && event.roller == self.id"
+          }
+        ]
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "bearer",
+          "op": "disadv",
+          "label": "恶言相加：攻击检定劣势"
+        }
+      ]
+    }
+  }
+}

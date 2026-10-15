@@ -2582,6 +2582,41 @@
     "未审"
    ]
   },
+  "XPHB:法师:法术抗性:14": {
+   "name": "法术抗性",
+   "automation": "partial",
+   "text": "抵抗法术时的豁免具有优势（ask 确认是否为法术豁免）。对法术造成的伤害具有抗性：抗性只能按伤害类型写，所以用 ask 确认伤害是否来自法术，是则减半。",
+   "rollMods": [
+    {
+     "on": {
+      "kind": "save"
+     },
+     "who": "bearer",
+     "when": "ask('这次豁免是在抵抗法术吗？')",
+     "op": "adv",
+     "label": "法术抗性：抵抗法术的豁免具有优势"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "resist",
+     "label": "法术抗性：法术伤害减半",
+     "on": "damageIncoming",
+     "role": "target",
+     "window": "before",
+     "when": "ask('这伤害来自法术吗？')",
+     "modify": [
+      {
+       "op": "halveDamage"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
   "XPHB:法师:法术塑形:6": {
    "name": "法术塑形",
    "automation": "manual",
@@ -4067,8 +4102,31 @@
   },
   "XPHB:拦截": {
    "name": "拦截",
-   "automation": "manual",
-   "text": "一名你可见的生物以攻击检定命中你 5 尺内的另一名生物时，你可以用反应把该次伤害减少 1d10 + 熟练加值（需要持握盾牌或简易 / 军用武器）。引擎的减伤修正只收固定数字、不能掷骰子，所以请手动掷骰并从伤害里扣除，反应由人自己扣。",
+   "automation": "full",
+   "text": "一名你可见的生物命中你 5 尺内的另一名生物时，用反应把伤害减少 1d10 + 熟练加值（需持握盾牌或简易 / 军用武器）。",
+   "triggers": [
+    {
+     "id": "interpose",
+     "label": "拦截",
+     "on": "attackHit",
+     "role": "ally",
+     "window": "before",
+     "deferTo": "damageIncoming",
+     "optional": true,
+     "cost": [
+      {
+       "economy": "reaction"
+      }
+     ],
+     "when": "target.id != self.id && within(self, target, 5) && canSee(self, attacker) && ask('你持握着盾牌或简易/军用武器吗？')",
+     "modify": [
+      {
+       "op": "reduceDamage",
+       "value": "1d10 + pb"
+      }
+     ]
+    }
+   ],
    "tags": [
     "ai",
     "未审"
@@ -4771,6 +4829,57 @@
      "who": "bearer",
      "op": "adv",
      "label": "魔能意志：维持专注的体质豁免具有优势"
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:魔能斩": {
+   "name": "魔能斩",
+   "automation": "full",
+   "text": "每回合一次，用契约武器命中生物时，可消耗一枚契约法术位，额外造成 (1 + 法术位环阶) 个 d8 力场伤害；目标体型在巨型或以下时，还可令其倒地。每回合一次由人把握。",
+   "actions": [
+    {
+     "id": "smite",
+     "name": "魔能斩",
+     "activation": "free",
+     "trigger": {
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "attack.weapon && ask('这是契约武器的攻击吗？')"
+     },
+     "requires": "turn.isMine",
+     "cost": [
+      {
+       "slot": {
+        "min": 1
+       }
+      }
+     ],
+     "root": [
+      {
+       "kind": "addDamage",
+       "dice": "(1 + slot.level)d8",
+       "type": "力场"
+      },
+      {
+       "kind": "if",
+       "when": "target.size != '超巨型'",
+       "then": [
+        {
+         "kind": "applyEffect",
+         "to": "target",
+         "template": "XPHB:condition:倒地",
+         "duration": {
+          "manual": true
+         }
+        }
+       ]
+      }
+     ]
     }
    ],
    "tags": [
@@ -8862,6 +8971,60 @@
     "未审"
    ]
   },
+  "XPHB:圣武士:迅捷灵光:7": {
+   "name": "迅捷灵光",
+   "automation": "partial",
+   "text": "自身速度 +10 尺已在静态层。10 尺灵光内的盟友在自己回合开始时获得 +10 尺速度，直到其下个回合结束；回合中途第一次进入灵光的盟友需人工处理。",
+   "auras": [
+    {
+     "id": "alacrity",
+     "radius": 10,
+     "affects": "allies",
+     "includeSelf": false,
+     "requires": "!self.has('失能')",
+     "stackKey": "迅捷灵光",
+     "grant": {
+      "triggers": [
+       {
+        "id": "alacrity-start",
+        "label": "迅捷灵光：速度",
+        "on": "turnStarted",
+        "role": "actor",
+        "do": [
+         {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "迅捷灵光"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "effects": {
+    "迅捷灵光": {
+     "stackKey": "迅捷灵光",
+     "statics": [
+      {
+       "kind": "speed",
+       "bonus": 10
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 1
+      }
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
   "XPHB:圣武士:勇气灵光:10": {
    "name": "勇气灵光",
    "automation": "partial",
@@ -9490,7 +9653,7 @@
   "XPHB:术士:律令之壁:6": {
    "name": "律令之壁",
    "automation": "partial",
-   "text": "以魔法动作消耗 1-5 点术法点，为你自己或 30 尺内一个可见生物创造屏障，获得等量的 d8（存放在屏障的状态里）。被守护者受到伤害时可以消耗骰子，使伤害减少掷出的合计。屏障持续到长休或你再次使用本特性。简化：每次触发消耗屏障里剩余的全部骰子并结束屏障（不能只用其中几颗），减伤按每颗 d8 的平均值 4.5 计、不真的掷骰；你再次使用时，原来在别的生物身上的旧屏障请手动移除。",
+   "text": "以魔法动作消耗 1-5 点术法点，为你自己或 30 尺内一个可见生物创造屏障，获得等量的 d8。被守护者受到伤害时消耗骰子，伤害减少掷出的合计。屏障持续到长休或你再次使用本特性。简化：每次触发消耗屏障里剩余的全部骰子并结束屏障（不能只用其中几颗）；你再次使用时，原来在别的生物身上的旧屏障请手动移除。",
    "actions": [
     {
      "id": "use",
@@ -9557,7 +9720,7 @@
        "modify": [
         {
          "op": "reduceDamage",
-         "value": "floor(effect.state.dice * 4.5)"
+         "value": "(effect.state.dice)d8"
         }
        ],
        "do": [
@@ -9687,6 +9850,149 @@
          ]
         }
        ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:术士:扭曲爆裂:18": {
+   "name": "扭曲爆裂",
+   "automation": "partial",
+   "text": "引擎先结算消失位置 30 尺内生物的力量豁免（失败受伤并被拉回原位，成功半伤），再执行传送。传送的目的地（120 尺内、你可见且未被占据）与拉回后的落点（原位空出后最近的空格）由人判断。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "扭曲爆裂",
+     "activation": "action",
+     "cost": [
+      {
+       "resource": "warp-burst"
+      }
+     ],
+     "targeting": {
+      "type": "area",
+      "range": "self",
+      "area": {
+       "shape": "sphere",
+       "radius": 30
+      },
+      "filter": "target.id != self.id"
+     },
+     "root": [
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "str",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "burst",
+           "dice": "3d10",
+           "type": "力场"
+          },
+          {
+           "kind": "note",
+           "text": "扭曲爆裂：把失败的生物拉向你原本的位置，停在最靠近的未被占据空间（手动处理）"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "burst",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "move",
+       "mode": "teleport",
+       "ft": 120
+      }
+     ]
+    },
+    {
+     "id": "reset",
+     "name": "扭曲爆裂：重置（5 点术法点）",
+     "activation": "free",
+     "requires": "self.resource('warp-burst') == 0",
+     "cost": [
+      {
+       "resource": "sorcery_points",
+       "n": 5
+      }
+     ],
+     "root": [
+      {
+       "kind": "resource",
+       "id": "warp-burst",
+       "delta": 1
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:术士:扭曲幸运:6": {
+   "name": "扭曲幸运",
+   "automation": "full",
+   "text": "你能看见的生物掷 d20 检定后，可以用反应并消耗 1 术法点，掷 1d4 加到或从中减去该 d20 的结果。只在会改变结果时询问：盟友（含你自己）的检定会失败时问「加」；敌人的检定会成功时问「减」。",
+   "triggers": [
+    {
+     "id": "bend-add",
+     "label": "扭曲幸运：加 1d4",
+     "on": "d20Rolled",
+     "role": "any",
+     "window": "before",
+     "optional": true,
+     "when": "roll.failing && canSee(self, combatant(roll.roller)) && (roll.roller == self.id || combatant(roll.roller).isAllyOf(self))",
+     "cost": [
+      {
+       "economy": "reaction"
+      },
+      {
+       "resource": "sorcery_points"
+      }
+     ],
+     "modify": [
+      {
+       "op": "addToRoll",
+       "value": "1d4"
+      }
+     ]
+    },
+    {
+     "id": "bend-sub",
+     "label": "扭曲幸运：减 1d4",
+     "on": "d20Rolled",
+     "role": "any",
+     "window": "before",
+     "optional": true,
+     "when": "!roll.failing && canSee(self, combatant(roll.roller)) && combatant(roll.roller).isEnemyOf(self)",
+     "cost": [
+      {
+       "economy": "reaction"
+      },
+      {
+       "resource": "sorcery_points"
+      }
+     ],
+     "modify": [
+      {
+       "op": "addToRoll",
+       "value": "-1d4"
       }
      ]
     }
@@ -10806,89 +11112,47 @@
   "XPHB:武僧:拨挡攻击:3": {
    "name": "拨挡攻击",
    "automation": "partial",
-   "text": "被主要伤害为钝击/穿刺/挥砍的攻击命中时，用反应把这次攻击的伤害减少 1d10 + 敏捷调整值 + 武僧等级。减伤的 1d10 引擎不能自己掷（减伤只收数字），需要先掷骰并输入点数。伤害被减到 0 后消耗 1 点功力重新定向的部分需要人处理。",
-   "actions": [
+   "text": "被伤害含钝击/穿刺/挥砍的攻击命中时，用反应把伤害减少 1d10 + 敏捷调整值 + 武僧等级。伤害被减到 0 后消耗 1 点功力重新定向的部分需要人处理。",
+   "triggers": [
     {
      "id": "deflect",
-     "name": "拨挡攻击",
-     "activation": "reaction",
-     "trigger": {
-      "on": "attackHit",
-      "role": "target",
-      "window": "before",
-      "when": "attack.damageType == '钝击' || attack.damageType == '穿刺' || attack.damageType == '挥砍'"
-     },
-     "root": [
+     "label": "拨挡攻击",
+     "on": "attackHit",
+     "role": "target",
+     "window": "before",
+     "deferTo": "damageIncoming",
+     "optional": true,
+     "cost": [
       {
-       "kind": "number",
-       "prompt": "拨挡攻击：掷 1d10，输入点数",
-       "var": "d",
-       "min": 1,
-       "max": 10
-      },
-      {
-       "kind": "applyEffect",
-       "to": "self",
-       "template": "拨挡攻击",
-       "state": {
-        "reduce": "vars.d + self.mod.dex + self.levelOf('武僧')"
-       }
+       "economy": "reaction"
       }
-     ]
-    }
-   ],
-   "effects": {
-    "拨挡攻击": {
-     "text": "这次攻击对你造成的伤害减少 1d10 + 敏捷调整值 + 武僧等级；用掉后消失。",
-     "duration": {
-      "rounds": 1,
-      "endsOn": [
-       {
-        "event": "attackMissed"
-       }
-      ]
-     },
-     "triggers": [
+     ],
+     "when": "attack.damageType == '钝击' || attack.damageType == '穿刺' || attack.damageType == '挥砍'",
+     "modify": [
       {
-       "id": "reduce",
-       "label": "拨挡攻击：减伤",
-       "on": "damageIncoming",
-       "role": "target",
-       "window": "before",
-       "modify": [
+       "op": "reduceDamage",
+       "value": "1d10 + self.mod.dex + self.levelOf('武僧')"
+      }
+     ],
+     "do": [
+      {
+       "kind": "if",
+       "when": "self.resource('功力') >= 1 && ask('拨挡攻击：伤害被减到 0 了吗？要消耗 1 点功力重新定向吗？')",
+       "then": [
         {
-         "op": "reduceDamage",
-         "value": "effect.state.reduce"
-        }
-       ],
-       "do": [
-        {
-         "kind": "removeEffect",
-         "from": "self",
-         "match": {
-          "name": "拨挡攻击"
-         }
+         "kind": "resource",
+         "id": "功力",
+         "delta": -1
         },
         {
-         "kind": "if",
-         "when": "self.resource('功力') >= 1 && ask('拨挡攻击：伤害被减到 0 了吗？要消耗 1 点功力重新定向吗？')",
-         "then": [
-          {
-           "kind": "resource",
-           "id": "功力",
-           "delta": -1
-          },
-          {
-           "kind": "note",
-           "text": "拨挡攻击：重新定向。近战攻击选你 5 尺内、你可见的一个生物；远程攻击选 60 尺内、不在掩护后、你可见的一个生物。该生物进行敏捷豁免（功力豁免 DC），失败则受到 2 个武艺骰 + 你的敏捷调整值的伤害，类型与原攻击相同。请手动结算。"
-          }
-         ]
+         "kind": "note",
+         "text": "拨挡攻击：重新定向。近战攻击选你 5 尺内、你可见的一个生物；远程攻击选 60 尺内、不在掩护后、你可见的一个生物。该生物进行敏捷豁免（DC 8 + 敏捷调整值 + 熟练加值），失败则受到 2 个武艺骰 + 你的敏捷调整值的伤害，类型与原攻击相同。请手动结算。"
         }
        ]
       }
      ]
     }
-   },
+   ],
    "tags": [
     "ai",
     "未审"
@@ -14034,6 +14298,43 @@
     "未审"
    ]
   },
+  "XPHB:吟游诗人:反迷惑:7": {
+   "name": "反迷惑",
+   "automation": "full",
+   "text": "你或 30 尺内的一名生物在对抗施加魅惑或恐慌状态的效应的豁免中失败时，以反应让这次豁免重骰，且重骰具有优势（两颗新骰取高，用两次重骰近似）。",
+   "triggers": [
+    {
+     "id": "countercharm",
+     "label": "反迷惑：重骰豁免（优势）",
+     "on": "d20Rolled",
+     "role": "any",
+     "window": "before",
+     "optional": true,
+     "when": "roll.kind == 'save' && roll.failing && within(self, combatant(roll.roller), 30) && ask('这次豁免是对抗施加魅惑或恐慌状态的效应吗？')",
+     "cost": [
+      {
+       "economy": "reaction"
+      }
+     ],
+     "modify": [
+      {
+       "op": "reroll",
+       "die": "d20",
+       "keep": "new"
+      },
+      {
+       "op": "reroll",
+       "die": "d20",
+       "keep": "higher"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
   "XPHB:吟游诗人:鼓舞之移:6": {
    "name": "鼓舞之移",
    "automation": "partial",
@@ -14192,6 +14493,43 @@
        "kind": "resource",
        "id": "诗人激励",
        "delta": 1
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:吟游诗人:灵感织衣:3": {
+   "name": "灵感织衣",
+   "automation": "partial",
+   "text": "附赠动作，消耗一次诗人激励并掷诗人骰，60 尺内其他生物（至多魅力调整值名，至少 1 名）各获得两倍骰值的临时生命值。规则是掷一次全员共用，这里按每名目标各掷一次近似；之后每名生物用反应移动至多自己的速度（不引发借机攻击），移动由各自处理。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "灵感织衣",
+     "activation": "bonus",
+     "cost": [
+      {
+       "resource": "诗人激励"
+      }
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": "max(1, mod.cha)",
+      "range": 60,
+      "filter": "target.id != self.id"
+     },
+     "root": [
+      {
+       "kind": "tempHp",
+       "amount": "classTable('诗人骰') + classTable('诗人骰')"
+      },
+      {
+       "kind": "note",
+       "text": "灵感织衣：每名被选中的生物可以立即用自己的反应移动至多等于自己速度的距离，不引发借机攻击。"
       }
      ]
     }
@@ -14428,6 +14766,63 @@
    "name": "引导闪避",
    "automation": "manual",
    "text": "受到允许敏捷豁免只承受一半伤害的效应影响时：豁免成功则不受伤害，失败则只承受一半伤害；位于你 5 尺内、同样需要该豁免的其他生物也可以享受此增益。效应自身的半伤结算在引擎里无法替换，需人手动处理。若你失能则无法使用此特性。",
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:吟游诗人:语出惊人:3": {
+   "name": "语出惊人",
+   "automation": "full",
+   "text": "你可见的 60 尺内的生物伤害掷骰、成功于属性检定或攻击检定时，以反应消耗一次诗人激励，从其结果中减去一颗诗人激励骰。只对非盟友提供；检定类只在这次检定按现在的结果会成功时询问；距离和视线由人确认。",
+   "triggers": [
+    {
+     "id": "cut-roll",
+     "label": "语出惊人：削减检定",
+     "on": "d20Rolled",
+     "role": "any",
+     "window": "before",
+     "optional": true,
+     "when": "(roll.kind == 'attack' || roll.kind == 'check') && !roll.failing && roll.roller != self.id && !combatant(roll.roller).isAllyOf(self) && canSee(self, combatant(roll.roller)) && within(self, combatant(roll.roller), 60)",
+     "cost": [
+      {
+       "economy": "reaction"
+      },
+      {
+       "resource": "诗人激励"
+      }
+     ],
+     "modify": [
+      {
+       "op": "addToRoll",
+       "value": "-classTable('诗人骰')"
+      }
+     ]
+    },
+    {
+     "id": "cut-damage",
+     "label": "语出惊人：削减伤害",
+     "on": "damageIncoming",
+     "role": "any",
+     "window": "before",
+     "optional": true,
+     "when": "damage.amount > 0 && attacker != null && !attacker.isAllyOf(self) && attacker.id != self.id && canSee(self, attacker) && within(self, attacker, 60)",
+     "cost": [
+      {
+       "economy": "reaction"
+      },
+      {
+       "resource": "诗人激励"
+      }
+     ],
+     "modify": [
+      {
+       "op": "reduceDamage",
+       "value": "classTable('诗人骰')"
+      }
+     ]
+    }
+   ],
    "tags": [
     "ai",
     "未审"
@@ -15236,6 +15631,41 @@
    "name": "万能诡术",
    "automation": "manual",
    "text": "对生物使用诡诈打击的摔绊选项时，还可以对法师之手 5 尺内的另一个生物施加同样效果。法师之手的位置与距离由人判断，摔绊选项本身不在本条里，人工处理。",
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:游荡者:心灵传送:9": {
+   "name": "心灵传送",
+   "automation": "partial",
+   "text": "附赠动作：消耗一枚灵能骰，传送到至多「骰值 × 10 尺」处一处可见、未被占据的空间（心灵之刃随即消失，无伤害）。需要你掷灵能骰并输入点数；目的地是否可见、是否未被占据由人确认。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "心灵传送",
+     "activation": "bonus",
+     "cost": [
+      {
+       "resource": "灵能力量"
+      }
+     ],
+     "root": [
+      {
+       "kind": "number",
+       "prompt": "心灵传送：掷灵能骰，输入点数",
+       "var": "n",
+       "min": 1,
+       "max": "cond(self.levelOf('游荡者') >= 17, 12, cond(self.levelOf('游荡者') >= 11, 10, cond(self.levelOf('游荡者') >= 5, 8, 6)))"
+      },
+      {
+       "kind": "move",
+       "mode": "teleport",
+       "ft": "10 * vars.n"
+      }
+     ]
+    }
+   ],
    "tags": [
     "ai",
     "未审"
@@ -17502,6 +17932,31 @@
        "match": {
         "key": "XPHB:condition:恐慌"
        }
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:战士:勇战英豪:10": {
+   "name": "勇战英豪",
+   "automation": "partial",
+   "text": "战斗中，回合开始时若没有英雄激励，可以获得一个。英雄激励的持有状态引擎读不到，由人确认后手动记录获得。",
+   "triggers": [
+    {
+     "id": "inspire",
+     "label": "勇战英豪：获得英雄激励",
+     "on": "turnStarted",
+     "role": "actor",
+     "optional": true,
+     "when": "ask('你现在没有英雄激励吗？')",
+     "do": [
+      {
+       "kind": "note",
+       "text": "勇战英豪：你获得英雄激励（请在人物卡上手动记录）"
       }
      ]
     }

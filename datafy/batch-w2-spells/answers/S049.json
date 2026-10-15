@@ -1,0 +1,66 @@
+{
+  "name": "激愤斩",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "激愤斩",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "trigger": {
+        "on": "attackHit",
+        "role": "actor",
+        "window": "before",
+        "when": "attack.melee && (attack.weapon || attack.unarmed)"
+      },
+      "requires": "turn.isMine",
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "root": [
+        {
+          "kind": "addDamage",
+          "dice": "(slot.level)d6",
+          "type": "暗蚀"
+        },
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "激愤斩",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "激愤斩": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:恐慌"
+      ],
+      "duration": {
+        "minutes": 1,
+        "saveEnds": {
+          "ability": "wis",
+          "at": "turnEnd"
+        }
+      }
+    }
+  }
+}

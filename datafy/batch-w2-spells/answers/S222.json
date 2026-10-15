@@ -1,0 +1,62 @@
+{
+  "name": "枯萎术",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "枯萎术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "if",
+          "when": "target.type == '植物'",
+          "then": [
+            {
+              "kind": "damage",
+              "dice": "(4 + slot.level)d8",
+              "type": "暗蚀"
+            }
+          ],
+          "else": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "necro",
+                  "dice": "(4 + slot.level)d8",
+                  "type": "暗蚀"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "necro",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

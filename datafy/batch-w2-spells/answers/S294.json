@@ -1,0 +1,173 @@
+{
+  "name": "咒唤元素",
+  "automation": "partial",
+  "text": "专注至多 10 分钟。在 60 尺内未占据空间咒唤大型虚幻精魂（气/闪电、土/雷鸣、火/火焰、水/寒冷）。生物进入精魂空间或在 5 尺内开始其回合时（若精魂未束缚生物），可迫使其敏捷豁免，失败受 8d8（升环每高一环 +1d8）对应伤害并陷入束缚；被束缚目标在其回合开始时重复豁免，失败受 4d8 伤害，成功脱离束缚。精魂位置、元素伤害类型选择与触发时机需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "咒唤元素",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "point",
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "咒唤元素",
+          "to": "self"
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "咒唤元素：元素攫抓",
+      "activation": "none",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.hasEffect('咒唤元素')",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "选择咒唤元素的伤害类型",
+          "options": [
+            {
+              "label": "闪电（气）",
+              "do": [
+                {
+                  "kind": "save",
+                  "ability": "dex",
+                  "dc": "self.spell.dc",
+                  "onFail": [
+                    {
+                      "kind": "damage",
+                      "dice": "8d8",
+                      "type": "闪电"
+                    },
+                    {
+                      "kind": "applyEffect",
+                      "template": "元素束缚",
+                      "to": "target"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "雷鸣（土）",
+              "do": [
+                {
+                  "kind": "save",
+                  "ability": "dex",
+                  "dc": "self.spell.dc",
+                  "onFail": [
+                    {
+                      "kind": "damage",
+                      "dice": "8d8",
+                      "type": "雷鸣"
+                    },
+                    {
+                      "kind": "applyEffect",
+                      "template": "元素束缚",
+                      "to": "target"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "火焰（火）",
+              "do": [
+                {
+                  "kind": "save",
+                  "ability": "dex",
+                  "dc": "self.spell.dc",
+                  "onFail": [
+                    {
+                      "kind": "damage",
+                      "dice": "8d8",
+                      "type": "火焰"
+                    },
+                    {
+                      "kind": "applyEffect",
+                      "template": "元素束缚",
+                      "to": "target"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "寒冷（水）",
+              "do": [
+                {
+                  "kind": "save",
+                  "ability": "dex",
+                  "dc": "self.spell.dc",
+                  "onFail": [
+                    {
+                      "kind": "damage",
+                      "dice": "8d8",
+                      "type": "寒冷"
+                    },
+                    {
+                      "kind": "applyEffect",
+                      "template": "元素束缚",
+                      "to": "target"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "咒唤元素": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "在 60 尺内维持大型虚幻元素精魂。生物进入其空间或在 5 尺内开始其回合时可迫使其进行敏捷豁免。"
+    },
+    "元素束缚": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:束缚"
+      ],
+      "duration": {
+        "saveEnds": {
+          "ability": "dex",
+          "at": "turnStart"
+        }
+      },
+      "text": "陷入束缚状态；在每个回合开始时必须重复进行敏捷豁免，失败受伤害（手动结算），成功脱离束缚。"
+    }
+  }
+}

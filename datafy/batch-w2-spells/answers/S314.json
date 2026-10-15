@@ -1,0 +1,98 @@
+{
+  "name": "石化术",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。60 尺内可见一名生物进行体质豁免（构装生物自动成功）。豁免成功，其速度直至施法者下个回合开始前变为 0；豁免失败，目标陷入束缚状态并在其每回合结束时重复体质豁免。累计 3 次成功则法术终止；累计 3 次失败则被转化为石头并陷入石化状态。若专注维持满 1 分钟，石化状态持续至被高等复原术移除（豁免次数累计与最终石化状态需手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "石化术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 6
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "石化术：逐步石化",
+              "to": "target"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "applyEffect",
+              "template": "石化术：僵直",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "石化术：逐步石化": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:束缚"
+      ],
+      "duration": {
+        "minutes": 1
+      },
+      "text": "因逐步石化而陷入束缚状态。在其每回合结束时必须再进行一次对抗法术 DC 的体质豁免；累计 3 次成功则法术终止；累计 3 次失败则转化为石头并陷入石化状态（若专注维持满 1 分钟，石化持续至被高等复原术移除）。"
+    },
+    "石化术：僵直": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "statics": [
+        {
+          "kind": "speedSet",
+          "value": 0
+        }
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        }
+      },
+      "text": "速度直至施法者的下个回合开始前变为 0。"
+    },
+    "石化术：石化": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:石化"
+      ],
+      "text": "被转化为石头陷入石化状态。若施法者维持专注达 1 分钟，则持续至被高等复原术等移除。"
+    }
+  }
+}

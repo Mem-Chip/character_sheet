@@ -1,0 +1,91 @@
+{
+  "name": "恐惧术",
+  "automation": "partial",
+  "text": "30 尺锥状区域内的生物感知豁免失败陷入恐慌并丢弃其持握物。被恐慌生物在自己回合中必须执行疾走动作并寻找最安全路线远离施法者；若回合结束时施法者不在其视线内，可再进行感知豁免，成功则法术对该生物终止（丢弃物品、强制移动和视线判断需手动处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "恐惧术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "cone",
+          "size": 30
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "template": "恐惧术",
+                  "to": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "恐惧术": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:恐慌"
+      ],
+      "text": "陷入恐慌，丢弃所有持握物；在回合内必须执行疾走动作远离施法者；若回合结束时施法者不在视线中，可进行感知豁免对抗法术 DC，成功则解除效应。",
+      "triggers": [
+        {
+          "id": "save-no-los",
+          "label": "恐惧术：视线外感知豁免",
+          "on": "turnEnded",
+          "role": "actor",
+          "when": "ask('施法者此时不在该生物视线中吗？')",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": "source.spell.dc",
+              "onSuccess": [
+                {
+                  "kind": "removeEffect",
+                  "match": {
+                    "name": "恐惧术"
+                  },
+                  "from": "self"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

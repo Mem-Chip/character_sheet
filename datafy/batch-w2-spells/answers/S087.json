@@ -1,0 +1,67 @@
+{
+  "name": "灾祸术",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "灾祸术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": "2 + slot.level",
+        "range": 30,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "cha",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "灾祸"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "灾祸": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": [
+              "attack",
+              "save"
+            ]
+          },
+          "who": "bearer",
+          "op": "addDice",
+          "value": "-1d4",
+          "label": "灾祸术"
+        }
+      ]
+    }
+  }
+}

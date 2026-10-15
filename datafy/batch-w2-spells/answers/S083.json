@@ -1,0 +1,51 @@
+{
+  "name": "油腻术",
+  "automation": "partial",
+  "text": "指定 60 尺内一点覆盖 10 尺方状区域，持续 1 分钟（无需专注）。区域变为困难地形。油脂出现时区域内的生物必须进行敏捷豁免，失败陷入倒地状态；后续进入该区域或在区域内结束回合的生物重复该豁免、以及困难地形需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "油腻术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": {
+          "shape": "cube",
+          "size": 10
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "XPHB:condition:倒地"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

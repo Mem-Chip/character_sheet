@@ -1,0 +1,120 @@
+{
+  "name": "驱逐善恶",
+  "automation": "partial",
+  "text": "法术持续时间内（至多 1 分钟，专注），天界生物、元素生物、精类、邪魔和不死生物对你的攻击检定具有劣势。你可以以一个魔法动作使用破除惑控（触碰生物解除上述生物造成的附身、魅惑或恐慌）或驱逐（5尺内上述类型生物进行魅力豁免，失败遣送回家园位面；亡灵遣返堕影冥界，精类遣返妖精荒野）。使用任一特性都会提前结束本法术。位面遣返与解除附身需由 DM 与玩家手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "驱逐善恶",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "驱逐善恶",
+          "to": "self"
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "驱逐善恶：破除惑控或驱逐",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating && self.hasEffect('驱逐善恶')",
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "选择使用破除惑控还是驱逐以提前结束法术：",
+          "options": [
+            {
+              "label": "破除惑控（触碰生物，结束其被天界/元素/精类/邪魔/不死生物附身、魅惑或恐慌）",
+              "do": [
+                {
+                  "kind": "note",
+                  "text": "以一个魔法动作触碰一名生物，解除其由天界生物、元素生物、精类、邪魔或不死生物造成的附身、魅惑或恐慌状态。法术提前结束。"
+                },
+                {
+                  "kind": "removeEffect",
+                  "match": {
+                    "name": "驱逐善恶"
+                  },
+                  "from": "self"
+                },
+                {
+                  "kind": "removeEffect",
+                  "match": {
+                    "key": "concentration"
+                  },
+                  "from": "self"
+                }
+              ]
+            },
+            {
+              "label": "驱逐（5尺内天界/元素/精类/邪魔/不死生物进行魅力豁免，失败被遣送回家园位面）",
+              "do": [
+                {
+                  "kind": "note",
+                  "text": "选择5尺内可见的一名天界生物、元素生物、精类、邪魔或不死生物，目标必须通过一次魅力豁免（DC为施法者的法术豁免DC），否则被遣送回其家园位面（不死生物遣返堕影冥界，精类遣返妖精荒野）。法术提前结束。"
+                },
+                {
+                  "kind": "removeEffect",
+                  "match": {
+                    "name": "驱逐善恶"
+                  },
+                  "from": "self"
+                },
+                {
+                  "kind": "removeEffect",
+                  "match": {
+                    "key": "concentration"
+                  },
+                  "from": "self"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "驱逐善恶": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "天界生物、元素生物、精类、邪魔和不死生物对你的攻击检定具有劣势。你可以以一个魔法动作使用破除惑控或驱逐并提前结束此法术。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "against",
+          "when": "attacker != null && (attacker.type == '天界生物' || attacker.type == '元素生物' || attacker.type == '精类' || attacker.type == '邪魔' || attacker.type == '不死生物')",
+          "op": "disadv",
+          "label": "驱逐善恶：攻击劣势"
+        }
+      ]
+    }
+  }
+}

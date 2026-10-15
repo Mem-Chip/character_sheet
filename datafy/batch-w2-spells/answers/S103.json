@@ -1,0 +1,62 @@
+{
+  "name": "炽焰法球",
+  "automation": "partial",
+  "text": "在 60 尺内地面的未占据空间创造直径 5 尺的炽焰法球，持续至多 1 分钟（专注）。在法球周围 5 尺内结束其回合或被法球移入占据空间的生物必须进行敏捷豁免，失败受到 (slot.level)d6 点火焰伤害，成功则伤害减半。可用附赠动作将法球沿地面移动至多 30 尺并撞击生物；被触及的未着装携带可燃物点燃；散发 20 尺明亮及额外 20 尺微光光照。附赠动作移动撞击、点燃物件及回合结束触发豁免需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "炽焰法球",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": {
+          "shape": "sphere",
+          "radius": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "d",
+                  "dice": "(slot.level)d6",
+                  "type": "火焰"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "d",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

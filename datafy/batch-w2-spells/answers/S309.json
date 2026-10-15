@@ -1,0 +1,92 @@
+{
+  "name": "魔魂壶",
+  "automation": "partial",
+  "text": "施法时间 1 分钟。灵魂离开身体进入容器，肉体陷入昏迷失神。处于容器中时，可用动作投射灵魂尝试附身 100 尺内可见类人生物。目标必须进行魅力豁免，失败则灵魂被困在容器中（失能且无法移动），施法者控制其身体（生命值、力量、敏捷、体质、速度和感官替换为目标数据）。成功则 24 小时内免疫附身。宿主身体死亡、容器被毁或回归身体的判定需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "魔魂壶",
+      "activation": {
+        "minutes": 1
+      },
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 6
+          }
+        }
+      ],
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "魔魂壶：出窍",
+          "to": "self"
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "魔魂壶：附身",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 100,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "cha",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "魔魂壶：宿主受困",
+              "to": "target"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "note",
+              "text": "目标成功抵抗附身，随后的 24 小时内无法再次尝试附身该生物。"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "魔魂壶：出窍": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:昏迷"
+      ],
+      "text": "肉体陷入失神昏迷。灵魂处于容器中，可投射灵魂附身 100 尺内的类人生物，或回到身体终止法术。"
+    },
+    "魔魂壶：宿主受困": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:失能"
+      ],
+      "text": "宿主灵魂被困在容器中，无法移动且陷入失能状态；其身体被施法者控制（各项体能属性替换需手动处理）。"
+    }
+  }
+}

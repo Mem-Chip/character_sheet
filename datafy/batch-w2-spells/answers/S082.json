@@ -1,0 +1,78 @@
+{
+  "name": "英雄气概",
+  "automation": "partial",
+  "text": "自愿生物免疫恐慌状态；在其每回合开始时获得等同于施法者施法属性调整值的临时生命值；法术结束时失去该法术给予的临时生命值需手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "英雄气概",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": "slot.level",
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "英雄气概"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "英雄气概": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "statics": [
+        {
+          "kind": "conditionImmune",
+          "values": [
+            "恐慌"
+          ]
+        }
+      ],
+      "onApply": [
+        {
+          "kind": "removeEffect",
+          "match": {
+            "name": "恐慌"
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "id": "turnStartTempHp",
+          "label": "英雄气概：获得临时生命值",
+          "on": "turnStarted",
+          "role": "actor",
+          "do": [
+            {
+              "kind": "tempHp",
+              "amount": "source.spell.mod",
+              "to": "self"
+            }
+          ]
+        }
+      ],
+      "text": "免疫恐慌状态；在其每回合开始时获得等同于施法属性调整值的临时生命值。"
+    }
+  }
+}

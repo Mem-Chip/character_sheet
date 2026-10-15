@@ -1,0 +1,67 @@
+{
+  "name": "风墙术",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。在 120 尺内升起至多长 50 尺、高 15 尺、厚 1 尺的烈风墙。风墙出现时占据区域内的生物须进行力量豁免，失败受到 4d8 钝击伤害，成功受到半数伤害。风墙阻隔浓雾烟尘等气体；小型或更小的飞行生物或物件无法穿过；对墙后目标射出的普通飞行物直接判为打失。风墙阻挡与弹道判定需在地图上手动处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "风墙术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "line",
+          "length": 50,
+          "width": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "str",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "ww",
+                  "dice": "4d8",
+                  "type": "钝击"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "ww",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "风墙阻隔气体；小型或更小的飞行生物无法穿过；对风墙后目标射出的普通飞行物直接打失"
+        }
+      ]
+    }
+  ]
+}

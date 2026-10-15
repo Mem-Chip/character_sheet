@@ -1,0 +1,79 @@
+{
+  "name": "光导箭",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "光导箭",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 120
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "ranged": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "(3 + slot.level)d6",
+              "type": "光耀"
+            },
+            {
+              "kind": "applyEffect",
+              "template": "光导箭",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "光导箭": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "source",
+          "nth": 1
+        },
+        "endsOn": [
+          {
+            "event": "d20Rolled",
+            "when": "event.kind == 'attack' && event.target == self.id"
+          }
+        ]
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "against",
+          "op": "adv",
+          "label": "光导箭：攻击检定优势"
+        }
+      ]
+    }
+  }
+}

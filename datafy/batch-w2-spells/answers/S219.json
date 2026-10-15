@@ -1,0 +1,67 @@
+{
+  "name": "惊惧斩",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "惊惧斩",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "trigger": {
+        "on": "attackHit",
+        "role": "actor",
+        "window": "before",
+        "when": "attack.melee && (attack.weapon || attack.unarmed)"
+      },
+      "requires": "turn.isMine",
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "root": [
+        {
+          "kind": "addDamage",
+          "dice": "(slot.level)d6",
+          "type": "心灵"
+        },
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "惊惧斩：震慑"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "惊惧斩：震慑": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:震慑"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "source",
+          "nth": 1
+        }
+      },
+      "text": "陷入震慑状态，持续至施法者下一回合结束。"
+    }
+  }
+}
