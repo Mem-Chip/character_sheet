@@ -691,3 +691,64 @@ polyline.erasing { opacity: .25; }
   --focus: #8cc3ad;
 }
 .palette-sel { height: 24px; font-size: 12px; padding: 0 4px; }
+
+/* ───────── 线的层次：发丝线 / 双线框 / 强调短条 / 角标 ─────────
+ * 面板：外框一道 + 内缩 3px 一道淡线（典籍的双线框）；标题下一道发丝线，左端压一截 2px 强调色短条（魔典的强调线）。
+ * 关键数字（AC、属性、顶栏数值）四角各一个小角标。行与行之间仍是最轻的发丝线。 */
+.panel { border-color: var(--line-2); box-shadow: var(--shadow), inset 0 0 0 3px var(--panel), inset 0 0 0 4px var(--line); }
+.panel > header { border-bottom: 1px solid var(--line); }
+.panel > header::after { content: ''; position: absolute; left: 14px; bottom: -1px; width: 28px; height: 2px; background: var(--accent); border-radius: 1px; }
+.panel > header { position: relative; }
+.dialog > header::after, .drawer-body .panel > header::after { display: none; }
+.hud .panel { box-shadow: none; }
+.corner { position: relative; }
+.ability, .vt { position: relative; }
+.ability::before, .ability::after, .vt::before, .vt::after {
+  content: ''; position: absolute; width: 6px; height: 6px; border: 1px solid var(--accent-line); pointer-events: none;
+}
+.ability::before, .vt::before { top: 3px; left: 3px; border-right: 0; border-bottom: 0; }
+.ability::after, .vt::after { bottom: 3px; right: 3px; border-left: 0; border-top: 0; }
+
+/* ───────── 人物卡：不铺满整个屏幕，信息收拢在一块 ───────── */
+.sheet-page { max-width: 1280px; }
+.sheet-grid { grid-template-columns: 290px minmax(0, 1fr) 310px; }
+@media (max-width: 1180px) { .sheet-grid { grid-template-columns: 280px minmax(0, 1fr); } .sheet-grid > :last-child { grid-column: 1 / -1; } }
+@media (max-width: 760px) { .sheet-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* 顶栏：名字 | 一排关键数值 */
+.hero { display: grid; grid-template-columns: minmax(200px, 1fr) auto; align-items: center; gap: 18px; padding: 16px 20px; margin-bottom: 12px; }
+.hero h1 { font-family: var(--font-display); font-weight: 900; font-size: 30px; margin: 0; line-height: 1.15; letter-spacing: .08em; }
+.hero h1::first-letter { color: var(--accent); }
+.hero .sub { color: var(--ink-2); font-size: 13.5px; margin-top: 4px; padding-left: 10px; border-left: 2px solid var(--accent); }
+.hero-tags { margin-top: 10px; gap: 6px; }
+.hero-tools { grid-column: 1 / -1; }
+.hero-vitals { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; justify-content: flex-end; }
+.vt { min-width: 76px; padding: 8px 10px 7px; border: 1px solid var(--line-2); border-radius: var(--r); background: var(--field); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.vt > i { font-style: normal; font-size: 11px; color: var(--ink-3); font-family: var(--font-display); letter-spacing: .12em; }
+.vt > b { font-family: var(--font-num); font-size: 30px; font-weight: 600; line-height: 1.1; font-variant-numeric: lining-nums tabular-nums; }
+.vt > b small { font-size: 12px; color: var(--ink-3); font-family: var(--font-ui); font-weight: 400; margin-left: 2px; }
+.vt > em { font-style: normal; font-size: 10.5px; color: var(--ink-3); max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vt-ac { border: 2px solid var(--accent); min-width: 88px; }
+.vt-ac > b { color: var(--accent); font-size: 34px; }
+.vt-hp { min-width: 230px; align-items: stretch; text-align: left; }
+.vt-hp > b span { font-size: 15px; color: var(--ink-3); font-weight: 500; margin-left: 4px; }
+.vt-hp > b u { text-decoration: none; font-family: var(--font-ui); font-size: 12px; color: var(--gold); margin-left: 8px; font-weight: 500; }
+.vt-hp .hpbar { margin: 4px 0 6px; }
+.hp-ctl { display: flex; gap: 4px; align-items: center; }
+.hp-ctl input { width: 56px; height: 24px; }
+@media (max-width: 1000px) { .hero { grid-template-columns: 1fr; } .hero-vitals { justify-content: flex-start; } }
+
+/* 属性：方块 3 × 2 */
+.ability { aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px; }
+/* 豁免：两列 */
+.saves2 { display: grid; grid-template-columns: 1fr 1fr; }
+.saves2 > div { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-bottom: 1px solid var(--line); color: var(--ink-2); }
+.saves2 > div:nth-child(odd) { border-right: 1px solid var(--line); }
+.saves2 > div:nth-last-child(-n+2) { border-bottom: 0; }
+.saves2 > div.on { color: var(--ink); }
+.saves2 b { margin-left: auto; font-weight: 600; }
+/* 内容收在内框里面（不压着那道淡线） */
+.panel { padding: 3px; }
+.panel > header { margin: 0 0 0; }
+.hud-log > .panel, .drawer-body .panel, .hud .panel { padding: 0; }
+.hero.panel { padding: 16px 20px; }

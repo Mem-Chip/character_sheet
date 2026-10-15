@@ -5,7 +5,7 @@ import { Choices } from '../components/Choices';
 import { Term } from '../components/Term';
 import { SpellBrowser } from '../components/SpellBrowser';
 import { Entries } from '../components/Entries';
-import { Panel, Pips, Stat, Tag, sgn } from '../components/ui';
+import { Panel, Pips, Tag, sgn } from '../components/ui';
 import type { Engine } from '../lib/engine';
 import { actions, stripDerived } from '../lib/store';
 
@@ -34,20 +34,19 @@ function SavesSkills({ sheet }: Props) {
   return (
     <>
       <Panel title="豁免" flush>
-        <table className="rows">
-          <tbody>
-            {ABILS.map((a) => {
-              const s = sheet.saves?.[a];
-              return (
-                <tr key={a}>
-                  <td style={{ width: 16 }}><span className={'dot' + (s?.prof ? ' on' : '')} /></td>
-                  <td>{ABIL_CN[a]}</td>
-                  <td className="r num serif">{sgn(s?.total)}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        {/* 两列：力敏 / 体智 / 感魅 */}
+        <div className="saves2">
+          {ABILS.map((a) => {
+            const s = sheet.saves?.[a];
+            return (
+              <div key={a} className={s?.prof ? 'on' : ''}>
+                <span className={'dot' + (s?.prof ? ' on' : '')} />
+                <span>{ABIL_CN[a]}</span>
+                <b className="num serif">{sgn(s?.total)}</b>
+              </div>
+            );
+          })}
+        </div>
       </Panel>
       <Panel title="技能" aside={<span>被动察觉 {sheet.passivePerception}</span>} flush>
         <table className="rows">
@@ -66,9 +65,13 @@ function SavesSkills({ sheet }: Props) {
   );
 }
 
-function Vitals({ id, char, sheet }: Props) {
+/**
+ * 人物卡顶上那一条：左边名字、种族职业、等级和待决定；右边一排关键数值（AC 突出，生命值带加减）。
+ * 卡面、升级、建卡、数据四页共用。
+ */
+export function SheetHero({ id, char, sheet, tags, tools }: Omit<Props, 'engine'> & { tags?: React.ReactNode; tools?: React.ReactNode }) {
   const [amt, setAmt] = useState('');
-  const max = sheet.hpMax;
+  const max = sheet.hpMax ?? 0;
   const cur = char.hp?.current ?? max;
   const temp = char.hp?.temp ?? 0;
   const setHp = (current: number, t = temp) => actions.update(id, (c) => {
@@ -76,35 +79,51 @@ function Vitals({ id, char, sheet }: Props) {
   });
   const n = Math.max(0, Math.round(Number(amt) || 0));
   const ds = char.deathSaves || { success: 0, failure: 0 };
+  const classes = (char.classes || []).filter((k: Json) => k.name).map((k: Json) => `${k.name} ${k.level}${k.subclass ? `（${k.subclass}）` : ''}`).join(' / ');
   return (
-    <Panel title="生命值" aside={<span className="faint" title={sheet.hpNotes}>{String(sheet.hpNotes || '').split('\n')[0]}</span>}>
-      <div className="spread">
-        <div className="serif num" style={{ fontSize: 30, lineHeight: 1.1 }}>
-          {cur}<span className="faint" style={{ fontSize: 15 }}> / {max}</span>
-          {temp > 0 && <span className="small" style={{ color: 'var(--accent)', marginLeft: 8 }}>+{temp} 临时</span>}
-        </div>
-        <div className="row">
-          <input type="number" min={0} value={amt} placeholder="数值" onChange={(e) => setAmt(e.target.value)} style={{ width: 70 }} />
-          <button className="btn sm" disabled={!n} onClick={() => {
-            const absorbed = Math.min(temp, n);
-            setHp(cur - (n - absorbed), temp - absorbed);
-            setAmt('');
-          }}>伤害</button>
-          <button className="btn sm" disabled={!n} onClick={() => { setHp(Math.min(max, cur + n)); setAmt(''); }}>治疗</button>
-          <button className="btn sm" disabled={!n} onClick={() => { setHp(cur, Math.max(temp, n)); setAmt(''); }}>临时</button>
-        </div>
+    <section className="hero panel">
+      <div className="hero-id">
+        <h1>{char.name || '未命名'}</h1>
+        <div className="sub">{[char.race, char.background, classes].filter(Boolean).join(' · ') || '还没选种族、背景、职业'}</div>
+        <div className="row hero-tags">{tags}</div>
       </div>
-      <div className={'hpbar' + (cur <= max / 4 ? ' low' : '')} style={{ marginTop: 6 }}><i style={{ width: `${Math.min(100, (cur / Math.max(1, max)) * 100)}%` }} /></div>
-      {cur === 0 && (
-        <div className="row" style={{ marginTop: 8 }}>
-          <span className="small">死亡豁免</span>
-          <span className="small faint">成功</span>
-          <Pips max={3} used={ds.success} onChange={(v) => actions.update(id, (c) => { c.deathSaves = { ...ds, success: v }; })} />
-          <span className="small faint">失败</span>
-          <Pips max={3} used={ds.failure} onChange={(v) => actions.update(id, (c) => { c.deathSaves = { ...ds, failure: v }; })} />
+      <div className="hero-vitals">
+        <div className="vt vt-ac" title={sheet.acNote}>
+          <i>护甲等级</i><b>{sheet.ac}</b><em>{String(sheet.acNote || '').split('\n')[0].replace(/^AC = /, '')}</em>
         </div>
-      )}
-    </Panel>
+        <div className="vt vt-hp">
+          <i title={sheet.hpNotes}>生命值</i>
+          <b>{cur}<span>/ {max}</span>{temp > 0 && <u>+{temp} 临时</u>}</b>
+          <div className={'hpbar' + (cur <= max / 4 ? ' low' : '')}><i style={{ width: `${Math.min(100, (cur / Math.max(1, max)) * 100)}%` }} /></div>
+          {cur === 0
+            ? (
+              <div className="row tiny">
+                <span>死亡豁免 成功</span>
+                <Pips max={3} used={ds.success} onChange={(v) => actions.update(id, (c) => { c.deathSaves = { ...ds, success: v }; })} />
+                <span>失败</span>
+                <Pips max={3} used={ds.failure} onChange={(v) => actions.update(id, (c) => { c.deathSaves = { ...ds, failure: v }; })} />
+              </div>
+            )
+            : (
+              <div className="hp-ctl">
+                <input type="number" min={0} value={amt} placeholder="数值" onChange={(e) => setAmt(e.target.value)} aria-label="数值" />
+                <button className="btn sm" disabled={!n} onClick={() => {
+                  const absorbed = Math.min(temp, n);
+                  setHp(cur - (n - absorbed), temp - absorbed);
+                  setAmt('');
+                }}>伤害</button>
+                <button className="btn sm" disabled={!n} onClick={() => { setHp(Math.min(max, cur + n)); setAmt(''); }}>治疗</button>
+                <button className="btn sm" disabled={!n} onClick={() => { setHp(cur, Math.max(temp, n)); setAmt(''); }}>临时</button>
+              </div>
+            )}
+        </div>
+        <div className="vt"><i>速度</i><b>{sheet.speed}<small>尺</small></b></div>
+        <div className="vt"><i>先攻</i><b>{sgn(sheet.initiative)}</b></div>
+        <div className="vt"><i>熟练加值</i><b>{sgn(sheet.pb)}</b></div>
+        <div className="vt"><i>被动察觉</i><b>{sheet.passivePerception}</b></div>
+      </div>
+      {tools && <div className="hero-tools">{tools}</div>}
+    </section>
   );
 }
 
@@ -307,7 +326,6 @@ function Profs({ sheet }: Props) {
 
 export function SheetView(p: Props) {
   const { sheet } = p;
-  const sc = sheet.spell || {};
   const warnings: string[] = sheet._warnings || [];
   return (
     <div className="sheet-grid">
@@ -317,15 +335,6 @@ export function SheetView(p: Props) {
         <Profs {...p} />
       </div>
       <div className="stack">
-        <div className="stats">
-          <Stat k="护甲等级" v={sheet.ac} s={String(sheet.acNote || '').split('\n')[0]} title={sheet.acNote} />
-          <Stat k="先攻" v={sgn(sheet.initiative)} />
-          <Stat k="速度" v={<>{sheet.speed}<small> 尺</small></>} />
-          <Stat k="熟练加值" v={sgn(sheet.pb)} />
-          {sc.dc != null && <Stat k="法术 DC" v={sc.dc} s={`攻击 ${sgn(sc.atk)}`} />}
-          <Stat k="被动察觉" v={sheet.passivePerception} />
-        </div>
-        <Vitals {...p} />
         <Attacks {...p} />
         <Spells {...p} />
         <Features {...p} />

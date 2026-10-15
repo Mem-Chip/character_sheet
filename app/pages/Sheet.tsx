@@ -8,7 +8,7 @@ import { useComputed } from '../lib/useSheet';
 import { SheetBuild } from './SheetBuild';
 import { SheetData } from './SheetData';
 import { SheetLevelUp } from './SheetLevelUp';
-import { SheetView } from './SheetView';
+import { SheetHero, SheetView } from './SheetView';
 
 export function download(name: string, text: string) {
   const a = document.createElement('a');
@@ -31,33 +31,28 @@ export function SheetPage({ engine }: { engine: Engine }) {
   if (!computed) return <div className="page"><div className="empty">正在计算…</div></div>;
 
   const { char, sheet } = computed;
-  const classes = (char.classes || []).filter((k: Json) => k.name).map((k: Json) => `${k.name} ${k.level}${k.subclass ? `（${k.subclass}）` : ''}`).join(' / ');
   const pendingList: Json[] = (sheet._pending || []).filter((c: Json) => !c.decided);
   const pending = pendingList.length;
   return (
-    <div className="page">
-      <div className="sheet-head">
-        <div>
-          <h1>{char.name || '未命名'}</h1>
-          <div className="sub">{[char.race, char.background, classes].filter(Boolean).join(' · ') || '还没选种族、背景、职业'}</div>
-        </div>
-        <div className="row">
+    <div className="page sheet-page">
+      <SheetHero
+        id={id} char={char} sheet={sheet}
+        tags={<>
           <Tag>{sheet.level || 0} 级</Tag>
           {pending > 0 && (
-            <button className="pendingtag" onClick={() => setTab('levelup')} title="点一下去选">
-              <Tag tone="warn">待决定：{pendingList.slice(0, 3).map((c) => c.label || c.id).join('、')}{pending > 3 ? ` 等 ${pending} 项` : ''}</Tag>
+            <button className="pendingtag" onClick={() => setTab('levelup')} title={pendingList.map((c) => c.label || c.id).join('\n')}>
+              <Tag tone="warn">待决定 {pending} 项</Tag>
             </button>
           )}
-        </div>
-        <div className="tools row">
-          <button className="btn sm" onClick={() => download(`${char.name || '人物卡'}.json`, actions.exportJson(id))}>导出 JSON</button>
-        </div>
-      </div>
+        </>}
+      />
       <div className="tabs" role="tablist">
         <button role="tab" aria-selected={tab === 'view'} onClick={() => setTab('view')}>卡面</button>
         <button role="tab" aria-selected={tab === 'levelup'} onClick={() => setTab('levelup')}>升级{pending > 0 && <span className="count">●{pending}</span>}</button>
         <button role="tab" aria-selected={tab === 'build'} onClick={() => setTab('build')}>建卡 / 编辑</button>
         <button role="tab" aria-selected={tab === 'data'} onClick={() => setTab('data')}>数据</button>
+        <span style={{ flex: 1 }} />
+        <button className="btn ghost sm" onClick={() => download(`${char.name || '人物卡'}.json`, actions.exportJson(id))}>导出 JSON</button>
       </div>
       {tab === 'view' ? <SheetView engine={engine} id={id} char={char} sheet={sheet} />
         : tab === 'levelup' ? <SheetLevelUp engine={engine} id={id} char={char} sheet={sheet} />
