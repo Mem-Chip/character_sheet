@@ -22,6 +22,11 @@ export function Stat(p: { k: ReactNode; v: ReactNode; s?: ReactNode; title?: str
   );
 }
 
+/** 长名字（超过 n 个字）截断，悬停看全文 */
+export function Clip({ text, n = 8 }: { text: string; n?: number }) {
+  return text.length > n ? <span title={text}>{text.slice(0, n)}…</span> : <>{text}</>;
+}
+
 export const sgn = (n: number | null | undefined) => (n == null ? '—' : (n >= 0 ? '+' : '') + n);
 
 /** 次数方格：点一下切换「用掉 / 恢复」（点第 i 格 = 用掉到第 i 格） */

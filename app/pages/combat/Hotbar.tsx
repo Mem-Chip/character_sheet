@@ -9,7 +9,7 @@ import { Term } from '../../components/Term';
 import { termOfKey } from '../../lib/terms';
 import { combat, type CombatUi } from '../../lib/combat';
 import type { Engine } from '../../lib/engine';
-import { COST_CN, CostIcon, actionsFor, costKind, freeSlots, runAction, type ActItem, type CostKind, type Group } from './Actor';
+import { CostIcon, actionsFor, costKind, freeSlots, runAction, type ActItem, type Group } from './Actor';
 import { woundOf } from './Initiative';
 import type { Namer } from './shared';
 
@@ -122,9 +122,9 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton }: {
         </div>
         {inCombat && (
           <div className="hot-econ">
-            <span className={econ.action ? 'on' : ''}>动作</span>
-            <span className={econ.bonus ? 'on' : ''}>附赠</span>
-            <span className={econ.reaction ? 'on' : ''}>反应</span>
+            <span className={econ.action ? 'on' : ''}><CostIcon kind="action" />动作</span>
+            <span className={econ.bonus ? 'on' : ''}><CostIcon kind="bonus" />附赠</span>
+            <span className={econ.reaction ? 'on' : ''}><CostIcon kind="reaction" />反应</span>
             {econ.attacksLeft > 0 && <span className="on">攻击 ×{econ.attacksLeft}</span>}
           </div>
         )}
@@ -146,7 +146,6 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton }: {
             <button key={t.k} className={t.k === cur?.k ? 'on' : ''} onClick={() => { setTab(t.k); setPick(null); }}>{t.label}<small>{t.list.length}</small></button>
           ))}
           <span style={{ flex: 1 }} />
-          <span className="cost-legend">{(['action', 'bonus', 'reaction', 'free'] as CostKind[]).map((k) => <span key={k}><CostIcon kind={k} />{COST_CN[k].replace('动作', '') || '动作'}</span>)}</span>
           {cur?.k === 'weapon' && <label className="tiny faint"><input type="checkbox" checked={asReaction} onChange={(e) => setAsReaction(e.target.checked)} /> 用反应攻击</label>}
         </div>
         <div className="hot-grid">

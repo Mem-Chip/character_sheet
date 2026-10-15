@@ -23,6 +23,8 @@ type Drawer = null | 'roster' | 'detail';
 
 export function CombatPage({ engine }: { engine: Engine }) {
   const ui = useCombat();
+  const uiRef = useRef(ui);
+  uiRef.current = ui;
   const [dlg, setDlg] = useState<null | 'pc' | 'monster' | 'settings' | 'online'>(null);
   /** DM 代玩家回答：记下是哪个决定，换了决定就自动收起 */
   const [proxy, setProxy] = useState<string | null>(null);
@@ -32,13 +34,17 @@ export function CombatPage({ engine }: { engine: Engine }) {
   const [logOpen, setLogOpen] = useState(() => { try { return localStorage.getItem('dnd2024-engine:dock:log') !== '0'; } catch { return true; } });
   // session 为空就（重新）初始化 —— 开发时热更新会把 combat.ts 的模块状态清掉
   useEffect(() => { if (!ui.session) initCombat(engine); }, [engine, ui.session]);
-  // Esc 取消选目标
+  // Esc：在选目标就取消选目标，否则取消选中的人和标的目标
   useEffect(() => {
-    if (!ui.aim) return;
-    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') combat.aimCancel(); };
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (uiRef.current.aim) { combat.aimCancel(); return; }
+      combat.select(null);
+      if (uiRef.current.targets.length) combat.clearTargets();
+    };
     window.addEventListener('keydown', esc);
     return () => window.removeEventListener('keydown', esc);
-  }, [!!ui.aim]);
+  }, []);
 
   const s = ui.session;
   if (!s) return <div className="page empty">正在准备遭遇…</div>;

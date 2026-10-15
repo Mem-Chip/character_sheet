@@ -7,7 +7,7 @@
 import { useSyncExternalStore } from 'react';
 import { combatantFromSheet, syncLiveToChar, viewFromSheet } from '../../src/bridge/from-sheet';
 import {
-  Session, createEncounter, defaultDiceMode, diceSourceFor, makeCombatant, makeView, parseCommand, physicalDice, rollExpr, type ChatRoll,
+  Session, createEncounter, defaultDiceMode, diceSourceFor, makeCombatant, makeView, chatEntry, physicalDice, type ChatRoll,
   type Command, type DispatchResult, type EngineCtx, type OverridePatch, type SessionSave, type ViewInit,
 } from '../../src/combat';
 import { api } from './api';
@@ -71,7 +71,7 @@ export interface Remote {
 
 export interface Stroke { id: string; by: number; color: string; width: number; pts: number[] }
 export interface MapState {
-  grid: { size: number; ox: number; oy: number; cols: number; rows: number; show: boolean; diagonal?: '5' | '5-10-5' };
+  grid: { size: number; ox: number; oy: number; cols: number; rows: number; show: boolean; diagonal?: '5' | '5-10-5'; paper?: string; line?: string };
   bg: { img: string; w: number; h: number } | null;
   strokes: Stroke[];
   tokens: Record<string, { x: number; y: number }>;
@@ -349,17 +349,14 @@ export const combat = {
     else combat.select(id);
   },
 
-  /** 指令框：/r 公开、/pr 私密。写错了返回错误信息；不是指令返回 'not-command' */
+  /** 指令框：/r 公开掷骰、/pr 私密掷骰，别的就是一句话。写错了返回错误信息 */
   say(text: string): string | null {
-    let p;
-    try { p = parseCommand(text); } catch (e) { return (e as Error).message; }
-    if (!p) return '目前只有 /r（公开掷骰）和 /pr（私密掷骰），比如 /r 1d20+5';
-    const r = ui.remote;
-    if (r) { act({ op: 'chat', text }); return null; }
-    const entry: ChatRoll = {
-      id: Math.random().toString(36).slice(2, 10), by: 0, byName: '我', at: Date.now(), afterTx: ui.session?.transactions.length ?? 0,
-      private: p.cmd === 'pr', note: p.note, results: p.exprs.map((x) => rollExpr(x)),
-    };
+    let entry: ChatRoll | null;
+    try {
+      entry = chatEntry(text, { id: Math.random().toString(36).slice(2, 10), by: 0, byName: '我', at: Date.now(), afterTx: ui.session?.transactions.length ?? 0 });
+    } catch (e) { return (e as Error).message; }
+    if (!entry) return null;
+    if (ui.remote) { act({ op: 'chat', text }); return null; }
     set({ chat: [...ui.chat, entry].slice(-100) });
     return null;
   },

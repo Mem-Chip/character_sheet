@@ -6,7 +6,7 @@ import {
   actionCosts, canPay, concentrationOf, describeCost, maxTargets, weaponAction,
   type Action, type Command, type ActiveEffect, type Cost, type Duration, type RuleBook, type Session,
 } from '../../../src/combat';
-import { NumInput, Panel, Pips, Stat, Tag, sgn } from '../../components/ui';
+import { Clip, NumInput, Panel, Pips, Stat, Tag, sgn } from '../../components/ui';
 import { Term } from '../../components/Term';
 import { termOfKey, type TermRef } from '../../lib/terms';
 import { combat, type CombatUi } from '../../lib/combat';
@@ -365,7 +365,7 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
               ))}
               {Object.entries(v.resources).map(([k, n]) => (
                 <tr key={'r' + k}>
-                  <td>{(v.resourceNames ?? {})[k] ?? k}</td>
+                  <td><Clip text={(v.resourceNames ?? {})[k] ?? k} /></td>
                   <td className="r"><Usage max={n} used={c.live.resourcesUsed[k] ?? 0} onChange={(used) => combat.dispatch({ type: 'setUsage', id, resource: k, used })} /></td>
                 </tr>
               ))}

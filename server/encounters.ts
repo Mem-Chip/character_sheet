@@ -16,7 +16,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import {
-  DICE_MODES, RuleBook, Session, createEncounter, defaultDiceMode, diceSourceFor, footprint, parseCommand, rollExpr, type ChatRoll, type DiceMode,
+  DICE_MODES, RuleBook, Session, createEncounter, defaultDiceMode, diceSourceFor, footprint, chatEntry, type ChatRoll, type DiceMode,
   type Command, type DispatchResult, type EngineCtx, type Diagonal, type OverridePatch, type Positions, type SessionSave,
 } from '../src/combat';
 import { RULE_FILES } from '../src/bridge/rule-files';
@@ -37,12 +37,15 @@ export interface Deps {
 export interface Stroke { id: string; by: number; color: string; width: number; pts: number[] }
 export interface MapState {
   /** 一格多少像素（底图坐标）、格子原点偏移、格子铺多大、显不显示 */
-  grid: { size: number; ox: number; oy: number; cols: number; rows: number; show: boolean; diagonal?: Diagonal };
+  grid: { size: number; ox: number; oy: number; cols: number; rows: number; show: boolean; diagonal?: Diagonal; paper?: string; line?: string };
   bg: { img: string; w: number; h: number } | null;
   strokes: Stroke[];
   /** 参与者 id → 格子坐标（占的左上角那一格） */
   tokens: Record<string, { x: number; y: number }>;
 }
+/** '#abc' / '#aabbcc' / '#aabbcc80'；'' 清掉；其余保持原值 */
+const hexOr = (v: unknown, old?: string): string | undefined =>
+  v === '' ? undefined : typeof v === 'string' && /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(v) ? v : old;
 const newMap = (): MapState => ({ grid: { size: 50, ox: 0, oy: 0, cols: 30, rows: 20, show: true }, bg: null, strokes: [], tokens: {} });
 const MAX_STROKES = 3000;
 const MAX_PTS = 4000;
@@ -208,6 +211,8 @@ export function createEncounters(d: Deps) {
           size: num(b.size ?? m.grid.size, 8, 400), ox: num(b.ox ?? m.grid.ox, -400, 400), oy: num(b.oy ?? m.grid.oy, -400, 400),
           cols: num(b.cols ?? m.grid.cols, 1, 200), rows: num(b.rows ?? m.grid.rows, 1, 200), show: b.show == null ? m.grid.show : !!b.show,
           diagonal: b.diagonal === '5-10-5' ? '5-10-5' : b.diagonal === '5' ? '5' : m.grid.diagonal ?? '5',
+          // 没底图时的底色、格线颜色：hex，空字符串 = 默认
+          paper: hexOr(b.paper, m.grid.paper), line: hexOr(b.line, m.grid.line),
         };
         return null;
       case 'bg': {
@@ -345,13 +350,11 @@ export function createEncounters(d: Deps) {
         if (b.hidden) e.hidden.push(id);
       } else if (op === 'chat') {
         // 指令框：骰子由服务器掷；私密的照样发给所有人，界面上只给本人（和点开的 DM）看
-        let p;
-        try { p = parseCommand(String(b.text ?? '')); } catch (err) { return reject((err as Error).message); }
-        if (!p) return reject('只认识 /r 和 /pr');
-        const entry: ChatRoll = {
-          id: randomUUID().slice(0, 8), by: u.id, byName: u.name, at: Date.now(), afterTx: e.session.transactions.length,
-          private: p.cmd === 'pr', note: p.note.slice(0, 80), results: p.exprs.map((x) => rollExpr(x)),
-        };
+        let entry: ChatRoll | null;
+        try {
+          entry = chatEntry(String(b.text ?? ''), { id: randomUUID().slice(0, 8), by: u.id, byName: u.name, at: Date.now(), afterTx: e.session.transactions.length });
+        } catch (err) { return reject((err as Error).message); }
+        if (!entry) return reject('空的');
         e.chat = [...e.chat, entry].slice(-300);
         d.run('UPDATE encounters SET meta = ?, updated = ? WHERE id = ?', metaOf(e), Date.now(), e.id);
         broadcast(e, 'chat', entry);

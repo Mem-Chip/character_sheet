@@ -152,6 +152,7 @@ export function previewLines(events: GameEvent[], name: Namer): Line[] {
 function ChatLine({ c, mine, dm }: { c: ChatRoll; mine: boolean; dm: boolean }) {
   const [peek, setPeek] = useState(false);
   const visible = !c.private || mine || peek;
+  if (c.text != null) return <div className="chatroll said"><div className="evline"><span className="txt"><b>{c.byName}</b>：{c.text}</span></div></div>;
   return (
     <div className={'chatroll' + (c.private ? ' private' : '')}>
       <div className="evline">
@@ -192,7 +193,7 @@ function CommandBox() {
   return (
     <div className="cmdbox">
       <input
-        value={text} placeholder="/r 1d20+5, 2d6+3 说明 · ad20 优势 · dd20 劣势 · /pr 私密"
+        value={text} title={['直接打字 = 说一句话', '/r 1d20+5, 2d6+3 说明 · ad20 优势 · dd20 劣势 · 4d6kh3 取高', '/pr 私密掷骰'].join('\n')}
         onChange={(e) => { setText(e.target.value); setErr(''); }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') send();

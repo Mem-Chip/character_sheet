@@ -5,7 +5,7 @@ import { Choices } from '../components/Choices';
 import { Term } from '../components/Term';
 import { SpellBrowser } from '../components/SpellBrowser';
 import { Entries } from '../components/Entries';
-import { Panel, Pips, Tag, sgn } from '../components/ui';
+import { Clip, Panel, Pips, Tag, sgn } from '../components/ui';
 import type { Engine } from '../lib/engine';
 import { actions, stripDerived } from '../lib/store';
 
@@ -240,7 +240,7 @@ function Resources({ engine, id, char, sheet }: Props) {
           <tbody>
             {pools.map((r) => (
               <tr key={r.key}>
-                <td className="serif">{r.name}</td>
+                <td className="serif"><Clip text={String(r.name)} /></td>
                 <td><Pips max={r.max} used={r.used || 0} onChange={(u) => actions.update(id, (c) => { c.resources = { ...(c.resources || {}), [r.key]: { ...(c.resources?.[r.key] || {}), used: u } }; })} /></td>
                 <td className="r small faint">{RECOVERY_CN[r.recovery] ?? r.recovery}</td>
               </tr>

@@ -6,6 +6,7 @@
  *   /r 1d20+5, 2d6+3 偷看箱子   逗号（中英文都行）隔开好几个；最后一段空格后面的字是说明
  *   /r 4d6kh3                 取高 3 颗（kl = 取低）
  *   /r ad20+5   /r dd20+5     优势 / 劣势（就是 2d20kh1 / 2d20kl1）
+ * 不以 / 开头的就是一句话，原样进日志。
  * 和战斗引擎无关：不进事务、不能撤销。
  */
 
@@ -120,4 +121,15 @@ export interface ChatRoll {
   private: boolean;
   note: string;
   results: RolledExpr[];
+  /** 不是指令、只是说了一句话（这时 results 为空） */
+  text?: string;
+}
+
+/** 指令框发出的一行 → 日志条目（掷骰或一句话）；写错了抛 Error，空行返回 null */
+export function chatEntry(line: string, who: Pick<ChatRoll, 'id' | 'by' | 'byName' | 'at' | 'afterTx'>): ChatRoll | null {
+  const t = line.trim();
+  if (!t) return null;
+  const p = parseCommand(t);
+  if (!p) return { ...who, private: false, note: '', results: [], text: t.slice(0, 500) };
+  return { ...who, private: p.cmd === 'pr', note: p.note.slice(0, 80), results: p.exprs.map((x) => rollExpr(x)) };
 }

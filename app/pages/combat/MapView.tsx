@@ -63,6 +63,21 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); };
   }, []);
 
+  // Delete：把选中的棋子拿下地图（要确认）
+  const selRef = useRef<string | null>(null);
+  selRef.current = ui.selected && map.tokens[ui.selected] && combat.canControl(ui.selected) ? ui.selected : null;
+  useEffect(() => {
+    const del = (e: KeyboardEvent) => {
+      if (e.key !== 'Delete' || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
+      const id = selRef.current;
+      if (!id || !confirm(`把 ${name(id)} 拿下地图？（人还在遭遇里，之后可以再放上来）`)) return;
+      combat.patchMap((m) => { delete m.tokens[id]; });
+      void combat.map({ action: 'token', id, x: null });
+    };
+    window.addEventListener('keydown', del);
+    return () => window.removeEventListener('keydown', del);
+  }, [name]);
+
   // 滚轮缩放（以鼠标为中心）；要非被动监听才能拦住页面滚动
   useEffect(() => {
     const el = box.current;
@@ -190,16 +205,15 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
     let d = '';
     for (let i = 0; i <= cols; i++) d += `M${ox + i * g} ${oy}V${oy + rows * g}`;
     for (let j = 0; j <= rows; j++) d += `M${ox} ${oy + j * g}H${ox + cols * g}`;
-    return <path d={d} className="map-grid" strokeWidth={1 / view.k} />;
+    return <path d={d} className="map-grid" strokeWidth={1 / view.k} style={map.grid.line ? { stroke: map.grid.line, strokeOpacity: 1 } : undefined} />;
   }, [map.grid, map.bg, worldW, worldH, g, view.k]);
 
   const bgUrl = map.bg ? new URL('api/', document.baseURI).pathname + `encounters/${remote.id}/bg?v=${map.bg.img}` : null;
   const moving = drag?.kind === 'token' ? drag : null;
-  const sel = ui.selected && map.tokens[ui.selected] ? ui.selected : null;
   const aimed: Record<string, number> = {};
   for (const p of ui.aim?.picks ?? []) aimed[p] = (aimed[p] ?? 0) + 1;
 
-  const hint = `滚轮缩放 · 拖空白处或按住空格平移 · 点棋子选中、右键设为目标 · 每格 5 尺，斜走${diagonal === '5' ? '也算 5 尺' : '交替 5 / 10 尺'}，引擎按棋子位置自动判断距离`;
+  const hint = `滚轮缩放 · 拖空白处或按住空格平移 · 点棋子选中、右键设为目标、Delete 拿下地图、Esc 取消选中 · 每格 5 尺，斜走${diagonal === '5' ? '也算 5 尺' : '交替 5 / 10 尺'}，引擎按棋子位置自动判断距离`;
   return (
     <div className="map-root">
       <div className="hud map-rail" title={hint}>
@@ -224,19 +238,13 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
       {tool === 'erase' && <div className="hud map-bar tiny faint">按住拖过线条就擦掉。{dm ? '' : '只能擦你自己画的。'}</div>}
       {tool === 'measure' && <div className="hud map-bar tiny faint">按住从一格拖到另一格。只有你自己看得到。</div>}
       {setup && dm && <MapSetup map={map} />}
-      {(offMap.length > 0 || (sel && combat.canControl(sel))) && (
+      {offMap.length > 0 && (
         <div className="hud map-bar">
-          {offMap.length > 0 && <span className="tiny faint">还没上图：</span>}
+          <span className="tiny faint">还没上图：</span>
           {offMap.map((id) => (
             <button key={id} className={'btn sm' + (placing === id ? ' on' : '')} onClick={() => setPlacing(placing === id ? null : id)}>{name(id)}</button>
           ))}
           {placing && <span className="tiny">点一格放下 {name(placing)}</span>}
-          {sel && combat.canControl(sel) && (
-            <button className="btn ghost sm" onClick={() => {
-              combat.patchMap((m) => { delete m.tokens[sel]; });
-              void combat.map({ action: 'token', id: sel, x: null });
-            }}>把 {name(sel)} 拿下地图</button>
-          )}
         </div>
       )}
       </div>
@@ -251,7 +259,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
       >
         <svg width="100%" height="100%">
           <g transform={`translate(${view.x} ${view.y}) scale(${view.k})`}>
-            {bgUrl ? <image href={bgUrl} x={0} y={0} width={map.bg!.w} height={map.bg!.h} /> : <rect width={worldW} height={worldH} className="map-paper" />}
+            {bgUrl ? <image href={bgUrl} x={0} y={0} width={map.bg!.w} height={map.bg!.h} /> : <rect width={worldW} height={worldH} className="map-paper" style={map.grid.paper ? { fill: map.grid.paper } : undefined} />}
             {gridLines}
             {map.strokes.map((x) => (
               <polyline
@@ -359,6 +367,8 @@ function MapSetup({ map }: { map: MapState }) {
       <label className="row tiny" style={{ gap: 4 }}>一格<NumInput min={8} max={400} value={gr.size} onChange={(n) => put({ size: n })} />像素</label>
       <label className="row tiny" style={{ gap: 4 }}>偏移<NumInput min={-400} max={400} value={gr.ox} onChange={(n) => put({ ox: n })} /><NumInput min={-400} max={400} value={gr.oy} onChange={(n) => put({ oy: n })} /></label>
       {!map.bg && <label className="row tiny" style={{ gap: 4 }}>大小<NumInput min={1} max={200} value={gr.cols} onChange={(n) => put({ cols: n })} />×<NumInput min={1} max={200} value={gr.rows} onChange={(n) => put({ rows: n })} />格</label>}
+      {!map.bg && <HexInput label="底色" value={gr.paper} onChange={(v) => put({ paper: v })} />}
+      <HexInput label="格线" value={gr.line} onChange={(v) => put({ line: v })} />
       <label className="row tiny" style={{ gap: 4 }}><input type="checkbox" checked={gr.show} onChange={(e) => put({ show: e.target.checked })} />显示格子</label>
       <label className="row tiny" style={{ gap: 4 }}>
         斜走
@@ -368,5 +378,31 @@ function MapSetup({ map }: { map: MapState }) {
         </select>
       </label>
     </div>
+  );
+}
+
+/** 颜色：直接写 hex（#334、#2a3b4c、带透明度 #2a3b4c80），空着 = 默认；回车或离开输入框生效 */
+function HexInput({ label, value, onChange }: { label: string; value?: string; onChange: (v: string) => void }) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const text = draft ?? value ?? '';
+  const ok = (v: string) => v === '' || /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(v);
+  const commit = () => {
+    if (draft == null) return;
+    let v = draft.trim();
+    if (v && !v.startsWith('#')) v = '#' + v;
+    if (ok(v) && v !== (value ?? '')) onChange(v);
+    setDraft(null);
+  };
+  return (
+    <label className="row tiny" style={{ gap: 4 }}>
+      {label}
+      {value && <i className="hex-dot" style={{ background: value }} />}
+      <input
+        className={'hex' + (draft != null && !ok(draft.trim() && !draft.trim().startsWith('#') ? '#' + draft.trim() : draft.trim()) ? ' bad' : '')}
+        value={text} placeholder="默认" size={9} spellCheck={false}
+        onChange={(e) => setDraft(e.target.value)} onBlur={commit}
+        onKeyDown={(e) => { if (e.key === 'Enter') commit(); else if (e.key === 'Escape') setDraft(null); }}
+      />
+    </label>
   );
 }

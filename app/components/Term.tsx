@@ -17,6 +17,8 @@ interface Win { id: number; ref: TermRef; at: Box; x?: number; y?: number; z: nu
 
 let engine: Engine | null = null;
 let hover: Win | null = null;
+/** 悬浮窗（或正要弹出的）是哪个术语元素的 —— 它被卸载时（按钮点完整栏换掉了）收起来，因为收不到 mouseleave */
+let owner: Element | null = null;
 /** 悬浮窗现在画在哪（按 Ctrl 固定时就固定在原地） */
 let hoverPos: { x: number; y: number } | null = null;
 let pins: Win[] = [];
@@ -37,6 +39,7 @@ const popups = {
   hoverSoon(ref: TermRef, el: Element) {
     clearTimeout(hideTimer);
     clearTimeout(showTimer);
+    owner = el;
     if (hover && sameRef(hover.ref, ref)) return;
     showTimer = setTimeout(() => { hover = { id: ++seq, ref, at: boxOf(el), z: 0 }; emit(); }, 220);
   },
@@ -52,6 +55,13 @@ const popups = {
     pins = [...pins, { id: ++seq, ref, at, z: ++zTop, ...(xy ?? {}) }];
     emit();
   },
+  /** 术语元素没了：它的悬浮窗立刻收起 */
+  gone(el: Element) {
+    if (owner !== el) return;
+    owner = null;
+    clearTimeout(showTimer);
+    if (hover) { hover = null; emit(); }
+  },
   close(id: number) { pins = pins.filter((p) => p.id !== id); emit(); },
   closeAll() { clearTimeout(showTimer); pins = []; hover = null; emit(); },
   front(id: number) { pins = pins.map((p) => (p.id === id ? { ...p, z: ++zTop } : p)); emit(); },
@@ -63,10 +73,13 @@ const popups = {
  * 查不到的类别不加效果，只渲染文字。
  */
 export function Term(p: { kind: string; name: string; source?: string; cls?: string; level?: number; inButton?: boolean; children?: ReactNode }) {
+  const self = useRef<HTMLSpanElement>(null);
+  useEffect(() => { const el = self.current; return () => { if (el) popups.gone(el); }; }, []);
   const ref: TermRef = { kind: p.kind, name: p.name, ...(p.source ? { source: p.source } : {}), ...(p.cls ? { cls: p.cls } : {}), ...(p.level != null ? { level: p.level } : {}) };
   if (!canLookup(p.kind) || !p.name) return <>{p.children ?? p.name}</>;
   return (
     <span
+      ref={self}
       className={'term' + (p.inButton ? ' in-btn' : '')}
       onMouseEnter={(e) => popups.hoverSoon(ref, e.currentTarget)}
       onMouseLeave={() => popups.leaveSoon()}
