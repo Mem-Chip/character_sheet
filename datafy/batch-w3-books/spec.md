@@ -168,6 +168,8 @@ export interface Area {
 export interface Targeting {
   type: 'self' | 'creature' | 'point' | 'area';
   count?: ExprSrc;
+  /** 同一个生物可以选好几次（魔法飞弹的飞弹、灼热射线的射线、魔能爆的光束）：选几次就结算几次 */
+  repeat?: boolean;
   range?: number | 'touch' | 'self' | 'reach';
   area?: Area;
   filter?: ExprSrc;
@@ -357,7 +359,7 @@ export interface Entry {
 1. **攻击节点的 `bonus` 缺省是 `self.spell.atk`（法术攻击）。** 武器攻击、徒手打击一定要自己写命中加值（`self.pb + max(self.mod.str, self.mod.dex)` 这类）；伤害骰里也要自己写属性调整值，引擎不会替你加。
 2. **`damage` 节点会立刻造成伤害**，不只是掷骰。一个分支里的 damage 节点先合成一个伤害包结算，再执行同一分支的其他节点。
    几个目标共用同一次掷骰（火球术）：在**第一次用到的分支里**写 `id`，其他分支用 `ref` 引用（可以加 `scale: 0.5` 减半）。不要在根上单独掷一次 —— 那会直接对目标造成一次伤害。
-3. **需要目标的节点**（attack、save、写给 target 的节点）有多个目标时，会自动对每个目标各执行一次，不用自己包 `forEach`。`targeting.count` 是最多能选几个。
+3. **需要目标的节点**（attack、save、写给 target 的节点）有多个目标时，会自动对每个目标各执行一次，不用自己包 `forEach`。`targeting.count` 是最多能选几个（玩家可以少选）。同一个生物能被选好几次、每次都结算一遍的（魔法飞弹的飞弹、灼热射线的射线、魔能爆的光束），写 `targeting.repeat: true`。
 4. **触发器的执行顺序**：先付代价（cost），再应用 modify，最后执行 do。do 里读到的 `roll` 已经是 modify 之后的结果 ——
    所以「加完仍然失败就不消耗」可以写成：do 里 `if roll.failing` → `{ kind: 'resource', id: …, delta: 1 }` 把代价退回去。
 5. **效应模板里的表达式**（效应的 rollMods、triggers、statics），`self` 是**承受这个效应的人**，`source` 是施加者。

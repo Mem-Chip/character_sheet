@@ -170,7 +170,9 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
   };
 
   const tokenDown = (e: React.PointerEvent, id: string) => {
-    if (e.button !== 0 || placing || tool !== 'move' || space.current) return;
+    if (e.button !== 0 || placing || space.current) return;
+    if (ui.aim) { e.stopPropagation(); combat.aimPick(id); return; }
+    if (tool !== 'move') return;
     e.stopPropagation();
     combat.select(id);
     if (!combat.canControl(id)) return;
@@ -194,6 +196,8 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
   const bgUrl = map.bg ? new URL('api/', document.baseURI).pathname + `encounters/${remote.id}/bg?v=${map.bg.img}` : null;
   const moving = drag?.kind === 'token' ? drag : null;
   const sel = ui.selected && map.tokens[ui.selected] ? ui.selected : null;
+  const aimed: Record<string, number> = {};
+  for (const p of ui.aim?.picks ?? []) aimed[p] = (aimed[p] ?? 0) + 1;
 
   const hint = `滚轮缩放 · 拖空白处或按住空格平移 · 点棋子选中、右键设为目标 · 每格 5 尺，斜走${diagonal === '5' ? '也算 5 尺' : '交替 5 / 10 尺'}，引擎按棋子位置自动判断距离`;
   return (
@@ -238,7 +242,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
       </div>
       <div
         ref={box}
-        className={'map-box tool-' + (placing ? 'place' : tool) + (drag?.kind === 'pan' ? ' panning' : '')}
+        className={'map-box tool-' + (placing ? 'place' : ui.aim ? 'aim' : tool) + (drag?.kind === 'pan' ? ' panning' : '')}
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
@@ -270,11 +274,17 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
                   key={id} data-token={id} className={cls}
                   transform={`translate(${map.grid.ox + at.x * g + r} ${map.grid.oy + at.y * g + r})`}
                   onPointerDown={(e) => tokenDown(e, id)}
-                  onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); combat.toggleTarget(id); }}
+                  onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); if (ui.aim) combat.aimUnpick(id); else combat.toggleTarget(id); }}
                 >
                   <title>{c.name}</title>
                   <circle r={r * 0.86} />
                   <text dy="0.35em" fontSize={Math.max(10, r * 0.62)}>{c.name.slice(0, n > 1 ? 4 : 2)}</text>
+                  {aimed[id] && (
+                    <g className="aim-badge" transform={`translate(${r * 0.62} ${-r * 0.62})`}>
+                      <circle r={Math.max(7, r * 0.3)} />
+                      <text dy="0.35em" fontSize={Math.max(9, r * 0.32)}>{aimed[id] > 1 ? aimed[id] : '✓'}</text>
+                    </g>
+                  )}
                 </g>
               );
             })}

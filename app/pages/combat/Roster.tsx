@@ -34,7 +34,7 @@ export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: Comba
           <div
             key={id}
             className={['cbt', id === ui.selected && 'sel', id === current && 'turn', c.live.dead && 'dead', isTarget && 'is-tgt', hiddenNow && 'is-hidden'].filter(Boolean).join(' ')}
-            onClick={() => combat.select(id)}
+            onClick={() => combat.clickCombatant(id)}
           >
             <span className="init">{c.initiative ?? '—'}</span>
             <span className="nm">

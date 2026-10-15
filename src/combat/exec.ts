@@ -601,6 +601,13 @@ export function triggeredActionUsable(tx: Tx, owner: Id, action: Action): { ok: 
   return { ok: true, questions: v instanceof Unknown ? [...v.questions] : [] };
 }
 
+/** 最多能选几个目标（targeting.count 可以随环阶变：魔法飞弹 2 + slot.level）；没写 = null（不限） */
+export function maxTargets(tx: Tx, actor: Id, action: Action, slotLevel?: number): number | null {
+  const t = action.targeting;
+  if (!t || t.count === undefined) return null;
+  return num(tx, { self: actor, targets: [], entryKey: '', actionName: action.name, cause: null, locals: {}, slot: slotLevel }, t.count, '目标数');
+}
+
 /** 效果随环阶变化的动作（表达式里用到 slot.level）—— 没指定环阶时值得问一句 */
 const scalesWithSlot = (a: Action) => JSON.stringify(a.root).includes('slot.level');
 
@@ -643,9 +650,10 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
     if (t && (t.type === 'creature' || t.type === 'area')) {
       if (!o.targets.length) throw new Rejected(`「${action.name}」需要选择目标`);
       if (t.count !== undefined && t.type === 'creature') {
-        const max = num(tx, { self: actor, targets: [], entryKey, actionName: action.name, cause: null, locals: {}, slot: o.slotLevel }, t.count, '目标数');
+        const max = maxTargets(tx, actor, action, o.slotLevel) ?? Infinity;
         if (o.targets.length > max) throw new Rejected(`「${action.name}」最多 ${max} 个目标，选了 ${o.targets.length} 个`);
       }
+      if (!t.repeat && new Set(o.targets).size < o.targets.length) throw new Rejected(`「${action.name}」不能重复选同一个目标`);
       for (const tid of o.targets) {
         if (!tx.state.combatants[tid]) throw new Rejected(`目标 ${tid} 不在遭遇中`);
         const forbidden = activeTemplates(tx, actor).some((a) => a.tpl.flags?.forbidTarget === 'source' && a.effect.source === tid);

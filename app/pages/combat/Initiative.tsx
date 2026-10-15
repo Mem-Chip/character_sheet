@@ -54,8 +54,8 @@ export function Initiative({ s, ui, name }: { s: Session; ui: CombatUi; name: Na
           return (
             <button
               key={id} className={cls} title={`${c.name} · ${hp}${c.initiative != null ? ` · 先攻 ${c.initiative}` : ''}`}
-              onClick={() => combat.select(id)}
-              onContextMenu={(e) => { e.preventDefault(); combat.toggleTarget(id); }}
+              onClick={() => combat.clickCombatant(id)}
+              onContextMenu={(e) => { e.preventDefault(); if (ui.aim) combat.aimUnpick(id); else combat.toggleTarget(id); }}
             >
               <span className="ini-dot">{c.name.slice(0, 1)}</span>
               <span className="ini-name">{c.name}<small>{c.live.dead ? '死亡' : hp}</small></span>

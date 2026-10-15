@@ -28,9 +28,25 @@ export interface CombatUi {
   dice: Record<string, DiceMode>;
   selected: string | null;
   targets: string[];
+  /** 选目标模式：点了一个要目标的动作之后，点棋子 / 先攻条里的人把他加进来，最后确认 */
+  aim: Aim | null;
   toast: { text: string; tone: 'danger' | 'ok' } | null;
   /** 战役遭遇（在服务器上跑）：本地的 session 只是镜像，所有操作发给服务器 */
   remote: Remote | null;
+}
+
+export interface Aim {
+  actor: string;
+  /** 动作引用（useAction 的 action）；manual = 手动施放的法术名 */
+  ref: string;
+  name: string;
+  /** 最多几个（null = 不限） */
+  max: number | null;
+  /** 能不能重复选同一个（魔法飞弹） */
+  repeat: boolean;
+  picks: string[];
+  /** 确认时发出去的命令（targets 那一项由 picks 填） */
+  cmd: Command;
 }
 
 export interface Remote {
@@ -61,7 +77,7 @@ interface RemoteState {
   dice?: Record<string, DiceMode>; hidden?: string[]; map?: MapState;
 }
 
-let ui: CombatUi = { session: null, version: 0, links: {}, dice: { '*': 'engine' }, selected: null, targets: [], toast: null, remote: null };
+let ui: CombatUi = { session: null, version: 0, links: {}, dice: { '*': 'engine' }, selected: null, targets: [], aim: null, toast: null, remote: null };
 let engineRef: Engine | null = null;
 let stream: EventSource | null = null;
 const listeners = new Set<() => void>();
@@ -205,7 +221,7 @@ export const combat = {
   leave(engine: Engine): void {
     stream?.close();
     stream = null;
-    ui = { ...ui, session: null, remote: null, links: {}, selected: null, targets: [] };
+    ui = { ...ui, session: null, remote: null, links: {}, selected: null, targets: [], aim: null };
     initCombat(engine);
   },
   /** 这个参与者我能不能操作（本地遭遇：都能） */
@@ -294,6 +310,40 @@ export const combat = {
   toggleTarget(id: string): void {
     set({ targets: ui.targets.includes(id) ? ui.targets.filter((t) => t !== id) : [...ui.targets, id] });
   },
+  /* ───── 选目标模式 ───── */
+  startAim(aim: Omit<Aim, 'picks'>): void {
+    // 之前已经标了目标的，直接带进来（不超过上限）
+    const pre = ui.targets.filter((t) => ui.session?.state.combatants[t]);
+    set({ aim: { ...aim, picks: aim.max != null ? pre.slice(0, aim.max) : pre } }, false);
+  },
+  /** 点了一个人：加进去（能重复的再点一次就再加一份；不能重复的再点一次就去掉） */
+  aimPick(id: string): void {
+    const a = ui.aim;
+    if (!a) return;
+    if (!a.repeat && a.picks.includes(id)) { set({ aim: { ...a, picks: a.picks.filter((x) => x !== id) } }, false); return; }
+    if (a.max != null && a.picks.length >= a.max) { toast(`「${a.name}」最多 ${a.max} 个目标`); return; }
+    set({ aim: { ...a, picks: [...a.picks, id] } }, false);
+  },
+  /** 去掉一份 */
+  aimUnpick(id: string): void {
+    const a = ui.aim;
+    if (!a) return;
+    const i = a.picks.lastIndexOf(id);
+    if (i >= 0) set({ aim: { ...a, picks: a.picks.filter((_, k) => k !== i) } }, false);
+  },
+  aimCancel(): void { if (ui.aim) set({ aim: null }, false); },
+  aimConfirm(): void {
+    const a = ui.aim;
+    if (!a || !a.picks.length) return;
+    set({ aim: null, targets: [...new Set(a.picks)] });
+    combat.dispatch({ ...a.cmd, targets: a.picks } as Command);
+  },
+  /** 点了参与者（地图棋子、先攻条、列表）：选目标模式里是加目标，平时是选中 */
+  clickCombatant(id: string): void {
+    if (ui.aim) combat.aimPick(id);
+    else combat.select(id);
+  },
+
   clearTargets(): void {
     set({ targets: [] });
   },

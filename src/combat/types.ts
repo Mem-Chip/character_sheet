@@ -159,6 +159,8 @@ export interface Area {
 export interface Targeting {
   type: 'self' | 'creature' | 'point' | 'area';
   count?: ExprSrc;
+  /** 同一个生物可以选好几次（魔法飞弹的飞弹、灼热射线的射线、魔能爆的光束）：选几次就结算几次 */
+  repeat?: boolean;
   range?: number | 'touch' | 'self' | 'reach';
   area?: Area;
   filter?: ExprSrc;

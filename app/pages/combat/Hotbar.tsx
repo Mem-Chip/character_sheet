@@ -22,6 +22,32 @@ const TABS: Array<{ k: string; label: string; groups: Group[] }> = [
   { k: 'timed', label: '时机', groups: ['时机到了会问'] },
 ];
 
+/** 选目标模式的条：选了谁（可重复的显示 ×N）、还能选几个、确认 / 取消 */
+export function AimBar({ ui, name }: { ui: CombatUi; name: Namer }) {
+  const a = ui.aim;
+  if (!a) return null;
+  const counts = new Map<string, number>();
+  for (const p of a.picks) counts.set(p, (counts.get(p) ?? 0) + 1);
+  return (
+    <div className="aimbar">
+      <div className="aim-head">
+        <b className="serif">「{a.name}」选目标</b>
+        <span className="num">{a.picks.length}{a.max != null ? ` / ${a.max}` : ''}</span>
+        <span className="tiny faint">{a.repeat ? '同一个可以选好几次 · ' : ''}点棋子或先攻条里的人加进来，右键去掉{a.max != null && a.max > 1 ? '；可以少选' : ''}</span>
+      </div>
+      <div className="aim-picks">
+        {[...counts].map(([id, n]) => (
+          <button key={id} className="tag" onClick={() => combat.aimUnpick(id)} title="去掉一个">{name(id)}{n > 1 ? ` ×${n}` : ''} ✕</button>
+        ))}
+        {!a.picks.length && <span className="faint small">还没选。</span>}
+        <span style={{ flex: 1 }} />
+        <button className="btn sm" onClick={combat.aimCancel}>取消</button>
+        <button className="btn primary" disabled={!a.picks.length} onClick={combat.aimConfirm}>确认{a.cmd.type === 'useAction' && a.cmd.slotLevel ? `（${a.cmd.slotLevel} 环）` : ''}</button>
+      </div>
+    </div>
+  );
+}
+
 export function Hotbar({ s, ui, engine, name, onDetail, turnButton }: {
   s: Session; ui: CombatUi; engine: Engine; name: Namer; onDetail: () => void; turnButton: React.ReactNode;
 }) {
@@ -114,7 +140,7 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton }: {
         {effTags}
       </div>
 
-      <div className="hot-actions">
+      {ui.aim ? <div className="hot-actions"><AimBar ui={ui} name={name} /></div> : <div className="hot-actions">
         <div className="hot-tabs">
           {tabs.map((t) => (
             <button key={t.k} className={t.k === cur?.k ? 'on' : ''} onClick={() => { setTab(t.k); setPick(null); }}>{t.label}<small>{t.list.length}</small></button>
@@ -122,9 +148,6 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton }: {
           <span style={{ flex: 1 }} />
           <span className="cost-legend">{(['action', 'bonus', 'reaction', 'free'] as CostKind[]).map((k) => <span key={k}><CostIcon kind={k} />{COST_CN[k].replace('动作', '') || '动作'}</span>)}</span>
           {cur?.k === 'weapon' && <label className="tiny faint"><input type="checkbox" checked={asReaction} onChange={(e) => setAsReaction(e.target.checked)} /> 用反应攻击</label>}
-          <span className="tiny">
-            {ui.targets.length ? <>目标：{ui.targets.map(name).join('、')} <button className="btn ghost sm" onClick={combat.clearTargets}>清空</button></> : <span className="faint">右键棋子选目标</span>}
-          </span>
         </div>
         <div className="hot-grid">
           {!cur && <span className="faint small">没有可用的动作。</span>}
@@ -150,7 +173,7 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton }: {
             );
           })}
         </div>
-      </div>
+      </div>}
 
       <div className="hot-end">
         {turnButton}

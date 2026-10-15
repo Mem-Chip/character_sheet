@@ -3,8 +3,8 @@ import { useMemo, useState } from 'react';
 import { ABIL_CN, ABILS, type Ability } from '../../../src/expr';
 import type { Json } from '../../../src/sheet';
 import {
-  actionCosts, canPay, concentrationOf, describeCost, weaponAction,
-  type Action, type ActiveEffect, type Cost, type Duration, type RuleBook, type Session,
+  actionCosts, canPay, concentrationOf, describeCost, maxTargets, weaponAction,
+  type Action, type Command, type ActiveEffect, type Cost, type Duration, type RuleBook, type Session,
 } from '../../../src/combat';
 import { NumInput, Panel, Pips, Stat, Tag, sgn } from '../../components/ui';
 import { Term } from '../../components/Term';
@@ -12,6 +12,7 @@ import { termOfKey, type TermRef } from '../../lib/terms';
 import { combat, type CombatUi } from '../../lib/combat';
 import { getApp } from '../../lib/store';
 import type { Engine } from '../../lib/engine';
+import { AimBar } from './Hotbar';
 import { DAMAGE_TYPES, type Namer } from './shared';
 
 export type Group = '武器攻击' | '法术' | '法术（未自动化）' | '特性' | '通用动作' | '时机到了会问';
@@ -248,6 +249,7 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
         aside={<span className="small">{tnames.length ? <>目标：{tnames.join('、')} <button className="btn ghost sm" onClick={combat.clearTargets}>清空</button></> : '未选目标'}</span>}
         flush
       >
+        <AimBar ui={ui} name={name} />
         {GROUPS.map((g) => {
           const list = items.filter((x) => x.group === g);
           if (!list.length) return null;
@@ -410,7 +412,6 @@ export function freeSlots(s: Session, id: string, min: number, max = 9): number[
 
 /** 执行一个动作。slotLevel 没给或者用不了 → 用最低的可用环阶 */
 export function runAction(s: Session, ui: CombatUi, id: string, it: ActItem, slotPick?: number, asReaction = false): void {
-  if (it.needsTargets && !ui.targets.length) { combat.toast('先选目标：右键地图上的棋子，或者点参与者右边的「目标」'); return; }
   // 付不起代价的动作也能点：DM 可以强制执行（不检查代价和次数）
   const force = !it.ok;
   if (force && !confirm(`${it.why}。\n仍然执行？（DM 强制：不检查代价）`)) return;
@@ -427,11 +428,19 @@ export function runAction(s: Session, ui: CombatUi, id: string, it: ActItem, slo
     });
     return;
   }
-  combat.dispatch({
+  const cmd: Command = {
     type: 'useAction', actor: id, action: it.ref,
     targets: it.needsTargets ? ui.targets : [id],
     slotLevel,
     options: asReaction && it.group === '武器攻击' ? { as: 'reaction' } : undefined,
     force: force || undefined,
-  });
+  };
+  // 要目标的：进选目标模式，在地图 / 先攻条上点人，再确认
+  if (it.needsTargets) {
+    const t = it.action.targeting;
+    const max = t?.type === 'creature' ? s.peek((tx) => maxTargets(tx, id, it.action, slotLevel)) : null;
+    combat.startAim({ actor: id, ref: it.ref, name: it.name, max, repeat: !!t?.repeat, cmd });
+    return;
+  }
+  combat.dispatch(cmd);
 }

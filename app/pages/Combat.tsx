@@ -32,6 +32,13 @@ export function CombatPage({ engine }: { engine: Engine }) {
   const [logOpen, setLogOpen] = useState(() => { try { return localStorage.getItem('dnd2024-engine:dock:log') !== '0'; } catch { return true; } });
   // session 为空就（重新）初始化 —— 开发时热更新会把 combat.ts 的模块状态清掉
   useEffect(() => { if (!ui.session) initCombat(engine); }, [engine, ui.session]);
+  // Esc 取消选目标
+  useEffect(() => {
+    if (!ui.aim) return;
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') combat.aimCancel(); };
+    window.addEventListener('keydown', esc);
+    return () => window.removeEventListener('keydown', esc);
+  }, [!!ui.aim]);
 
   const s = ui.session;
   if (!s) return <div className="page empty">正在准备遭遇…</div>;

@@ -464,3 +464,11 @@ describe('从人物卡刷新', () => {
     expect(s.state.combatants.f.base.ac).toBe(before.ac);
   });
 });
+
+describe('选目标：重复选同一个', () => {
+  it('没写 repeat 的动作不能重复选同一个目标', () => {
+    const { s } = setup([fighter(), goblin('g')]);
+    const r = s.dispatch({ type: 'useAction', actor: 'f', action: 'weapon:ls', targets: ['g', 'g'] });
+    expect(r.status).toBe('rejected');
+  });
+});
