@@ -29,10 +29,10 @@ export const EMITTED_EVENTS = new Set([
 
 const NODE_KINDS = new Set([
   'attack', 'save', 'check', 'damage', 'addDamage', 'heal', 'tempHp', 'applyEffect', 'removeEffect', 'extendEffect',
-  'resource', 'economy', 'choose', 'if', 'forEach', 'repeat', 'move', 'note', 'number',
+  'resource', 'economy', 'choose', 'if', 'forEach', 'repeat', 'move', 'note', 'number', 'modify',
 ]);
-const ROLL_OPS = new Set(['adv', 'disadv', 'add', 'addDice', 'autoFail', 'autoSucceed', 'critRange', 'autoCritOnHit', 'minD20', 'minDie', 'targetAdd']);
-const MODIFY_OPS = new Set(['reroll', 'addToRoll', 'reduceDamage', 'halveDamage', 'setHp', 'cancel']);
+const ROLL_OPS = new Set(['adv', 'disadv', 'add', 'addDice', 'autoFail', 'autoSucceed', 'critRange', 'autoCritOnHit', 'minD20', 'minDie', 'targetAdd', 'maxDice']);
+const MODIFY_OPS = new Set(['reroll', 'addToRoll', 'reduceDamage', 'halveDamage', 'setHp', 'cancel', 'evasion']);
 const STATIC_KINDS = new Set(['ac', 'speed', 'speedSet', 'spellDc', 'resist', 'resistAll', 'immune', 'vuln', 'conditionImmune']);
 
 const NUM = T.num;
@@ -139,6 +139,12 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
         break;
       case 'move':
         expr(n.ft, 'node', NUM, `${at}.ft`);
+        break;
+      case 'modify':
+        for (const m of n.modify ?? []) {
+          if (!MODIFY_OPS.has(m.op)) out.push(`${where(at)}：未知修改「${m.op}」`);
+          if ('value' in m) expr(m.value, 'node', m.op === 'addToRoll' || m.op === 'reduceDamage' ? DICE : NUM, `${at}.modify`);
+        }
         break;
       default:
         break;

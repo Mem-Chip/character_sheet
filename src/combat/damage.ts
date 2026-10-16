@@ -33,6 +33,10 @@ export interface DamagePacket {
   scale?: number;
   halve?: boolean;
   cancel?: boolean;
+  /** 来自豁免的伤害：哪项豁免、成没成功、成功是否只受一半（反射闪避看这个） */
+  save?: { ability: string; success: boolean; half: boolean };
+  /** 伤害骰全部取最大值（超限导能） */
+  max?: boolean;
   reduce: Array<{ value: number; types?: string[] }>;
 }
 
@@ -63,11 +67,13 @@ const sum = (a: number[]) => a.reduce((x, y) => x + y, 0);
  *   doubleDice（RAW）—— 伤害骰掷两次；maxPlusRoll（常见房规）—— 一份取最大值 + 一份正常掷。
  * minDie：巨武器战斗把 1、2 当 3。
  */
-export function rollComponent(tx: Tx, c: DamageComponent, crit: boolean, user: string, minDie: number): { faces: number[][]; total: number } {
+export function rollComponent(tx: Tx, c: DamageComponent, crit: boolean, user: string, minDie: number, max = false): { faces: number[][]; total: number } {
   const mode = crit ? tx.rules.coreParam<string>('critDamage') : 'none';
   const dice = mode === 'doubleDice' ? c.dice.doubled() : c.dice;
   if (dice.isConstant) return { faces: [], total: dice.flat };
-  const faces = tx.roll(dice.terms.map((t) => ({ faces: t.faces, count: t.count })), user, `${c.from}（${c.type}）`, 'damage');
+  // 取最大值：不用掷
+  const faces = max ? dice.terms.map((t) => Array<number>(t.count).fill(t.faces))
+    : tx.roll(dice.terms.map((t) => ({ faces: t.faces, count: t.count })), user, `${c.from}（${c.type}）`, 'damage');
   const adj = faces.map((fs) => fs.map((f) => Math.max(f, minDie)));
   let total = dice.flat;
   dice.terms.forEach((t, i) => { total += t.sign * sum(adj[i]); });
@@ -99,6 +105,7 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
       const { active } = evaluateMods(tx, cands, p.source, `${p.label} 伤害`);
       for (const { d, value } of active) {
         if (d.item.op === 'minDie' && typeof value === 'number') minDie = Math.max(minDie, value);
+        if (d.item.op === 'maxDice' && (d.item.on.spell === undefined || d.item.on.spell === !!p.attack?.spell)) p.max = true;
         if ((d.item.op === 'add' || d.item.op === 'addDice') && value !== undefined) {
           const dice = value instanceof Dice ? value : Dice.constant(value);
           p.components.push({ dice, type: primary, from: d.item.label });
@@ -111,7 +118,7 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
   const rolledParts: Array<{ from: string; type: string; dice: string; faces: number[]; total: number }> = [];
   const byType: Record<string, number> = {};
   for (const c of p.components) {
-    const r = c.rolled ?? { ...rollComponent(tx, c, p.crit, user, minDie), crit: p.crit };
+    const r = c.rolled ?? { ...rollComponent(tx, c, p.crit, user, minDie, p.max), crit: p.crit };
     c.rolled = r;
     const type = normType(c.type);
     rolledParts.push({ from: c.from, type, dice: (r.crit ? c.dice.doubled() : c.dice).toString(), faces: r.faces.flat(), total: r.total });
@@ -129,7 +136,8 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
     event: 'damageIncoming', window: 'before', actor: p.source ?? undefined, target: p.target,
     scope: {
       attack: p.attack,
-      damage: { type: p.components[0]?.type ?? '', amount: rolledTotal, crit: p.crit },
+      // save：这次伤害来自哪项豁免（不是豁免带来的 = 空字符串）；saved：豁免成功了没有
+      damage: { type: p.components[0]?.type ?? '', amount: rolledTotal, crit: p.crit, save: p.save?.ability ?? '', saved: !!p.save?.success },
       event: { label: p.label, source: p.source },
     },
     cause: rolledSeq,
@@ -137,7 +145,12 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
     modify: (m, by) => {
       if (m.op === 'halveDamage') p.halve = true;
       else if (m.op === 'cancel') p.cancel = true;
-      else if (m.op === 'reduceDamage') {
+      else if (m.op === 'evasion') {
+        // 只管「豁免成功只受一半」的伤害：成功 → 不受伤害，失败 → 一半
+        if (!p.save?.half) return;
+        if (p.save.success) p.cancel = true;
+        else p.halve = true;
+      } else if (m.op === 'reduceDamage') {
         // 可以带骰子（拦截 1d10 + 熟练加值）：由能力持有者的控制者掷一次
         const v = runDice(m.value, makeEnv(tx, { self: by.owner, source: by.source, effect: by.effect }));
         if (v instanceof Unknown) return;
@@ -300,3 +313,21 @@ export function grantTempHp(tx: Tx, id: Id, amount: number, label: string, cause
 }
 
 export const isUnknown = (v: unknown): v is Unknown => v instanceof Unknown;
+
+/**
+ * 这次掷骰要不要全部取最大值（rollMods 里的 maxDice：极效治疗、超限导能）。
+ * kind = damage / heal；on.spell = 只管法术的；when 里能用 slot、target。
+ */
+export function maxDiceFor(tx: Tx, roller: Id, kind: 'damage' | 'heal', scope: { target?: Id; slot?: number; spell?: boolean; attack?: AttackInfo }): boolean {
+  if (!tx.state.combatants[roller]) return false;
+  const cands = rollModsOf(tx, roller)
+    .filter((d) => d.item.who === 'bearer' && d.item.op === 'maxDice' && [d.item.on.kind].flat().includes(kind)
+      && (d.item.on.spell === undefined || d.item.on.spell === !!scope.spell)
+      && (!d.item.on.attack || filterMatches({ ...d.item.on, kind: 'attack' }, { kind: 'attack', attack: scope.attack })))
+    .map((d) => ({
+      d,
+      scope: { self: roller, source: d.source, target: scope.target, slot: scope.slot, attack: scope.attack, effect: d.effect },
+    }));
+  if (!cands.length) return false;
+  return evaluateMods(tx, cands, roller, kind === 'heal' ? '治疗骰' : '伤害骰').active.length > 0;
+}

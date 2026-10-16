@@ -16,18 +16,22 @@ export type TurnKey = string;
 
 export type RollKind = 'attack' | 'save' | 'check';
 /** RollMod / 触发器筛选用：在三大类之外还能点名几个特殊检定 */
-export type RollFilterKind = RollKind | 'd20' | 'damage' | 'initiative' | 'deathSave' | 'concentration';
+export type RollFilterKind = RollKind | 'd20' | 'damage' | 'heal' | 'initiative' | 'deathSave' | 'concentration';
 
 export interface RollFilter {
   kind: RollFilterKind | RollFilterKind[];
   ability?: Ability | Ability[];
   skill?: string | string[];
   attack?: { melee?: boolean; ranged?: boolean; weapon?: boolean; spell?: boolean };
+  /** 伤害 / 治疗骰：只管来自法术的（true）或不是法术的（false） */
+  spell?: boolean;
 }
 
 export type RollOp =
   | 'adv' | 'disadv' | 'add' | 'addDice' | 'autoFail' | 'autoSucceed'
-  | 'critRange' | 'autoCritOnHit' | 'minD20' | 'minDie' | 'targetAdd';
+  | 'critRange' | 'autoCritOnHit' | 'minD20' | 'minDie' | 'targetAdd'
+  /** 伤害骰 / 治疗骰全部取最大值（极效治疗、超限导能） */
+  | 'maxDice';
 
 export interface RollMod {
   on: RollFilter;
@@ -122,6 +126,11 @@ export interface TriggerSpec {
   window?: TriggerWindow;
   deferTo?: string;
   when?: ExprSrc;
+  /**
+   * 反应动作打谁：缺省是窗口的承受者（至圣斩打被命中的、护盾术护自己）；
+   * 'actor' = 窗口的发起者（炼狱叱喝打伤害来源、法术反制打施法者）
+   */
+  aim?: 'actor' | 'target';
 }
 
 export type Modify =
@@ -131,7 +140,9 @@ export type Modify =
   | { op: 'reduceDamage'; value: ExprSrc; types?: string[] }
   | { op: 'halveDamage' }
   | { op: 'setHp'; value: ExprSrc }
-  | { op: 'cancel' };
+  | { op: 'cancel' }
+  /** 反射闪避：「豁免成功只受一半伤害」的效果 —— 成功改为不受伤害，失败改为只受一半（别的伤害不管） */
+  | { op: 'evasion' };
 
 export interface Trigger extends TriggerSpec {
   id: string;
@@ -213,16 +224,20 @@ export type Node =
   | { kind: 'extendEffect'; template: string }
   | { kind: 'resource'; id: string; delta: ExprSrc }
   | { kind: 'economy'; action?: number; bonus?: number; reaction?: number; attacks?: number; move?: ExprSrc }
-  | { kind: 'choose'; prompt: string; options: Array<{ label: string; do: Node[]; when?: ExprSrc }>; count?: number }
+  /** var：把选中项的 value（没写就是 label）放进 `vars.<var>`，后面的节点可以用（伤害类型 `type: 'vars.elem'`） */
+  | { kind: 'choose'; prompt: string; options: Array<{ label: string; do?: Node[]; when?: ExprSrc; value?: string }>; count?: number; var?: string }
   /** 让人选一个数（圣疗用多少点），结果放进 `vars.<var>` 给后面的节点用 */
   | { kind: 'number'; prompt: string; var: string; min?: ExprSrc; max: ExprSrc; default?: ExprSrc }
   | { kind: 'if'; when: ExprSrc; then?: Node[]; else?: Node[] }
   | { kind: 'forEach'; in: 'targets' | 'area'; do: Node[] }
   | { kind: 'repeat'; n: ExprSrc; do: Node[] }
   | { kind: 'move'; mode: 'push' | 'pull' | 'teleport'; ft: ExprSrc }
-  | { kind: 'note'; text: string };
+  | { kind: 'note'; text: string }
+  /** 在窗口里改正在结算的东西（反应动作的 root、触发器的 do 里用）：值在当前作用域里求（能用 slot.level），带骰子的当场掷 */
+  | { kind: 'modify'; modify: Modify[] };
 
-export type NodeTarget = 'target' | 'self';
+/** attacker = 窗口的发起者（攻击者、伤害来源） */
+export type NodeTarget = 'target' | 'self' | 'attacker';
 
 /** 一个规则条目（官方条目的动态层 / 状态 / 通用动作 / 精通 / 房规） */
 export interface Entry {

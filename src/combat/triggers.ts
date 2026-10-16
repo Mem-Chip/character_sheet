@@ -162,16 +162,19 @@ function fire(tx: Tx, spec: WindowSpec, c: TriggerCand): void {
   if (lim === 'oncePerTurn') tx.emit('onceUsed', { id: c.owner, key: c.key, at: tx.turnKey() }, seq);
   if (lim === 'oncePerRound') tx.emit('onceUsed', { id: c.owner, key: c.key, at: `r${tx.state.round ?? 0}` }, seq);
 
+  // 窗口允许修改时，modify 节点经由这里改（值已经在节点那边求好）
+  const modify = spec.modify ? (m: Modify) => spec.modify!(m, c) : undefined;
   if (c.action) {
     // 窗口触发的动作：动作自己付代价（反应 / 附赠 + 法术位…），自己跑效果树；
-    // 目标 = 窗口里的目标（至圣斩打的是被命中的那个），没有就是自己
+    // 目标 = 窗口里的目标（至圣斩打的是被命中的那个），没有就是自己；aim: 'actor' = 窗口的发起者（炼狱叱喝打伤害来源）
+    const aimed = c.action.trigger?.aim === 'actor' ? spec.actor : spec.target;
     executeAction(tx, {
       actor: c.owner, actionKey: `${c.from}#${c.action.id}`, action: c.action,
-      targets: spec.target ? [spec.target] : [c.owner],
+      targets: aimed && tx.state.combatants[aimed] ? [aimed] : [c.owner],
       cause: seq, viaReaction: true,
       window: {
         packet: spec.packet, attack: spec.scope.attack, attacker: spec.scope.attacker ?? spec.actor,
-        roll: spec.refresh ? spec.refresh() : spec.scope.roll, damage: spec.scope.damage, event: spec.scope.event,
+        roll: spec.refresh ? spec.refresh() : spec.scope.roll, damage: spec.scope.damage, event: spec.scope.event, modify,
       },
     });
     return;
@@ -203,6 +206,7 @@ function fire(tx: Tx, spec: WindowSpec, c: TriggerCand): void {
       event: spec.scope.event,
       packet: spec.packet,
       originKind: c.from.includes(':spell:') ? 'spell' : 'feature',
+      modify,
     };
     runNodes(tx, t.do, ctx);
   }

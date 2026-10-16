@@ -1,5 +1,5 @@
-import { runBool, runInt, Unknown } from '../expr';
-import { kill } from './damage';
+import { run, runBool, runInt, Unknown } from '../expr';
+import { kill, normType } from './damage';
 import { runNodes } from './exec';
 import { makeEnv } from './scope';
 import type { Tx } from './tx';
@@ -108,16 +108,22 @@ export function effectiveView(tx: Tx, id: Id): CombatantView {
         const r = runInt(e, makeEnv(tx, { self: id, source: at.effect.source, effect: at.effect }));
         return r instanceof Unknown ? 0 : r;
       };
+      // 抗性 / 免疫 / 易伤的类型可以写表达式（`effect.state.type`：施加时选的伤害类型），其余是字面类型名
+      const types = (vs: string[]) => vs.map((x) => {
+        if (!/^[a-z]+\./.test(x)) return x;
+        const r = run(x, makeEnv(tx, { self: id, source: at.effect.source, effect: at.effect }));
+        return r instanceof Unknown || r == null ? '' : normType(String(r));
+      }).filter(Boolean);
       for (const m of at.tpl.statics ?? []) {
         switch (m.kind) {
           case 'ac': acBonus += num(m.bonus); break;
           case 'spellDc': dcBonus += num(m.bonus); break;
           case 'speed': speedBonus += num(m.bonus); break;
           case 'speedSet': speedSet = speedSet === null ? m.value : Math.min(speedSet, m.value); break;
-          case 'resist': v.resist.push(...m.values); break;
+          case 'resist': v.resist.push(...types(m.values)); break;
           case 'resistAll': resistAll = true; break;
-          case 'immune': v.immune.push(...m.values); break;
-          case 'vuln': v.vuln.push(...m.values); break;
+          case 'immune': v.immune.push(...types(m.values)); break;
+          case 'vuln': v.vuln.push(...types(m.values)); break;
           case 'conditionImmune': v.conditionImmune.push(...m.values); break;
         }
       }

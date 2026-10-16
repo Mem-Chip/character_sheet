@@ -1,11 +1,11 @@
 import { ABIL_CN, Dice, Unknown, run, runBool, runDice, runInt, type ExprSrc, type Question, type Value } from '../expr';
-import { applyDamagePacket, applyHeal, grantTempHp, normType, rollComponent, type DamageComponent, type DamagePacket } from './damage';
+import { applyDamagePacket, applyHeal, grantTempHp, maxDiceFor, normType, rollComponent, type DamageComponent, type DamagePacket } from './damage';
 import { controllerOf, d20Test, rollValue } from './d20';
 import { activeTemplates, applyEffect, effectiveView, effectsOf, endEffect, startConcentration } from './effects';
 import { makeEnv, nameOf, type ScopeData } from './scope';
 import { blockedEconomy, fireWindow } from './triggers';
 import { Rejected, type Tx } from './tx';
-import type { Action, ActiveEffect, AttackInfo, AttackRow, Cost, Duration, EffectId, Id, Node } from './types';
+import type { Action, ActiveEffect, AttackInfo, AttackRow, Cost, Duration, EffectId, Id, Modify, Node } from './types';
 
 /**
  * 效果树解释器 + 动作执行（COMBAT-DESIGN §4.1 / §4.2）。
@@ -47,8 +47,12 @@ export interface ExecCtx {
   /** 最近一次豁免的 DC（saveEnds 缺省用它） */
   dc?: number;
   originKind?: ActiveEffect['origin']['kind'];
-  /** number 节点选出来的数（同一次执行里共享） */
-  vars?: Record<string, number>;
+  /** number / choose 节点选出来的值（同一次执行里共享） */
+  vars?: Record<string, number | string>;
+  /** 窗口里能改正在结算的东西（modify 节点用）；不在 before 窗口里就没有 */
+  modify?: (m: Modify) => void;
+  /** 当前在豁免的哪个分支里（伤害包据此知道「成功减半」，反射闪避用） */
+  save?: { ability: string; success: boolean; half: boolean };
 }
 
 export function scopeOf(tx: Tx, ctx: ExecCtx): ScopeData {
@@ -111,8 +115,12 @@ export function resolveBool(tx: Tx, e: ExprSrc, scope: ScopeData, askTo: Id, lab
 export function runNodes(tx: Tx, nodes: Node[] | undefined, ctx: ExecCtx): void {
   if (!nodes?.length) return;
   const dmg = nodes.filter((n): n is Extract<Node, { kind: 'damage' }> => n.kind === 'damage');
+  // 写在第一个伤害节点前面的 choose / number / modify 先做：伤害要用选出来的类型、减伤要先于反击
+  const first = nodes.findIndex((n) => n.kind === 'damage');
+  const early = new Set<Node>(first < 0 ? [] : nodes.slice(0, first).filter((n) => n.kind === 'choose' || n.kind === 'number' || n.kind === 'modify'));
+  for (const n of early) runNode(tx, n, ctx);
   if (dmg.length) runDamageNodes(tx, dmg, ctx);
-  for (const n of nodes) if (n.kind !== 'damage') runNode(tx, n, ctx);
+  for (const n of nodes) if (n.kind !== 'damage' && !early.has(n)) runNode(tx, n, ctx);
 }
 
 /** 需要目标却没有「当前目标」时，对每个目标各执行一次 */
@@ -122,8 +130,12 @@ function perTarget(tx: Tx, ctx: ExecCtx, fn: (c: ExecCtx) => void): void {
   for (const t of ctx.targets) if (tx.state.combatants[t]) fn({ ...ctx, target: t });
 }
 
-function recipients(tx: Tx, ctx: ExecCtx, to: 'target' | 'self' | 'each' | undefined): Id[] {
+function recipients(tx: Tx, ctx: ExecCtx, to: 'target' | 'self' | 'attacker' | 'each' | undefined): Id[] {
   if (to === 'self') return [ctx.self];
+  if (to === 'attacker') {
+    if (!ctx.attacker || !tx.state.combatants[ctx.attacker]) throw new Error(`「${ctx.actionName}」要对攻击者 / 伤害来源生效，但这里没有`);
+    return [ctx.attacker];
+  }
   if (to === 'each') return ctx.targets.slice();
   if (to === 'target' || to === undefined) {
     if (ctx.target) return [ctx.target];
@@ -159,7 +171,8 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
     case 'heal': {
       for (const id of recipients(tx, ctx, n.to)) {
         const d = dice(tx, ctx, n.amount, '治疗量');
-        const amount = rollComponent(tx, { dice: d, type: '治疗', from: ctx.actionName }, false, controllerOf(tx, ctx.self), 0).total;
+        const max = maxDiceFor(tx, ctx.self, 'heal', { target: id, slot: ctx.slot, spell: ctx.originKind === 'spell' });
+        const amount = rollComponent(tx, { dice: d, type: '治疗', from: ctx.actionName }, false, controllerOf(tx, ctx.self), 0, max).total;
         applyHeal(tx, id, amount, ctx.actionName, ctx.cause);
       }
       return;
@@ -234,7 +247,12 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
         default: [String(open[0].i)],
       });
       const list = (Array.isArray(picked) ? picked : [picked]).map(String).slice(0, n.count ?? 1);
-      for (const i of list) runNodes(tx, n.options[Number(i)]?.do, ctx);
+      for (const i of list) {
+        const o = n.options[Number(i)];
+        if (!o) continue;
+        if (n.var) (ctx.vars ??= {})[n.var] = o.value ?? o.label;
+        runNodes(tx, o.do, ctx);
+      }
       return;
     }
     case 'number': {
@@ -274,6 +292,18 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
     case 'note':
       tx.emit('note', { text: n.text, owner: ctx.self, target: ctx.target }, ctx.cause);
       return;
+    case 'modify': {
+      if (!ctx.modify) throw new Error(`「${ctx.actionName}」：modify 只能用在 before 窗口触发的反应 / 触发器里`);
+      for (const m of n.modify) {
+        // 值在这里求（能用 slot.level、vars），带骰子的由自己的控制者当场掷；交给窗口的是一个定数
+        if ('value' in m && m.value !== undefined) {
+          const d = dice(tx, ctx, m.value, ctx.actionName);
+          const total = d.isConstant ? d.flat : rollComponent(tx, { dice: d, type: '', from: ctx.actionName }, false, controllerOf(tx, ctx.self), 0).total;
+          ctx.modify({ ...m, value: String(total) } as Modify);
+        } else ctx.modify(m);
+      }
+      return;
+    }
   }
 }
 
@@ -391,7 +421,9 @@ function runSave(tx: Tx, n: Extract<Node, { kind: 'save' }>, ctx: ExecCtx): void
   });
   const ok = r.outcome === 'success';
   const seq = tx.emit(ok ? 'saveSucceeded' : 'saveFailed', { actor: ctx.self, target, ability, dc, label: ctx.actionName }, r.seq);
-  runNodes(tx, ok ? n.onSuccess : n.onFail, { ...ctx, target, roll: rollValue(r), cause: seq, dc });
+  // 成功分支里有减半的伤害 = 「豁免成功只受一半」（反射闪避据此把成功改成不受伤害、失败改成一半）
+  const half = (n.onSuccess ?? []).some((x) => x.kind === 'damage' && x.scale === 0.5);
+  runNodes(tx, ok ? n.onSuccess : n.onFail, { ...ctx, target, roll: rollValue(r), cause: seq, dc, save: { ability, success: ok, half } });
 }
 
 /* ------------------------------ 伤害节点 ------------------------------ */
@@ -403,6 +435,8 @@ function runSave(tx: Tx, n: Extract<Node, { kind: 'save' }>, ctx: ExecCtx): void
 function runDamageNodes(tx: Tx, nodes: Array<Extract<Node, { kind: 'damage' }>>, ctx: ExecCtx): void {
   const byRecipient = new Map<Id, DamageComponent[]>();
   let scale: number | undefined;
+  let maxed: boolean | undefined;
+  const maxDmg = () => (maxed ??= maxDiceFor(tx, ctx.self, 'damage', { target: ctx.target, slot: ctx.slot, spell: ctx.originKind === 'spell', attack: ctx.attack }));
   for (const n of nodes) {
     let comps: DamageComponent[];
     if (n.ref) {
@@ -412,7 +446,7 @@ function runDamageNodes(tx: Tx, nodes: Array<Extract<Node, { kind: 'damage' }>>,
         const def = ctx.damageDefs?.[n.ref];
         if (!def) throw new Error(`伤害节点引用了不存在的 id「${n.ref}」`);
         const c: DamageComponent = { dice: dice(tx, ctx, def.dice ?? '0', ctx.actionName), type: typeOf(tx, ctx, def.type), from: ctx.actionName };
-        c.rolled = { ...rollComponent(tx, c, false, controllerOf(tx, ctx.self), 0), crit: false };
+        c.rolled = { ...rollComponent(tx, c, false, controllerOf(tx, ctx.self), 0, maxDmg()), crit: false };
         shared = ctx.locals[n.ref] = { comps: [c] };
       }
       comps = shared.comps.map((c) => ({ ...c, type: n.type ? typeOf(tx, ctx, n.type) : c.type, rolled: c.rolled ? { ...c.rolled } : undefined }));
@@ -422,7 +456,7 @@ function runDamageNodes(tx: Tx, nodes: Array<Extract<Node, { kind: 'damage' }>>,
         const prev = ctx.locals[n.id];
         if (prev) comps = prev.comps.map((x) => ({ ...x, rolled: x.rolled ? { ...x.rolled } : undefined }));
         else {
-          c.rolled = { ...rollComponent(tx, c, false, controllerOf(tx, ctx.self), 0), crit: false };
+          c.rolled = { ...rollComponent(tx, c, false, controllerOf(tx, ctx.self), 0, maxDmg()), crit: false };
           ctx.locals[n.id] = { comps: [c] };
           comps = [c];
         }
@@ -435,7 +469,7 @@ function runDamageNodes(tx: Tx, nodes: Array<Extract<Node, { kind: 'damage' }>>,
   for (const [id, comps] of byRecipient) {
     applyDamagePacket(tx, {
       source: ctx.self, target: id, components: comps.map((c) => ({ ...c })), crit: false, label: ctx.actionName,
-      scale, reduce: [],
+      scale, reduce: [], save: ctx.save, max: maxDmg() || undefined,
     }, ctx.cause);
   }
 }
@@ -569,7 +603,7 @@ export interface ExecuteOpts {
   viaReaction?: boolean;
   options?: Record<string, unknown>;
   /** 由窗口触发的动作（至圣斩、护盾术）：带上窗口的上下文 —— 命中窗口里的伤害包、攻击信息、检定 */
-  window?: Pick<ExecCtx, 'packet' | 'attack' | 'attacker' | 'roll' | 'damage' | 'event'>;
+  window?: Pick<ExecCtx, 'packet' | 'attack' | 'attacker' | 'roll' | 'damage' | 'event' | 'modify'>;
 }
 
 /** 这个动作的代价（动作经济 + 声明的代价） */

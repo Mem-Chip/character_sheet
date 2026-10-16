@@ -25,18 +25,22 @@
 ```ts
 export type RollKind = 'attack' | 'save' | 'check';
 /** RollMod / 触发器筛选用：在三大类之外还能点名几个特殊检定 */
-export type RollFilterKind = RollKind | 'd20' | 'damage' | 'initiative' | 'deathSave' | 'concentration';
+export type RollFilterKind = RollKind | 'd20' | 'damage' | 'heal' | 'initiative' | 'deathSave' | 'concentration';
 
 export interface RollFilter {
   kind: RollFilterKind | RollFilterKind[];
   ability?: Ability | Ability[];
   skill?: string | string[];
   attack?: { melee?: boolean; ranged?: boolean; weapon?: boolean; spell?: boolean };
+  /** 伤害 / 治疗骰：只管来自法术的（true）或不是法术的（false） */
+  spell?: boolean;
 }
 
 export type RollOp =
   | 'adv' | 'disadv' | 'add' | 'addDice' | 'autoFail' | 'autoSucceed'
-  | 'critRange' | 'autoCritOnHit' | 'minD20' | 'minDie' | 'targetAdd';
+  | 'critRange' | 'autoCritOnHit' | 'minD20' | 'minDie' | 'targetAdd'
+  /** 伤害骰 / 治疗骰全部取最大值（极效治疗、超限导能） */
+  | 'maxDice';
 
 export interface RollMod {
   on: RollFilter;
@@ -131,6 +135,11 @@ export interface TriggerSpec {
   window?: TriggerWindow;
   deferTo?: string;
   when?: ExprSrc;
+  /**
+   * 反应动作打谁：缺省是窗口的承受者（至圣斩打被命中的、护盾术护自己）；
+   * 'actor' = 窗口的发起者（炼狱叱喝打伤害来源、法术反制打施法者）
+   */
+  aim?: 'actor' | 'target';
 }
 
 export type Modify =
@@ -140,7 +149,9 @@ export type Modify =
   | { op: 'reduceDamage'; value: ExprSrc; types?: string[] }
   | { op: 'halveDamage' }
   | { op: 'setHp'; value: ExprSrc }
-  | { op: 'cancel' };
+  | { op: 'cancel' }
+  /** 反射闪避：「豁免成功只受一半伤害」的效果 —— 成功改为不受伤害，失败改为只受一半（别的伤害不管） */
+  | { op: 'evasion' };
 
 export interface Trigger extends TriggerSpec {
   id: string;
@@ -222,16 +233,20 @@ export type Node =
   | { kind: 'extendEffect'; template: string }
   | { kind: 'resource'; id: string; delta: ExprSrc }
   | { kind: 'economy'; action?: number; bonus?: number; reaction?: number; attacks?: number; move?: ExprSrc }
-  | { kind: 'choose'; prompt: string; options: Array<{ label: string; do: Node[]; when?: ExprSrc }>; count?: number }
+  /** var：把选中项的 value（没写就是 label）放进 `vars.<var>`，后面的节点可以用（伤害类型 `type: 'vars.elem'`） */
+  | { kind: 'choose'; prompt: string; options: Array<{ label: string; do?: Node[]; when?: ExprSrc; value?: string }>; count?: number; var?: string }
   /** 让人选一个数（圣疗用多少点），结果放进 `vars.<var>` 给后面的节点用 */
   | { kind: 'number'; prompt: string; var: string; min?: ExprSrc; max: ExprSrc; default?: ExprSrc }
   | { kind: 'if'; when: ExprSrc; then?: Node[]; else?: Node[] }
   | { kind: 'forEach'; in: 'targets' | 'area'; do: Node[] }
   | { kind: 'repeat'; n: ExprSrc; do: Node[] }
   | { kind: 'move'; mode: 'push' | 'pull' | 'teleport'; ft: ExprSrc }
-  | { kind: 'note'; text: string };
+  | { kind: 'note'; text: string }
+  /** 在窗口里改正在结算的东西（反应动作的 root、触发器的 do 里用）：值在当前作用域里求（能用 slot.level），带骰子的当场掷 */
+  | { kind: 'modify'; modify: Modify[] };
 
-export type NodeTarget = 'target' | 'self';
+/** attacker = 窗口的发起者（攻击者、伤害来源） */
+export type NodeTarget = 'target' | 'self' | 'attacker';
 
 /** 一个规则条目（官方条目的动态层 / 状态 / 通用动作 / 精通 / 房规） */
 export interface Entry {
@@ -266,8 +281,8 @@ export interface Entry {
 | 字段 | 能用的名字 |
 |---|---|
 | Action.requires、targeting.count、targeting.filter | `self`：参与者、`source`：参与者、`pb`：数字、`level`：数字、`mod`{ str, dex, con, int, wis, cha }、`score`{ str, dex, con, int, wis, cha }、`str`：数字、`dex`：数字、`con`：数字、`int`：数字、`wis`：数字、`cha`：数字、`round`：数字、`turn`{ isMine, of }、`core`：对象、`target`：参与者、`slot`{ level } |
-| 效果节点里的所有表达式（dice、dc、amount、when、delta、max…） | `self`：参与者、`source`：参与者、`pb`：数字、`level`：数字、`mod`{ str, dex, con, int, wis, cha }、`score`{ str, dex, con, int, wis, cha }、`str`：数字、`dex`：数字、`con`：数字、`int`：数字、`wis`：数字、`cha`：数字、`round`：数字、`turn`{ isMine, of }、`core`：对象、`target`：参与者、`attacker`：参与者、`slot`{ level }、`roll`{ kind, sub, ability, skill, natural, total, vs, adv, disadv, roller, target, crit, failing }、`attack`{ melee, ranged, weapon, spell, unarmed, finesse, reach, ability, damageType, item, mastery }、`damage`{ type, amount, crit }、`event`：对象、`effect`：对象、`vars`：对象 |
-| Trigger.when、Action.trigger.when、modify 的 value | `self`：参与者、`source`：参与者、`pb`：数字、`level`：数字、`mod`{ str, dex, con, int, wis, cha }、`score`{ str, dex, con, int, wis, cha }、`str`：数字、`dex`：数字、`con`：数字、`int`：数字、`wis`：数字、`cha`：数字、`round`：数字、`turn`{ isMine, of }、`core`：对象、`target`：参与者、`attacker`：参与者、`slot`{ level }、`roll`{ kind, sub, ability, skill, natural, total, vs, adv, disadv, roller, target, crit, failing }、`attack`{ melee, ranged, weapon, spell, unarmed, finesse, reach, ability, damageType, item, mastery }、`damage`{ type, amount, crit }、`event`：对象、`effect`：对象、`vars`：对象 |
+| 效果节点里的所有表达式（dice、dc、amount、when、delta、max…） | `self`：参与者、`source`：参与者、`pb`：数字、`level`：数字、`mod`{ str, dex, con, int, wis, cha }、`score`{ str, dex, con, int, wis, cha }、`str`：数字、`dex`：数字、`con`：数字、`int`：数字、`wis`：数字、`cha`：数字、`round`：数字、`turn`{ isMine, of }、`core`：对象、`target`：参与者、`attacker`：参与者、`slot`{ level }、`roll`{ kind, sub, ability, skill, natural, total, vs, adv, disadv, roller, target, crit, failing }、`attack`{ melee, ranged, weapon, spell, unarmed, finesse, reach, ability, damageType, item, mastery }、`damage`{ type, amount, crit, save, saved }、`event`：对象、`effect`：对象、`vars`：对象 |
+| Trigger.when、Action.trigger.when、modify 的 value | `self`：参与者、`source`：参与者、`pb`：数字、`level`：数字、`mod`{ str, dex, con, int, wis, cha }、`score`{ str, dex, con, int, wis, cha }、`str`：数字、`dex`：数字、`con`：数字、`int`：数字、`wis`：数字、`cha`：数字、`round`：数字、`turn`{ isMine, of }、`core`：对象、`target`：参与者、`attacker`：参与者、`slot`{ level }、`roll`{ kind, sub, ability, skill, natural, total, vs, adv, disadv, roller, target, crit, failing }、`attack`{ melee, ranged, weapon, spell, unarmed, finesse, reach, ability, damageType, item, mastery }、`damage`{ type, amount, crit, save, saved }、`event`：对象、`effect`：对象、`vars`：对象 |
 | RollMod.when、RollMod.value | `self`：参与者、`source`：参与者、`pb`：数字、`level`：数字、`mod`{ str, dex, con, int, wis, cha }、`score`{ str, dex, con, int, wis, cha }、`str`：数字、`dex`：数字、`con`：数字、`int`：数字、`wis`：数字、`cha`：数字、`round`：数字、`turn`{ isMine, of }、`core`：对象、`target`：参与者、`attacker`：参与者、`attack`{ melee, ranged, weapon, spell, unarmed, finesse, reach, ability, damageType, item, mastery }、`roll`{ kind, sub, ability, skill, roller, target }、`effect`：对象 |
 | StaticMod 的 bonus | `self`：参与者、`source`：参与者、`pb`：数字、`level`：数字、`mod`{ str, dex, con, int, wis, cha }、`score`{ str, dex, con, int, wis, cha }、`str`：数字、`dex`：数字、`con`：数字、`int`：数字、`wis`：数字、`cha`：数字、`round`：数字、`turn`{ isMine, of }、`core`：对象、`effect`：对象 |
 | Duration.endsOn[].when | `self`：参与者、`source`：参与者、`pb`：数字、`level`：数字、`mod`{ str, dex, con, int, wis, cha }、`score`{ str, dex, con, int, wis, cha }、`str`：数字、`dex`：数字、`con`：数字、`int`：数字、`wis`：数字、`cha`：数字、`round`：数字、`turn`{ isMine, of }、`core`：对象、`event`：对象、`effect`：对象 |
@@ -321,7 +336,7 @@ export interface Entry {
 | attackHit | after | 同上 | attack、roll、damage（已结算） | — |
 | attackMissed | after | 攻击者 / 目标 | attack、roll | — |
 | saveForced | after | 迫使豁免的人 / 豁免的人 | — | — |
-| damageIncoming | before | 伤害来源 / 承受者 | damage（掷出来的总数）、attack | reduceDamage（值可以带骰子，掷一次）、halveDamage、cancel |
+| damageIncoming | before | 伤害来源 / 承受者 | damage（掷出来的总数）、attack | reduceDamage（值可以带骰子，掷一次）、halveDamage、cancel、evasion |
 | damageTaken | after | 来源 / 承受者 | damage | — |
 | reducedTo0 | before | 来源 / 承受者 | damage | setHp（「改为降到 1」这类） |
 | turnStarted / turnEnded | after | 回合的主人 | — | — |
@@ -330,6 +345,10 @@ export interface Entry {
 | restCompleted | after | 休息的人 | event.kind（short / long） | — |
 
 反应类能力想「看到伤害再决定」（直觉闪避）：挂在 `attackHit` before，再写 `deferTo: 'damageIncoming'`。
+
+**带 `trigger` 的反应动作也能改正在结算的东西**：在 `root` 里写 `{ kind: 'modify', modify: [ … ] }`（和触发器的 modify 一样的写法），只能挂在 before 窗口。
+值在动作自己的作用域里求，所以能用 `slot.level`：反冲术 = `damageIncoming` before 的反应法术，`root: [{ kind: 'modify', modify: [{ op: 'reduceDamage', value: '(slot.level)d6 + self.spell.mod' }] }, …]`。
+反应动作默认打窗口的承受者（至圣斩打被命中的、护盾术护自己）；要打**窗口的发起者**（攻击者、伤害来源、施法者），在 `trigger` 上写 `aim: 'actor'`（炼狱叱喝、法术反制）。
 
 效应的 `duration.endsOn` 可以监听的事件：`turnStarted`、`turnEnded`、`initiativeRolled`、`spellCast`、`d20Rolled`、`attackHit`、`attackMissed`、`saveForced`、`damageIncoming`、`damageTaken`、`reducedTo0`、`restCompleted`、`actionUsed`、`actionDone`、`saveFailed`、`saveSucceeded`、`damageApplied`、`damageRolled`、`healed`、`tempHpGained`、`effectApplied`、`effectEnded`、`turnEnding`、`roundStarted`、`combatStarted`、`combatEnded`、`died`、`timeAdvanced`。
 `endsOn` 的 `when` 里，`event` 是事件内容（d20Rolled 有 `kind`、`roller`、`target`、`total`；effectApplied 有 `bearer`、`name`），`self` 是效应的承受者。
@@ -350,14 +369,21 @@ export interface Entry {
 10. **法术**的动作 `tags: ['spell', 'magical']`，动作 id 一般是 `cast`。
 11. **名字**：动作 `name`、触发器 `label`、检定修正 `label` 都以能力的中文名开头（可以加「：说明」）。回执和弹窗上显示的就是它。
 12. **让人选**：几个选项选一个 → `choose` 节点（选项可以带 `when`，条件不满足就不列）；选一个数 → `number` 节点，结果在 `vars.<var>`。
+   `choose` 也可以写 `var`：选中项的 `value`（没写就是 `label`）放进 `vars.<var>`，后面的节点能用 —— 伤害类型 `type: 'vars.elem'`；
+   要让效应记住（防护能量伤害），`applyEffect` 上写 `state: { type: 'vars.elem' }`，效应里 `statics: [{ kind: 'resist', values: ['effect.state.type'] }]`（抗性 / 免疫 / 易伤的类型可以写成表达式）。
 13. **引擎做不到的**（移动、视线、地形）→ `move` / `note` 节点，或在 `when` 里用 `ask('…')` 问人。**没把握就整条写成 `{ "automation": "manual", "text": "…" }`**：不自动化，比写错强。
 14. 伤害类型用中文：钝击 穿刺 挥砍 火焰 寒冷 闪电 雷鸣 强酸 毒素 黯蚀 光耀 心灵 力场。技能用中文：运动 体操 巧手 隐匿 奥秘 历史 调查 自然 宗教 驯兽 洞悉 医药 察觉 求生 欺瞒 威吓 表演 游说。
 15. 恒定的数值（AC +1、速度 +10、熟练）不写；只有带条件的写成 `rollMods` / `statics`（在效应里）。
+16. **对攻击者 / 伤害来源生效**（黯冰狱铠的反噬、火焰护盾）：节点上写 `to: 'attacker'`（damage、heal、tempHp、applyEffect 都行）。在命中、受伤这些窗口的触发器和反应里用。
+17. **反射闪避**这类（「豁免成功只受一半的效果：成功改为不受伤害，失败改为一半」）：`damageIncoming` before 的触发器，`when: "damage.save == 'dex'"`，`modify: [{ op: 'evasion' }]`。
+   `damage.save` 是这次伤害来自哪项豁免（不是豁免带来的就是空字符串），`damage.saved` 是成功了没有。evasion 只对「成功分支里写了 `scale: 0.5`」的伤害起作用。
+18. **骰子取最大值**（极效治疗、超限导能）：`rollMods` 里 `op: 'maxDice'`，`on: { kind: 'heal' }` 或 `{ kind: 'damage' }`；只管法术的加 `spell: true`（`on: { kind: 'damage', spell: true }`）。
 
 ## 6. 引擎怎么执行（容易想错的地方）
 
 1. **攻击节点的 `bonus` 缺省是 `self.spell.atk`（法术攻击）。** 武器攻击、徒手打击一定要自己写命中加值（`self.pb + max(self.mod.str, self.mod.dex)` 这类）；伤害骰里也要自己写属性调整值，引擎不会替你加。
-2. **`damage` 节点会立刻造成伤害**，不只是掷骰。一个分支里的 damage 节点先合成一个伤害包结算，再执行同一分支的其他节点。
+2. **`damage` 节点会立刻造成伤害**，不只是掷骰。一个分支里的 damage 节点先合成一个伤害包结算，再执行同一分支的其他节点
+   （例外：写在第一个 damage 前面的 `choose`、`number`、`modify` 先做，好让伤害用上选出来的值）。
    几个目标共用同一次掷骰（火球术）：在**第一次用到的分支里**写 `id`，其他分支用 `ref` 引用（可以加 `scale: 0.5` 减半）。不要在根上单独掷一次 —— 那会直接对目标造成一次伤害。
 3. **需要目标的节点**（attack、save、写给 target 的节点）有多个目标时，会自动对每个目标各执行一次，不用自己包 `forEach`。`targeting.count` 是最多能选几个（玩家可以少选）。同一个生物能被选好几次、每次都结算一遍的（魔法飞弹的飞弹、灼热射线的射线、魔能爆的光束），写 `targeting.repeat: true`。
 4. **触发器的执行顺序**：先付代价（cost），再应用 modify，最后执行 do。do 里读到的 `roll` 已经是 modify 之后的结果 ——

@@ -66,7 +66,7 @@ const ATTACK = T.obj({
   melee: T.bool, ranged: T.bool, weapon: T.bool, spell: T.bool, unarmed: T.bool, finesse: T.bool, reach: T.bool,
   ability: T.str, damageType: T.str, item: T.str, mastery: T.str,
 });
-const DAMAGE = T.obj({ type: T.str, amount: T.num, crit: T.bool });
+const DAMAGE = T.obj({ type: T.str, amount: T.num, crit: T.bool, save: T.str, saved: T.bool });
 
 const COMMON: Record<string, Ty> = {
   self: T.ref, source: T.ref,
@@ -120,7 +120,7 @@ export interface ScopeData {
   event?: Record<string, unknown>;
   effect?: ActiveEffect;
   /** number 节点选出来的数 */
-  vars?: Record<string, number>;
+  vars?: Record<string, number | string>;
 }
 
 export function nameOf(tx: Tx, id: Id): string {

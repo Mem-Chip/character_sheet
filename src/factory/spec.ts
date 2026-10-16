@@ -54,7 +54,7 @@ const WINDOWS: Array<[string, string, string, string, string]> = [
   ['attackHit', 'after', '同上', 'attack、roll、damage（已结算）', '—'],
   ['attackMissed', 'after', '攻击者 / 目标', 'attack、roll', '—'],
   ['saveForced', 'after', '迫使豁免的人 / 豁免的人', '—', '—'],
-  ['damageIncoming', 'before', '伤害来源 / 承受者', 'damage（掷出来的总数）、attack', 'reduceDamage（值可以带骰子，掷一次）、halveDamage、cancel'],
+  ['damageIncoming', 'before', '伤害来源 / 承受者', 'damage（掷出来的总数）、attack', 'reduceDamage（值可以带骰子，掷一次）、halveDamage、cancel、evasion'],
   ['damageTaken', 'after', '来源 / 承受者', 'damage', '—'],
   ['reducedTo0', 'before', '来源 / 承受者', 'damage', 'setHp（「改为降到 1」这类）'],
   ['turnStarted / turnEnded', 'after', '回合的主人', '—', '—'],
@@ -152,6 +152,10 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
 
 反应类能力想「看到伤害再决定」（直觉闪避）：挂在 \`attackHit\` before，再写 \`deferTo: 'damageIncoming'\`。
 
+**带 \`trigger\` 的反应动作也能改正在结算的东西**：在 \`root\` 里写 \`{ kind: 'modify', modify: [ … ] }\`（和触发器的 modify 一样的写法），只能挂在 before 窗口。
+值在动作自己的作用域里求，所以能用 \`slot.level\`：反冲术 = \`damageIncoming\` before 的反应法术，\`root: [{ kind: 'modify', modify: [{ op: 'reduceDamage', value: '(slot.level)d6 + self.spell.mod' }] }, …]\`。
+反应动作默认打窗口的承受者（至圣斩打被命中的、护盾术护自己）；要打**窗口的发起者**（攻击者、伤害来源、施法者），在 \`trigger\` 上写 \`aim: 'actor'\`（炼狱叱喝、法术反制）。
+
 效应的 \`duration.endsOn\` 可以监听的事件：${[...EMITTED_EVENTS].map((e) => `\`${e}\``).join('、')}。
 \`endsOn\` 的 \`when\` 里，\`event\` 是事件内容（d20Rolled 有 \`kind\`、\`roller\`、\`target\`、\`total\`；effectApplied 有 \`bearer\`、\`name\`），\`self\` 是效应的承受者。
 
@@ -171,14 +175,21 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
 10. **法术**的动作 \`tags: ['spell', 'magical']\`，动作 id 一般是 \`cast\`。
 11. **名字**：动作 \`name\`、触发器 \`label\`、检定修正 \`label\` 都以能力的中文名开头（可以加「：说明」）。回执和弹窗上显示的就是它。
 12. **让人选**：几个选项选一个 → \`choose\` 节点（选项可以带 \`when\`，条件不满足就不列）；选一个数 → \`number\` 节点，结果在 \`vars.<var>\`。
+   \`choose\` 也可以写 \`var\`：选中项的 \`value\`（没写就是 \`label\`）放进 \`vars.<var>\`，后面的节点能用 —— 伤害类型 \`type: 'vars.elem'\`；
+   要让效应记住（防护能量伤害），\`applyEffect\` 上写 \`state: { type: 'vars.elem' }\`，效应里 \`statics: [{ kind: 'resist', values: ['effect.state.type'] }]\`（抗性 / 免疫 / 易伤的类型可以写成表达式）。
 13. **引擎做不到的**（移动、视线、地形）→ \`move\` / \`note\` 节点，或在 \`when\` 里用 \`ask('…')\` 问人。**没把握就整条写成 \`{ "automation": "manual", "text": "…" }\`**：不自动化，比写错强。
 14. 伤害类型用中文：${DAMAGE_TYPES.join(' ')}。技能用中文：${SKILLS.join(' ')}。
 15. 恒定的数值（AC +1、速度 +10、熟练）不写；只有带条件的写成 \`rollMods\` / \`statics\`（在效应里）。
+16. **对攻击者 / 伤害来源生效**（黯冰狱铠的反噬、火焰护盾）：节点上写 \`to: 'attacker'\`（damage、heal、tempHp、applyEffect 都行）。在命中、受伤这些窗口的触发器和反应里用。
+17. **反射闪避**这类（「豁免成功只受一半的效果：成功改为不受伤害，失败改为一半」）：\`damageIncoming\` before 的触发器，\`when: "damage.save == 'dex'"\`，\`modify: [{ op: 'evasion' }]\`。
+   \`damage.save\` 是这次伤害来自哪项豁免（不是豁免带来的就是空字符串），\`damage.saved\` 是成功了没有。evasion 只对「成功分支里写了 \`scale: 0.5\`」的伤害起作用。
+18. **骰子取最大值**（极效治疗、超限导能）：\`rollMods\` 里 \`op: 'maxDice'\`，\`on: { kind: 'heal' }\` 或 \`{ kind: 'damage' }\`；只管法术的加 \`spell: true\`（\`on: { kind: 'damage', spell: true }\`）。
 
 ## 6. 引擎怎么执行（容易想错的地方）
 
 1. **攻击节点的 \`bonus\` 缺省是 \`self.spell.atk\`（法术攻击）。** 武器攻击、徒手打击一定要自己写命中加值（\`self.pb + max(self.mod.str, self.mod.dex)\` 这类）；伤害骰里也要自己写属性调整值，引擎不会替你加。
-2. **\`damage\` 节点会立刻造成伤害**，不只是掷骰。一个分支里的 damage 节点先合成一个伤害包结算，再执行同一分支的其他节点。
+2. **\`damage\` 节点会立刻造成伤害**，不只是掷骰。一个分支里的 damage 节点先合成一个伤害包结算，再执行同一分支的其他节点
+   （例外：写在第一个 damage 前面的 \`choose\`、\`number\`、\`modify\` 先做，好让伤害用上选出来的值）。
    几个目标共用同一次掷骰（火球术）：在**第一次用到的分支里**写 \`id\`，其他分支用 \`ref\` 引用（可以加 \`scale: 0.5\` 减半）。不要在根上单独掷一次 —— 那会直接对目标造成一次伤害。
 3. **需要目标的节点**（attack、save、写给 target 的节点）有多个目标时，会自动对每个目标各执行一次，不用自己包 \`forEach\`。\`targeting.count\` 是最多能选几个（玩家可以少选）。同一个生物能被选好几次、每次都结算一遍的（魔法飞弹的飞弹、灼热射线的射线、魔能爆的光束），写 \`targeting.repeat: true\`。
 4. **触发器的执行顺序**：先付代价（cost），再应用 modify，最后执行 do。do 里读到的 \`roll\` 已经是 modify 之后的结果 ——
