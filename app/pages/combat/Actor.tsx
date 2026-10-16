@@ -105,7 +105,7 @@ export function actionsFor(s: Session, rules: RuleBook, spells: Json[], id: stri
   const keys = [...v.sources, ...rules.keys().filter((k) => k.startsWith('XPHB:action:'))];
   const seen = new Set<string>();
   for (const key of keys) {
-    const e = v.entries?.[key] ?? rules.entry(key);
+    const e = rules.entry(key) ?? v.entries?.[key];
     if (!e?.actions?.length || seen.has(key)) continue;
     seen.add(key);
     for (const a of e.actions) {
@@ -129,7 +129,7 @@ export function actionsFor(s: Session, rules: RuleBook, spells: Json[], id: stri
   }
   // 时机能力：常驻的触发器 + 窗口触发的动作
   for (const key of new Set(v.sources)) {
-    const e = v.entries?.[key] ?? rules.entry(key);
+    const e = rules.entry(key) ?? v.entries?.[key];
     if (!e || e.automation === 'manual') continue;
     const timed = [
       ...(e.triggers ?? []).map((t) => ({ id: t.id, name: t.label ?? e.name ?? t.id, on: t.on, cost: t.cost ?? [], action: null as Action | null })),

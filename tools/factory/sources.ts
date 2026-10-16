@@ -138,6 +138,32 @@ export async function buildTask(env: SheetEnv, id: string, key: string, iface?: 
       resources: {}, ...staticOf(key), interface: iface,
     };
   }
+  // 物品：<来源>:item:<名字>
+  if (parts[1] === 'item') {
+    const name = parts.slice(2).join(':');
+    const it = [...(read('items.json').item as Json[]), ...(read('items-base.json').baseitem as Json[])].find((x) => x.source === src && x.name === name);
+    if (!it) throw new Error(`找不到物品「${name}」`);
+    const RAR: Record<string, string> = { common: '普通', uncommon: '非普通', rare: '珍稀', 'very rare': '非常珍稀', legendary: '传说', artifact: '神器' };
+    const magic = it.rarity && it.rarity !== 'none';
+    const consumable = String(it.type ?? '').split('|')[0] === 'P' || (it.miscTags || []).includes('CNS');
+    const resources: Record<string, string> = {};
+    if (consumable) resources['物品:' + name] = `${name}（数量）`;
+    if (Number(it.charges)) resources['物品充能:' + name] = `${name}（充能 ${it.charges}）`;
+    return {
+      id, key, name, kind: 'item',
+      where: magic ? `魔法物品（${RAR[it.rarity] ?? it.rarity}${it.reqAttune ? '，需同调' : ''}）` : '冒险装备',
+      text: flattenEntries(it.entries), resources, interface: iface,
+      extra: [
+        '物品的条目在**装备着**（需要同调的还要已同调）时生效；消耗品带在身上就能用。',
+        ...(consumable ? [`这是消耗品：用一次的动作写 \`cost: [{ resource: '物品:${name}' }]\`（数量引擎自己管）。喝药水是附赠动作（activation: 'bonus'）；投掷类（炼金火、圣水、强酸瓶）是一次攻击或豁免。`] : []),
+        ...(Number(it.charges) ? [`有 ${it.charges} 发充能：花充能写 \`cost: [{ resource: '物品充能:${name}', n: <几发> }]\`。充能怎么恢复（黎明）由长休处理，**不要**自己声明 resources。`] : []),
+        '护甲、武器的 +N 和 AC / 豁免 / 法术攻击 / 法术 DC 的固定加值，人物卡已经算了（只要物品数据里有），**不要**再写 —— 只有这些的物品直接跳过。',
+        '「消耗 1 发充能施展火球术」这类：写成动作，root 里照那个法术的效果写（DC 用物品写的数值，没写就用 self.spell.dc）。',
+        `「长休（或黎明）前只能用一次」这类没有充能的次数：在条目顶层声明 \`resources: [{ id: '物品次数:${name}', name: '${name}', formula: 1, recovery: 'long' }]\`，动作写 \`cost: [{ resource: '物品次数:${name}' }]\`（一件物品有好几种次数，就用 '物品次数:${name}:<短名>'）。`,
+      ],
+      ...staticOf(key),
+    };
+  }
   // 职业 / 子职特性：<来源>:<职业>:<特性>:<等级>
   if (parts.length === 4) {
     const [, cls, name, lv] = parts;

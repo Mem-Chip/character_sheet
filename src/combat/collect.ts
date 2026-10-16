@@ -24,9 +24,9 @@ export interface Declared<T> {
   stackGroup?: string;
 }
 
-/** 某个参与者身上的条目：先看他自带的（怪物数据卡），再看规则书 */
+/** 某个参与者身上的条目：规则书里写好的优先，没有就用他自带的（怪物数据卡、自动生成的物品动作） */
 export function entryOf(tx: Tx, id: Id, key: string): Entry | undefined {
-  return effectiveView(tx, id).entries?.[key] ?? tx.rules.entry(key);
+  return tx.rules.entry(key) ?? effectiveView(tx, id).entries?.[key];
 }
 
 /** 条目的动态声明是否生效（`automation: 'manual'` = 这一条由人裁定，引擎不碰） */

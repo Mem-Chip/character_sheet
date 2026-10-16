@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 import { RuleBook, auditRuleBook, type RuleFile } from '../src/combat';
 
 // AI 数据放在前面：同键时手写数据覆盖它（实际上工厂不会给已有手写数据的键出题）
-const FILES = ['data/dyn/ai/features.json', 'data/dyn/ai/spells.json', 'data/rules-2024.json', 'data/dyn/spells.json', 'data/dyn/features.json'];
+const FILES = ['data/dyn/ai/features.json', 'data/dyn/ai/spells.json', 'data/dyn/ai/books.json', 'data/dyn/ai/items.json', 'data/rules-2024.json', 'data/dyn/spells.json', 'data/dyn/features.json'];
 const files = FILES.map((f) => JSON.parse(readFileSync(resolve(import.meta.dirname, '..', f), 'utf8')) as RuleFile);
 const book = new RuleBook(files);
 const problems = auditRuleBook(book);

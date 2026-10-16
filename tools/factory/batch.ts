@@ -3,6 +3,7 @@
  *
  *   npx tsx tools/factory/batch.ts plan <wave> [目录]   出任务：wave 1 = 职业 / 子职特性、专长、可选特性、种族；wave 2 = 法术；
  *                                                       wave 3 = 其他书（BOOKS=XGE,TCE,AU,FRHoF）的子职、专长、可选特性、种族、法术
+ *                                                       wave 4 = 物品：2024 的魔法物品（XDMG）+ 玩家手册的冒险装备、药水（XPHB）
  *                                                       目录名里要有 batch-w<wave>（collect 靠它认是哪一波），缺省放在 .factory/ 下
  *   npx tsx tools/factory/batch.ts refresh <目录>        按现在的代码重写这个目录的 spec.md 和 examples.json（引擎改过之后用）
  *   npx tsx tools/factory/batch.ts lint <目录> <题号>     检查一份答案（子代理自己跑）；{ "skip": "…" } 直接算通过
@@ -25,7 +26,7 @@ import { buildTask, ownerView, spellsOf } from './sources';
 const ROOT = resolve(import.meta.dirname, '..', '..');
 const DATA = resolve(ROOT, 'data', '5etools', 'data');
 const AI_DIR = resolve(ROOT, 'data', 'dyn', 'ai');
-const AI_FILES: Record<string, string> = { 1: 'features.json', 2: 'spells.json', 3: 'books.json' };
+const AI_FILES: Record<string, string> = { 1: 'features.json', 2: 'spells.json', 3: 'books.json', 4: 'items.json' };
 const read = (p: string): Json => JSON.parse(readFileSync(p, 'utf8'));
 const GOLDEN = [rulesJson, spellsJson, featuresJson] as unknown as RuleFile[];
 
@@ -118,6 +119,28 @@ function planWave3(): Planned[] {
   return out;
 }
 
+/** 第 4 波：物品。魔法物品按稀有度分组；冒险装备一组。纯静态的（+1 武器、+1 护甲）答案里跳过即可 */
+function planWave4(): Planned[] {
+  const out: Planned[] = [];
+  const seen = new Set<string>();
+  const RAR: Record<string, string> = { common: '普通', uncommon: '非普通', rare: '珍稀', 'very rare': '非常珍稀', legendary: '传说', artifact: '神器', varies: '不定' };
+  const NOT_GEAR = ['S', 'M', 'R', 'LA', 'MA', 'HA', 'AT', 'INS', 'GS', 'T', 'TAH', 'MNT', 'VEH', 'SHP', 'FD', 'TG', '$C', '$G', '$A'];
+  const items = read(resolve(DATA, 'items.json')).item as Json[];
+  const base = read(resolve(DATA, 'items-base.json')).baseitem as Json[];
+  for (const it of [...items, ...base]) {
+    const key = `${it.source}:item:${it.name}`;
+    if (seen.has(key)) continue;
+    const magic = it.rarity && it.rarity !== 'none';
+    if (magic && it.source !== 'XDMG') continue;
+    if (!magic && it.source !== 'XPHB') continue;
+    if (!magic && (it.weapon || it.armor || NOT_GEAR.includes(String(it.type).split('|')[0]))) continue;
+    if (!it.entries?.length) continue;
+    seen.add(key);
+    out.push({ key, group: magic ? `魔法物品·${RAR[it.rarity] ?? it.rarity}` : '冒险装备' });
+  }
+  return out;
+}
+
 function planWave2(): Planned[] {
   return (read(resolve(DATA, 'spells', 'spells-xphb.json')).spell as Json[])
     .sort((a, b) => a.level - b.level || String(a.name).localeCompare(String(b.name), 'zh'))
@@ -155,7 +178,7 @@ function writeSpec(dir: string): void {
 
 async function plan(wave: string, outDir?: string): Promise<void> {
   const done = new Set([...GOLDEN, ...allAi()].flatMap((f) => Object.keys(f.entries)));
-  const items = (wave === '1' ? planWave1() : wave === '2' ? planWave2() : planWave3()).filter((x) => !done.has(x.key));
+  const items = (wave === '1' ? planWave1() : wave === '2' ? planWave2() : wave === '3' ? planWave3() : planWave4()).filter((x) => !done.has(x.key));
   const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 13).replace('T', '-');
   const dir = outDir ? resolve(outDir) : resolve(ROOT, '.factory', `batch-w${wave}-${stamp}`);
   if (!/batch-w\d/.test(dir)) throw new Error(`目录名里要有 batch-w${wave}：${dir}`);
@@ -164,7 +187,7 @@ async function plan(wave: string, outDir?: string): Promise<void> {
   writeSpec(dir);
 
   const env = await createNodeEnv();
-  const prefix = wave === '1' ? 'F' : wave === '2' ? 'S' : 'B';
+  const prefix = wave === '1' ? 'F' : wave === '2' ? 'S' : wave === '3' ? 'B' : 'I';
   const manifest: Array<{ id: string; key: string; group: string; name: string }> = [];
   const failed: string[] = [];
   let n = 0;
@@ -289,8 +312,9 @@ async function collect(dir: string): Promise<void> {
     const { resources: _declared, ...entry } = answer as Entry & { resources?: unknown };
     const r = smoke(m.key, entry, files, owner);
     if (r.errors.length) { failures.push({ id: m.id, key: m.key, problems: r.errors.map((e) => `试算：${e}`) }); continue; }
-    out.entries[m.key] = { ...entry, tags: [...new Set([...(entry.tags ?? []), 'ai', '未审'])] };
-    if (decls.length) declaredAll.push({ key: m.key, resources: decls });
+    out.entries[m.key] = { ...(wave === '4' && decls.length ? { resources: decls } : {}), ...entry, tags: [...new Set([...(entry.tags ?? []), 'ai', '未审'])] } as Entry;
+    // 物品的次数池不进人物卡数据（物品不是人物卡的能力来源），进战斗时从条目里读
+    if (decls.length && wave !== '4') declaredAll.push({ key: m.key, resources: decls });
     written++;
   }
   mkdirSync(AI_DIR, { recursive: true });
@@ -314,7 +338,7 @@ async function collect(dir: string): Promise<void> {
 }
 
 const [cmd, a, b] = process.argv.slice(2);
-if (cmd === 'plan' && (a === '1' || a === '2' || a === '3')) await plan(a, b);
+if (cmd === 'plan' && ['1', '2', '3', '4'].includes(a)) await plan(a, b);
 else if (cmd === 'refresh' && a) { writeSpec(resolve(a)); console.log(`已重写 ${a}/spec.md 和 examples.json`); }
 else if (cmd === 'lint' && a && b) {
   const { problems, answer } = lintOne(resolve(a), b);
@@ -323,4 +347,4 @@ else if (cmd === 'lint' && a && b) {
   process.exitCode = problems.length ? 1 : 0;
 } else if (cmd === 'collect' && a) await collect(resolve(a));
 else if (cmd === 'text' && a) console.log(flattenEntries(JSON.parse(a)));
-else console.log('用法：batch.ts plan <1|2|3> [目录] | refresh <目录> | lint <目录> <题号> | collect <目录>');
+else console.log('用法：batch.ts plan <1|2|3|4> [目录] | refresh <目录> | lint <目录> <题号> | collect <目录>');

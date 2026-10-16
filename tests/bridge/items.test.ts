@@ -52,7 +52,7 @@ describe.skipIf(!hasLocalData())('物品', () => {
     const s = new Session(createEncounter('t'), { rules: new RuleBook(FILES, []), diceFor: () => dice });
     done(s.dispatch({ type: 'addCombatant', combatant: pc }));
     dice.push(3, 4);
-    done(s.dispatch({ type: 'useAction', actor: 'f', action: 'ITEM:治疗药水#use', targets: ['f'] }));
+    done(s.dispatch({ type: 'useAction', actor: 'f', action: 'XDMG:item:治疗药水#use', targets: ['f'] }));
     expect(s.state.combatants.f.live.hp).toBe(10 + 9);
     syncLiveToChar(c, sheet, s.state.combatants.f);
     expect(c.equipment.find((e: { name: string }) => e.name === '治疗药水').qty).toBe(1);

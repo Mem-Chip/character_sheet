@@ -98,6 +98,17 @@ export function SheetItems({ engine, id, char, sheet }: { engine: Engine; id: st
                 {rarity && <span className="tag">{rarity}</span>}
                 {needAttune && <span className={'tag' + (e.attuned ? ' on' : '')} title={typeof ent.reqAttune === 'string' ? `需要同调（${ent.reqAttune}）` : '需要同调才生效'}>{e.attuned ? '已同调' : '需同调'}</span>}
                 {!ent && !e.custom && <span className="warnline tiny"> 数据里找不到</span>}
+                {Number(ent?.charges) > 0 && (() => {
+                  const max = Number(ent.charges), used = Math.min(max, Number(e.chargesUsed) || 0);
+                  const set = (u: number) => upd(id, (c) => { c.equipment[i].chargesUsed = Math.max(0, Math.min(max, u)); });
+                  return (
+                    <span className="tiny" style={{ marginLeft: 8 }} title={ent.recharge ? `恢复：${ent.recharge === 'dawn' ? '每天黎明' : ent.recharge}${ent.rechargeAmount ? `（${String(ent.rechargeAmount).replace(/\{@dice ([^}]+)\}/, '$1')}）` : ''}` : ''}>
+                      充能 <b>{max - used}</b>/{max}
+                      <button className="tag-x" disabled={used >= max} onClick={() => set(used + 1)} title="用掉 1">−</button>
+                      <button className="tag-x" disabled={used <= 0} onClick={() => set(used - 1)} title="恢复 1">+</button>
+                    </span>
+                  );
+                })()}
                 {e.custom?.desc && <div className="tiny faint">{e.custom.desc}</div>}
               </td>
               <td style={{ width: 66 }}><NumInput min={1} value={e.qty ?? 1} onChange={(n) => upd(id, (c) => { c.equipment[i].qty = n; })} style={{ width: 56 }} /></td>

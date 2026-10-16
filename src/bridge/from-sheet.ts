@@ -8,6 +8,7 @@ import { normType } from '../combat/damage';
 import { freshEconomy } from '../combat/view';
 import type { AttackRow, Combatant, CombatantView, Entry, LiveState } from '../combat/types';
 import { plain } from './from-monster';
+import { RULE_FILES } from './rule-files';
 import { ABILS, COUNT_ONLY, SIZE_CN, sourceKeyOf, type CharData, type Json, type SheetEnv } from '../sheet';
 import type { Ability } from '../expr';
 
@@ -106,20 +107,61 @@ export function healDiceOf(ent: Json): string | null {
   const m = /恢复\s*(\d+d\d+(?:\s*[+-]\s*\d+)?)\s*点?\s*生命值/.exec(text);
   return m ? m[1].replace(/\s+/g, ' ') : null;
 }
-/** 带着的消耗品 → 资源（数量）+ 一个动作：治疗药水按「恢复 XdY 点生命值」自动治疗，其他的照原文手动 */
-function consumables(char: CharData): { max: Record<string, number>; name: Record<string, string>; entries: Record<string, Entry> } {
-  const out = { max: {} as Record<string, number>, name: {} as Record<string, string>, entries: {} as Record<string, Entry> };
+/** 物品的规则条目键：和法术一样，<来源>:item:<名字> */
+export const itemKey = (ent: Json) => `${ent.source ?? 'XPHB'}:item:${ent.name}`;
+const CHARGE_RES = '物品充能:';
+const USES_RES = '物品次数:';
+
+/** 物品条目里声明的次数池（「长休前只能用一次」）：规则书里写好的条目才有；后面的文件盖前面的 */
+function itemPools(key: string): Array<{ id: string; name: string; max: number }> {
+  let decl: Array<{ id: string; name?: string; formula?: unknown }> | undefined;
+  for (const f of RULE_FILES) {
+    const e = (f.entries as Record<string, { resources?: typeof decl }>)[key];
+    if (e?.resources) decl = e.resources;
+  }
+  return (decl ?? []).filter((r) => r.id?.startsWith(USES_RES)).map((r) => ({ id: r.id, name: r.name ?? r.id, max: Math.max(1, Number(r.formula) || 1) }));
+}
+
+/**
+ * 物品进战斗：
+ *   - 消耗品（药水之类）：数量记成资源「物品:名字」；条目里的动作花它。治疗药水认得出就自动生成治疗动作（规则书里有写好的条目时用写好的）；
+ *   - 装备着的魔法物品（要同调的同调了）：它的条目键进 sources（规则书里有就生效）；
+ *   - 有充能的：资源「物品充能:名字」= 充能数（用过的记在卡上）。
+ */
+function itemsForCombat(char: CharData): { max: Record<string, number>; used: Record<string, number>; name: Record<string, string>; entries: Record<string, Entry>; keys: string[] } {
+  const out = { max: {} as Record<string, number>, used: {} as Record<string, number>, name: {} as Record<string, string>, entries: {} as Record<string, Entry>, keys: [] as string[] };
   for (const eq of char._resolved?.equipment || []) {
     const ent = eq._ent;
-    if (!ent || !isConsumable(ent)) continue;
+    if (!ent || ent.custom) continue;
+    const key = itemKey(ent);
+    const active = eq.equipped && (!ent.reqAttune || eq.attuned);
+    const charges = Number(ent.charges) || 0;
+    if (charges && (active || isConsumable(ent))) {
+      const id = CHARGE_RES + eq.name;
+      out.max[id] = charges;
+      out.used[id] = Math.min(charges, Number(eq.chargesUsed) || 0);
+      out.name[id] = `${eq.name}（充能）`;
+    }
+    if (active) {
+      for (const p of itemPools(key)) {
+        out.max[p.id] = p.max;
+        out.used[p.id] = Math.min(p.max, Number(eq.uses?.[p.id]) || 0);
+        out.name[p.id] = p.name;
+      }
+    }
+    if (!isConsumable(ent)) {
+      if (active) out.keys.push(key);
+      continue;
+    }
     const id = ITEM_RES + eq.name;
     const qty = Math.max(0, Number(eq.qty ?? 1) || 0);
     if (!qty) continue;
     out.max[id] = (out.max[id] ?? 0) + qty;
     out.name[id] = eq.name;
+    out.keys.push(key);
     const heal = healDiceOf(ent);
     const potion = String(ent.type ?? '').split('|')[0] === 'P';
-    out.entries['ITEM:' + eq.name] = {
+    out.entries[key] = {
       name: eq.name,
       actions: [{
         id: 'use', name: eq.name, activation: potion ? 'bonus' : 'action', tags: ['item'], cost: [{ resource: id }],
@@ -128,6 +170,7 @@ function consumables(char: CharData): { max: Record<string, number>; name: Recor
       }],
     };
   }
+  out.keys = [...new Set(out.keys)];
   return out;
 }
 
@@ -181,7 +224,7 @@ export function viewFromSheet(env: SheetEnv, char: CharData, sheet: Json): Comba
   }
 
   // 消耗品（药水之类）：数量记成资源「物品:名字」，用掉一次 = 资源用掉一次；各自一个动作
-  const items = consumables(char);
+  const items = itemsForCombat(char);
   const ctype = char._resolved?.race?.creatureTypes?.[0];
   return {
     name: char.name || '未命名',
@@ -205,7 +248,7 @@ export function viewFromSheet(env: SheetEnv, char: CharData, sheet: Json): Comba
     conditionImmune: sheet.conditionImmune || [],
     attacks,
     attacksPerAction,
-    sources: [...sourceKeys(env, char), ...Object.keys(items.entries)],
+    sources: [...sourceKeys(env, char), ...items.keys],
     resources: { ...res.max, ...items.max },
     resourceNames: { ...res.name, ...items.name },
     ...(Object.keys(items.entries).length ? { entries: items.entries } : {}),
@@ -234,7 +277,7 @@ export function combatantFromSheet(env: SheetEnv, char: CharData, sheet: Json, o
     hp: char.hp?.current ?? view.hpMax,
     tempHp: char.hp?.temp ?? 0,
     deathSaves: { s: char.deathSaves?.success ?? 0, f: char.deathSaves?.failure ?? 0 },
-    resourcesUsed: res.used,
+    resourcesUsed: { ...res.used, ...Object.fromEntries(Object.entries(itemsForCombat(char).used).filter(([, n]) => n > 0)) },
     slotsUsed,
     heroicInspiration: false,
     stable: false,
@@ -258,6 +301,18 @@ export function combatantFromSheet(env: SheetEnv, char: CharData, sheet: Json, o
  * 只写记账字段；build 半边（属性、职业、装备…）一概不碰。
  */
 export function syncLiveToChar(char: CharData, sheet: Json, c: Combatant): void {
+  // 物品的次数池（长休一次之类）：记在卡上那件物品下
+  for (const [id, max] of Object.entries(c.base.resources)) {
+    if (!id.startsWith(USES_RES)) continue;
+    const i = (char.equipment || []).findIndex((e: Json) => e?.name === id.slice(USES_RES.length).split(':')[0]);
+    if (i >= 0) char.equipment[i] = { ...char.equipment[i], uses: { ...(char.equipment[i].uses || {}), [id]: Math.min(max, c.live.resourcesUsed[id] ?? 0) } };
+  }
+  // 充能物品：用过几次记在卡上
+  for (const [id, max] of Object.entries(c.base.resources)) {
+    if (!id.startsWith(CHARGE_RES)) continue;
+    const i = (char.equipment || []).findIndex((e: Json) => e?.name === id.slice(CHARGE_RES.length));
+    if (i >= 0) char.equipment[i] = { ...char.equipment[i], chargesUsed: Math.min(max, c.live.resourcesUsed[id] ?? 0) };
+  }
   // 消耗品：带进来多少 − 用掉多少（绝对值，重复写回不会重复扣）
   for (const [id, max] of Object.entries(c.base.resources)) {
     if (!id.startsWith(ITEM_RES)) continue;

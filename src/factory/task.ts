@@ -15,7 +15,7 @@ export interface Task {
   /** 规则条目键：`XPHB:<职业>:<特性>:<等级>` / `XPHB:<专长>` / `XPHB:spell:<法术>` */
   key: string;
   name: string;
-  kind: 'classFeature' | 'subclassFeature' | 'feat' | 'spell' | 'optfeature' | 'race';
+  kind: 'classFeature' | 'subclassFeature' | 'feat' | 'spell' | 'optfeature' | 'race' | 'item';
   /** 「圣武士 3 级（奉献之誓）」「1 环法术」「起源专长」 */
   where: string;
   /** 原文（标签已去掉） */
