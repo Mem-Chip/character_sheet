@@ -1,0 +1,2761 @@
+[
+  {
+    "key": "XGE:野蛮人:风暴之盾:10",
+    "name": "风暴之盾",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "具体抗性类型取决于所选环境，由人工在盟友承受伤害时确认处理。"
+    ],
+    "notes": [],
+    "text": "在狂暴期间，处于你风暴灵光（10尺）内的、由你选择的生物，同样获得你风暴之魂特性所赋予的伤害抗性（荒漠：火焰；海洋：闪电；冻原：寒冷）。具体抗性类型取决于所选环境，由人工在盟友承受伤害时确认处理。",
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:野蛮人:精魂之盾:6",
+    "name": "精魂之盾",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "14级起（仇魂先祖），若该伤害来自一次攻击，攻击者受到等同于精魂之盾降低伤害等量的力场伤害，需人手动扣除。"
+    ],
+    "notes": [
+      "仇魂先祖（14级）：攻击者受到等同于精魂之盾降低伤害等量的力场伤害，请手动扣除攻击者生命值。"
+    ],
+    "text": "狂暴期间，当你 30 尺内你能看到的其他生物受到伤害时，可以用反应为其降低伤害（6级 2d6，10级 3d6，14级 4d6）。14级起（仇魂先祖），若该伤害来自一次攻击，攻击者受到等同于精魂之盾降低伤害等量的力场伤害，需人手动扣除。",
+    "triggers": [
+      {
+        "id": "spirit-shield",
+        "label": "精魂之盾：降低伤害",
+        "on": "damageIncoming",
+        "role": "any",
+        "window": "before",
+        "optional": true,
+        "cost": [
+          {
+            "economy": "reaction"
+          }
+        ],
+        "when": "self.hasEffect('狂暴') && target.id != self.id && within(self, target, 30) && canSee(self, target)",
+        "modify": [
+          {
+            "op": "reduceDamage",
+            "value": "cond(self.levelOf('野蛮人') >= 14, 4d6, cond(self.levelOf('野蛮人') >= 10, 3d6, 2d6))"
+          }
+        ],
+        "do": [
+          {
+            "kind": "if",
+            "when": "self.levelOf('野蛮人') >= 14 && attack != null && attacker != null",
+            "then": [
+              {
+                "kind": "note",
+                "text": "仇魂先祖（14级）：攻击者受到等同于精魂之盾降低伤害等量的力场伤害，请手动扣除攻击者生命值。"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:野蛮人:怒不畏死:14",
+    "name": "怒不畏死",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "引擎目前无法阻止 0 生命值陷入昏迷或拦截死亡豁免致死，需人手动处理。"
+    ],
+    "notes": [],
+    "text": "狂暴期间 0 生命值不会使你陷入昏迷；死亡豁免累积失败 3 次在狂暴期间不会死亡；若狂暴结束时仍处于 0 生命值则死亡。引擎目前无法阻止 0 生命值陷入昏迷或拦截死亡豁免致死，需人手动处理。",
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:吟游诗人:不破威仪:14",
+    "name": "不破威仪",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "攻击判定、豁免与改选目标由人手动处理。"
+    ],
+    "notes": [],
+    "text": "以附赠动作展现威严存在，持续 1 分钟（陷入失能时提前结束）。持续时间内，任何生物在每回合中首次试图攻击你时，必须通过一次对抗你的法术豁免 DC 的魅力豁免。豁免失败时，该生物在该回合内无法攻击你，且必须为本次攻击选定新目标或放弃攻击；豁免成功时能正常攻击，但在你的下个回合中对抗你的法术豁免具有劣势。攻击判定、豁免与改选目标由人手动处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "不破威仪",
+        "activation": "bonus",
+        "cost": [
+          {
+            "resource": "不破威仪"
+          }
+        ],
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "不破威仪",
+            "duration": {
+              "minutes": 1,
+              "endsOn": [
+                {
+                  "event": "effectApplied",
+                  "when": "self.has('失能')"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "不破威仪": {
+        "text": "展现魔法性的威严存在，持续 1 分钟（失能时提前结束）。每回合中任何生物首次试图攻击你时，须进行对抗你法术豁免 DC 的魅力豁免（手动处理）。",
+        "duration": {
+          "minutes": 1,
+          "endsOn": [
+            {
+              "event": "effectApplied",
+              "when": "self.has('失能')"
+            }
+          ]
+        }
+      },
+      "不破威仪：豁免劣势": {
+        "text": "在不破威仪施加者的下个回合结束前，对抗其法术所做的任何豁免检定具有劣势。",
+        "duration": {
+          "until": {
+            "at": "turnEnd",
+            "of": "source",
+            "nth": 1
+          }
+        },
+        "rollMods": [
+          {
+            "on": {
+              "kind": "save"
+            },
+            "who": "bearer",
+            "when": "source != null && ask('这次豁免是对抗不破威仪施加者的法术吗？')",
+            "op": "disadv",
+            "label": "不破威仪：法术豁免劣势"
+          }
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:吟游诗人:额外攻击:6",
+    "name": "额外攻击",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "攻击次数由人手动处理（引擎不自动管理攻击动作的次数）。"
+    ],
+    "notes": [],
+    "text": "第6级起，你在自己回合内执行攻击动作时可以攻击两次而非一次。攻击次数由人手动处理（引擎不自动管理攻击动作的次数）。",
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:吟游诗人:灵感织衣:3",
+    "name": "灵感织衣",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "生物获得这些临时生命值时可以用反应移动至多等同于其速度的距离且不引发借机攻击（反应与移动由人手动处理）。"
+    ],
+    "notes": [
+      "获得临时生命值的生物可以用其反应移动至多等同于其速度的距离，此次移动不引发借机攻击（手动处理）"
+    ],
+    "text": "以附赠动作消耗一次诗人激励，选择周围 60 尺内至多魅力调整值（至少 1 个）个你可见且能看见你的生物。每个生物获得临时生命值（3级5点，5级8点，10级11点，15级14点）。生物获得这些临时生命值时可以用反应移动至多等同于其速度的距离且不引发借机攻击（反应与移动由人手动处理）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "灵感织衣",
+        "activation": "bonus",
+        "cost": [
+          {
+            "resource": "诗人激励"
+          }
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": "max(1, mod.cha)",
+          "range": 60,
+          "filter": "canSee(self, target) && canSee(target, self)"
+        },
+        "root": [
+          {
+            "kind": "tempHp",
+            "amount": "cond(self.levelOf('吟游诗人') >= 15, 14, cond(self.levelOf('吟游诗人') >= 10, 11, cond(self.levelOf('吟游诗人') >= 5, 8, 5)))",
+            "to": "target"
+          },
+          {
+            "kind": "note",
+            "text": "获得临时生命值的生物可以用其反应移动至多等同于其速度的距离，此次移动不引发借机攻击（手动处理）"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:吟游诗人:乱击剑舞:3",
+    "name": "乱击剑舞",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "对命中的目标造成等同于激励骰结果的额外同类型伤害，且你周围 5 尺内由你选择的另一名可见生物也受到等同于该激励骰结果的伤害（次要目标的伤害需手动扣除）。"
+    ],
+    "notes": [
+      "乱击剑舞：你周围 5 尺范围内由你选择的另一名可见生物也受到等同于本次激励骰掷骰点数的额外伤害，请手动对该生物结算并扣除生命值。"
+    ],
+    "text": "在你的回合内以攻击动作进行武器攻击命中时，可以消耗一次诗人激励（每回合限一次剑舞）。对命中的目标造成等同于激励骰结果的额外同类型伤害，且你周围 5 尺内由你选择的另一名可见生物也受到等同于该激励骰结果的伤害（次要目标的伤害需手动扣除）。",
+    "triggers": [
+      {
+        "id": "slashing-flourish",
+        "label": "乱击剑舞：消耗激励横扫加伤",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "before",
+        "limit": "oncePerTurn",
+        "optional": true,
+        "cost": [
+          {
+            "resource": "诗人激励"
+          }
+        ],
+        "when": "turn.isMine && attack.weapon",
+        "do": [
+          {
+            "kind": "number",
+            "prompt": "乱击剑舞：请掷诗人激励骰（classTable('诗人骰')），输入掷出的点数作为额外伤害",
+            "var": "flourishRoll",
+            "min": 1,
+            "max": 12,
+            "default": 4
+          },
+          {
+            "kind": "addDamage",
+            "dice": "vars.flourishRoll",
+            "type": "attack.damageType"
+          },
+          {
+            "kind": "note",
+            "text": "乱击剑舞：你周围 5 尺范围内由你选择的另一名可见生物也受到等同于本次激励骰掷骰点数的额外伤害，请手动对该生物结算并扣除生命值。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:吟游诗人:推击剑舞:3",
+    "name": "推击剑舞",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "之后可立即用反应移动至多自身步行速度距离来到目标 5 尺内未占据空间（战棋移动与反应由人手动处理）。"
+    ],
+    "notes": [
+      "击退目标后，你可以立即用反应移动至多等于步行速度的距离来到目标 5 尺内未占据空间，请手动在战棋上移动并扣除反应。"
+    ],
+    "text": "在你的回合内以攻击动作进行武器攻击命中时，可以消耗一次诗人激励（每回合限一次剑舞）。造成等同于激励骰结果的额外同类型伤害，并将目标推离你至多 5 + 激励骰结果尺；之后可立即用反应移动至多自身步行速度距离来到目标 5 尺内未占据空间（战棋移动与反应由人手动处理）。",
+    "triggers": [
+      {
+        "id": "mobile-flourish",
+        "label": "推击剑舞：消耗激励加伤并击退",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "before",
+        "limit": "oncePerTurn",
+        "optional": true,
+        "cost": [
+          {
+            "resource": "诗人激励"
+          }
+        ],
+        "when": "turn.isMine && attack.weapon",
+        "do": [
+          {
+            "kind": "number",
+            "prompt": "推击剑舞：请掷诗人激励骰（classTable('诗人骰')），输入掷出的点数作为额外伤害与击退距离计算",
+            "var": "flourishRoll",
+            "min": 1,
+            "max": 12,
+            "default": 4
+          },
+          {
+            "kind": "addDamage",
+            "dice": "vars.flourishRoll",
+            "type": "attack.damageType"
+          },
+          {
+            "kind": "move",
+            "mode": "push",
+            "ft": "5 + vars.flourishRoll"
+          },
+          {
+            "kind": "note",
+            "text": "击退目标后，你可以立即用反应移动至多等于步行速度的距离来到目标 5 尺内未占据空间，请手动在战棋上移动并扣除反应。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:吟游诗人:威仪作锦:6",
+    "name": "威仪作锦",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "具体命令指令及效果由人手动处理。"
+    ],
+    "notes": [
+      "目标处于魅惑状态，自动豁免失败！在它的下个回合服从你的命令（命令术）",
+      "目标豁免失败，在它的下个回合服从你的命令（命令术）"
+    ],
+    "text": "以附赠动作施展命令术（无需法术位），同时获得超凡美貌并进入专注（至多 1 分钟）。持续时间内，每个你的回合都能以附赠动作再次施展命令术（无需法术位）。被你魅惑的生物对抗此特性施放的命令术时自动豁免失败。具体命令指令及效果由人手动处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "威仪作锦",
+        "activation": "bonus",
+        "cost": [
+          {
+            "resource": "majesty"
+          }
+        ],
+        "concentration": {
+          "minutes": 1
+        },
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 60,
+          "filter": "target.id != self.id"
+        },
+        "root": [
+          {
+            "kind": "if",
+            "when": "target.has('魅惑')",
+            "then": [
+              {
+                "kind": "note",
+                "text": "目标处于魅惑状态，自动豁免失败！在它的下个回合服从你的命令（命令术）"
+              }
+            ],
+            "else": [
+              {
+                "kind": "save",
+                "ability": "wis",
+                "dc": "self.spell.dc",
+                "onFail": [
+                  {
+                    "kind": "note",
+                    "text": "目标豁免失败，在它的下个回合服从你的命令（命令术）"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "威仪作锦"
+          }
+        ]
+      },
+      {
+        "id": "command",
+        "name": "威仪作锦：命令术",
+        "activation": "bonus",
+        "requires": "self.hasEffect('威仪作锦') && turn.isMine",
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 60,
+          "filter": "target.id != self.id"
+        },
+        "root": [
+          {
+            "kind": "if",
+            "when": "target.has('魅惑')",
+            "then": [
+              {
+                "kind": "note",
+                "text": "目标处于魅惑状态，自动豁免失败！在它的下个回合服从你的命令（命令术）"
+              }
+            ],
+            "else": [
+              {
+                "kind": "save",
+                "ability": "wis",
+                "dc": "self.spell.dc",
+                "onFail": [
+                  {
+                    "kind": "note",
+                    "text": "目标豁免失败，在它的下个回合服从你的命令（命令术）"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "威仪作锦": {
+        "text": "超凡美貌：持续至多 1 分钟（专注）。持续时间内每个你的回合都可以附赠动作施展命令术，且无需法术位。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:吟游诗人:阴暗学识:14",
+    "name": "阴暗学识",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "共通语言要求与非战斗秘密恐吓角色扮演效果由人工处理。"
+    ],
+    "notes": [],
+    "text": "以一个动作对 30 尺内能听见声音的生物发出低语，感知豁免失败则被魅惑 8 小时（受攻击、伤害或被迫豁免时提前结束）。共通语言要求与非战斗秘密恐吓角色扮演效果由人工处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "阴暗学识",
+        "activation": "action",
+        "cost": [
+          {
+            "resource": "shadowLore"
+          }
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 30,
+          "filter": "target.id != self.id"
+        },
+        "root": [
+          {
+            "kind": "save",
+            "ability": "wis",
+            "dc": "self.spell.dc",
+            "onFail": [
+              {
+                "kind": "applyEffect",
+                "template": "阴暗学识",
+                "to": "target",
+                "duration": {
+                  "hours": 8,
+                  "endsOn": [
+                    {
+                      "event": "damageTaken",
+                      "when": "self.id == event.target"
+                    },
+                    {
+                      "event": "attackHit",
+                      "when": "self.id == event.target"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "阴暗学识": {
+        "implies": [
+          "XPHB:condition:魅惑"
+        ],
+        "text": "被施加者魅惑 8 小时。遵循其命令（不危及性命），视其为密友。受到攻击、受到伤害或被迫豁免时提前结束。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:永生者赠礼",
+    "name": "永生者赠礼",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "由于魔宠位置与治疗掷骰引擎无法自动追踪，需由玩家在恢复生命值时手动取最大值。"
+    ],
+    "notes": [],
+    "text": "当你被恢复生命值时，只要此时你的魔宠位于你 100 尺以内，所有决定你恢复生命值点数的骰子均取最大值。由于魔宠位置与治疗掷骰引擎无法自动追踪，需由玩家在恢复生命值时手动取最大值。",
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:幽魂凝视",
+    "name": "幽魂凝视",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "看穿 30 尺固态物件及黑暗视觉感官属于探索与视觉效果，由玩家手动处理。"
+    ],
+    "notes": [],
+    "text": "以一个动作开启幽魂凝视，持续至多 1 分钟（专注）。看穿 30 尺固态物件及黑暗视觉感官属于探索与视觉效果，由玩家手动处理。短休或长休恢复 1 次。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "幽魂凝视",
+        "activation": "action",
+        "concentration": {
+          "minutes": 1
+        },
+        "cost": [
+          {
+            "resource": "ghostlyGaze"
+          }
+        ],
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "幽魂凝视",
+            "duration": {
+              "minutes": 1
+            }
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "幽魂凝视": {
+        "text": "看穿 30 尺范围内固态物件；若无黑暗视觉则获得 30 尺黑暗视觉。持续至多 1 分钟（专注）。",
+        "duration": {
+          "minutes": 1
+        }
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:游荡者:火眼金睛:13",
+    "name": "火眼金睛",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "你能感知到欺瞒效果的存在但无法得知真相，细节由 DM 手动告知。"
+    ],
+    "notes": [
+      "火眼金睛：感知周围 30 尺内的幻术存在、非原本形态下的变形生物以及意在欺瞒感官的魔法，由 DM 告知是否存在欺瞒效果。"
+    ],
+    "text": "只要你未处于目盲或耳聋状态，可以一个动作感知周围 30 尺内幻术的存在、非原本形态下的变形生物以及其他欺瞒感官的魔法。可用次数等于感知调整值（至少 1 次），长休恢复。你能感知到欺瞒效果的存在但无法得知真相，细节由 DM 手动告知。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "火眼金睛",
+        "activation": "action",
+        "cost": [
+          {
+            "resource": "unerring-eye"
+          }
+        ],
+        "requires": "!self.has('目盲') && !self.has('耳聋')",
+        "root": [
+          {
+            "kind": "note",
+            "text": "火眼金睛：感知周围 30 尺内的幻术存在、非原本形态下的变形生物以及意在欺瞒感官的魔法，由 DM 告知是否存在欺瞒效果。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:游荡者:鉴识之眼:3",
+    "name": "鉴识之眼",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "线索与隐匿生物由 DM 手动告知判定。"
+    ],
+    "notes": [
+      "鉴识之眼：以附赠动作进行一次感知（察觉）检定，侦测隐藏的生物或物体。",
+      "鉴识之眼：以附赠动作进行一次智力（调查）检定，揭示和破译线索。"
+    ],
+    "text": "可以使用附赠动作进行一次感知（察觉）检定来侦测隐藏的生物或物体，或者进行一次智力（调查）检定来揭示和破译线索。线索与隐匿生物由 DM 手动告知判定。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "鉴识之眼",
+        "activation": "bonus",
+        "root": [
+          {
+            "kind": "choose",
+            "prompt": "鉴识之眼：选择进行的检定",
+            "options": [
+              {
+                "label": "感知（察觉）检定：侦测隐藏生物或物体",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "鉴识之眼：以附赠动作进行一次感知（察觉）检定，侦测隐藏的生物或物体。"
+                  }
+                ]
+              },
+              {
+                "label": "智力（调查）检定：揭示和破译线索",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "鉴识之眼：以附赠动作进行一次智力（调查）检定，揭示和破译线索。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:游荡者:梦幻舞步:3",
+    "name": "梦幻舞步",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "借机攻击由人手动发起与限制，此效果提供状态标记与提示。"
+    ],
+    "notes": [],
+    "text": "在你的回合中，如果你对某一生物发动近战攻击，该生物在你的本回合剩余时间内无法对你发起借机攻击。借机攻击由人手动发起与限制，此效果提供状态标记与提示。",
+    "triggers": [
+      {
+        "id": "fancyFootwork",
+        "label": "梦幻舞步：防止借机攻击",
+        "on": "d20Rolled",
+        "role": "actor",
+        "window": "after",
+        "when": "turn.isMine && roll.kind == 'attack' && attack.melee && target != null",
+        "do": [
+          {
+            "kind": "applyEffect",
+            "to": "target",
+            "template": "梦幻舞步",
+            "duration": {
+              "until": {
+                "at": "turnEnd",
+                "of": "source",
+                "nth": 0
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "梦幻舞步": {
+        "text": "本回合剩余时间内无法对来源剑客发起借机攻击。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:游荡者:散兵战术:3",
+    "name": "散兵战术",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "此移动不会引发借机攻击（由人手动移动）。"
+    ],
+    "notes": [
+      "散兵战术：以反应移动至多你速度一半的距离（不引发借机攻击），请手动在战图上移动。"
+    ],
+    "text": "当一个敌人在你周围 5 尺内结束其回合时，你可以使用反应移动至多你速度一半的距离。此移动不会引发借机攻击（由人手动移动）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "散兵战术",
+        "activation": "reaction",
+        "trigger": {
+          "on": "turnEnded",
+          "role": "any",
+          "when": "!turn.isMine && turn.of.isEnemyOf(self) && within(self, turn.of, 5)"
+        },
+        "root": [
+          {
+            "kind": "note",
+            "text": "散兵战术：以反应移动至多你速度一半的距离（不引发借机攻击），请手动在战图上移动。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:游荡者:瞬息打击:17",
+    "name": "瞬息打击",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "额外的武器攻击与偷袭由人手动发起与判定。"
+    ],
+    "notes": [
+      "瞬息打击：以附赠动作发起一次额外武器攻击（在武器行手动发起）。若本回合已对其他生物使用过偷袭，对该不同目标命中的攻击仍可额外享受偷袭伤害（classTable('偷袭')），请手动添加偷袭伤害。"
+    ],
+    "text": "若你在自己回合中执行了攻击动作，可以用附赠动作发起一次额外的攻击。即使本回合已使用过偷袭，这次攻击同样可以受益于偷袭，但无法在同一回合对同一目标偷袭两次。额外的武器攻击与偷袭由人手动发起与判定。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "瞬息打击",
+        "activation": "bonus",
+        "requires": "turn.isMine",
+        "tags": [
+          "weapon"
+        ],
+        "root": [
+          {
+            "kind": "note",
+            "text": "瞬息打击：以附赠动作发起一次额外武器攻击（在武器行手动发起）。若本回合已对其他生物使用过偷袭，对该不同目标命中的攻击仍可额外享受偷袭伤害（classTable('偷袭')），请手动添加偷袭伤害。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:游荡者:误导:13",
+    "name": "误导",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "引擎取消对你的命中，对掩护生物的攻击由人手动判定结算。"
+    ],
+    "notes": [
+      "误导：你使用反应将这次攻击的目标转嫁到为你提供掩护的生物身上，请手动判定该生物是否被击中并结算相应伤害。"
+    ],
+    "text": "当你周围 5 尺范围内有另一个生物为你提供掩护且你成为攻击目标被命中时，可以用反应将该攻击转嫁到掩护你的生物身上。引擎取消对你的命中，对掩护生物的攻击由人手动判定结算。",
+    "triggers": [
+      {
+        "id": "misdirection",
+        "label": "误导：转嫁攻击",
+        "on": "attackHit",
+        "role": "target",
+        "window": "before",
+        "optional": true,
+        "cost": [
+          {
+            "economy": "reaction"
+          }
+        ],
+        "when": "ask('5尺内是否有生物为你提供了掩护？')",
+        "modify": [
+          {
+            "op": "cancel"
+          }
+        ],
+        "do": [
+          {
+            "kind": "note",
+            "text": "误导：你使用反应将这次攻击的目标转嫁到为你提供掩护的生物身上，请手动判定该生物是否被击中并结算相应伤害。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:游荡者:潇洒气质:9",
+    "name": "潇洒气质",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "检定对抗由人手动判定。"
+    ],
+    "notes": [],
+    "text": "以一个动作进行魅力（游说）对抗目标感知（洞悉）检定（目标须能听见你且共享语言）。检定对抗由人手动判定。检定成功时，若敌对则施加嘲讽效果（对其除你之外的目标攻击有劣势且不能对其借机攻击，持续1分钟，队友攻击/法术影响或距离超60尺提前结束）；若非敌对则魅惑1分钟（视为友好熟人，受到伤害或有害行为提前结束）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "潇洒气质",
+        "activation": "action",
+        "targeting": {
+          "type": "creature",
+          "count": 1
+        },
+        "root": [
+          {
+            "kind": "choose",
+            "prompt": "潇洒气质：游说对抗洞悉检定是否成功？",
+            "options": [
+              {
+                "label": "成功：目标敌对（挑衅嘲讽）",
+                "do": [
+                  {
+                    "kind": "applyEffect",
+                    "to": "target",
+                    "template": "挑衅",
+                    "duration": {
+                      "minutes": 1,
+                      "endsOn": [
+                        {
+                          "event": "damageTaken"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "label": "成功：目标非敌对（魅惑）",
+                "do": [
+                  {
+                    "kind": "applyEffect",
+                    "to": "target",
+                    "template": "XPHB:condition:魅惑",
+                    "duration": {
+                      "minutes": 1,
+                      "endsOn": [
+                        {
+                          "event": "damageTaken"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "label": "失败：对抗未成功",
+                "do": []
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "挑衅": {
+        "text": "对剑客以外的目标发动的攻击检定具有劣势，且不能对除剑客以外的目标进行借机攻击。受到伤害、队友施法影响或离开60尺提前结束。",
+        "rollMods": [
+          {
+            "on": {
+              "kind": "attack"
+            },
+            "who": "bearer",
+            "when": "target != null && target.id != source.id",
+            "op": "disadv",
+            "label": "潇洒气质：对剑客以外的目标攻击具有劣势"
+          }
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:游荡者:战术大师:3",
+    "name": "战术大师",
+    "automation": "full",
+    "level": null,
+    "manual": [],
+    "notes": [
+      "所选盟友下一次使用你所选技能/工具的属性检定具有优势（在你的下个回合开始前）。"
+    ],
+    "text": "你可以以附赠动作执行协助动作。此外，当你使用协助动作支援盟友攻击某个生物时，攻击目标可以在你 30 尺范围内（前提是目标能看到或听到你）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "战术大师（协助）",
+        "activation": "bonus",
+        "requires": "turn.isMine",
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 30
+        },
+        "root": [
+          {
+            "kind": "choose",
+            "prompt": "战术大师：协助的方式",
+            "options": [
+              {
+                "label": "辅助一次攻击检定：虚晃 30 尺内的一个敌人",
+                "do": [
+                  {
+                    "kind": "applyEffect",
+                    "to": "target",
+                    "template": "XPHB:action:协助#协助攻击"
+                  }
+                ]
+              },
+              {
+                "label": "辅助一次属性检定（手动处理）",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "所选盟友下一次使用你所选技能/工具的属性检定具有优势（在你的下个回合开始前）。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:游荡者:战术洞悉:3",
+    "name": "战术洞悉",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "对抗检定由人手动判定。"
+    ],
+    "notes": [],
+    "text": "以附赠动作与周围一个可见且未失能的生物进行对抗（你的洞悉对抗目标的欺瞒）。若对抗成功，持续 1 分钟内，即使你对其攻击没有优势也能造成偷袭伤害（但攻击有劣势时依旧无法偷袭）。若对另一目标成功使用此特性，前一次增益提前结束。17级时（伺隙锐瞳），偷袭伤害额外增加 3d6。对抗检定由人手动判定。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "战术洞悉",
+        "activation": "bonus",
+        "targeting": {
+          "type": "creature",
+          "count": 1
+        },
+        "root": [
+          {
+            "kind": "choose",
+            "prompt": "战术洞悉：感知（洞悉）对抗目标魅力（欺瞒）是否成功？",
+            "options": [
+              {
+                "label": "对抗成功：施加战术洞悉",
+                "do": [
+                  {
+                    "kind": "applyEffect",
+                    "to": "self",
+                    "template": "战术洞悉",
+                    "duration": {
+                      "minutes": 1
+                    },
+                    "state": {
+                      "mark": "target"
+                    }
+                  }
+                ]
+              },
+              {
+                "label": "对抗失败：未能洞悉目标",
+                "do": []
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "战术洞悉": {
+        "text": "对洞悉目标发动攻击时，若没有劣势，无需优势亦可造成偷袭伤害。17级起额外造成 3d6 偷袭伤害。",
+        "triggers": [
+          {
+            "id": "insightful-sneak",
+            "label": "战术洞悉：偷袭",
+            "on": "attackHit",
+            "role": "actor",
+            "window": "before",
+            "optional": true,
+            "limit": "oncePerTurn",
+            "when": "(attack.finesse || attack.ranged) && target.id == effect.state.mark && !roll.disadv",
+            "do": [
+              {
+                "kind": "addDamage",
+                "dice": "classTable('偷袭') + cond(self.levelOf('游荡者') >= 17, 3d6, 0d6)",
+                "type": "attack.damageType"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:游侠:恐惧伏击:3",
+    "name": "恐惧伏击",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "在战斗首回合执行攻击动作时可额外发动一次武器攻击（由玩家手动进行），若该次攻击命中，可触发额外 1d8 武器同类型伤害。"
+    ],
+    "notes": [],
+    "text": "先攻检定加感知调整值、战斗首回合速度+10已自动化。在战斗首回合执行攻击动作时可额外发动一次武器攻击（由玩家手动进行），若该次攻击命中，可触发额外 1d8 武器同类型伤害。",
+    "triggers": [
+      {
+        "id": "ambush-speed",
+        "label": "恐惧伏击：首回合速度增加",
+        "on": "turnStarted",
+        "role": "actor",
+        "window": "after",
+        "when": "round == 1 && turn.isMine",
+        "do": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "inline": {
+              "name": "恐惧伏击：速度提升",
+              "duration": {
+                "until": {
+                  "at": "turnEnd",
+                  "of": "bearer",
+                  "nth": 0
+                }
+              },
+              "statics": [
+                {
+                  "kind": "speed",
+                  "bonus": 10
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "id": "ambush-extra-damage",
+        "label": "恐惧伏击：额外攻击伤害（+1d8）",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "before",
+        "optional": true,
+        "when": "round == 1 && turn.isMine && attack.weapon && ask('这次命中是首回合攻击动作中恐惧伏击提供的额外武器攻击吗？')",
+        "do": [
+          {
+            "kind": "addDamage",
+            "dice": "1d8",
+            "type": "attack.damageType"
+          }
+        ]
+      }
+    ],
+    "rollMods": [
+      {
+        "on": {
+          "kind": "initiative"
+        },
+        "who": "bearer",
+        "op": "add",
+        "value": "max(0, self.mod.wis)",
+        "label": "恐惧伏击：先攻加感知调整值"
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:游侠:猎手感知:3",
+    "name": "猎手感知",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "以一个动作选择 60 尺内可见的一名生物，获知其伤害免疫、抗性与易伤信息（若被预言系魔法隐瞒则视为无），由 DM 手动告知。"
+    ],
+    "notes": [
+      "猎手感知：立刻知晓目标生物拥有的伤害免疫、抗性与易伤（若被预言系魔法隐瞒则感知为无），由 DM 告知玩家"
+    ],
+    "text": "以一个动作选择 60 尺内可见的一名生物，获知其伤害免疫、抗性与易伤信息（若被预言系魔法隐瞒则视为无），由 DM 手动告知。长休恢复（次数等于感知调整值，至少 1 次）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "猎手感知",
+        "activation": "action",
+        "cost": [
+          {
+            "resource": "猎手感知"
+          }
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 60
+        },
+        "root": [
+          {
+            "kind": "note",
+            "text": "猎手感知：立刻知晓目标生物拥有的伤害免疫、抗性与易伤（若被预言系魔法隐瞒则感知为无），由 DM 告知玩家"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:游侠:灵体防御:15",
+    "name": "灵体防御",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "持续至当前回合结束，期间该攻击包含的伤害类型的抗性需人工确认处理。"
+    ],
+    "notes": [],
+    "text": "当你因一次攻击受到伤害时，可用反应使本次伤害减半（模拟获得该攻击所有伤害类型的抗性）。持续至当前回合结束，期间该攻击包含的伤害类型的抗性需人工确认处理。",
+    "triggers": [
+      {
+        "id": "spectral-defense",
+        "label": "灵体防御：伤害减半",
+        "on": "attackHit",
+        "role": "target",
+        "window": "before",
+        "deferTo": "damageIncoming",
+        "optional": true,
+        "cost": [
+          {
+            "economy": "reaction"
+          }
+        ],
+        "modify": [
+          {
+            "op": "halveDamage"
+          }
+        ],
+        "do": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "灵体防御"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "灵体防御": {
+        "text": "获得触发攻击所含所有伤害类型的抗性，持续至当前回合结束。",
+        "duration": {
+          "endsOn": [
+            {
+              "event": "turnEnded"
+            }
+          ]
+        }
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:游侠:魔法使的克星:11",
+    "name": "魔法使的克星",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "法术或传送的中断与浪费需由 DM / 人工处理。"
+    ],
+    "notes": [
+      "魔法使的克星：目标感知豁免失败，其施展的法术或传送失败并被浪费，请手动取消该法术或传送。"
+    ],
+    "text": "当你看见周围 60 尺内有生物施展法术或传送时，可以用反应迫使其进行感知豁免（DC 等于你的法术豁免 DC），豁免失败其法术或传送失败并浪费。短休或长休恢复 1 次。法术或传送的中断与浪费需由 DM / 人工处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "魔法使的克星",
+        "activation": "reaction",
+        "trigger": {
+          "on": "spellCast",
+          "role": "any",
+          "window": "before",
+          "when": "ask('周围60尺内有你可见的生物施展法术或传送吗？')"
+        },
+        "cost": [
+          {
+            "resource": "magic-users-nemesis"
+          }
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 60
+        },
+        "root": [
+          {
+            "kind": "save",
+            "ability": "wis",
+            "dc": "self.spell.dc",
+            "onFail": [
+              {
+                "kind": "note",
+                "text": "魔法使的克星：目标感知豁免失败，其施展的法术或传送失败并被浪费，请手动取消该法术或传送。"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:游侠:杀手反制:15",
+    "name": "杀手反制",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "武器攻击与豁免自动成功需由人手动处理。"
+    ],
+    "notes": [
+      "杀手反制：立刻用反应对狩猎目标进行一次武器攻击。若命中，除正常结算伤害外，本次豁免自动成功（请手动判定命中并免除豁免惩罚）。"
+    ],
+    "text": "当你的狩猎开始特性目标迫使你进行一次豁免检定时，可以在进行豁免检定前立刻用反应对其进行一次武器攻击。若攻击命中，除攻击的正常效果外，本次豁免检定自动成功。武器攻击与豁免自动成功需由人手动处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "杀手反制",
+        "activation": "reaction",
+        "trigger": {
+          "on": "saveForced",
+          "role": "target",
+          "window": "after",
+          "when": "self.hasEffect('狩猎开始') && ask('该豁免是由你的狩猎开始目标迫使进行的吗？')"
+        },
+        "targeting": {
+          "type": "creature",
+          "count": 1
+        },
+        "root": [
+          {
+            "kind": "note",
+            "text": "杀手反制：立刻用反应对狩猎目标进行一次武器攻击。若命中，除正常结算伤害外，本次豁免自动成功（请手动判定命中并免除豁免惩罚）。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:游侠:闪现打击:11",
+    "name": "闪现打击",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [
+      "闪现打击：获得额外 1 次武器攻击，必须用来攻击第三个不同的生物"
+    ],
+    "text": "执行攻击动作时，每次攻击前可传送最多 10 尺至可见未占据空间。若在同一攻击动作中攻击了至少两个不同生物，可获得额外 1 次攻击机会以攻击第三个生物。",
+    "triggers": [
+      {
+        "id": "teleport-before-attack",
+        "label": "闪现打击：攻击前传送 10 尺",
+        "on": "d20Rolled",
+        "role": "actor",
+        "window": "before",
+        "optional": true,
+        "when": "turn.isMine && roll.kind == 'attack' && attack.weapon && ask('这次攻击是否属于攻击动作，且需要在攻击前传送最多 10 尺？')",
+        "do": [
+          {
+            "kind": "move",
+            "mode": "teleport",
+            "ft": 10
+          }
+        ]
+      },
+      {
+        "id": "extra-attack-third",
+        "label": "闪现打击：额外攻击第三个生物",
+        "on": [
+          "attackHit",
+          "attackMissed"
+        ],
+        "role": "actor",
+        "window": "after",
+        "optional": true,
+        "limit": "oncePerTurn",
+        "when": "turn.isMine && attack.weapon && ask('你在本次攻击动作中是否已经攻击了至少两个不同的生物？')",
+        "do": [
+          {
+            "kind": "economy",
+            "attacks": 1
+          },
+          {
+            "kind": "note",
+            "text": "闪现打击：获得额外 1 次武器攻击，必须用来攻击第三个不同的生物"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:游侠:位面战士:3",
+    "name": "位面战士",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "引擎无法自动将武器的基础伤害类型转为力场伤害，需人工处理。"
+    ],
+    "notes": [
+      "位面战士：本次武器攻击的原有伤害类型也全部转化为力场伤害（引擎无法自动改写武器基础伤害类型，需人工处理）"
+    ],
+    "text": "附赠动作指定 30 尺内可见的一名生物，本回合对其下一次武器攻击命中造成额外 1d8（11级 2d8）力场伤害。引擎无法自动将武器的基础伤害类型转为力场伤害，需人工处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "位面战士",
+        "activation": "bonus",
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 30
+        },
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "位面战士",
+            "state": {
+              "mark": "target"
+            }
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "位面战士": {
+        "duration": {
+          "until": {
+            "at": "turnEnd",
+            "of": "bearer",
+            "nth": 0
+          }
+        },
+        "triggers": [
+          {
+            "id": "hit",
+            "label": "位面战士：命中造成额外力场伤害",
+            "on": "attackHit",
+            "role": "actor",
+            "window": "before",
+            "when": "attack.weapon && target.id == effect.state.mark",
+            "do": [
+              {
+                "kind": "addDamage",
+                "dice": "cond(self.levelOf('游侠') >= 11, 2d8, 1d8)",
+                "type": "力场"
+              },
+              {
+                "kind": "removeEffect",
+                "match": {
+                  "name": "位面战士"
+                },
+                "from": "self"
+              },
+              {
+                "kind": "note",
+                "text": "位面战士：本次武器攻击的原有伤害类型也全部转化为力场伤害（引擎无法自动改写武器基础伤害类型，需人工处理）"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:游侠:以太漫步:7",
+    "name": "以太漫步",
+    "automation": "partial",
+    "level": 0,
+    "manual": [
+      "以太位面的交互与移动等细节需人工处理。"
+    ],
+    "notes": [],
+    "text": "以一个附赠动作无需消耗法术位施展法术以太化，持续至当前回合结束。以太位面的交互与移动等细节需人工处理。每次短休或长休恢复 1 次。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "以太漫步",
+        "activation": "bonus",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "resource": "以太漫步"
+          }
+        ],
+        "targeting": {
+          "type": "self"
+        },
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "以太漫步"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "以太漫步": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "duration": {
+          "until": {
+            "at": "turnEnd",
+            "of": "bearer",
+            "nth": 0
+          }
+        },
+        "text": "处于以太边界（以太化法术效果），无法被原位面生物察觉或影响，仅能与以太位面事物互动；在当前回合结束时结束。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:游侠:阴影视野:3",
+    "name": "阴影视野",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "黑暗视觉增加属于静态感官属性不在此处理。在黑暗中，对于依赖黑暗视觉观察你的生物而言你视为隐形（攻击你具有劣势，你攻击对方具有优势），由人确认光照与对方视觉情况。",
+    "rollMods": [
+      {
+        "on": {
+          "kind": "attack"
+        },
+        "who": "against",
+        "when": "ask('你是否完全身处黑暗中，且攻击者只能依靠黑暗视觉看见你？')",
+        "op": "disadv",
+        "label": "阴影视野：依赖黑暗视觉的攻击者"
+      },
+      {
+        "on": {
+          "kind": "attack"
+        },
+        "who": "bearer",
+        "when": "ask('你是否完全身处黑暗中，且目标只能依靠黑暗视觉看见你？')",
+        "op": "adv",
+        "label": "阴影视野：对依赖黑暗视觉的目标"
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:游侠:追猎如风:11",
+    "name": "追猎如风",
+    "automation": "full",
+    "level": null,
+    "manual": [],
+    "notes": [
+      "追猎如风：武器攻击未命中，增加 1 次攻击机会（作为同一动作的一部分）"
+    ],
+    "text": "每个你的回合一次，当你的一次武器攻击未命中时，你可以作出另一次武器攻击，作为同一动作的一部分。",
+    "triggers": [
+      {
+        "id": "stalkers-flurry",
+        "label": "追猎如风：失手后额外攻击",
+        "on": "attackMissed",
+        "role": "actor",
+        "window": "after",
+        "optional": true,
+        "limit": "oncePerTurn",
+        "when": "turn.isMine && attack.weapon",
+        "do": [
+          {
+            "kind": "economy",
+            "attacks": 1
+          },
+          {
+            "kind": "note",
+            "text": "追猎如风：武器攻击未命中，增加 1 次攻击机会（作为同一动作的一部分）"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:战士:坚定之印:3",
+    "name": "坚定之印",
+    "automation": "full",
+    "level": null,
+    "manual": [],
+    "notes": [
+      "激活惩戒攻击：本回合内发动的下一次近战武器攻击具有优势，且击中时额外造成等同于战士等级一半的武器伤害。"
+    ],
+    "text": "以近战武器攻击命中敌人时赋予印记，持续至你下个回合结束（失能、死亡或被他人赋予印记时提前结束）。被标记敌人身处你5尺内时，对你以外目标的攻击检定具有劣势。若被标记敌人对你以外生物造成伤害，在你下个回合中可用附赠动作消耗一次使用次数对其发动特殊近战武器攻击，该攻击具有优势且击中额外造成等同于战士等级一半的伤害。使用次数等同于力量调整值（至少1次），长休恢复。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "坚定之印：惩戒攻击",
+        "activation": "bonus",
+        "requires": "turn.isMine",
+        "cost": [
+          {
+            "resource": "unwavering-mark"
+          }
+        ],
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "坚定之印：惩戒",
+            "duration": {
+              "until": {
+                "at": "turnEnd",
+                "of": "bearer",
+                "nth": 0
+              }
+            }
+          },
+          {
+            "kind": "note",
+            "text": "激活惩戒攻击：本回合内发动的下一次近战武器攻击具有优势，且击中时额外造成等同于战士等级一半的武器伤害。"
+          }
+        ]
+      }
+    ],
+    "triggers": [
+      {
+        "id": "mark",
+        "label": "坚定之印：标记目标",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "after",
+        "when": "attack.melee && attack.weapon",
+        "do": [
+          {
+            "kind": "applyEffect",
+            "to": "target",
+            "template": "坚定之印",
+            "duration": {
+              "until": {
+                "at": "turnEnd",
+                "of": "source",
+                "nth": 1
+              },
+              "endsOn": [
+                {
+                  "event": "effectApplied",
+                  "when": "event.bearer == source.id && source.has('失能')"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "id": "bonus-damage",
+        "label": "坚定之印：惩戒攻击额外伤害",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "before",
+        "when": "self.hasEffect('坚定之印：惩戒') && attack.melee && attack.weapon",
+        "do": [
+          {
+            "kind": "addDamage",
+            "dice": "floor(self.levelOf('战士') / 2)",
+            "type": "attack.damageType"
+          },
+          {
+            "kind": "removeEffect",
+            "from": "self",
+            "match": {
+              "name": "坚定之印：惩戒"
+            }
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "坚定之印": {
+        "text": "处于坚定之印标记中：若处于骁骑士5尺范围内，对骁骑士以外目标的攻击检定具有劣势。",
+        "rollMods": [
+          {
+            "on": {
+              "kind": "attack"
+            },
+            "who": "bearer",
+            "when": "target != null && target.id != source.id && within(self, source, 5)",
+            "op": "disadv",
+            "label": "坚定之印：对骁骑士以外目标的攻击具有劣势"
+          }
+        ]
+      },
+      "坚定之印：惩戒": {
+        "text": "本回合内近战武器攻击具有优势，击中时额外造成战士等级一半的武器伤害。",
+        "rollMods": [
+          {
+            "on": {
+              "kind": "attack",
+              "attack": {
+                "melee": true,
+                "weapon": true
+              }
+            },
+            "who": "bearer",
+            "op": "adv",
+            "label": "坚定之印：惩戒攻击具有优势"
+          }
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:战士:坚守战线:10",
+    "name": "坚守战线",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "生物在你触及范围内移动5尺或更多距离会引发你的借机攻击（移动触发借机由人工判定）。"
+    ],
+    "notes": [],
+    "text": "生物在你触及范围内移动5尺或更多距离会引发你的借机攻击（移动触发借机由人工判定）。当你以借机攻击命中生物时，该生物的速度降为0直至本回合结束。",
+    "triggers": [
+      {
+        "id": "hold-line",
+        "label": "坚守战线：借机攻击命中定身",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "after",
+        "when": "attack.melee && ask('这次命中是借机攻击吗？')",
+        "do": [
+          {
+            "kind": "applyEffect",
+            "to": "target",
+            "template": "坚守战线：定身",
+            "duration": {
+              "until": {
+                "at": "turnEnd",
+                "of": "bearer",
+                "nth": 0
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "坚守战线：定身": {
+        "text": "被骁骑士借机攻击命中，速度降为0直至本回合结束。",
+        "statics": [
+          {
+            "kind": "speedSet",
+            "value": 0
+          }
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:战士:警戒守卫:18",
+    "name": "警戒守卫",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "（引擎未实现非自身回合专属借机反应槽，需由玩家与DM手动处理）"
+    ],
+    "notes": [],
+    "text": "战斗中，你在每个其他生物的回合中可以进行一次额外的特殊反应。这一反应只能用于发动借机攻击，且你不能在同一回合中既使用特殊反应又使用你原本的反应。（引擎未实现非自身回合专属借机反应槽，需由玩家与DM手动处理）",
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:战士:生死流转:18",
+    "name": "生死流转",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "（引擎未实现打断当前回合插入额外回合的流程，需手动处理）"
+    ],
+    "notes": [],
+    "text": "如果你受到会将生命值降到0且不会立即杀死你的伤害，可以用反应延缓陷入昏迷并立刻插入一个额外回合。额外回合结束时若生命值仍为0则陷入昏迷。长休恢复。（引擎未实现打断当前回合插入额外回合的流程，需手动处理）",
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:战士:守护战技:7",
+    "name": "守护战技",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [
+      "掷 1d8 加入目标 AC。若加上后目标 AC 超过攻击检定结果，本次攻击未命中（请手动撤销伤害）；若依然命中，本次伤害已被自动减半。"
+    ],
+    "text": "持用近战武器或盾牌时，当你或5尺内可见生物被攻击命中时，可以消耗一次使用次数以反应投掷1d8加入其AC。若因此使AC超过攻击检定结果则攻击未命中；若依然命中，则该生物对本次攻击伤害具有抗性（由引擎自动将本次伤害减半）。使用次数等同于体质调整值（至少1次），长休恢复。",
+    "triggers": [
+      {
+        "id": "ward",
+        "label": "守护战技：掷1d8加AC或减半伤害",
+        "on": "attackHit",
+        "role": "any",
+        "window": "before",
+        "optional": true,
+        "cost": [
+          {
+            "economy": "reaction"
+          },
+          {
+            "resource": "warding-maneuver"
+          }
+        ],
+        "when": "(target.id == self.id || (within(self, target, 5) && canSee(self, target))) && ask('持用近战武器或盾牌吗？')",
+        "modify": [
+          {
+            "op": "halveDamage"
+          }
+        ],
+        "do": [
+          {
+            "kind": "note",
+            "text": "掷 1d8 加入目标 AC。若加上后目标 AC 超过攻击检定结果，本次攻击未命中（请手动撤销伤害）；若依然命中，本次伤害已被自动减半。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:战士:燕返:15",
+    "name": "燕返",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "（引擎未实现在单次攻击中放弃优势置换额外攻击的流程，需手动处理）"
+    ],
+    "notes": [],
+    "text": "当你在自己回合中执行了攻击动作，且你在其中某次对抗某一目标的攻击检定中具有优势，你就可以放弃那次检定的那一优势，转而额外对那个目标发动一次攻击作为本次攻击动作的一部分。每回合你只能这么做一次。（引擎未实现在单次攻击中放弃优势置换额外攻击的流程，需手动处理）",
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:spell:碧水法球",
+    "name": "碧水法球",
+    "automation": "partial",
+    "level": 4,
+    "manual": [
+      "法术结束时水球落下熄灭 30 尺内非魔法火焰，被束缚者倒地（水球容纳上限、移动与淹没判定需手动处理）。"
+    ],
+    "notes": [
+      "处于水球内的生物力量豁免失败陷入束缚；巨型及以上自动成功。水球至多容纳 4 个中型或 1 个大型生物。"
+    ],
+    "text": "在 90 尺内召唤半径 5 尺的水球，持续至多 1 分钟（专注）。区域内生物须进行力量豁免（巨型及以上自动成功），失败陷入束缚并被水淹没，在其回合结束时可重复豁免。水球至多容纳 4 个中型或 1 个大型生物。后续可以动作直线移动水球至多 30 尺并撞击生物迫使其豁免。法术结束时水球落下熄灭 30 尺内非魔法火焰，被束缚者倒地（水球容纳上限、移动与淹没判定需手动处理）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "碧水法球",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 4
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 1
+        },
+        "targeting": {
+          "type": "area",
+          "range": 90,
+          "area": {
+            "shape": "sphere",
+            "radius": 5
+          }
+        },
+        "root": [
+          {
+            "kind": "forEach",
+            "in": "area",
+            "do": [
+              {
+                "kind": "save",
+                "ability": "str",
+                "dc": "self.spell.dc",
+                "onFail": [
+                  {
+                    "kind": "applyEffect",
+                    "template": "碧水法球：束缚",
+                    "to": "target"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "kind": "note",
+            "text": "处于水球内的生物力量豁免失败陷入束缚；巨型及以上自动成功。水球至多容纳 4 个中型或 1 个大型生物。"
+          }
+        ]
+      },
+      {
+        "id": "moveSphere",
+        "name": "碧水法球：移动撞击",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "targeting": {
+          "type": "area",
+          "range": 30,
+          "area": {
+            "shape": "sphere",
+            "radius": 5
+          }
+        },
+        "root": [
+          {
+            "kind": "forEach",
+            "in": "area",
+            "do": [
+              {
+                "kind": "save",
+                "ability": "str",
+                "dc": "self.spell.dc",
+                "onFail": [
+                  {
+                    "kind": "applyEffect",
+                    "template": "碧水法球：束缚",
+                    "to": "target"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "碧水法球：束缚": {
+        "tags": [
+          "magical",
+          "spell",
+          "debuff"
+        ],
+        "implies": [
+          "XPHB:condition:束缚"
+        ],
+        "duration": {
+          "saveEnds": {
+            "ability": "str",
+            "dc": "self.spell.dc",
+            "at": "turnEnd"
+          }
+        },
+        "text": "被水球束缚且被水淹没。在其每个回合结束时可重复力量豁免，成功则脱离束缚。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:spell:操控风力",
+    "name": "操控风力",
+    "automation": "partial",
+    "level": 5,
+    "manual": [
+      "环境风力、飞行坠落与远程攻击劣势需手动处理。"
+    ],
+    "notes": [
+      "操控风力：狂风模式。进出或穿过区域的远程武器攻击具劣势；强风逆风移动消耗额外移动力。",
+      "操控风力：下沉气流。穿过或以其中生物为目标的远程武器攻击具劣势；飞行生物飞入或开始回合力量豁免失败摔落倒地。",
+      "操控风力：上升气流。区域内坠落伤害减半；垂直跳跃高度增加 10 尺。"
+    ],
+    "text": "控制 300 尺内 100 尺立方的空气，持续至多 1 小时（专注）。施法时及后续可用动作选择或切换效果：【狂风】（大风/强风使进出或穿过该区域的远程武器攻击具劣势；强风使逆风移动消耗双倍移动力）、【下沉气流】（穿过或以其中生物为目标的远程武器攻击具劣势；飞行生物每回合首次飞入或在其中开始回合须进行力量豁免，失败摔落倒地）、【上升气流】（坠落伤害减半，垂直跳跃高度+10尺）。环境风力、飞行坠落与远程攻击劣势需手动处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "操控风力",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 5
+            }
+          }
+        ],
+        "concentration": {
+          "hours": 1
+        },
+        "targeting": {
+          "type": "area",
+          "range": 300,
+          "area": {
+            "shape": "cube",
+            "size": 100
+          }
+        },
+        "root": [
+          {
+            "kind": "choose",
+            "prompt": "选择操控风力模式",
+            "options": [
+              {
+                "label": "狂风",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "操控风力：狂风模式。进出或穿过区域的远程武器攻击具劣势；强风逆风移动消耗额外移动力。"
+                  }
+                ]
+              },
+              {
+                "label": "下沉气流",
+                "do": [
+                  {
+                    "kind": "forEach",
+                    "in": "area",
+                    "do": [
+                      {
+                        "kind": "save",
+                        "ability": "str",
+                        "dc": "self.spell.dc",
+                        "onFail": [
+                          {
+                            "kind": "applyEffect",
+                            "template": "下沉气流：倒地",
+                            "to": "target"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "note",
+                    "text": "操控风力：下沉气流。穿过或以其中生物为目标的远程武器攻击具劣势；飞行生物飞入或开始回合力量豁免失败摔落倒地。"
+                  }
+                ]
+              },
+              {
+                "label": "上升气流",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "操控风力：上升气流。区域内坠落伤害减半；垂直跳跃高度增加 10 尺。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "下沉气流：倒地": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "implies": [
+          "XPHB:condition:倒地"
+        ],
+        "text": "受下沉气流冲击摔落倒地。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:spell:潮涌",
+    "name": "潮涌",
+    "automation": "partial",
+    "level": 3,
+    "manual": [
+      "随后浪潮向四周流散，熄灭区域及周围 30 尺内未受保护的火焰（灭火环境效果需手动处理）。"
+    ],
+    "notes": [],
+    "text": "在 120 尺内召唤长至多 30 尺、宽至多 10 尺、高至多 10 尺的浪潮。区域内生物进行敏捷豁免，失败受到 4d8 钝击伤害并倒地，成功半伤且不倒地。随后浪潮向四周流散，熄灭区域及周围 30 尺内未受保护的火焰（灭火环境效果需手动处理）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "潮涌",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 3
+            }
+          }
+        ],
+        "targeting": {
+          "type": "area",
+          "range": 120,
+          "area": {
+            "shape": "line",
+            "length": 30,
+            "width": 10
+          }
+        },
+        "root": [
+          {
+            "kind": "forEach",
+            "in": "area",
+            "do": [
+              {
+                "kind": "save",
+                "ability": "dex",
+                "dc": "self.spell.dc",
+                "onFail": [
+                  {
+                    "kind": "damage",
+                    "id": "wave",
+                    "dice": "4d8",
+                    "type": "钝击"
+                  },
+                  {
+                    "kind": "applyEffect",
+                    "to": "target",
+                    "template": "XPHB:condition:倒地"
+                  }
+                ],
+                "onSuccess": [
+                  {
+                    "kind": "damage",
+                    "ref": "wave",
+                    "scale": 0.5
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:spell:虫群孳生",
+    "name": "虫群孳生",
+    "automation": "partial",
+    "level": 0,
+    "manual": [
+      "豁免失败受到 1d6（随等级成长）毒素伤害，并向随机方向（掷 1d4：1北 2南 3东 4西）移动 5 尺（若可移动且速度至少 5 尺，不引发借机攻击，随机移动需手动处理）。"
+    ],
+    "notes": [
+      "目标掷 1d4 决定随机方向（1北 2南 3东 4西）移动 5 尺（不引发借机攻击，受阻则不移动）"
+    ],
+    "text": "迫使 30 尺内你能看见的一名生物进行体质豁免。豁免失败受到 1d6（随等级成长）毒素伤害，并向随机方向（掷 1d4：1北 2南 3东 4西）移动 5 尺（若可移动且速度至少 5 尺，不引发借机攻击，随机移动需手动处理）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "虫群孳生",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 30
+        },
+        "root": [
+          {
+            "kind": "save",
+            "ability": "con",
+            "dc": "self.spell.dc",
+            "onFail": [
+              {
+                "kind": "damage",
+                "dice": "(1 + floor((self.level + 1) / 6))d6",
+                "type": "毒素"
+              },
+              {
+                "kind": "note",
+                "text": "目标掷 1d4 决定随机方向（1北 2南 3东 4西）移动 5 尺（不引发借机攻击，受阻则不移动）"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:spell:创造篝火",
+    "name": "创造篝火",
+    "automation": "partial",
+    "level": 0,
+    "manual": [
+      "后续生物进入或在其中结束回合的豁免及点燃未着装物体需手动处理。"
+    ],
+    "notes": [],
+    "text": "在 60 尺内创造 5 尺立方的篝火，持续至多 1 分钟（专注）。施放时空间内的生物必须进行敏捷豁免，失败受到 1d8（随等级成长）火焰伤害。后续生物进入或在其中结束回合的豁免及点燃未着装物体需手动处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "创造篝火",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "concentration": {
+          "minutes": 1
+        },
+        "targeting": {
+          "type": "area",
+          "range": 60,
+          "area": {
+            "shape": "cube",
+            "size": 5
+          }
+        },
+        "root": [
+          {
+            "kind": "forEach",
+            "in": "area",
+            "do": [
+              {
+                "kind": "save",
+                "ability": "dex",
+                "dc": "self.spell.dc",
+                "onFail": [
+                  {
+                    "kind": "damage",
+                    "dice": "(1 + floor((self.level + 1) / 6))d8",
+                    "type": "火焰"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:spell:大漩涡",
+    "name": "大漩涡",
+    "automation": "partial",
+    "level": 5,
+    "manual": [
+      "任何在该区域内开始其回合的生物须进行力量豁免，失败受到 6d6 钝击伤害并被拉向漩涡中心 10 尺，成功不受伤害且不被拉拽（漩涡范围、站位判定与拉拽需手动处理）。"
+    ],
+    "notes": [
+      "在 120 尺内指定一点创造半径 30 尺的大漩涡（地面或水面，困难地形），持续至多 1 分钟（专注）。"
+    ],
+    "text": "在 120 尺内地面或水面创造半径 30 尺的大漩涡，持续至多 1 分钟（专注）。该区域视为困难地形。任何在该区域内开始其回合的生物须进行力量豁免，失败受到 6d6 钝击伤害并被拉向漩涡中心 10 尺，成功不受伤害且不被拉拽（漩涡范围、站位判定与拉拽需手动处理）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "大漩涡",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 5
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 1
+        },
+        "targeting": {
+          "type": "area",
+          "range": 120,
+          "area": {
+            "shape": "cylinder",
+            "radius": 30
+          }
+        },
+        "root": [
+          {
+            "kind": "note",
+            "text": "在 120 尺内指定一点创造半径 30 尺的大漩涡（地面或水面，困难地形），持续至多 1 分钟（专注）。"
+          }
+        ]
+      },
+      {
+        "id": "turnStartSave",
+        "name": "大漩涡：回合开始豁免",
+        "activation": "none",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 120
+        },
+        "root": [
+          {
+            "kind": "save",
+            "ability": "str",
+            "dc": "self.spell.dc",
+            "onFail": [
+              {
+                "kind": "damage",
+                "dice": "6d6",
+                "type": "钝击"
+              },
+              {
+                "kind": "move",
+                "mode": "pull",
+                "ft": 10
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:spell:弹射术",
+    "name": "弹射术",
+    "automation": "partial",
+    "level": 1,
+    "manual": [
+      "弹射物本身受到同等伤害（沿直线顺序判定由人手动处理）。"
+    ],
+    "notes": [],
+    "text": "选择 60 尺内重 1~5 磅（每升一环 +5 磅）的未着装物件向选定方向直线飞出至多 90 尺。即将撞击生物时，该生物须进行敏捷豁免，失败受到 3d8（每升一环 +1d8）钝击伤害且物件停止运动；弹射物本身受到同等伤害（沿直线顺序判定由人手动处理）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "弹射术",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 1
+            }
+          }
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 90
+        },
+        "root": [
+          {
+            "kind": "save",
+            "ability": "dex",
+            "dc": "self.spell.dc",
+            "onFail": [
+              {
+                "kind": "damage",
+                "dice": "(2 + slot.level)d8",
+                "type": "钝击"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:spell:地颤",
+    "name": "地颤",
+    "automation": "partial",
+    "level": 1,
+    "manual": [
+      "区域内地表若为松软土壤或石头则变为困难地形（困难地形需手动处理）。"
+    ],
+    "notes": [],
+    "text": "在 10 尺区域内引发地面颤动。区域内除你之外的其他生物必须进行敏捷豁免，失败受到 1d6（每升一环 +1d6）点钝击伤害并倒地。区域内地表若为松软土壤或石头则变为困难地形（困难地形需手动处理）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "地颤",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 1
+            }
+          }
+        ],
+        "targeting": {
+          "type": "area",
+          "range": 10,
+          "area": {
+            "shape": "sphere",
+            "radius": 10
+          }
+        },
+        "root": [
+          {
+            "kind": "forEach",
+            "in": "area",
+            "do": [
+              {
+                "kind": "if",
+                "when": "target.id != self.id",
+                "then": [
+                  {
+                    "kind": "save",
+                    "ability": "dex",
+                    "dc": "self.spell.dc",
+                    "onFail": [
+                      {
+                        "kind": "damage",
+                        "dice": "(slot.level)d6",
+                        "type": "钝击"
+                      },
+                      {
+                        "kind": "applyEffect",
+                        "to": "target",
+                        "template": "XPHB:condition:倒地"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:spell:地缚",
+    "name": "地缚",
+    "automation": "partial",
+    "level": 2,
+    "manual": [
+      "飞行中的受术生物以每轮 60 尺的速度安全降落，直至落地或法术结束（飞行速度与降落需手动处理）。"
+    ],
+    "notes": [],
+    "text": "选择 300 尺内一名可见生物进行力量豁免。豁免失败则在持续时间内（专注至多 1 分钟）其飞行速度降为 0 尺；飞行中的受术生物以每轮 60 尺的速度安全降落，直至落地或法术结束（飞行速度与降落需手动处理）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "地缚",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 2
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 1
+        },
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 300
+        },
+        "root": [
+          {
+            "kind": "save",
+            "ability": "str",
+            "dc": "self.spell.dc",
+            "onFail": [
+              {
+                "kind": "applyEffect",
+                "to": "target",
+                "template": "地缚"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "地缚": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "text": "飞行速度降为 0 尺。若正在飞行中，每轮以 60 尺速度安全降落直到触地或法术结束。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:spell:地狱呼唤",
+    "name": "地狱呼唤",
+    "automation": "partial",
+    "level": 5,
+    "manual": [
+      "魔鬼对施法者及同伴不友好，拥有独立先攻并由 DM 操控。",
+      "升环：6 环及以上每高一环挑战等级上限+1（魔鬼实体、数据与检定需手动处理）。"
+    ],
+    "notes": [
+      "在 90 尺内召唤一只挑战等级 6 或更低的魔鬼，持续至多 1 小时（专注）。升环施法每高一环挑战等级上限增加 1。",
+      "以自由动作尝试向魔鬼发出命令：进行魅力（欺瞒、威吓或游说）检定对抗魔鬼的感知（洞悉）检定，知晓真名具优势。失败则在余下时间内魔鬼免疫你的口头命令。"
+    ],
+    "text": "施法 1 分钟，从九狱召唤挑战等级 6 或更低的魔鬼（如猬魔或须魔），持续至多 1 小时（专注）。魔鬼对施法者及同伴不友好，拥有独立先攻并由 DM 操控。每回合施法者可尝试对其下达口头命令，需通过魅力（欺瞒、威吓或游说）检定对抗其感知（洞析）检定（知晓真名具优势）；检定失败魔鬼免疫后续命令。升环：6 环及以上每高一环挑战等级上限+1（魔鬼实体、数据与检定需手动处理）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "地狱呼唤",
+        "activation": {
+          "minutes": 1
+        },
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 5
+            }
+          }
+        ],
+        "concentration": {
+          "hours": 1
+        },
+        "targeting": {
+          "type": "point",
+          "range": 90
+        },
+        "root": [
+          {
+            "kind": "note",
+            "text": "在 90 尺内召唤一只挑战等级 6 或更低的魔鬼，持续至多 1 小时（专注）。升环施法每高一环挑战等级上限增加 1。"
+          }
+        ]
+      },
+      {
+        "id": "command",
+        "name": "地狱呼唤：口头命令",
+        "activation": "free",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 90
+        },
+        "root": [
+          {
+            "kind": "note",
+            "text": "以自由动作尝试向魔鬼发出命令：进行魅力（欺瞒、威吓或游说）检定对抗魔鬼的感知（洞悉）检定，知晓真名具优势。失败则在余下时间内魔鬼免疫你的口头命令。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:spell:敌群环绕",
+    "name": "敌群环绕",
+    "automation": "partial",
+    "level": 3,
+    "manual": [
+      "每次受伤害时目标可重复智力豁免以结束效应（恐慌免疫检测、随机选敌与受伤害重复豁免需手动处理）。"
+    ],
+    "notes": [],
+    "text": "迫使 120 尺内一名可见生物进行智力豁免（免疫恐慌者自动通过）。豁免失败则在持续时间内（专注至多 1 分钟）将所有可见生物视作敌人，攻击或施法目标必须从有效范围内可见生物中随机选择，且必须进行可用的借机攻击。每次受伤害时目标可重复智力豁免以结束效应（恐慌免疫检测、随机选敌与受伤害重复豁免需手动处理）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "敌群环绕",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 3
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 1
+        },
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 120
+        },
+        "root": [
+          {
+            "kind": "save",
+            "ability": "int",
+            "dc": "self.spell.dc",
+            "onFail": [
+              {
+                "kind": "applyEffect",
+                "to": "target",
+                "template": "敌群环绕"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "敌群环绕": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "text": "将所有可见生物视作敌人。选择目标时必须从射程内的可见目标中随机选择；若有生物引发借机攻击必须发动攻击；每次受到伤害时可重复智力豁免以结束此效应。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:spell:风暴法球",
+    "name": "风暴法球",
+    "automation": "partial",
+    "level": 4,
+    "manual": [
+      "持续期间每回合可用附赠动作从中心发射闪电攻击 60 尺内生物，远程法术攻击命中造成 4d6（升环每高一环+1d6）闪电伤害，目标在球体内攻击检定具优势（回合结束豁免、困难地形与升环闪电伤害需手动处理）。"
+    ],
+    "notes": [
+      "球体内为困难地形；在球体内结束回合的生物须进行力量豁免，失败受到钝击伤害；球体周围 30 尺内聆听察觉检定具劣势。"
+    ],
+    "text": "在 150 尺内指定一点创造 20 尺半径风暴球体，持续至多 1 分钟（专注）。出现时及在其中结束回合的生物须进行力量豁免，失败受 2d6（升环每高一环+1d6）钝击伤害。球体内为困难地形；周围 30 尺内聆听察觉检定具劣势。持续期间每回合可用附赠动作从中心发射闪电攻击 60 尺内生物，远程法术攻击命中造成 4d6（升环每高一环+1d6）闪电伤害，目标在球体内攻击检定具优势（回合结束豁免、困难地形与升环闪电伤害需手动处理）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "风暴法球",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 4
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 1
+        },
+        "targeting": {
+          "type": "area",
+          "range": 150,
+          "area": {
+            "shape": "sphere",
+            "radius": 20
+          }
+        },
+        "root": [
+          {
+            "kind": "forEach",
+            "in": "area",
+            "do": [
+              {
+                "kind": "save",
+                "ability": "str",
+                "dc": "self.spell.dc",
+                "onFail": [
+                  {
+                    "kind": "damage",
+                    "dice": "(slot.level - 2)d6",
+                    "type": "钝击"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "kind": "applyEffect",
+            "template": "风暴法球",
+            "to": "self"
+          },
+          {
+            "kind": "note",
+            "text": "球体内为困难地形；在球体内结束回合的生物须进行力量豁免，失败受到钝击伤害；球体周围 30 尺内聆听察觉检定具劣势。"
+          }
+        ]
+      },
+      {
+        "id": "lightning",
+        "name": "风暴法球：闪电射击",
+        "activation": "bonus",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "requires": "self.hasEffect('风暴法球')",
+        "targeting": {
+          "type": "creature",
+          "range": 60
+        },
+        "root": [
+          {
+            "kind": "attack",
+            "attack": {
+              "spell": true,
+              "ranged": true
+            },
+            "onHit": [
+              {
+                "kind": "damage",
+                "dice": "4d6",
+                "type": "闪电"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "风暴法球": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "text": "维持风暴法球。附赠动作射出闪电攻击 60 尺内生物（目标在球体内具有优势），命中受 4d6 闪电伤害（升环每高一环+1d6）。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "XGE:spell:拂晓",
+    "name": "拂晓",
+    "automation": "partial",
+    "level": 5,
+    "manual": [
+      "施法者在光柱 60 尺内时，每回合可用附赠动作将光柱移动至多 60 尺（光柱移动、站位与阳光环境需手动处理）。"
+    ],
+    "notes": [
+      "若你在光柱 60 尺内，以附赠动作将光柱移动至多 60 尺。"
+    ],
+    "text": "在 60 尺内指定一点升起 30 尺半径、40 尺高的阳光光柱，持续至多 1 分钟（专注）。光柱出现时处于其中的生物须进行体质豁免，失败受 4d10 光耀伤害，成功半伤；在光柱中结束回合的生物也须进行该豁免。施法者在光柱 60 尺内时，每回合可用附赠动作将光柱移动至多 60 尺（光柱移动、站位与阳光环境需手动处理）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "拂晓",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 5
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 1
+        },
+        "targeting": {
+          "type": "area",
+          "range": 60,
+          "area": {
+            "shape": "cylinder",
+            "radius": 30
+          }
+        },
+        "root": [
+          {
+            "kind": "forEach",
+            "in": "area",
+            "do": [
+              {
+                "kind": "save",
+                "ability": "con",
+                "dc": "self.spell.dc",
+                "onFail": [
+                  {
+                    "kind": "damage",
+                    "id": "dawnDmg",
+                    "dice": "4d10",
+                    "type": "光耀"
+                  }
+                ],
+                "onSuccess": [
+                  {
+                    "kind": "damage",
+                    "ref": "dawnDmg",
+                    "scale": 0.5
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "endTurnSave",
+        "name": "拂晓：回合结束伤害",
+        "activation": "none",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 60
+        },
+        "root": [
+          {
+            "kind": "save",
+            "ability": "con",
+            "dc": "self.spell.dc",
+            "onFail": [
+              {
+                "kind": "damage",
+                "id": "dawnTurnDmg",
+                "dice": "4d10",
+                "type": "光耀"
+              }
+            ],
+            "onSuccess": [
+              {
+                "kind": "damage",
+                "ref": "dawnTurnDmg",
+                "scale": 0.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "moveLight",
+        "name": "拂晓：移动光柱",
+        "activation": "bonus",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "targeting": {
+          "type": "point",
+          "range": 60
+        },
+        "root": [
+          {
+            "kind": "note",
+            "text": "若你在光柱 60 尺内，以附赠动作将光柱移动至多 60 尺。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  }
+]

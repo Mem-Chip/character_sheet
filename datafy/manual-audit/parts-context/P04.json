@@ -1,0 +1,3522 @@
+[
+  {
+    "key": "XPHB:spell:元素召唤术",
+    "name": "元素召唤术",
+    "automation": "partial",
+    "level": 4,
+    "manual": [
+      "元素灵魄作为独立参战生物入场（使用对应法术位环阶数据块）需人手动在战斗中添加与操控。"
+    ],
+    "notes": [
+      "在 90 尺内可见未占据空间唤来元素灵魄（气/土/火/水），使用对应法术位环阶数据块在战斗中行动"
+    ],
+    "text": "在 90 尺内可见未占据空间唤来元素灵魄（气/土/火/水），持续 1 小时（专注）；元素灵魄作为独立参战生物入场（使用对应法术位环阶数据块）需人手动在战斗中添加与操控。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "元素召唤术",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 4
+            }
+          }
+        ],
+        "concentration": {
+          "hours": 1
+        },
+        "targeting": {
+          "type": "point",
+          "range": 90
+        },
+        "root": [
+          {
+            "kind": "note",
+            "text": "在 90 尺内可见未占据空间唤来元素灵魄（气/土/火/水），使用对应法术位环阶数据块在战斗中行动"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/spells.json"
+  },
+  {
+    "key": "XPHB:spell:原力法阵",
+    "name": "原力法阵",
+    "automation": "partial",
+    "level": 5,
+    "manual": [
+      "且对抗豁免成功受半数伤害的法术或魔法效应时，若豁免成功则不受伤害（豁免成功免伤需手动调整结算）。"
+    ],
+    "notes": [],
+    "text": "专注至多 10 分钟。以自身为中心散发 30 尺灵光。灵光范围内的你和盟友对抗法术或其他魔法效应的豁免检定具有优势（通过询问确认）。且对抗豁免成功受半数伤害的法术或魔法效应时，若豁免成功则不受伤害（豁免成功免伤需手动调整结算）。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "原力法阵",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 5
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 10
+        },
+        "targeting": {
+          "type": "self"
+        },
+        "root": [
+          {
+            "kind": "applyEffect",
+            "template": "原力法阵",
+            "to": "self"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "原力法阵": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "aura": {
+          "id": "circle-of-power",
+          "radius": 30,
+          "affects": "allies",
+          "includeSelf": true,
+          "grant": {
+            "rollMods": [
+              {
+                "on": {
+                  "kind": "save"
+                },
+                "who": "bearer",
+                "when": "ask('此豁免用于对抗法术或其他魔法效应吗？')",
+                "op": "adv",
+                "label": "原力法阵：对抗法术与魔法效应豁免优势"
+              }
+            ]
+          }
+        },
+        "text": "30 尺灵光内的你和盟友对抗法术或其他魔法效应的豁免检定具有优势；对抗豁免成功受半数伤害的法术或魔法效应时，豁免成功则不受伤害。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/spells.json"
+  },
+  {
+    "key": "XPHB:spell:援助术",
+    "name": "援助术",
+    "automation": "partial",
+    "level": 2,
+    "manual": [
+      "生命值上限与当前生命值的提升需手动调整。"
+    ],
+    "notes": [],
+    "text": "选择 30 尺内至多三个生物，其生命值上限和当前生命值在 8 小时内提高 5 点（每升 1 环 +5）。生命值上限与当前生命值的提升需手动调整。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "援助术",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 2
+            }
+          }
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": 3,
+          "range": 30
+        },
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "target",
+            "template": "援助术"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "援助术": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "duration": {
+          "hours": 8
+        },
+        "text": "生命值上限和当前生命值提高（基础 5 点，每升 1 环 +5，需手动调整）。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/spells.json"
+  },
+  {
+    "key": "XPHB:spell:月光涌泉",
+    "name": "月光涌泉",
+    "automation": "partial",
+    "level": 4,
+    "manual": [
+      "散发 20 尺明亮光照与 20 尺微光光照（光照需手动处理）。"
+    ],
+    "notes": [],
+    "text": "散发 20 尺明亮光照与 20 尺微光光照（光照需手动处理）。获得光耀伤害抗性，近战攻击命中时额外造成 2d6 点光耀伤害。受到 60 尺内可见生物伤害后，可以反应迫使其进行体质豁免，失败则目盲至你的下个回合结束。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "月光涌泉",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 4
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 10
+        },
+        "targeting": {
+          "type": "self"
+        },
+        "root": [
+          {
+            "kind": "applyEffect",
+            "template": "月光涌泉",
+            "to": "self"
+          }
+        ]
+      },
+      {
+        "id": "use",
+        "name": "月光涌泉：致盲反击",
+        "activation": "reaction",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "requires": "self.hasEffect('月光涌泉')",
+        "trigger": {
+          "on": "damageTaken",
+          "role": "target",
+          "window": "after",
+          "when": "damage.amount > 0 && attacker != null && attacker.id != self.id && within(self, attacker, 60) && canSee(self, attacker)"
+        },
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 60
+        },
+        "root": [
+          {
+            "kind": "save",
+            "ability": "con",
+            "dc": "self.spell.dc",
+            "onFail": [
+              {
+                "kind": "applyEffect",
+                "template": "XPHB:condition:目盲",
+                "to": "target",
+                "duration": {
+                  "until": {
+                    "at": "turnEnd",
+                    "of": "source",
+                    "nth": 1
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "月光涌泉": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "statics": [
+          {
+            "kind": "resist",
+            "values": [
+              "光耀"
+            ]
+          }
+        ],
+        "triggers": [
+          {
+            "id": "extra-damage",
+            "label": "月光涌泉：额外光耀伤害",
+            "on": "attackHit",
+            "role": "actor",
+            "window": "before",
+            "when": "attack.melee",
+            "do": [
+              {
+                "kind": "addDamage",
+                "dice": "2d6",
+                "type": "光耀"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/spells.json"
+  },
+  {
+    "key": "XPHB:spell:月华之光",
+    "name": "月华之光",
+    "automation": "partial",
+    "level": 2,
+    "manual": [
+      "后续回合以动作移动光柱 60 尺、变形限制及回合内触发豁免限制需手动处理。"
+    ],
+    "notes": [],
+    "text": "指定 120 尺内一点产生半径 5 尺、高 40 尺的微光圆柱，持续至多 1 分钟（专注）。出现时、进入区域或在其中结束回合的生物须进行体质豁免，失败承受 (slot.level)d10 光耀伤害且变形生物变回原形（离开前无法变形），成功伤害减半。后续回合以动作移动光柱 60 尺、变形限制及回合内触发豁免限制需手动处理。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "月华之光",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 2
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 1
+        },
+        "targeting": {
+          "type": "area",
+          "range": 120,
+          "area": {
+            "shape": "cylinder",
+            "radius": 5
+          }
+        },
+        "root": [
+          {
+            "kind": "forEach",
+            "in": "area",
+            "do": [
+              {
+                "kind": "save",
+                "ability": "con",
+                "dc": "self.spell.dc",
+                "onFail": [
+                  {
+                    "kind": "damage",
+                    "id": "d",
+                    "dice": "(slot.level)d10",
+                    "type": "光耀"
+                  }
+                ],
+                "onSuccess": [
+                  {
+                    "kind": "damage",
+                    "ref": "d",
+                    "scale": 0.5
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/spells.json"
+  },
+  {
+    "key": "XPHB:spell:云雾术",
+    "name": "云雾术",
+    "automation": "partial",
+    "level": 1,
+    "manual": [
+      "浓雾持续至专注结束或被强风吹散（重度遮蔽与强风吹散需手动处理）。"
+    ],
+    "notes": [
+      "创造一片半径 20 尺（使用的法术位每比 1 环高 1 环增加 20 尺）的球状浓雾，区域被重度遮蔽，持续至法术结束或被强风吹散。"
+    ],
+    "text": "专注至多 1 小时。以 120 尺内一点为中心创造半径 20 尺（使用的法术位每比 1 环高 1 环增加 20 尺）的球状浓雾，区域被重度遮蔽。浓雾持续至专注结束或被强风吹散（重度遮蔽与强风吹散需手动处理）。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "云雾术",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 1
+            }
+          }
+        ],
+        "concentration": {
+          "hours": 1
+        },
+        "targeting": {
+          "type": "area",
+          "range": 120,
+          "area": {
+            "shape": "sphere",
+            "radius": 20
+          }
+        },
+        "root": [
+          {
+            "kind": "note",
+            "text": "创造一片半径 20 尺（使用的法术位每比 1 环高 1 环增加 20 尺）的球状浓雾，区域被重度遮蔽，持续至法术结束或被强风吹散。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/spells.json"
+  },
+  {
+    "key": "XPHB:spell:造风术",
+    "name": "造风术",
+    "automation": "partial",
+    "level": 2,
+    "manual": [
+      "迎风移动需额外移动力、吹散气体、吹灭火焰及后续以附赠动作改变方向需手动处理。"
+    ],
+    "notes": [],
+    "text": "从自身向指定方向吹出长 60 尺、宽 10 尺的风线，持续至多 1 分钟（专注）。区域内生物须进行力量豁免，失败被推离施法者 15 尺。在风线中结束回合同样需豁免。迎风移动需额外移动力、吹散气体、吹灭火焰及后续以附赠动作改变方向需手动处理。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "造风术",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 2
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 1
+        },
+        "targeting": {
+          "type": "area",
+          "range": "self",
+          "area": {
+            "shape": "line",
+            "length": 60,
+            "width": 10
+          }
+        },
+        "root": [
+          {
+            "kind": "forEach",
+            "in": "area",
+            "do": [
+              {
+                "kind": "save",
+                "ability": "str",
+                "dc": "self.spell.dc",
+                "onFail": [
+                  {
+                    "kind": "move",
+                    "mode": "push",
+                    "ft": 15
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/spells.json"
+  },
+  {
+    "key": "XPHB:spell:召雷术",
+    "name": "召雷术",
+    "automation": "partial",
+    "level": 3,
+    "manual": [
+      "室外暴风雨天气伤害+1d10、风暴云覆盖范围及后续动作升环伤害需手动调整判定。"
+    ],
+    "notes": [],
+    "text": "召唤半径 60 尺风暴云，持续至多 10 分钟（专注）。施法时及后续可用动作降下闪电，指定点 5 尺内生物进行敏捷豁免，失败受 3d10（升环每比三环高一环+1d10）闪电伤害，成功受半数伤害；室外暴风雨天气伤害+1d10、风暴云覆盖范围及后续动作升环伤害需手动调整判定。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "召雷术",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 3
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 10
+        },
+        "targeting": {
+          "type": "area",
+          "range": 120,
+          "area": {
+            "shape": "cylinder",
+            "radius": 5
+          }
+        },
+        "root": [
+          {
+            "kind": "applyEffect",
+            "template": "召雷术",
+            "to": "self"
+          },
+          {
+            "kind": "forEach",
+            "in": "area",
+            "do": [
+              {
+                "kind": "save",
+                "ability": "dex",
+                "dc": "self.spell.dc",
+                "onFail": [
+                  {
+                    "kind": "damage",
+                    "id": "lightning",
+                    "dice": "(slot.level)d10",
+                    "type": "闪电"
+                  }
+                ],
+                "onSuccess": [
+                  {
+                    "kind": "damage",
+                    "ref": "lightning",
+                    "scale": 0.5
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "use",
+        "name": "召雷术：降下闪电",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "requires": "self.concentrating",
+        "targeting": {
+          "type": "area",
+          "range": 120,
+          "area": {
+            "shape": "cylinder",
+            "radius": 5
+          }
+        },
+        "root": [
+          {
+            "kind": "forEach",
+            "in": "area",
+            "do": [
+              {
+                "kind": "save",
+                "ability": "dex",
+                "dc": "self.spell.dc",
+                "onFail": [
+                  {
+                    "kind": "damage",
+                    "id": "lightningSub",
+                    "dice": "3d10",
+                    "type": "闪电"
+                  }
+                ],
+                "onSuccess": [
+                  {
+                    "kind": "damage",
+                    "ref": "lightningSub",
+                    "scale": 0.5
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "召雷术": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "text": "风暴云在头顶聚集。持续时间内可以动作降下闪电，5 尺内生物敏捷豁免对抗法术 DC，失败受闪电伤害，成功半数。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/spells.json"
+  },
+  {
+    "key": "XPHB:spell:支配类人",
+    "name": "支配类人",
+    "automation": "partial",
+    "level": 5,
+    "manual": [
+      "心灵感应指挥与升环专注时长需手动处理。"
+    ],
+    "notes": [],
+    "text": "对 60 尺内可见类人生物施展（若正在与其战斗豁免具优势，由人判定）。目标感知豁免失败陷入被支配的魅惑状态，专注至多 1 分钟（升环 6 环 10 分钟、7 环 1 小时、8 环+ 8 小时）。目标每次受到伤害时可重复豁免，成功则法术终止。心灵感应指挥与升环专注时长需手动处理。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "支配类人",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 5
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 1
+        },
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 60,
+          "filter": "target.type == '类人生物'"
+        },
+        "root": [
+          {
+            "kind": "save",
+            "ability": "wis",
+            "dc": "self.spell.dc",
+            "onFail": [
+              {
+                "kind": "applyEffect",
+                "template": "支配类人",
+                "to": "target"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "支配类人": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "implies": [
+          "XPHB:condition:魅惑"
+        ],
+        "triggers": [
+          {
+            "id": "damage-save",
+            "label": "支配类人：受伤重复豁免",
+            "on": "damageTaken",
+            "role": "target",
+            "window": "after",
+            "when": "damage.amount > 0",
+            "do": [
+              {
+                "kind": "save",
+                "ability": "wis",
+                "dc": "source.spell.dc",
+                "onSuccess": [
+                  {
+                    "kind": "removeEffect",
+                    "from": "self",
+                    "match": {
+                      "name": "支配类人"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "陷入被支配的魅惑状态。与施法者处于同位面时可被心灵感应命令；每次受到伤害时可重复感知豁免，成功则终止。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/spells.json"
+  },
+  {
+    "key": "XPHB:spell:支配野兽",
+    "name": "支配野兽",
+    "automation": "partial",
+    "level": 4,
+    "manual": [
+      "心灵感应指挥与升环专注时长需手动处理。"
+    ],
+    "notes": [],
+    "text": "对 60 尺内可见野兽施展（若正在与其战斗豁免具优势，由人判定）。目标感知豁免失败陷入被支配的魅惑状态，专注至多 1 分钟（升环 5 环 10 分钟、6 环 1 小时、7 环+ 8 小时）。目标每次受到伤害时可重复豁免，成功则法术终止。心灵感应指挥与升环专注时长需手动处理。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "支配野兽",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 4
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 1
+        },
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 60,
+          "filter": "target.type == '野兽'"
+        },
+        "root": [
+          {
+            "kind": "save",
+            "ability": "wis",
+            "dc": "self.spell.dc",
+            "onFail": [
+              {
+                "kind": "applyEffect",
+                "template": "支配野兽",
+                "to": "target"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "支配野兽": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "implies": [
+          "XPHB:condition:魅惑"
+        ],
+        "triggers": [
+          {
+            "id": "damage-save",
+            "label": "支配野兽：受伤重复豁免",
+            "on": "damageTaken",
+            "role": "target",
+            "window": "after",
+            "when": "damage.amount > 0",
+            "do": [
+              {
+                "kind": "save",
+                "ability": "wis",
+                "dc": "source.spell.dc",
+                "onSuccess": [
+                  {
+                    "kind": "removeEffect",
+                    "from": "self",
+                    "match": {
+                      "name": "支配野兽"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/spells.json"
+  },
+  {
+    "key": "XPHB:spell:植物滋长",
+    "name": "植物滋长",
+    "automation": "partial",
+    "level": 3,
+    "manual": [
+      "移动力花费需在地图上手动结算）。"
+    ],
+    "notes": [
+      "植物滋长（繁茂）：100 尺半径球状区域内普通植物过度生长，穿过区域的生物每移动 1 尺花费 4 尺移动力。施法者可在法术范围内指定排除部分区域。"
+    ],
+    "text": "1 动作施法（繁茂）：指定 150 尺内一点，100 尺半径球状区域内普通植物过度生长，穿过区域的生物每移动 1 尺必须花费 4 尺移动力（施法者可指定排除任意子区域；移动力花费需在地图上手动结算）。8 小时施法（丰产）：使半里内植物在 365 日内产出双倍作物。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "植物滋长",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 3
+            }
+          }
+        ],
+        "targeting": {
+          "type": "area",
+          "range": 150,
+          "area": {
+            "shape": "sphere",
+            "radius": 100
+          }
+        },
+        "root": [
+          {
+            "kind": "note",
+            "text": "植物滋长（繁茂）：100 尺半径球状区域内普通植物过度生长，穿过区域的生物每移动 1 尺花费 4 尺移动力。施法者可在法术范围内指定排除部分区域。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/spells.json"
+  },
+  {
+    "key": "XPHB:spell:治疗祷言",
+    "name": "治疗祷言",
+    "automation": "partial",
+    "level": 2,
+    "manual": [
+      "生物直到完成长休前无法再次受此法术影响（短休增益与长休前不可再次受影响需手动处理）。"
+    ],
+    "notes": [],
+    "text": "施法 10 分钟。30 尺内至多 5 个生物获得短休增益并恢复 (slot.level)d8 生命值。生物直到完成长休前无法再次受此法术影响（短休增益与长休前不可再次受影响需手动处理）。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "治疗祷言",
+        "activation": {
+          "minutes": 10
+        },
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 2
+            }
+          }
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": 5,
+          "range": 30
+        },
+        "root": [
+          {
+            "kind": "heal",
+            "amount": "(slot.level)d8"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/spells.json"
+  },
+  {
+    "key": "XPHB:spell:咒唤林地卫士",
+    "name": "咒唤林地卫士",
+    "automation": "partial",
+    "level": 4,
+    "manual": [
+      "每当光环进入可见生物空间、生物进入光环或在其中结束回合时，可对其结算「自然精魂冲击」：感知豁免失败受到 5d8（升环每高一环 +1d8）力场伤害，成功半数（每名生物每回合限一次，触发时机与每回合限制需手动处理）。"
+    ],
+    "notes": [],
+    "text": "10 尺光环缭绕自身，专注至多 10 分钟。持续时间内可以附赠动作撤离。每当光环进入可见生物空间、生物进入光环或在其中结束回合时，可对其结算「自然精魂冲击」：感知豁免失败受到 5d8（升环每高一环 +1d8）力场伤害，成功半数（每名生物每回合限一次，触发时机与每回合限制需手动处理）。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "咒唤林地卫士",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 4
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 10
+        },
+        "targeting": {
+          "type": "self"
+        },
+        "root": [
+          {
+            "kind": "applyEffect",
+            "template": "咒唤林地卫士",
+            "to": "self",
+            "state": {
+              "slot": "slot.level"
+            }
+          }
+        ]
+      },
+      {
+        "id": "use",
+        "name": "咒唤林地卫士：撤离",
+        "activation": "bonus",
+        "requires": "self.hasEffect('咒唤林地卫士') && turn.isMine",
+        "root": [
+          {
+            "kind": "applyEffect",
+            "template": "XPHB:action:撤离#撤离",
+            "to": "self"
+          }
+        ]
+      },
+      {
+        "id": "strike",
+        "name": "咒唤林地卫士：自然精魂冲击",
+        "activation": "free",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "requires": "self.hasEffect('咒唤林地卫士')",
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 10
+        },
+        "root": [
+          {
+            "kind": "save",
+            "ability": "wis",
+            "dc": "self.spell.dc",
+            "onFail": [
+              {
+                "kind": "damage",
+                "id": "d",
+                "dice": "5d8",
+                "type": "力场"
+              }
+            ],
+            "onSuccess": [
+              {
+                "kind": "damage",
+                "ref": "d",
+                "scale": 0.5
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "咒唤林地卫士": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "text": "10 尺自然精魂光环；可以附赠动作撤离；进入光环或在其中结束回合的生物受冲击伤害。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/spells.json"
+  },
+  {
+    "key": "XPHB:spell:咒唤兽群",
+    "name": "咒唤兽群",
+    "automation": "partial",
+    "level": 3,
+    "manual": [
+      "兽群位置、移动、触发时机与升环伤害需手动调整判定。"
+    ],
+    "notes": [
+      "咒唤兽群：在 60 尺内召出虚幻兽群。在兽群 5 尺内力量豁免具有优势；生物进入兽群 10 尺内或在其中结束回合时迫使其进行敏捷豁免，失败受 3d10（升环+1d10）挥砍伤害。"
+    ],
+    "text": "在 60 尺内召唤大型虚幻兽群，持续至多 10 分钟（专注）。施法者在兽群 5 尺内时力量豁免具有优势；自身移动时可令兽群移动 30 尺。兽群移动至生物 10 尺内、生物进入兽群 10 尺内或在其中结束回合时，可迫使其进行敏捷豁免，失败受 3d10（升环每比三环高一环+1d10）挥砍伤害（每回合限一次）。兽群位置、移动、触发时机与升环伤害需手动调整判定。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "咒唤兽群",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 3
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 10
+        },
+        "targeting": {
+          "type": "point",
+          "range": 60
+        },
+        "root": [
+          {
+            "kind": "applyEffect",
+            "template": "咒唤兽群",
+            "to": "self"
+          },
+          {
+            "kind": "note",
+            "text": "咒唤兽群：在 60 尺内召出虚幻兽群。在兽群 5 尺内力量豁免具有优势；生物进入兽群 10 尺内或在其中结束回合时迫使其进行敏捷豁免，失败受 3d10（升环+1d10）挥砍伤害。"
+          }
+        ]
+      },
+      {
+        "id": "use",
+        "name": "咒唤兽群：兽群践踏",
+        "activation": "none",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "requires": "self.concentrating",
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 60,
+          "filter": "canSee(self, target)"
+        },
+        "root": [
+          {
+            "kind": "save",
+            "ability": "dex",
+            "dc": "self.spell.dc",
+            "onFail": [
+              {
+                "kind": "damage",
+                "dice": "3d10",
+                "type": "挥砍"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "咒唤兽群": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "rollMods": [
+          {
+            "on": {
+              "kind": "save",
+              "ability": "str"
+            },
+            "who": "bearer",
+            "op": "adv",
+            "when": "ask('是否位于兽群 5 尺内？')",
+            "label": "咒唤兽群：力量豁免优势"
+          }
+        ],
+        "text": "虚幻兽群存在于 60 尺内；在兽群 5 尺内力量豁免具有优势。移动时可令兽群移动 30 尺。生物进入兽群 10 尺内或在其中结束回合须进行敏捷豁免，失败受 3d10（升环+1d10）挥砍伤害（每生物每回合限一次）。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/spells.json"
+  },
+  {
+    "key": "XPHB:spell:咒唤微元素群",
+    "name": "咒唤微元素群",
+    "automation": "partial",
+    "level": 4,
+    "manual": [
+      "光环内地面视为敌人的困难地形（困难地形及升环加骰需手动处理）。"
+    ],
+    "notes": [],
+    "text": "专注至多 10 分钟。在自身身周 15 尺光环内咒唤微元素群。你进行的任何攻击检定命中光环内的生物时，额外造成 2d8 点（升环每高一环 +1d8）强酸、寒冷、火焰或闪电伤害（攻击时自选）；光环内地面视为敌人的困难地形（困难地形及升环加骰需手动处理）。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "咒唤微元素群",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 4
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 10
+        },
+        "targeting": {
+          "type": "self"
+        },
+        "root": [
+          {
+            "kind": "applyEffect",
+            "template": "咒唤微元素群",
+            "to": "self"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "咒唤微元素群": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "aura": {
+          "id": "conjure-minor-elementals",
+          "radius": 15,
+          "affects": "enemies",
+          "includeSelf": false,
+          "grant": {}
+        },
+        "triggers": [
+          {
+            "id": "extra-damage",
+            "label": "咒唤微元素群：额外元素伤害",
+            "on": "attackHit",
+            "role": "actor",
+            "window": "before",
+            "when": "within(self, target, 15)",
+            "do": [
+              {
+                "kind": "choose",
+                "prompt": "选择咒唤微元素群的额外伤害类型",
+                "options": [
+                  {
+                    "label": "强酸",
+                    "do": [
+                      {
+                        "kind": "addDamage",
+                        "dice": "2d8",
+                        "type": "强酸"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "寒冷",
+                    "do": [
+                      {
+                        "kind": "addDamage",
+                        "dice": "2d8",
+                        "type": "寒冷"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "火焰",
+                    "do": [
+                      {
+                        "kind": "addDamage",
+                        "dice": "2d8",
+                        "type": "火焰"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "闪电",
+                    "do": [
+                      {
+                        "kind": "addDamage",
+                        "dice": "2d8",
+                        "type": "闪电"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "15 尺光环；命中光环内生物时额外造成 2d8 强酸、寒冷、火焰或闪电伤害；光环内地面为敌人困难地形。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/spells.json"
+  },
+  {
+    "key": "XPHB:spell:咒唤元素",
+    "name": "咒唤元素",
+    "automation": "partial",
+    "level": 5,
+    "manual": [
+      "精魂位置、元素伤害类型选择与触发时机需手动处理。"
+    ],
+    "notes": [],
+    "text": "专注至多 10 分钟。在 60 尺内未占据空间咒唤大型虚幻精魂（气/闪电、土/雷鸣、火/火焰、水/寒冷）。生物进入精魂空间或在 5 尺内开始其回合时（若精魂未束缚生物），可迫使其敏捷豁免，失败受 8d8（升环每高一环 +1d8）对应伤害并陷入束缚；被束缚目标在其回合开始时重复豁免，失败受 4d8 伤害，成功脱离束缚。精魂位置、元素伤害类型选择与触发时机需手动处理。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "咒唤元素",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 5
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 10
+        },
+        "targeting": {
+          "type": "point",
+          "range": 60
+        },
+        "root": [
+          {
+            "kind": "applyEffect",
+            "template": "咒唤元素",
+            "to": "self"
+          }
+        ]
+      },
+      {
+        "id": "use",
+        "name": "咒唤元素：元素攫抓",
+        "activation": "none",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "requires": "self.hasEffect('咒唤元素')",
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 60
+        },
+        "root": [
+          {
+            "kind": "choose",
+            "prompt": "选择咒唤元素的伤害类型",
+            "options": [
+              {
+                "label": "闪电（气）",
+                "do": [
+                  {
+                    "kind": "save",
+                    "ability": "dex",
+                    "dc": "self.spell.dc",
+                    "onFail": [
+                      {
+                        "kind": "damage",
+                        "dice": "8d8",
+                        "type": "闪电"
+                      },
+                      {
+                        "kind": "applyEffect",
+                        "template": "元素束缚",
+                        "to": "target"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "label": "雷鸣（土）",
+                "do": [
+                  {
+                    "kind": "save",
+                    "ability": "dex",
+                    "dc": "self.spell.dc",
+                    "onFail": [
+                      {
+                        "kind": "damage",
+                        "dice": "8d8",
+                        "type": "雷鸣"
+                      },
+                      {
+                        "kind": "applyEffect",
+                        "template": "元素束缚",
+                        "to": "target"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "label": "火焰（火）",
+                "do": [
+                  {
+                    "kind": "save",
+                    "ability": "dex",
+                    "dc": "self.spell.dc",
+                    "onFail": [
+                      {
+                        "kind": "damage",
+                        "dice": "8d8",
+                        "type": "火焰"
+                      },
+                      {
+                        "kind": "applyEffect",
+                        "template": "元素束缚",
+                        "to": "target"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "label": "寒冷（水）",
+                "do": [
+                  {
+                    "kind": "save",
+                    "ability": "dex",
+                    "dc": "self.spell.dc",
+                    "onFail": [
+                      {
+                        "kind": "damage",
+                        "dice": "8d8",
+                        "type": "寒冷"
+                      },
+                      {
+                        "kind": "applyEffect",
+                        "template": "元素束缚",
+                        "to": "target"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "咒唤元素": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "text": "在 60 尺内维持大型虚幻元素精魂。生物进入其空间或在 5 尺内开始其回合时可迫使其进行敏捷豁免。"
+      },
+      "元素束缚": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "implies": [
+          "XPHB:condition:束缚"
+        ],
+        "duration": {
+          "saveEnds": {
+            "ability": "dex",
+            "at": "turnStart"
+          }
+        },
+        "text": "陷入束缚状态；在每个回合开始时必须重复进行敏捷豁免，失败受伤害（手动结算），成功脱离束缚。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/spells.json"
+  },
+  {
+    "key": "XPHB:spell:昼明术",
+    "name": "昼明术",
+    "automation": "partial",
+    "level": 3,
+    "manual": [
+      "日光范围与遮蔽需在地图上手动处理。"
+    ],
+    "notes": [
+      "昼明术：在指定点或未被着装携带的物件周围创造 60 尺半径明亮日光并额外延伸 60 尺微光；解除重叠的 3 环或更低环阶造暗法术。"
+    ],
+    "text": "持续 1 小时。在 60 尺内一点扩散 60 尺半径球状明亮日光（并额外散发 60 尺微光），或附于未被着装或携带的物件上散发 60 尺光环。与 3 环或更低环阶法术创造的黑暗区域重叠时将其解除。日光范围与遮蔽需在地图上手动处理。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "昼明术",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 3
+            }
+          }
+        ],
+        "targeting": {
+          "type": "area",
+          "range": 60,
+          "area": {
+            "shape": "sphere",
+            "radius": 60
+          }
+        },
+        "root": [
+          {
+            "kind": "note",
+            "text": "昼明术：在指定点或未被着装携带的物件周围创造 60 尺半径明亮日光并额外延伸 60 尺微光；解除重叠的 3 环或更低环阶造暗法术。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/spells.json"
+  },
+  {
+    "key": "XPHB:spell:蛛网术",
+    "name": "蛛网术",
+    "automation": "partial",
+    "level": 2,
+    "manual": [
+      "每回合首次进入与开始回合豁免、坍塌机制、挣脱及易燃燃烧需手动处理。"
+    ],
+    "notes": [],
+    "text": "在 60 尺内指定一点召唤 20 尺立方蛛网，持续至多 1 小时（专注），区域内视为困难地形且轻度遮蔽。区域内生物须进行敏捷豁免，失败陷入束缚状态。被束缚生物可用动作进行力量（运动）检定对抗法术 DC 挣脱。每回合首次进入与开始回合豁免、坍塌机制、挣脱及易燃燃烧需手动处理。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "蛛网术",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 2
+            }
+          }
+        ],
+        "concentration": {
+          "hours": 1
+        },
+        "targeting": {
+          "type": "area",
+          "range": 60,
+          "area": {
+            "shape": "cube",
+            "size": 20
+          }
+        },
+        "root": [
+          {
+            "kind": "forEach",
+            "in": "area",
+            "do": [
+              {
+                "kind": "save",
+                "ability": "dex",
+                "dc": "self.spell.dc",
+                "onFail": [
+                  {
+                    "kind": "applyEffect",
+                    "to": "target",
+                    "template": "蛛网束缚"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "蛛网束缚": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "implies": [
+          "XPHB:condition:束缚"
+        ],
+        "text": "陷入束缚状态。可用动作进行对抗法术 DC 的力量（运动）检定，成功则挣脱束缚。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/spells.json"
+  },
+  {
+    "key": "XPHB:spell:蛛行术",
+    "name": "蛛行术",
+    "automation": "partial",
+    "level": 2,
+    "manual": [
+      "攀爬速度与特殊移动需手动处理。"
+    ],
+    "notes": [],
+    "text": "触碰至多 (slot.level - 1) 个自愿生物，使其在至多 1 小时内（专注）获得等同于步行速度的攀爬速度，且无需双手即可在垂直表面或天花板上倒挂移动。攀爬速度与特殊移动需手动处理。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "蛛行术",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 2
+            }
+          }
+        ],
+        "concentration": {
+          "hours": 1
+        },
+        "targeting": {
+          "type": "creature",
+          "count": "slot.level - 1",
+          "range": "touch"
+        },
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "target",
+            "template": "蛛行术"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "蛛行术": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "text": "获得等同于步行速度的攀爬速度，且无需双手即可在垂直表面或天花板倒挂移动。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/spells.json"
+  },
+  {
+    "key": "XPHB:spell:注目术",
+    "name": "注目术",
+    "automation": "partial",
+    "level": 2,
+    "manual": [
+      "战斗中自动成功与被动察觉需手动处理。"
+    ],
+    "notes": [],
+    "text": "指定 60 尺内可见生物进行感知豁免，若你或同伴正与其战斗则自动成功。豁免失败其感知（察觉）检定与被动察觉值获得 -10 减值，持续至法术终止（专注至多 1 分钟）。战斗中自动成功与被动察觉需手动处理。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "注目术",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 2
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 1
+        },
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 60,
+          "filter": "canSee(self, target)"
+        },
+        "root": [
+          {
+            "kind": "save",
+            "ability": "wis",
+            "dc": "self.spell.dc",
+            "onFail": [
+              {
+                "kind": "applyEffect",
+                "to": "target",
+                "template": "注目分心"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "注目分心": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "rollMods": [
+          {
+            "on": {
+              "kind": "check",
+              "ability": "wis",
+              "skill": "察觉"
+            },
+            "who": "bearer",
+            "op": "add",
+            "value": -10,
+            "label": "注目术"
+          }
+        ],
+        "text": "感知（察觉）检定与被动察觉值具有 -10 减值。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/spells.json"
+  },
+  {
+    "key": "XPHB:spell:灼热金属",
+    "name": "灼热金属",
+    "automation": "partial",
+    "level": 2,
+    "manual": [
+      "持续时间内后续回合以附赠动作造成伤害及丢下物件需手动处理。"
+    ],
+    "notes": [],
+    "text": "指定 60 尺内可见人造金属物件，与其接触的生物承受 (slot.level)d8 火焰伤害，且须进行体质豁免，失败若能丢下物件则必须丢下；若未丢下，直至施法者下一回合开始前攻击检定与属性检定具有劣势。持续时间内后续回合以附赠动作造成伤害及丢下物件需手动处理。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "灼热金属",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 2
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 1
+        },
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 60,
+          "filter": "canSee(self, target)"
+        },
+        "root": [
+          {
+            "kind": "damage",
+            "dice": "(slot.level)d8",
+            "type": "火焰"
+          },
+          {
+            "kind": "save",
+            "ability": "con",
+            "dc": "self.spell.dc",
+            "onFail": [
+              {
+                "kind": "applyEffect",
+                "to": "target",
+                "template": "灼热灼伤"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "灼热灼伤": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "duration": {
+          "until": {
+            "at": "turnStart",
+            "of": "source",
+            "nth": 1
+          }
+        },
+        "rollMods": [
+          {
+            "on": {
+              "kind": "attack"
+            },
+            "who": "bearer",
+            "op": "disadv",
+            "label": "灼热金属"
+          },
+          {
+            "on": {
+              "kind": "check"
+            },
+            "who": "bearer",
+            "op": "disadv",
+            "label": "灼热金属"
+          }
+        ],
+        "text": "若能丢下物件则必须丢下；若未丢下，攻击检定与属性检定具有劣势。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/spells.json"
+  },
+  {
+    "key": "XPHB:阿斯莫",
+    "name": "阿斯莫",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "天堂飞翼的飞行速度、内耀辉光的光照需要手动处理；"
+    ],
+    "notes": [],
+    "text": "天界抗性、黑暗视觉、光辉掌者（光亮术）是静态部分，由人物卡处理。天堂飞翼的飞行速度、内耀辉光的光照需要手动处理；内耀辉光的回合结束伤害请在自己的回合结束时用「内耀辉光（回合结束伤害）」触发。天界启示的额外伤害对攻击或法术造成的伤害都会询问，不是攻击 / 法术伤害（例如内耀辉光自己的伤害）时请拒绝。",
+    "actions": [
+      {
+        "id": "healing-hands",
+        "name": "治愈之手",
+        "activation": "action",
+        "text": "魔法动作：触碰一个生物，恢复等同于熟练加值个 d4 之和的生命值。",
+        "cost": [
+          {
+            "resource": "治愈之手"
+          }
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": "touch"
+        },
+        "root": [
+          {
+            "kind": "heal",
+            "amount": "(pb)d4"
+          }
+        ]
+      },
+      {
+        "id": "revelation-wings",
+        "name": "天界启示：天堂飞翼",
+        "activation": "bonus",
+        "text": "3 级起。变身 1 分钟：获得等同于速度的飞行速度；每个回合一次，攻击或法术造成伤害时额外造成等同熟练加值的光耀伤害。",
+        "requires": "self.level >= 3",
+        "cost": [
+          {
+            "resource": "天界启示"
+          }
+        ],
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "天堂飞翼"
+          }
+        ]
+      },
+      {
+        "id": "revelation-radiance",
+        "name": "天界启示：内耀辉光",
+        "activation": "bonus",
+        "text": "3 级起。变身 1 分钟：散发 10 尺明亮光照与其外 10 尺微光光照；每个你的回合结束时，10 尺内每个生物受到等同熟练加值的光耀伤害；每个回合一次，攻击或法术造成伤害时额外造成等同熟练加值的光耀伤害。",
+        "requires": "self.level >= 3",
+        "cost": [
+          {
+            "resource": "天界启示"
+          }
+        ],
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "内耀辉光"
+          }
+        ]
+      },
+      {
+        "id": "radiance-pulse",
+        "name": "天界启示：内耀辉光（回合结束伤害）",
+        "activation": "free",
+        "text": "在你的回合结束时使用：你 10 尺内的每个生物受到等同熟练加值的光耀伤害。",
+        "requires": "turn.isMine && self.hasEffect('内耀辉光')",
+        "targeting": {
+          "type": "area",
+          "range": "self",
+          "area": {
+            "shape": "emanation",
+            "radius": 10
+          }
+        },
+        "root": [
+          {
+            "kind": "forEach",
+            "in": "area",
+            "do": [
+              {
+                "kind": "if",
+                "when": "target.id != self.id",
+                "then": [
+                  {
+                    "kind": "damage",
+                    "dice": "pb",
+                    "type": "光耀"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "revelation-shroud",
+        "name": "天界启示：死灵环绕",
+        "activation": "bonus",
+        "text": "3 级起。变身 1 分钟：除盟友外、10 尺内能看见你的生物须通过魅力豁免（DC 8 + 熟练加值 + 魅力调整值），否则陷入恐慌，持续至你的下一回合结束；每个回合一次，攻击或法术造成伤害时额外造成等同熟练加值的暗蚀伤害。",
+        "requires": "self.level >= 3",
+        "cost": [
+          {
+            "resource": "天界启示"
+          }
+        ],
+        "targeting": {
+          "type": "area",
+          "range": "self",
+          "area": {
+            "shape": "emanation",
+            "radius": 10
+          }
+        },
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "死灵环绕"
+          },
+          {
+            "kind": "forEach",
+            "in": "area",
+            "do": [
+              {
+                "kind": "if",
+                "when": "target.id != self.id && !target.isAllyOf(self) && canSee(target, self)",
+                "then": [
+                  {
+                    "kind": "save",
+                    "ability": "cha",
+                    "dc": "8 + self.pb + self.mod.cha",
+                    "onFail": [
+                      {
+                        "kind": "applyEffect",
+                        "to": "target",
+                        "template": "XPHB:condition:恐慌",
+                        "duration": {
+                          "until": {
+                            "at": "turnEnd",
+                            "of": "source",
+                            "nth": 1
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "end-revelation",
+        "name": "天界启示：提前结束变身",
+        "activation": "free",
+        "requires": "self.hasEffect('天堂飞翼') || self.hasEffect('内耀辉光') || self.hasEffect('死灵环绕')",
+        "root": [
+          {
+            "kind": "removeEffect",
+            "from": "self",
+            "match": {
+              "tag": "revelation"
+            }
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "天堂飞翼": {
+        "tags": [
+          "revelation"
+        ],
+        "text": "获得等同于速度的飞行速度（引擎不追踪飞行，手动处理）。每个你的回合一次，攻击或法术造成伤害时额外造成等同熟练加值的光耀伤害。",
+        "duration": {
+          "minutes": 1
+        },
+        "triggers": [
+          {
+            "id": "wings-bonus",
+            "label": "天界启示：额外光耀伤害",
+            "on": "damageTaken",
+            "role": "actor",
+            "optional": true,
+            "limit": "oncePerTurn",
+            "when": "turn.isMine && damage.amount > 0 && target.id != self.id",
+            "do": [
+              {
+                "kind": "damage",
+                "dice": "pb",
+                "type": "光耀"
+              }
+            ]
+          }
+        ]
+      },
+      "内耀辉光": {
+        "tags": [
+          "revelation"
+        ],
+        "text": "散发 10 尺明亮光照与其外 10 尺微光光照。你的回合结束时，10 尺内每个生物受到等同熟练加值的光耀伤害（用「内耀辉光（回合结束伤害）」触发）。每个你的回合一次，攻击或法术造成伤害时额外造成等同熟练加值的光耀伤害。",
+        "duration": {
+          "minutes": 1
+        },
+        "triggers": [
+          {
+            "id": "radiance-bonus",
+            "label": "天界启示：额外光耀伤害",
+            "on": "damageTaken",
+            "role": "actor",
+            "optional": true,
+            "limit": "oncePerTurn",
+            "when": "turn.isMine && damage.amount > 0 && target.id != self.id",
+            "do": [
+              {
+                "kind": "damage",
+                "dice": "pb",
+                "type": "光耀"
+              }
+            ]
+          }
+        ]
+      },
+      "死灵环绕": {
+        "tags": [
+          "revelation"
+        ],
+        "text": "每个你的回合一次，攻击或法术造成伤害时额外造成等同熟练加值的暗蚀伤害。",
+        "duration": {
+          "minutes": 1
+        },
+        "triggers": [
+          {
+            "id": "shroud-bonus",
+            "label": "天界启示：额外暗蚀伤害",
+            "on": "damageTaken",
+            "role": "actor",
+            "optional": true,
+            "limit": "oncePerTurn",
+            "when": "turn.isMine && damage.amount > 0 && target.id != self.id",
+            "do": [
+              {
+                "kind": "damage",
+                "dice": "pb",
+                "type": "黯蚀"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:矮人",
+    "name": "矮人",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "黑暗视觉、毒素抗性、生命值上限加 1 属于静态（人物卡）。石中精妙：附赠动作获得 60 尺震颤感知 10 分钟，次数等于熟练、长休全部恢复（资源「石中精妙」）。震颤感知本身引擎不处理，效果只记录文字；必须位于岩石表面或接触岩石才能使用，由人判断。中毒豁免优势只在由人确认为避免或结束中毒时生效。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "石中精妙：震颤感知",
+        "activation": "bonus",
+        "cost": [
+          {
+            "resource": "石中精妙"
+          }
+        ],
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "震颤感知"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "震颤感知": {
+        "text": "拥有 60 尺震颤感知（需位于岩石表面或接触岩石时才能利用），持续 10 分钟。",
+        "duration": {
+          "minutes": 10
+        }
+      }
+    },
+    "rollMods": [
+      {
+        "on": {
+          "kind": "save",
+          "ability": "con"
+        },
+        "who": "bearer",
+        "when": "ask('这个体质豁免是为了避免或结束中毒状态吗？')",
+        "op": "adv",
+        "label": "矮人体魄：中毒豁免"
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:暗夜精魂之恩惠",
+    "name": "暗夜精魂之恩惠",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "隐形在你执行动作、附赠动作或反应后立即结束，需要手动移除；"
+    ],
+    "notes": [
+      "融身入影：你执行动作、附赠动作或反应后，隐形立即结束（请手动移除）"
+    ],
+    "text": "是否身处微光光照或黑暗由人判断；隐形在你执行动作、附赠动作或反应后立即结束，需要手动移除；离开微光/黑暗时用「结束幽影化身」去掉抗性。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "暗夜精魂之恩惠：融身入影",
+        "activation": "bonus",
+        "text": "需身处微光光照或黑暗中。获得隐形状态，直到你执行动作、附赠动作或反应后立即结束（手动移除）。",
+        "requires": "!self.has('隐形')",
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "XPHB:condition:隐形",
+            "duration": {
+              "manual": true
+            }
+          },
+          {
+            "kind": "note",
+            "text": "融身入影：你执行动作、附赠动作或反应后，隐形立即结束（请手动移除）"
+          }
+        ]
+      },
+      {
+        "id": "shadow-form",
+        "name": "暗夜精魂之恩惠：幽影化身",
+        "activation": "free",
+        "text": "身处微光光照或黑暗期间，具有除心灵和光耀外所有伤害的抗性。进入微光/黑暗时启用。",
+        "requires": "!self.hasEffect('幽影化身')",
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "幽影化身",
+            "duration": {
+              "manual": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "shadow-form-end",
+        "name": "暗夜精魂之恩惠：结束幽影化身",
+        "activation": "free",
+        "text": "离开微光光照和黑暗时用，去掉抗性。",
+        "requires": "self.hasEffect('幽影化身')",
+        "root": [
+          {
+            "kind": "removeEffect",
+            "from": "self",
+            "match": {
+              "name": "幽影化身"
+            }
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "幽影化身": {
+        "text": "身处微光光照或黑暗期间，具有除心灵和光耀外所有伤害的抗性。",
+        "statics": [
+          {
+            "kind": "resist",
+            "values": [
+              "钝击",
+              "穿刺",
+              "挥砍",
+              "火焰",
+              "寒冷",
+              "闪电",
+              "雷鸣",
+              "强酸",
+              "毒素",
+              "黯蚀",
+              "力场"
+            ]
+          }
+        ],
+        "duration": {
+          "manual": true
+        }
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:半身人",
+    "name": "半身人",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "勇气：引擎不知道豁免是针对什么，每次豁免会询问是否为避免或结束恐慌状态。半身人灵巧（穿越更大生物的空间）、天生善匿（被更大的生物遮蔽时可以躲藏）由人判断。",
+    "triggers": [
+      {
+        "id": "lucky",
+        "label": "幸运：d20 掷出 1 时重骰",
+        "on": "d20Rolled",
+        "role": "actor",
+        "window": "before",
+        "optional": true,
+        "when": "roll.natural == 1",
+        "modify": [
+          {
+            "op": "reroll",
+            "die": "d20",
+            "keep": "new"
+          }
+        ]
+      }
+    ],
+    "rollMods": [
+      {
+        "on": {
+          "kind": "save"
+        },
+        "who": "bearer",
+        "when": "ask('这次豁免是为了避免或结束恐慌状态吗？')",
+        "op": "adv",
+        "label": "勇气：避免或结束恐慌的豁免"
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:飙速跑者",
+    "name": "飙速跑者",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "飙速跑者：速度提升 10 尺为静态（已在人物卡）。灵活移动已写成：对你发动的借机攻击具有劣势（由人确认该攻击是否为借机攻击）。险地疾行（自己回合疾走后，困难地形不再额外消耗移动力）需要人处理：引擎不管地形的移动消耗。",
+    "rollMods": [
+      {
+        "on": {
+          "kind": "attack"
+        },
+        "who": "against",
+        "when": "ask('这次攻击是借机攻击吗？')",
+        "op": "disadv",
+        "label": "飙速跑者：借机攻击劣势（灵活移动）"
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:超凡强韧之恩惠",
+    "name": "超凡强韧之恩惠",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "之后直至你的下个回合开始前不再受益）引擎没有生命值恢复的触发时机，需人工处理。"
+    ],
+    "notes": [],
+    "text": "生命值上限 +40 已在人物卡静态层。额外恢复（每当恢复生命值时，额外恢复等于体质调整值的生命值；之后直至你的下个回合开始前不再受益）引擎没有生命值恢复的触发时机，需人工处理。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:穿刺者",
+    "name": "穿刺者",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "引擎不能重骰单枚伤害骰，也读不到武器的骰子，需要人手动处理。"
+    ],
+    "notes": [],
+    "text": "穿透伤：每回合一次，用造成穿刺伤害的攻击命中时，可以重骰这次伤害的其中一枚伤害骰，必须采用新结果。强化重击：用造成穿刺伤害的攻击掷出重击时，额外伤害多掷一枚伤害骰。引擎不能重骰单枚伤害骰，也读不到武器的骰子，需要人手动处理。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:次元旅行之恩惠",
+    "name": "次元旅行之恩惠",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "攻击动作后的传送引擎没有对应事件，需人工处理；"
+    ],
+    "notes": [],
+    "text": "闪烁步：施放法术后可传送至多 30 尺到一处可见的未占据空间，已写为 spellCast 后的触发器。攻击动作后的传送引擎没有对应事件，需人工处理；传送落点由人选择。",
+    "triggers": [
+      {
+        "id": "blink-spell",
+        "label": "次元旅行之恩惠：闪烁步（施法后）",
+        "on": "spellCast",
+        "role": "actor",
+        "window": "after",
+        "optional": true,
+        "do": [
+          {
+            "kind": "move",
+            "mode": "teleport",
+            "ft": 30
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:大厨",
+    "name": "大厨",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "零嘴 8 小时保质期、烹饪时机、以及给其他生物食用（由对方的附赠动作食用，池子也要从厨师那边扣）需要人手动处理。"
+    ],
+    "notes": [],
+    "text": "厨师工具熟练为静态，不写。大补食膳（短休的食物恢复）与烹饪零嘴（一小时或长休时）属于非战斗时机，不写。应急零嘴已写：附赠动作食用一份，获得等同于熟练加值的临时生命值；零嘴数量按熟练，在长休时补满。零嘴 8 小时保质期、烹饪时机、以及给其他生物食用（由对方的附赠动作食用，池子也要从厨师那边扣）需要人手动处理。",
+    "actions": [
+      {
+        "id": "eat",
+        "name": "大厨：食用应急零嘴",
+        "activation": "bonus",
+        "cost": [
+          {
+            "resource": "零嘴"
+          }
+        ],
+        "root": [
+          {
+            "kind": "tempHp",
+            "amount": "pb",
+            "to": "self"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:德鲁伊:大德鲁伊:20",
+    "name": "大德鲁伊",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "自然术使：荒野形态次数的扣除自动处理，但新得到的法术位引擎无法生成，需要手动在法术位上加一个（环阶 = 2 × 转化次数）。"
+    ],
+    "notes": [
+      "自然术使：手动获得一个 2 环法术位",
+      "自然术使：手动获得一个 4 环法术位",
+      "自然术使：手动获得一个 6 环法术位",
+      "自然术使：手动获得一个 8 环法术位",
+      "不凋化形：投先攻时没有荒野形态次数，获得 1 次"
+    ],
+    "text": "不凋化形自动处理。自然术使：荒野形态次数的扣除自动处理，但新得到的法术位引擎无法生成，需要手动在法术位上加一个（环阶 = 2 × 转化次数）。青春永驻是叙事，不处理。",
+    "actions": [
+      {
+        "id": "nature-magician",
+        "name": "自然术使",
+        "activation": "free",
+        "text": "无需任何动作：把未使用的荒野形态次数转化为一个法术位，每次 = 2 个环阶；转化后须长休才能再用。法术位需要手动加上。",
+        "cost": [
+          {
+            "resource": "nature-magician"
+          }
+        ],
+        "requires": "self.resource('wildshape-uses') > 0",
+        "root": [
+          {
+            "kind": "choose",
+            "prompt": "自然术使：转化几次未使用的荒野形态次数？（每次 = 2 个环阶）",
+            "options": [
+              {
+                "label": "转化 1 次 → 2 环法术位",
+                "when": "self.resource('wildshape-uses') >= 1",
+                "do": [
+                  {
+                    "kind": "resource",
+                    "id": "wildshape-uses",
+                    "delta": -1
+                  },
+                  {
+                    "kind": "note",
+                    "text": "自然术使：手动获得一个 2 环法术位"
+                  }
+                ]
+              },
+              {
+                "label": "转化 2 次 → 4 环法术位",
+                "when": "self.resource('wildshape-uses') >= 2",
+                "do": [
+                  {
+                    "kind": "resource",
+                    "id": "wildshape-uses",
+                    "delta": -2
+                  },
+                  {
+                    "kind": "note",
+                    "text": "自然术使：手动获得一个 4 环法术位"
+                  }
+                ]
+              },
+              {
+                "label": "转化 3 次 → 6 环法术位",
+                "when": "self.resource('wildshape-uses') >= 3",
+                "do": [
+                  {
+                    "kind": "resource",
+                    "id": "wildshape-uses",
+                    "delta": -3
+                  },
+                  {
+                    "kind": "note",
+                    "text": "自然术使：手动获得一个 6 环法术位"
+                  }
+                ]
+              },
+              {
+                "label": "转化 4 次 → 8 环法术位",
+                "when": "self.resource('wildshape-uses') >= 4",
+                "do": [
+                  {
+                    "kind": "resource",
+                    "id": "wildshape-uses",
+                    "delta": -4
+                  },
+                  {
+                    "kind": "note",
+                    "text": "自然术使：手动获得一个 8 环法术位"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "triggers": [
+      {
+        "id": "evergreen",
+        "label": "大德鲁伊：不凋化形",
+        "on": "initiativeRolled",
+        "role": "actor",
+        "window": "after",
+        "when": "self.resource('wildshape-uses') <= 0",
+        "do": [
+          {
+            "kind": "resource",
+            "id": "wildshape-uses",
+            "delta": 1
+          },
+          {
+            "kind": "note",
+            "text": "不凋化形：投先攻时没有荒野形态次数，获得 1 次"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:德鲁伊:大洋慨赠:14",
+    "name": "大洋慨赠",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "受赠者自己的浪涌（显现时的与之后附赠动作的）以及你之前赠出的光环被替换，需要手动处理；"
+    ],
+    "notes": [],
+    "text": "使用瀚海之怒时，可以改为让 60 尺内一个自愿生物身上显现光环（该生物使用你的法术豁免 DC 与感知调整值）；消耗两次荒野变形则自己与另一生物同时显现。受赠者自己的浪涌（显现时的与之后附赠动作的）以及你之前赠出的光环被替换，需要手动处理；受赠者的 DC 与骰数记在效应状态里。",
+    "actions": [
+      {
+        "id": "gift",
+        "name": "大洋慨赠：光环显现在自愿生物身上",
+        "activation": "bonus",
+        "text": "消耗一次荒野变形，让 60 尺内一个自愿生物（而非你）身上显现瀚海之怒的光环。",
+        "cost": [
+          {
+            "resource": "wildshape-uses"
+          }
+        ],
+        "requires": "turn.isMine",
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 60,
+          "filter": "target.id != self.id"
+        },
+        "root": [
+          {
+            "kind": "removeEffect",
+            "from": "self",
+            "match": {
+              "name": "瀚海之怒"
+            }
+          },
+          {
+            "kind": "applyEffect",
+            "to": "target",
+            "template": "大洋慨赠",
+            "state": {
+              "dc": "self.spell.dc",
+              "dice": "max(1, self.mod.wis)"
+            }
+          }
+        ]
+      },
+      {
+        "id": "both",
+        "name": "大洋慨赠：自己与另一生物同时显现",
+        "activation": "bonus",
+        "text": "消耗两次荒野变形，在你自己和 60 尺内另一个自愿生物身上同时显现瀚海之怒的光环。你自己显现时的那次浪涌请手动结算。",
+        "cost": [
+          {
+            "resource": "wildshape-uses",
+            "n": 2
+          }
+        ],
+        "requires": "turn.isMine",
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 60,
+          "filter": "target.id != self.id"
+        },
+        "root": [
+          {
+            "kind": "removeEffect",
+            "from": "self",
+            "match": {
+              "name": "瀚海之怒"
+            }
+          },
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "inline": {
+              "name": "瀚海之怒",
+              "tags": [
+                "wrath-of-the-sea"
+              ],
+              "text": "你周围显现着海浪形态的光环（5 尺；6 级起 10 尺），持续 10 分钟。你解除它、再度显现或陷入失能时提前结束。",
+              "duration": {
+                "minutes": 10,
+                "endsOn": [
+                  {
+                    "event": "effectApplied",
+                    "when": "event.bearer == self.id && self.has('失能')"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "kind": "applyEffect",
+            "to": "target",
+            "template": "大洋慨赠",
+            "state": {
+              "dc": "self.spell.dc",
+              "dice": "max(1, self.mod.wis)"
+            }
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "大洋慨赠": {
+        "tags": [
+          "wrath-of-the-sea"
+        ],
+        "text": "德鲁伊赋予你的瀚海之怒光环（10 分钟，你陷入失能时提前结束）。你可以像瀚海之怒那样发出浪涌：体质豁免 DC 与伤害骰数（感知调整值颗 d6，最少 1 颗）取自德鲁伊，见效应状态 dc / dice；浪涌请手动结算。",
+        "duration": {
+          "minutes": 10,
+          "endsOn": [
+            {
+              "event": "effectApplied",
+              "when": "event.bearer == self.id && self.has('失能')"
+            }
+          ]
+        }
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:德鲁伊:风暴降生:10",
+    "name": "风暴降生",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "这两项需挂在「瀚海之怒」激活时的效应上，本条无法钩入，需人工处理。"
+    ],
+    "notes": [],
+    "text": "激活瀚海之怒时额外获得两项增益：飞行速度等于速度；对寒冷、闪电、雷鸣伤害的抗性。这两项需挂在「瀚海之怒」激活时的效应上，本条无法钩入，需人工处理。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:德鲁伊:荒野复苏:5",
+    "name": "荒野复苏",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "也可消耗一次荒野形态次数（无需动作）获得一个 1 环法术位，长休前不能再次这样做（获得的法术位请手动加上）。"
+    ],
+    "notes": [
+      "荒野复苏：获得一个 1 环法术位（请手动加到法术位上），完成一次长休前不能再次这样做。"
+    ],
+    "text": "每个你的回合一次，没有荒野形态次数时可消耗一个法术位（无需动作）获得一次荒野形态次数；也可消耗一次荒野形态次数（无需动作）获得一个 1 环法术位，长休前不能再次这样做（获得的法术位请手动加上）。",
+    "actions": [
+      {
+        "id": "slot-to-wildshape",
+        "name": "荒野复苏：法术位换荒野形态次数",
+        "activation": "free",
+        "requires": "turn.isMine && self.resource('wildshape-uses') <= 0 && !self.hasEffect('荒野复苏：本回合已用')",
+        "cost": [
+          {
+            "slot": {
+              "min": 1
+            }
+          }
+        ],
+        "root": [
+          {
+            "kind": "resource",
+            "id": "wildshape-uses",
+            "delta": 1
+          },
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "荒野复苏：本回合已用"
+          }
+        ]
+      },
+      {
+        "id": "wildshape-to-slot",
+        "name": "荒野复苏：荒野形态次数换 1 环法术位",
+        "activation": "free",
+        "requires": "self.resource('wildshape-uses') > 0",
+        "cost": [
+          {
+            "resource": "wildshape-uses"
+          },
+          {
+            "resource": "wild-resurgence-slot"
+          }
+        ],
+        "root": [
+          {
+            "kind": "note",
+            "text": "荒野复苏：获得一个 1 环法术位（请手动加到法术位上），完成一次长休前不能再次这样做。"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "荒野复苏：本回合已用": {
+        "text": "本回合已经用法术位换过荒野形态次数。",
+        "duration": {
+          "until": {
+            "at": "turnEnd",
+            "of": "bearer",
+            "nth": 0
+          }
+        }
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:德鲁伊:荒野伙伴:2",
+    "name": "荒野伙伴",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [
+      "荒野伙伴：视为施展寻获魔宠（无需材料），魔宠为妖精，你完成长休后消失；请手动处理魔宠。"
+    ],
+    "text": "以魔法动作消耗一个法术位或一次荒野形态次数来施展寻获魔宠（无需材料），魔宠为妖精，长休后消失。这里只处理资源消耗，魔宠本身由人处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "荒野伙伴（消耗荒野形态次数）",
+        "activation": "action",
+        "cost": [
+          {
+            "resource": "wildshape-uses"
+          }
+        ],
+        "root": [
+          {
+            "kind": "note",
+            "text": "荒野伙伴：视为施展寻获魔宠（无需材料），魔宠为妖精，你完成长休后消失；请手动处理魔宠。"
+          }
+        ]
+      },
+      {
+        "id": "slot",
+        "name": "荒野伙伴（消耗法术位）",
+        "activation": "action",
+        "cost": [
+          {
+            "slot": {
+              "min": 1
+            }
+          }
+        ],
+        "root": [
+          {
+            "kind": "note",
+            "text": "荒野伙伴：视为施展寻获魔宠（无需材料），魔宠为妖精，你完成长休后消失；请手动处理魔宠。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:德鲁伊:荒野形态:2",
+    "name": "荒野形态",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [
+      "荒野形态：数据卡换成所选野兽（保留生物类型、生命值、智力/感知/魅力、职业特性等），最长保持德鲁伊等级一半的小时数，请手动计时。"
+    ],
+    "text": "附赠动作消耗一次荒野形态次数，变形为已学会的野兽形态：获得等于德鲁伊等级的临时生命值；无法施法（不打断专注）；陷入失能或死亡时结束；可再次使用荒野形态换形，也可用附赠动作提前结束。持续时间（德鲁伊等级一半的小时）、野兽数据卡替换、装备处理需要人处理。",
+    "actions": [
+      {
+        "id": "enter",
+        "name": "荒野形态",
+        "activation": "bonus",
+        "cost": [
+          {
+            "resource": "wildshape-uses"
+          }
+        ],
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "荒野形态"
+          },
+          {
+            "kind": "tempHp",
+            "to": "self",
+            "amount": "self.levelOf('德鲁伊')"
+          },
+          {
+            "kind": "note",
+            "text": "荒野形态：数据卡换成所选野兽（保留生物类型、生命值、智力/感知/魅力、职业特性等），最长保持德鲁伊等级一半的小时数，请手动计时。"
+          }
+        ]
+      },
+      {
+        "id": "end",
+        "name": "结束荒野形态",
+        "activation": "bonus",
+        "requires": "self.hasEffect('荒野形态')",
+        "root": [
+          {
+            "kind": "removeEffect",
+            "from": "self",
+            "match": {
+              "name": "荒野形态"
+            }
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "荒野形态": {
+        "text": "你变形为野兽：无法施展法术（变形不会打断专注与已施展的法术）。持续德鲁伊等级一半的小时数，或直到再次使用荒野形态、陷入失能、死亡。",
+        "duration": {
+          "manual": true,
+          "endsOn": [
+            {
+              "event": "effectApplied",
+              "when": "event.bearer == self.id && self.has('失能')"
+            }
+          ]
+        },
+        "flags": {
+          "cannot": [
+            "castSpells"
+          ]
+        }
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:德鲁伊:进阶结社形态:6",
+    "name": "进阶结社形态",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "月耀辉光：荒野形态下的每次攻击命中时，可以选择造成普通伤害或光耀伤害（把伤害类型改为光耀）——引擎目前无法改写伤害类型，手动处理。"
+    ],
+    "notes": [],
+    "text": "月耀辉光：荒野形态下的每次攻击命中时，可以选择造成普通伤害或光耀伤害（把伤害类型改为光耀）——引擎目前无法改写伤害类型，手动处理。强化韧性（体质豁免加感知调整值）已在人物卡静态层。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:德鲁伊:闪耀星座:10",
+    "name": "闪耀星座",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "每个你的回合开始时，若处于星耀形态，可以更换身上闪耀的星座（写成回合开始的可选触发器；新星座的标记效应重新计 10 分钟，更换后不额外获得化身时的那一箭）。射手座的 1d8 变 2d8 已写在射手座条目里（按德鲁伊 10 级判断），圣杯座的 2d8 在圣杯座条目里；巨龙座的 20 尺飞行速度和悬浮在静态层里，且不分星座始终计入（已知限制）。",
+    "triggers": [
+      {
+        "id": "swap",
+        "label": "闪耀星座：更换星座",
+        "on": "turnStarted",
+        "role": "actor",
+        "optional": true,
+        "when": "self.hasEffect('星耀形态')",
+        "do": [
+          {
+            "kind": "choose",
+            "prompt": "更换身上闪耀的星座",
+            "options": [
+              {
+                "label": "射手座",
+                "when": "!self.hasEffect('星耀形态：射手座')",
+                "do": [
+                  {
+                    "kind": "removeEffect",
+                    "from": "self",
+                    "match": {
+                      "tag": "starry-constellation"
+                    }
+                  },
+                  {
+                    "kind": "applyEffect",
+                    "to": "self",
+                    "inline": {
+                      "name": "星耀形态：射手座",
+                      "tags": [
+                        "starry-form",
+                        "starry-constellation"
+                      ],
+                      "text": "射手座在你身上亮起：可以用附赠动作发射光箭。",
+                      "duration": {
+                        "minutes": 10,
+                        "endsOn": [
+                          {
+                            "event": "effectApplied",
+                            "when": "event.bearer == self.id && self.has('失能')"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "label": "圣杯座",
+                "when": "!self.hasEffect('星耀形态：圣杯座')",
+                "do": [
+                  {
+                    "kind": "removeEffect",
+                    "from": "self",
+                    "match": {
+                      "tag": "starry-constellation"
+                    }
+                  },
+                  {
+                    "kind": "applyEffect",
+                    "to": "self",
+                    "inline": {
+                      "name": "星耀形态：圣杯座",
+                      "tags": [
+                        "starry-form",
+                        "starry-constellation"
+                      ],
+                      "text": "圣杯座在你身上亮起。",
+                      "duration": {
+                        "minutes": 10,
+                        "endsOn": [
+                          {
+                            "event": "effectApplied",
+                            "when": "event.bearer == self.id && self.has('失能')"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "label": "巨龙座",
+                "when": "!self.hasEffect('星耀形态：巨龙座')",
+                "do": [
+                  {
+                    "kind": "removeEffect",
+                    "from": "self",
+                    "match": {
+                      "tag": "starry-constellation"
+                    }
+                  },
+                  {
+                    "kind": "applyEffect",
+                    "to": "self",
+                    "inline": {
+                      "name": "星耀形态：巨龙座",
+                      "tags": [
+                        "starry-form",
+                        "starry-constellation"
+                      ],
+                      "text": "巨龙座在你身上亮起。",
+                      "duration": {
+                        "minutes": 10,
+                        "endsOn": [
+                          {
+                            "event": "effectApplied",
+                            "when": "event.bearer == self.id && self.has('失能')"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:德鲁伊:圣杯座:3",
+    "name": "圣杯座",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "为他人恢复时目标需人工选择。"
+    ],
+    "notes": [
+      "为 30 尺内的另一生物恢复 1d8 + 感知调整值生命值（手动选择目标并结算）"
+    ],
+    "text": "星耀形态·圣杯座期间：施展消耗法术位、为生物恢复生命值的法术后，可以为自己或 30 尺内另一生物恢复 1d8 + 感知调整值。引擎无法判断法术是否消耗了法术位、是否为恢复生命值的法术，由人确认；为他人恢复时目标需人工选择。",
+    "triggers": [
+      {
+        "id": "grail",
+        "label": "圣杯座：恢复生命值",
+        "on": "spellCast",
+        "role": "actor",
+        "window": "after",
+        "when": "self.hasEffect('星耀形态：圣杯座') && ask('刚施展的法术是消耗法术位、为生物恢复生命值的吗？')",
+        "do": [
+          {
+            "kind": "choose",
+            "prompt": "圣杯座：为谁恢复生命值？",
+            "options": [
+              {
+                "label": "自己",
+                "do": [
+                  {
+                    "kind": "heal",
+                    "to": "self",
+                    "amount": "1d8 + self.mod.wis"
+                  }
+                ]
+              },
+              {
+                "label": "30 尺内的另一生物（手动选择目标）",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "为 30 尺内的另一生物恢复 1d8 + 感知调整值生命值（手动选择目标并结算）"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:德鲁伊:水生亲和:6",
+    "name": "水生亲和",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "瀚海之怒光环范围提升至 10 尺：光环定义在「瀚海之怒」自己的条目里，需人工把那里的 radius 改为 10，本条不自动化。",
+      "获得等于速度的游泳速度：静态层没有游泳速度字段，需人工处理。"
+    ],
+    "notes": [],
+    "text": "瀚海之怒光环范围提升至 10 尺：光环定义在「瀚海之怒」自己的条目里，需人工把那里的 radius 改为 10，本条不自动化。获得等于速度的游泳速度：静态层没有游泳速度字段，需人工处理。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:德鲁伊:宇宙预兆:6",
+    "name": "宇宙预兆",
+    "automation": "full",
+    "level": null,
+    "manual": [],
+    "notes": [
+      "没有参照星图，不获得预兆"
+    ],
+    "text": "每次长休后参照星图掷一枚骰子：偶数为吉兆，奇数为凶兆（由玩家掷骰后选择）。直到下次长休，周围 30 尺内一个可见生物将要进行 D20 检定时，可用反应投 1d6 加入（吉兆）或从结果中减去（凶兆）；次数为感知调整值（最少 1 次），长休恢复。吉兆只提供给己方生物，凶兆只提供给敌方生物（近似）。",
+    "triggers": [
+      {
+        "id": "omen",
+        "label": "宇宙预兆：长休后寻找预兆",
+        "on": "restCompleted",
+        "role": "actor",
+        "when": "event.kind == 'long'",
+        "do": [
+          {
+            "kind": "removeEffect",
+            "from": "self",
+            "match": {
+              "tag": "cosmic-omen"
+            }
+          },
+          {
+            "kind": "choose",
+            "prompt": "参照星图寻找预兆：掷一枚骰子，结果是？",
+            "options": [
+              {
+                "label": "偶数：吉兆（加 1d6）",
+                "do": [
+                  {
+                    "kind": "applyEffect",
+                    "to": "self",
+                    "template": "吉兆"
+                  }
+                ]
+              },
+              {
+                "label": "奇数：凶兆（减 1d6）",
+                "do": [
+                  {
+                    "kind": "applyEffect",
+                    "to": "self",
+                    "template": "凶兆"
+                  }
+                ]
+              },
+              {
+                "label": "这次不寻找预兆",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "没有参照星图，不获得预兆"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "吉兆": {
+        "tags": [
+          "cosmic-omen"
+        ],
+        "text": "吉兆（偶数）：直到下次长休，周围 30 尺内一个可见生物将要进行 D20 检定时，你可以用反应投 1d6 加入检定结果。",
+        "duration": {
+          "manual": true
+        },
+        "triggers": [
+          {
+            "id": "weal",
+            "label": "宇宙预兆：吉兆（+1d6）",
+            "on": "d20Rolled",
+            "role": "any",
+            "window": "before",
+            "optional": true,
+            "when": "combatant(roll.roller).side == self.side && canSee(self, combatant(roll.roller)) && within(self, combatant(roll.roller), 30)",
+            "cost": [
+              {
+                "economy": "reaction"
+              },
+              {
+                "resource": "宇宙预兆"
+              }
+            ],
+            "modify": [
+              {
+                "op": "addToRoll",
+                "value": "1d6"
+              }
+            ]
+          }
+        ]
+      },
+      "凶兆": {
+        "tags": [
+          "cosmic-omen"
+        ],
+        "text": "凶兆（奇数）：直到下次长休，周围 30 尺内一个可见生物将要进行 D20 检定时，你可以用反应投 1d6 从检定结果中减去。",
+        "duration": {
+          "manual": true
+        },
+        "triggers": [
+          {
+            "id": "woe",
+            "label": "宇宙预兆：凶兆（-1d6）",
+            "on": "d20Rolled",
+            "role": "any",
+            "window": "before",
+            "optional": true,
+            "when": "combatant(roll.roller).side != self.side && canSee(self, combatant(roll.roller)) && within(self, combatant(roll.roller), 30)",
+            "cost": [
+              {
+                "economy": "reaction"
+              },
+              {
+                "resource": "宇宙预兆"
+              }
+            ],
+            "modify": [
+              {
+                "op": "addToRoll",
+                "value": "-1d6"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:德鲁伊:元素狂怒:15",
+    "name": "元素狂怒",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "强力施法：施法距离为 10 尺及以上的德鲁伊戏法，施法距离提升 300 尺（戏法条目的距离需人工调整）。",
+      "原力蛮击：额外伤害提升至 2d8（原力蛮击条目的骰子需人工调整）。"
+    ],
+    "notes": [],
+    "text": "强力施法：施法距离为 10 尺及以上的德鲁伊戏法，施法距离提升 300 尺（戏法条目的距离需人工调整）。原力蛮击：额外伤害提升至 2d8（原力蛮击条目的骰子需人工调整）。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:德鲁伊:原力蛮击:7",
+    "name": "原力蛮击",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "每个你的回合内一次，武器攻击或荒野变形野兽形态的攻击命中时，额外造成 1d8 寒冷 / 火焰 / 闪电 / 雷鸣伤害（命中时选择）。是否为野兽形态的攻击由人回答。",
+    "triggers": [
+      {
+        "id": "primal-strike",
+        "label": "原力蛮击",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "before",
+        "optional": true,
+        "limit": "oncePerTurn",
+        "when": "turn.isMine && !attack.spell && (attack.weapon || ask('这是荒野变形中野兽形态的攻击吗？'))",
+        "do": [
+          {
+            "kind": "choose",
+            "prompt": "原力蛮击：选择额外伤害的类型",
+            "options": [
+              {
+                "label": "寒冷",
+                "do": [
+                  {
+                    "kind": "addDamage",
+                    "dice": "1d8",
+                    "type": "寒冷"
+                  }
+                ]
+              },
+              {
+                "label": "火焰",
+                "do": [
+                  {
+                    "kind": "addDamage",
+                    "dice": "1d8",
+                    "type": "火焰"
+                  }
+                ]
+              },
+              {
+                "label": "闪电",
+                "do": [
+                  {
+                    "kind": "addDamage",
+                    "dice": "1d8",
+                    "type": "闪电"
+                  }
+                ]
+              },
+              {
+                "label": "雷鸣",
+                "do": [
+                  {
+                    "kind": "addDamage",
+                    "dice": "1d8",
+                    "type": "雷鸣"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:德鲁伊:月光飞步:10",
+    "name": "月光飞步",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "传送落点是否未被占据、是否在你视线内由人判断。次数在长休时全部恢复（上限由人物卡给出）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "月光飞步",
+        "activation": "bonus",
+        "cost": [
+          {
+            "resource": "moonlightStep"
+          }
+        ],
+        "targeting": {
+          "type": "point",
+          "range": 30
+        },
+        "root": [
+          {
+            "kind": "move",
+            "mode": "teleport",
+            "ft": 30
+          },
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "月光飞步"
+          }
+        ]
+      },
+      {
+        "id": "restore",
+        "name": "月光飞步（消耗法术位恢复一次）",
+        "activation": "free",
+        "cost": [
+          {
+            "slot": {
+              "min": 2
+            }
+          }
+        ],
+        "requires": "self.resource('moonlightStep') < max(1, self.mod.wis)",
+        "root": [
+          {
+            "kind": "resource",
+            "id": "moonlightStep",
+            "delta": 1
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "月光飞步": {
+        "text": "在这个回合结束前进行的下一次攻击具有优势。",
+        "rollMods": [
+          {
+            "on": {
+              "kind": "attack"
+            },
+            "who": "bearer",
+            "op": "adv",
+            "label": "月光飞步"
+          }
+        ],
+        "duration": {
+          "until": {
+            "at": "turnEnd",
+            "of": "bearer",
+            "nth": 0
+          },
+          "endsOn": [
+            {
+              "event": "d20Rolled",
+              "when": "event.kind == 'attack' && event.roller == self.id"
+            }
+          ]
+        }
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:德鲁伊:月辉形态:14",
+    "name": "月辉形态",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "月辉同行：使用月光飞步时可一并传送一名 10 尺内的自愿生物（落点在你出现点 10 尺内）——位置引擎不处理，手动。"
+    ],
+    "notes": [],
+    "text": "月耀炽光：一回合一次，荒野形态下的攻击命中时额外 2d10 光耀伤害（是否为荒野形态的攻击由人回答）。月辉同行：使用月光飞步时可一并传送一名 10 尺内的自愿生物（落点在你出现点 10 尺内）——位置引擎不处理，手动。",
+    "triggers": [
+      {
+        "id": "lunar-radiance",
+        "label": "月辉形态：月耀炽光（+2d10 光耀）",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "before",
+        "optional": true,
+        "limit": "oncePerTurn",
+        "when": "!attack.spell && ask('这次攻击是荒野形态下进行的吗？')",
+        "do": [
+          {
+            "kind": "addDamage",
+            "dice": "2d10",
+            "type": "光耀"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:德鲁伊:自然庇护:14",
+    "name": "自然庇护",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "区域内你和盟友的掩护、盟友获得的自然之护抗性（取决于你当前的地貌）、区域的位置和范围，引擎都不处理，手动。"
+    ],
+    "notes": [
+      "自然庇护：你和盟友在立方区域内拥有掩护；盟友获得你自然之护的当前抗性（手动处理）",
+      "自然庇护：把立方区域移动至多 60 尺，移动后仍须在你的 120 尺内"
+    ],
+    "text": "区域内你和盟友的掩护、盟友获得的自然之护抗性（取决于你当前的地貌）、区域的位置和范围，引擎都不处理，手动。这里只处理：消耗荒野形态次数、1 分钟的持续（失能或死亡时结束）、附赠动作移动区域的提醒。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "自然庇护",
+        "activation": "action",
+        "cost": [
+          {
+            "resource": "wildshape-uses"
+          }
+        ],
+        "targeting": {
+          "type": "area",
+          "range": 120,
+          "area": {
+            "shape": "cube",
+            "size": 15
+          }
+        },
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "自然庇护"
+          },
+          {
+            "kind": "note",
+            "text": "自然庇护：你和盟友在立方区域内拥有掩护；盟友获得你自然之护的当前抗性（手动处理）"
+          }
+        ]
+      },
+      {
+        "id": "move",
+        "name": "自然庇护：移动区域",
+        "activation": "bonus",
+        "requires": "turn.isMine && self.hasEffect('自然庇护')",
+        "root": [
+          {
+            "kind": "note",
+            "text": "自然庇护：把立方区域移动至多 60 尺，移动后仍须在你的 120 尺内"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "自然庇护": {
+        "text": "灵体树木与藤蔓形成的 15 尺立方区域持续 1 分钟，直到你失能或死亡。区域内你和盟友拥有掩护，盟友获得你自然之护的当前抗性（手动处理）。",
+        "duration": {
+          "minutes": 1,
+          "endsOn": [
+            {
+              "event": "effectApplied",
+              "when": "event.bearer == self.id && self.has('失能')"
+            },
+            {
+              "event": "died",
+              "when": "self.dead"
+            }
+          ]
+        }
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:德鲁伊:自然恢复:6",
+    "name": "自然恢复",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "免环施法：引擎无法替换该法术的法术位消耗，施法时需手动免除那一次法术位。",
+      "短休恢复法术位：可恢复的法术位由人手动选择并恢复，本条只记录次数。"
+    ],
+    "notes": [
+      "本次施法免除法术位消耗（手动）",
+      "选择恢复消耗的法术位：环阶总和不超过德鲁伊等级的一半（向上取整），且不能是 6 环或更高；手动恢复。"
+    ],
+    "text": "免环施法：引擎无法替换该法术的法术位消耗，施法时需手动免除那一次法术位。短休恢复法术位：可恢复的法术位由人手动选择并恢复，本条只记录次数。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "自然恢复（免环施法）",
+        "activation": "free",
+        "cost": [
+          {
+            "resource": "natural-recovery"
+          }
+        ],
+        "text": "施展一个以大地结社准备的一环及以上法术时，无须消耗法术位；随后施法时手动免除该次法术位消耗。",
+        "root": [
+          {
+            "kind": "note",
+            "text": "本次施法免除法术位消耗（手动）"
+          }
+        ]
+      }
+    ],
+    "triggers": [
+      {
+        "id": "slot-recovery",
+        "label": "自然恢复：短休恢复法术位",
+        "on": "restCompleted",
+        "role": "actor",
+        "window": "after",
+        "optional": true,
+        "when": "event.kind == 'short'",
+        "cost": [
+          {
+            "resource": "natural-recovery-slot"
+          }
+        ],
+        "do": [
+          {
+            "kind": "note",
+            "text": "选择恢复消耗的法术位：环阶总和不超过德鲁伊等级的一半（向上取整），且不能是 6 环或更高；手动恢复。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:毒师",
+    "name": "毒师",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "强效毒素（毒素伤害无视对方的毒素伤害抗性）需人手动处理。",
+      "本专长提升的属性在数据中未指明，需人手动处理。"
+    ],
+    "notes": [],
+    "text": "强效毒素（毒素伤害无视对方的毒素伤害抗性）需人手动处理。酿毒：附赠动作为武器或弹药涂毒，毒性维持 1 分钟，造成伤害后消耗；受伤者须通过体质豁免（DC = 8 + 本专长提升属性的调整值 + 熟练加值），失败受 2d8 毒素伤害并中毒至你的下一回合结束。本专长提升的属性在数据中未指明，需人手动处理。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:盾牌大师",
+    "name": "盾牌大师",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "盾击：是否属于攻击动作的一部分由人判断（目前只在自己回合、近战武器命中 5 尺内的生物时提示）。介入盾牌：引擎看不出这次伤害是否来自「敏捷豁免成功则只受一半」的效应，会问人确认；确认后伤害清零并消耗反应。",
+    "triggers": [
+      {
+        "id": "shield-bash",
+        "label": "盾牌大师：盾击",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "after",
+        "optional": true,
+        "limit": "oncePerTurn",
+        "when": "turn.isMine && attack.weapon && attack.melee && self.wearing('S') && within(self, target, 5) && !target.dead",
+        "do": [
+          {
+            "kind": "save",
+            "ability": "str",
+            "dc": "8 + self.mod.str + pb",
+            "onFail": [
+              {
+                "kind": "choose",
+                "prompt": "盾击的效果",
+                "options": [
+                  {
+                    "label": "推离 5 尺",
+                    "do": [
+                      {
+                        "kind": "move",
+                        "mode": "push",
+                        "ft": 5
+                      }
+                    ]
+                  },
+                  {
+                    "label": "令其倒地",
+                    "do": [
+                      {
+                        "kind": "applyEffect",
+                        "to": "target",
+                        "template": "XPHB:condition:倒地"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "interpose",
+        "label": "盾牌大师：介入盾牌（不受这次伤害）",
+        "on": "damageIncoming",
+        "role": "target",
+        "window": "before",
+        "optional": true,
+        "cost": [
+          {
+            "economy": "reaction"
+          }
+        ],
+        "when": "self.wearing('S') && !self.has('失能') && damage.amount > 0 && ask('这次伤害来自「敏捷豁免成功则只受一半伤害」的效应，而且你刚刚豁免成功了吗？')",
+        "modify": [
+          {
+            "op": "cancel"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:法师:奥术回想:1",
+    "name": "奥术回想",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "引擎不能直接恢复法术位，选定后由人手动恢复。"
+    ],
+    "notes": [
+      "按所选环阶总和恢复已消耗的法术位（人工处理；每个法术位环阶必须小于六环）"
+    ],
+    "text": "完成一次短休后可以恢复已消耗的法术位：恢复的环阶总和不超过法师等级的一半（向上取整），且每个法术位的环阶都必须小于六环。每次长休可用一次。引擎不能直接恢复法术位，选定后由人手动恢复。",
+    "triggers": [
+      {
+        "id": "recover",
+        "label": "奥术回想：恢复法术位",
+        "on": "restCompleted",
+        "role": "actor",
+        "optional": true,
+        "when": "event.kind == 'short'",
+        "cost": [
+          {
+            "resource": "奥术回想"
+          }
+        ],
+        "do": [
+          {
+            "kind": "number",
+            "prompt": "恢复法术位的环阶总和（不超过法师等级的一半，向上取整；每个法术位都小于六环）",
+            "var": "n",
+            "min": 1,
+            "max": "ceil(self.levelOf('法师') / 2)"
+          },
+          {
+            "kind": "note",
+            "text": "按所选环阶总和恢复已消耗的法术位（人工处理；每个法术位环阶必须小于六环）"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  }
+]

@@ -1,0 +1,2395 @@
+[
+  {
+    "key": "AU:尚武魔宠",
+    "name": "尚武魔宠",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "法术施展与魔宠反应拦截由玩家手动处理。"
+    ],
+    "notes": [],
+    "text": "战斗魔宠：始终准备战斗魔宠法术，每日可无需法术位施展一次（资源「战斗魔宠」，长休恢复），亦可用合适法术位施展。拦截攻击：魔宠 5 尺内生物被攻击命中时，魔宠可用反应使其对抗该攻击的 AC 增加等同于你熟练加值的数值。法术施展与魔宠反应拦截由玩家手动处理。",
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:死灵专家",
+    "name": "死灵专家",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "生命值骰面数、消耗与恢复生命值由玩家手动处理。"
+    ],
+    "notes": [],
+    "text": "额外法术属于人物卡静态层授予。操纵生命：当你使用法术位施展死灵学派法术时，可立即投掷至多两枚未消耗的生命值骰，恢复等于骰值总值加法术位环阶的生命值，并消耗那些生命值骰。生命值骰面数、消耗与恢复生命值由玩家手动处理。",
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:塑能专家",
+    "name": "塑能专家",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "生命值骰面数、消耗与伤害加值由玩家手动处理。"
+    ],
+    "notes": [],
+    "text": "额外法术属于人物卡静态层授予。塑能助燃：每回合一次，施展塑能法术并以之造成伤害时，可投掷至多两枚未消耗的生命值骰并将骰值总值加入该法术的其中一枚伤害骰，并消耗那些生命值骰。生命值骰面数、消耗与伤害加值由玩家手动处理。",
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:慰疗魔宠",
+    "name": "慰疗魔宠",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "由于光环源自魔宠且引擎不支持重写治疗骰点数，由玩家手动处理。"
+    ],
+    "notes": [],
+    "text": "治愈信标：只要魔宠位于你 120 尺内，正能量充斥源自魔宠的 5 尺光环。盟友在该光环内掷骰决定生物恢复的生命值数量时，可将骰出的 1 和 2 均视为 3。由于光环源自魔宠且引擎不支持重写治疗骰点数，由玩家手动处理。",
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:武僧:精通秘法战斗风格:17",
+    "name": "精通秘法战斗风格",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "引擎无法将疾风连击的徒手打击替换为施法，需人工处理：发动疾风连击（耗 1 功力）时代替两次打击，扣除对应 1 环或 2 环法术位并手动结算该法术。"
+    ],
+    "notes": [],
+    "text": "每当你使用疾风连击时，你可以将两次徒手打击替换为施展一道施法时间为动作、环阶为一环或二环的你的术士法术，且施展该法术视作发动疾风连击的同一个附赠动作的一部分。引擎无法将疾风连击的徒手打击替换为施法，需人工处理：发动疾风连击（耗 1 功力）时代替两次打击，扣除对应 1 环或 2 环法术位并手动结算该法术。",
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:武僧:秘法武功:6",
+    "name": "秘法武功",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "4环6点/19级），恢复出的法术位需手动记到法术位上。"
+    ],
+    "notes": [
+      "恢复一个 1 环法术位（需手动记到法术位上）",
+      "恢复一个 2 环法术位（需手动记到法术位上）",
+      "恢复一个 3 环法术位（需手动记到法术位上）",
+      "恢复一个 4 环法术位（需手动记到法术位上）"
+    ],
+    "text": "可以将法术位转换为功力，或将功力转换为法术位。法术位转功力（无需动作）：消耗一个法术位，恢复等同于该法术位环阶数量的已消耗功力。恢复法术位：完成短休或使用运转周天时，转换未消耗的功力恢复一个已消耗法术位（1环2点/6级；2环3点/7级；3环5点/13级；4环6点/19级），恢复出的法术位需手动记到法术位上。",
+    "actions": [
+      {
+        "id": "slotToKi",
+        "name": "秘法武功：法术位转功力",
+        "activation": "free",
+        "cost": [
+          {
+            "slot": {
+              "min": 1
+            }
+          }
+        ],
+        "root": [
+          {
+            "kind": "resource",
+            "id": "功力",
+            "delta": "slot.level"
+          }
+        ]
+      },
+      {
+        "id": "kiToSlot",
+        "name": "秘法武功：恢复法术位",
+        "activation": "none",
+        "root": [
+          {
+            "kind": "choose",
+            "prompt": "恢复几环法术位？",
+            "options": [
+              {
+                "label": "1 环（2 点功力）",
+                "when": "self.levelOf('武僧') >= 6 && self.resource('功力') >= 2",
+                "do": [
+                  {
+                    "kind": "resource",
+                    "id": "功力",
+                    "delta": -2
+                  },
+                  {
+                    "kind": "note",
+                    "text": "恢复一个 1 环法术位（需手动记到法术位上）"
+                  }
+                ]
+              },
+              {
+                "label": "2 环（3 点功力）",
+                "when": "self.levelOf('武僧') >= 7 && self.resource('功力') >= 3",
+                "do": [
+                  {
+                    "kind": "resource",
+                    "id": "功力",
+                    "delta": -3
+                  },
+                  {
+                    "kind": "note",
+                    "text": "恢复一个 2 环法术位（需手动记到法术位上）"
+                  }
+                ]
+              },
+              {
+                "label": "3 环（5 点功力）",
+                "when": "self.levelOf('武僧') >= 13 && self.resource('功力') >= 5",
+                "do": [
+                  {
+                    "kind": "resource",
+                    "id": "功力",
+                    "delta": -5
+                  },
+                  {
+                    "kind": "note",
+                    "text": "恢复一个 3 环法术位（需手动记到法术位上）"
+                  }
+                ]
+              },
+              {
+                "label": "4 环（6 点功力）",
+                "when": "self.levelOf('武僧') >= 19 && self.resource('功力') >= 6",
+                "do": [
+                  {
+                    "kind": "resource",
+                    "id": "功力",
+                    "delta": -6
+                  },
+                  {
+                    "kind": "note",
+                    "text": "恢复一个 4 环法术位（需手动记到法术位上）"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:武僧:秘法战斗风格:6",
+    "name": "秘法战斗风格",
+    "automation": "partial",
+    "level": 0,
+    "manual": [
+      "戏法的选择与施放效果由人手动处理。"
+    ],
+    "notes": [
+      "施展一道施法时间为动作的术士戏法，代替本次徒手打击。戏法的选择与效果由人手动处理。"
+    ],
+    "text": "在自己回合执行攻击动作时，可以将其中一次徒手打击替换为施展一道施法时间为动作的术士戏法。引擎只扣这一次攻击次数；戏法的选择与施放效果由人手动处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "秘法战斗风格：替换一次徒手打击",
+        "activation": "none",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "economy": "attack"
+          }
+        ],
+        "requires": "turn.isMine",
+        "root": [
+          {
+            "kind": "note",
+            "text": "施展一道施法时间为动作的术士戏法，代替本次徒手打击。戏法的选择与效果由人手动处理。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:武僧:凝神击:11",
+    "name": "凝神击",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "使用震慑拳时，无论目标豁免是否成功，直至你下个回合开始，目标在对抗你的法术的豁免检定上具有劣势。",
+    "triggers": [
+      {
+        "id": "focusedStrike",
+        "label": "凝神击",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "after",
+        "optional": true,
+        "when": "turn.isMine && ask('本次命中是否使用了震慑拳？')",
+        "do": [
+          {
+            "kind": "applyEffect",
+            "to": "target",
+            "template": "凝神击"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "凝神击": {
+        "duration": {
+          "until": {
+            "at": "turnStart",
+            "of": "source"
+          }
+        },
+        "rollMods": [
+          {
+            "on": {
+              "kind": "save"
+            },
+            "who": "bearer",
+            "when": "ask('这次豁免是对抗来自凝神击来源的法术吗？')",
+            "op": "disadv",
+            "label": "凝神击：对抗法术豁免劣势"
+          }
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:虚弱弹",
+    "name": "虚弱弹",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "在此期间目标以攻击命中时伤害扣减一枚奥术射击骰需手动处理。"
+    ],
+    "notes": [],
+    "text": "远程武器攻击命中生物时，消耗一次奥术射击使用次数（短休恢复）：目标额外受到两枚奥术射击骰的黯蚀伤害，且必须通过体质豁免，否则直到其下一回合结束前获得中毒状态。在此期间目标以攻击命中时伤害扣减一枚奥术射击骰需手动处理。",
+    "triggers": [
+      {
+        "id": "weakening",
+        "label": "虚弱弹",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "before",
+        "optional": true,
+        "limit": "oncePerTurn",
+        "when": "attack.ranged && attack.weapon",
+        "cost": [
+          {
+            "resource": "arcaneShot"
+          }
+        ],
+        "do": [
+          {
+            "kind": "addDamage",
+            "dice": "cond(self.levelOf('战士') >= 18, 2d12, cond(self.levelOf('战士') >= 15, 2d10, cond(self.levelOf('战士') >= 10, 2d8, 2d6)))",
+            "type": "黯蚀"
+          },
+          {
+            "kind": "save",
+            "ability": "con",
+            "dc": "8 + self.pb + self.mod.int",
+            "onFail": [
+              {
+                "kind": "applyEffect",
+                "to": "target",
+                "template": "虚弱中毒"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "虚弱中毒": {
+        "text": "陷入中毒状态，直到你的下一回合结束。在此期间每当你以攻击检定命中时，该次攻击的总伤害减去一枚奥术射击骰的数值。",
+        "duration": {
+          "until": {
+            "at": "turnEnd",
+            "of": "bearer",
+            "nth": 1
+          }
+        },
+        "implies": [
+          "XPHB:condition:中毒"
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:异界魔宠",
+    "name": "异界魔宠",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "由玩家在魔宠数据卡上手动记录与结算。"
+    ],
+    "notes": [],
+    "text": "异界赋能：施展寻获魔宠时，可赋予魔宠异界威能，持续至再次施展。赋能期间魔宠获得所选一种伤害抗性（暗蚀、毒素、心灵、光耀或雷鸣），并获得相位行走能力（穿行生物与物件如困难地形）。由玩家在魔宠数据卡上手动记录与结算。",
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:预言专家",
+    "name": "预言专家",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "优势或劣势需手动处理。"
+    ],
+    "notes": [
+      "先见干预：已消耗反应，请手动为本次 D20 检定赋予优势或劣势。"
+    ],
+    "text": "准备法术属于人物卡静态层授予。【先见干预】60尺内可见生物进行D20检定时，可以反应令该生物本次掷骰获得优势或劣势。长休恢复1次；使用法术位施展预言法术亦可重获使用次数。优势或劣势需手动处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "预言专家：先见干预",
+        "activation": "reaction",
+        "trigger": {
+          "on": "d20Rolled",
+          "role": "any",
+          "window": "before",
+          "when": "within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))"
+        },
+        "cost": [
+          {
+            "resource": "glimpse-intervention"
+          }
+        ],
+        "root": [
+          {
+            "kind": "note",
+            "text": "先见干预：已消耗反应，请手动为本次 D20 检定赋予优势或劣势。"
+          }
+        ]
+      }
+    ],
+    "triggers": [
+      {
+        "id": "regain-intervention",
+        "label": "先见干预：施展预言法术重获次数",
+        "on": "spellCast",
+        "role": "actor",
+        "window": "after",
+        "when": "ask('刚才是使用法术位施展预言学派法术吗？')",
+        "do": [
+          {
+            "kind": "if",
+            "when": "self.resource('glimpse-intervention') < 1",
+            "then": [
+              {
+                "kind": "resource",
+                "id": "glimpse-intervention",
+                "delta": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:元素魔宠",
+    "name": "元素魔宠",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "魔宠抗性、反应消耗、脉冲范围与倒地判定由玩家手动处理。"
+    ],
+    "notes": [
+      "以附赠动作命令 120 尺内魔宠使用反应释放能量脉冲：其 5 尺光环内生物敏捷豁免，失败受 2d4 所选类型元素伤害且中型或更小生物陷入倒地。"
+    ],
+    "text": "【元素赋能】施展寻获魔宠时选择一种伤害类型（强酸、寒冷、火焰、闪电或雷鸣），魔宠获得对应伤害抗性。【能量脉冲】能以附赠动作命令 120 尺内的魔宠以其反应释放能量爆发：源自魔宠的 5 尺光环内每名生物进行敏捷豁免（DC 为法术豁免 DC），失败受 2d4 所选类型伤害，且体型中型或更小生物陷入倒地。魔宠抗性、反应消耗、脉冲范围与倒地判定由玩家手动处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "元素魔宠：能量脉冲",
+        "activation": "bonus",
+        "requires": "turn.isMine",
+        "root": [
+          {
+            "kind": "note",
+            "text": "以附赠动作命令 120 尺内魔宠使用反应释放能量脉冲：其 5 尺光环内生物敏捷豁免，失败受 2d4 所选类型元素伤害且中型或更小生物陷入倒地。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:战士:奥术射击:3",
+    "name": "奥术射击",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "每回合一次，使用具备弹药属性的武器进行远程攻击时可赋予奥术射击选项。可用次数等于智力调整值（至少 1 次），短休或长休恢复。奥术射击骰 3 级 1d6，10 级 1d8，15 级 1d10，18 级 1d12；DC = 8 + 熟练加值 + 智力调整值。具体射击选项见各子条目。",
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:战士:不屈传送:15",
+    "name": "不屈传送",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [
+      "传送至多 60 尺至一处你可见的未占据空间"
+    ],
+    "text": "当你使用不屈特性且该次豁免检定成功时，你能传送至多 60 尺至一处你可见的未占据空间。是否使用了不屈特性由人确认，落点的视线与未占据空间由人判断。",
+    "triggers": [
+      {
+        "id": "teleport",
+        "label": "不屈传送",
+        "on": "d20Rolled",
+        "role": "actor",
+        "window": "after",
+        "optional": true,
+        "when": "roll.kind == 'save' && !roll.failing && ask('这次豁免检定是否使用了「不屈」特性？')",
+        "do": [
+          {
+            "kind": "move",
+            "mode": "teleport",
+            "ft": 60
+          },
+          {
+            "kind": "note",
+            "text": "传送至多 60 尺至一处你可见的未占据空间"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:战士:注魔弹:7",
+    "name": "注魔弹",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "开锁、藤蔓生长及环境效果由人工裁决。"
+    ],
+    "notes": [
+      "暗幕弹：15 尺区域内非魔法火焰熄灭，生物察觉检定及被动察觉承受 -5 减值，持续 1 分钟。",
+      "解锁弹：300 尺内可闻敲击声，15 尺内解开一把非魔法锁具、松开卡死或打开门栓。",
+      "蔓生弹：长出 120 尺藤蔓供攀爬，持续 10 分钟。"
+    ],
+    "text": "以一个魔法动作为一枚非魔法弹药注入魔法效应（暗幕弹、解锁弹或蔓生弹），射向射程内可见固体表面。短休或长休恢复，也可消耗一次回气重置使用权。开锁、藤蔓生长及环境效果由人工裁决。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "注魔弹",
+        "activation": "action",
+        "tags": [
+          "magical"
+        ],
+        "cost": [
+          {
+            "resource": "imbuedArrow"
+          }
+        ],
+        "root": [
+          {
+            "kind": "choose",
+            "prompt": "选择注魔弹效应",
+            "options": [
+              {
+                "label": "暗幕弹：15尺魔法阴影持续1分钟，熄灭火焰，察觉-5",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "暗幕弹：15 尺区域内非魔法火焰熄灭，生物察觉检定及被动察觉承受 -5 减值，持续 1 分钟。"
+                  }
+                ]
+              },
+              {
+                "label": "解锁弹：300尺敲击声，15尺内解开非魔法锁具",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "解锁弹：300 尺内可闻敲击声，15 尺内解开一把非魔法锁具、松开卡死或打开门栓。"
+                  }
+                ]
+              },
+              {
+                "label": "蔓生弹：长出120尺藤蔓可供攀爬，持续10分钟",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "蔓生弹：长出 120 尺藤蔓供攀爬，持续 10 分钟。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "reset",
+        "name": "注魔弹：重置使用权",
+        "activation": "free",
+        "cost": [
+          {
+            "resource": "回气"
+          }
+        ],
+        "root": [
+          {
+            "kind": "resource",
+            "id": "imbuedArrow",
+            "delta": 1
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:战士:宗师射术:18",
+    "name": "宗师射术",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "移动与远程武器攻击由人手动处理。"
+    ],
+    "notes": [
+      "宗师射术：向远离攻击者的方向移动至多等于速度一半的距离，且不引发借机攻击（手动移动）",
+      "宗师射术：若攻击者处在你的武器射程范围内，对其进行一次远程攻击检定（在武器行手动发起）"
+    ],
+    "text": "当一名你可见的生物对你进行攻击检定并失手时，你能以反应向远离攻击者的方向移动至多等于你速度一半的距离，且不会因此引发借机攻击。其后作为该反应的一部分，若攻击者还处在你的武器射程范围内，你可以对其进行一次远程攻击检定。移动与远程武器攻击由人手动处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "宗师射术",
+        "activation": "reaction",
+        "trigger": {
+          "on": "attackMissed",
+          "role": "target",
+          "window": "after",
+          "when": "attacker != null && canSee(self, attacker)"
+        },
+        "root": [
+          {
+            "kind": "note",
+            "text": "宗师射术：向远离攻击者的方向移动至多等于速度一半的距离，且不引发借机攻击（手动移动）"
+          },
+          {
+            "kind": "note",
+            "text": "宗师射术：若攻击者处在你的武器射程范围内，对其进行一次远程攻击检定（在武器行手动发起）"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:咒能爆发之恩惠",
+    "name": "咒能爆发之恩惠",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "伤害骰保底与受损生物倒地状态由玩家手动处理。"
+    ],
+    "notes": [
+      "法术过载已激活：本次法术伤害骰中所有 1 和 2 均视为 3，且受到该法术伤害的生物陷入倒地状态。"
+    ],
+    "text": "【法术过载】当你使用法术位施展一道造成伤害的法术时，可以消耗一次法术过载：该法术伤害骰投出的 1 和 2 均视为 3，且受到该法术伤害的生物陷入倒地状态。投掷先攻、短休或长休恢复 1 次。伤害骰保底与受损生物倒地状态由玩家手动处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "咒能爆发：法术过载",
+        "activation": "free",
+        "cost": [
+          {
+            "resource": "spell-overload"
+          }
+        ],
+        "root": [
+          {
+            "kind": "note",
+            "text": "法术过载已激活：本次法术伤害骰中所有 1 和 2 均视为 3，且受到该法术伤害的生物陷入倒地状态。"
+          }
+        ]
+      }
+    ],
+    "triggers": [
+      {
+        "id": "regain-on-initiative",
+        "label": "法术过载：投掷先攻重获使用次数",
+        "on": "initiativeRolled",
+        "role": "actor",
+        "window": "after",
+        "do": [
+          {
+            "kind": "if",
+            "when": "self.resource('spell-overload') < 1",
+            "then": [
+              {
+                "kind": "resource",
+                "id": "spell-overload",
+                "delta": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:追踪弹",
+    "name": "追踪弹",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "距离判断与位置获知需手动处理。"
+    ],
+    "notes": [
+      "你获知目标当前的位置"
+    ],
+    "text": "替换一次远程武器攻击，消耗一次奥术射击使用次数（短休恢复）：无需攻击检定，选择前 1 分钟内见过的一名生物，弹药绕过拐角并无视掩护追踪目标。身处武器最大射程内的目标须进行敏捷豁免，失败受到武器伤害加两枚奥术射击骰的力场伤害并知晓其当前位置，成功受半伤。距离判断与位置获知需手动处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "追踪弹",
+        "activation": "none",
+        "requires": "turn.isMine",
+        "cost": [
+          {
+            "economy": "attack"
+          },
+          {
+            "resource": "arcaneShot"
+          }
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": 1
+        },
+        "root": [
+          {
+            "kind": "save",
+            "ability": "dex",
+            "dc": "8 + self.pb + self.mod.int",
+            "onFail": [
+              {
+                "kind": "damage",
+                "id": "dmg",
+                "dice": "1d8 + self.mod.dex + cond(self.levelOf('战士') >= 18, 2d12, cond(self.levelOf('战士') >= 15, 2d10, cond(self.levelOf('战士') >= 10, 2d8, 2d6)))",
+                "type": "力场"
+              },
+              {
+                "kind": "note",
+                "text": "你获知目标当前的位置"
+              }
+            ],
+            "onSuccess": [
+              {
+                "kind": "damage",
+                "ref": "dmg",
+                "scale": 0.5
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:spell:步履维艰",
+    "name": "步履维艰",
+    "automation": "partial",
+    "level": 2,
+    "manual": [
+      "一名被妨碍的目标在其每个回合结束时重复此豁免，成功则终止法术（疾走限制需手动处理）。"
+    ],
+    "notes": [],
+    "text": "专注至多 1 分钟。选择 120 尺内至多三名可见生物进行智力豁免。豁免失败则目标速度减半且无法执行疾走动作。一名被妨碍的目标在其每个回合结束时重复此豁免，成功则终止法术（疾走限制需手动处理）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "步履维艰",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 2
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 1
+        },
+        "targeting": {
+          "type": "creature",
+          "count": 3,
+          "range": 120
+        },
+        "root": [
+          {
+            "kind": "save",
+            "ability": "int",
+            "dc": "self.spell.dc",
+            "onFail": [
+              {
+                "kind": "applyEffect",
+                "to": "target",
+                "template": "步履维艰"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "步履维艰": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "duration": {
+          "minutes": 1,
+          "saveEnds": {
+            "ability": "int",
+            "dc": "self.spell.dc",
+            "at": "turnEnd"
+          }
+        },
+        "statics": [
+          {
+            "kind": "speed",
+            "bonus": "-floor(self.speed / 2)"
+          }
+        ],
+        "text": "速度减半，且无法执行疾走动作。在其每个回合结束时重复智力豁免，成功则终止此法术。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:spell:负能量洪流",
+    "name": "负能量洪流",
+    "automation": "partial",
+    "level": 5,
+    "manual": [
+      "转化为丧尸与控制需手动处理。"
+    ],
+    "notes": [
+      "若被该伤害杀死，类人生物在施法者下个回合开始时转化为受控丧尸，持续 24 小时。"
+    ],
+    "text": "向 60 尺内一名可见生物发射负能量。若目标不是亡灵，其进行体质豁免，失败受 (slot.level - 2)d10 + 25 暗蚀伤害，成功受半伤；若被该伤害杀死，类人生物在施法者下回合开始转化为受控丧尸持续 24 小时。若目标是亡灵，则其获得 3d10 临时生命值。转化为丧尸与控制需手动处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "负能量洪流",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 5
+            }
+          }
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 60
+        },
+        "root": [
+          {
+            "kind": "choose",
+            "prompt": "目标是否为亡灵？",
+            "options": [
+              {
+                "label": "非亡灵（体质豁免承受伤害）",
+                "do": [
+                  {
+                    "kind": "save",
+                    "ability": "con",
+                    "dc": "self.spell.dc",
+                    "onFail": [
+                      {
+                        "kind": "damage",
+                        "id": "flood",
+                        "dice": "(slot.level - 2)d10 + 25",
+                        "type": "暗蚀"
+                      },
+                      {
+                        "kind": "note",
+                        "text": "若被该伤害杀死，类人生物在施法者下个回合开始时转化为受控丧尸，持续 24 小时。"
+                      }
+                    ],
+                    "onSuccess": [
+                      {
+                        "kind": "damage",
+                        "ref": "flood",
+                        "scale": 0.5
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "label": "亡灵（获得临时生命值）",
+                "do": [
+                  {
+                    "kind": "tempHp",
+                    "amount": "3d10",
+                    "to": "target"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:spell:魂灵提灯",
+    "name": "魂灵提灯",
+    "automation": "partial",
+    "level": 5,
+    "manual": [
+      "灵魂碎片收集与计数需手动处理。"
+    ],
+    "notes": [
+      "消耗 1 枚灵魂碎片（提灯容量上限等于施法属性调整值）。"
+    ],
+    "text": "持续 10 分钟。上方悬浮一盏幽灵般的黑色提灯，散发 60 尺微光光照。敌人在光照内死亡时飞入提灯一枚灵魂碎片（容量上限为施法属性调整值，法术结束时消散）。可用附赠动作消耗一枚灵魂碎片对 60 尺内可见目标产生效应：【汲取生命】体质豁免，失败受 4d8 + 施法属性调整值暗蚀伤害，成功减半；【修复亡灵】亡灵目标恢复 4d8 + 施法属性调整值生命值；【护佑盟友】其他生物对其攻击检定劣势至你下回合开始。灵魂碎片收集与计数需手动处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "魂灵提灯",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 5
+            }
+          }
+        ],
+        "targeting": {
+          "type": "self"
+        },
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "魂灵提灯"
+          }
+        ]
+      },
+      {
+        "id": "lantern-power",
+        "name": "魂灵提灯：释放碎片",
+        "activation": "bonus",
+        "requires": "self.hasEffect('魂灵提灯')",
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 60
+        },
+        "root": [
+          {
+            "kind": "choose",
+            "prompt": "选择消耗一枚灵魂碎片产生的效应",
+            "options": [
+              {
+                "label": "汲取生命",
+                "do": [
+                  {
+                    "kind": "save",
+                    "ability": "con",
+                    "dc": "self.spell.dc",
+                    "onFail": [
+                      {
+                        "kind": "damage",
+                        "dice": "4d8 + self.spell.mod",
+                        "type": "暗蚀"
+                      }
+                    ],
+                    "onSuccess": [
+                      {
+                        "kind": "damage",
+                        "dice": "4d8 + self.spell.mod",
+                        "type": "暗蚀",
+                        "scale": 0.5
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "label": "修复亡灵",
+                "do": [
+                  {
+                    "kind": "heal",
+                    "amount": "4d8 + self.spell.mod",
+                    "to": "target"
+                  }
+                ]
+              },
+              {
+                "label": "护佑盟友",
+                "do": [
+                  {
+                    "kind": "applyEffect",
+                    "to": "target",
+                    "template": "魂灵护佑"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "kind": "note",
+            "text": "消耗 1 枚灵魂碎片（提灯容量上限等于施法属性调整值）。"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "魂灵提灯": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "duration": {
+          "minutes": 10
+        },
+        "text": "散发半径 60 尺微光光照。敌人在光照内死亡时一枚灵魂碎片飞入提灯（上限为施法属性调整值）。可以附赠动作消耗一枚灵魂碎片释放效应。"
+      },
+      "魂灵护佑": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "duration": {
+          "until": {
+            "at": "turnStart",
+            "of": "source",
+            "nth": 1
+          }
+        },
+        "rollMods": [
+          {
+            "on": {
+              "kind": "attack"
+            },
+            "who": "against",
+            "op": "disadv",
+            "label": "魂灵护佑：被攻击检定劣势"
+          }
+        ],
+        "text": "其他生物对其进行的攻击检定具有劣势，直至施法者的下一回合开始。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:spell:汲能术",
+    "name": "汲能术",
+    "automation": "partial",
+    "level": 5,
+    "manual": [
+      "目标超出 60 尺或具有掩护时法术结束（恢复生命值、距离与掩护需手动判定）。"
+    ],
+    "notes": [
+      "汲能术：你恢复等同于目标受到暗蚀伤害一半的生命值，请手动处理恢复"
+    ],
+    "text": "专注至多 1 分钟。汲取 60 尺内一名可见生物的生命。目标进行敏捷豁免，失败受 (1 + slot.level)d8 暗蚀伤害并受汲能触须连接；成功受半伤且法术结束。造成伤害时你恢复等同于伤害一半的生命值。法术持续期间在你的每个回合可用附赠动作自动对目标造成 2d8 暗蚀伤害并恢复一半数值生命值。目标超出 60 尺或具有掩护时法术结束（恢复生命值、距离与掩护需手动判定）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "汲能术",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 5
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 1
+        },
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 60
+        },
+        "root": [
+          {
+            "kind": "save",
+            "ability": "dex",
+            "dc": "self.spell.dc",
+            "onFail": [
+              {
+                "kind": "damage",
+                "dice": "(1 + slot.level)d8",
+                "type": "暗蚀"
+              },
+              {
+                "kind": "note",
+                "text": "汲能术：你恢复等同于目标受到暗蚀伤害一半的生命值，请手动处理恢复"
+              },
+              {
+                "kind": "applyEffect",
+                "to": "self",
+                "template": "汲能术"
+              }
+            ],
+            "onSuccess": [
+              {
+                "kind": "damage",
+                "dice": "(1 + slot.level)d8",
+                "type": "暗蚀",
+                "scale": 0.5
+              },
+              {
+                "kind": "note",
+                "text": "汲能术：你恢复等同于目标受到暗蚀伤害一半的生命值，请手动处理恢复"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "drain",
+        "name": "汲能术：汲取",
+        "activation": "bonus",
+        "requires": "self.hasEffect('汲能术') && turn.isMine",
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 60
+        },
+        "root": [
+          {
+            "kind": "damage",
+            "dice": "2d8",
+            "type": "暗蚀"
+          },
+          {
+            "kind": "note",
+            "text": "汲能术：你恢复等同于目标受到暗蚀伤害一半的生命值，请手动处理恢复"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "汲能术": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "duration": {
+          "minutes": 1
+        },
+        "text": "在法术持续期间的每个你的回合中，都可以用附赠动作对目标自动造成 2d8 暗蚀伤害，并恢复一半数值生命值。目标超出 60 尺或具有掩护时法术结束。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:spell:假寐术",
+    "name": "假寐术",
+    "automation": "partial",
+    "level": 3,
+    "manual": [
+      "若目标完整处于昏迷状态达 10 分钟，则获得完成一次短休的增益，且在完成一次长休前不能再受此法术影响（短休结算与摇醒需手动处理）。"
+    ],
+    "notes": [],
+    "text": "选择 30 尺内至多 (slot.level) 名可见自愿生物，使其在 10 分钟持续时间内陷入昏迷状态。若目标受到伤害或有其他生物用动作摇醒，则法术提前终止。若目标完整处于昏迷状态达 10 分钟，则获得完成一次短休的增益，且在完成一次长休前不能再受此法术影响（短休结算与摇醒需手动处理）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "假寐术",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 3
+            }
+          }
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": "slot.level",
+          "range": 30
+        },
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "target",
+            "template": "假寐"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "假寐": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "implies": [
+          "XPHB:condition:昏迷"
+        ],
+        "duration": {
+          "minutes": 10
+        },
+        "text": "陷入昏迷状态。受到伤害或被生物用动作摇醒则提前终止；完整持续 10 分钟后获得短休增益（完成长休前不可再次受此法术影响）。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:spell:距离失真",
+    "name": "距离失真",
+    "automation": "partial",
+    "level": 4,
+    "manual": [
+      "进入/结束回合触发与困难地形需手动处理。"
+    ],
+    "notes": [
+      "球状区域对其视为困难地形，持续至其回合结束。"
+    ],
+    "text": "专注至多 10 分钟。在 120 尺内以一点为中心的 60 尺球状区域创造空间膨胀幻象。对区域内可见生物可选择：【天旋地转】智力豁免，失败受 2d10 心灵伤害且区域对其视为困难地形至其回合结束；【缩地成寸】速度增加 20 尺至其下一回合结束。法术持续期间，生物进入区域或在其中结束回合时可使其受其中一道效应（每回合限一次）。进入/结束回合触发与困难地形需手动处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "距离失真",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 4
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 10
+        },
+        "targeting": {
+          "type": "area",
+          "range": 120,
+          "area": {
+            "shape": "sphere",
+            "radius": 60
+          }
+        },
+        "root": [
+          {
+            "kind": "forEach",
+            "in": "area",
+            "do": [
+              {
+                "kind": "choose",
+                "prompt": "为该生物选择距离失真效应",
+                "options": [
+                  {
+                    "label": "天旋地转",
+                    "do": [
+                      {
+                        "kind": "save",
+                        "ability": "int",
+                        "dc": "self.spell.dc",
+                        "onFail": [
+                          {
+                            "kind": "damage",
+                            "dice": "2d10",
+                            "type": "心灵"
+                          },
+                          {
+                            "kind": "note",
+                            "text": "球状区域对其视为困难地形，持续至其回合结束。"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "label": "缩地成寸",
+                    "do": [
+                      {
+                        "kind": "applyEffect",
+                        "to": "target",
+                        "template": "缩地成寸"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "缩地成寸": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "duration": {
+          "until": {
+            "at": "turnEnd",
+            "of": "bearer",
+            "nth": 1
+          }
+        },
+        "statics": [
+          {
+            "kind": "speed",
+            "bonus": 20
+          }
+        ],
+        "text": "速度增加 20 尺，持续至其下一回合结束。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:spell:力竭波",
+    "name": "力竭波",
+    "automation": "partial",
+    "level": 5,
+    "manual": [
+      "法术结束时移除其造成的所有力竭等级（力竭上限与法术结束移除需手动处理）。"
+    ],
+    "notes": [],
+    "text": "专注至多 1 分钟。以附赠动作呼唤灰色光环笼罩周身。持续时间内可执行魔法动作投射 60 尺锥状光幕，区域内生物须进行体质豁免，失败获得一层力竭（该法术无法将力竭提升至 4 级以上）。法术结束时移除其造成的所有力竭等级（力竭上限与法术结束移除需手动处理）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "力竭波",
+        "activation": "bonus",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 5
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 1
+        },
+        "targeting": {
+          "type": "self"
+        },
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "力竭波"
+          }
+        ]
+      },
+      {
+        "id": "wave",
+        "name": "力竭波：投射光幕",
+        "activation": "action",
+        "requires": "self.hasEffect('力竭波')",
+        "targeting": {
+          "type": "area",
+          "range": "self",
+          "area": {
+            "shape": "cone",
+            "length": 60
+          }
+        },
+        "root": [
+          {
+            "kind": "forEach",
+            "in": "area",
+            "do": [
+              {
+                "kind": "save",
+                "ability": "con",
+                "dc": "self.spell.dc",
+                "onFail": [
+                  {
+                    "kind": "if",
+                    "when": "target.exhaustion < 4",
+                    "then": [
+                      {
+                        "kind": "applyEffect",
+                        "to": "target",
+                        "template": "力竭波：力竭"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "力竭波": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "duration": {
+          "minutes": 1
+        },
+        "text": "周身笼罩灰色光环。持续时间内可执行魔法动作投射 60 尺锥状光幕。法术结束时移除其造成的所有力竭等级。"
+      },
+      "力竭波：力竭": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "implies": [
+          "XPHB:condition:力竭"
+        ],
+        "stack": "level",
+        "duration": {
+          "minutes": 1
+        },
+        "text": "获得 1 层力竭（此法术无法将力竭提升至 4 级以上）。法术结束时被移除。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:spell:埋骨墓地",
+    "name": "埋骨墓地",
+    "automation": "partial",
+    "level": 5,
+    "manual": [
+      "方格自定义拼合、进入/结束回合触发与困难地形需手动处理。"
+    ],
+    "notes": [],
+    "text": "专注至多 1 分钟。在 120 尺内由至多四个相互连接的 10 尺方格组成骸骨之手区域，对敌人视为困难地形。骸骨之手出现时，区域内的每个敌人进行力量豁免，失败受 (slot.level + 1)d6 暗蚀伤害，且在其所有伤害掷骰中受 1d6 减值直至其下一回合结束。敌人进入区域或在区域内结束回合时同样须进行该豁免（每回合限一次）。方格自定义拼合、进入/结束回合触发与困难地形需手动处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "埋骨墓地",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 5
+            }
+          }
+        ],
+        "concentration": {
+          "minutes": 1
+        },
+        "targeting": {
+          "type": "area",
+          "range": 120,
+          "area": {
+            "shape": "cube",
+            "size": 20
+          }
+        },
+        "root": [
+          {
+            "kind": "forEach",
+            "in": "area",
+            "do": [
+              {
+                "kind": "save",
+                "ability": "str",
+                "dc": "self.spell.dc",
+                "onFail": [
+                  {
+                    "kind": "damage",
+                    "dice": "(1 + slot.level)d6",
+                    "type": "暗蚀"
+                  },
+                  {
+                    "kind": "applyEffect",
+                    "to": "target",
+                    "template": "埋骨墓地"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "埋骨墓地": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "duration": {
+          "until": {
+            "at": "turnEnd",
+            "of": "bearer",
+            "nth": 1
+          }
+        },
+        "rollMods": [
+          {
+            "on": {
+              "kind": "damage"
+            },
+            "who": "bearer",
+            "op": "addDice",
+            "value": "-1d6",
+            "label": "埋骨墓地：伤害掷骰受 1d6 减值"
+          }
+        ],
+        "text": "在所有伤害掷骰中受 1d6 减值，持续至其下一回合结束。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:spell:靡叶生华",
+    "name": "靡叶生华",
+    "automation": "partial",
+    "level": 2,
+    "manual": [
+      "此外，区域内一个由你选择的生物能消耗并投掷一枚其未使用的生命值骰（升环施法时每高一环可多消耗投掷 1 颗），恢复等于骰值总和加你的施法属性调整值的生命值（生命骰消耗与恢复需手动处理）。"
+    ],
+    "notes": [
+      "所选区域内的一名生物可消耗并投掷 1 枚未使用的生命值骰（升环每高一环多 1 枚），恢复等同于骰值加施法属性调整值的生命值（由玩家手动处理）。"
+    ],
+    "text": "在 60 尺内以一点为中心的 10 尺半径球状区域内唤起死气与生机。区域内由你选择的每个生物进行体质豁免，失败受 (1 + slot.level)d6 暗蚀伤害，成功受半伤。此外，区域内一个由你选择的生物能消耗并投掷一枚其未使用的生命值骰（升环施法时每高一环可多消耗投掷 1 颗），恢复等于骰值总和加你的施法属性调整值的生命值（生命骰消耗与恢复需手动处理）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "靡叶生华",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 2
+            }
+          }
+        ],
+        "targeting": {
+          "type": "area",
+          "range": 60,
+          "area": {
+            "shape": "sphere",
+            "radius": 10
+          }
+        },
+        "root": [
+          {
+            "kind": "forEach",
+            "in": "area",
+            "do": [
+              {
+                "kind": "save",
+                "ability": "con",
+                "dc": "self.spell.dc",
+                "onFail": [
+                  {
+                    "kind": "damage",
+                    "id": "wither",
+                    "dice": "(1 + slot.level)d6",
+                    "type": "暗蚀"
+                  }
+                ],
+                "onSuccess": [
+                  {
+                    "kind": "damage",
+                    "ref": "wither",
+                    "scale": 0.5
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "kind": "note",
+            "text": "所选区域内的一名生物可消耗并投掷 1 枚未使用的生命值骰（升环每高一环多 1 枚），恢复等同于骰值加施法属性调整值的生命值（由玩家手动处理）。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:spell:魔邓肯冥思术",
+    "name": "魔邓肯冥思术",
+    "automation": "manual",
+    "level": 5,
+    "manual": [
+      "以八至九环施展时最高可恢复四环法术位（法术位恢复由玩家手动在人物卡处理）。"
+    ],
+    "notes": [
+      "恢复至多两枚已消耗的二环或更低环阶法术位（以 6~7 环施展可恢复至多三环，以 8~9 环施展可恢复至多四环；请手动在人物卡增加法术位）。"
+    ],
+    "text": "你恢复至多两枚已消耗的二环或更低环阶的法术位。升环施法：以六至七环施展时最高可恢复三环法术位；以八至九环施展时最高可恢复四环法术位（法术位恢复由玩家手动在人物卡处理）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "魔邓肯冥思术",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 5
+            }
+          }
+        ],
+        "targeting": {
+          "type": "self"
+        },
+        "root": [
+          {
+            "kind": "note",
+            "text": "恢复至多两枚已消耗的二环或更低环阶法术位（以 6~7 环施展可恢复至多三环，以 8~9 环施展可恢复至多四环；请手动在人物卡增加法术位）。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:spell:友善之域",
+    "name": "友善之域",
+    "automation": "partial",
+    "level": 4,
+    "manual": [
+      "源自你 60 尺光环内，每当你进行一次用于影响区域内生物的属性检定时，可将 d20 掷出的 9 或更低视为 10（是否为影响该生物的属性检定由人工判定）。"
+    ],
+    "notes": [],
+    "text": "持续 10 分钟。源自你 60 尺光环内，每当你进行一次用于影响区域内生物的属性检定时，可将 d20 掷出的 9 或更低视为 10（是否为影响该生物的属性检定由人工判定）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "友善之域",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 4
+            }
+          }
+        ],
+        "targeting": {
+          "type": "self"
+        },
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "友善之域"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "友善之域": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "duration": {
+          "minutes": 10
+        },
+        "rollMods": [
+          {
+            "on": {
+              "kind": "check"
+            },
+            "who": "bearer",
+            "when": "ask('检定是否用于影响友善之域60尺内的生物？')",
+            "op": "minD20",
+            "value": 10,
+            "label": "友善之域：属性检定最低 10"
+          }
+        ],
+        "text": "每当你进行一次用于影响源自你 60 尺光环内生物的属性检定时，可将 d20 掷出的 9 或更低视为 10。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:spell:战斗魔宠",
+    "name": "战斗魔宠",
+    "automation": "partial",
+    "level": 2,
+    "manual": [
+      "若已拥有寻获魔宠则强化现有魔宠，赋予等同于战斗魔宠生命值的临时生命值（召唤物实体、属性与行动由人手动处理）。"
+    ],
+    "notes": [
+      "召唤蛮勇形态战斗魔宠（或强化现有魔宠），使用对应法术位环阶的数据块；实体与行动由人手动处理。",
+      "召唤掠空形态战斗魔宠（或强化现有魔宠），使用对应法术位环阶的数据块；实体与行动由人手动处理。",
+      "召唤潜猎形态战斗魔宠（或强化现有魔宠），使用对应法术位环阶的数据块；实体与行动由人手动处理。"
+    ],
+    "text": "持续 1 小时。在 10 尺内召唤一只战斗魔宠（蛮勇、掠空或潜猎形态，生物类型为天族、妖精或邪魔），使用对应法术位环阶的数据块。魔宠拥有独立先攻并在自己的回合内行动；若已拥有寻获魔宠则强化现有魔宠，赋予等同于战斗魔宠生命值的临时生命值（召唤物实体、属性与行动由人手动处理）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "战斗魔宠",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 2
+            }
+          }
+        ],
+        "targeting": {
+          "type": "point",
+          "range": 10
+        },
+        "root": [
+          {
+            "kind": "choose",
+            "prompt": "选择战斗魔宠的形态",
+            "options": [
+              {
+                "label": "蛮勇形态",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "召唤蛮勇形态战斗魔宠（或强化现有魔宠），使用对应法术位环阶的数据块；实体与行动由人手动处理。"
+                  }
+                ]
+              },
+              {
+                "label": "掠空形态",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "召唤掠空形态战斗魔宠（或强化现有魔宠），使用对应法术位环阶的数据块；实体与行动由人手动处理。"
+                  }
+                ]
+              },
+              {
+                "label": "潜猎形态",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "召唤潜猎形态战斗魔宠（或强化现有魔宠），使用对应法术位环阶的数据块；实体与行动由人手动处理。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "AU:spell:植物召唤术",
+    "name": "植物召唤术",
+    "automation": "partial",
+    "level": 5,
+    "manual": [
+      "生命值降至 0 或法术结束时消失（召唤物实体与战斗行动由人手动处理）。"
+    ],
+    "notes": [
+      "召唤真菌植物灵魄，使用对应法术位环阶的数据块；实体与行动由人手动处理。",
+      "召唤巨树植物灵魄，使用对应法术位环阶的数据块；实体与行动由人手动处理。",
+      "召唤藤蔓植物灵魄，使用对应法术位环阶的数据块；实体与行动由人手动处理。"
+    ],
+    "text": "专注至多 1 小时。在 90 尺内召唤一个植物灵魄（真菌、巨树或藤蔓），使用对应环阶的植物灵魄数据块。灵魄共用先攻并在施法者回合后立即行动，遵从口头指令；生命值降至 0 或法术结束时消失（召唤物实体与战斗行动由人手动处理）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "植物召唤术",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 5
+            }
+          }
+        ],
+        "concentration": {
+          "hours": 1
+        },
+        "targeting": {
+          "type": "point",
+          "range": 90
+        },
+        "root": [
+          {
+            "kind": "choose",
+            "prompt": "选择植物灵魄的种类",
+            "options": [
+              {
+                "label": "真菌",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "召唤真菌植物灵魄，使用对应法术位环阶的数据块；实体与行动由人手动处理。"
+                  }
+                ]
+              },
+              {
+                "label": "巨树",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "召唤巨树植物灵魄，使用对应法术位环阶的数据块；实体与行动由人手动处理。"
+                  }
+                ]
+              },
+              {
+                "label": "藤蔓",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "召唤藤蔓植物灵魄，使用对应法术位环阶的数据块；实体与行动由人手动处理。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "FRHoF:暴风骤岚之恩惠",
+    "name": "暴风骤岚之恩惠",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "【风暴之力】生物在对抗你造成闪电或雷鸣伤害的法术时进行的豁免检定具有劣势，由人工在判定法术豁免时处理。"
+    ],
+    "notes": [],
+    "text": "【暴风之眼】对闪电和雷鸣伤害具有抗性（静态）；浴血期间对闪电和雷鸣伤害免疫已自动化。【风暴之力】生物在对抗你造成闪电或雷鸣伤害的法术时进行的豁免检定具有劣势，由人工在判定法术豁免时处理。",
+    "triggers": [
+      {
+        "id": "storm-eye-immunity",
+        "label": "暴风之眼：浴血免疫闪电与雷鸣伤害",
+        "on": "damageIncoming",
+        "role": "target",
+        "window": "before",
+        "when": "self.hp <= floor(self.hpMax / 2) && (damage.type == '闪电' || damage.type == '雷鸣')",
+        "modify": [
+          {
+            "op": "cancel"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "FRHoF:变幻无常之恩惠",
+    "name": "变幻无常之恩惠",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "具体生物数据卡替换由人工处理。"
+    ],
+    "notes": [
+      "变形为挑战等级不高于10的野兽、类人或怪兽，获得等于新形态生命值+20的临时生命值，持续1小时或直至临时生命值耗尽/主动变回。具体属性替换由人工调整。"
+    ],
+    "text": "以魔法动作变形为CR<=10的野兽、类人或怪兽，获得新形态生命值+20的临时生命值，持续1小时或直至临时生命值归零/再次以魔法动作变回。具体生物数据卡替换由人工处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "变幻无常之恩惠：变形生物",
+        "activation": "action",
+        "cost": [
+          {
+            "resource": "shapechanger"
+          }
+        ],
+        "targeting": {
+          "type": "self"
+        },
+        "root": [
+          {
+            "kind": "note",
+            "text": "变形为挑战等级不高于10的野兽、类人或怪兽，获得等于新形态生命值+20的临时生命值，持续1小时或直至临时生命值耗尽/主动变回。具体属性替换由人工调整。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "FRHoF:翠绿闲庭新羽",
+    "name": "翠绿闲庭新羽",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "【双人轮打】执行协助动作时，可作为动作的一部分与5尺内未失能的自愿盟友交换位置且不引发借机攻击，由玩家手动处理。"
+    ],
+    "notes": [],
+    "text": "【动物交谈】始终准备动物交谈，仪式持续时间延长至8小时（静态/探索）。【双人轮打】执行协助动作时，可作为动作的一部分与5尺内未失能的自愿盟友交换位置且不引发借机攻击，由玩家手动处理。",
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "FRHoF:翠色魔法",
+    "name": "翠色魔法",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "法术施展由玩家手动处理。"
+    ],
+    "notes": [],
+    "text": "【动物伙伴】对野兽执行影响动作时属性检定具优势（社交/探索）。【二体一心】始终准备法术野兽感官（静态）；每日可无需法术位施展一次（长休恢复，且无需专注），也可用合适环阶法术位施展。法术施展由玩家手动处理。",
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "FRHoF:毒手殁心之恩惠",
+    "name": "毒手殁心之恩惠",
+    "automation": "manual",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "【百毒不侵】你具有对毒素伤害和中毒状态的免疫。【完美毒师】每回合一次，当你掷骰以决定生物因你的攻击、法术或特性受到的毒素伤害时，你能够以每枚骰子可能掷出的最高值替代其骰值。",
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "FRHoF:法师:额外攻击:6",
+    "name": "额外攻击",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "攻击次数与戏法替换由人手动处理。"
+    ],
+    "notes": [],
+    "text": "你在你的回合内执行攻击动作时可以进行两次攻击而非一次。此外，你可以将额外攻击中的一次替换为施展你的一道施法时间为动作的法师戏法。攻击次数与戏法替换由人手动处理。",
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "FRHoF:法师:剑歌:3",
+    "name": "剑歌",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "使用奥术回想时恢复一次已消耗的剑歌次数（请手动增加或由奥术回想触发）。"
+    ],
+    "notes": [],
+    "text": "附赠动作唤起剑歌，持续 1 分钟。若未穿甲未持盾，获得 AC 加值（智力调整值，最低+1）、移动速度 +10 尺、敏捷（体操）检定优势、维持专注的体质豁免加智力调整值。可用智力替代力敏进行熟练武器的攻击与伤害掷骰。穿甲、持盾、双手武器攻击、失能或主动终止时结束。使用奥术回想时恢复一次已消耗的剑歌次数（请手动增加或由奥术回想触发）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "剑歌",
+        "activation": "bonus",
+        "cost": [
+          {
+            "resource": "bladesong"
+          }
+        ],
+        "requires": "!self.wearing('LA') && !self.wearing('MA') && !self.wearing('HA') && !self.wearing('S') && !self.hasEffect('剑歌')",
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "剑歌"
+          }
+        ]
+      }
+    ],
+    "triggers": [
+      {
+        "id": "regain-on-arcane-recovery",
+        "label": "剑歌：奥术回想恢复使用次数",
+        "on": "restCompleted",
+        "role": "actor",
+        "optional": true,
+        "when": "ask('在本次休息中是否使用了奥术回想？')",
+        "do": [
+          {
+            "kind": "resource",
+            "id": "bladesong",
+            "delta": 1
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "剑歌": {
+        "text": "AC 增加智力调整值（最低+1）；速度增加 10 尺；敏捷（体操）检定具有优势；维持专注的体质豁免增加智力调整值。熟练武器攻击/伤害可用智力替代力敏。穿甲、持盾、使用双手武器攻击或陷入失能时结束。",
+        "duration": {
+          "minutes": 1,
+          "endsOn": [
+            {
+              "event": "effectApplied",
+              "when": "event.bearer == self.id && self.has('失能')"
+            }
+          ]
+        },
+        "statics": [
+          {
+            "kind": "ac",
+            "bonus": "max(1, self.mod.int)"
+          },
+          {
+            "kind": "speed",
+            "bonus": 10
+          }
+        ],
+        "rollMods": [
+          {
+            "on": {
+              "kind": "check",
+              "ability": "dex",
+              "skill": "体操"
+            },
+            "who": "bearer",
+            "op": "adv",
+            "label": "剑歌：敏捷（体操）检定具有优势"
+          },
+          {
+            "on": {
+              "kind": "concentration",
+              "ability": "con"
+            },
+            "who": "bearer",
+            "op": "add",
+            "value": "self.mod.int",
+            "label": "剑歌：维持专注的体质豁免增加智力调整值"
+          }
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "FRHoF:法师:胜利之歌:14",
+    "name": "胜利之歌",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [
+      "胜利之歌：以附赠动作使用一把武器发动一次攻击，请在武器行发起攻击。"
+    ],
+    "text": "在你施展一道施法时间为一动作的法术后，你能够以一个附赠动作使用一把武器发动一次攻击。请在武器行发起攻击。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "胜利之歌",
+        "activation": "bonus",
+        "requires": "turn.isMine && ask('本回合是否施展过施法时间为一动作的法术？')",
+        "tags": [
+          "weapon"
+        ],
+        "root": [
+          {
+            "kind": "note",
+            "text": "胜利之歌：以附赠动作使用一把武器发动一次攻击，请在武器行发起攻击。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "FRHoF:法师:守御之歌:10",
+    "name": "守御之歌",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "法术位消耗与对应减伤请手动结算。"
+    ],
+    "notes": [
+      "守御之歌：消耗一枚法术位，并将本次受到的伤害降低等同于该法术位环阶 5 倍的数值。请手动扣除法术位并减免伤害。"
+    ],
+    "text": "在你的剑歌激活期间，当你受到伤害时，你可以执行反应以消耗一枚法术位，并将该伤害降低等同于该法术位环阶 5 倍的数值。法术位消耗与对应减伤请手动结算。",
+    "triggers": [
+      {
+        "id": "song-of-defense",
+        "label": "守御之歌：消耗法术位降低伤害",
+        "on": "damageIncoming",
+        "role": "target",
+        "window": "before",
+        "optional": true,
+        "when": "self.hasEffect('剑歌')",
+        "cost": [
+          {
+            "economy": "reaction"
+          }
+        ],
+        "do": [
+          {
+            "kind": "note",
+            "text": "守御之歌：消耗一枚法术位，并将本次受到的伤害降低等同于该法术位环阶 5 倍的数值。请手动扣除法术位并减免伤害。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "FRHoF:贵族信念",
+    "name": "贵族信念",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "以附赠动作选择至多三名 60 尺内能看见你的生物，结束其倒地状态并增强信念 1 分钟（免疫魅惑与恐慌，对抗附身、魅惑或恐慌的新豁免具有优势）。目标起立需消耗其反应；陷入失能状态时提前结束。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "执旗者",
+        "activation": "bonus",
+        "cost": [
+          {
+            "resource": "banneret"
+          }
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": 3,
+          "range": 60
+        },
+        "root": [
+          {
+            "kind": "forEach",
+            "in": "targets",
+            "do": [
+              {
+                "kind": "removeEffect",
+                "from": "target",
+                "match": {
+                  "name": "倒地"
+                }
+              },
+              {
+                "kind": "applyEffect",
+                "to": "target",
+                "template": "执旗者"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "执旗者": {
+        "duration": {
+          "minutes": 1
+        },
+        "statics": [
+          {
+            "kind": "conditionImmune",
+            "values": [
+              "魅惑",
+              "恐慌"
+            ]
+          }
+        ],
+        "rollMods": [
+          {
+            "on": {
+              "kind": "save"
+            },
+            "who": "bearer",
+            "when": "ask('这次豁免是对抗附身、魅惑或恐慌效应吗？')",
+            "op": "adv",
+            "label": "执旗者：对抗附身/魅惑/恐慌"
+          }
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "FRHoF:街头正义",
+    "name": "街头正义",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "盟友攻击受擒目标的优势与探索捆缚DC均由玩家手动处理。"
+    ],
+    "notes": [],
+    "text": "【锁头】盟友对因你陷入受擒的生物发动的攻击检定具有优势。【坚固锁结】使用链条、镣铐或绳索捆缚生物时，挣脱或破坏DC增加你的熟练加值。【强硬言辞】影响生物时敌对态度不会令你的威吓检定具有劣势。盟友攻击受擒目标的优势与探索捆缚DC均由玩家手动处理。",
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "FRHoF:惊魂落魄之恩惠",
+    "name": "惊魂落魄之恩惠",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "生物逃跑移动由人工处理。"
+    ],
+    "notes": [
+      "豁免失败：该生物需要消耗其回合以可用的最快方式移动远离你。"
+    ],
+    "text": "【无畏】免疫恐慌状态（静态）。【令人生畏】威吓技能熟练与专精（静态）。【逃吧，蠢料！】陷入恐慌的生物在60尺内开始其回合时，只要可见且无掩护，可以反应迫使其进行感知豁免（DC 8+CHA+PB），失败则其该回合必须以最快方式移动远离你。短休或长休恢复。生物逃跑移动由人工处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "惊魂落魄之恩惠：逃吧，蠢料！",
+        "activation": "reaction",
+        "trigger": {
+          "on": "turnStarted",
+          "role": "any",
+          "window": "after",
+          "when": "canSee(self, attacker) && within(attacker, self, 60) && attacker.has('XPHB:condition:恐慌')"
+        },
+        "cost": [
+          {
+            "resource": "flee-fools"
+          }
+        ],
+        "targeting": {
+          "type": "creature",
+          "range": 60,
+          "filter": "target.id != self.id"
+        },
+        "root": [
+          {
+            "kind": "save",
+            "ability": "wis",
+            "dc": "8 + self.pb + self.mod.cha",
+            "onFail": [
+              {
+                "kind": "note",
+                "text": "豁免失败：该生物需要消耗其回合以可用的最快方式移动远离你。"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "FRHoF:巨灵魔法",
+    "name": "巨灵魔法",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "具体自选法术与施展由玩家手动处理。"
+    ],
+    "notes": [],
+    "text": "【祈愿魔法】能以魔法动作施展自选术士1环法术（施法时间需为动作）一次，长休恢复。到达11级时如同2环施展，到达17级时如同3环施展。具体自选法术与施展由玩家手动处理。",
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "FRHoF:领主联盟特工",
+    "name": "领主联盟特工",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "激励打击：每回合一次，重击命中时可令 30 尺内能见听且无英雄激励的一名盟友获得英雄激励（手动授予）。"
+    ],
+    "notes": [
+      "激励打击：选择一名 30 尺内能看见或听见你且没有英雄激励的盟友，该盟友获得英雄激励。"
+    ],
+    "text": "激励打击：每回合一次，重击命中时可令 30 尺内能见听且无英雄激励的一名盟友获得英雄激励（手动授予）。重获荣誉：可见敌人对 5 尺内盟友造成伤害时，下个回合结束前对该敌人的下次攻击检定具有优势。",
+    "triggers": [
+      {
+        "id": "inspiring-strike",
+        "label": "激励打击",
+        "on": "attackHit",
+        "role": "actor",
+        "limit": "oncePerTurn",
+        "when": "roll.crit",
+        "do": [
+          {
+            "kind": "note",
+            "text": "激励打击：选择一名 30 尺内能看见或听见你且没有英雄激励的盟友，该盟友获得英雄激励。"
+          }
+        ]
+      },
+      {
+        "id": "reclaim-honor",
+        "label": "重获荣誉",
+        "on": "damageTaken",
+        "role": "ally",
+        "when": "within(target, self, 5) && source != null && source.isEnemyOf(self)",
+        "do": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "重获荣誉"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "重获荣誉": {
+        "text": "你的下个回合结束前，对伤害你 5 尺内盟友的该敌人的下次攻击检定具有优势。",
+        "duration": {
+          "until": {
+            "at": "turnEnd",
+            "of": "bearer",
+            "nth": 1
+          },
+          "endsOn": [
+            {
+              "event": "d20Rolled",
+              "when": "event.kind == 'attack' && event.roller == self.id"
+            }
+          ]
+        },
+        "rollMods": [
+          {
+            "on": {
+              "kind": "attack"
+            },
+            "who": "bearer",
+            "when": "ask('这次攻击是对伤害你 5 尺内盟友的敌人发起的吗？')",
+            "op": "adv",
+            "label": "重获荣誉"
+          }
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "FRHoF:迷锁触碰",
+    "name": "迷锁触碰",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "表格包含力场范围伤害、心灵链接、反转重力、相互震慑、AC+2或法术消散等多样效应，由人手动掷骰并结算对应效果。"
+    ],
+    "notes": [],
+    "text": "【迷锁守护】法术攻击命中你或你在对抗法术的豁免检定中失败时，可以反应在密斯特拉之触魔法表上掷1d20骰出魔法效应（豁免DC=8+PB+属性加值）。表格包含力场范围伤害、心灵链接、反转重力、相互震慑、AC+2或法术消散等多样效应，由人手动掷骰并结算对应效果。长休恢复PB次。",
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "FRHoF:牧师:思维魔法:3",
+    "name": "思维魔法",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "具体施展法术由玩家手动结算并扣除引导神力。"
+    ],
+    "notes": [],
+    "text": "以一个魔法动作消耗一次引导神力，无需法术位及材料成分施展知识领域法术表中已准备的一个预言学派法术。具体施展法术由玩家手动结算并扣除引导神力。",
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "FRHoF:散塔林会暴徒",
+    "name": "散塔林会暴徒",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "【见缝插针】为借机攻击掷伤害时可投掷两次伤害骰并采用其中一个结果（由玩家手动处理）。",
+      "【家人至上】投掷先攻时若具有英雄激励，可消耗它令你和盟友的此次先攻检定具有优势（英雄激励扣除与盟友先攻优势需玩家手动处理）。"
+    ],
+    "notes": [],
+    "text": "【见缝插针】为借机攻击掷伤害时可投掷两次伤害骰并采用其中一个结果（由玩家手动处理）。【家人至上】投掷先攻时若具有英雄激励，可消耗它令你和盟友的此次先攻检定具有优势（英雄激励扣除与盟友先攻优势需玩家手动处理）。",
+    "rollMods": [
+      {
+        "on": {
+          "kind": "initiative"
+        },
+        "who": "bearer",
+        "when": "ask('投掷先攻时消耗英雄激励以获得优势吗？')",
+        "op": "adv",
+        "label": "家人至上：先攻优势"
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "FRHoF:散塔林会战术",
+    "name": "散塔林会战术",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "【反击】位于你5尺内的生物以近战攻击命中你后，你可以立即消耗反应对该生物发动一次借机攻击（攻击由玩家手动发起）。",
+      "【万能佣兵】完成长休时选择一项已熟练的技能获得专精，持续至下次长休（属于人物卡技能层，手动调整）。"
+    ],
+    "notes": [
+      "反击：已消耗反应，立即对命中你的攻击者发动一次借机攻击。"
+    ],
+    "text": "【反击】位于你5尺内的生物以近战攻击命中你后，你可以立即消耗反应对该生物发动一次借机攻击（攻击由玩家手动发起）。【万能佣兵】完成长休时选择一项已熟练的技能获得专精，持续至下次长休（属于人物卡技能层，手动调整）。",
+    "triggers": [
+      {
+        "id": "riposte",
+        "label": "散塔林会战术：受击反击",
+        "on": "attackHit",
+        "role": "target",
+        "window": "after",
+        "optional": true,
+        "when": "attack.melee && within(self, attacker, 5)",
+        "cost": [
+          {
+            "economy": "reaction"
+          }
+        ],
+        "do": [
+          {
+            "kind": "note",
+            "text": "反击：已消耗反应，立即对命中你的攻击者发动一次借机攻击。"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/books.json"
+  },
+  {
+    "key": "FRHoF:生机勃发之恩惠",
+    "name": "生机勃发之恩惠",
+    "automation": "manual",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "【超健康】当你获得临时生命值时，该临时生命值数值增加5。【超恢复】当你消耗一枚或更多生命值骰来恢复生命值时，你能够以每枚骰子可能掷出的最高值替代其骰值。",
+    "sourceFile": "data/dyn/ai/books.json"
+  }
+]

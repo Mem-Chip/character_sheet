@@ -1,0 +1,1767 @@
+[
+  {
+    "key": "XPHB:游荡者:诡诈打击:5",
+    "name": "诡诈打击",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "需要改动偷袭骰数，目前手动处理；"
+    ],
+    "notes": [],
+    "text": "造成偷袭伤害时，可以在伤害骰投掷前扣除若干偷袭骰，换取投毒、摔绊、撤步等效果（各选项另有条目）。需要改动偷袭骰数，目前手动处理；选项要求的豁免 DC = 8 + 熟练加值 + 敏捷调整值。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游荡者:恍惚（花费：2d6）:14",
+    "name": "恍惚（花费：2d6）",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "诡诈打击选项，花费 2d6 偷袭骰：需人工从偷袭伤害中扣除（引擎没有偷袭骰池）。",
+      "失败则其下一回合只能在移动、执行一个动作、执行一个附赠动作中选一项，这个选择限制引擎不执行，需人工处理。"
+    ],
+    "notes": [],
+    "text": "诡诈打击选项，花费 2d6 偷袭骰：需人工从偷袭伤害中扣除（引擎没有偷袭骰池）。目标进行体质豁免（DC = 8 + 敏捷调整值 + 熟练加值）；失败则其下一回合只能在移动、执行一个动作、执行一个附赠动作中选一项，这个选择限制引擎不执行，需人工处理。",
+    "triggers": [
+      {
+        "id": "daze",
+        "label": "恍惚（花费：2d6）",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "before",
+        "optional": true,
+        "limit": "oncePerTurn",
+        "when": "(attack.finesse || attack.ranged) && (roll.adv || (allyWithin(target, 5, { exclude: [self], notCond: '失能' }) && !roll.disadv))",
+        "do": [
+          {
+            "kind": "save",
+            "ability": "con",
+            "dc": "8 + self.mod.dex + self.pb",
+            "onFail": [
+              {
+                "kind": "applyEffect",
+                "template": "恍惚"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "恍惚": {
+        "text": "下一回合只能在移动、执行一个动作、执行一个附赠动作中选一项（引擎不限制，人工处理）。",
+        "duration": {
+          "until": {
+            "at": "turnEnd",
+            "of": "bearer",
+            "nth": 0
+          }
+        }
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游荡者:击昏（花费：6d6）:14",
+    "name": "击昏（花费：6d6）",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "诡诈打击选项，花费 6d6 偷袭骰：需人工从偷袭伤害中扣除（引擎没有偷袭骰池）。"
+    ],
+    "notes": [],
+    "text": "诡诈打击选项，花费 6d6 偷袭骰：需人工从偷袭伤害中扣除（引擎没有偷袭骰池）。目标进行体质豁免（DC = 8 + 敏捷调整值 + 熟练加值）；失败则陷入昏迷，持续 1 分钟。昏迷的目标在自己的回合结束时可以重新豁免，通过即结束；受到任何伤害也会结束。",
+    "triggers": [
+      {
+        "id": "knockout",
+        "label": "击昏（花费：6d6）",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "before",
+        "optional": true,
+        "limit": "oncePerTurn",
+        "when": "(attack.finesse || attack.ranged) && (roll.adv || (allyWithin(target, 5, { exclude: [self], notCond: '失能' }) && !roll.disadv))",
+        "do": [
+          {
+            "kind": "save",
+            "ability": "con",
+            "dc": "8 + self.mod.dex + self.pb",
+            "onFail": [
+              {
+                "kind": "applyEffect",
+                "template": "XPHB:condition:昏迷",
+                "duration": {
+                  "minutes": 1,
+                  "saveEnds": {
+                    "ability": "con",
+                    "at": "turnEnd"
+                  },
+                  "endsOn": [
+                    {
+                      "event": "damageTaken"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游荡者:极效潜行:9",
+    "name": "极效潜行",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "隐形的结束由 DM 手动处理，本条目无法自动化。"
+    ],
+    "notes": [],
+    "text": "诡诈打击新选项「无声袭击」（花费 1d6）：若你通过躲藏获得隐形，且回合结束时仍处于掩护中或掩护之后，本次攻击不会使这个隐形结束。诡诈打击的花费与选项需在「诡诈打击」条目中加入；隐形的结束由 DM 手动处理，本条目无法自动化。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游荡者:进阶诡诈打击:11",
+    "name": "进阶诡诈打击",
+    "automation": "manual",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "偷袭时可以一次性选用两种诡诈打击效果，每种都要独立扣除对应的偷袭伤害骰。诡诈打击的选项与扣骰都由人处理（引擎没有偷袭骰池，也不在本条里写诡诈打击选项）。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游荡者:可靠才能:7",
+    "name": "可靠才能",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "属性检定可以运用技能或工具熟练时，可以把 d20 掷出的 9 及以下视为 10。是否可以运用熟练、以及是否选择使用，由人在 ask 中确认。",
+    "rollMods": [
+      {
+        "on": {
+          "kind": "check"
+        },
+        "who": "bearer",
+        "when": "ask('是否用可靠才能？（这次属性检定可以运用你的技能熟练或工具熟练）')",
+        "op": "minD20",
+        "value": 10,
+        "label": "可靠才能：d20 的 9 及以下视为 10"
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游荡者:快手:3",
+    "name": "快手",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "附赠动作可用于：巧手（敏捷（巧手）检定，开锁、解除陷阱或扒窃，DC 由 DM 定，手动处理）；"
+    ],
+    "notes": [
+      "进行一次敏捷（巧手）检定：开锁、解除陷阱或扒窃（DC 由 DM 定，手动）",
+      "本回合多出的这个动作只能用于操作动作，或要求该动作的魔法物品的魔法动作（手动约束）"
+    ],
+    "text": "附赠动作可用于：巧手（敏捷（巧手）检定，开锁、解除陷阱或扒窃，DC 由 DM 定，手动处理）；使用物件（附赠动作换得一个动作，只能用于操作动作，或要求该动作的魔法物品的魔法动作，这一限制由人遵守）。",
+    "actions": [
+      {
+        "id": "sleight",
+        "name": "快手（巧手）",
+        "activation": "bonus",
+        "root": [
+          {
+            "kind": "note",
+            "text": "进行一次敏捷（巧手）检定：开锁、解除陷阱或扒窃（DC 由 DM 定，手动）"
+          }
+        ]
+      },
+      {
+        "id": "object",
+        "name": "快手（使用物件）",
+        "activation": "bonus",
+        "root": [
+          {
+            "kind": "economy",
+            "action": 1
+          },
+          {
+            "kind": "note",
+            "text": "本回合多出的这个动作只能用于操作动作，或要求该动作的魔法物品的魔法动作（手动约束）"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游荡者:灵能面纱:13",
+    "name": "灵能面纱",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "造成伤害或迫使生物豁免时隐形立即结束，引擎不会自动结束，需人手动移除。"
+    ],
+    "notes": [],
+    "text": "魔法动作：获得隐形，至多 1 小时，或直到主动解除（无需动作）。造成伤害或迫使生物豁免时隐形立即结束，引擎不会自动结束，需人手动移除。每次长休可用一次；消耗一枚灵能骰（无需动作）可重置。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "灵能面纱",
+        "activation": "action",
+        "cost": [
+          {
+            "resource": "灵能面纱"
+          }
+        ],
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "XPHB:condition:隐形",
+            "duration": {
+              "manual": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "reset",
+        "name": "灵能面纱（重置）",
+        "activation": "free",
+        "requires": "self.resource('灵能面纱') == 0",
+        "cost": [
+          {
+            "resource": "灵能力量"
+          }
+        ],
+        "root": [
+          {
+            "kind": "resource",
+            "id": "灵能面纱",
+            "delta": 1
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游荡者:灵振诀窍:3",
+    "name": "灵振诀窍",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "引擎无法判断检定是否用到熟练项，询问时请自行确认。",
+      "短休恢复一颗的部分手动处理。"
+    ],
+    "notes": [
+      "灵振诀窍：检定仍然失败，不消耗灵能骰"
+    ],
+    "text": "用熟练的技能或工具做属性检定失败时，可以掷一颗灵能骰加到结果上；只有加完变为成功才消耗这颗骰子。引擎无法判断检定是否用到熟练项，询问时请自行确认。灵能骰池按 2 × 熟练加值计，骰子大小随游荡者等级成长（5 级 d8、11 级 d10、17 级 d12）；短休恢复一颗的部分手动处理。",
+    "triggers": [
+      {
+        "id": "knack",
+        "label": "灵振诀窍：+灵能骰（仅限熟练的技能 / 工具）",
+        "on": "d20Rolled",
+        "role": "actor",
+        "window": "before",
+        "optional": true,
+        "when": "roll.kind == 'check' && roll.failing",
+        "cost": [
+          {
+            "resource": "灵能力量"
+          }
+        ],
+        "modify": [
+          {
+            "op": "addToRoll",
+            "value": "cond(self.levelOf('游荡者') >= 17, 1d12, cond(self.levelOf('游荡者') >= 11, 1d10, cond(self.levelOf('游荡者') >= 5, 1d8, 1d6)))"
+          }
+        ],
+        "do": [
+          {
+            "kind": "if",
+            "when": "roll.failing",
+            "then": [
+              {
+                "kind": "resource",
+                "id": "灵能力量",
+                "delta": 1
+              },
+              {
+                "kind": "note",
+                "text": "灵振诀窍：检定仍然失败，不消耗灵能骰"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游荡者:飘忽不定:18",
+    "name": "飘忽不定",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "引擎的修正只能给优势或劣势，无法去掉攻击者已有的优势，需人工处理：攻击者有优势时按普通掷骰（优势与劣势相消）。"
+    ],
+    "notes": [],
+    "text": "只要你并未失能，以你为目标的攻击检定无法具有优势。引擎的修正只能给优势或劣势，无法去掉攻击者已有的优势，需人工处理：攻击者有优势时按普通掷骰（优势与劣势相消）。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游荡者:窃盗本能:17",
+    "name": "窃盗本能",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "引擎没有额外回合与先攻顺序的机制，需要人手动处理。"
+    ],
+    "notes": [],
+    "text": "每次战斗的第一轮可以行动两个回合：第二个回合以先攻减 10 行动。引擎没有额外回合与先攻顺序的机制，需要人手动处理。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游荡者:使用魔法装置:13",
+    "name": "使用魔法装置",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "同调：最多同时同调四件魔法物品（静态上限，手动）。",
+      "充能：使用消耗充能的魔法物品特性时掷 1d6，结果为 6 则本次不消耗充能（引擎没有这个时机，手动）。",
+      "可稳定使用戏法和 1 环卷轴，更高环阶的卷轴须先通过智力（奥秘）检定 DC 10 + 法术环阶，失败则卷轴化为尘埃（手动）。"
+    ],
+    "notes": [],
+    "text": "同调：最多同时同调四件魔法物品（静态上限，手动）。充能：使用消耗充能的魔法物品特性时掷 1d6，结果为 6 则本次不消耗充能（引擎没有这个时机，手动）。卷轴：可用任何法术卷轴，施法属性为智力；可稳定使用戏法和 1 环卷轴，更高环阶的卷轴须先通过智力（奥秘）检定 DC 10 + 法术环阶，失败则卷轴化为尘埃（手动）。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游荡者:摔绊（花费：1d6）:5",
+    "name": "摔绊",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "偷袭骰减 1d6 由人手动处理（引擎无法减少偷袭骰），由人确认是否使用。"
+    ],
+    "notes": [],
+    "text": "狡诈打击选项，花费 1d6 偷袭骰。偷袭骰减 1d6 由人手动处理（引擎无法减少偷袭骰），由人确认是否使用。仅对大型及以下目标生效；目标进行敏捷豁免（DC 为狡诈打击通用公式 8 + 敏捷调整值 + 熟练加值），失败则倒地，直到移除。",
+    "triggers": [
+      {
+        "id": "trip",
+        "label": "摔绊（花费：1d6）",
+        "on": "attackHit",
+        "role": "actor",
+        "limit": "oncePerTurn",
+        "when": "target.size != '巨型' && target.size != '超巨型' && ask('这次命中是否造成了偷袭伤害，并用 1d6 偷袭骰选择摔绊？')",
+        "do": [
+          {
+            "kind": "save",
+            "ability": "dex",
+            "dc": "8 + mod.dex + pb",
+            "onFail": [
+              {
+                "kind": "applyEffect",
+                "to": "target",
+                "template": "XPHB:condition:倒地",
+                "duration": {
+                  "manual": true
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游荡者:撕裂心智:17",
+    "name": "撕裂心智",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "用心灵之刃对生物造成偷袭伤害时，可迫使其进行感知豁免（DC 8 + 熟练 + 敏捷），失败则震慑 1 分钟；其回合结束时可重复豁免，成功即结束。「偷袭生效」按攻击条件近似（心灵之刃、灵巧或远程，且具有优势或 5 尺内有盟友），需人确认。每次长休一次；消耗三枚灵能骰（无需动作）可重置。",
+    "actions": [
+      {
+        "id": "reset",
+        "name": "撕裂心智（重置）",
+        "activation": "free",
+        "requires": "self.resource('撕裂心智') == 0",
+        "cost": [
+          {
+            "resource": "灵能力量",
+            "n": 3
+          }
+        ],
+        "root": [
+          {
+            "kind": "resource",
+            "id": "撕裂心智",
+            "delta": 1
+          }
+        ]
+      }
+    ],
+    "triggers": [
+      {
+        "id": "shred",
+        "label": "撕裂心智：感知豁免",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "after",
+        "optional": true,
+        "when": "attack.item == '心灵之刃' && (attack.finesse || attack.ranged) && (roll.adv || (allyWithin(target, 5, { exclude: [self], notCond: '失能' }) && !roll.disadv))",
+        "cost": [
+          {
+            "resource": "撕裂心智"
+          }
+        ],
+        "do": [
+          {
+            "kind": "save",
+            "ability": "wis",
+            "dc": "8 + pb + mod.dex",
+            "onFail": [
+              {
+                "kind": "applyEffect",
+                "to": "target",
+                "template": "XPHB:condition:震慑",
+                "duration": {
+                  "minutes": 1,
+                  "saveEnds": {
+                    "ability": "wis",
+                    "dc": "8 + source.pb + source.mod.dex",
+                    "at": "turnEnd"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游荡者:投毒（花费：1d6）:5",
+    "name": "投毒",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "引擎无法减少偷袭骰，偷袭骰减 1d6 由人手动处理；"
+    ],
+    "notes": [],
+    "text": "狡诈打击选项，花费 1d6 偷袭骰。引擎无法减少偷袭骰，偷袭骰减 1d6 由人手动处理；需先造成偷袭伤害，并随身携带毒药工具（由人确认）。命中后目标进行体质豁免（DC 为狡诈打击通用公式 8 + 敏捷调整值 + 熟练加值），失败则中毒 1 分钟，目标每次自己的回合结束时可重新豁免，成功则中毒结束。",
+    "triggers": [
+      {
+        "id": "poison",
+        "label": "投毒（花费：1d6）",
+        "on": "attackHit",
+        "role": "actor",
+        "limit": "oncePerTurn",
+        "when": "ask('这次命中是否造成了偷袭伤害，并用 1d6 偷袭骰选择投毒？')",
+        "do": [
+          {
+            "kind": "save",
+            "ability": "con",
+            "dc": "8 + mod.dex + pb",
+            "onFail": [
+              {
+                "kind": "applyEffect",
+                "to": "target",
+                "template": "XPHB:condition:中毒",
+                "duration": {
+                  "minutes": 1,
+                  "saveEnds": {
+                    "ability": "con",
+                    "at": "turnEnd"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游荡者:万能诡术:13",
+    "name": "万能诡术",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "法师之手的位置与距离由人判断，摔绊选项本身不在本条里，人工处理。"
+    ],
+    "notes": [],
+    "text": "对生物使用诡诈打击的摔绊选项时，还可以对法师之手 5 尺内的另一个生物施加同样效果。法师之手的位置与距离由人判断，摔绊选项本身不在本条里，人工处理。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游荡者:心灵传送:9",
+    "name": "心灵传送",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "附赠动作：消耗一枚灵能骰，传送到至多「骰值 × 10 尺」处一处可见、未被占据的空间（心灵之刃随即消失，无伤害）。需要你掷灵能骰并输入点数；目的地是否可见、是否未被占据由人确认。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "心灵传送",
+        "activation": "bonus",
+        "cost": [
+          {
+            "resource": "灵能力量"
+          }
+        ],
+        "root": [
+          {
+            "kind": "number",
+            "prompt": "心灵传送：掷灵能骰，输入点数",
+            "var": "n",
+            "min": 1,
+            "max": "cond(self.levelOf('游荡者') >= 17, 12, cond(self.levelOf('游荡者') >= 11, 10, cond(self.levelOf('游荡者') >= 5, 8, 6)))"
+          },
+          {
+            "kind": "move",
+            "mode": "teleport",
+            "ft": "10 * vars.n"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游荡者:心灵低语:3",
+    "name": "心灵低语",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "魔法动作：消耗一枚灵能骰，掷出的结果数即心灵感应的小时数（手动记录）；"
+    ],
+    "notes": [
+      "掷一枚灵能骰，结果数为心灵感应的小时数（手动记录）"
+    ],
+    "text": "魔法动作：消耗一枚灵能骰，掷出的结果数即心灵感应的小时数（手动记录）；可以选择至多等同于熟练加值数量的可见生物建立感应。感应的时长、一里的距离限制、发送与接收信息，以及生物随时断开，由人处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "心灵低语",
+        "activation": "action",
+        "cost": [
+          {
+            "resource": "灵能力量"
+          }
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": "pb",
+          "filter": "canSee(self, target)"
+        },
+        "root": [
+          {
+            "kind": "note",
+            "text": "掷一枚灵能骰，结果数为心灵感应的小时数（手动记录）"
+          },
+          {
+            "kind": "applyEffect",
+            "to": "each",
+            "template": "心灵低语",
+            "duration": {
+              "manual": true
+            }
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "心灵低语": {
+        "text": "可与施法者心灵感应交流，距离不超过一里；持续时间为掷出的小时数，到时由人手动移除。"
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游荡者:心灵之刃:3",
+    "name": "心灵之刃",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "借机攻击时化刃、远程心灵之刃由人手动处理。"
+    ],
+    "notes": [],
+    "text": "执行攻击动作时的心灵之刃攻击已写（近战，1d6 心灵伤害，攻击与伤害加值按灵巧近似，需人确认）。本回合用过心灵之刃后，附赠动作化出第二把刃（1d4 伤害）已写；「另一只手空闲」由人确认。借机攻击时化刃、远程心灵之刃由人手动处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "心灵之刃",
+        "activation": "none",
+        "cost": [
+          {
+            "economy": "attack"
+          }
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": "reach"
+        },
+        "tags": [
+          "weapon"
+        ],
+        "root": [
+          {
+            "kind": "attack",
+            "bonus": "self.pb + max(self.mod.str, self.mod.dex)",
+            "attack": {
+              "melee": true,
+              "weapon": true,
+              "ability": "dex",
+              "damageType": "心灵",
+              "item": "心灵之刃"
+            },
+            "onHit": [
+              {
+                "kind": "damage",
+                "dice": "1d6 + max(self.mod.str, self.mod.dex)",
+                "type": "心灵"
+              }
+            ]
+          },
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "心灵之刃：本回合已化刃"
+          }
+        ]
+      },
+      {
+        "id": "bonus",
+        "name": "心灵之刃（附赠）",
+        "activation": "bonus",
+        "requires": "turn.isMine && self.hasEffect('心灵之刃：本回合已化刃') && ask('另一只手空闲吗？')",
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": "reach"
+        },
+        "tags": [
+          "weapon"
+        ],
+        "root": [
+          {
+            "kind": "attack",
+            "bonus": "self.pb + max(self.mod.str, self.mod.dex)",
+            "attack": {
+              "melee": true,
+              "weapon": true,
+              "ability": "dex",
+              "damageType": "心灵",
+              "item": "心灵之刃"
+            },
+            "onHit": [
+              {
+                "kind": "damage",
+                "dice": "1d4 + max(self.mod.str, self.mod.dex)",
+                "type": "心灵"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "心灵之刃：本回合已化刃": {
+        "text": "本回合已用心灵之刃攻击，可以用附赠动作再化出一把。",
+        "duration": {
+          "until": {
+            "at": "turnEnd",
+            "of": "bearer",
+            "nth": 0
+          }
+        }
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游荡者:眩目（花费：3d6）:14",
+    "name": "眩目（花费：3d6）",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "诡诈打击选项，花费 3d6 偷袭骰：需人工从偷袭伤害中扣除（引擎没有偷袭骰池）。"
+    ],
+    "notes": [],
+    "text": "诡诈打击选项，花费 3d6 偷袭骰：需人工从偷袭伤害中扣除（引擎没有偷袭骰池）。目标进行敏捷豁免（DC = 8 + 敏捷调整值 + 熟练加值）；失败则陷入目盲，直到其下个回合结束。",
+    "triggers": [
+      {
+        "id": "dazzle",
+        "label": "眩目（花费：3d6）",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "before",
+        "optional": true,
+        "limit": "oncePerTurn",
+        "when": "(attack.finesse || attack.ranged) && (roll.adv || (allyWithin(target, 5, { exclude: [self], notCond: '失能' }) && !roll.disadv))",
+        "do": [
+          {
+            "kind": "save",
+            "ability": "dex",
+            "dc": "8 + self.mod.dex + self.pb",
+            "onFail": [
+              {
+                "kind": "applyEffect",
+                "template": "XPHB:condition:目盲",
+                "duration": {
+                  "until": {
+                    "at": "turnEnd",
+                    "of": "bearer",
+                    "nth": 0
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游荡者:寻的攻击:9",
+    "name": "寻的攻击",
+    "automation": "full",
+    "level": null,
+    "manual": [],
+    "notes": [
+      "寻的攻击：加完仍然未命中，灵能骰不消耗"
+    ],
+    "text": "心灵之刃的攻击检定会失败时，可以消耗一枚灵能骰（9 级起为 d8，11 级 d10，17 级 d12）加到攻击检定上；加完仍然未命中则灵能骰不消耗。心灵之刃按「物品名为心灵之刃，或造成心灵伤害的武器攻击」判断。",
+    "triggers": [
+      {
+        "id": "homing",
+        "label": "寻的攻击：灵能骰加到攻击检定",
+        "on": "d20Rolled",
+        "role": "actor",
+        "window": "before",
+        "optional": true,
+        "when": "roll.kind == 'attack' && roll.failing && (attack.item == '心灵之刃' || (attack.weapon && attack.damageType == '心灵'))",
+        "cost": [
+          {
+            "resource": "灵能力量"
+          }
+        ],
+        "modify": [
+          {
+            "op": "addToRoll",
+            "value": "cond(self.levelOf('游荡者') >= 17, 1d12, cond(self.levelOf('游荡者') >= 11, 1d10, 1d8))"
+          }
+        ],
+        "do": [
+          {
+            "kind": "if",
+            "when": "roll.failing",
+            "then": [
+              {
+                "kind": "resource",
+                "id": "灵能力量",
+                "delta": 1
+              },
+              {
+                "kind": "note",
+                "text": "寻的攻击：加完仍然未命中，灵能骰不消耗"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游荡者:致命一击:17",
+    "name": "致命一击",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "豁免失败后「本次攻击造成双倍伤害」需人手动加倍（引擎不能加倍本次攻击的全部伤害）。"
+    ],
+    "notes": [
+      "致命一击：目标豁免失败，本次攻击伤害加倍（手动补上）"
+    ],
+    "text": "第一轮偷袭命中时，目标的体质豁免已自动询问（DC 8 + 熟练 + 敏捷）。豁免失败后「本次攻击造成双倍伤害」需人手动加倍（引擎不能加倍本次攻击的全部伤害）。「偷袭生效」按攻击条件近似（灵巧或远程，且具有优势或 5 尺内有盟友），需人确认。",
+    "triggers": [
+      {
+        "id": "coup",
+        "label": "致命一击：体质豁免",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "after",
+        "optional": true,
+        "when": "round == 1 && (attack.finesse || attack.ranged) && (roll.adv || (allyWithin(target, 5, { exclude: [self], notCond: '失能' }) && !roll.disadv))",
+        "do": [
+          {
+            "kind": "save",
+            "ability": "con",
+            "dc": "8 + pb + mod.dex",
+            "onFail": [
+              {
+                "kind": "note",
+                "text": "致命一击：目标豁免失败，本次攻击伤害加倍（手动补上）"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游荡者:专业渗透:9",
+    "name": "专业渗透",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "模仿大师：钻研至少一小时后，精准模仿他人的言语、笔迹（非战斗，手动处理）。",
+      "稳定瞄准的速度归零写在其自身条目里，本条目无法取消它，需人手动处理（速度保持不变）。"
+    ],
+    "notes": [],
+    "text": "模仿大师：钻研至少一小时后，精准模仿他人的言语、笔迹（非战斗，手动处理）。机动瞄准：使用「稳定瞄准」时速度不归零。稳定瞄准的速度归零写在其自身条目里，本条目无法取消它，需人手动处理（速度保持不变）。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游侠:不知疲倦:10",
+    "name": "不知疲倦",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "短休减少 1 级力竭：引擎没有减一级力竭的节点，需人工处理。"
+    ],
+    "notes": [
+      "力竭等级减少 1 级（手动处理）"
+    ],
+    "text": "短休减少 1 级力竭：引擎没有减一级力竭的节点，需人工处理。",
+    "actions": [
+      {
+        "id": "temp",
+        "name": "不知疲倦：临时生命值",
+        "activation": "action",
+        "tags": [
+          "magical"
+        ],
+        "cost": [
+          {
+            "resource": "tireless"
+          }
+        ],
+        "root": [
+          {
+            "kind": "tempHp",
+            "amount": "1d8 + max(1, self.mod.wis)",
+            "to": "self"
+          }
+        ]
+      }
+    ],
+    "triggers": [
+      {
+        "id": "short-rest",
+        "label": "不知疲倦：减少力竭",
+        "on": "restCompleted",
+        "role": "actor",
+        "when": "event.kind == 'short' && self.exhaustion > 0",
+        "do": [
+          {
+            "kind": "note",
+            "text": "力竭等级减少 1 级（手动处理）"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游侠:法术共享:15",
+    "name": "法术共享",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "引擎没有独立的原初行侣参与者，需要人手动处理。"
+    ],
+    "notes": [],
+    "text": "（驯兽师）你施展的、以自己为目标的法术，若原初行侣在你 30 尺内，可以让该法术效应同时作用于它。引擎没有独立的原初行侣参与者，需要人手动处理。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游侠:防守战术:7",
+    "name": "防守战术",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "二选一，所选由人在 ask 中确认（短休或长休后可以替换，由人在卡上更改）。冲出重围：对你发动的借机攻击具有劣势，由人确认该攻击是否为借机攻击。多重防御：某生物的攻击命中你之后，它本回合对你的其他攻击具有劣势，由人确认该攻击者本回合是否已经命中过你。",
+    "rollMods": [
+      {
+        "on": {
+          "kind": "attack"
+        },
+        "who": "against",
+        "when": "ask('防守战术选的是冲出重围，且这次攻击是借机攻击吗？')",
+        "op": "disadv",
+        "label": "防守战术：冲出重围（借机攻击劣势）"
+      },
+      {
+        "on": {
+          "kind": "attack"
+        },
+        "who": "against",
+        "when": "ask('防守战术选的是多重防御，且这个攻击者本回合已经有一次攻击命中过你吗？')",
+        "op": "disadv",
+        "label": "防守战术：多重防御（本回合其他攻击劣势）"
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游侠:高阶猎杀技艺:11",
+    "name": "高阶猎杀技艺",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "引擎无法选择第二个目标，这里只在命中标记目标时提醒，额外伤害由人手动施加。"
+    ],
+    "notes": [
+      "高阶猎杀技艺：选择被标记生物 30 尺内、你能看见的另一生物，对其施加 1d6 点力场伤害（猎人印记的额外伤害），由人手动处理"
+    ],
+    "text": "每回合一次，对被猎人印记标记的生物造成伤害后，可以对该生物 30 尺内、你能看见的另一生物施加猎人印记的额外伤害（1d6 力场）。引擎无法选择第二个目标，这里只在命中标记目标时提醒，额外伤害由人手动施加。",
+    "triggers": [
+      {
+        "id": "hm-extra",
+        "label": "高阶猎杀技艺：转移猎人印记额外伤害（手动选目标）",
+        "on": "attackHit",
+        "role": "actor",
+        "optional": true,
+        "limit": "oncePerTurn",
+        "when": "self.hasEffect('猎人印记') && target.id == self.effect('猎人印记').state.mark && damage.amount > 0",
+        "do": [
+          {
+            "kind": "note",
+            "text": "高阶猎杀技艺：选择被标记生物 30 尺内、你能看见的另一生物，对其施加 1d6 点力场伤害（猎人印记的额外伤害），由人手动处理"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游侠:精宸所与:11",
+    "name": "精宸所与",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "法术本身在妖精召唤术的条目里，这些修改目前手动处理。"
+    ],
+    "notes": [],
+    "text": "妖精召唤术无需材料成分；可以免费施展一次（资源池「免费施展该法术」，长休恢复）；开始施展时可以改为无需专注，此时持续时间变为 1 分钟。法术本身在妖精召唤术的条目里，这些修改目前手动处理。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游侠:恐惧伏击:3",
+    "name": "恐惧伏击",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "人物卡静态层的速度 +10 是常驻的，「仅第一个回合」这一限定无法在静态层表达，需要人手动处理（第一个回合之外速度应减 10）。"
+    ],
+    "notes": [],
+    "text": "伏击者之跃：每场战斗第一个回合开始时速度 +10，直到该回合结束。人物卡静态层的速度 +10 是常驻的，「仅第一个回合」这一限定无法在静态层表达，需要人手动处理（第一个回合之外速度应减 10）。",
+    "triggers": [
+      {
+        "id": "dread-strike",
+        "label": "恐惧伏击：恐惧打击（额外 2d6 心灵伤害）",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "before",
+        "optional": true,
+        "limit": "oncePerTurn",
+        "when": "attack.weapon",
+        "cost": [
+          {
+            "resource": "恐惧打击"
+          }
+        ],
+        "do": [
+          {
+            "kind": "addDamage",
+            "dice": "2d6",
+            "type": "心灵"
+          }
+        ]
+      }
+    ],
+    "rollMods": [
+      {
+        "on": {
+          "kind": "initiative"
+        },
+        "who": "bearer",
+        "op": "add",
+        "value": "max(0, self.mod.wis)",
+        "label": "恐惧伏击：先攻加感知调整值"
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游侠:猎杀技艺:3",
+    "name": "猎杀技艺",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "灭族者未写：需要对另一生物再发动一次武器攻击，引擎无法选择新目标，由人手动处理。"
+    ],
+    "notes": [],
+    "text": "二选一，所选由人在 ask 中确认。巨像屠夫已写：用武器命中生命值不满的生物时额外造成 1d8 点武器同类型伤害，每回合一次。灭族者未写：需要对另一生物再发动一次武器攻击，引擎无法选择新目标，由人手动处理。短休或长休后可以替换所选，由人在卡上更改。",
+    "triggers": [
+      {
+        "id": "colossus",
+        "label": "猎杀技艺：巨像屠夫（额外 1d8）",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "before",
+        "limit": "oncePerTurn",
+        "when": "attack.weapon && target.hp < target.hpMax && ask('猎杀技艺选的是巨像屠夫吗？')",
+        "do": [
+          {
+            "kind": "addDamage",
+            "dice": "1d8",
+            "type": "attack.damageType"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游侠:兽性狂怒:11",
+    "name": "兽性狂怒",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "引擎没有独立的原初行侣参与者，以上需要人手动处理。"
+    ],
+    "notes": [],
+    "text": "（驯兽师）原初行侣野兽的行动：①命令野兽执行野兽打击时，它可以使用该动作两次；②每回合它首次命中受你的猎人印记影响的生物时，额外造成等同于猎人印记额外伤害的力场伤害。引擎没有独立的原初行侣参与者，以上需要人手动处理。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游侠:宿敌:1",
+    "name": "宿敌",
+    "automation": "partial",
+    "level": 0,
+    "manual": [
+      "猎人印记的追踪检定优势、目标降至 0 后转移标记为手动处理（见猎人印记）。"
+    ],
+    "notes": [],
+    "text": "猎人印记的追踪检定优势、目标降至 0 后转移标记为手动处理（见猎人印记）。无需法术位的次数随游侠等级提升（宿敌列），上限需由人物卡静态层按等级更新，本条不处理。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "宿敌：猎人印记",
+        "activation": "bonus",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "resource": "favored-enemy-casts"
+          }
+        ],
+        "concentration": {
+          "hours": 1
+        },
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 90
+        },
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "XPHB:spell:猎人印记#猎人印记",
+            "state": {
+              "mark": "target"
+            }
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游侠:特殊训练:7",
+    "name": "特殊训练",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "引擎没有独立的原初行侣参与者，以上需要人手动处理。"
+    ],
+    "notes": [],
+    "text": "（驯兽师）原初行侣野兽的行动：①用附赠动作命令野兽行动时，野兽可以用它自己的附赠动作执行疾走、撤离、回避或协助；②野兽攻击命中并造成伤害时，伤害类型可选力场或其原本类型。引擎没有独立的原初行侣参与者，以上需要人手动处理。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游侠:屠灭众敌:20",
+    "name": "屠灭众敌",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "需要人手动按游侠 20 级把猎人印记的伤害骰当作 d10 处理。"
+    ],
+    "notes": [],
+    "text": "猎人印记的伤害骰从 d6 改为 d10。要改的是猎人印记法术自己的伤害骰（1d6），本条目无法修改它；需要人手动按游侠 20 级把猎人印记的伤害骰当作 d10 处理。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游侠:雾行漫游:15",
+    "name": "雾行漫游",
+    "automation": "partial",
+    "level": 0,
+    "manual": [
+      "这一同行效果需要人手动处理；"
+    ],
+    "notes": [
+      "可携带 5 尺内一个你可见的自愿生物同行，落点在你目标位置 5 尺内（手动处理）"
+    ],
+    "text": "每次施展迷踪步时可以携带 5 尺内一个你可见的自愿生物一同传送，它落在你目标位置 5 尺内的未占据空间。这一同行效果需要人手动处理；自动化部分只覆盖免费施展的迷踪步本身（消耗 mistyStepFree 次数、不耗法术位）。",
+    "actions": [
+      {
+        "id": "free",
+        "name": "雾行漫游：免费迷踪步",
+        "activation": "bonus",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "resource": "mistyStepFree"
+          }
+        ],
+        "root": [
+          {
+            "kind": "move",
+            "mode": "teleport",
+            "ft": 30
+          },
+          {
+            "kind": "note",
+            "text": "可携带 5 尺内一个你可见的自愿生物同行，落点在你目标位置 5 尺内（手动处理）"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游侠:妖思魅缕:7",
+    "name": "妖思魅缕",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "反应的目标要选择「不同于通过豁免的那一位」的生物（手动留意）。"
+    ],
+    "notes": [],
+    "text": "对抗或终止魅惑 / 恐慌的豁免优势：引擎无法判断豁免的来源，仅对感知豁免询问；反应部分也只检查感知豁免，距离与视线由询问确认，两次询问都由人回答。反应的目标要选择「不同于通过豁免的那一位」的生物（手动留意）。",
+    "actions": [
+      {
+        "id": "twist",
+        "name": "妖思魅缕",
+        "activation": "reaction",
+        "trigger": {
+          "on": "d20Rolled",
+          "role": "any",
+          "window": "after",
+          "when": "roll.kind == 'save' && roll.ability == 'wis' && !roll.failing && ask('刚通过的是对抗或终止魅惑 / 恐慌状态的豁免，且豁免者是你或你 120 尺内你可见的生物吗？')"
+        },
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 120,
+          "filter": "target.id != self.id"
+        },
+        "root": [
+          {
+            "kind": "save",
+            "ability": "wis",
+            "dc": "self.spell.dc",
+            "onFail": [
+              {
+                "kind": "choose",
+                "prompt": "妖思魅缕：目标陷入哪种状态？",
+                "options": [
+                  {
+                    "label": "魅惑",
+                    "do": [
+                      {
+                        "kind": "applyEffect",
+                        "template": "XPHB:condition:魅惑",
+                        "duration": {
+                          "minutes": 1,
+                          "saveEnds": {
+                            "ability": "wis",
+                            "at": "turnEnd"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "label": "恐慌",
+                    "do": [
+                      {
+                        "kind": "applyEffect",
+                        "template": "XPHB:condition:恐慌",
+                        "duration": {
+                          "minutes": 1,
+                          "saveEnds": {
+                            "ability": "wis",
+                            "at": "turnEnd"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "rollMods": [
+      {
+        "on": {
+          "kind": "save",
+          "ability": "wis"
+        },
+        "who": "bearer",
+        "when": "ask('这次豁免是对抗或终止魅惑 / 恐慌状态的吗？')",
+        "op": "adv",
+        "label": "妖思魅缕：对抗魅惑 / 恐慌"
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游侠:阴影视野:3",
+    "name": "阴影视野",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "60 尺黑暗视觉（及在既有值上叠加）是感官属性，引擎没有对应字段，不写。隐形部分：完全身处黑暗中时，对只能依靠黑暗视觉看见你的生物具有隐形状态（它们攻击你具有劣势，你攻击它们具有优势）。引擎无法判断对方的视觉来源与光照，每次由人确认。",
+    "rollMods": [
+      {
+        "on": {
+          "kind": "attack"
+        },
+        "who": "against",
+        "when": "ask('你是否完全身处黑暗中，且攻击者只能依靠黑暗视觉看见你？')",
+        "op": "disadv",
+        "label": "阴影视野：依赖黑暗视觉的攻击者"
+      },
+      {
+        "on": {
+          "kind": "attack"
+        },
+        "who": "bearer",
+        "when": "ask('你是否完全身处黑暗中，且目标只能依靠黑暗视觉看见你？')",
+        "op": "adv",
+        "label": "阴影视野：对依赖黑暗视觉的目标"
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游侠:永恒追猎:13",
+    "name": "永恒追猎",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "引擎没有「某个法术的专注免于受伤打断」的写法，受伤引起的专注检定需要人手动免除。"
+    ],
+    "notes": [],
+    "text": "受到伤害不会打断你对猎人印记的专注。引擎没有「某个法术的专注免于受伤打断」的写法，受伤引起的专注检定需要人手动免除。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游侠:原初伴侣:3",
+    "name": "原初伴侣",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "原初野兽本身（数据卡、行动、生命值、死亡）手动处理。"
+    ],
+    "notes": [
+      "原初伴侣：命令野兽执行一个动作（野兽的行动手动处理）",
+      "原初伴侣：野兽执行野兽打击（野兽的攻击手动处理）",
+      "原初伴侣：野兽将在一分钟后复活并恢复全部生命值（手动处理）"
+    ],
+    "text": "原初野兽本身（数据卡、行动、生命值、死亡）手动处理。这里只记录命令野兽和复活消耗的行动经济：野兽默认只执行回避；你的回合以附赠动作命令它，或牺牲你的一次攻击命令它执行野兽打击；你失能时野兽自主行动；野兽死亡不超过一小时，可以用魔法动作消耗一个法术位使它复活（一分钟后恢复全部生命值）。",
+    "actions": [
+      {
+        "id": "command",
+        "name": "原初伴侣：命令野兽",
+        "activation": "bonus",
+        "requires": "turn.isMine",
+        "text": "以附赠动作命令原初野兽执行一个动作（数据卡里的或其他动作）。",
+        "root": [
+          {
+            "kind": "note",
+            "text": "原初伴侣：命令野兽执行一个动作（野兽的行动手动处理）"
+          }
+        ]
+      },
+      {
+        "id": "strike",
+        "name": "原初伴侣：牺牲攻击命令野兽打击",
+        "activation": "none",
+        "requires": "turn.isMine",
+        "cost": [
+          {
+            "economy": "attack"
+          }
+        ],
+        "text": "使用攻击动作时，牺牲你的一次攻击，命令原初野兽执行野兽打击动作。",
+        "root": [
+          {
+            "kind": "note",
+            "text": "原初伴侣：野兽执行野兽打击（野兽的攻击手动处理）"
+          }
+        ]
+      },
+      {
+        "id": "revive",
+        "name": "原初伴侣：复活野兽",
+        "activation": "action",
+        "tags": [
+          "magical"
+        ],
+        "cost": [
+          {
+            "slot": {
+              "min": 1
+            }
+          }
+        ],
+        "text": "野兽死亡不超过一小时时，以魔法动作消耗一个法术位使它复活；它在一分钟后死而复生并恢复所有生命值。",
+        "root": [
+          {
+            "kind": "note",
+            "text": "原初伴侣：野兽将在一分钟后复活并恢复全部生命值（手动处理）"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:游侠:追猎如风:11",
+    "name": "追猎如风",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "额外效应二选一、由人确认所选：群慌已写（目标做法术豁免 DC 的感知豁免，失败恐慌至你的下一回合开始），但目标 10 尺内其他生物的豁免需人手动处理；",
+      "瞬息打击（对原目标 5 尺内另一生物再攻击）需人手动选择新目标并攻击。"
+    ],
+    "notes": [
+      "群慌：目标 10 尺内的其他每个生物也要进行同样的感知豁免（DC 为你的法术豁免 DC），失败则恐慌至你的下一回合开始，由人手动处理",
+      "瞬息打击：用同一把武器对原目标 5 尺内的另一生物再发动一次攻击，新目标必须在武器触及或射程内，由人手动处理"
+    ],
+    "text": "恐惧打击心灵伤害从 1d6 变为 2d8 不在本条写（属于恐惧伏击的恐惧打击，需在该条目按等级处理）。额外效应二选一、由人确认所选：群慌已写（目标做法术豁免 DC 的感知豁免，失败恐慌至你的下一回合开始），但目标 10 尺内其他生物的豁免需人手动处理；瞬息打击（对原目标 5 尺内另一生物再攻击）需人手动选择新目标并攻击。",
+    "triggers": [
+      {
+        "id": "dreadful-rider",
+        "label": "追猎如风：恐惧打击的额外效应",
+        "on": "attackHit",
+        "role": "actor",
+        "optional": true,
+        "when": "attack.weapon && ask('这次命中是否使用了恐惧伏击的恐惧打击？')",
+        "do": [
+          {
+            "kind": "choose",
+            "prompt": "追猎如风：选择额外效应",
+            "options": [
+              {
+                "label": "群慌：目标进行感知豁免（DC 为你的法术豁免 DC），失败则恐慌至你的下一回合开始",
+                "do": [
+                  {
+                    "kind": "save",
+                    "ability": "wis",
+                    "dc": "self.spell.dc",
+                    "onFail": [
+                      {
+                        "kind": "applyEffect",
+                        "to": "target",
+                        "template": "XPHB:condition:恐慌",
+                        "duration": {
+                          "until": {
+                            "at": "turnStart",
+                            "of": "source",
+                            "nth": 1
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "note",
+                    "text": "群慌：目标 10 尺内的其他每个生物也要进行同样的感知豁免（DC 为你的法术豁免 DC），失败则恐慌至你的下一回合开始，由人手动处理"
+                  }
+                ]
+              },
+              {
+                "label": "瞬息打击：用同一武器对原目标 5 尺内的另一生物再攻击一次（手动）",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "瞬息打击：用同一把武器对原目标 5 尺内的另一生物再发动一次攻击，新目标必须在武器触及或射程内，由人手动处理"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:元素掌控",
+    "name": "元素掌控",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "能量掌控：你施展的、所选伤害类型的法术无视该类型的抗性，引擎没有忽略抗性的效果，需人手动处理。"
+    ],
+    "notes": [],
+    "text": "能量掌控：你施展的、所选伤害类型的法术无视该类型的抗性，引擎没有忽略抗性的效果，需人手动处理。伤害骰中的 1 视为 2 已写为法术伤害的最小骰值，靠 ask 确认该法术造成的是你选定的伤害类型。复选时每次选择的类型由人记录。",
+    "rollMods": [
+      {
+        "on": {
+          "kind": "damage",
+          "attack": {
+            "spell": true
+          }
+        },
+        "who": "bearer",
+        "when": "ask('这道法术造成的伤害是你在元素掌控中选定的伤害类型之一吗？')",
+        "op": "minDie",
+        "value": 2,
+        "label": "元素掌控：1 视为 2"
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:远程法术",
+    "name": "远程法术",
+    "automation": "manual",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "超魔法：施展射程至少为 5 尺的法术时，消耗 1 术法点将射程翻倍；施展射程为触碰的法术时，消耗 1 术法点将射程改为 30 尺。引擎不改写法术射程，由人处理。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:运动员",
+    "name": "运动员",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "攀爬速度（等同于你的速度）和跳跃（移动 5 尺后跳远或跳高）引擎无法表达，需要人手动处理。"
+    ],
+    "notes": [],
+    "text": "鲤鱼打挺已写：处于倒地状态时，仅消耗 5 尺移动力即可站起（此时终止倒地）。攀爬速度（等同于你的速度）和跳跃（移动 5 尺后跳远或跳高）引擎无法表达，需要人手动处理。",
+    "actions": [
+      {
+        "id": "stand",
+        "name": "运动员：鲤鱼打挺",
+        "activation": "free",
+        "requires": "self.has('倒地') && self.speed >= 5",
+        "root": [
+          {
+            "kind": "economy",
+            "move": "-5"
+          },
+          {
+            "kind": "removeEffect",
+            "from": "self",
+            "match": {
+              "name": "倒地"
+            }
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:战地施法者",
+    "name": "战地施法者",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "引擎看不到离开触及范围的时机，请手动施展该法术并自行扣反应。"
+    ],
+    "notes": [],
+    "text": "响应法术：生物离开触及范围时可以用反应对其施展一道施法时间为动作、且只以它为目标的法术，而不是借机攻击；引擎看不到离开触及范围的时机，请手动施展该法术并自行扣反应。姿势成分：持握武器 / 盾牌也能满足，纯叙事。",
+    "rollMods": [
+      {
+        "on": {
+          "kind": "concentration"
+        },
+        "who": "bearer",
+        "op": "adv",
+        "label": "战地施法者：专注（体质豁免优势）"
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:战士:奥法打击:10",
+    "name": "奥法打击",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "用掉后需人手动移除该效应（否则到你的下个回合结束时自动消失）。"
+    ],
+    "notes": [],
+    "text": "用武器命中一个生物后，该生物直到你的下个回合结束前，在对抗你法术的下一次豁免中具有劣势。引擎每次豁免都会询问「是否针对你的法术」；用掉后需人手动移除该效应（否则到你的下个回合结束时自动消失）。",
+    "triggers": [
+      {
+        "id": "arcane-strike",
+        "label": "奥法打击：施加豁免劣势",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "after",
+        "when": "attack.weapon",
+        "do": [
+          {
+            "kind": "applyEffect",
+            "to": "target",
+            "template": "奥法打击"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "奥法打击": {
+        "rollMods": [
+          {
+            "on": {
+              "kind": "save"
+            },
+            "who": "bearer",
+            "when": "source != null && ask('这次豁免是针对施法者的法术吗？')",
+            "op": "disadv",
+            "label": "奥法打击：对施法者法术的豁免"
+          }
+        ],
+        "duration": {
+          "until": {
+            "at": "turnEnd",
+            "of": "source",
+            "nth": 1
+          }
+        }
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:战士:奥能冲锋:15",
+    "name": "奥能冲锋",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "动作如潮之前的传送需人手动处理，目的地的视线与空位由人判断。"
+    ],
+    "notes": [],
+    "text": "使用动作如潮时，可以传送至多 30 尺至一个你能看到的未占据空间，可以在动作如潮的额外动作之前或之后进行。引擎只在本回合已用过动作如潮之后提供传送；动作如潮之前的传送需人手动处理，目的地的视线与空位由人判断。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "奥能冲锋：传送",
+        "activation": "free",
+        "requires": "turn.isMine && self.hasEffect('动作如潮') && !self.hasEffect('奥能冲锋')",
+        "root": [
+          {
+            "kind": "move",
+            "mode": "teleport",
+            "ft": 30
+          },
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "奥能冲锋"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "奥能冲锋": {
+        "text": "本回合已经用过奥能冲锋的传送。",
+        "duration": {
+          "until": {
+            "at": "turnEnd",
+            "of": "bearer",
+            "nth": 0
+          }
+        }
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:战士:坚韧:15",
+    "name": "坚韧",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "引擎无法替换战技的代价和骰子，需要人手动处理（不扣卓越骰，骰子改掷 1d8）。"
+    ],
+    "notes": [],
+    "text": "每回合一次，使用战技时可以不消耗卓越骰，改为掷 1d8 作为结果。引擎无法替换战技的代价和骰子，需要人手动处理（不扣卓越骰，骰子改掷 1d8）。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:战士:精通战争魔法:18",
+    "name": "精通战争魔法",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "引擎不能替换攻击次数，需人工处理：由人决定替换、选择法术并按法术结算。"
+    ],
+    "notes": [],
+    "text": "在自己回合执行攻击动作时，可以把其中两次攻击替换为施展一道施法时间为动作、环阶为一环或二环的法师法术。引擎不能替换攻击次数，需人工处理：由人决定替换、选择法术并按法术结算。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:战士:力场壁垒:15",
+    "name": "力场壁垒",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "掩护等级（半掩护还是四分之三掩护）原文没写，引擎只记录掩护状态与 1 分钟时长，掩护带来的 AC 与敏捷豁免加值需由人判断；消耗灵能骰重置使用权由人处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "力场壁垒",
+        "activation": "bonus",
+        "cost": [
+          {
+            "resource": "force-wall"
+          }
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": "max(1, mod.int)",
+          "range": 30
+        },
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "each",
+            "template": "力场壁垒"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "力场壁垒": {
+        "text": "1 分钟内视为处于掩护中；陷入失能状态时提前结束。",
+        "duration": {
+          "minutes": 1,
+          "endsOn": [
+            {
+              "event": "effectApplied",
+              "when": "event.bearer == self.id && self.has('失能')"
+            }
+          ]
+        }
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:战士:料敌机先:7",
+    "name": "料敌机先",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "附赠动作查看 30 尺内可见生物的抗性、免疫与易伤：引擎没有揭示信息的节点，查看并告知使用者需要人手动处理。"
+    ],
+    "notes": [
+      "查看目标是否具有抗性、免疫或易伤，并告知使用者具体内容（手动）"
+    ],
+    "text": "附赠动作查看 30 尺内可见生物的抗性、免疫与易伤：引擎没有揭示信息的节点，查看并告知使用者需要人手动处理。每次长休可用一次；可消耗 1 粒卓越骰（无需动作）重置使用权。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "料敌机先",
+        "activation": "bonus",
+        "cost": [
+          {
+            "resource": "料敌机先"
+          }
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 30,
+          "filter": "canSee(target, self)"
+        },
+        "root": [
+          {
+            "kind": "note",
+            "text": "查看目标是否具有抗性、免疫或易伤，并告知使用者具体内容（手动）"
+          }
+        ]
+      },
+      {
+        "id": "reset",
+        "name": "料敌机先：卓越骰重置",
+        "activation": "free",
+        "requires": "self.resource('料敌机先') == 0",
+        "cost": [
+          {
+            "resource": "卓越骰"
+          }
+        ],
+        "root": [
+          {
+            "kind": "resource",
+            "id": "料敌机先",
+            "delta": 1
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  }
+]

@@ -1,0 +1,2513 @@
+[
+  {
+    "key": "XPHB:魔契师:锐眼斗士:6",
+    "name": "锐眼斗士",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "用唤醒心灵与生物形成连结时，可迫使其进行感知豁免（DC 为你的法术豁免 DC）；失败则连结期间它对你的攻击检定具有劣势，你对它的攻击检定具有优势。使用后直到短休或长休前不能再用，除非消耗一个契约魔法法术位（无需动作）复原使用次数。只能紧接唤醒心灵使用、连结结束时移除效果，由人处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "锐眼斗士",
+        "activation": "free",
+        "cost": [
+          {
+            "resource": "use"
+          }
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 30,
+          "filter": "canSee(self, target)"
+        },
+        "root": [
+          {
+            "kind": "save",
+            "ability": "wis",
+            "dc": "self.spell.dc",
+            "onFail": [
+              {
+                "kind": "applyEffect",
+                "to": "target",
+                "template": "锐眼斗士：连结"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "reset",
+        "name": "锐眼斗士：复原使用次数",
+        "activation": "free",
+        "cost": [
+          {
+            "slot": {
+              "min": 1
+            }
+          }
+        ],
+        "requires": "self.resource('use') < 1",
+        "root": [
+          {
+            "kind": "resource",
+            "id": "use",
+            "delta": 1
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "锐眼斗士：连结": {
+        "tags": [
+          "锐眼斗士"
+        ],
+        "text": "连结期间：它对施放者的攻击具有劣势，施放者对它的攻击具有优势。连结结束时手动移除。",
+        "duration": {
+          "manual": true
+        },
+        "rollMods": [
+          {
+            "on": {
+              "kind": "attack"
+            },
+            "who": "bearer",
+            "when": "target.id == source.id",
+            "op": "disadv",
+            "label": "锐眼斗士：对施放者的攻击具有劣势"
+          },
+          {
+            "on": {
+              "kind": "attack"
+            },
+            "who": "against",
+            "when": "attacker.id == source.id",
+            "op": "adv",
+            "label": "锐眼斗士：施放者对其攻击具有优势"
+          }
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:魔契师:思维之盾:10",
+    "name": "思维之盾",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "每当一个生物对你造成心灵伤害，该生物受到等同于你所承受伤害的伤害：反射对象是伤害来源，引擎的伤害节点无法指定来源，需人工处理。"
+    ],
+    "notes": [],
+    "text": "心灵抗性已在人物卡（静态）。思维不可被心灵感应阅读属于纯叙事，不处理。每当一个生物对你造成心灵伤害，该生物受到等同于你所承受伤害的伤害：反射对象是伤害来源，引擎的伤害节点无法指定来源，需人工处理。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:魔契师:天界韧性:10",
+    "name": "天界韧性",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [
+      "可再选至多 5 个你可见的生物，各获得 魔契师等级的一半 + 魅力调整值 的临时生命值（由人选择并结算）；若本次休息中还使用了秘法回流，则再获得一次（由人处理）"
+    ],
+    "text": "完成一次短休或长休后，获得临时生命值，数值为魔契师等级 + 魅力调整值；可以同时选择至多 5 个你可见的生物，各获得魔契师等级的一半 + 魅力调整值的临时生命值。引擎自动处理自己的那份（休息完成时）；选择盟友、以及秘法回流时额外获得的那一次，由人处理。",
+    "triggers": [
+      {
+        "id": "celestial-resilience",
+        "label": "天界韧性：临时生命值",
+        "on": "restCompleted",
+        "role": "actor",
+        "window": "after",
+        "do": [
+          {
+            "kind": "tempHp",
+            "amount": "self.levelOf('魔契师') + self.mod.cha",
+            "to": "self"
+          },
+          {
+            "kind": "note",
+            "text": "可再选至多 5 个你可见的生物，各获得 魔契师等级的一半 + 魅力调整值 的临时生命值（由人选择并结算）；若本次休息中还使用了秘法回流，则再获得一次（由人处理）"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:魔契师:雾隐遁行:6",
+    "name": "雾隐遁行",
+    "automation": "partial",
+    "level": 0,
+    "manual": [
+      "受到伤害后可以用反应施展迷踪步（施法用的法术位或妖精步伐次数请手动扣除）；",
+      "非反应施展迷踪步时选「惊惧步伐」只能提示，豁免与伤害需要手动结算：传送前或传送后的空间（你选）5 尺内的生物进行感知豁免（DC = 你的法术豁免 DC），失败受到 2d10 心灵伤害。"
+    ],
+    "notes": [
+      "雾隐遁行：只传送，不选额外效果",
+      "惊惧步伐：传送前或传送后的空间（你选）5 尺内的生物进行感知豁免（DC = 你的法术豁免 DC），失败受到 2d10 心灵伤害"
+    ],
+    "text": "受到伤害后可以用反应施展迷踪步（施法用的法术位或妖精步伐次数请手动扣除）；迷踪步（无论怎么施展）另有「无踪步伐」「惊惧步伐」两个选项。非反应施展迷踪步时选「惊惧步伐」只能提示，豁免与伤害需要手动结算：传送前或传送后的空间（你选）5 尺内的生物进行感知豁免（DC = 你的法术豁免 DC），失败受到 2d10 心灵伤害。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "雾隐遁行：反应施展迷踪步",
+        "activation": "reaction",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "trigger": {
+          "on": "damageTaken",
+          "role": "target",
+          "window": "after"
+        },
+        "root": [
+          {
+            "kind": "move",
+            "mode": "teleport",
+            "ft": 30
+          },
+          {
+            "kind": "choose",
+            "prompt": "迷踪步的额外选项",
+            "options": [
+              {
+                "label": "无额外效果",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "雾隐遁行：只传送，不选额外效果"
+                  }
+                ]
+              },
+              {
+                "label": "无踪步伐：隐形，到你的下一回合开始（或攻击、造成伤害、施法后结束）",
+                "do": [
+                  {
+                    "kind": "applyEffect",
+                    "to": "self",
+                    "template": "无踪步伐"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "dreadful",
+        "name": "雾隐遁行：反应施展迷踪步（惊惧步伐）",
+        "activation": "reaction",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "text": "范围选在传送前或传送后的空间（由你选择）周围 5 尺。",
+        "trigger": {
+          "on": "damageTaken",
+          "role": "target",
+          "window": "after"
+        },
+        "targeting": {
+          "type": "area",
+          "range": 30,
+          "area": {
+            "shape": "sphere",
+            "radius": 5
+          }
+        },
+        "root": [
+          {
+            "kind": "move",
+            "mode": "teleport",
+            "ft": 30
+          },
+          {
+            "kind": "forEach",
+            "in": "area",
+            "do": [
+              {
+                "kind": "save",
+                "ability": "wis",
+                "dc": "self.spell.dc",
+                "onFail": [
+                  {
+                    "kind": "damage",
+                    "id": "dread",
+                    "dice": "2d10",
+                    "type": "心灵"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "triggers": [
+      {
+        "id": "fey-options",
+        "label": "雾隐遁行：迷踪步的额外选项",
+        "on": "spellCast",
+        "role": "actor",
+        "window": "after",
+        "optional": true,
+        "when": "event.spell == '迷踪步' || event.key == 'XPHB:spell:迷踪步'",
+        "do": [
+          {
+            "kind": "choose",
+            "prompt": "迷踪步的额外选项（雾隐遁行）",
+            "options": [
+              {
+                "label": "无踪步伐：隐形，到你的下一回合开始（或攻击、造成伤害、施法后结束）",
+                "do": [
+                  {
+                    "kind": "applyEffect",
+                    "to": "self",
+                    "template": "无踪步伐"
+                  }
+                ]
+              },
+              {
+                "label": "惊惧步伐（豁免与伤害手动结算）",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "惊惧步伐：传送前或传送后的空间（你选）5 尺内的生物进行感知豁免（DC = 你的法术豁免 DC），失败受到 2d10 心灵伤害"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "无踪步伐": {
+        "tags": [
+          "magical",
+          "spell"
+        ],
+        "text": "你处于隐形状态，持续到你的下一回合开始，或你进行攻击检定、造成伤害、施展法术之后。",
+        "implies": [
+          "XPHB:condition:隐形"
+        ],
+        "duration": {
+          "until": {
+            "at": "turnStart",
+            "of": "bearer",
+            "nth": 1
+          }
+        },
+        "triggers": [
+          {
+            "id": "end-atk",
+            "label": "无踪步伐：进行攻击检定后结束",
+            "on": "d20Rolled",
+            "role": "actor",
+            "window": "after",
+            "when": "roll.kind == 'attack'",
+            "do": [
+              {
+                "kind": "removeEffect",
+                "match": {
+                  "name": "无踪步伐"
+                },
+                "from": "self"
+              }
+            ]
+          },
+          {
+            "id": "end-dmg",
+            "label": "无踪步伐：造成伤害后结束",
+            "on": "damageTaken",
+            "role": "actor",
+            "window": "after",
+            "do": [
+              {
+                "kind": "removeEffect",
+                "match": {
+                  "name": "无踪步伐"
+                },
+                "from": "self"
+              }
+            ]
+          },
+          {
+            "id": "end-cast",
+            "label": "无踪步伐：施法后结束",
+            "on": "spellCast",
+            "role": "actor",
+            "window": "after",
+            "when": "event.spell != '迷踪步' && event.key != 'XPHB:spell:迷踪步'",
+            "do": [
+              {
+                "kind": "removeEffect",
+                "match": {
+                  "name": "无踪步伐"
+                },
+                "from": "self"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:魔契师:心灵法术:3",
+    "name": "心灵法术",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "施放造成伤害的魔契师法术时，可以把伤害类型改为心灵（引擎不能改写法术的伤害类型，需人工处理）。"
+    ],
+    "notes": [],
+    "text": "施放造成伤害的魔契师法术时，可以把伤害类型改为心灵（引擎不能改写法术的伤害类型，需人工处理）。施放惑控或幻术类魔契师法术时，可以不需要言语与姿势成分（引擎不计施法成分，无需处理）。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:魔契师:玄奥秘法:11",
+    "name": "玄奥秘法",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "免法术位的扣费需要人在施法时手动处理，因为法术条目按法术位扣费，无法在此替换。"
+    ],
+    "notes": [],
+    "text": "可以不消耗法术位施展一道六环魔契师法术（第 13/15/17 级可选七/八/九环），长休恢复。资源「玄奥秘法」上限已在静态层；免法术位的扣费需要人在施法时手动处理，因为法术条目按法术位扣费，无法在此替换。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:魔契师:妖精步伐:3",
+    "name": "妖精步伐",
+    "automation": "partial",
+    "level": 0,
+    "manual": [],
+    "notes": [
+      "传送后由人为一个你可见、位于你 10 尺内的生物结算 1d10 临时生命值",
+      "传送前由人结算：传送前所在空间 5 尺内的生物进行感知豁免（DC = 你的法术豁免 DC），失败则其在对你以外的生物发动攻击检定时具有劣势，直至你的下一回合开始",
+      "本次不施加额外效应"
+    ],
+    "text": "无需法术位地施展迷踪步，次数等于魅力调整值（最少 1），长休恢复。施展迷踪步时可选一项额外效应。引擎自动处理传送与复苏步伐的自身临时生命值；复苏步伐选盟友、嘲弄步伐的豁免需要由人结算。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "妖精步伐：迷踪步",
+        "activation": "bonus",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "cost": [
+          {
+            "resource": "妖精步伐"
+          }
+        ],
+        "root": [
+          {
+            "kind": "choose",
+            "prompt": "迷踪步的额外效应",
+            "options": [
+              {
+                "label": "复苏步伐：自己获得 1d10 临时生命值",
+                "do": [
+                  {
+                    "kind": "tempHp",
+                    "amount": "1d10",
+                    "to": "self"
+                  }
+                ]
+              },
+              {
+                "label": "复苏步伐：10 尺内一个可见生物获得 1d10 临时生命值（目标由人选）",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "传送后由人为一个你可见、位于你 10 尺内的生物结算 1d10 临时生命值"
+                  }
+                ]
+              },
+              {
+                "label": "嘲弄步伐：传送前 5 尺内的生物做感知豁免",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "传送前由人结算：传送前所在空间 5 尺内的生物进行感知豁免（DC = 你的法术豁免 DC），失败则其在对你以外的生物发动攻击检定时具有劣势，直至你的下一回合开始"
+                  }
+                ]
+              },
+              {
+                "label": "不施加额外效应",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "本次不施加额外效应"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "kind": "move",
+            "mode": "teleport",
+            "ft": 30
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:魔契师:直坠噩梦:14",
+    "name": "直坠噩梦",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "目标返回的位置（先前空间或最近的空位）需人工处理。"
+    ],
+    "notes": [
+      "目标返回先前所占据的空间，或最近的未被占据空间（人工放置）"
+    ],
+    "text": "每回合一次，以攻击检定命中一个生物后可以发动：目标进行魅力豁免（DC 为你的法术豁免 DC），失败则被送入下层位面并失能，直至你的下一回合结束；若目标并非邪魔，还受到 8d10 点心灵伤害。目标返回的位置（先前空间或最近的空位）需人工处理。每次长休可用一次；可消耗一个契约魔法法术位（无需动作）重置使用权。",
+    "actions": [
+      {
+        "id": "reset",
+        "name": "直坠噩梦：重置使用权",
+        "activation": "free",
+        "cost": [
+          {
+            "slot": {
+              "min": 1
+            }
+          }
+        ],
+        "requires": "self.resource('直坠噩梦') < 1",
+        "root": [
+          {
+            "kind": "resource",
+            "id": "直坠噩梦",
+            "delta": 1
+          }
+        ]
+      }
+    ],
+    "triggers": [
+      {
+        "id": "hurl",
+        "label": "直坠噩梦",
+        "on": "attackHit",
+        "role": "actor",
+        "optional": true,
+        "limit": "oncePerTurn",
+        "cost": [
+          {
+            "resource": "直坠噩梦"
+          }
+        ],
+        "do": [
+          {
+            "kind": "save",
+            "ability": "cha",
+            "dc": "self.spell.dc",
+            "onFail": [
+              {
+                "kind": "applyEffect",
+                "to": "target",
+                "template": "直坠噩梦：下层位面"
+              },
+              {
+                "kind": "if",
+                "when": "target.type != '邪魔'",
+                "then": [
+                  {
+                    "kind": "damage",
+                    "dice": "8d10",
+                    "type": "心灵"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "直坠噩梦：下层位面": {
+        "tags": [
+          "直坠噩梦"
+        ],
+        "text": "目标已被送入下层位面，失能直至施放者的下一回合结束；返回位置由人处理。",
+        "implies": [
+          "XPHB:condition:失能"
+        ],
+        "duration": {
+          "until": {
+            "at": "turnEnd",
+            "of": "source",
+            "nth": 1
+          }
+        },
+        "onEnd": [
+          {
+            "kind": "note",
+            "text": "目标返回先前所占据的空间，或最近的未被占据空间（人工放置）"
+          }
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:魔契师:灼光复仇:14",
+    "name": "灼光复仇",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "恢复生命值一半与结束倒地：对自己自动处理，对盟友需要在其角色上手动处理；"
+    ],
+    "notes": [
+      "灼光复仇：令那名盟友恢复等于其生命值上限一半的生命值，且其可以选择结束倒地状态"
+    ],
+    "text": "在你或 60 尺内的盟友将要进行死亡豁免时使用。恢复生命值一半与结束倒地：对自己自动处理，对盟友需要在其角色上手动处理；范围选在那名生物周围 30 尺，选择受影响的生物时请排除被救者本人和你不想伤害的人。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "灼光复仇",
+        "activation": "free",
+        "cost": [
+          {
+            "resource": "searing-vengeance"
+          }
+        ],
+        "targeting": {
+          "type": "area",
+          "range": 60,
+          "area": {
+            "shape": "sphere",
+            "radius": 30
+          }
+        },
+        "root": [
+          {
+            "kind": "choose",
+            "prompt": "灼光复仇：谁将要进行死亡豁免？",
+            "options": [
+              {
+                "label": "我自己",
+                "do": [
+                  {
+                    "kind": "heal",
+                    "to": "self",
+                    "amount": "floor(self.hpMax / 2)"
+                  },
+                  {
+                    "kind": "if",
+                    "when": "self.has('倒地') && ask('同时结束你的倒地状态吗？')",
+                    "then": [
+                      {
+                        "kind": "removeEffect",
+                        "from": "self",
+                        "match": {
+                          "name": "倒地"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "label": "60 尺内的盟友（其恢复与倒地手动处理）",
+                "do": [
+                  {
+                    "kind": "note",
+                    "text": "灼光复仇：令那名盟友恢复等于其生命值上限一半的生命值，且其可以选择结束倒地状态"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "kind": "forEach",
+            "in": "area",
+            "do": [
+              {
+                "kind": "damage",
+                "id": "sv",
+                "dice": "2d8 + self.mod.cha",
+                "type": "光耀"
+              },
+              {
+                "kind": "applyEffect",
+                "to": "target",
+                "template": "XPHB:condition:目盲",
+                "duration": {
+                  "manual": true,
+                  "endsOn": [
+                    {
+                      "event": "turnEnded"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:魔契师:醉心魔法:14",
+    "name": "醉心魔法",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "以一个动作消耗法术位施展幻术或惑控法术后，可无需法术位，立即施展迷踪步作为该动作的一部分。是否为幻术或惑控、是否为动作施放并消耗了法术位由人确认。",
+    "triggers": [
+      {
+        "id": "bewitch",
+        "label": "醉心魔法：免法术位迷踪步",
+        "on": "spellCast",
+        "role": "actor",
+        "window": "after",
+        "optional": true,
+        "when": "ask('这次施法是以动作、消耗法术位施展的幻术或惑控法术吗？')",
+        "do": [
+          {
+            "kind": "move",
+            "mode": "teleport",
+            "ft": 30
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:牧师:光冕:17",
+    "name": "光冕",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "使用次数（光冕池，长休恢复）已在静态层，但「光冕」不在本条目可花的资源里，所以引擎不扣次数，需人工扣减。"
+    ],
+    "notes": [
+      "消耗一次光冕使用次数（手动扣减）"
+    ],
+    "text": "明亮光照（60 尺）内的敌人，在抵抗黎明曙光或火焰/光耀伤害法术的豁免时具有劣势；引擎分不出豁免来源，由你确认。使用次数（光冕池，长休恢复）已在静态层，但「光冕」不在本条目可花的资源里，所以引擎不扣次数，需人工扣减。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "光冕",
+        "activation": "action",
+        "tags": [
+          "magical"
+        ],
+        "root": [
+          {
+            "kind": "note",
+            "text": "消耗一次光冕使用次数（手动扣减）"
+          },
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "光冕"
+          }
+        ]
+      },
+      {
+        "id": "dismiss",
+        "name": "光冕（熄灭）",
+        "activation": "free",
+        "requires": "self.hasEffect('光冕')",
+        "root": [
+          {
+            "kind": "removeEffect",
+            "from": "self",
+            "match": {
+              "name": "光冕"
+            }
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "光冕": {
+        "text": "你散发出半径 60 尺的明亮光照与额外 30 尺的微光，持续 1 分钟或直至解除。",
+        "duration": {
+          "minutes": 1
+        }
+      }
+    },
+    "auras": [
+      {
+        "id": "corona",
+        "radius": 60,
+        "affects": "enemies",
+        "includeSelf": false,
+        "requires": "self.hasEffect('光冕')",
+        "grant": {
+          "rollMods": [
+            {
+              "on": {
+                "kind": "save"
+              },
+              "who": "bearer",
+              "when": "ask('这次豁免是抵抗黎明曙光，或火焰/光耀伤害的法术吗？')",
+              "op": "disadv",
+              "label": "光冕：明亮光照中的敌人"
+            }
+          ]
+        }
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:牧师:诡术祝福:3",
+    "name": "诡术祝福",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "祝福持续到你完成一次长休或再次使用本特性，这两种结束都需手动处理，再次使用时旧祝福不会自动结束。"
+    ],
+    "notes": [],
+    "text": "被祝福的生物（你自己或 30 尺内一个自愿生物）的敏捷（隐匿）检定具有优势；自愿与否由你确认。祝福持续到你完成一次长休或再次使用本特性，这两种结束都需手动处理，再次使用时旧祝福不会自动结束。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "诡术祝福",
+        "activation": "action",
+        "tags": [
+          "magical"
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 30
+        },
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "target",
+            "template": "诡术祝福"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "诡术祝福": {
+        "rollMods": [
+          {
+            "on": {
+              "kind": "check",
+              "ability": "dex",
+              "skill": "隐匿"
+            },
+            "who": "bearer",
+            "op": "adv",
+            "label": "诡术祝福：敏捷（隐匿）"
+          }
+        ],
+        "duration": {
+          "manual": true
+        }
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:牧师:诡诈换位:6",
+    "name": "诡诈换位",
+    "automation": "manual",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "每当你用附赠动作创造或移动召现分身的幻象时，可以通过传送与幻象交换位置。引擎不追踪幻象位置，由人处理。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:牧师:极效治疗:17",
+    "name": "极效治疗",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "引擎的治疗骰没有被动修改的入口，需人工按最大值结算。"
+    ],
+    "notes": [],
+    "text": "用法术或引导神力掷的治疗骰，直接取每颗骰子的最大值（例：2d6 直接取 12）。引擎的治疗骰没有被动修改的入口，需人工按最大值结算。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:牧师:进阶神圣干预:20",
+    "name": "进阶神圣干预",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "选了祈愿术后，神圣干预要等 2d4 次长休才能再用，而不是普通的每次长休恢复，需人工记录。"
+    ],
+    "notes": [],
+    "text": "神圣干预可以改选祈愿术，这要在神圣干预本身的动作里加选项，不在本条目里处理。选了祈愿术后，神圣干预要等 2d4 次长休才能再用，而不是普通的每次长休恢复，需人工记录。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:牧师:精通分身:17",
+    "name": "精通分身",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "幻象的位置和消失时机引擎不跟踪，请手动处理。"
+    ],
+    "notes": [],
+    "text": "召唤分身所创造的幻象的强化。共享干扰：你和盟友对位于幻象 5 尺内的生物进行攻击检定具有优势；治愈幻象：幻象消失时，你或你选择的 5 尺内一名生物恢复等同于牧师等级的生命值。幻象的位置和消失时机引擎不跟踪，请手动处理。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:牧师:精通受祝击:14",
+    "name": "精通受祝击",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "强力施法的临时生命值需手动处理：引擎分不出牧师戏法，也没有「60 尺内另一生物」的选目标流程。"
+    ],
+    "notes": [],
+    "text": "神圣打击的额外伤害升至 2d8，即再加 1d8。引擎不记得 7 级选的是哪一项，所以做成可选，由你确认是否选了神圣打击。强力施法的临时生命值需手动处理：引擎分不出牧师戏法，也没有「60 尺内另一生物」的选目标流程。",
+    "triggers": [
+      {
+        "id": "smite-up",
+        "label": "精通受祝击：神圣打击额外 1d8",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "before",
+        "optional": true,
+        "limit": "oncePerTurn",
+        "when": "attack.weapon",
+        "do": [
+          {
+            "kind": "choose",
+            "prompt": "神圣打击（精通）：造成光耀还是黯蚀伤害？",
+            "options": [
+              {
+                "label": "光耀",
+                "do": [
+                  {
+                    "kind": "addDamage",
+                    "dice": "1d8",
+                    "type": "光耀"
+                  }
+                ]
+              },
+              {
+                "label": "黯蚀",
+                "do": [
+                  {
+                    "kind": "addDamage",
+                    "dice": "1d8",
+                    "type": "黯蚀"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:牧师:黎明曙光:3",
+    "name": "黎明曙光",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "驱散区域内魔法黑暗的部分手动处理。",
+      "区域内要受影响的生物由你选择，引擎会对区域内所有生物结算豁免，不选的需人工忽略。"
+    ],
+    "notes": [
+      "驱散区域内的任何魔法黑暗（手动）"
+    ],
+    "text": "驱散区域内魔法黑暗的部分手动处理。区域内要受影响的生物由你选择，引擎会对区域内所有生物结算豁免，不选的需人工忽略。豁免 DC 按法术豁免 DC 近似（原文未写明）。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "黎明曙光",
+        "activation": "action",
+        "tags": [
+          "magical"
+        ],
+        "cost": [
+          {
+            "resource": "引导神力"
+          }
+        ],
+        "targeting": {
+          "type": "area",
+          "area": {
+            "shape": "emanation",
+            "radius": 30
+          }
+        },
+        "root": [
+          {
+            "kind": "note",
+            "text": "驱散区域内的任何魔法黑暗（手动）"
+          },
+          {
+            "kind": "forEach",
+            "in": "area",
+            "do": [
+              {
+                "kind": "save",
+                "ability": "con",
+                "dc": "self.spell.dc",
+                "onFail": [
+                  {
+                    "kind": "damage",
+                    "id": "dawn",
+                    "dice": "2d10 + self.levelOf('牧师')",
+                    "type": "光耀"
+                  }
+                ],
+                "onSuccess": [
+                  {
+                    "kind": "damage",
+                    "ref": "dawn",
+                    "scale": 0.5
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:牧师:驱散亡灵:2",
+    "name": "驱散亡灵",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "被驱散的生物会尽可能远离你：引擎用「恐慌」的劣势与不能向你靠近来近似，「尽可能远离」的移动由人处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "驱散亡灵",
+        "activation": "action",
+        "tags": [
+          "magical"
+        ],
+        "cost": [
+          {
+            "resource": "引导神力"
+          }
+        ],
+        "targeting": {
+          "type": "area",
+          "range": "self",
+          "area": {
+            "shape": "emanation",
+            "radius": 30
+          }
+        },
+        "root": [
+          {
+            "kind": "forEach",
+            "in": "area",
+            "do": [
+              {
+                "kind": "if",
+                "when": "target.id != self.id && target.type == '不死生物' && ask('这个亡灵是你选择驱散的吗？')",
+                "then": [
+                  {
+                    "kind": "save",
+                    "ability": "wis",
+                    "dc": "self.spell.dc",
+                    "onFail": [
+                      {
+                        "kind": "applyEffect",
+                        "to": "target",
+                        "template": "XPHB:condition:恐慌",
+                        "duration": {
+                          "minutes": 1,
+                          "endsOn": [
+                            {
+                              "event": "damageTaken",
+                              "when": "event.target == self.id"
+                            },
+                            {
+                              "event": "effectApplied",
+                              "when": "source != null && event.bearer == source.id && source.has('失能')"
+                            },
+                            {
+                              "event": "died",
+                              "when": "source != null && source.dead"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "kind": "applyEffect",
+                        "to": "target",
+                        "template": "XPHB:condition:失能",
+                        "duration": {
+                          "minutes": 1,
+                          "endsOn": [
+                            {
+                              "event": "damageTaken",
+                              "when": "event.target == self.id"
+                            },
+                            {
+                              "event": "effectApplied",
+                              "when": "source != null && event.bearer == source.id && source.has('失能')"
+                            },
+                            {
+                              "event": "died",
+                              "when": "source != null && source.dead"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:牧师:神圣干预:10",
+    "name": "神圣干预",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "引擎无法免费施放任意法术，请手动扣除「神圣干预」次数并按该法术的数据结算（法术位另行补回）。"
+    ],
+    "notes": [],
+    "text": "以魔法动作选择一道 5 环或更低、施法时间不是 1 反应的牧师法术，作为此动作的一部分施展，无需法术位与材料成分；完成长休前无法再次使用（资源池「神圣干预」）。引擎无法免费施放任意法术，请手动扣除「神圣干预」次数并按该法术的数据结算（法术位另行补回）。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:牧师:神佑医者:6",
+    "name": "神佑医者",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "引擎没有「治疗」事件可以监听，也读不到环阶，需人工加。"
+    ],
+    "notes": [],
+    "text": "用法术位施放为他人恢复生命值的法术后，你立即恢复 2 + 法术位环阶的生命值。引擎没有「治疗」事件可以监听，也读不到环阶，需人工加。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:牧师:生命门徒:3",
+    "name": "生命门徒",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "引擎没有「治疗」事件可以监听，治疗节点写在各法术条目里，需人工加。"
+    ],
+    "notes": [],
+    "text": "消耗法术位施展的法术恢复生命值时，额外恢复 2 + 法术位环阶的生命值。引擎没有「治疗」事件可以监听，治疗节点写在各法术条目里，需人工加。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:牧师:维持生命:3",
+    "name": "维持生命",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "这里只做单个目标：分给多个生物时需手动分配。"
+    ],
+    "notes": [],
+    "text": "治疗能量池（5 × 牧师等级）原文可分给 30 尺内任意数量的浴血生物，每个恢复至多到其生命上限的一半。这里只做单个目标：分给多个生物时需手动分配。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "维持生命",
+        "activation": "action",
+        "tags": [
+          "magical"
+        ],
+        "cost": [
+          {
+            "resource": "引导神力"
+          }
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 30,
+          "filter": "target.hp * 2 <= target.hpMax"
+        },
+        "root": [
+          {
+            "kind": "number",
+            "prompt": "用多少点治疗量？（总量为 5 × 牧师等级）",
+            "var": "n",
+            "min": 1,
+            "max": "min(5 * self.levelOf('牧师'), target.hpMax / 2 - target.hp)"
+          },
+          {
+            "kind": "heal",
+            "amount": "vars.n"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:牧师:战神祝福:6",
+    "name": "战神祝福",
+    "automation": "manual",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "可以用引导神力代替法术位施展虔诚护盾或灵体武器。这样施展的法术不需要专注，持续时间变为 1 分钟，但会在你再次施展该法术、陷入失能或死亡时提前结束。法术消耗的替换与持续时间的改变由人处理。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:牧师:战争祭司:3",
+    "name": "战争祭司",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "武器攻击的命中与伤害引擎不自动结算，由人手动处理。"
+    ],
+    "notes": [
+      "以附赠动作发动一次武器攻击或徒手打击：由人选择武器，手动掷攻击与伤害（不占用攻击动作的次数）"
+    ],
+    "text": "附赠动作：发动一次武器攻击或徒手打击。可用次数等于感知调整值（最少 1 次），短休或长休后恢复。武器攻击的命中与伤害引擎不自动结算，由人手动处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "战争祭司：附赠攻击",
+        "activation": "bonus",
+        "cost": [
+          {
+            "resource": "warPriest"
+          }
+        ],
+        "root": [
+          {
+            "kind": "note",
+            "text": "以附赠动作发动一次武器攻击或徒手打击：由人选择武器，手动掷攻击与伤害（不占用攻击动作的次数）"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:牧师:召现分身:3",
+    "name": "召现分身",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [
+      "把幻象移动至多 30 尺，到你 120 尺内一处可见的未占据空间（位置由人处理）"
+    ],
+    "text": "附赠动作：消耗一次引导神力，创造一个无实体的完美幻象，位于你 30 尺内一处可见的未占据空间。幻象持续 1 分钟，可无需动作解除，陷入失能时结束。幻象存在期间：可如同在幻象位置施法（须用你自己的感官）；你和幻象都在某生物 5 尺内、且该生物能看见幻象时，你对它的攻击具有优势；附赠动作可把幻象移动至多 30 尺，目的地须是你 120 尺内一处可见的未占据空间。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "召现分身",
+        "activation": "bonus",
+        "cost": [
+          {
+            "resource": "引导神力"
+          }
+        ],
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "幻象"
+          }
+        ]
+      },
+      {
+        "id": "move",
+        "name": "召现分身：移动幻象",
+        "activation": "bonus",
+        "requires": "self.hasEffect('幻象')",
+        "root": [
+          {
+            "kind": "note",
+            "text": "把幻象移动至多 30 尺，到你 120 尺内一处可见的未占据空间（位置由人处理）"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "幻象": {
+        "name": "幻象",
+        "text": "无实体、不占据空间的完美视觉幻象。可如同在幻象位置施法（须用你自己的感官，手动处理）。",
+        "duration": {
+          "minutes": 1,
+          "endsOn": [
+            {
+              "event": "effectApplied",
+              "when": "event.bearer == self.id && self.has('失能')"
+            }
+          ]
+        },
+        "rollMods": [
+          {
+            "on": {
+              "kind": "attack"
+            },
+            "who": "bearer",
+            "when": "ask('你和幻象是否都在攻击目标 5 尺内，且目标能看见幻象？')",
+            "op": "adv",
+            "label": "召现分身：干扰"
+          }
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:牧师:灼净亡灵:5",
+    "name": "灼净亡灵",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "一次掷骰由所有失败的亡灵共用，引擎暂不支持，由人手动投掷并结算。"
+    ],
+    "notes": [],
+    "text": "使用驱散亡灵时，可以投掷等于你感知调整值枚 d8（最少 1d8），每个在驱散亡灵豁免中失败的亡灵受到等同于骰值之和的光耀伤害；此伤害不会结束驱散效应。一次掷骰由所有失败的亡灵共用，引擎暂不支持，由人手动投掷并结算。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:耐性",
+    "name": "耐性",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "高速恢复（附赠动作，投掷一枚生命值骰并恢复等于结果的生命值）只留了一个提示动作：生命值骰的面数取决于职业，引擎没有对应的生命值骰资源，需人手动扣骰并回复生命值。"
+    ],
+    "notes": [
+      "消耗一枚生命值骰并投掷，恢复等于结果的生命值（手动处理）"
+    ],
+    "text": "悍不畏死已写：死亡豁免具有优势。高速恢复（附赠动作，投掷一枚生命值骰并恢复等于结果的生命值）只留了一个提示动作：生命值骰的面数取决于职业，引擎没有对应的生命值骰资源，需人手动扣骰并回复生命值。",
+    "actions": [
+      {
+        "id": "recover",
+        "name": "耐性：高速恢复",
+        "activation": "bonus",
+        "root": [
+          {
+            "kind": "note",
+            "text": "消耗一枚生命值骰并投掷，恢复等于结果的生命值（手动处理）"
+          }
+        ]
+      }
+    ],
+    "rollMods": [
+      {
+        "on": {
+          "kind": "deathSave"
+        },
+        "who": "bearer",
+        "op": "adv",
+        "label": "耐性：悍不畏死"
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:能量抗性之恩惠",
+    "name": "能量抗性之恩惠",
+    "automation": "partial",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "先用「选择抗性」选两种伤害类型（长休后可以重选，再用一次即可，会替换旧的选择）。能量重导：受到所选类型的伤害后，用反应把相同类型的伤害传导给 60 尺内可见的另一名生物；对你全身掩护的生物不能选，由人判断。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "能量抗性之恩惠：选择抗性",
+        "activation": "free",
+        "text": "从强酸、寒冷、火焰、闪电、黯蚀、毒素、心灵、光耀、雷鸣里选两种获得抗性；每次长休后可以改变。",
+        "root": [
+          {
+            "kind": "removeEffect",
+            "from": "self",
+            "match": {
+              "tag": "boon-energy-resist"
+            }
+          },
+          {
+            "kind": "choose",
+            "prompt": "选择两种伤害类型获得抗性",
+            "count": 2,
+            "options": [
+              {
+                "label": "强酸",
+                "do": [
+                  {
+                    "kind": "applyEffect",
+                    "to": "self",
+                    "template": "能量抗性：强酸",
+                    "duration": {
+                      "manual": true
+                    }
+                  }
+                ]
+              },
+              {
+                "label": "寒冷",
+                "do": [
+                  {
+                    "kind": "applyEffect",
+                    "to": "self",
+                    "template": "能量抗性：寒冷",
+                    "duration": {
+                      "manual": true
+                    }
+                  }
+                ]
+              },
+              {
+                "label": "火焰",
+                "do": [
+                  {
+                    "kind": "applyEffect",
+                    "to": "self",
+                    "template": "能量抗性：火焰",
+                    "duration": {
+                      "manual": true
+                    }
+                  }
+                ]
+              },
+              {
+                "label": "闪电",
+                "do": [
+                  {
+                    "kind": "applyEffect",
+                    "to": "self",
+                    "template": "能量抗性：闪电",
+                    "duration": {
+                      "manual": true
+                    }
+                  }
+                ]
+              },
+              {
+                "label": "黯蚀",
+                "do": [
+                  {
+                    "kind": "applyEffect",
+                    "to": "self",
+                    "template": "能量抗性：黯蚀",
+                    "duration": {
+                      "manual": true
+                    }
+                  }
+                ]
+              },
+              {
+                "label": "毒素",
+                "do": [
+                  {
+                    "kind": "applyEffect",
+                    "to": "self",
+                    "template": "能量抗性：毒素",
+                    "duration": {
+                      "manual": true
+                    }
+                  }
+                ]
+              },
+              {
+                "label": "心灵",
+                "do": [
+                  {
+                    "kind": "applyEffect",
+                    "to": "self",
+                    "template": "能量抗性：心灵",
+                    "duration": {
+                      "manual": true
+                    }
+                  }
+                ]
+              },
+              {
+                "label": "光耀",
+                "do": [
+                  {
+                    "kind": "applyEffect",
+                    "to": "self",
+                    "template": "能量抗性：光耀",
+                    "duration": {
+                      "manual": true
+                    }
+                  }
+                ]
+              },
+              {
+                "label": "雷鸣",
+                "do": [
+                  {
+                    "kind": "applyEffect",
+                    "to": "self",
+                    "template": "能量抗性：雷鸣",
+                    "duration": {
+                      "manual": true
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "redirect",
+        "name": "能量抗性之恩惠：能量重导",
+        "activation": "reaction",
+        "text": "把一次相同类型的伤害传导给你 60 尺内可见的另一名生物（不能是对你而言处于全身掩护下的生物）：目标敏捷豁免（DC = 8 + 体质调整值 + 熟练加值），失败受到 2d12 + 体质调整值伤害。",
+        "trigger": {
+          "on": "damageTaken",
+          "role": "target",
+          "when": "damage.amount > 0 && ((damage.type == '强酸' && self.hasEffect('能量抗性：强酸')) || (damage.type == '寒冷' && self.hasEffect('能量抗性：寒冷')) || (damage.type == '火焰' && self.hasEffect('能量抗性：火焰')) || (damage.type == '闪电' && self.hasEffect('能量抗性：闪电')) || (damage.type == '黯蚀' && self.hasEffect('能量抗性：黯蚀')) || (damage.type == '毒素' && self.hasEffect('能量抗性：毒素')) || (damage.type == '心灵' && self.hasEffect('能量抗性：心灵')) || (damage.type == '光耀' && self.hasEffect('能量抗性：光耀')) || (damage.type == '雷鸣' && self.hasEffect('能量抗性：雷鸣')))"
+        },
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 60,
+          "filter": "target.id != self.id && canSee(self, target)"
+        },
+        "root": [
+          {
+            "kind": "save",
+            "ability": "dex",
+            "dc": "8 + self.mod.con + pb",
+            "onFail": [
+              {
+                "kind": "damage",
+                "dice": "2d12 + self.mod.con",
+                "type": "damage.type"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "能量抗性：强酸": {
+        "tags": [
+          "boon-energy-resist"
+        ],
+        "text": "具有强酸伤害的抗性（能量抗性之恩惠所选类型之一）。",
+        "statics": [
+          {
+            "kind": "resist",
+            "values": [
+              "强酸"
+            ]
+          }
+        ],
+        "duration": {
+          "manual": true
+        }
+      },
+      "能量抗性：寒冷": {
+        "tags": [
+          "boon-energy-resist"
+        ],
+        "text": "具有寒冷伤害的抗性（能量抗性之恩惠所选类型之一）。",
+        "statics": [
+          {
+            "kind": "resist",
+            "values": [
+              "寒冷"
+            ]
+          }
+        ],
+        "duration": {
+          "manual": true
+        }
+      },
+      "能量抗性：火焰": {
+        "tags": [
+          "boon-energy-resist"
+        ],
+        "text": "具有火焰伤害的抗性（能量抗性之恩惠所选类型之一）。",
+        "statics": [
+          {
+            "kind": "resist",
+            "values": [
+              "火焰"
+            ]
+          }
+        ],
+        "duration": {
+          "manual": true
+        }
+      },
+      "能量抗性：闪电": {
+        "tags": [
+          "boon-energy-resist"
+        ],
+        "text": "具有闪电伤害的抗性（能量抗性之恩惠所选类型之一）。",
+        "statics": [
+          {
+            "kind": "resist",
+            "values": [
+              "闪电"
+            ]
+          }
+        ],
+        "duration": {
+          "manual": true
+        }
+      },
+      "能量抗性：黯蚀": {
+        "tags": [
+          "boon-energy-resist"
+        ],
+        "text": "具有黯蚀伤害的抗性（能量抗性之恩惠所选类型之一）。",
+        "statics": [
+          {
+            "kind": "resist",
+            "values": [
+              "黯蚀"
+            ]
+          }
+        ],
+        "duration": {
+          "manual": true
+        }
+      },
+      "能量抗性：毒素": {
+        "tags": [
+          "boon-energy-resist"
+        ],
+        "text": "具有毒素伤害的抗性（能量抗性之恩惠所选类型之一）。",
+        "statics": [
+          {
+            "kind": "resist",
+            "values": [
+              "毒素"
+            ]
+          }
+        ],
+        "duration": {
+          "manual": true
+        }
+      },
+      "能量抗性：心灵": {
+        "tags": [
+          "boon-energy-resist"
+        ],
+        "text": "具有心灵伤害的抗性（能量抗性之恩惠所选类型之一）。",
+        "statics": [
+          {
+            "kind": "resist",
+            "values": [
+              "心灵"
+            ]
+          }
+        ],
+        "duration": {
+          "manual": true
+        }
+      },
+      "能量抗性：光耀": {
+        "tags": [
+          "boon-energy-resist"
+        ],
+        "text": "具有光耀伤害的抗性（能量抗性之恩惠所选类型之一）。",
+        "statics": [
+          {
+            "kind": "resist",
+            "values": [
+              "光耀"
+            ]
+          }
+        ],
+        "duration": {
+          "manual": true
+        }
+      },
+      "能量抗性：雷鸣": {
+        "tags": [
+          "boon-energy-resist"
+        ],
+        "text": "具有雷鸣伤害的抗性（能量抗性之恩惠所选类型之一）。",
+        "statics": [
+          {
+            "kind": "resist",
+            "values": [
+              "雷鸣"
+            ]
+          }
+        ],
+        "duration": {
+          "manual": true
+        }
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:念动力",
+    "name": "念动力",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "本专长提升的属性在建卡时选定，人物卡数据里没有对应字段，且法术的距离与成分修改引擎不支持，目前手动处理。"
+    ],
+    "notes": [],
+    "text": "念动力：次级心灵遥控（习得法师之手；施放时无言语与姿势成分、灵体手可隐形、施法距离与可远离距离各 +30 尺，施法属性为本专长提升的属性）。念力推撞（附赠动作，30 尺内一个可见生物进行力量豁免，DC = 8 + 本专长提升属性的调整值 + 熟练加值，失败则拉近或推离 5 尺）。本专长提升的属性在建卡时选定，人物卡数据里没有对应字段，且法术的距离与成分修改引擎不支持，目前手动处理。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:骑乘战斗",
+    "name": "骑乘战斗",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "侧跃躲闪（坐骑敏捷豁免的伤害结算）与我身作盾（改变攻击目标）需人手动处理。"
+    ],
+    "notes": [],
+    "text": "骑乘突击已自动化（位置条件由人确认）；侧跃躲闪（坐骑敏捷豁免的伤害结算）与我身作盾（改变攻击目标）需人手动处理。",
+    "rollMods": [
+      {
+        "on": {
+          "kind": "attack"
+        },
+        "who": "bearer",
+        "when": "ask('你正在骑乘，且目标位于坐骑 5 尺内、体型比坐骑至少小一级、未被骑乘吗？')",
+        "op": "adv",
+        "label": "骑乘战斗：骑乘突击"
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:强弩专家",
+    "name": "强弩专家",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "无视装填（弩的装填规则）以及抵近射击（5 尺内远程攻击不因敌人而具有劣势，引擎没有取消劣势的效果）需要人手动处理。"
+    ],
+    "notes": [],
+    "text": "双持射击已写：由具有轻型词条的手弩或轻弩发动的额外攻击（附赠）伤害，可以加入属性调整值（靠 ask 确认这是轻型词条提供的额外攻击）。无视装填（弩的装填规则）以及抵近射击（5 尺内远程攻击不因敌人而具有劣势，引擎没有取消劣势的效果）需要人手动处理。",
+    "rollMods": [
+      {
+        "on": {
+          "kind": "damage"
+        },
+        "who": "bearer",
+        "when": "(attack.item == '手弩' || attack.item == '轻弩') && ask('这次伤害是由具有轻型词条的弩发动的额外攻击（双持）吗？')",
+        "op": "add",
+        "value": "abilityMod(attack.ability)",
+        "label": "强弩专家：双持射击"
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:强效法术",
+    "name": "强效法术",
+    "automation": "manual",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "超魔法：为法术进行伤害掷骰时，消耗 1 术法点，重掷最多等同于魅力调整值数量的伤害骰（至少 1 个），必须采用新结果。可与其他超魔同用。引擎没有对伤害骰重掷的时机，由人处理。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:擒抱者",
+    "name": "擒抱者",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "高速拖行（拖动受擒生物不额外耗移动力）引擎无法处理移动消耗，需人手动处理。"
+    ],
+    "notes": [],
+    "text": "连擒带打已写：回合内用攻击动作的徒手打击命中后，可以额外进行一次擒抱（DC 同基础擒抱），每回合一次。优势攻击已写：你攻击受擒于你的生物时具有优势（靠受擒效应的施加者判断）。擒抱需要一只空手，这一点由人确认。高速拖行（拖动受擒生物不额外耗移动力）引擎无法处理移动消耗，需人手动处理。",
+    "triggers": [
+      {
+        "id": "grapple",
+        "label": "擒抱者：连擒带打",
+        "on": "attackHit",
+        "role": "actor",
+        "optional": true,
+        "limit": "oncePerTurn",
+        "when": "attack.unarmed && turn.isMine",
+        "do": [
+          {
+            "kind": "save",
+            "ability": [
+              "str",
+              "dex"
+            ],
+            "dc": "8 + mod.str + pb",
+            "onFail": [
+              {
+                "kind": "applyEffect",
+                "to": "target",
+                "template": "XPHB:condition:受擒",
+                "state": {
+                  "escapeDc": "8 + mod.str + pb"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "rollMods": [
+      {
+        "on": {
+          "kind": "attack"
+        },
+        "who": "bearer",
+        "when": "target.hasEffect('受擒') && target.effect('受擒').source != null && target.effect('受擒').source.id == self.id",
+        "op": "adv",
+        "label": "擒抱者：优势攻击"
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:刃之魔契",
+    "name": "刃之魔契",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "手动：召唤契约武器或与魔法武器连结的选择；"
+    ],
+    "notes": [],
+    "text": "自动：连结后，连结武器的攻击检定与伤害掷骰改用魅力调整值代替力量或敏捷（每次攻击前由人确认是否为连结的武器）。手动：召唤契约武器或与魔法武器连结的选择；连结结束条件（你在 5 尺外 1 分钟或更久、你死亡、再次使用本特性的附赠动作）；熟练授予；把伤害类型改为暗蚀 / 心灵 / 光耀（引擎不能替换武器的伤害类型）。",
+    "actions": [
+      {
+        "id": "bond",
+        "name": "刃之魔契：连结武器",
+        "activation": "bonus",
+        "requires": "!self.hasEffect('刃之魔契')",
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "刃之魔契",
+            "duration": {
+              "manual": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "unbond",
+        "name": "刃之魔契：结束连结",
+        "activation": "bonus",
+        "requires": "self.hasEffect('刃之魔契')",
+        "root": [
+          {
+            "kind": "removeEffect",
+            "from": "self",
+            "match": {
+              "name": "刃之魔契"
+            }
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "刃之魔契": {
+        "tags": [
+          "magical"
+        ],
+        "duration": {
+          "manual": true
+        },
+        "rollMods": [
+          {
+            "on": {
+              "kind": "attack",
+              "attack": {
+                "weapon": true
+              }
+            },
+            "who": "bearer",
+            "when": "ask('这次攻击用的是你连结的武器吗？')",
+            "op": "add",
+            "value": "self.mod.cha - abilityMod(attack.ability)",
+            "label": "刃之魔契：用魅力攻击"
+          },
+          {
+            "on": {
+              "kind": "damage",
+              "attack": {
+                "weapon": true
+              }
+            },
+            "who": "bearer",
+            "when": "ask('这次伤害用的是你连结的武器吗？')",
+            "op": "add",
+            "value": "self.mod.cha - abilityMod(attack.ability)",
+            "label": "刃之魔契：用魅力伤害"
+          }
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:融身入影",
+    "name": "融身入影",
+    "automation": "partial",
+    "level": 0,
+    "manual": [
+      "手动：攻击或施法后失去隐形等结束条件，需人工移除。"
+    ],
+    "notes": [],
+    "text": "身处微光光照或黑暗环境时，可无需法术位对自身施展隐形术（环境由人确认）。隐形术的专注时长为 1 小时。手动：攻击或施法后失去隐形等结束条件，需人工移除。",
+    "actions": [
+      {
+        "id": "cast",
+        "name": "融身入影：隐形术",
+        "activation": "action",
+        "tags": [
+          "spell",
+          "magical"
+        ],
+        "requires": "ask('你身处微光光照或黑暗环境吗？')",
+        "concentration": {
+          "hours": 1
+        },
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "XPHB:condition:隐形"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:哨兵",
+    "name": "哨兵",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "守护者（5 尺内生物撤离后，或其攻击命中他人后，可立即借机攻击）需人手动处理。"
+    ],
+    "notes": [],
+    "text": "阻拦已自动化（借机攻击命中后，目标本回合剩余时间内速度为 0，由人确认是否为借机攻击）；守护者（5 尺内生物撤离后，或其攻击命中他人后，可立即借机攻击）需人手动处理。",
+    "triggers": [
+      {
+        "id": "block",
+        "label": "哨兵：阻拦",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "after",
+        "when": "attack.melee && ask('这次攻击是借机攻击（反应）吗？')",
+        "do": [
+          {
+            "kind": "applyEffect",
+            "to": "target",
+            "template": "阻拦"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "阻拦": {
+        "text": "本回合剩余时间内速度为 0。",
+        "statics": [
+          {
+            "kind": "speedSet",
+            "value": 0
+          }
+        ],
+        "duration": {
+          "until": {
+            "at": "turnEnd",
+            "of": "bearer",
+            "nth": 0
+          }
+        }
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:神射手",
+    "name": "神射手",
+    "automation": "manual",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "神射手：远程武器攻击无视掩护（绕过掩体）；位于敌人 5 尺内或攻击超出常规射程的目标时，不因此具有劣势。掩护判断与距离劣势的取消需要人处理，引擎目前不自动化。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:升阶法术",
+    "name": "升阶法术",
+    "automation": "manual",
+    "level": null,
+    "manual": [],
+    "notes": [],
+    "text": "超魔法：施展迫使生物进行豁免的法术时，消耗 2 术法点，使法术影响的某一名生物对此法术的豁免具有劣势。引擎不改写法术豁免，由人处理。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:圣武士:仇敌誓言:3",
+    "name": "仇敌誓言",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "誓言目标降至 0 后换给另一个生物（无需动作）为手动处理。"
+    ],
+    "notes": [],
+    "text": "在执行攻击动作时消耗引导神力立下誓言（何时可用由人判断）。誓言目标降至 0 后换给另一个生物（无需动作）为手动处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "仇敌誓言",
+        "activation": "free",
+        "requires": "turn.isMine",
+        "cost": [
+          {
+            "resource": "channel-divinity"
+          }
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": 1,
+          "range": 30,
+          "filter": "canSee(self, target)"
+        },
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "仇敌誓言",
+            "state": {
+              "target": "target"
+            }
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "仇敌誓言": {
+        "text": "1 分钟内，对誓言目标的攻击检定具有优势。",
+        "duration": {
+          "minutes": 1
+        },
+        "rollMods": [
+          {
+            "on": {
+              "kind": "attack"
+            },
+            "who": "bearer",
+            "when": "target.id == effect.state.target",
+            "op": "adv",
+            "label": "仇敌誓言"
+          }
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:圣武士:奉献灵光:7",
+    "name": "奉献灵光",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "灵光半径固定为 10 尺，18 级灵光增效的 30 尺未在本条处理，见「灵光增效」，需人手动。"
+    ],
+    "notes": [],
+    "text": "守护灵光内的盟友免疫魅惑；陷入魅惑的盟友进入灵光时，该状态在灵光内暂时无效。你自己的魅惑免疫已在静态层，因此光环不含自身。与守护灵光一样，失能时光环无效。灵光半径固定为 10 尺，18 级灵光增效的 30 尺未在本条处理，见「灵光增效」，需人手动。",
+    "auras": [
+      {
+        "id": "devotion",
+        "radius": 10,
+        "affects": "allies",
+        "includeSelf": false,
+        "requires": "!self.has('失能')",
+        "stackKey": "奉献灵光",
+        "grant": {
+          "statics": [
+            {
+              "kind": "conditionImmune",
+              "values": [
+                "魅惑"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:圣武士:复仇天使:20",
+    "name": "复仇天使",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "飞行 60 尺与悬浮为静态层的修正，不随本特性开始与结束，需人工处理。"
+    ],
+    "notes": [],
+    "text": "飞行 60 尺与悬浮为静态层的修正，不随本特性开始与结束，需人工处理。豁免 DC 取圣武士的法术豁免 DC。恐慌与攻击优势自动处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "复仇天使",
+        "activation": "bonus",
+        "requires": "turn.isMine",
+        "cost": [
+          {
+            "resource": "avenging-angel"
+          }
+        ],
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "复仇天使"
+          }
+        ]
+      },
+      {
+        "id": "end",
+        "name": "复仇天使：提前结束",
+        "activation": "free",
+        "requires": "self.hasEffect('复仇天使')",
+        "root": [
+          {
+            "kind": "removeEffect",
+            "from": "self",
+            "match": {
+              "name": "复仇天使"
+            }
+          }
+        ]
+      },
+      {
+        "id": "reset",
+        "name": "复仇天使：重置",
+        "activation": "free",
+        "requires": "self.resource('avenging-angel') < 1",
+        "cost": [
+          {
+            "slot": {
+              "min": 5,
+              "max": 5
+            }
+          }
+        ],
+        "root": [
+          {
+            "kind": "resource",
+            "id": "avenging-angel",
+            "delta": 1
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "复仇天使": {
+        "text": "持续 10 分钟。每个在灵光范围内开始其回合的敌人必须通过感知豁免，否则恐慌 1 分钟或直到其受到伤害。",
+        "duration": {
+          "minutes": 10
+        },
+        "aura": {
+          "id": "dread",
+          "radius": 10,
+          "affects": "enemies",
+          "includeSelf": false,
+          "requires": "!self.has('失能')",
+          "grant": {
+            "triggers": [
+              {
+                "id": "dread",
+                "label": "复仇天使：恐惧灵光",
+                "on": "turnStarted",
+                "role": "actor",
+                "do": [
+                  {
+                    "kind": "save",
+                    "ability": "wis",
+                    "dc": "source.spell.dc",
+                    "onFail": [
+                      {
+                        "kind": "applyEffect",
+                        "template": "XPHB:condition:恐慌",
+                        "duration": {
+                          "minutes": 1,
+                          "endsOn": [
+                            {
+                              "event": "damageTaken"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "kind": "applyEffect",
+                        "template": "复仇天使：恐慌"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "复仇天使：恐慌": {
+        "text": "对被恐慌生物发动的攻击检定具有优势。",
+        "duration": {
+          "minutes": 1,
+          "endsOn": [
+            {
+              "event": "damageTaken"
+            }
+          ]
+        },
+        "rollMods": [
+          {
+            "on": {
+              "kind": "attack"
+            },
+            "who": "against",
+            "op": "adv",
+            "label": "复仇天使：目标恐慌"
+          }
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:圣武士:复仇之魂:15",
+    "name": "复仇之魂",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "依赖仇敌誓言的效应名与你的武器，目前手动处理。"
+    ],
+    "notes": [],
+    "text": "受你仇敌誓言影响的生物发动攻击后（无论命中与否），只要它在你的触及内，你可以用反应对其进行一次近战攻击。依赖仇敌誓言的效应名与你的武器，目前手动处理。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:圣武士:复原之触:14",
+    "name": "复原之触",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "这是对圣疗使用的附加选项，不自动化：由人在圣疗时选择终止哪些状态，并手动扣除治疗能量。"
+    ],
+    "notes": [],
+    "text": "对生物使用圣疗时，可以终止其身上的目盲、魅惑、耳聋、恐慌、麻痹或震慑中的一种或多种；每终止一个效应花费圣疗 5 点治疗能量，且不恢复该生物的生命值。这是对圣疗使用的附加选项，不自动化：由人在圣疗时选择终止哪些状态，并手动扣除治疗能量。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:圣武士:鼓舞斩:3",
+    "name": "鼓舞斩",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "分配给其他生物、以及免法术位的至圣斩（圣武斩）是否触发，需人手动处理。"
+    ],
+    "notes": [],
+    "text": "施展至圣斩后，可消耗一次引导神力，为 30 尺内你选择的生物或你自身分配 2d8 + 圣武士等级的临时生命值。自动化部分：默认全部给自己。分配给其他生物、以及免法术位的至圣斩（圣武斩）是否触发，需人手动处理。",
+    "triggers": [
+      {
+        "id": "inspire",
+        "label": "鼓舞斩：临时生命值",
+        "on": "spellCast",
+        "role": "actor",
+        "optional": true,
+        "when": "event.key == 'XPHB:spell:至圣斩'",
+        "cost": [
+          {
+            "resource": "channel-divinity"
+          }
+        ],
+        "do": [
+          {
+            "kind": "tempHp",
+            "amount": "2d8 + self.levelOf('圣武士')",
+            "to": "self"
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:圣武士:辉煌防御:15",
+    "name": "辉煌防御",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "若因此失手且攻击者在你的武器触及内，可用武器对其攻击一次（属于该反应的一部分）：这次反击需要人手动发起。"
+    ],
+    "notes": [
+      "辉煌防御：若这次攻击因此失手，且攻击者在你的武器触及范围内，你可以用武器对其进行一次攻击（视为本反应的一部分，请手动发起）"
+    ],
+    "text": "你或 10 尺内你可见的生物被攻击命中时，用反应给被命中者加 AC（魅力调整值，至少 +1），可能使这次攻击改为失手。若因此失手且攻击者在你的武器触及内，可用武器对其攻击一次（属于该反应的一部分）：这次反击需要人手动发起。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "辉煌防御",
+        "activation": "reaction",
+        "trigger": {
+          "on": "attackHit",
+          "role": "any",
+          "window": "before",
+          "when": "target.id == self.id || (target.isAllyOf(self) && within(self, target, 10) && canSee(self, target))"
+        },
+        "cost": [
+          {
+            "resource": "radiantDefense"
+          }
+        ],
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "target",
+            "template": "辉煌防御"
+          },
+          {
+            "kind": "note",
+            "text": "辉煌防御：若这次攻击因此失手，且攻击者在你的武器触及范围内，你可以用武器对其进行一次攻击（视为本反应的一部分，请手动发起）"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "辉煌防御": {
+        "text": "对这次攻击获得 AC 加值：施放者的魅力调整值（至少 +1）。这次攻击结算后消失。",
+        "statics": [
+          {
+            "kind": "ac",
+            "bonus": "max(1, source.mod.cha)"
+          }
+        ],
+        "duration": {
+          "rounds": 1,
+          "endsOn": [
+            {
+              "event": "attackMissed"
+            },
+            {
+              "event": "damageTaken"
+            }
+          ]
+        }
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:圣武士:坚韧复仇:7",
+    "name": "坚韧复仇",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "命中后立刻移动至多你速度一半（属于原反应、不引发借机攻击）需要人手动处理。"
+    ],
+    "notes": [
+      "坚韧复仇：你可以立刻移动至多你速度的一半，本次移动属于原反应，不引发借机攻击"
+    ],
+    "text": "借机攻击命中后，可以让目标速度降为 0，直到当前回合结束。借机攻击靠提问判断（不在自己回合发生的近战命中才会问）。命中后立刻移动至多你速度一半（属于原反应、不引发借机攻击）需要人手动处理。",
+    "triggers": [
+      {
+        "id": "relentless",
+        "label": "坚韧复仇",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "after",
+        "optional": true,
+        "when": "attack.melee && !turn.isMine && ask('这次命中的是借机攻击吗？')",
+        "do": [
+          {
+            "kind": "applyEffect",
+            "to": "target",
+            "template": "坚韧复仇"
+          },
+          {
+            "kind": "note",
+            "text": "坚韧复仇：你可以立刻移动至多你速度的一半，本次移动属于原反应，不引发借机攻击"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "坚韧复仇": {
+        "text": "速度降为 0，直到当前回合结束。",
+        "statics": [
+          {
+            "kind": "speedSet",
+            "value": 0
+          }
+        ],
+        "duration": {
+          "until": {
+            "at": "turnEnd",
+            "of": "bearer",
+            "nth": 0
+          }
+        }
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:圣武士:绝伦健将:3",
+    "name": "绝伦健将",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "跳远、跳高距离 +10 尺不由引擎计算，需人工处理。"
+    ],
+    "notes": [],
+    "text": "跳远、跳高距离 +10 尺不由引擎计算，需人工处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "绝伦健将",
+        "activation": "bonus",
+        "requires": "turn.isMine",
+        "cost": [
+          {
+            "resource": "channel-divinity"
+          }
+        ],
+        "root": [
+          {
+            "kind": "applyEffect",
+            "to": "self",
+            "template": "绝伦健将"
+          }
+        ]
+      }
+    ],
+    "effects": {
+      "绝伦健将": {
+        "text": "1 小时内，力量（运动）检定与敏捷（体操）检定具有优势；跳远、跳高距离 +10 尺（手动）。",
+        "duration": {
+          "hours": 1
+        },
+        "rollMods": [
+          {
+            "on": {
+              "kind": "check",
+              "ability": "str",
+              "skill": "运动"
+            },
+            "who": "bearer",
+            "op": "adv",
+            "label": "绝伦健将：运动检定"
+          },
+          {
+            "on": {
+              "kind": "check",
+              "ability": "dex",
+              "skill": "体操"
+            },
+            "who": "bearer",
+            "op": "adv",
+            "label": "绝伦健将：体操检定"
+          }
+        ]
+      }
+    },
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:圣武士:灵光增效:18",
+    "name": "灵光增效",
+    "automation": "manual",
+    "level": null,
+    "manual": [
+      "光环半径在引擎中是固定数字，本条无法改写其他条目的半径，需人手动按 30 尺处理。"
+    ],
+    "notes": [],
+    "text": "守护灵光（6 级）的光环范围提升至 30 尺，勇气灵光与奉献灵光同样基于守护灵光的范围，也随之变为 30 尺。光环半径在引擎中是固定数字，本条无法改写其他条目的半径，需人手动按 30 尺处理。",
+    "sourceFile": "data/dyn/ai/features.json"
+  },
+  {
+    "key": "XPHB:圣武士:弃绝众敌:9",
+    "name": "弃绝众敌",
+    "automation": "partial",
+    "level": null,
+    "manual": [
+      "陷入恐慌的目标每回合只能移动、执行一个动作或一个附赠动作三选一，这一限制需人手动处理。"
+    ],
+    "notes": [],
+    "text": "以魔法动作消耗一次引导神力，对 60 尺内至多 max(1, 魅力调整值) 个可见生物进行感知豁免（DC 为法术豁免 DC），失败则陷入恐慌 1 分钟或直到受到任何伤害。陷入恐慌的目标每回合只能移动、执行一个动作或一个附赠动作三选一，这一限制需人手动处理。",
+    "actions": [
+      {
+        "id": "use",
+        "name": "弃绝众敌",
+        "activation": "action",
+        "tags": [
+          "magical"
+        ],
+        "cost": [
+          {
+            "resource": "channel-divinity"
+          }
+        ],
+        "targeting": {
+          "type": "creature",
+          "count": "max(1, self.mod.cha)",
+          "range": 60,
+          "filter": "canSee(self, target)"
+        },
+        "root": [
+          {
+            "kind": "save",
+            "ability": "wis",
+            "dc": "self.spell.dc",
+            "onFail": [
+              {
+                "kind": "applyEffect",
+                "to": "target",
+                "template": "XPHB:condition:恐慌",
+                "duration": {
+                  "minutes": 1,
+                  "endsOn": [
+                    {
+                      "event": "damageTaken"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sourceFile": "data/dyn/ai/features.json"
+  }
+]

@@ -138,8 +138,10 @@ if (process.argv[2] === 'merge') {
     L.push('');
   }
   L.push('## 现在就能写的（答案要改）', '', ...all.filter((a) => a.now).map((a) => `- ${a.name}（\`${a.key}\`）：${a.fix ?? a.need}`), '');
-  writeFileSync(join(out, 'report.md'), L.join('\n'));
-  console.log(`${all.length} 条 → ${out}/report.md`);
+  // report.md 里有手写的「建议」：已经有了就不覆盖，写到 report.generated.md
+  const dest = existsSync(join(out, 'report.md')) ? 'report.generated.md' : 'report.md';
+  writeFileSync(join(out, dest), L.join('\n'));
+  console.log(`${all.length} 条 → ${out}/${dest}`);
   process.exit(0);
 }
 mkdirSync(out, { recursive: true });
