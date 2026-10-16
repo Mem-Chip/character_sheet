@@ -9,6 +9,7 @@
  */
 import { useLayoutEffect, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import type { Engine } from '../lib/engine';
+import { getApp } from '../lib/store';
 import { canLookup, lookupTerm, type TermData, type TermRef } from '../lib/terms';
 import { Entries } from './Entries';
 
@@ -42,7 +43,14 @@ const popups = {
     clearTimeout(showTimer);
     owner = el;
     if (hover && sameRef(hover.ref, ref)) return;
-    showTimer = setTimeout(() => { hover = { id: ++seq, ref, at: boxOf(el), z: 0 }; emit(); }, 220);
+    const delay = getApp().termDelay;
+    if (delay < 0) return;
+    if (delay === 0) {
+      hover = { id: ++seq, ref, at: boxOf(el), z: 0 };
+      emit();
+      return;
+    }
+    showTimer = setTimeout(() => { hover = { id: ++seq, ref, at: boxOf(el), z: 0 }; emit(); }, delay);
   },
   leaveSoon() {
     clearTimeout(showTimer);

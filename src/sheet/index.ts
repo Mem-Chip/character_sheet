@@ -10,3 +10,7 @@ export { MasteryRules, SoftLimits, WildShape, Unlocks, classSkillBudget, spellbo
 export { normalizeSheet, normalizeValue } from './normalize';
 export * from './constants';
 export { choiceOptions, decisionValue, classSpells, spellInClassList, spellSourcesReady, abilitySummary, pointBuyCost, STANDARD_ARRAY, backgroundBonusFrom, backgroundOriginFeat, type PoolOption, type PoolResult } from './pools';
+export {
+  classStartingEquipment, backgroundStartingEquipment, getStartingEquipmentOptions, applyStartingEquipment,
+  type StartingEquipmentPackage, type StartingEquipmentResult, type StartingItemSpec,
+} from './starting-equipment';

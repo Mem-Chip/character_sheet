@@ -35,20 +35,32 @@ export interface AppState {
   theme: Theme;
   palette: Palette;
   width: PageWidth;
+  termDelay: number;
 }
 
 /** 页面最大宽度（人物卡、卡片库这些页；地图视图总是铺满） */
 export type PageWidth = 'narrow' | 'medium' | 'wide';
 export const WIDTHS: Array<[PageWidth, string]> = [['narrow', '窄'], ['medium', '中'], ['wide', '宽']];
 
-/** 配色（和浅色 / 深色独立）：灰蓝、灰绿、典籍（旧纸 + 朱砂） */
-export type Palette = 'slate' | 'sage' | 'codex';
-export const PALETTES: Array<[Palette, string]> = [['slate', '灰蓝'], ['sage', '灰绿'], ['codex', '典籍']];
+/** 配色（和浅色 / 深色独立）：灰蓝、灰绿、典籍（米纸 + 陶赭）、极简（纯黑灰阶） */
+export type Palette = 'slate' | 'sage' | 'codex' | 'minimal';
+export const PALETTES: Array<[Palette, string]> = [['slate', '灰蓝'], ['sage', '灰绿'], ['codex', '典籍'], ['minimal', '极简']];
+
+/** 词条悬浮提示延迟（毫秒）：-1 为关闭悬停，0 为即时，>0 为延迟毫秒数 */
+export const TERM_DELAYS: Array<[number, string]> = [
+  [-1, '关闭'],
+  [0, '即时 (0ms)'],
+  [200, '快速 (200ms)'],
+  [400, '中速 (400ms)'],
+  [700, '稍慢 (700ms)'],
+  [1200, '慢速 (1.2s)'],
+];
 
 const KEY = 'dnd2024-engine:v1';
 const THEME_KEY = 'dnd2024-engine:theme';
 const PALETTE_KEY = 'dnd2024-engine:palette';
 const WIDTH_KEY = 'dnd2024-engine:width';
+const TERM_DELAY_KEY = 'dnd2024-engine:term-delay';
 
 export const stripDerived = (c: CharData): CharData =>
   Object.fromEntries(Object.entries(c).filter(([k]) => !k.startsWith('_'))) as CharData;
@@ -57,7 +69,10 @@ function load(): AppState {
   let theme: Theme = 'light';
   let palette: Palette = 'slate';
   let width: PageWidth = 'medium';
+  let termDelay = 300;
   try {
+    const td = localStorage.getItem(TERM_DELAY_KEY);
+    if (td != null && !isNaN(Number(td))) termDelay = Number(td);
     const w = localStorage.getItem(WIDTH_KEY);
     if (WIDTHS.some(([k]) => k === w)) width = w as PageWidth;
     const p = localStorage.getItem(PALETTE_KEY);
@@ -70,10 +85,10 @@ function load(): AppState {
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const s = JSON.parse(raw) as Partial<AppState>;
-      return { cards: s.cards ?? {}, order: s.order ?? [], currentId: s.currentId ?? null, page: s.page ?? 'library', theme, palette, width };
+      return { cards: s.cards ?? {}, order: s.order ?? [], currentId: s.currentId ?? null, page: s.page ?? 'library', theme, palette, width, termDelay };
     }
   } catch { /* 坏了就从空的开始 */ }
-  return { cards: {}, order: [], currentId: null, page: 'library', theme, palette, width };
+  return { cards: {}, order: [], currentId: null, page: 'library', theme, palette, width, termDelay };
 }
 
 let state: AppState = load();
@@ -85,6 +100,7 @@ function persist(): void {
     localStorage.setItem(THEME_KEY, state.theme);
     localStorage.setItem(PALETTE_KEY, state.palette);
     localStorage.setItem(WIDTH_KEY, state.width);
+    localStorage.setItem(TERM_DELAY_KEY, String(state.termDelay));
   } catch { /* 存不下（配额）：这次会话照常用 */ }
 }
 
@@ -120,6 +136,9 @@ export const actions = {
   setWidth(width: PageWidth) {
     document.documentElement.dataset.width = width;
     set({ width });
+  },
+  setTermDelay(termDelay: number) {
+    set({ termDelay });
   },
   open(id: string) { set({ currentId: id, page: 'sheet' }); },
 

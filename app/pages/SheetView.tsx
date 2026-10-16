@@ -8,6 +8,7 @@ import { Entries } from '../components/Entries';
 import { Clip, Panel, Pips, Tag, sgn } from '../components/ui';
 import type { Engine } from '../lib/engine';
 import { actions, stripDerived } from '../lib/store';
+import { termOfResource } from '../lib/terms';
 
 const ABBR: Record<string, string> = { str: '力', dex: '敏', con: '体', int: '智', wis: '感', cha: '魅' };
 const RECOVERY_CN: Record<string, string> = { short: '短休', long: '长休', initiative: '先攻', none: '特殊', '?': '按规则' };
@@ -84,7 +85,14 @@ export function SheetHero({ id, char, sheet, tags, tools }: Omit<Props, 'engine'
     <section className="hero panel">
       <div className="hero-id">
         <h1>{char.name || '未命名'}</h1>
-        <div className="sub">{[char.race, char.background, classes].filter(Boolean).join(' · ') || '还没选种族、背景、职业'}</div>
+        <div className="sub">
+          {[
+            char.race ? <Term key="race" kind="race" name={char.race}>{char.race}</Term> : null,
+            char.background ? <Term key="bg" kind="background" name={char.background}>{char.background}</Term> : null,
+            classes || null,
+          ].filter(Boolean).map((node, idx) => <span key={idx}>{idx > 0 && ' · '}{node}</span>)}
+          {!char.race && !char.background && !classes && '还没选种族、背景、职业'}
+        </div>
         <div className="row hero-tags">{tags}</div>
       </div>
       <div className="hero-vitals">
@@ -137,10 +145,10 @@ function Attacks({ sheet }: Props) {
           <tbody>
             {rows.map((r, i) => (
               <tr key={i}>
-                <td className="serif">{r.name}{!r.prof && <span className="warnline tiny"> 未熟练</span>}</td>
+                <td className="serif"><Term kind="item" name={r.name}>{r.name}</Term>{!r.prof && <span className="warnline tiny"> 未熟练</span>}</td>
                 <td className="r num serif">{sgn(r.atk)}</td>
                 <td className="num">{r.dmgText}{r.dmg2 && <span className="faint tiny"> / 双手 {r.dmg2}</span>}</td>
-                <td>{(sheet.masteries || []).includes(r.name) && r.mastery?.[0] ? <Tag tone="accent">{r.mastery[0]}</Tag> : <span className="faint">—</span>}</td>
+                <td>{(sheet.masteries || []).includes(r.name) && r.mastery?.[0] ? <Tag tone="accent"><Term kind="itemMastery" name={r.mastery[0]}>{r.mastery[0]}</Term></Tag> : <span className="faint">—</span>}</td>
                 <td className="small muted">{ABIL_CN[r.abil as keyof typeof ABIL_CN]}{r.range ? ` · ${r.range} 尺` : ''}</td>
               </tr>
             ))}
@@ -215,7 +223,7 @@ function Spells({ engine, id, char, sheet }: Props) {
             );
           })}
           {(sc.granted || []).map((g: Json) => (
-            <tr key={'g' + g.name}><td className="serif">{g.name}</td><td className="small muted">额外法术 · {g.from}</td><td /></tr>
+            <tr key={'g' + g.name}><td className="serif"><Term kind="spell" name={g.name} /></td><td className="small muted">额外法术 · {g.from}</td><td /></tr>
           ))}
         </tbody>
       </table>
@@ -238,13 +246,16 @@ function Resources({ engine, id, char, sheet }: Props) {
       {pools.length ? (
         <table className="rows">
           <tbody>
-            {pools.map((r) => (
-              <tr key={r.key}>
-                <td className="serif"><Clip text={String(r.name)} /></td>
-                <td><Pips max={r.max} used={r.used || 0} onChange={(u) => actions.update(id, (c) => { c.resources = { ...(c.resources || {}), [r.key]: { ...(c.resources?.[r.key] || {}), used: u } }; })} /></td>
-                <td className="r small faint">{RECOVERY_CN[r.recovery] ?? r.recovery}</td>
-              </tr>
-            ))}
+            {pools.map((r) => {
+              const tr = termOfResource(r);
+              return (
+                <tr key={r.key}>
+                  <td className="serif">{tr ? <Term {...tr} inButton><Clip text={String(r.name)} /></Term> : <Clip text={String(r.name)} />}</td>
+                  <td><Pips max={r.max} used={r.used || 0} onChange={(u) => actions.update(id, (c) => { c.resources = { ...(c.resources || {}), [r.key]: { ...(c.resources?.[r.key] || {}), used: u } }; })} /></td>
+                  <td className="r small faint">{RECOVERY_CN[r.recovery] ?? r.recovery}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       ) : <div className="empty">没有资源池。</div>}
@@ -289,7 +300,7 @@ function Features({ sheet, char }: Props) {
           {[...g.items].sort((a, b) => (a.level ?? 0) - (b.level ?? 0)).map((f, i) => (
             <details className="feature" key={i}>
               <summary>
-                <span className="nm">{f._origin === 'race' || f._origin === 'hr' ? f.name : <Term kind={f._sub ? 'subclassFeature' : 'classFeature'} name={f.name} cls={f._cls} level={f.level} inButton>{f.name}</Term>}</span>
+                <span className="nm">{f._origin === 'hr' ? f.name : f._origin === 'race' ? <Term kind="raceFeature" name={f.name} inButton>{f.name}</Term> : <Term kind={f._sub ? 'subclassFeature' : 'classFeature'} name={f.name} cls={f._cls} level={f.level} inButton>{f.name}</Term>}</span>
                 {f.level ? <span className="tiny faint">{f.level} 级</span> : null}
               </summary>
               <div className="prose"><Entries entries={f.entries || []} /></div>

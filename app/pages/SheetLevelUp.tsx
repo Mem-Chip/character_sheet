@@ -12,6 +12,7 @@ import { Choices } from '../components/Choices';
 import { Entries } from '../components/Entries';
 import { SpellBrowser } from '../components/SpellBrowser';
 import { NumInput, Panel, Tag } from '../components/ui';
+import { Term } from '../components/Term';
 import type { Engine } from '../lib/engine';
 import { tagCampaign } from '../lib/hub';
 import { actions, getApp, stripDerived } from '../lib/store';
@@ -135,7 +136,7 @@ export function SheetLevelUp({ engine, id, char, sheet }: Props) {
                 <div className="small faint">新特性</div>
                 {gained.length ? gained.map((f) => (
                   <details key={featKey(f)} className="feature">
-                    <summary><span className="nm">{f.name}</span>{f._sub && <Tag>子职</Tag>}</summary>
+                    <summary><span className="nm"><Term kind={f._sub ? 'subclassFeature' : 'classFeature'} name={f.name} cls={f._cls} level={f.level} inButton>{f.name}</Term></span>{f._sub && <Tag>子职</Tag>}</summary>
                     <div className="prose small"><Entries entries={f.entries || []} /></div>
                   </details>
                 )) : <div className="small muted">这一级没有新特性。</div>}

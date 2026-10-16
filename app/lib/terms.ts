@@ -14,7 +14,7 @@ export interface TermData { kind: string; name: string; source: string; kindLabe
 export const KIND_LABEL: Record<string, string> = {
   spell: '法术', condition: '状态', status: '状态', disease: '疾病', feat: '专长', optfeature: '可选特性', item: '物品',
   skill: '技能', action: '动作', sense: '感官', variantrule: '规则', language: '语言', race: '种族', background: '背景',
-  classFeature: '职业特性', subclassFeature: '子职特性', itemMastery: '武器精通', itemProperty: '武器属性',
+  classFeature: '职业特性', subclassFeature: '子职特性', raceFeature: '种族特质', itemMastery: '武器精通', itemProperty: '武器属性',
 };
 
 /** 类别 → [数据键, 数组名]；一个类别可以查好几份 */
@@ -37,7 +37,7 @@ const TABLES: Record<string, Array<[string, string]>> = {
   itemProperty: [['itemsBase', 'itemProperty']],
 };
 
-export const canLookup = (kind: string) => kind in TABLES || kind === 'classFeature' || kind === 'subclassFeature' || kind === 'auto';
+export const canLookup = (kind: string) => kind in TABLES || kind === 'classFeature' || kind === 'subclassFeature' || kind === 'raceFeature' || kind === 'auto';
 
 /** 规则条目键 → 术语：`XPHB:spell:名`、`XPHB:action:名`、`XPHB:condition:名`、职业特性 `XPHB:职业:名:等级`、其余 `XPHB:名` */
 export function termOfKey(key: string): TermRef | null {
@@ -109,15 +109,19 @@ async function find(engine: Engine, ref: TermRef): Promise<TermData | null> {
     meta: metaOf(kind, e), entries: e.entries || (e.entry ? [e.entry] : []),
   } : null);
 
+  if (ref.kind === 'raceFeature') {
+    return findRaceFeature(engine, ref.name);
+  }
   if (ref.kind === 'classFeature' || ref.kind === 'subclassFeature') {
-    const slug = ref.cls ? CLASS_SLUG_BY_NAME[ref.cls] : undefined;
-    if (!slug) return null;
-    const data = await store.classData(slug);
-    // 引擎的条目键不区分职业特性和子职特性：两张表都找
-    for (const kind of ref.kind === 'classFeature' ? ['classFeature', 'subclassFeature'] : ['subclassFeature', 'classFeature']) {
-      const hits = (data?.[kind] as Json[] || []).filter((f) => f.name === ref.name && (ref.level == null || f.level === ref.level));
-      const hit = hits.find((f) => /^X/.test(f.source)) ?? hits[0];
-      if (hit) return done(hit, kind);
+    const slugs = ref.cls ? [CLASS_SLUG_BY_NAME[ref.cls]].filter(Boolean) : Object.values(CLASS_SLUG_BY_NAME);
+    for (const slug of slugs) {
+      if (!slug) continue;
+      const data = await store.classData(slug).catch(() => null);
+      for (const kind of ref.kind === 'classFeature' ? ['classFeature', 'subclassFeature'] : ['subclassFeature', 'classFeature']) {
+        const hits = (data?.[kind] as Json[] || []).filter((f) => f.name === ref.name && (ref.level == null || f.level === ref.level));
+        const hit = hits.find((f) => /^X/.test(f.source)) ?? hits[0];
+        if (hit) return done(hit, kind);
+      }
     }
     return null;
   }
@@ -126,6 +130,10 @@ async function find(engine: Engine, ref: TermRef): Promise<TermData | null> {
       const hit = await find(engine, { ...ref, kind });
       if (hit) return hit;
     }
+    const hitCls = await find(engine, { ...ref, kind: 'classFeature' });
+    if (hitCls) return hitCls;
+    const hitRace = await findRaceFeature(engine, ref.name);
+    if (hitRace) return hitRace;
     return null;
   }
   for (const [file, arr] of TABLES[ref.kind] || []) {
@@ -137,6 +145,58 @@ async function find(engine: Engine, ref: TermRef): Promise<TermData | null> {
   if (ref.kind === 'spell') {
     const hit = pick([...store.bookSpells.values()].flat(), ref.name, ref.source);
     if (hit) return done(hit);
+  }
+  return null;
+}
+
+async function findRaceFeature(engine: Engine, name: string): Promise<TermData | null> {
+  const store = engine.env.store;
+  const d = await store.ensure('races').catch(() => null);
+  for (const r of (d?.race || []) as Json[]) {
+    for (const ent of (r.entries || []) as Json[]) {
+      if (ent && typeof ent === 'object' && ent.name === name) {
+        return {
+          kind: 'raceFeature',
+          name: ent.name,
+          source: r.source ?? 'XPHB',
+          kindLabel: '种族特质',
+          meta: [`种族：${r.name}`],
+          entries: ent.entries || (ent.entry ? [ent.entry] : []),
+        };
+      }
+    }
+  }
+  return null;
+}
+
+const RESOURCE_FEATURE_MAP: Record<string, string> = {
+  狂暴次数: '狂暴',
+  引导神力: '引导神力',
+  荒野形态: '荒野形态',
+  回气: '回气',
+  功力: '运转周天',
+  功力点: '运转周天',
+  术法点: '术法点',
+  宿敌: '宿敌',
+  祈唤: '魔能祈唤',
+};
+
+/** 资源对象 → 术语引用（用于鼠标悬浮查看说明） */
+export function termOfResource(r: Json): TermRef | null {
+  if (!r) return null;
+  const name = String(r.name || '').trim();
+  const key = String(r.key || '');
+  if (key.startsWith('table:XPHB:')) {
+    const [, , cls, col] = key.split(':');
+    const featName = RESOURCE_FEATURE_MAP[col] || col.replace(/次数$/, '');
+    return { kind: 'classFeature', cls, name: featName };
+  }
+  if (r.from && r.from !== '能力' && r.from !== '职业表') {
+    return { kind: 'auto', name: String(r.from).trim() };
+  }
+  if (name) {
+    const cleanName = RESOURCE_FEATURE_MAP[name] || name.replace(/次数$/, '');
+    return { kind: 'auto', name: cleanName };
   }
   return null;
 }
