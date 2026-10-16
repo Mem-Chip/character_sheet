@@ -32,6 +32,7 @@ export const REF_SHAPE: RefShape = {
     has: { params: [T.str], returns: T.bool, doc: '是否处于某状态（含隐含的）' },
     hasEffect: { params: [T.str], returns: T.bool, doc: '身上是否有某个效应（名字或键）' },
     effect: { params: [T.str], returns: T.open, doc: '取效应实例：{id, name, key, state, source}' },
+    hasSource: { params: [T.str], returns: T.bool, doc: '是否拥有某规则条目（特性、专长、法术）' },
     levelOf: { params: [T.str], returns: T.num, doc: '某职业的等级' },
     wearing: { params: [T.str], returns: T.bool, doc: "是否着装某类护甲：'LA' 'MA' 'HA' 'S'" },
     isEnemyOf: { params: [T.ref], returns: T.bool },
@@ -173,6 +174,10 @@ export function refOf(tx: Tx, id: Id): RefValue {
         case 'effect': {
           const e = findEffect(tx, id, s(0));
           return e ? { id: e.id, name: e.name, key: e.key, state: e.state as Record<string, Value>, source: e.source } : null;
+        }
+        case 'hasSource': {
+          const q = s(0);
+          return effectiveView(tx, id).sources.some((x) => x === q || x.includes(`:${q}:`) || x.endsWith(`:${q}`));
         }
         case 'levelOf': return effectiveView(tx, id).levels[s(0)] ?? 0;
         case 'wearing': return effectiveView(tx, id).wearing.includes(s(0));

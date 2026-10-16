@@ -17,11 +17,46 @@ type Pos = Positions[string];
 
 const key = (x: number, y: number) => `${x},${y}`;
 
+export const sizeToGrid = (sz?: string): number =>
+  sz === 'L' || sz === '大型' ? 2 : sz === 'H' || sz === '巨型' ? 3 : sz === 'G' || sz === '超巨型' ? 4 : 1;
+
 /** 棋子占的格子 */
 export function cellsOf(p: Pos): string[] {
   const out: string[] = [];
   for (let dx = 0; dx < p.s; dx++) for (let dy = 0; dy < p.s; dy++) out.push(key(p.x + dx, p.y + dy));
   return out;
+}
+
+/** 召唤物入场：若召唤者在地图上有位置，在召唤者身旁找最近空位放上棋子并发 moved 事件 */
+export function placeSummon(tx: Tx, summoner: Id, summonId: Id, size: string | undefined, cause: number | null): void {
+  const pos = tx.pos;
+  const sp = pos?.[summoner];
+  if (!pos || !sp) return;
+  const s = sizeToGrid(size);
+  const taken = new Set<string>();
+  for (const [k, p] of Object.entries(pos)) {
+    const c = tx.state.combatants[k];
+    if (c && !c.live.dead) for (const cell of cellsOf(p)) taken.add(cell);
+  }
+  const free = (x: number, y: number) => {
+    if (x < 0 || y < 0) return false;
+    return cellsOf({ x, y, s }).every((c) => !taken.has(c));
+  };
+  let picked: Cell = { x: sp.x + sp.s, y: sp.y };
+  outer: for (let r = 1; r <= 6; r++) {
+    for (let dy = -r; dy <= sp.s - 1 + r; dy++) {
+      for (let dx = -r; dx <= sp.s - 1 + r; dx++) {
+        const x = sp.x + dx;
+        const y = sp.y + dy;
+        if (free(x, y)) {
+          picked = { x, y };
+          break outer;
+        }
+      }
+    }
+  }
+  pos[summonId] = { x: picked.x, y: picked.y, s };
+  tx.emit('moved', { id: summonId, from: picked, to: picked, forced: true }, cause);
 }
 
 const inZone = (z: Zone, p: Pos) => cellsOf(p).some((c) => z.cells.includes(c));

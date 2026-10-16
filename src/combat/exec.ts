@@ -1,13 +1,14 @@
 import { ABIL_CN, Dice, Unknown, run, runBool, runDice, runInt, type ExprSrc, type Question, type Value } from '../expr';
 import { applyDamagePacket, applyHeal, grantTempHp, maxDiceFor, normType, rollComponent, type DamageComponent, type DamagePacket } from './damage';
 import { controllerOf, d20Test, rollValue } from './d20';
-import { activeTemplates, applyEffect, effectiveView, effectsOf, endEffect, startConcentration } from './effects';
+import { activeTemplates, applyEffect, effectiveView, effectsOf, endEffect, skillBonus, startConcentration } from './effects';
 import { makeEnv, nameOf, type ScopeData } from './scope';
 import { entryOf } from './collect';
-import { shove } from './space';
+import { placeSummon, shove } from './space';
 import { blockedEconomy, fireWindow } from './triggers';
 import { Rejected, type Tx } from './tx';
-import type { Action, ActiveEffect, AttackInfo, AttackRow, Cost, Duration, EffectId, Id, Modify, Node, Zone } from './types';
+import { makeCombatant, makeView } from './view';
+import type { Action, ActiveEffect, AttackInfo, AttackRow, CombatantView, Cost, Duration, EffectId, Entry, Id, Modify, Node, Zone } from './types';
 
 /**
  * 效果树解释器 + 动作执行（COMBAT-DESIGN §4.1 / §4.2）。
@@ -57,6 +58,8 @@ export interface ExecCtx {
   area?: { cells: string[]; tpl?: Record<string, unknown> };
   /** 当前在豁免的哪个分支里（伤害包据此知道「成功减半」，反射闪避用） */
   save?: { ability: string; success: boolean; half: boolean };
+  /** 荒野形态 / 召唤动作从 UI 传入的生物面板 */
+  form?: CombatantView;
 }
 
 export function scopeOf(tx: Tx, ctx: ExecCtx): ScopeData {
@@ -153,10 +156,16 @@ function recipients(tx: Tx, ctx: ExecCtx, to: 'target' | 'self' | 'attacker' | '
 function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
   switch (n.kind) {
     case 'attack': return perTarget(tx, ctx, (c) => runAttack(tx, n, c));
-    case 'save': return perTarget(tx, ctx, (c) => runSave(tx, n, c));
+    case 'save': {
+      if (n.to && n.to !== 'target') {
+        for (const id of recipients(tx, ctx, n.to)) runSave(tx, n, { ...ctx, target: id });
+        return;
+      }
+      return perTarget(tx, ctx, (c) => runSave(tx, n, c));
+    }
     case 'check': {
       const v = effectiveView(tx, ctx.self);
-      const bonus = n.skill ? (v.skill[n.skill] ?? v.mod[n.ability]) : v.mod[n.ability];
+      const bonus = n.skill ? skillBonus(v, n.skill, n.ability) : v.mod[n.ability];
       const dc = num(tx, ctx, n.dc, '检定 DC');
       const r = d20Test(tx, {
         roller: ctx.self, kind: 'check', ability: n.ability, skill: n.skill, bonus, vs: dc,
@@ -198,7 +207,10 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
       for (const id of recipients(tx, ctx, n.from ?? 'target')) {
         for (const e of effectsOf(tx, id)) {
           const m = n.match;
-          const hit = (m.key && (e.key === m.key || e.key.split('#')[0] === m.key)) || (m.name && e.name === m.name) || (m.tag && e.tags.includes(m.tag));
+          const hit =
+            (m.key && (e.key === m.key || e.key.split('#')[0] === m.key)) ||
+            (m.name && (e.name === m.name || e.key.split('#')[1] === m.name)) ||
+            (m.tag && e.tags.includes(m.tag));
           if (hit) endEffect(tx, e.id, `被「${ctx.actionName}」移除`, ctx.cause);
         }
       }
@@ -252,7 +264,7 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
       });
       const list = (Array.isArray(picked) ? picked : [picked]).map(String).slice(0, n.count ?? 1);
       for (const i of list) {
-        const o = n.options[Number(i)];
+        const o = n.options[Number(i)] ?? n.options.find((x) => x.label === i || x.value === i);
         if (!o) continue;
         if (n.var) (ctx.vars ??= {})[n.var] = o.value ?? o.label;
         runNodes(tx, o.do, ctx);
@@ -327,6 +339,122 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
       }
       return;
     }
+    case 'summon': {
+      runSummon(tx, n, ctx);
+      return;
+    }
+  }
+}
+
+const SUMMON_SIZE_CN: Record<string, string> = {
+  T: '微型', S: '小型', M: '中型', L: '大型', H: '巨型', G: '超巨型',
+};
+const SUMMON_TYPE_CN: Record<string, string> = {
+  beast: '野兽', fey: '妖精', undead: '不死生物', elemental: '元素生物',
+  aberration: '异怪', construct: '构装体', dragon: '龙类', celestial: '天界生物', fiend: '邪魔',
+};
+
+function runSummon(tx: Tx, n: Extract<Node, { kind: 'summon' }>, ctx: ExecCtx): void {
+  const summoner = tx.state.combatants[ctx.self];
+  if (!summoner) return;
+  const sv = effectiveView(tx, ctx.self);
+  const count = n.count !== undefined ? Math.max(1, num(tx, ctx, n.count, '召唤数量')) : 1;
+  const linkEffect = n.link !== false ? (ctx.concentrationId ?? ctx.effectId) : undefined;
+  if (!linkEffect) {
+    for (const c of Object.values(tx.state.combatants)) {
+      if (c.summoner === ctx.self && !c.linkEffect) tx.emit('combatantRemoved', { id: c.id }, ctx.cause);
+    }
+  }
+  const rawType = n.type ?? n.creatureType;
+  const typeCn = rawType ? (SUMMON_TYPE_CN[rawType] ?? rawType) : undefined;
+
+  for (let i = 0; i < count; i++) {
+    const id = tx.nextId('s');
+    const baseName = ctx.form?.name ?? n.name;
+    const name = count > 1 ? `${baseName} ${i + 1}` : baseName;
+    let view: CombatantView;
+    if (ctx.form) {
+      view = {
+        ...structuredClone(ctx.form),
+        name,
+        ...(typeCn ? { type: typeCn } : {}),
+      };
+    } else {
+      const score = {
+        str: n.score?.str !== undefined ? num(tx, ctx, n.score.str, '力量') : 10,
+        dex: n.score?.dex !== undefined ? num(tx, ctx, n.score.dex, '敏捷') : 10,
+        con: n.score?.con !== undefined ? num(tx, ctx, n.score.con, '体质') : 10,
+        int: n.score?.int !== undefined ? num(tx, ctx, n.score.int, '智力') : 10,
+        wis: n.score?.wis !== undefined ? num(tx, ctx, n.score.wis, '感知') : 10,
+        cha: n.score?.cha !== undefined ? num(tx, ctx, n.score.cha, '魅力') : 10,
+      };
+      const fallbackAtk = sv.spell?.atk ?? (sv.pb + sv.mod.wis);
+      const attacks: AttackRow[] = (n.attacks ?? []).map((a, idx) => ({
+        id: a.id ?? `atk-${idx + 1}`,
+        name: a.name,
+        melee: a.melee ?? !a.ranged,
+        ranged: a.ranged ?? false,
+        finesse: false,
+        ability: 'str',
+        bonus: a.bonus !== undefined ? num(tx, ctx, a.bonus, `${a.name} 命中加值`) : fallbackAtk,
+        damage: dice(tx, ctx, a.damage, `${a.name} 伤害`).toString(),
+        damageType: normType(a.damageType),
+        extra: a.extra?.map((x) => ({ dice: dice(tx, ctx, x.dice, `${a.name} 额外伤害`).toString(), type: normType(x.type) })),
+        reach: a.reach,
+        range: a.range,
+        long: a.long,
+      }));
+      const entryKey = `summon:${id}`;
+      const hasEntry = !!(n.actions?.length || n.triggers?.length || n.rollMods?.length);
+      const entries: Record<string, Entry> | undefined = hasEntry
+        ? {
+            [entryKey]: {
+              name,
+              ...(n.actions?.length ? { actions: n.actions.map((a) => structuredClone(a)) } : {}),
+              ...(n.triggers?.length ? { triggers: n.triggers.map((t) => structuredClone(t)) } : {}),
+              ...(n.rollMods?.length ? { rollMods: n.rollMods.map((m) => structuredClone(m)) } : {}),
+            },
+          }
+        : undefined;
+      const notes = (n.notes ?? []).map((x) =>
+        typeof x === 'string'
+          ? { group: '特性', name: x.includes('：') ? x.split('：')[0] : '特性', text: x }
+          : structuredClone(x),
+      );
+      const rawSize = n.size ?? 'M';
+      view = makeView({
+        name,
+        size: SUMMON_SIZE_CN[rawSize] ?? rawSize,
+        type: typeCn ?? '野兽',
+        ac: n.ac !== undefined ? Math.max(1, num(tx, ctx, n.ac, '召唤物 AC')) : 12,
+        hpMax: n.hp !== undefined ? Math.max(1, num(tx, ctx, n.hp, '召唤物生命值')) : 10,
+        speed: n.speed !== undefined ? Math.max(0, num(tx, ctx, n.speed, '召唤物速度')) : 30,
+        pb: n.pb !== undefined ? num(tx, ctx, n.pb, '召唤物熟练加值') : sv.pb,
+        initiative: summoner.initiative ?? sv.initiative,
+        score,
+        spell: sv.spell ? { ...sv.spell } : null,
+        attacks,
+        attacksPerAction: n.attacksPerAction !== undefined ? Math.max(1, num(tx, ctx, n.attacksPerAction, '多重攻击次数')) : 1,
+        resist: (n.resist ?? []).map(normType),
+        immune: (n.immune ?? []).map(normType),
+        conditionImmune: [...(n.conditionImmune ?? [])],
+        sources: hasEntry ? [entryKey] : [],
+        ...(entries ? { entries } : {}),
+        ...(notes.length ? { notes } : {}),
+      });
+    }
+    const cb = makeCombatant({
+      id,
+      kind: 'monster',
+      side: summoner.side,
+      controller: summoner.controller,
+      view,
+      initiative: summoner.initiative,
+      summoner: ctx.self,
+      linkEffect,
+    });
+    const seq = tx.emit('combatantAdded', { combatant: cb }, ctx.cause);
+    placeSummon(tx, ctx.self, id, view.size, seq);
   }
 }
 
@@ -353,6 +481,7 @@ function applyEffectNode(tx: Tx, n: Extract<Node, { kind: 'applyEffect' }>, ctx:
     potency: n.potency !== undefined ? num(tx, ctx, n.potency, '效应强度') : 0,
     state,
     snap,
+    form: bearer === ctx.self ? ctx.form : undefined,
     origin: { kind: ctx.originKind ?? 'feature', ref: ctx.entryKey },
     cause: ctx.cause,
   });
@@ -366,7 +495,7 @@ const DEFAULT_ATTACK: AttackInfo = {
 };
 
 function runAttack(tx: Tx, n: Extract<Node, { kind: 'attack' }>, ctx: ExecCtx): void {
-  const target = ctx.target!;
+  let target = ctx.target!;
   const attack: AttackInfo = { ...DEFAULT_ATTACK, ...(n.attack ?? {}) };
   const bonus = num(tx, ctx, n.bonus ?? 'self.spell.atk', '攻击加值');
   const acBefore = effectiveView(tx, target).ac;
@@ -379,7 +508,7 @@ function runAttack(tx: Tx, n: Extract<Node, { kind: 'attack' }>, ctx: ExecCtx): 
 
   const miss = (why?: string) => {
     const seq = tx.emit('attackMissed', { attacker: ctx.self, target, label: ctx.actionName, total: r.total, vs: r.vs, why }, r.seq);
-    runNodes(tx, n.onMiss, { ...hctx, cause: seq });
+    runNodes(tx, n.onMiss, { ...hctx, target, cause: seq });
     fireWindow(tx, { event: 'attackMissed', window: 'after', actor: ctx.self, target, scope: { attack, roll: rollValue(r) }, cause: seq });
   };
   if (r.outcome !== 'hit') { miss(); return; }
@@ -392,21 +521,60 @@ function runAttack(tx: Tx, n: Extract<Node, { kind: 'attack' }>, ctx: ExecCtx): 
   for (const d of dmgNodes) packet.components.push({ dice: dice(tx, hctx, d.dice ?? '0', ctx.actionName), type: typeOf(tx, hctx, d.type), from: ctx.actionName });
   const hitSeq = tx.emit('attackHit', { attacker: ctx.self, target, label: ctx.actionName, total: r.total, vs: r.vs, crit: r.crit }, r.seq);
 
-  // a. 防守方（护盾术……）
-  const windowBase = { event: 'attackHit', window: 'before' as const, actor: ctx.self, target, scope: { attack, roll: rollValue(r) }, packet };
-  const modify = (m: { op: string }) => {
+  // a. 防守方（护盾术、镜影术、庇护术、骑乘战斗、云雾符文……）
+  let cancelledBy: string | null = null;
+  let redirected = false;
+  const modify = (m: Modify, by?: { owner: Id; label: string }) => {
     if (m.op === 'halveDamage') packet.halve = true;
-    else if (m.op === 'cancel') packet.cancel = true;
+    else if (m.op === 'doubleDamage') packet.double = true;
+    else if (m.op === 'cancel') cancelledBy = by?.label ?? '攻击被抵消';
+    else if (m.op === 'redirect') {
+      const who = by?.owner ?? target;
+      const label = by?.label ?? '改换目标';
+      if (m.to === 'self') {
+        if (who !== target && who !== ctx.self && tx.state.combatants[who] && !tx.state.combatants[who].live.dead) {
+          target = who;
+          packet.target = target;
+          redirected = true;
+          tx.emit('note', { text: `${label}：攻击目标改为 ${nameOf(tx, target)}`, owner: who, target }, hitSeq);
+        }
+      } else {
+        const others = Object.values(tx.state.combatants).filter((c) => !c.live.dead && c.id !== target && c.id !== ctx.self);
+        if (!others.length) {
+          cancelledBy = `${label}：没有可改选的目标`;
+        } else {
+          const opts = [...others.map((c) => ({ id: c.id, label: c.name })), { id: 'cancel', label: '放弃攻击（落空）' }];
+          const picked = tx.decide({
+            kind: 'choose', to: controllerOf(tx, who), prompt: `${label}：选择新的攻击目标`, multi: false,
+            options: opts, default: [opts[0].id],
+          });
+          const raw = String(Array.isArray(picked) ? picked[0] : picked);
+          const cid = opts.some((o) => o.id === raw) ? raw : opts[Number(raw)]?.id;
+          if (!cid || cid === 'cancel' || !tx.state.combatants[cid]) {
+            cancelledBy = `${label}：放弃攻击`;
+          } else {
+            target = cid;
+            packet.target = target;
+            redirected = true;
+            tx.emit('note', { text: `${label}：攻击目标改为 ${nameOf(tx, target)}`, owner: who, target }, hitSeq);
+          }
+        }
+      }
+    }
   };
-  fireWindow(tx, { ...windowBase, phase: 'defensive', cause: hitSeq, modify });
+  fireWindow(tx, { event: 'attackHit', window: 'before', actor: ctx.self, target, scope: { attack, roll: rollValue(r) }, packet, phase: 'defensive', cause: hitSeq, modify });
+  if (cancelledBy) {
+    miss(cancelledBy);
+    return;
+  }
 
-  // b. 重新判定：AC 可能变了（天然 20 / 重击仍然命中）
+  // b. 重新判定：AC 或目标可能变了（天然 20 / 重击 / autoSucceed 仍然命中）
   const acAfter = effectiveView(tx, target).ac;
-  if (acAfter !== acBefore && !r.crit && r.vs !== null) {
-    const vs = r.vs + (acAfter - acBefore);
+  if ((redirected || acAfter !== acBefore) && !r.crit && !r.autoSucceed && r.vs !== null) {
+    const vs = redirected ? acAfter : r.vs + (acAfter - acBefore);
     if (r.total < vs) {
       tx.emit('attackRechecked', { attacker: ctx.self, target, total: r.total, vsBefore: r.vs, vs, result: 'miss' }, hitSeq);
-      miss(`AC 变为 ${acAfter}`);
+      miss(redirected ? `对 ${nameOf(tx, target)} AC ${acAfter} 未命中` : `AC 变为 ${acAfter}`);
       return;
     }
   }
@@ -415,12 +583,12 @@ function runAttack(tx: Tx, n: Extract<Node, { kind: 'attack' }>, ctx: ExecCtx): 
     tx.emit('critUpgraded', { attacker: ctx.self, target, by: r.autoCritOnHit }, hitSeq);
   }
 
-  // c. 进攻方（偷袭、至圣斩、猎人印记……）
-  const offRoll = { ...rollValue(r), crit: packet.crit };
-  fireWindow(tx, { ...windowBase, scope: { attack, roll: offRoll }, phase: 'offensive', cause: hitSeq, modify });
+  // c. 进攻方（偷袭、至圣斩、猎人印记、致命一击……）
+  const offRoll = { ...rollValue(r), target, crit: packet.crit };
+  fireWindow(tx, { event: 'attackHit', window: 'before', actor: ctx.self, target, scope: { attack, roll: offRoll }, packet, phase: 'offensive', cause: hitSeq, modify });
 
   const res = applyDamagePacket(tx, packet, hitSeq);
-  const after: ExecCtx = { ...hctx, roll: offRoll, damage: { type: packet.components[0]?.type ?? '', amount: res.total, crit: packet.crit }, cause: res.seq };
+  const after: ExecCtx = { ...hctx, target, roll: offRoll, damage: { type: packet.components[0]?.type ?? '', amount: res.total, crit: packet.crit }, cause: res.seq };
   runNodes(tx, (n.onHit ?? []).filter((x) => x.kind !== 'damage'), after);
   fireWindow(tx, {
     event: 'attackHit', window: 'after', actor: ctx.self, target,
@@ -649,6 +817,23 @@ export function actionCosts(action: Action, asReaction = false): Cost[] {
   return costs;
 }
 
+const MOON_SPELLS = new Set(['疗伤术', '月华之光', '点点星芒', '咒唤兽群', '月光涌泉', '群体疗伤术']);
+
+const hasSourceName = (sources: string[], name: string) =>
+  sources.some((s) => s === name || s.includes(`:${name}:`) || s.endsWith(`:${name}`) || s.endsWith(`#${name}`));
+
+function cannotCastSpell(tx: Tx, owner: Id, action: Action): boolean {
+  const blockers = activeTemplates(tx, owner).filter((a) => a.tpl.flags?.cannot?.includes('castSpells'));
+  if (!blockers.length) return false;
+  if (blockers.some((a) => !a.effect.form && !(a.tpl.tags ?? []).includes('wildshape'))) return true;
+  const v = effectiveView(tx, owner);
+  if ((v.levels['德鲁伊'] ?? 0) >= 18 || hasSourceName(v.sources, '兽形施法')) return false;
+  if (MOON_SPELLS.has(action.name) && (hasSourceName(v.sources, '月亮结社法术') || hasSourceName(v.sources, '结社形态'))) {
+    return false;
+  }
+  return true;
+}
+
 /**
  * 窗口触发的动作现在能不能用（不抛错版的 executeAction 前置检查，不含目标检查）。
  * requires 不确定时返回问题，交给窗口一起问。
@@ -661,7 +846,7 @@ export function triggeredActionUsable(tx: Tx, owner: Id, action: Action): { ok: 
   const costs = actionCosts(action);
   if (!canPay(tx, owner, costs)) return no;
   const cannot = new Set(activeTemplates(tx, owner).flatMap((a) => a.tpl.flags?.cannot ?? []));
-  if (isSpell && cannot.has('castSpells')) return no;
+  if (isSpell && cannotCastSpell(tx, owner, action)) return no;
   if (action.concentration && cannot.has('concentrate')) return no;
   if (inCombat(tx) && isSpell && costs.some((k) => 'slot' in k) && c.economy.slotSpellCast) return no;
   if (action.requires === undefined) return { ok: true, questions: [] };
@@ -712,7 +897,7 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
       throw new Rejected(`${c.name} 现在无法执行${ACT_CN[act]}（失能）`);
     }
     const cannot = new Set(activeTemplates(tx, actor).flatMap((a) => a.tpl.flags?.cannot ?? []));
-    if (isSpell && cannot.has('castSpells')) throw new Rejected(`${c.name} 现在不能施法`);
+    if (isSpell && cannotCastSpell(tx, actor, action)) throw new Rejected(`${c.name} 现在不能施法`);
     if (action.concentration && cannot.has('concentrate')) throw new Rejected(`${c.name} 现在无法保持专注`);
     if (action.requires !== undefined) {
       const ok = resolveBool(tx, action.requires, { self: actor, slot: o.slotLevel }, actor, action.name);
@@ -787,14 +972,38 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
   if (quick) endEffect(tx, quick.id, `用在了「${action.name}」上（附赠动作施放）`, seq);
   if (slot !== undefined && inCombat(tx) && isSpell) tx.emit('economyChanged', { id: actor, patch: { slotSpellCast: true } }, seq);
   if (isSpell) {
+    const evScope = { actor, spell: action.name, key: entryKey, slotLevel: slot ?? 0 };
+    let countered: { by: string; refundSlot: boolean } | null = null;
+    fireWindow(tx, {
+      event: 'spellCast', window: 'before', actor,
+      scope: { slot, event: evScope },
+      cause: seq,
+      modify: (m, by) => {
+        if (m.op === 'cancel') countered = { by: by.label, refundSlot: m.refundSlot !== false };
+      },
+    });
+    if (countered !== null) {
+      const { by, refundSlot } = countered as { by: string; refundSlot: boolean };
+      if (slot !== undefined && refundSlot) {
+        tx.emit('slotUsed', { id: actor, level: slot, used: Math.max(0, (c.live.slotsUsed[slot] ?? 1) - 1) }, seq);
+        if (inCombat(tx)) tx.emit('economyChanged', { id: actor, patch: { slotSpellCast: false } }, seq);
+      }
+      tx.emit('note', {
+        text: `「${action.name}」被「${by}」打断，法术失效${slot !== undefined ? (refundSlot ? '（法术位不消耗）' : '（法术位已消耗）') : ''}`,
+        owner: actor,
+      }, seq);
+      tx.emit('actionDone', { actor, action: action.name }, seq);
+      return;
+    }
     const cast = tx.emit('spellCast', { actor, spell: action.name, key: entryKey, slotLevel: slot ?? null }, seq);
-    fireWindow(tx, { event: 'spellCast', window: 'after', actor, scope: { event: { spell: action.name, key: entryKey } }, cause: cast });
+    fireWindow(tx, { event: 'spellCast', window: 'after', actor, scope: { slot, event: evScope }, cause: cast });
   }
 
   let concentrationId: EffectId | undefined;
   if (action.concentration) {
     concentrationId = startConcentration(tx, actor, action.name, action.concentration, entryKey, seq).id;
   }
+  const form = o.options?.form as CombatantView | undefined;
   const ctx: ExecCtx = {
     self: actor,
     targets: o.targets.slice(),
@@ -810,6 +1019,7 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
     originKind: isSpell ? 'spell' : (action.tags ?? []).includes('weapon') ? 'item' : 'feature',
     vars: {},
     ...(o.area ? { area: o.area } : {}),
+    ...(form ? { form } : {}),
     ...o.window,
   };
   runNodes(tx, action.root, ctx);

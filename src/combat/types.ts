@@ -31,7 +31,9 @@ export type RollOp =
   | 'adv' | 'disadv' | 'add' | 'addDice' | 'autoFail' | 'autoSucceed'
   | 'critRange' | 'autoCritOnHit' | 'minD20' | 'minDie' | 'targetAdd'
   /** 伤害骰 / 治疗骰全部取最大值（极效治疗、超限导能） */
-  | 'maxDice';
+  | 'maxDice'
+  /** 不能获得优势（序列意识、飘忽不定：who: 'against' 时别人打你没有优势） */
+  | 'noAdv';
 
 export interface RollMod {
   on: RollFilter;
@@ -142,12 +144,34 @@ export type Modify =
   /** value 可以带骰子（1d10 + pb），由能力持有者掷一次 */
   | { op: 'reduceDamage'; value: ExprSrc; types?: string[] }
   | { op: 'halveDamage' }
+  /** 伤害翻倍（致命一击） */
+  | { op: 'doubleDamage' }
   | { op: 'setHp'; value: ExprSrc }
-  | { op: 'cancel' }
-  /** 把这次豁免 / 检定改成成功（传奇抗性） */
+  /**
+   * 抵消 / 打断：
+   *   - damageIncoming：这次伤害归零（护盾术免疫魔法飞弹）；
+   *   - attackHit（防守段）：这次攻击改为未命中（镜影术、幻影化形、不破威仪）；
+   *   - spellCast：打断施法，法术消散、动作浪费；refundSlot 缺省 true（2024 法术反制：返还法术位），false = 法术位照常消耗。
+   */
+  | { op: 'cancel'; refundSlot?: boolean }
+  /** 把这次豁免 / 检定 / 攻击改成成功或命中（传奇抗性、现世传说） */
   | { op: 'succeed' }
   /** 反射闪避：「豁免成功只受一半伤害」的效果 —— 成功改为不受伤害，失败改为只受一半（别的伤害不管） */
-  | { op: 'evasion' };
+  | { op: 'evasion' }
+  /**
+   * 改目标：
+   *   - attackHit（防守段）：to = 'self' 把攻击改到自己身上（骑乘战斗）；不写或 'choose' 让人选一个新目标或放弃攻击（庇护术、云雾符文、直觉魅惑、误导），按新目标 AC 重新判定；
+   *   - damageIncoming：把整包伤害改由自己承受（保护联结）。
+   */
+  | { op: 'redirect'; to?: 'self' | 'choose' }
+  /**
+   * 替承受者吸收伤害（damageIncoming，先按原目标的抗性 / 易伤算出伤害）：
+   *   - from 缺省 'tempHp'：用自己的临时生命值吸收，溢出仍归原目标（投射守御）；
+   *   - from = 'hp'：不可减免地由自己代替承受全部最终伤害（护卫灵光）。
+   */
+  | { op: 'absorb'; from?: 'tempHp' | 'hp' }
+  /** 消除这次 d20 检定的优势 / 劣势，改用第一颗 d20（归复平衡 which 缺省 'both'，醉汉机运 which: 'disadv'） */
+  | { op: 'clearAdv'; which?: 'both' | 'adv' | 'disadv' };
 
 export interface Trigger extends TriggerSpec {
   id: string;
@@ -212,10 +236,26 @@ export interface AttackInfo {
   mastery: string | null;
 }
 
+export interface SummonAttackSpec {
+  id?: string;
+  name: string;
+  /** 缺省 self.spell.atk */
+  bonus?: ExprSrc;
+  /** 伤害表达式（召唤时求值成骰子文本，如 '1d8 + 4 + slot.level'） */
+  damage: ExprSrc;
+  damageType: string;
+  melee?: boolean;
+  ranged?: boolean;
+  reach?: boolean;
+  range?: number;
+  long?: number;
+  extra?: Array<{ dice: ExprSrc; type: string }>;
+}
+
 export type Node =
   | { kind: 'attack'; bonus?: ExprSrc; attack?: Partial<AttackInfo>; critRange?: ExprSrc; onHit?: Node[]; onMiss?: Node[] }
-  /** ability 写成数组 = 由目标选择（引擎替目标选加值高的那个，例如擒抱：力量或敏捷） */
-  | { kind: 'save'; ability: Ability | Ability[]; dc: ExprSrc; onFail?: Node[]; onSuccess?: Node[] }
+  /** ability 写成数组 = 由目标选择（引擎替目标选加值高的那个，例如擒抱：力量或敏捷）；to: 'attacker' = 迫使攻击者豁免（庇护术、不破威仪） */
+  | { kind: 'save'; to?: NodeTarget; ability: Ability | Ability[]; dc: ExprSrc; onFail?: Node[]; onSuccess?: Node[] }
   | { kind: 'check'; ability: Ability; skill?: string; dc: ExprSrc; onFail?: Node[]; onSuccess?: Node[] }
   | { kind: 'damage'; dice?: ExprSrc; type?: string; id?: string; ref?: string; scale?: number; to?: NodeTarget }
   | { kind: 'addDamage'; dice: ExprSrc; type: string }
@@ -245,6 +285,20 @@ export type Node =
   | {
       kind: 'zone'; name?: string; on: ZoneWhen[]; do: Node[];
       affects?: 'all' | 'enemies' | 'allies'; oncePerTurn?: boolean; rounds?: number;
+    }
+  /**
+   * 召唤一个参战生物（召唤术、原初伴侣、魔宠）：与召唤者同控制者、同阵营，先攻紧贴在召唤者后面；
+   * link != false 时随本次动作的专注 / 效应结束而消失。
+   */
+  | {
+      kind: 'summon'; name: string; size?: string; type?: string; creatureType?: string;
+      ac?: ExprSrc; hp?: ExprSrc; speed?: ExprSrc; pb?: ExprSrc;
+      score?: Partial<Record<Ability, ExprSrc>>;
+      resist?: string[]; immune?: string[]; conditionImmune?: string[];
+      attacksPerAction?: ExprSrc; attacks?: SummonAttackSpec[];
+      actions?: Action[]; triggers?: Trigger[]; rollMods?: RollMod[];
+      notes?: Array<{ group: string; name: string; text: string } | string>;
+      count?: ExprSrc; link?: boolean;
     }
   | { kind: 'note'; text: string }
   /** 在窗口里改正在结算的东西（反应动作的 root、触发器的 do 里用）：值在当前作用域里求（能用 slot.level），带骰子的当场掷 */
@@ -391,6 +445,10 @@ export interface Combatant {
   live: LiveState;
   economy: Economy;
   initiative: number | null;
+  /** 召唤者 / 主人（召唤物、原初伴侣、魔宠）：先攻紧贴在召唤者后面，0 HP 时直接消失 */
+  summoner?: Id;
+  /** 链接的效应（专注法术之类）：该效应结束时本召唤物随之消失 */
+  linkEffect?: EffectId;
 }
 
 export interface ActiveEffect {
@@ -399,6 +457,8 @@ export interface ActiveEffect {
   name: string;
   /** 现场写的效应（场景效应 / DM 手动）没有规则条目，模板就存在实例上 */
   inline?: EffectTemplate;
+  /** 变形类效应（荒野形态）附带的野兽数据卡快照：生效期间由 effectiveView 按 2024 荒野形态规则与 base 合成 */
+  form?: CombatantView;
   bearer: Id;
   source: Id | null;
   origin: { kind: 'spell' | 'feature' | 'item' | 'condition' | 'mastery' | 'manual' | 'rule'; ref: string };
@@ -472,7 +532,7 @@ export type Command =
   /** area：范围法术选的那些格子（"x,y"）和画图用的形状 —— 留下区域的法术（zone 节点）用 */
   | { type: 'useAction'; actor: Id; action: string; targets?: Id[]; slotLevel?: number; options?: Record<string, unknown>; force?: boolean; area?: { cells: string[]; tpl?: Record<string, unknown> } }
   | { type: 'roll'; roller: Id; kind: RollKind; ability?: Ability; skill?: string; dc?: number; label?: string }
-  | { type: 'applyEffect'; to: Id; template?: string; inline?: EffectTemplate; name?: string; duration?: Duration; source?: Id | null }
+  | { type: 'applyEffect'; to: Id; template?: string; inline?: EffectTemplate; name?: string; duration?: Duration; source?: Id | null; form?: CombatantView }
   | { type: 'removeEffect'; id: EffectId }
   | { type: 'adjustHp'; id: Id; delta?: number; set?: number; temp?: number }
   | { type: 'damage'; id: Id; amount: number; damageType: string; source?: Id | null }

@@ -8,6 +8,12 @@ export function namer(s: Session): Namer {
   for (const t of s.transactions) {
     const cmd = t.input.cmd;
     if (cmd.type === 'addCombatant') map[cmd.combatant.id] = cmd.combatant.name;
+    for (const ev of t.events) {
+      if (ev.type === 'combatantAdded') {
+        const c = ev.payload.combatant as { id?: string; name?: string } | undefined;
+        if (c?.id && c?.name) map[c.id] = c.name;
+      }
+    }
   }
   for (const [id, c] of Object.entries(s.state.combatants)) map[id] = c.name;
   return (id) => (id == null ? '—' : map[String(id)] ?? String(id));

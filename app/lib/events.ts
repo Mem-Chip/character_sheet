@@ -26,7 +26,7 @@ type P = Record<string, any>;
 const OUTCOME_CN: Record<string, string> = { hit: '命中', miss: '未命中', success: '成功', fail: '失败' };
 const ACT_CN: Record<string, string> = { action: '动作', bonus: '附赠动作', reaction: '反应', free: '', none: '', special: '' };
 const MOD_CN: Record<string, string> = {
-  adv: '优势', disadv: '劣势', add: '加值', addDice: '加骰', autoFail: '自动失败', autoSucceed: '自动成功',
+  adv: '优势', disadv: '劣势', noAdv: '禁止优势', add: '加值', addDice: '加骰', autoFail: '自动失败', autoSucceed: '自动成功',
   critRange: '重击范围', autoCritOnHit: '命中即重击', minD20: 'd20 保底', minDie: '伤害骰保底', targetAdd: '目标加值',
 };
 

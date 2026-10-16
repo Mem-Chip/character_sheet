@@ -37,14 +37,31 @@ export function startCombat(tx: Tx, order: Id[] | undefined, cause: number | nul
   if (!ids.length) throw new Rejected('遭遇里还没有参与者');
   let finalOrder = order?.filter((x) => ids.includes(x));
   if (!finalOrder?.length) {
-    for (const id of ids) if (tx.state.combatants[id].initiative === null) rollInitiative(tx, id, cause);
-    finalOrder = ids.slice().sort((a, b) => {
+    const roots = ids.filter((id) => {
+      const s = tx.state.combatants[id].summoner;
+      return !s || !tx.state.combatants[s];
+    });
+    for (const id of roots) if (tx.state.combatants[id].initiative === null) rollInitiative(tx, id, cause);
+    roots.sort((a, b) => {
       const ca = tx.state.combatants[a];
       const cb = tx.state.combatants[b];
       return (cb.initiative ?? 0) - (ca.initiative ?? 0)
         || effectiveView(tx, b).score.dex - effectiveView(tx, a).score.dex
         || a.localeCompare(b);
     });
+    finalOrder = [];
+    for (const r of roots) {
+      finalOrder.push(r);
+      const rInit = tx.state.combatants[r].initiative;
+      for (const id of ids) {
+        if (tx.state.combatants[id].summoner === r) {
+          if (rInit !== null && tx.state.combatants[id].initiative !== rInit) {
+            tx.emit('initiativeSet', { id, value: rInit }, cause);
+          }
+          finalOrder.push(id);
+        }
+      }
+    }
   }
   const seq = tx.emit('combatStarted', { order: finalOrder }, cause);
   // 战斗开始前施加的效应：从现在起按第一个行动者的回合计数

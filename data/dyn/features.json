@@ -435,6 +435,157 @@
           "flags": { "quicken": true }
         }
       }
+    },
+    "XPHB:德鲁伊:荒野形态:2": {
+      "name": "荒野形态",
+      "automation": "full",
+      "text": "附赠动作消耗一次荒野形态次数，变形为所选野兽：保留生命值、智力/感知/魅力、熟练加值与职业特性，替换体型、速度、力量/敏捷/体质、AC 与天生攻击；获得等于德鲁伊等级（月亮结社为 3 倍等级）的临时生命值；无法施法（月亮结社法术与 18 级兽形施法除外，不打断专注）；陷入失能或死亡时自动解除。",
+      "actions": [
+        {
+          "id": "enter", "name": "荒野形态", "activation": "bonus",
+          "tags": ["wildshape"],
+          "cost": [{ "resource": "wildshape-uses" }],
+          "root": [
+            { "kind": "applyEffect", "to": "self", "template": "荒野形态" },
+            { "kind": "tempHp", "to": "self", "amount": "cond(self.hasSource('结社形态'), 3 * self.levelOf('德鲁伊'), self.levelOf('德鲁伊'))" }
+          ]
+        },
+        {
+          "id": "end", "name": "结束荒野形态", "activation": "bonus",
+          "requires": "self.hasEffect('荒野形态')",
+          "root": [{ "kind": "removeEffect", "from": "self", "match": { "tag": "wildshape" } }]
+        }
+      ],
+      "effects": {
+        "荒野形态": {
+          "tags": ["wildshape"],
+          "text": "变形为野兽：保留智力/感知/魅力与生命值，使用野兽的力量/敏捷/体质、AC、速度与天生攻击；无法施法（月亮结社法术与兽形施法除外，不打断专注）。陷入失能时自动结束。",
+          "duration": {
+            "manual": true,
+            "endsOn": [{ "event": "effectApplied", "when": "event.bearer == self.id && self.has('失能')" }]
+          },
+          "flags": { "cannot": ["castSpells"] }
+        }
+      }
+    },
+    "XPHB:德鲁伊:荒野伙伴:2": {
+      "name": "荒野伙伴",
+      "automation": "full",
+      "text": "以魔法动作消耗一次荒野形态次数或一个法术位施展寻获魔宠（魔宠生物类型为妖精，随你先攻行动）。",
+      "actions": [
+        {
+          "id": "use", "name": "荒野伙伴（消耗荒野形态次数）", "activation": "action",
+          "tags": ["familiar"],
+          "cost": [{ "resource": "wildshape-uses" }],
+          "root": [{
+            "kind": "summon", "name": "荒野魔宠", "size": "T", "creatureType": "fey", "ac": 12, "hp": 3, "speed": 40,
+            "score": { "str": 3, "dex": 15, "con": 10, "int": 3, "wis": 12, "cha": 7 }, "link": false,
+            "attacks": [{ "name": "爪抓", "bonus": 4, "damage": "1", "damageType": "挥砍" }]
+          }]
+        },
+        {
+          "id": "slot", "name": "荒野伙伴（消耗法术位）", "activation": "action",
+          "tags": ["familiar"],
+          "cost": [{ "slot": { "min": 1 } }],
+          "root": [{
+            "kind": "summon", "name": "荒野魔宠", "size": "T", "creatureType": "fey", "ac": 12, "hp": 3, "speed": 40,
+            "score": { "str": 3, "dex": 15, "con": 10, "int": 3, "wis": 12, "cha": 7 }, "link": false,
+            "attacks": [{ "name": "爪抓", "bonus": 4, "damage": "1", "damageType": "挥砍" }]
+          }]
+        }
+      ]
+    },
+    "XPHB:德鲁伊:原力蛮击:7": {
+      "name": "原力蛮击",
+      "automation": "full",
+      "text": "每个你的回合内一次，武器攻击或荒野形态下野兽的攻击命中时，额外造成 1d8（15 级元素狂怒起为 2d8）寒冷 / 火焰 / 闪电 / 雷鸣伤害。",
+      "triggers": [{
+        "id": "primal-strike", "label": "原力蛮击", "on": "attackHit", "role": "actor", "window": "before",
+        "optional": true, "limit": "oncePerTurn",
+        "when": "turn.isMine && !attack.spell && (attack.weapon || self.hasEffect('荒野形态'))",
+        "do": [{
+          "kind": "choose", "prompt": "原力蛮击：选择额外伤害的类型",
+          "options": [
+            { "label": "寒冷", "do": [{ "kind": "addDamage", "dice": "cond(self.levelOf('德鲁伊') >= 15, 2d8, 1d8)", "type": "寒冷" }] },
+            { "label": "火焰", "do": [{ "kind": "addDamage", "dice": "cond(self.levelOf('德鲁伊') >= 15, 2d8, 1d8)", "type": "火焰" }] },
+            { "label": "闪电", "do": [{ "kind": "addDamage", "dice": "cond(self.levelOf('德鲁伊') >= 15, 2d8, 1d8)", "type": "闪电" }] },
+            { "label": "雷鸣", "do": [{ "kind": "addDamage", "dice": "cond(self.levelOf('德鲁伊') >= 15, 2d8, 1d8)", "type": "雷鸣" }] }
+          ]
+        }]
+      }]
+    },
+    "XPHB:德鲁伊:月辉形态:14": {
+      "name": "月辉形态",
+      "automation": "full",
+      "text": "月耀炽光：每回合一次，荒野形态下的攻击命中时额外造成 2d10 光耀伤害。",
+      "triggers": [{
+        "id": "lunar-radiance", "label": "月辉形态：月耀炽光（+2d10 光耀）", "on": "attackHit", "role": "actor", "window": "before",
+        "optional": true, "limit": "oncePerTurn",
+        "when": "!attack.spell && self.hasEffect('荒野形态')",
+        "do": [{ "kind": "addDamage", "dice": "2d10", "type": "光耀" }]
+      }]
+    },
+    "XPHB:游侠:原初伴侣:3": {
+      "name": "原初伴侣",
+      "automation": "full",
+      "text": "召唤原初野兽（大地野兽 / 天空野兽 / 海洋野兽），与你共用先攻并在你之后行动。你的回合可以用附赠动作或牺牲一次攻击命令它行动。",
+      "actions": [
+        {
+          "id": "summon", "name": "原初伴侣：呼唤原初野兽", "activation": "free",
+          "root": [{
+            "kind": "choose", "prompt": "选择原初野兽形态",
+            "options": [
+              {
+                "label": "大地野兽（中型，AC 13+PB，HP 5+5×游侠等级）",
+                "do": [{
+                  "kind": "summon", "name": "大地野兽", "size": "M", "creatureType": "beast",
+                  "ac": "13 + self.pb", "hp": "5 + 5 * self.levelOf('游侠')", "speed": 40,
+                  "score": { "str": 14, "dex": 14, "con": 15, "int": 8, "wis": 14, "cha": 11 },
+                  "attacksPerAction": "cond(self.levelOf('游侠') >= 11, 2, 1)", "link": false,
+                  "attacks": [{ "name": "野兽打击（撕裂）", "damage": "1d8 + 2 + self.pb", "damageType": "挥砍" }],
+                  "notes": ["冲锋：攻击前直线移动至少 20 尺命中时额外 1d6 挥砍伤害且大型或更小目标陷入倒地"]
+                }]
+              },
+              {
+                "label": "天空野兽（小型，AC 13+PB，HP 4+4×游侠等级，飞行 60 尺）",
+                "do": [{
+                  "kind": "summon", "name": "天空野兽", "size": "S", "creatureType": "beast",
+                  "ac": "13 + self.pb", "hp": "4 + 4 * self.levelOf('游侠')", "speed": 60,
+                  "score": { "str": 6, "dex": 16, "con": 13, "int": 8, "wis": 14, "cha": 11 },
+                  "attacksPerAction": "cond(self.levelOf('游侠') >= 11, 2, 1)", "link": false,
+                  "attacks": [{ "name": "野兽打击（撕裂）", "damage": "1d4 + 3 + self.pb", "damageType": "挥砍" }],
+                  "notes": ["飞掠：飞行离开敌人触及范围时不引发借机攻击"]
+                }]
+              },
+              {
+                "label": "海洋野兽（中型，AC 13+PB，HP 5+5×游侠等级，游泳 60 尺）",
+                "do": [{
+                  "kind": "summon", "name": "海洋野兽", "size": "M", "creatureType": "beast",
+                  "ac": "13 + self.pb", "hp": "5 + 5 * self.levelOf('游侠')", "speed": 30,
+                  "score": { "str": 14, "dex": 14, "con": 15, "int": 8, "wis": 14, "cha": 11 },
+                  "attacksPerAction": "cond(self.levelOf('游侠') >= 11, 2, 1)", "link": false,
+                  "attacks": [{ "name": "野兽打击（束缚）", "damage": "1d6 + 2 + self.pb", "damageType": "钝击" }],
+                  "notes": ["水陆两栖；命中时目标陷入受擒（逃脱 DC 同你的法术豁免 DC）"]
+                }]
+              }
+            ]
+          }]
+        },
+        {
+          "id": "command", "name": "原初伴侣：命令野兽", "activation": "bonus", "requires": "turn.isMine",
+          "root": [{ "kind": "note", "text": "原初伴侣：以附赠动作命令原初野兽在本轮执行动作" }]
+        },
+        {
+          "id": "strike", "name": "原初伴侣：牺牲攻击命令野兽打击", "activation": "none", "requires": "turn.isMine",
+          "cost": [{ "economy": "attack" }],
+          "root": [{ "kind": "note", "text": "原初伴侣：牺牲一次攻击命令原初野兽执行野兽打击" }]
+        },
+        {
+          "id": "revive", "name": "原初伴侣：复活野兽", "activation": "action", "tags": ["magical"],
+          "cost": [{ "slot": { "min": 1 } }],
+          "root": [{ "kind": "note", "text": "原初伴侣：消耗法术位复活死亡不超过 1 小时的原初野兽" }]
+        }
+      ]
     }
   }
 }

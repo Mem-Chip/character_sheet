@@ -84,6 +84,9 @@ export interface CombatantInit {
   side?: string;
   view: CombatantView;
   hp?: number;
+  initiative?: number | null;
+  summoner?: string;
+  linkEffect?: string;
 }
 
 export function makeCombatant(init: CombatantInit): Combatant {
@@ -99,6 +102,8 @@ export function makeCombatant(init: CombatantInit): Combatant {
     base: init.view,
     live,
     economy: freshEconomy(init.view),
-    initiative: null,
+    initiative: init.initiative ?? null,
+    ...(init.summoner ? { summoner: init.summoner } : {}),
+    ...(init.linkEffect ? { linkEffect: init.linkEffect } : {}),
   };
 }

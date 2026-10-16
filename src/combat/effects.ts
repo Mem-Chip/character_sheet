@@ -61,7 +61,13 @@ export function hasCondition(tx: Tx, bearer: Id, name: string): boolean {
 
 /** 按名字或键找效应（含被压制的） */
 export function findEffect(tx: Tx, bearer: Id, nameOrKey: string): ActiveEffect | undefined {
-  return effectsOf(tx, bearer).find((e) => e.name === nameOrKey || e.key === nameOrKey || e.key.split('#')[0] === nameOrKey);
+  return effectsOf(tx, bearer).find(
+    (e) =>
+      e.name === nameOrKey ||
+      e.key === nameOrKey ||
+      e.key.split('#')[0] === nameOrKey ||
+      e.key.split('#')[1] === nameOrKey,
+  );
 }
 
 export function exhaustionOf(tx: Tx, bearer: Id): number {
@@ -72,19 +78,137 @@ export function exhaustionOf(tx: Tx, bearer: Id): number {
 export const roundsOf = (d?: { rounds?: number; minutes?: number; hours?: number }): number =>
   d ? (d.rounds ?? 0) + (d.minutes ?? 0) * 10 + (d.hours ?? 0) * 600 : 0;
 
+/* ------------------------------ 技能与荒野形态合并 ------------------------------ */
+
+export const SKILL_DEFS: ReadonlyArray<readonly [en: string, cn: string, ability: 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha']> = [
+  ['athletics', '运动', 'str'],
+  ['acrobatics', '体操', 'dex'],
+  ['sleight-of-hand', '巧手', 'dex'],
+  ['stealth', '隐匿', 'dex'],
+  ['arcana', '奥秘', 'int'],
+  ['history', '历史', 'int'],
+  ['investigation', '调查', 'int'],
+  ['nature', '自然', 'int'],
+  ['religion', '宗教', 'int'],
+  ['animal-handling', '驯兽', 'wis'],
+  ['insight', '洞悉', 'wis'],
+  ['medicine', '医药', 'wis'],
+  ['perception', '察觉', 'wis'],
+  ['survival', '生存', 'wis'],
+  ['deception', '欺瞒', 'cha'],
+  ['intimidation', '威吓', 'cha'],
+  ['performance', '表演', 'cha'],
+  ['persuasion', '游说', 'cha'],
+];
+
+const SKILL_ALIAS: Record<string, readonly [string, string, 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha']> = (() => {
+  const m: Record<string, readonly [string, string, 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha']> = {};
+  for (const d of SKILL_DEFS) {
+    m[d[0]] = d;
+    m[d[1]] = d;
+  }
+  m['特技'] = ['acrobatics', '体操', 'dex'];
+  return m;
+})();
+
+/** 取技能加值（兼容中英文技能名，缺省回退到对应属性调整值） */
+export function skillBonus(v: CombatantView, skill: string, fallbackAbility?: 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha'): number {
+  if (v.skill[skill] !== undefined) return v.skill[skill];
+  const def = SKILL_ALIAS[skill];
+  if (def) {
+    if (v.skill[def[0]] !== undefined) return v.skill[def[0]];
+    if (v.skill[def[1]] !== undefined) return v.skill[def[1]];
+    return v.mod[fallbackAbility ?? def[2]];
+  }
+  return fallbackAbility ? v.mod[fallbackAbility] : 0;
+}
+
+/**
+ * 2024 荒野形态属性合并（XPHB p.81）：
+ * - 保留德鲁伊的 HP、生命骰、智力/感知/魅力、熟练加值、职业特性与语言
+ * - 替换为野兽的体型、速度、力量/敏捷/体质、AC、天生攻击、抗性/免疫/易伤
+ * - 豁免与技能：保留德鲁伊原有熟练（用德鲁伊 PB + 合并后属性调整值），同时获得野兽的熟练；若野兽面板加值更高则取野兽加值
+ * - 月亮结社（结社形态）：AC = max(野兽 AC, 13 + 感知调整值)
+ */
+export function mergeWildShape(base: CombatantView, form: CombatantView): CombatantView {
+  const score = {
+    str: form.score.str,
+    dex: form.score.dex,
+    con: form.score.con,
+    int: base.score.int,
+    wis: base.score.wis,
+    cha: base.score.cha,
+  };
+  const mod = {
+    str: form.mod.str,
+    dex: form.mod.dex,
+    con: form.mod.con,
+    int: base.mod.int,
+    wis: base.mod.wis,
+    cha: base.mod.cha,
+  };
+  const pb = Math.max(base.pb, form.pb);
+  const save = { ...base.save };
+  for (const a of ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const) {
+    const druidExtra = base.save[a] - base.mod[a];
+    const formExtra = form.save[a] - form.mod[a];
+    const bestExtra = Math.max(druidExtra, formExtra > 0 ? Math.max(formExtra, base.pb) : 0);
+    save[a] = Math.max(mod[a] + bestExtra, form.save[a]);
+  }
+  const skill: Record<string, number> = { ...base.skill, ...form.skill };
+  for (const [en, cn, ab] of SKILL_DEFS) {
+    const baseRaw = base.skill[en] ?? base.skill[cn];
+    const druidExtra = baseRaw !== undefined ? baseRaw - base.mod[ab] : 0;
+    const formRaw = form.skill[cn] ?? form.skill[en];
+    const formExtra = formRaw !== undefined ? formRaw - form.mod[ab] : 0;
+    const bestExtra = Math.max(druidExtra, formRaw !== undefined ? Math.max(formExtra, base.pb) : 0);
+    const merged = Math.max(mod[ab] + bestExtra, formRaw ?? -Infinity);
+    skill[en] = merged;
+    skill[cn] = merged;
+  }
+  const hasMoonCircle = base.sources.some((s) => s === '结社形态' || s.includes(':结社形态:') || s.endsWith('#结社形态'));
+  const ac = hasMoonCircle ? Math.max(form.ac, 13 + mod.wis) : form.ac;
+  const entries = (base.entries || form.entries) ? { ...(base.entries ?? {}), ...(form.entries ?? {}) } : undefined;
+  const notes = [...(form.notes ?? []), ...(base.notes ?? [])];
+
+  return {
+    ...base,
+    size: form.size,
+    type: form.type || base.type,
+    ac,
+    speed: form.speed,
+    pb,
+    score,
+    mod,
+    save,
+    skill,
+    resist: [...new Set([...form.resist])],
+    immune: [...new Set([...form.immune])],
+    vuln: [...new Set([...form.vuln])],
+    conditionImmune: [...new Set([...form.conditionImmune])],
+    attacks: [...form.attacks],
+    attacksPerAction: form.attacksPerAction,
+    sources: [...new Set([...form.sources, ...base.sources])],
+    ...(entries ? { entries } : {}),
+    ...(notes.length ? { notes } : {}),
+  };
+}
+
 /* ------------------------------ 有效数值 ------------------------------ */
 
 const viewCache = new WeakMap<Tx, Map<Id, { seq: number; view: CombatantView }>>();
 const computing = new Set<string>();
 
 /**
- * 基础 view + 生效效应的 statics。
- * ⚠️ statics 里的表达式可能引用 `self.ac` 这种依赖 view 的东西 —— 计算期间再取 view 时返回基础 view，避免无限递归。
+ * 基础 view + 荒野形态变形覆盖 + 生效效应的 statics。
+ * ⚠️ statics 里的表达式可能引用 `self.ac` 这种依赖 view 的东西 —— 计算期间再取 view 时返回基础（或变形后基础）view，避免无限递归。
  */
 export function effectiveView(tx: Tx, id: Id): CombatantView {
   const c = tx.state.combatants[id];
   if (!c) throw new Error(`没有参与者 ${id}`);
-  if (computing.has(id)) return c.base;
+  const formEffect = effectsOf(tx, id).find((e) => !e.suppressed && e.form);
+  const startView = formEffect?.form ? mergeWildShape(c.base, formEffect.form) : c.base;
+  if (computing.has(id)) return startView;
   let cache = viewCache.get(tx);
   if (!cache) viewCache.set(tx, (cache = new Map()));
   const hit = cache.get(id);
@@ -93,11 +217,11 @@ export function effectiveView(tx: Tx, id: Id): CombatantView {
   computing.add(id);
   try {
     const v: CombatantView = {
-      ...c.base,
-      resist: [...c.base.resist],
-      immune: [...c.base.immune],
-      vuln: [...c.base.vuln],
-      conditionImmune: [...c.base.conditionImmune],
+      ...startView,
+      resist: [...startView.resist],
+      immune: [...startView.immune],
+      vuln: [...startView.vuln],
+      conditionImmune: [...startView.conditionImmune],
     };
     let acBonus = 0;
     let dcBonus = 0;
@@ -162,6 +286,8 @@ export interface ApplyOpts {
   potency?: number;
   state?: Record<string, unknown>;
   snap?: Record<string, unknown>;
+  /** 荒野形态 / 变形覆盖的野兽数据 */
+  form?: CombatantView;
   origin: ActiveEffect['origin'];
   cause: number | null;
 }
@@ -179,12 +305,13 @@ export function applyEffect(tx: Tx, o: ApplyOpts): ActiveEffect | null {
     key = r.key;
     tpl = r.tpl;
   }
-  const name = o.name ?? tplName(key, tpl);
+  const baseName = o.name ?? tplName(key, tpl);
+  const name = o.form && !o.name ? `${baseName}（${o.form.name}）` : baseName;
   const bearer = tx.state.combatants[o.bearer];
   if (!bearer) throw new Error(`没有参与者 ${o.bearer}`);
 
-  if ((tpl.tags ?? []).includes('condition') && effectiveView(tx, o.bearer).conditionImmune.includes(name)) {
-    tx.emit('effectBlocked', { bearer: o.bearer, key, name, reason: `${bearer.name} 免疫「${name}」状态` }, o.cause);
+  if ((tpl.tags ?? []).includes('condition') && effectiveView(tx, o.bearer).conditionImmune.includes(baseName)) {
+    tx.emit('effectBlocked', { bearer: o.bearer, key, name, reason: `${bearer.name} 免疫「${baseName}」状态` }, o.cause);
     return null;
   }
 
@@ -197,6 +324,15 @@ export function applyEffect(tx: Tx, o: ApplyOpts): ActiveEffect | null {
       const seq = tx.emit('effectLevel', { bearer: o.bearer, key, name, level }, o.cause);
       if (tpl.deathAtLevel && level >= tpl.deathAtLevel) kill(tx, o.bearer, `${name}达到 ${level} 级`, seq);
       return tx.state.effects[prev.id];
+    }
+  }
+
+  // 荒野形态 / 变形效应：再次施展时先结束旧形态，而不是压制共存
+  if (o.form || (tpl.tags ?? []).includes('wildshape')) {
+    for (const prev of effectsOf(tx, o.bearer)) {
+      if (prev.form || (prev.tags ?? []).includes('wildshape') || prev.key === key) {
+        endEffect(tx, prev.id, '换入新形态', o.cause);
+      }
     }
   }
 
@@ -219,8 +355,10 @@ export function applyEffect(tx: Tx, o: ApplyOpts): ActiveEffect | null {
     suppressed: false,
     state: { ...(tpl.stack === 'level' ? { level: 1 } : {}), ...(o.state ?? {}) },
     tags: tpl.tags ?? [],
+    form: o.form ? structuredClone(o.form) : undefined,
   };
   if (effect.inline === undefined) delete effect.inline;
+  if (effect.form === undefined) delete effect.form;
   const seq = tx.emit('effectApplied', { effect, bearer: o.bearer, key, name, source: o.source }, o.cause);
   restack(tx, o.bearer, seq);
 
@@ -248,6 +386,13 @@ export function endEffect(tx: Tx, id: EffectId, reason: string, cause: number | 
       endEffect(tx, linked.id, `专注结束（${e.name}）`, seq);
     }
     zonesOfConcentration(tx, id, seq);
+  }
+  // 随该效应（如召唤法术专注）存续的召唤物一并退场
+  for (const c of Object.values(tx.state.combatants)) {
+    if (c.linkEffect === id) {
+      tx.emit('note', { text: `${c.name} 随「${e.name}」结束而消失`, owner: e.bearer }, seq);
+      tx.emit('combatantRemoved', { id: c.id }, seq);
+    }
   }
   restack(tx, e.bearer, seq);
   if (tpl?.onEnd?.length && tx.state.combatants[e.bearer]) {

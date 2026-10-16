@@ -37,11 +37,22 @@ export interface CombatUi {
   targets: string[];
   /** 选目标模式：点了一个要目标的动作之后，点棋子 / 先攻条里的人把他加进来，最后确认 */
   aim: Aim | null;
+  /** 荒野形态 / 寻获魔宠：选一个野兽数据卡后再执行动作 */
+  formPick: FormPick | null;
+  /** 手动给某个参与者加召唤物 / 伙伴 */
+  summonFor: string | null;
   /** 本地遭遇的指令框掷骰（战役遭遇的在 remote.chat） */
   chat: ChatRoll[];
   toast: { text: string; tone: 'danger' | 'ok' } | null;
   /** 战役遭遇（在服务器上跑）：本地的 session 只是镜像，所有操作发给服务器 */
   remote: Remote | null;
+}
+
+export interface FormPick {
+  actor: string;
+  kind: 'wildshape' | 'familiar';
+  name: string;
+  cmd: Extract<Command, { type: 'useAction' }>;
 }
 
 export interface Aim {
@@ -118,7 +129,7 @@ interface RemoteState {
   dice?: Record<string, DiceMode>; hidden?: string[]; map?: MapState; chat?: ChatRoll[]; actingAs?: string | null; dicePhys?: DicePhysics; diceColors?: Record<string, string>; diceOpen?: boolean; reveal?: Record<string, boolean>;
 }
 
-let ui: CombatUi = { session: null, version: 0, links: {}, dice: {}, selected: null, targets: [], aim: null, chat: [], toast: null, remote: null };
+let ui: CombatUi = { session: null, version: 0, links: {}, dice: {}, selected: null, targets: [], aim: null, formPick: null, summonFor: null, chat: [], toast: null, remote: null };
 let engineRef: Engine | null = null;
 let stream: EventSource | null = null;
 const listeners = new Set<() => void>();
@@ -288,7 +299,7 @@ export const combat = {
     stream?.close();
     stream = null;
     useEncounterRules(engine, undefined);
-    ui = { ...ui, session: null, remote: null, links: {}, selected: null, targets: [], aim: null };
+    ui = { ...ui, session: null, remote: null, links: {}, selected: null, targets: [], aim: null, formPick: null, summonFor: null };
     initCombat(engine);
   },
   /** 这个参与者我能不能操作（本地遭遇：都能） */
@@ -299,7 +310,7 @@ export const combat = {
     const out: Positions = {};
     for (const [id, t] of Object.entries(r.map.tokens)) {
       const c = st.combatants[id];
-      if (c) out[id] = { x: t.x, y: t.y, s: footprint(c.base.size) };
+      if (c) out[id] = { x: t.x, y: t.y, s: footprint(ui.session!.view(id).size) };
     }
     return out;
   },
@@ -428,13 +439,54 @@ export const combat = {
   },
   reset(engine: Engine): void {
     if (ui.remote) { act({ op: 'reset' }); return; }
-    set({ session: new Session(createEncounter('enc'), ctxFor(engine)), links: {}, selected: null, targets: [] });
+    set({ session: new Session(createEncounter('enc'), ctxFor(engine)), links: {}, selected: null, targets: [], formPick: null, summonFor: null });
   },
   select(id: string | null): void {
     set({ selected: id }, true);
   },
   toggleTarget(id: string): void {
     set({ targets: ui.targets.includes(id) ? ui.targets.filter((t) => t !== id) : [...ui.targets, id] });
+  },
+  /* ───── 荒野形态 / 魔宠 / 召唤物 ───── */
+  startFormPick(formPick: FormPick): void {
+    set({ formPick }, false);
+  },
+  cancelFormPick(): void {
+    if (ui.formPick) set({ formPick: null }, false);
+  },
+  confirmFormPick(form: ViewInit): void {
+    const p = ui.formPick;
+    if (!p) return;
+    set({ formPick: null }, false);
+    const formView = makeView(form);
+    combat.dispatch({ ...p.cmd, options: { ...(p.cmd.options ?? {}), form: formView } });
+  },
+  openSummon(summonerId: string | null): void {
+    set({ summonFor: summonerId }, false);
+  },
+  addSummon(summonerId: string, view: ViewInit, count = 1): void {
+    const s = ui.session!;
+    const summoner = s.state.combatants[summonerId];
+    if (!summoner) return;
+    for (let i = 1; i <= count; i++) {
+      const name = count > 1 ? `${view.name} ${i}` : view.name;
+      const cmd: Command = {
+        type: 'addCombatant',
+        combatant: makeCombatant({
+          id: uniqueId('s'),
+          kind: 'monster',
+          side: summoner.side,
+          controller: summoner.controller,
+          summoner: summonerId,
+          initiative: summoner.initiative,
+          view: makeView({ ...view, name }),
+        }),
+      };
+      if (ui.remote) { act({ op: 'dispatch', cmd }); continue; }
+      const r = s.dispatch(cmd);
+      if (r.status !== 'done') { after(r); return; }
+    }
+    after({ status: 'done', events: [] });
   },
   /* ───── 选目标模式 ───── */
   startAim(aim: Omit<Aim, 'picks'>): void {

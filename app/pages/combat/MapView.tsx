@@ -163,14 +163,14 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
   const threats = useMemo(() => {
     const id = ui.selected, me = id ? map.tokens[id] : undefined, c = id ? st.combatants[id] : undefined;
     if (!id || !me || !c || c.live.dead) return [];
-    const n = footprint(c.base.size);
+    const n = footprint(s.view(id).size);
     const out: Array<{ id: string; x: number; y: number; w: number }> = [];
     for (const [eid, t] of tokens) {
       const e = st.combatants[eid];
       if (eid === id || e.live.dead || e.side === c.side) continue;
       const reach = s.peek((tx) => reachOf(tx, eid));
       if (reach == null) continue;
-      const m = footprint(e.base.size);
+      const m = footprint(s.view(eid).size);
       const dx = Math.max(0, me.x - (t.x + m - 1), t.x - (me.x + n - 1));
       const dy = Math.max(0, me.y - (t.y + m - 1), t.y - (me.y + n - 1));
       if (gridFeet(dx, dy, diagonal) > reach) continue;
@@ -186,7 +186,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
   const areaAim = aim?.area ?? null;
   const aimKey = aim ? `${aim.actor}|${aim.ref}` : '';
   const casterTok = aim ? map.tokens[aim.actor] : undefined;
-  const casterN = aim ? footprint(st.combatants[aim.actor]?.base.size) : 1;
+  const casterN = aim ? footprint(s.view(aim.actor).size) : 1;
   const caster = casterTok ? { x: map.grid.ox + (casterTok.x + casterN / 2) * g, y: map.grid.oy + (casterTok.y + casterN / 2) * g, half: (casterN * g) / 2 } : null;
   const tplAt = (p: { x: number; y: number }, snap = shift) => (areaAim ? spellTpl(areaAim, map.grid, caster, p, undefined, snap) : null);
   /** 模板的原点离施法者多远（尺）；自身出发的不算 */
@@ -202,7 +202,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
   const caught = (t: Tpl) => Object.entries(map.tokens).filter(([id, tk]) => {
     const c = st.combatants[id];
     if (!c || c.live.dead || (areaAim?.self && id === aim?.actor)) return false;
-    const n = footprint(c.base.size);
+    const n = footprint(s.view(id).size);
     for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (cellHit(t, map.grid, tk.x + i, tk.y + j)) return true;
     return false;
   }).map(([id]) => id);
@@ -388,7 +388,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
     if (!combat.canControl(id)) return;
     const t = map.tokens[id];
     box.current!.setPointerCapture(e.pointerId);
-    setDrag({ kind: 'token', id, n: footprint(st.combatants[id]?.base.size), from: t, at: t });
+    setDrag({ kind: 'token', id, n: footprint(s.view(id).size), from: t, at: t });
   };
 
   /* ───── 画 ───── */
@@ -418,7 +418,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
   const trail = (() => {
     const tr = map.trail;
     if (!tr || st.round === null || tr.id !== current || tr.key !== `${st.round}:${st.turnIndex}` || !visible(tr.id) || tr.cells.length < 2) return null;
-    return { ...tr, n: footprint(st.combatants[tr.id]?.base.size) };
+    return { ...tr, n: footprint(s.view(tr.id).size) };
   })();
   const aimed: Record<string, number> = {};
   for (const p of ui.aim?.picks ?? []) aimed[p] = (aimed[p] ?? 0) + 1;
@@ -580,7 +580,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
             {tokens.map(([id, t]) => {
               const c = st.combatants[id];
               const at = moving?.id === id ? moving.at : t;
-              const n = footprint(c.base.size);
+              const n = footprint(s.view(id).size);
               const r = (n * g) / 2;
               const cls = ['token', c.side === 'party' ? 'party' : c.side === 'enemy' ? 'enemy' : 'other', id === ui.selected && 'sel', id === current && 'turn',
                 ui.targets.includes(id) && 'tgt', c.live.dead && 'dead', remote.hidden.includes(id) && 'hid', combat.canControl(id) && 'mine'].filter(Boolean).join(' ');

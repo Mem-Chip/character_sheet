@@ -210,12 +210,19 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
   const use = (it: ActItem) => runAction(s, ui, id, it, slotPick[it.ref], asReaction);
 
   const econ = c.economy;
+  const formEff = effects.find((e) => !e.suppressed && e.form);
   return (
     <div className="stack">
       <Panel
-        title={<>{c.name} <span className="faint small">{c.kind === 'pc' ? '角色' : c.kind === 'npc' ? 'NPC' : '怪物'} · {v.size} {v.type}</span></>}
+        title={<>{c.name} <span className="faint small">{c.summoner ? `召唤自 ${name(c.summoner)}` : c.kind === 'pc' ? '角色' : c.kind === 'npc' ? 'NPC' : '怪物'} · {v.size} {v.type}{formEff?.form ? `（形态：${formEff.form.name}）` : ''}</span></>}
         aside={<>
           {isTurn && <Tag tone="accent">当前回合</Tag>}
+          {formEff?.form && combat.canControl(id) && (
+            <button className="btn sm" onClick={() => combat.dispatch({ type: 'removeEffect', id: formEff.id })} title="提前解除荒野形态">解除变形</button>
+          )}
+          {!c.summoner && combat.canControl(id) && (
+            <button className="btn sm" onClick={() => combat.openSummon(id)} title="为这个角色添加召唤物、魔宠或伙伴（同阵营、紧随其后行动）">+ 召唤物</button>
+          )}
           {/* 战斗 → 卡是自动的（生命值、法术位、资源、死亡豁免）；卡 → 战斗要点这个（升级、换装备之后） */}
           {ui.links[id] && getApp().cards[ui.links[id]] && combat.canControl(id) && (
             <button className="btn sm" onClick={() => void combat.refreshFromCard(engine, id)} title="人物卡改过（升级、换装备）之后，按卡上现在的样子更新数值；当前生命值和已用次数不变。会记进日志，可以撤销">从人物卡刷新</button>
@@ -299,12 +306,12 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
         {effects.length === 0 && <div className="empty" style={{ padding: '8px 12px' }}>没有效应。</div>}
         {effects.map((e) => (
           <div key={e.id} className="effrow">
-            <span className={'nm' + (e.suppressed ? ' faint' : '')}>{e.key === 'concentration' ? `专注：${e.name}` : (() => { const t = termOfKey(String(e.key ?? '')); return t ? <Term {...t}>{e.name}</Term> : e.name; })()}</span>
+            <span className={'nm' + (e.suppressed ? ' faint' : '')}>{e.key === 'concentration' ? `专注：${e.name}` : (() => { const t = termOfKey(String(e.key ?? '')); const label = e.form ? `${e.name}（${e.form.name}）` : e.name; return t ? <Term {...t}>{label}</Term> : label; })()}</span>
             <span className="tiny faint">{[e.source && e.source !== id ? `来自 ${name(e.source)}` : '', durText(e.duration, e), e.suppressed ? '被压制' : ''].filter(Boolean).join(' · ')}</span>
             <span style={{ flex: 1 }} />
             {e.key === 'concentration'
               ? <button className="btn ghost sm" onClick={() => combat.dispatch({ type: 'endConcentration', id })}>终止专注</button>
-              : <button className="btn ghost sm" onClick={() => combat.dispatch({ type: 'removeEffect', id: e.id })} title="DM 手动移除">移除</button>}
+              : <button className="btn ghost sm" onClick={() => combat.dispatch({ type: 'removeEffect', id: e.id })} title="移除效应">移除</button>}
           </div>
         ))}
         <div className="effrow">
@@ -446,13 +453,18 @@ export function runAction(s: Session, ui: CombatUi, id: string, it: ActItem, slo
     });
     return;
   }
-  const cmd: Command = {
+  const cmd: Extract<Command, { type: 'useAction' }> = {
     type: 'useAction', actor: id, action: it.ref,
     targets: it.needsTargets ? ui.targets : [id],
     slotLevel,
     options: asReaction && it.group === '武器攻击' ? { as: 'reaction' } : undefined,
     force: force || undefined,
   };
+  const tags = it.action.tags ?? [];
+  if (tags.includes('wildshape') || tags.includes('familiar')) {
+    combat.startFormPick({ actor: id, kind: tags.includes('familiar') ? 'familiar' : 'wildshape', name: it.name, cmd });
+    return;
+  }
   // 要目标的：进选目标模式，在地图 / 先攻条上点人，再确认
   if (it.needsTargets) {
     const t = it.action.targeting;

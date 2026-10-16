@@ -1,11 +1,11 @@
 import { ABIL_CN } from '../expr';
 import { applyDamagePacket, applyHeal, grantTempHp } from './damage';
 import { d20Test } from './d20';
-import { applyEffect, checkEndsOn, effectiveView, endConcentration, endEffect } from './effects';
+import { applyEffect, checkEndsOn, effectiveView, endConcentration, endEffect, skillBonus } from './effects';
 import { Dice } from '../expr';
 import { engineDice } from './dice';
 import { executeAction, findAction } from './exec';
-import { travel } from './space';
+import { placeSummon, travel } from './space';
 import { advanceTime, nextTurn, rest, startCombat } from './turns';
 import { NeedDecision, Rejected, Tx, setPostEmit, type EngineCtx, type TapeEntry, type TxInput } from './tx';
 import type { Action, CombatantView, Command, Decision, EncounterState, GameEvent, OverridePatch, Settings, UserId, Zone } from './types';
@@ -68,10 +68,12 @@ export function runTx(state: EncounterState, input: TxInput, ctx: EngineCtx): Tx
 
 function handle(tx: Tx, cmd: Command): void {
   switch (cmd.type) {
-    case 'addCombatant':
+    case 'addCombatant': {
       if (tx.state.combatants[cmd.combatant.id]) throw new Rejected(`已经有 id 为 ${cmd.combatant.id} 的参与者`);
-      tx.emit('combatantAdded', { combatant: cmd.combatant });
+      const seq = tx.emit('combatantAdded', { combatant: cmd.combatant });
+      if (cmd.combatant.summoner) placeSummon(tx, cmd.combatant.summoner, cmd.combatant.id, cmd.combatant.base.size, seq);
       return;
+    }
     case 'removeCombatant':
       tx.emit('combatantRemoved', { id: cmd.id });
       return;
@@ -103,7 +105,7 @@ function handle(tx: Tx, cmd: Command): void {
       const v = effectiveView(tx, cmd.roller);
       const ability = cmd.ability;
       const bonus = cmd.kind === 'save' && ability ? v.save[ability]
-        : cmd.skill ? (v.skill[cmd.skill] ?? (ability ? v.mod[ability] : 0))
+        : cmd.skill ? skillBonus(v, cmd.skill, ability)
         : ability ? v.mod[ability] : 0;
       d20Test(tx, {
         roller: cmd.roller, kind: cmd.kind, ability, skill: cmd.skill, bonus, vs: cmd.dc,
@@ -116,7 +118,7 @@ function handle(tx: Tx, cmd: Command): void {
       const seq = tx.emit('manualOverride', { what: 'applyEffect', to: cmd.to, template: cmd.template ?? cmd.name ?? '现场效应' });
       applyEffect(tx, {
         bearer: cmd.to, source: cmd.source ?? null, ref: cmd.template, inline: cmd.inline, name: cmd.name,
-        baseKey: cmd.template ?? 'manual', duration: cmd.duration,
+        baseKey: cmd.template ?? 'manual', duration: cmd.duration, form: cmd.form,
         origin: { kind: cmd.template?.includes(':condition:') ? 'condition' : 'manual', ref: cmd.template ?? 'manual' },
         cause: seq,
       });

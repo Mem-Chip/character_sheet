@@ -138,7 +138,7 @@ export function createEncounters(d: Deps) {
         const out: Positions = {};
         for (const [id, t] of Object.entries(e.map.tokens)) {
           const c = st.combatants[id];
-          if (c) out[id] = { x: t.x, y: t.y, s: footprint(c.base.size) };
+          if (c) out[id] = { x: t.x, y: t.y, s: footprint(e.session!.view(id).size) };
         }
         return Object.keys(out).length ? out : null;
       },
@@ -175,9 +175,12 @@ export function createEncounters(d: Deps) {
 
   function changed(e: Live): void {
     e.seq++;
-    // 怪物、NPC 死了：在玩家那边藏起来（DM 那边变淡，可以再亮出来）
+    for (const id of Object.keys(e.map.tokens)) {
+      if (!e.session.state.combatants[id]) delete e.map.tokens[id];
+    }
+    // 怪物、NPC 死了：在玩家那边藏起来（DM 那边变淡，可以再亮出来；玩家自己的角色与召唤物不藏）
     for (const c of Object.values(e.session.state.combatants)) {
-      if (c.kind === 'pc') continue;
+      if (c.kind === 'pc' || c.side === 'party' || c.summoner) continue;
       if (c.live.dead && !e.autoHid.includes(c.id)) {
         e.autoHid.push(c.id);
         if (!e.hidden.includes(c.id)) e.hidden.push(c.id);
@@ -234,7 +237,7 @@ export function createEncounters(d: Deps) {
   };
 
   /** 玩家能发的命令 */
-  const PLAYER_CMDS = new Set(['useAction', 'roll', 'addCombatant', 'removeCombatant', 'refreshCombatant', 'heal', 'tempHp', 'setUsage', 'manualCast', 'damage', 'setEconomy']);
+  const PLAYER_CMDS = new Set(['useAction', 'roll', 'addCombatant', 'removeCombatant', 'refreshCombatant', 'heal', 'tempHp', 'setUsage', 'manualCast', 'damage', 'setEconomy', 'endConcentration']);
 
   function check(e: Live, u: User, role: 'dm' | 'player', cmd: Command): string | null {
     if (role === 'dm') return null;
@@ -244,7 +247,11 @@ export function createEncounters(d: Deps) {
       return cur && ownerOf(e, cur) === u.id ? null : '只能结束自己的回合';
     }
     if (!PLAYER_CMDS.has(cmd.type)) return '这件事要 DM 来做';
-    if (cmd.type === 'addCombatant') return cmd.combatant.kind === 'pc' ? null : '玩家只能加自己的角色';
+    if (cmd.type === 'addCombatant') {
+      if (cmd.combatant.kind === 'pc') return null;
+      if (cmd.combatant.summoner && ownerOf(e, cmd.combatant.summoner) === u.id) return null;
+      return '玩家只能加自己的角色或召唤物';
+    }
     const who = subjectOf(cmd);
     if (!who || ownerOf(e, who) !== u.id) return '只能操作自己的角色';
     return null;

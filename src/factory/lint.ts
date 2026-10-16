@@ -17,17 +17,17 @@ const KEYS = {
   /** 条目自己声明的资源池（人物卡那边还没有的），见说明书 §5 */
   resourceDecl: ['id', 'name', 'formula', 'recovery'],
   action: ['id', 'name', 'activation', 'trigger', 'cost', 'requires', 'targeting', 'concentration', 'root', 'tags', 'text'],
-  triggerSpec: ['on', 'role', 'window', 'deferTo', 'when'],
-  trigger: ['id', 'on', 'role', 'window', 'deferTo', 'when', 'optional', 'limit', 'cost', 'do', 'modify', 'label'],
+  triggerSpec: ['on', 'role', 'window', 'deferTo', 'when', 'aim'],
+  trigger: ['id', 'on', 'role', 'window', 'deferTo', 'when', 'aim', 'optional', 'limit', 'cost', 'do', 'modify', 'label'],
   rollMod: ['on', 'who', 'when', 'op', 'value', 'label'],
-  rollFilter: ['kind', 'ability', 'skill', 'attack'],
+  rollFilter: ['kind', 'ability', 'skill', 'attack', 'spell'],
   attackFilter: ['melee', 'ranged', 'weapon', 'spell'],
   template: ['name', 'duration', 'statics', 'rollMods', 'triggers', 'aura', 'flags', 'implies', 'stackKey', 'stack', 'deathAtLevel', 'onApply', 'onEnd', 'tags', 'text'],
   duration: ['instant', 'rounds', 'minutes', 'hours', 'until', 'max', 'saveEnds', 'endsOn', 'manual'],
   until: ['at', 'of', 'nth'],
   saveEnds: ['ability', 'dc', 'at'],
   endsOn: ['event', 'when'],
-  flags: ['blocks', 'breaksConcentration', 'cannot', 'forbidTarget'],
+  flags: ['blocks', 'breaksConcentration', 'cannot', 'forbidTarget', 'quicken'],
   aura: ['id', 'radius', 'affects', 'includeSelf', 'requires', 'grant', 'stackKey'],
   grant: ['rollMods', 'statics', 'triggers'],
   targeting: ['type', 'count', 'repeat', 'range', 'area', 'filter'],
@@ -37,10 +37,11 @@ const KEYS = {
 
 const NODE_KEYS: Record<string, readonly string[]> = {
   attack: ['bonus', 'attack', 'critRange', 'onHit', 'onMiss'],
-  save: ['ability', 'dc', 'onFail', 'onSuccess'],
+  save: ['ability', 'dc', 'to', 'onFail', 'onSuccess'],
   check: ['ability', 'skill', 'dc', 'onFail', 'onSuccess'],
   damage: ['dice', 'type', 'id', 'ref', 'scale', 'to'],
   addDamage: ['dice', 'type'],
+  modify: ['modify'],
   heal: ['amount', 'to'],
   tempHp: ['amount', 'to'],
   applyEffect: ['template', 'inline', 'name', 'to', 'duration', 'link', 'potency', 'state'],
@@ -48,12 +49,14 @@ const NODE_KEYS: Record<string, readonly string[]> = {
   extendEffect: ['template'],
   resource: ['id', 'delta'],
   economy: ['action', 'bonus', 'reaction', 'attacks', 'move'],
-  choose: ['prompt', 'options', 'count'],
+  choose: ['prompt', 'var', 'options', 'count'],
   number: ['prompt', 'var', 'min', 'max', 'default'],
   if: ['when', 'then', 'else'],
   forEach: ['in', 'do'],
   repeat: ['n', 'do'],
   move: ['mode', 'ft'],
+  zone: ['on', 'affects', 'oncePerTurn', 'rounds', 'do'],
+  summon: ['name', 'count', 'size', 'type', 'creatureType', 'ac', 'hp', 'speed', 'pb', 'score', 'attacksPerAction', 'attacks', 'actions', 'triggers', 'rollMods', 'resist', 'immune', 'conditionImmune', 'notes', 'link'],
   note: ['text'],
 };
 
@@ -62,10 +65,12 @@ const STATIC_KEYS: Record<string, readonly string[]> = {
   resist: ['values'], resistAll: [], immune: ['values'], vuln: ['values'], conditionImmune: ['values'],
 };
 const COST_KEYS: Array<[string, readonly string[]]> = [
-  ['economy', ['economy', 'n']], ['resource', ['resource', 'n']], ['slot', ['slot']], ['recharge', ['recharge']], ['charges', ['charges', 'n']],
+  ['economy', ['economy', 'n']], ['resource', ['resource', 'n']], ['slot', ['slot']], ['recharge', ['recharge', 'id']], ['charges', ['charges', 'n']],
 ];
 const MODIFY_KEYS: Record<string, readonly string[]> = {
-  reroll: ['die', 'keep'], addToRoll: ['value'], reduceDamage: ['value', 'types'], halveDamage: [], setHp: ['value'], cancel: [],
+  reroll: ['die', 'keep'], addToRoll: ['value'], succeed: [],
+  reduceDamage: ['value', 'types'], halveDamage: [], doubleDamage: [], evasion: [],
+  setHp: ['value'], cancel: ['refundSlot'], redirect: ['to'], absorb: ['from'], clearAdv: ['which'],
 };
 
 /** 结构检查：未知字段、该是数组 / 对象的不是 */
@@ -81,6 +86,11 @@ export function lintShape(entry: unknown): string[] {
     if (!Array.isArray(x)) { out.push(`${at}：应该是数组`); return; }
     x.forEach((y, i) => each(y, `${at}[${i}]`));
   };
+  const modifyItem = (m: unknown, a: string) => {
+    const allowed = isObj(m) ? MODIFY_KEYS[String(m.op)] : undefined;
+    if (!allowed) out.push(`${a}：未知修改「${isObj(m) ? String(m.op) : m}」（可用：${Object.keys(MODIFY_KEYS).join(' ')}）`);
+    else keys(m, ['op', ...allowed], a);
+  };
   const nodes = (x: unknown, at: string) => list(x, at, node);
   const node = (n: unknown, at: string) => {
     if (!isObj(n)) { out.push(`${at}：节点应该是对象`); return; }
@@ -89,10 +99,24 @@ export function lintShape(entry: unknown): string[] {
     keys(n, ['kind', ...allowed], `${at}（${n.kind}）`);
     if (n.attack !== undefined) keys(n.attack, KEYS.attackInfo, `${at}.attack`);
     for (const f of ['onHit', 'onMiss', 'onFail', 'onSuccess', 'then', 'else', 'do']) nodes(n[f], `${at}.${f}`);
-    if (n.kind === 'choose') list(n.options, `${at}.options`, (o, a) => { if (keys(o, ['label', 'do', 'when'], a)) nodes((o as Obj).do, `${a}.do`); });
+    if (n.kind === 'choose') list(n.options, `${at}.options`, (o, a) => { if (keys(o, ['label', 'value', 'do', 'when'], a)) nodes((o as Obj).do, `${a}.do`); });
+    if (n.kind === 'modify') list(n.modify, `${at}.modify`, modifyItem);
     if (n.kind === 'applyEffect' && n.inline !== undefined) template(n.inline, `${at}.inline`);
     if (n.kind === 'applyEffect' && n.duration !== undefined) duration(n.duration, `${at}.duration`);
     if (n.kind === 'removeEffect') keys(n.match, ['key', 'name', 'tag'], `${at}.match`);
+    if (n.kind === 'summon') {
+      if (n.score !== undefined) keys(n.score, ['str', 'dex', 'con', 'int', 'wis', 'cha'], `${at}.score`);
+      list(n.attacks, `${at}.attacks`, (a, p) => {
+        if (keys(a, ['id', 'name', 'melee', 'ranged', 'bonus', 'damage', 'damageType', 'extra', 'reach', 'range', 'long'], p)) {
+          list((a as Obj).extra, `${p}.extra`, (x, xp) => keys(x, ['dice', 'type'], xp));
+        }
+      });
+      list(n.actions, `${at}.actions`, (a, p) => {
+        if (keys(a, KEYS.action, p)) nodes((a as Obj).root, `${p}.root`);
+      });
+      list(n.triggers, `${at}.triggers`, trigger);
+      list(n.rollMods, `${at}.rollMods`, rollMod);
+    }
   };
   const cost = (c: unknown, at: string) => {
     if (!isObj(c)) { out.push(`${at}：代价应该是对象`); return; }
@@ -112,11 +136,7 @@ export function lintShape(entry: unknown): string[] {
     const o = t as Obj;
     list(o.cost, `${at}.cost`, cost);
     nodes(o.do, `${at}.do`);
-    list(o.modify, `${at}.modify`, (m, a) => {
-      const allowed = isObj(m) ? MODIFY_KEYS[String(m.op)] : undefined;
-      if (!allowed) out.push(`${a}：未知修改「${isObj(m) ? String(m.op) : m}」（可用：${Object.keys(MODIFY_KEYS).join(' ')}）`);
-      else keys(m, ['op', ...allowed], a);
-    });
+    list(o.modify, `${at}.modify`, modifyItem);
   };
   const duration = (d: unknown, at: string) => {
     if (!keys(d, KEYS.duration, at)) return;

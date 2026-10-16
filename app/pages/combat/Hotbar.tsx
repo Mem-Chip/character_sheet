@@ -111,6 +111,14 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
             </span>
           );
         }
+        if (e.form) {
+          return (
+            <span key={e.id} className="tag accent">
+              {e.name}·{e.form.name}
+              {combat.canControl(id) && <button className="tag-x" title="解除变形" onClick={() => combat.dispatch({ type: 'removeEffect', id: e.id })}>✕</button>}
+            </span>
+          );
+        }
         // 「睡眠术：失能」显示成失能（悬停看状态原文），来源小字
         const lb = effectLabel(e.name);
         if (lb.cond) return <span key={e.id} className="tag"><Term kind="condition" name={lb.cond}>{lb.text}</Term>{lb.from && <small className="faint"> · {lb.from}</small>}</span>;
@@ -154,7 +162,7 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
   return (
     <div className="hotbar">
       <div className="hot-status">
-        {showName && <div className="hot-name serif">{c.name}<small>{c.kind === 'pc' ? '角色' : c.kind === 'npc' ? 'NPC' : '怪物'}</small></div>}
+        {showName && <div className="hot-name serif">{c.name}<small>{c.summoner ? `召唤自 ${name(c.summoner)}` : c.kind === 'pc' ? '角色' : c.kind === 'npc' ? 'NPC' : '怪物'}</small></div>}
         <div className="hot-vitals">
           <div className="hot-hp">
             <b className="hot-big">{c.live.hp}<small>/{v.hpMax}</small></b>

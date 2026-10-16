@@ -35,7 +35,19 @@ export function applyEvent(s: EncounterState, ev: GameEvent): void {
     case 'combatantAdded': {
       const cb = p.combatant as Combatant;
       s.combatants[cb.id] = structuredClone(cb);
-      if (s.round !== null && !s.order.includes(cb.id)) s.order.push(cb.id);
+      const n = Number(/^s(\d+)$/.exec(cb.id)?.[1]);
+      if (Number.isFinite(n) && s.nextId <= n) s.nextId = n + 1;
+      if (s.round !== null && !s.order.includes(cb.id)) {
+        const sumIdx = cb.summoner ? s.order.indexOf(cb.summoner) : -1;
+        if (sumIdx >= 0) {
+          let idx = sumIdx + 1;
+          while (idx < s.order.length && s.combatants[s.order[idx]]?.summoner === cb.summoner) idx++;
+          s.order.splice(idx, 0, cb.id);
+          if (idx <= s.turnIndex) s.turnIndex++;
+        } else {
+          s.order.push(cb.id);
+        }
+      }
       break;
     }
     case 'baseRefreshed': {
