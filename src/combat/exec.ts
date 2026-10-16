@@ -3,6 +3,7 @@ import { applyDamagePacket, applyHeal, grantTempHp, maxDiceFor, normType, rollCo
 import { controllerOf, d20Test, rollValue } from './d20';
 import { activeTemplates, applyEffect, effectiveView, effectsOf, endEffect, startConcentration } from './effects';
 import { makeEnv, nameOf, type ScopeData } from './scope';
+import { entryOf } from './collect';
 import { shove } from './space';
 import { blockedEconomy, fireWindow } from './triggers';
 import { Rejected, type Tx } from './tx';
@@ -522,6 +523,9 @@ function lowestSlot(tx: Tx, id: Id, min: number, max = 9): number | null {
   return null;
 }
 
+/** 充能记在 resourcesUsed 里的名字：「充能:5:火焰吐息」（阈值写在名字里，回合开始掷骰时要用） */
+export const rechargeKey = (k: { recharge: '5-6' | '6'; id?: string }) => `充能:${k.recharge === '6' ? 6 : 5}:${k.id ?? '?'}`;
+
 /** 付得起吗（不付）。战斗外不限制动作经济 */
 export function canPay(tx: Tx, id: Id, costs: Cost[]): boolean {
   const c = tx.state.combatants[id];
@@ -541,6 +545,8 @@ export function canPay(tx: Tx, id: Id, costs: Cost[]): boolean {
       if (max - (c.live.resourcesUsed[k.resource] ?? 0) < 1) return false;
     } else if ('slot' in k) {
       if (lowestSlot(tx, id, k.slot.min, k.slot.max) === null) return false;
+    } else if ('recharge' in k) {
+      if ((c.live.resourcesUsed[rechargeKey(k)] ?? 0) > 0) return false;
     }
   }
   return true;
@@ -563,6 +569,8 @@ export function payCosts(tx: Tx, id: Id, costs: Cost[], label: string, cause: nu
       if (level === null || level < k.slot.min || !slotAvailable(tx, id, level)) throw new Rejected(`${label}：没有可用的 ${slotLevel ?? k.slot.min} 环法术位`);
       tx.emit('slotUsed', { id, level, used: (c.live.slotsUsed[level] ?? 0) + 1 }, cause);
       usedSlot = level;
+    } else if ('recharge' in k) {
+      tx.emit('resourceUsed', { id, resource: rechargeKey(k), used: 1 }, cause);
     }
   }
   return usedSlot;
@@ -577,7 +585,7 @@ export function collectDamageDefs(nodes: Node[], out: Record<string, Extract<Nod
     if (n.kind === 'damage' && n.id) out[n.id] = n;
     for (const v of Object.values(n)) {
       if (Array.isArray(v) && v.length && typeof v[0] === 'object' && v[0] && 'kind' in v[0]) collectDamageDefs(v as Node[], out);
-      if (Array.isArray(v) && v.length && typeof v[0] === 'object' && v[0] && 'do' in v[0]) for (const o of v as Array<{ do: Node[] }>) collectDamageDefs(o.do, out);
+      if (Array.isArray(v) && v.length && typeof v[0] === 'object' && v[0] && 'do' in v[0]) for (const o of v as Array<{ do?: Node[] }>) collectDamageDefs(o.do ?? [], out);
     }
   }
   return out;
@@ -595,7 +603,10 @@ export function weaponAction(row: AttackRow): Action {
     cost: [{ economy: 'attack' }],
     // 射程：近战按触及（5 / 10 尺），能投掷 / 远程的按远射程
     targeting: { type: 'creature', count: 1, range: Math.max(row.melee ? (row.reach ? 10 : 5) : 0, row.long ?? row.range ?? 0) || undefined },
-    root: [{ kind: 'attack', bonus: row.bonus, attack, onHit: [{ kind: 'damage', dice: row.damage, type: normType(row.damageType) }] }],
+    root: [{
+      kind: 'attack', bonus: row.bonus, attack,
+      onHit: [{ kind: 'damage', dice: row.damage, type: normType(row.damageType) }, ...(row.extra ?? []).map((x) => ({ kind: 'damage' as const, dice: x.dice, type: normType(x.type) }))],
+    }],
     tags: ['weapon'],
   };
 }
@@ -608,7 +619,7 @@ export function findAction(tx: Tx, actor: Id, ref: string): { key: string; actio
     return { key: ref, action: weaponAction(row) };
   }
   const [key, aid] = ref.split('#');
-  const entry = tx.rules.entry(key);
+  const entry = entryOf(tx, actor, key);
   const action = entry?.actions?.find((a) => a.id === (aid ?? entry.actions?.[0]?.id));
   if (!entry || !action) throw new Rejected(`找不到动作「${ref}」`);
   return { key, action };

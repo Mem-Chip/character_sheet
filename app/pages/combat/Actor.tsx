@@ -105,7 +105,7 @@ export function actionsFor(s: Session, rules: RuleBook, spells: Json[], id: stri
   const keys = [...v.sources, ...rules.keys().filter((k) => k.startsWith('XPHB:action:'))];
   const seen = new Set<string>();
   for (const key of keys) {
-    const e = rules.entry(key);
+    const e = v.entries?.[key] ?? rules.entry(key);
     if (!e?.actions?.length || seen.has(key)) continue;
     seen.add(key);
     for (const a of e.actions) {
@@ -129,7 +129,7 @@ export function actionsFor(s: Session, rules: RuleBook, spells: Json[], id: stri
   }
   // 时机能力：常驻的触发器 + 窗口触发的动作
   for (const key of new Set(v.sources)) {
-    const e = rules.entry(key);
+    const e = v.entries?.[key] ?? rules.entry(key);
     if (!e || e.automation === 'manual') continue;
     const timed = [
       ...(e.triggers ?? []).map((t) => ({ id: t.id, name: t.label ?? e.name ?? t.id, on: t.on, cost: t.cost ?? [], action: null as Action | null })),
@@ -357,6 +357,16 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
         </div>
       </Panel>
 
+      {(v.notes?.length ?? 0) > 0 && (
+        <Panel title="要手动处理的能力" aside={<span className="tiny">引擎不自动结算，按原文处理</span>}>
+          {v.notes!.map((n, i) => (
+            <details key={i} className="note-ab">
+              <summary><span className="faint tiny">{n.group}</span> {n.name}</summary>
+              <div className="small">{n.text}</div>
+            </details>
+          ))}
+        </Panel>
+      )}
       {(Object.keys(v.resources).length > 0 || Object.keys(v.slots).length > 0) && (
         <Panel title="资源" aside={<span className="tiny">点方格手动改（记进日志）</span>} flush>
           <table className="rows">

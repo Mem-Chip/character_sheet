@@ -55,6 +55,8 @@ export function makeView(init: ViewInit): CombatantView {
     slots: init.slots ?? {},
     classTable: init.classTable ?? {},
     wearing: init.wearing ?? [],
+    ...(init.entries ? { entries: init.entries } : {}),
+    ...(init.notes?.length ? { notes: init.notes } : {}),
   };
 }
 

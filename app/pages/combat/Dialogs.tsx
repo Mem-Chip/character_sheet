@@ -1,10 +1,11 @@
 /** 战斗页的对话框：等待中的决定、加角色、加怪物、遭遇设置 */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Decision, Session, Settings, ViewInit } from '../../../src/combat';
 import { Dialog, Field, NumInput } from '../../components/ui';
 import { combat, useCombat, type CombatUi, type DiceMode } from '../../lib/combat';
 import type { Engine } from '../../lib/engine';
 import { DiceSettings } from './DiceSettings';
+import { BestiaryPicker } from './Bestiary';
 import { useApp } from '../../lib/store';
 import { previewLines } from './Log';
 import { CREATURE_TYPES, DAMAGE_TYPES, type Namer } from './shared';
@@ -213,8 +214,12 @@ const PRESETS: Array<[string, Partial<MonsterForm>]> = [
   ['训练假人', { name: '训练假人', ac: 10, hp: 100, init: 0, atkName: '', perAction: 1, type: '构装生物' }],
 ];
 
-export function AddMonsterDialog({ onClose, canHide }: { onClose: () => void; canHide?: boolean }) {
+export function AddMonsterDialog({ onClose, canHide, loadMonsters }: { onClose: () => void; canHide?: boolean; loadMonsters?: () => Promise<unknown[]> }) {
   const [hidden, setHidden] = useState(false);
+  const [tab, setTab] = useState<'book' | 'custom'>(loadMonsters ? 'book' : 'custom');
+  // 图鉴按需加载（1 MB 多）
+  const [monsters, setMonsters] = useState<unknown[] | null>(null);
+  useEffect(() => { void loadMonsters?.().then(setMonsters, () => setMonsters([])); }, []);
   const [f, setF] = useState<MonsterForm>({
     name: '杂兵', count: 1, side: 'enemy', type: '类人生物', ac: 13, hp: 7, init: 2, speed: 30,
     atkName: '短剑', atkBonus: 4, atkDamage: '1d6 + 2', atkType: '穿刺', perAction: 1, ranged: false,
@@ -232,10 +237,25 @@ export function AddMonsterDialog({ onClose, canHide }: { onClose: () => void; ca
     combat.addMonster(view, Math.max(1, Math.min(20, f.count)), f.side, hidden);
     onClose();
   };
+  const tabs = (
+    <div className="row" style={{ gap: 4, marginBottom: 8 }}>
+      {loadMonsters && <button className={'btn sm' + (tab === 'book' ? ' on' : '')} onClick={() => setTab('book')}>图鉴</button>}
+      <button className={'btn sm' + (tab === 'custom' ? ' on' : '')} onClick={() => setTab('custom')}>自己填</button>
+    </div>
+  );
+  if (tab === 'book' && loadMonsters) {
+    return (
+      <Dialog title="加怪物" onClose={onClose}>
+        {tabs}
+        {!monsters ? <div className="empty">正在加载图鉴…</div> : <BestiaryPicker monsters={monsters} canHide={canHide} onAdd={(view, n, side, hid) => { combat.addMonster(view, n, side, hid); onClose(); }} />}
+      </Dialog>
+    );
+  }
   return (
     <Dialog title="加怪物" onClose={onClose} footer={<>
       {canHide && <label className="small" style={{ marginRight: 'auto' }}><input type="checkbox" checked={hidden} onChange={(e) => setHidden(e.target.checked)} /> 先藏起来（玩家看不到，之后在参与者列表里亮出）</label>}
       <button className="btn" onClick={onClose}>取消</button><button className="btn primary" onClick={add}>加入 {f.count > 1 ? `${f.count} 个` : ''}</button></>}>
+      {tabs}
       <div className="row">
         <span className="tiny faint">速成模板</span>
         {PRESETS.map(([label, p]) => <button key={label} className="chip" onClick={() => set({ ...p, ranged: !!p.ranged, type: p.type ?? '类人生物' })}>{label}</button>)}
@@ -264,7 +284,7 @@ export function AddMonsterDialog({ onClose, canHide }: { onClose: () => void; ca
         <Field label="每个攻击动作"><NumInput min={1} value={f.perAction} onChange={(n) => set({ perAction: n })} /></Field>
         <Field label="远程"><input type="checkbox" checked={f.ranged} onChange={(e) => set({ ranged: e.target.checked })} style={{ height: 28 }} /></Field>
       </div>
-      <div className="tiny faint">怪物数据卡的导入还没做；先用这里手填，数值都可以在战斗中手动调整。</div>
+      <div className="tiny faint">图鉴里没有的怪物在这里手填，数值都可以在战斗中手动调整。</div>
     </Dialog>
   );
 }

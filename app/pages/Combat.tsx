@@ -144,7 +144,7 @@ export function CombatPage({ engine }: { engine: Engine }) {
 
   const dialogs = <>
     {dlg === 'pc' && <AddPcDialog engine={engine} ui={ui} onClose={() => setDlg(null)} />}
-    {dlg === 'monster' && <AddMonsterDialog canHide={!!remote && dm} onClose={() => setDlg(null)} />}
+    {dlg === 'monster' && <AddMonsterDialog canHide={!!remote && dm} loadMonsters={() => engine.env.store.ensure('bestiaryXmm').then((d) => d?.monster ?? [])} onClose={() => setDlg(null)} />}
     {dlg === 'online' && <OnlineDialog engine={engine} onClose={() => setDlg(null)} />}
     {dlg === 'settings' && <SettingsDialog s={s} ui={ui} onClose={() => setDlg(null)} />}
     {ui.toast && <div className={'toast ' + ui.toast.tone} role="status">{ui.toast.text}</div>}

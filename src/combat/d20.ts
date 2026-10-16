@@ -290,6 +290,11 @@ export function d20Test(tx: Tx, req: RollRequest): RollResult {
         v.terms.forEach((t, i) => { total += t.sign * fs[i].reduce((a, b) => a + b, 0); });
         result.extra.push({ label: by.label, dice: v.toString(), faces: fs.flat(), total });
         recompute();
+      } else if (m.op === 'succeed') {
+        // 传奇抗性：失败改成成功（连自动失败也盖过）
+        result.autoFail = false;
+        result.autoSucceed = true;
+        result.mods.push({ op: 'autoSucceed', label: by.label, owner: by.owner, from: by.from });
       }
     },
     refresh: () => rollValue(result),

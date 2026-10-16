@@ -24,6 +24,11 @@ export interface Declared<T> {
   stackGroup?: string;
 }
 
+/** 某个参与者身上的条目：先看他自带的（怪物数据卡），再看规则书 */
+export function entryOf(tx: Tx, id: Id, key: string): Entry | undefined {
+  return effectiveView(tx, id).entries?.[key] ?? tx.rules.entry(key);
+}
+
 /** 条目的动态声明是否生效（`automation: 'manual'` = 这一条由人裁定，引擎不碰） */
 const live = (e: Entry | undefined): e is Entry => !!e && e.automation !== 'manual';
 
@@ -33,7 +38,7 @@ function permanentEntries(tx: Tx, id: Id): Array<[string, Entry]> {
   for (const k of effectiveView(tx, id).sources) {
     if (seen.has(k)) continue;
     seen.add(k);
-    const e = tx.rules.entry(k);
+    const e = entryOf(tx, id, k);
     if (live(e)) out.push([k, e]);
   }
   for (const [k, e] of tx.rules.globals()) if (!seen.has(k) && live(e)) out.push([k, e]);
@@ -89,7 +94,7 @@ export function aurasCovering(tx: Tx, who: Id): AuraHit[] {
     if (hc.live.dead) continue;
     const list: Array<{ aura: Aura; from: string }> = [];
     for (const k of effectiveView(tx, holder).sources) {
-      const e = tx.rules.entry(k);
+      const e = entryOf(tx, holder, k);
       if (live(e)) for (const a of e.auras ?? []) list.push({ aura: a, from: k });
     }
     for (const at of activeTemplates(tx, holder)) if (at.tpl.aura) list.push({ aura: at.tpl.aura, from: at.key });

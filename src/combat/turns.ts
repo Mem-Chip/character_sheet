@@ -95,6 +95,7 @@ export function beginTurn(tx: Tx, id: Id, cause: number | null): void {
     const u = e.duration.until;
     if (u && u.at === 'turnStart' && untilOf(e) === id && timing.untilCount >= (u.nth ?? 1)) endEffect(tx, e.id, '持续时间到', seq);
   }
+  rechargeCheck(tx, id, seq);
   saveEndsCheck(tx, id, 'turnStart', seq);
   if (c.kind === 'pc' && c.live.hp === 0 && !c.live.dead && !c.live.stable) deathSave(tx, id, seq);
   fireWindow(tx, { event: 'turnStarted', window: 'after', actor: id, scope: {}, cause: seq });
@@ -112,6 +113,19 @@ export function endTurn(tx: Tx, id: Id, cause: number | null): void {
   fireWindow(tx, { event: 'turnEnded', window: 'after', actor: id, scope: {}, cause: seq });
   zonesOnTurn(tx, id, 'turnEnd', seq);
   tx.emit('turnEnded', { id }, seq);
+}
+
+/** 充能（吐息武器）：用过的在自己回合开始时掷 d6，达到阈值就又能用 */
+function rechargeCheck(tx: Tx, id: Id, cause: number | null): void {
+  const c = tx.state.combatants[id];
+  for (const [k, used] of Object.entries(c.live.resourcesUsed)) {
+    const m = /^充能:(\d):(.*)$/.exec(k);
+    if (!m || !used) continue;
+    const [[f]] = tx.roll([{ faces: 6, count: 1 }], c.controller, `${m[2]} 充能`);
+    const ok = f >= Number(m[1]);
+    const seq = tx.emit('note', { text: `${c.name} 的「${m[2]}」充能：d6 = ${f}${ok ? '，恢复' : '，还没好'}`, owner: id }, cause);
+    if (ok) tx.emit('resourceUsed', { id, resource: k, used: 0 }, seq);
+  }
 }
 
 /** 「目标在其每回合结束时可以重新进行这次豁免」 */

@@ -117,7 +117,8 @@ export type Cost =
   | { economy: 'action' | 'bonus' | 'reaction' | 'attack' | 'move'; n?: ExprSrc }
   | { resource: string; n?: ExprSrc }
   | { slot: { min: number; max?: number } }
-  | { recharge: '5-6' | '6' }
+  /** 充能：用过之后在自己回合开始时掷 d6，达到就恢复。id = 记在 resourcesUsed 里的名字（同一个参与者里唯一） */
+  | { recharge: '5-6' | '6'; id?: string }
   | { charges: string; n?: ExprSrc };
 
 export type TriggerWindow = 'before' | 'after';
@@ -143,6 +144,8 @@ export type Modify =
   | { op: 'halveDamage' }
   | { op: 'setHp'; value: ExprSrc }
   | { op: 'cancel' }
+  /** 把这次豁免 / 检定改成成功（传奇抗性） */
+  | { op: 'succeed' }
   /** 反射闪避：「豁免成功只受一半伤害」的效果 —— 成功改为不受伤害，失败改为只受一半（别的伤害不管） */
   | { op: 'evasion' };
 
@@ -314,6 +317,8 @@ export interface AttackRow {
   range?: number;
   /** 远射程（劣势也能打到的最远距离） */
   long?: number;
+  /** 命中时另外的伤害（怪物的「外加 5 (2d4) 火焰伤害」） */
+  extra?: Array<{ dice: string; type: string }>;
 }
 
 /** 静态数值快照（PC 来自人物卡管线，怪物来自数据卡，测试里手搓） */
@@ -348,6 +353,10 @@ export interface CombatantView {
   /** 职业等级表当前行（`classTable('偷袭')` → '3d6'） */
   classTable: Record<string, string | number>;
   wearing: string[];
+  /** 参与者自带的规则条目（怪物的数据卡解析出来的动作、触发器）：键 → 条目，sources 里照常列这些键 */
+  entries?: Record<string, Entry>;
+  /** 引擎不处理、要人看着办的能力原文（怪物的特性、施法、附带效果）：只给界面显示 */
+  notes?: Array<{ group: string; name: string; text: string }>;
 }
 
 export interface LiveState {
