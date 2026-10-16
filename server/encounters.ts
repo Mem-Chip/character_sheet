@@ -84,6 +84,8 @@ interface Live {
   diceColors: Record<string, string>;
   /** 怪物 / NPC 的骰子在玩家那边的 3D 动画显示点数（明骰）；默认暗骰（空白骰子） */
   diceOpen: boolean;
+  /** DM 在日志里把某次掷骰转明 / 转暗（'r:事务:第几次 d20' / 'd:事务:第几次伤害' → true = 明骰）；不写 = 按默认 */
+  reveal: Record<string, boolean>;
   ctx: EngineCtx;
   seq: number;
   watchers: Set<ServerResponse>;
@@ -135,7 +137,7 @@ export function createEncounters(d: Deps) {
     const e = {
       id, campaignId: String(r.campaign_id), name: String(r.name),
       owners: meta.owners ?? {}, cards: meta.cards ?? {}, dice: meta.dice ?? {}, hidden: meta.hidden ?? [], chat: meta.chat ?? [],
-      actingAs: meta.actingAs ?? null, autoHid: meta.autoHid ?? [], dicePhys: meta.dicePhys ?? {}, diceColors: meta.diceColors ?? {}, diceOpen: !!meta.diceOpen, map: { ...newMap(), ...(meta.map ?? {}) }, seq: 0, watchers: new Set(),
+      actingAs: meta.actingAs ?? null, autoHid: meta.autoHid ?? [], dicePhys: meta.dicePhys ?? {}, diceColors: meta.diceColors ?? {}, diceOpen: !!meta.diceOpen, reveal: meta.reveal ?? {}, map: { ...newMap(), ...(meta.map ?? {}) }, seq: 0, watchers: new Set(),
     } as unknown as Live;
     e.ctx = ctxOf(e);
     e.session = Session.restore(JSON.parse(String(r.save)) as SessionSave, e.ctx);
@@ -145,9 +147,9 @@ export function createEncounters(d: Deps) {
 
   const stateOf = (e: Live) => ({
     id: e.id, name: e.name, campaignId: e.campaignId, seq: e.seq, owners: e.owners, cards: e.cards,
-    dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, dicePhys: e.dicePhys, diceColors: e.diceColors, diceOpen: e.diceOpen, save: e.session.save(),
+    dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, dicePhys: e.dicePhys, diceColors: e.diceColors, diceOpen: e.diceOpen, reveal: e.reveal, save: e.session.save(),
   });
-  const metaOf = (e: Live) => JSON.stringify({ owners: e.owners, cards: e.cards, dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, autoHid: e.autoHid, dicePhys: e.dicePhys, diceColors: e.diceColors, diceOpen: e.diceOpen });
+  const metaOf = (e: Live) => JSON.stringify({ owners: e.owners, cards: e.cards, dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, autoHid: e.autoHid, dicePhys: e.dicePhys, diceColors: e.diceColors, diceOpen: e.diceOpen, reveal: e.reveal });
   const broadcast = (e: Live, event: string, data: unknown) => {
     const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
     for (const w of e.watchers) w.write(msg);
@@ -426,9 +428,14 @@ export function createEncounters(d: Deps) {
         else s.cancelPending();
       } else if (op === 'undo' || op === 'override' || op === 'reset') {
         if (role !== 'dm') return reject('只有 DM 能撤销、裁定、清空');
-        if (op === 'undo') s.undo(Math.max(1, Number(b.n ?? 1)));
+        if (op === 'undo') {
+          s.undo(Math.max(1, Number(b.n ?? 1)));
+          // 撤掉的那几笔上的转明 / 转暗也去掉（不然落到之后的新事务上）
+          const n = s.transactions.length;
+          e.reveal = Object.fromEntries(Object.entries(e.reveal).filter(([k]) => Number(k.split(':')[1]) < n));
+        }
         else if (op === 'override') r = s.override(Number(b.txIndex), b.patch as OverridePatch);
-        else { e.owners = {}; e.cards = {}; e.hidden = []; e.chat = []; e.autoHid = []; e.map.tokens = {}; e.map.trail = null; e.session = new Session(createEncounter(e.id), e.ctx); }
+        else { e.owners = {}; e.cards = {}; e.hidden = []; e.chat = []; e.reveal = {}; e.autoHid = []; e.map.tokens = {}; e.map.trail = null; e.session = new Session(createEncounter(e.id), e.ctx); }
       } else if (op === 'setDice') {
         // 玩家只能改自己控制的；DM 什么都能改（包括默认 '*' 和怪物 'dm'）
         const who = String(b.user ?? '');
@@ -448,6 +455,21 @@ export function createEncounters(d: Deps) {
       } else if (op === 'diceOpen') {
         if (role !== 'dm') return reject('只有 DM 能改');
         e.diceOpen = !!b.open;
+      } else if (op === 'reveal') {
+        // 日志里把一次掷骰转明 / 转暗。指令框的骰子（chat）：DM 和掷的人都能改；战斗里的只有 DM
+        const open = b.open == null ? null : !!b.open;
+        if (typeof b.chat === 'string') {
+          const c = e.chat.find((x) => x.id === b.chat);
+          if (!c) return reject('找不到这次掷骰');
+          if (role !== 'dm' && c.by !== u.id) return reject('只能改自己掷的');
+          c.private = open === null ? !c.private : !open;
+        } else {
+          if (role !== 'dm') return reject('只有 DM 能改');
+          const key = String(b.key ?? '');
+          if (!/^[rd]:\d+:\d+$/.test(key)) return reject('不认识的掷骰');
+          if (open === null) delete e.reveal[key];
+          else e.reveal[key] = open;
+        }
       } else if (op === 'diceColor') {
         // 自己的骰子颜色（大家看到的都是这个颜色）；空 = 回到默认
         const c = String(b.color ?? '');

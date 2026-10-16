@@ -30,6 +30,18 @@ export function Log({ s, name, onCollapse }: { s: Session; name: Namer; onCollap
   const chat: ChatRoll[] = ui.remote ? ui.remote.chat : ui.chat;
   const chatAt = (n: number) => chat.filter((c) => (n === txs.length ? c.afterTx >= n : c.afterTx === n)).reverse();
   const me = ui.remote ? ui.remote.me : 0;
+  const r = ui.remote;
+  /** 战役遭遇里这次掷骰在玩家那边是不是暗骰（DM 那边照样看全，只是标出来） */
+  const darkOf = (t: Session['transactions'][number], i: number, k: number): boolean | undefined => {
+    const e = t.events[k];
+    if (!r || (e.type !== 'd20Rolled' && e.type !== 'damageRolled')) return undefined;
+    const p = e.payload as { index: number; roller?: string; source?: string | null };
+    // 这次用的骰子：上一次掷骰事件之后、这一条之前掷的
+    let prev = -1;
+    for (let j = k - 1; j >= 0; j--) if (t.events[j].type === 'd20Rolled' || t.events[j].type === 'damageRolled') { prev = j; break; }
+    const tapeDark = t.input.tape.some((x) => x?.dark && x.ev != null && x.ev > prev && x.ev <= k);
+    return combat.rollDark(`${e.type === 'd20Rolled' ? 'r' : 'd'}:${i}:${p.index}`, p.roller ?? p.source ?? null, tapeDark);
+  };
 
   return (
     <div className="logwrap">
@@ -52,12 +64,14 @@ export function Log({ s, name, onCollapse }: { s: Session; name: Namer; onCollap
           const chats = chatAt(i).map((c) => <ChatLine key={c.id} c={c} mine={c.by === me} dm={dm} />);
           if (mentionsHidden(t.input.cmd)) return chats.length ? <div key={i}>{chats}</div> : null;
           // 「加入 xx」的标题已经说了，不再重复那一行
+          const darkSeq = new Map<number, boolean>();
           const lines = t.events
+            .map((e, k) => { const d = darkOf(t, i, k); if (d !== undefined) darkSeq.set(e.seq, d); return e; })
             .filter((e) => e.type !== 'combatantAdded')
             // 先攻顺序里去掉藏着的；其他提到藏着的人的事件整条不显示
             .map((e) => (e.type === 'combatStarted' && hidden.length ? { ...e, payload: { ...e.payload, order: (e.payload as { order: string[] }).order.filter((x) => !hidden.includes(x)) } } : e))
             .filter((e) => e.type === 'combatStarted' || !mentionsHidden(e.payload))
-            .map((e) => describe(e, name, secret)).filter((x): x is Line => !!x);
+            .map((e) => describe(e, name, secret, darkSeq.has(e.seq) ? !dm && darkSeq.get(e.seq) : undefined)).filter((x): x is Line => !!x);
           const overridden = t.input.overrides.length > 0;
           return (
             <div key={i}>
@@ -75,6 +89,8 @@ export function Log({ s, name, onCollapse }: { s: Session; name: Namer; onCollap
                   open={open === `${i}:${l.seq}`}
                   onToggle={() => setOpen(open === `${i}:${l.seq}` ? null : `${i}:${l.seq}`)}
                   onOverride={(patch) => { setOpen(null); combat.override(i, patch); }}
+                  dark={r && dm && l.dice ? darkSeq.get(l.seq) : undefined}
+                  onDark={(d) => l.dice && combat.reveal({ key: `${l.dice.kind}:${i}:${l.dice.index}` }, !d)}
                 />
               ))}
             </div>
@@ -90,18 +106,22 @@ export function Log({ s, name, onCollapse }: { s: Session; name: Namer; onCollap
   );
 }
 
-function LineView({ l, dm, open, onToggle, onOverride }: {
+function LineView({ l, dm, open, onToggle, onOverride, dark, onDark }: {
   l: Line;
   dm: boolean;
   open: boolean;
   onToggle: () => void;
   onOverride: (patch: Parameters<typeof combat.override>[1]) => void;
+  /** DM 看：这次掷骰在玩家那边是暗骰（undefined = 不是战役遭遇里的掷骰，不给开关） */
+  dark?: boolean;
+  onDark?: (dark: boolean) => void;
 }) {
   const canRule = dm && (!!l.roll || !!l.damage);
   return (
     <div className={'ev' + (l.tone ? ' t-' + l.tone : '')}>
       <div className="evline">
         <span className="txt">{l.text}</span>
+        {dark !== undefined && <DarkToggle dark={dark} onSet={(d) => onDark?.(d)} />}
         {canRule && <button className="btn ghost sm rule-btn" onClick={onToggle} title="DM 事后改这个结果：从这一笔起重放后面所有的事">裁定</button>}
       </div>
       {l.receipt && <div className="receipt">{l.receipt}</div>}
@@ -143,6 +163,16 @@ function DamageRule({ byType, onSet }: { byType: Record<string, number>; onSet: 
       ))}
       <button className="btn sm" onClick={() => onSet(vals)}>确定</button>
     </div>
+  );
+}
+
+/** 暗骰 / 明骰开关：暗的时候玩家看不到骰面和明细 */
+function DarkToggle({ dark, onSet }: { dark: boolean; onSet: (dark: boolean) => void }) {
+  return (
+    <button className={'btn ghost sm dark-btn' + (dark ? ' on' : '')} onClick={() => onSet(!dark)}
+      title={dark ? '暗骰：玩家看不到骰面和明细。点一下转成明骰' : '明骰：大家都看得到骰面。点一下转成暗骰'}>
+      {dark ? '暗骰' : '明骰'}
+    </button>
   );
 }
 
@@ -188,6 +218,7 @@ function TermLine({ c }: { c: ChatRoll }) {
 /** 指令框掷的一次骰。私密的：别人只看到「掷了骰子」；DM 可以点开看 */
 function ChatLine({ c, mine, dm }: { c: ChatRoll; mine: boolean; dm: boolean }) {
   const [peek, setPeek] = useState(false);
+  const remote = !!useCombat().remote;
   const visible = !c.private || mine || peek;
   if (c.term) return <TermLine c={c} />;
   if (c.text != null) return <div className="chatroll said"><div className="evline"><span className="txt"><b>{c.byName}</b>：{c.text}</span></div></div>;
@@ -200,6 +231,7 @@ function ChatLine({ c, mine, dm }: { c: ChatRoll; mine: boolean; dm: boolean }) 
           {visible && <> → {c.results.map((r, i) => <b key={i} className="num roll-total">{r.total}</b>)}</>}
         </span>
         {!visible && dm && <button className="btn ghost sm" onClick={() => setPeek(true)}>看</button>}
+        {(mine || dm) && remote && <DarkToggle dark={c.private} onSet={(d) => combat.reveal({ chat: c.id }, !d)} />}
         {c.private && !mine && peek && <button className="btn ghost sm" onClick={() => setPeek(false)}>收起</button>}
       </div>
       {visible && c.results.map((r, i) => (

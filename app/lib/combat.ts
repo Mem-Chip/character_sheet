@@ -88,6 +88,8 @@ export interface Remote {
   diceColors: Record<string, string>;
   /** 怪物的骰子在玩家那边显示点数（DM 设） */
   diceOpen: boolean;
+  /** DM 在日志里转明 / 转暗过的掷骰（'r:事务:第几次 d20' / 'd:事务:第几次伤害' → true = 明骰） */
+  reveal: Record<string, boolean>;
   /** 别人（和自己）的标点、分享的测距：过一会儿自己消失 */
   pings: Ping[];
   connected: boolean;
@@ -106,7 +108,7 @@ export interface MapState {
 }
 interface RemoteState {
   save: SessionSave; owners: Record<string, number>; cards: Record<string, string>; name: string;
-  dice?: Record<string, DiceMode>; hidden?: string[]; map?: MapState; chat?: ChatRoll[]; actingAs?: string | null; dicePhys?: DicePhysics; diceColors?: Record<string, string>; diceOpen?: boolean;
+  dice?: Record<string, DiceMode>; hidden?: string[]; map?: MapState; chat?: ChatRoll[]; actingAs?: string | null; dicePhys?: DicePhysics; diceColors?: Record<string, string>; diceOpen?: boolean; reveal?: Record<string, boolean>;
 }
 
 let ui: CombatUi = { session: null, version: 0, links: {}, dice: {}, selected: null, targets: [], aim: null, chat: [], toast: null, remote: null };
@@ -234,7 +236,7 @@ function applyRemote(data: RemoteState): void {
     const cur = st.round !== null ? st.order[st.turnIndex] : null;
     const selected = ui.selected && st.combatants[ui.selected] ? ui.selected : cur ?? Object.keys(st.combatants)[0] ?? null;
     set({ session, links: data.cards, selected, targets: ui.targets.filter((t) => st.combatants[t]), remote: {
-      ...ui.remote, owners: data.owners, name: data.name, dice: data.dice ?? {}, hidden: data.hidden ?? [], map: data.map ?? ui.remote.map, chat: data.chat ?? ui.remote.chat, actingAs: data.actingAs ?? null, dicePhys: data.dicePhys ?? {}, diceColors: data.diceColors ?? {}, diceOpen: !!data.diceOpen, connected: true,
+      ...ui.remote, owners: data.owners, name: data.name, dice: data.dice ?? {}, hidden: data.hidden ?? [], map: data.map ?? ui.remote.map, chat: data.chat ?? ui.remote.chat, actingAs: data.actingAs ?? null, dicePhys: data.dicePhys ?? {}, diceColors: data.diceColors ?? {}, diceOpen: !!data.diceOpen, reveal: data.reveal ?? {}, connected: true,
     } }, false);
   } catch (e) {
     toast('同步遭遇失败：' + (e as Error).message);
@@ -249,7 +251,7 @@ export const combat = {
     const info = await api<RemoteState & { role: 'dm' | 'player'; me: number; campaignId: string; map: MapState }>('GET', `encounters/${encounterId}`);
     ui = {
       ...ui, selected: null, targets: [],
-      remote: { id: encounterId, name: info.name, campaignId: info.campaignId, role: info.role, me: info.me, owners: info.owners, dice: {}, hidden: [], map: info.map, chat: [], actingAs: null, pings: [], dicePhys: {}, diceColors: {}, diceOpen: false, connected: false },
+      remote: { id: encounterId, name: info.name, campaignId: info.campaignId, role: info.role, me: info.me, owners: info.owners, dice: {}, hidden: [], map: info.map, chat: [], actingAs: null, pings: [], dicePhys: {}, diceColors: {}, diceOpen: false, reveal: {}, connected: false },
     };
     applyRemote(info);
     stream = new EventSource(new URL('api/', document.baseURI).pathname + `encounters/${encounterId}/stream`);
@@ -343,6 +345,23 @@ export const combat = {
   /** DM：怪物的骰子明骰 / 暗骰 */
   setDiceOpen(open: boolean): void {
     if (ui.remote) act({ op: 'diceOpen', open });
+  },
+  /**
+   * 玩家那边这次掷骰是不是暗骰（看不到骰面和明细）：DM 在日志里转过的按转的；
+   * 否则 DM 掷的时候选了暗骰、或者是怪物 / NPC 的（DM 没开明骰）就是暗的。key 见 RemoteUi.reveal
+   */
+  rollDark(key: string, roller: string | null, tapeDark: boolean): boolean {
+    const r = ui.remote;
+    if (!r) return false;
+    const v = r.reveal[key];
+    if (v != null) return !v;
+    if (tapeDark) return true;
+    const c = roller ? ui.session?.state.combatants[roller] : null;
+    return !!c && c.side !== 'party' && r.owners[c.controller] == null && !r.diceOpen;
+  },
+  /** DM：日志里把一次掷骰转明 / 转暗；指令框掷的（chat id）掷的人自己也能改 */
+  reveal(target: { key: string } | { chat: string }, open: boolean): void {
+    if (ui.remote) act({ op: 'reveal', ...target, open });
   },
   /** 自己的骰子颜色（空 = 默认） */
   setDiceColor(color: string): void {

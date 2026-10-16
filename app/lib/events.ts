@@ -17,6 +17,8 @@ export interface Line {
   /** 可以被 DM 事后裁定的东西 */
   roll?: { index: number; kind: string; judged: boolean };
   damage?: { index: number; byType: Record<string, number> };
+  /** 这一行是一次掷骰（d20 / 伤害骰）：r / d + 这笔事务里的第几次。日志里转明 / 转暗用 */
+  dice?: { kind: 'r' | 'd'; index: number };
 }
 
 type P = Record<string, any>;
@@ -34,7 +36,8 @@ const abil = (a: unknown) => (a ? ABIL_CN[a as Ability] ?? String(a) : '');
 /** 玩家视角下要保密的参与者（怪物）：它的骰子明细、AC、生命值数字不显示 */
 export type Secret = (id: unknown) => boolean;
 
-export function describe(ev: GameEvent, name: (id: unknown) => string, secret: Secret = () => false): Line | null {
+/** dark：这次掷骰在当前视角下是暗骰（不给骰面和明细）；不给 = 掷骰的人是要保密的就算暗骰 */
+export function describe(ev: GameEvent, name: (id: unknown) => string, secret: Secret = () => false, dark?: boolean): Line | null {
   const p = ev.payload as P;
   const L = (text: string, tone?: Tone, extra: Partial<Line> = {}): Line => ({ seq: ev.seq, text, tone, ...extra });
   switch (ev.type) {
@@ -51,7 +54,7 @@ export function describe(ev: GameEvent, name: (id: unknown) => string, secret: S
       return L(`${name(p.actor)} 使用「${p.action}」${act ? `（${act}）` : ''}${tg.length ? ` → ${tg.map(name).join('、')}` : ''}`);
     }
     case 'spellCast': return p.slotLevel ? L(`消耗 ${p.slotLevel} 环法术位`) : null;
-    case 'd20Rolled': return d20Line(ev, p, name, secret);
+    case 'd20Rolled': return d20Line(ev, p, name, secret, dark);
     case 'attackHit': return L(`${p.crit ? '重击！' : '命中'} ${name(p.target)}`, p.crit ? 'crit' : 'hit');
     case 'attackMissed': return L(`未命中 ${name(p.target)}${p.why ? `（${p.why}）` : ''}`, 'miss');
     case 'attackRechecked': return secret(p.target) ? L('复核 → 未命中', 'miss') : L(`复核：总值 ${p.total} 对 AC ${p.vs}（原 ${p.vsBefore}）→ 未命中`, 'miss');
@@ -62,7 +65,7 @@ export function describe(ev: GameEvent, name: (id: unknown) => string, secret: S
     case 'damageAdded': return null;
     case 'damageRolled': {
       const parts = (p.parts as P[]).map((x) => `${x.dice} [${(x.faces as number[]).join(', ')}] = ${x.total} ${x.type}${x.from && x.from !== p.label ? `（${x.from}）` : ''}`);
-      return L(`伤害骰${p.crit ? '（重击）' : ''}${p.scale !== 1 ? `，×${p.scale}` : ''}`, undefined, { receipt: parts.join('；') });
+      return L(`伤害骰${p.crit ? '（重击）' : ''}${p.scale !== 1 ? `，×${p.scale}` : ''}`, undefined, { receipt: dark ? undefined : parts.join('；'), dice: { kind: 'd', index: p.index } });
     }
     case 'damageApplied': {
       if (secret(p.target)) return L(`${name(p.target)} 受到 ${p.total} 点伤害`, 'dmg', { damage: { index: p.index, byType: p.byType } });
@@ -117,7 +120,7 @@ function overrideText(p: P, name: (id: unknown) => string): string {
   }
 }
 
-function d20Line(ev: GameEvent, p: P, name: (id: unknown) => string, secret: Secret): Line {
+function d20Line(ev: GameEvent, p: P, name: (id: unknown) => string, secret: Secret, darkRoll?: boolean): Line {
   const d20 = p.d20 as number[];
   const mode = p.cancelled ? '优劣势抵消' : p.adv ? '优势' : p.disadv ? '劣势' : '';
   const dice = d20.length > 1 ? `d20 [${d20.join(', ')}]${mode ? ` ${mode}` : ''} → ${p.natural}` : `d20 [${p.natural}]${mode ? ` ${mode}` : ''}`;
@@ -126,7 +129,7 @@ function d20Line(ev: GameEvent, p: P, name: (id: unknown) => string, secret: Sec
   // 攻击怪物不告诉 AC；怪物自己掷的骰子（暗骰）不给明细
   const vs = p.vs === null || p.vs === undefined || (p.kind === 'attack' && secret(p.target)) ? ''
     : p.kind === 'attack' ? ` 对 AC ${p.vs}` : ` 对 DC ${p.vs}`;
-  const dark = secret(p.roller);
+  const dark = darkRoll ?? secret(p.roller);
   const out = p.outcome ? OUTCOME_CN[p.outcome] + (p.crit ? '（重击）' : '') : '';
   const what = p.kind === 'attack' ? `用「${String(p.label).replace(/\s*攻击检定$/, '')}」攻击${p.target ? ` ${name(p.target)}` : ''}`
     : p.sub === 'initiative' ? '先攻' : p.sub === 'deathSave' ? '死亡豁免' : p.sub === 'concentration' ? '专注检定'
@@ -145,6 +148,7 @@ function d20Line(ev: GameEvent, p: P, name: (id: unknown) => string, secret: Sec
     receipt: dark ? undefined : parts.join(''),
     sub: dark ? [] : sub,
     roll: { index: p.index, kind: p.kind, judged: p.vs !== null && p.vs !== undefined },
+    dice: { kind: 'r', index: p.index },
   };
 }
 
