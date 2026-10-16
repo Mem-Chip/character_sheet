@@ -184,6 +184,27 @@ export function createEncounters(d: Deps) {
     }
   }
 
+  /** 撤销了几笔事务：这几笔里移动过的棋子放回第一笔发起时的位置，走过的路线也退回去 */
+  function undoMoves(e: Live, gone: ReadonlyArray<{ input: { cmd: Command; positions?: Positions }; events: ReadonlyArray<{ type: string; payload: unknown }> }>): void {
+    const before = gone[0]?.input.positions;
+    if (!before) return;
+    const ids = new Set<string>();
+    for (const t of gone) {
+      if (t.input.cmd.type === 'move') ids.add(t.input.cmd.id);
+      for (const ev of t.events) if (ev.type === 'moved') ids.add((ev.payload as { id: string }).id);
+    }
+    const m = e.map;
+    for (const id of ids) {
+      const p = before[id];
+      if (!p || !e.session.state.combatants[id]) continue;
+      m.tokens[id] = { x: p.x, y: p.y };
+      if (m.trail?.id === id) {
+        const i = m.trail.cells.map((c) => c.x === p.x && c.y === p.y).lastIndexOf(true);
+        m.trail = i > 0 ? { ...m.trail, cells: m.trail.cells.slice(0, i + 1) } : null;
+      }
+    }
+  }
+
   /** 这条命令针对哪个参与者（玩家只能动自己的） */
   function subjectOf(cmd: Command): string | null {
     const c = cmd as unknown as Row;
@@ -444,7 +465,10 @@ export function createEncounters(d: Deps) {
       } else if (op === 'undo' || op === 'override' || op === 'reset') {
         if (role !== 'dm') return reject('只有 DM 能撤销、裁定、清空');
         if (op === 'undo') {
-          s.undo(Math.max(1, Number(b.n ?? 1)));
+          const count = Math.max(1, Number(b.n ?? 1));
+          const gone = s.transactions.slice(Math.max(0, s.transactions.length - count));
+          s.undo(count);
+          undoMoves(e, gone);
           // 撤掉的那几笔上的转明 / 转暗也去掉（不然落到之后的新事务上）
           const n = s.transactions.length;
           e.reveal = Object.fromEntries(Object.entries(e.reveal).filter(([k]) => Number(k.split(':')[1]) < n));
