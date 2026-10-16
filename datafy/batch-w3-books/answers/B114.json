@@ -1,0 +1,57 @@
+{
+  "name": "扩散孢子",
+  "automation": "partial",
+  "text": "处于一体共生状态下，可以用附赠动作将真菌孢子投向至多30尺远，漂浮在10尺立方空间中持续1分钟（再次使用、附赠动作取消或一体共生结束时提前消失）。生物进入或在该处开始回合须进行体质豁免，失败受到孢子环绕伤害（每回合至多一次）。这片孢子存在期间无法使用孢子环绕反应能力。具体区域触发由人工结算。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "扩散孢子",
+      "activation": "bonus",
+      "requires": "self.hasEffect('一体共生')",
+      "targeting": {
+        "type": "point",
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "扩散孢子",
+          "duration": {
+            "minutes": 1,
+            "endsOn": [
+              {
+                "event": "effectEnded",
+                "when": "event.bearer == self.id && event.name == '一体共生'"
+              }
+            ]
+          }
+        },
+        {
+          "kind": "note",
+          "text": "在至多30尺处创造10尺立方孢子云，持续1分钟。生物移动进入或在该处开始回合须通过体质豁免（DC为你的法术豁免DC），失败受到孢子环绕伤害（10级1d8，14级1d10黯蚀，每回合至多一次）。存在期间无法使用孢子环绕的反应能力。"
+        }
+      ]
+    },
+    {
+      "id": "dismiss",
+      "name": "取消扩散孢子",
+      "activation": "bonus",
+      "requires": "self.hasEffect('扩散孢子')",
+      "root": [
+        {
+          "kind": "removeEffect",
+          "from": "self",
+          "match": {
+            "name": "扩散孢子"
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "扩散孢子": {
+      "text": "扩散孢子处于激活状态。只要孢子存在，就无法使用孢子环绕的反应能力。可使用附赠动作取消。"
+    }
+  }
+}

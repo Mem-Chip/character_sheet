@@ -1,0 +1,77 @@
+{
+  "name": "西风打击",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。持续时间内你的移动不会引发借机攻击。此外法术结束前仅限一次，你可在自己回合让一次武器攻击检定获得优势，命中额外造成 1d8 力场伤害；无论命中与否，步行速度增加 30 尺直至该回合结束（仅限一次与速度加值需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "西风打击",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "西风打击"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "西风打击": {
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack",
+            "attack": {
+              "weapon": true
+            }
+          },
+          "who": "bearer",
+          "when": "turn.isMine && ask('本次攻击消耗西风打击的优势吗？')",
+          "op": "adv",
+          "label": "西风打击：武器攻击优势"
+        }
+      ],
+      "triggers": [
+        {
+          "id": "zephyr-dmg",
+          "label": "西风打击：额外力场伤害",
+          "on": "attackHit",
+          "role": "actor",
+          "window": "before",
+          "optional": true,
+          "when": "attack.weapon && turn.isMine",
+          "do": [
+            {
+              "kind": "addDamage",
+              "dice": "1d8",
+              "type": "力场"
+            }
+          ]
+        }
+      ],
+      "text": "移动不引发借机攻击。法术期间可令一次武器攻击检定具优势，命中额外造成 1d8 力场伤害，且回合结束前步行速度 +30 尺。"
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "name": "阴暗学识",
+  "automation": "partial",
+  "text": "以一个动作对 30 尺内能听见声音的生物发出低语，感知豁免失败则被魅惑 8 小时（受攻击、伤害或被迫豁免时提前结束）。共通语言要求与非战斗秘密恐吓角色扮演效果由人工处理。",
+  "resources": [
+    {
+      "id": "shadowLore",
+      "name": "阴暗学识",
+      "formula": 1,
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "阴暗学识",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "shadowLore"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30,
+        "filter": "target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "阴暗学识",
+              "to": "target",
+              "duration": {
+                "hours": 8,
+                "endsOn": [
+                  {
+                    "event": "damageTaken",
+                    "when": "self.id == event.target"
+                  },
+                  {
+                    "event": "attackHit",
+                    "when": "self.id == event.target"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "阴暗学识": {
+      "implies": [
+        "XPHB:condition:魅惑"
+      ],
+      "text": "被施加者魅惑 8 小时。遵循其命令（不危及性命），视其为密友。受到攻击、受到伤害或被迫豁免时提前结束。"
+    }
+  }
+}

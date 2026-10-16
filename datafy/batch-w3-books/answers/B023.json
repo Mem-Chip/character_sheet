@@ -1,0 +1,107 @@
+{
+  "name": "野兽之形",
+  "automation": "partial",
+  "text": "进入狂暴时选择长出啃咬、爪击或尾击天生武器。啃咬生命值低于一半时命中回血（每回合一次已写）；爪击在攻击动作中爪击后可追加一次爪击（一回合一次已写为 free 动作）；尾击在 10 尺内可见生物攻击命中你时可用反应掷 1d8 加 AC（已写为反应）。天生武器常规攻击请在武器行发起或手动投掷。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "野兽之形：尾击防御",
+      "activation": "reaction",
+      "trigger": {
+        "on": "attackHit",
+        "role": "target",
+        "window": "before",
+        "when": "self.hasEffect('狂暴') && attacker != null && within(self, attacker, 10) && canSee(self, attacker) && ask('本次狂暴选择的是尾击吗？')"
+      },
+      "root": [
+        {
+          "kind": "number",
+          "prompt": "野兽之形·尾击防御：请掷 1d8，输入投出的点数加到对抗这次攻击的 AC 上",
+          "var": "tailAc",
+          "min": 1,
+          "max": 8,
+          "default": 4
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "尾击防御",
+          "state": {
+            "bonus": "vars.tailAc"
+          }
+        }
+      ]
+    },
+    {
+      "id": "claw-extra",
+      "name": "野兽之形：追加爪击",
+      "activation": "free",
+      "requires": "turn.isMine && self.hasEffect('狂暴') && ask('你在本回合攻击动作中已进行过一次爪击吗？')",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "reach"
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "bonus": "self.pb + self.mod.str",
+          "attack": {
+            "melee": true,
+            "weapon": true,
+            "ability": "str",
+            "damageType": "挥砍"
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "1d6 + self.mod.str + classTable('狂暴伤害')",
+              "type": "挥砍"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "triggers": [
+    {
+      "id": "bite-heal",
+      "label": "野兽之形：啃咬回血",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "limit": "oncePerTurn",
+      "optional": true,
+      "when": "turn.isMine && self.hasEffect('狂暴') && self.hp < floor(self.hpMax / 2) && ask('本次命中的是野兽之形·啃咬吗？')",
+      "do": [
+        {
+          "kind": "heal",
+          "amount": "self.pb",
+          "to": "self"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "尾击防御": {
+      "text": "对抗这次攻击的 AC 增加掷出的 1d8 点数，可能使这次攻击变为失手。",
+      "statics": [
+        {
+          "kind": "ac",
+          "bonus": "effect.state.bonus"
+        }
+      ],
+      "duration": {
+        "rounds": 1,
+        "endsOn": [
+          {
+            "event": "attackMissed"
+          },
+          {
+            "event": "damageTaken"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "name": "哀惧灵袭",
+  "automation": "full",
+  "triggers": [
+    {
+      "id": "dread-psychic",
+      "label": "哀惧灵袭：额外心灵伤害",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "attack.weapon && !target.hasEffect('哀惧灵袭标记')",
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "cond(self.levelOf('游侠') >= 11, 1d6, 1d4)",
+          "type": "心灵"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "哀惧灵袭标记"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "哀惧灵袭标记": {
+      "text": "本回合已受过哀惧灵袭的额外伤害（每个生物每回合只受一次）。",
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "source",
+          "nth": 0
+        }
+      }
+    }
+  }
+}

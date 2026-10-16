@@ -1,0 +1,64 @@
+{
+  "name": "妖精诡术",
+  "automation": "partial",
+  "text": "【妖精轻步】在你的回合执行撤离动作时，本回合剩余时间内困难地形不消耗额外移动力（棋盘移动由人工处理）。【惊惶打击】攻击检定命中时可消耗一次使用次数，迫使目标进行感知豁免（DC 8+PB+属性加值），失败则其所有豁免检定具有劣势，持续至你的下个回合结束。长休恢复PB次。",
+  "resources": [
+    {
+      "id": "bewildering-strike",
+      "name": "惊惶打击",
+      "formula": "pb",
+      "recovery": "long"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "bewildering-strike",
+      "label": "惊惶打击",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "cost": [
+        {
+          "resource": "bewildering-strike"
+        }
+      ],
+      "do": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "8 + self.pb + max(self.mod.int, self.mod.wis, self.mod.cha)",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "惊惶"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "惊惶": {
+      "text": "你的豁免检定具有劣势，持续至施加者的下个回合结束。",
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "source",
+          "nth": 1
+        }
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save"
+          },
+          "who": "bearer",
+          "op": "disadv",
+          "label": "惊惶：豁免具有劣势"
+        }
+      ]
+    }
+  }
+}

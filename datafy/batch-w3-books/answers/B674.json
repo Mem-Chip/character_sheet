@@ -1,0 +1,125 @@
+{
+  "name": "噪鸣护盾",
+  "automation": "partial",
+  "text": "专注至多 10 分钟。获得雷鸣伤害抗性，且对你发动的远程攻击检定具有劣势。源自你的半径 10 尺光环内，每当光环进入生物所在空间、生物进入光环或在其中结束回合时，该生物须进行体质豁免，失败受 3d6 雷鸣伤害且陷入耳聋直至你的下回合开始，成功受半伤（每名生物每回合限一次；升环每高一环 +1d6 伤害；光环移动/进入判定与升环伤害需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "噪鸣护盾",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "噪鸣护盾"
+        }
+      ]
+    },
+    {
+      "id": "wave",
+      "name": "噪鸣护盾：光环判定",
+      "activation": "none",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 10
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "dmg",
+              "dice": "3d6",
+              "type": "雷鸣"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "噪鸣护盾：耳聋"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "dmg",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "噪鸣护盾": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "statics": [
+        {
+          "kind": "resist",
+          "values": [
+            "雷鸣"
+          ]
+        }
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack",
+            "attack": {
+              "ranged": true
+            }
+          },
+          "who": "against",
+          "op": "disadv",
+          "label": "噪鸣护盾：对你发动的远程攻击检定具有劣势"
+        }
+      ],
+      "text": "获得对雷鸣伤害的抗性，且对你发动的远程攻击检定均具有劣势。"
+    },
+    "噪鸣护盾：耳聋": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:耳聋"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        }
+      },
+      "text": "陷入耳聋状态，持续至施法者的下一回合开始。"
+    }
+  }
+}

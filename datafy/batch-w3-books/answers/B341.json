@@ -1,0 +1,70 @@
+{
+  "name": "序列意识",
+  "automation": "partial",
+  "text": "以附赠动作进入1分钟的序列意识：在此期间，你的每次d20检定里，d20掷出9或以下按10计；对你的攻击不能具有优势（引擎无法自动取消优势：对你的攻击出现优势时请手动改为无优势）。每次长休可免费使用一次；也可消耗5点术法点重置使用权。",
+  "resources": [
+    {
+      "id": "trance-of-order",
+      "name": "序列意识",
+      "formula": 1,
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "序列意识",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "trance-of-order"
+        }
+      ],
+      "requires": "!self.hasEffect('序列意识')",
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "序列意识"
+        }
+      ]
+    },
+    {
+      "id": "restore",
+      "name": "序列意识：恢复使用权（5术法点）",
+      "activation": "free",
+      "cost": [
+        {
+          "resource": "sorcery_points",
+          "n": 5
+        }
+      ],
+      "root": [
+        {
+          "kind": "resource",
+          "id": "trance-of-order",
+          "delta": 1
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "序列意识": {
+      "text": "1分钟内：d20检定掷出9或以下视为10；对你的攻击不能具有优势（需手动处理）。",
+      "duration": {
+        "minutes": 1
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "d20"
+          },
+          "who": "bearer",
+          "op": "minD20",
+          "value": 10,
+          "label": "序列意识：9或以下视为10"
+        }
+      ]
+    }
+  }
+}

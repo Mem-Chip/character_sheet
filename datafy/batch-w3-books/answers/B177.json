@@ -1,0 +1,43 @@
+{
+  "name": "醉拳技巧",
+  "automation": "partial",
+  "text": "每当你使用疾风连击时，你都将获得执行了撤离动作的好处，且你的步行速度增加 10 尺，持续直至当前回合结束。使用疾风连击时请开启此特性获得撤离和速度加值。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "醉拳技巧",
+      "activation": "free",
+      "requires": "turn.isMine && !self.hasEffect('醉拳技巧')",
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "XPHB:action:撤离#撤离"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "醉拳技巧"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "醉拳技巧": {
+      "text": "步行速度增加 10 尺，持续直至当前回合结束。",
+      "statics": [
+        {
+          "kind": "speed",
+          "bonus": 10
+        }
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 0
+        }
+      }
+    }
+  }
+}

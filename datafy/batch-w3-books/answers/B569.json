@@ -1,0 +1,100 @@
+{
+  "name": "烟火术",
+  "automation": "partial",
+  "text": "熄灭 60 尺内一处 5 尺立方的非魔法火焰并选择产生烟火或浓烟。【烟火】火焰周围 10 尺内生物须进行体质豁免，失败则目盲直到施法者的下个回合结束；【浓烟】产生 20 尺半径重度遮蔽黑烟持续 1 分钟（浓烟视野遮蔽需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "烟火术：烟火",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": {
+          "shape": "sphere",
+          "radius": 10
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "烟火目盲"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "smoke",
+      "name": "烟火术：浓烟",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": {
+          "shape": "sphere",
+          "radius": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "目标火焰散发出浓重黑烟，充满 20 尺半径区域并造成重度遮蔽，持续 1 分钟或直到被强风吹散。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "烟火目盲": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:目盲"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "creator",
+          "nth": 1
+        }
+      },
+      "text": "陷入目盲状态，持续直至施法者的下个回合结束。"
+    }
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "name": "秘法武功",
+  "automation": "partial",
+  "text": "可以将法术位转换为功力，或将功力转换为法术位。法术位转功力（无需动作）：消耗一个法术位，恢复等同于该法术位环阶数量的已消耗功力。恢复法术位：完成短休或使用运转周天时，转换未消耗的功力恢复一个已消耗法术位（1环2点/6级；2环3点/7级；3环5点/13级；4环6点/19级），恢复出的法术位需手动记到法术位上。",
+  "actions": [
+    {
+      "id": "slotToKi",
+      "name": "秘法武功：法术位转功力",
+      "activation": "free",
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "root": [
+        {
+          "kind": "resource",
+          "id": "功力",
+          "delta": "slot.level"
+        }
+      ]
+    },
+    {
+      "id": "kiToSlot",
+      "name": "秘法武功：恢复法术位",
+      "activation": "none",
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "恢复几环法术位？",
+          "options": [
+            {
+              "label": "1 环（2 点功力）",
+              "when": "self.levelOf('武僧') >= 6 && self.resource('功力') >= 2",
+              "do": [
+                {
+                  "kind": "resource",
+                  "id": "功力",
+                  "delta": -2
+                },
+                {
+                  "kind": "note",
+                  "text": "恢复一个 1 环法术位（需手动记到法术位上）"
+                }
+              ]
+            },
+            {
+              "label": "2 环（3 点功力）",
+              "when": "self.levelOf('武僧') >= 7 && self.resource('功力') >= 3",
+              "do": [
+                {
+                  "kind": "resource",
+                  "id": "功力",
+                  "delta": -3
+                },
+                {
+                  "kind": "note",
+                  "text": "恢复一个 2 环法术位（需手动记到法术位上）"
+                }
+              ]
+            },
+            {
+              "label": "3 环（5 点功力）",
+              "when": "self.levelOf('武僧') >= 13 && self.resource('功力') >= 5",
+              "do": [
+                {
+                  "kind": "resource",
+                  "id": "功力",
+                  "delta": -5
+                },
+                {
+                  "kind": "note",
+                  "text": "恢复一个 3 环法术位（需手动记到法术位上）"
+                }
+              ]
+            },
+            {
+              "label": "4 环（6 点功力）",
+              "when": "self.levelOf('武僧') >= 19 && self.resource('功力') >= 6",
+              "do": [
+                {
+                  "kind": "resource",
+                  "id": "功力",
+                  "delta": -6
+                },
+                {
+                  "kind": "note",
+                  "text": "恢复一个 4 环法术位（需手动记到法术位上）"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

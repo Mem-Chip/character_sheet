@@ -1,0 +1,78 @@
+{
+  "name": "热能袭",
+  "automation": "partial",
+  "text": "在你的回合中执行攻击动作后，可以消耗 2 点功力以附赠动作施放燃烧之手；可消耗额外功力升环（每消耗 1 点上升 1 环，总消耗最多为武僧等级的一半）。是否刚执行攻击动作由人确认。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "热能袭：燃烧之手",
+      "activation": "bonus",
+      "requires": "turn.isMine && ask('你在本回合中执行了攻击动作吗？')",
+      "cost": [
+        {
+          "resource": "功力",
+          "n": 2
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "cone",
+          "size": 15
+        }
+      },
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "root": [
+        {
+          "kind": "number",
+          "prompt": "热能袭：额外消耗多少点功力来升环？（每点升 1 环，总消耗至多为武僧等级的一半）",
+          "var": "extra",
+          "min": 0,
+          "max": "min(self.resource('功力'), max(0, floor(self.levelOf('武僧') / 2) - 2))",
+          "default": 0
+        },
+        {
+          "kind": "if",
+          "when": "vars.extra > 0",
+          "then": [
+            {
+              "kind": "resource",
+              "id": "功力",
+              "delta": "-vars.extra"
+            }
+          ]
+        },
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "8 + self.pb + self.mod.wis",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "bh",
+                  "dice": "(3 + vars.extra)d6",
+                  "type": "火焰"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "bh",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

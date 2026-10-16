@@ -1,0 +1,34 @@
+{
+  "name": "救赎使节",
+  "automation": "partial",
+  "text": "和平化身：获得其他生物造成的所有伤害的抗性（伤害减半）；当生物以一次攻击对你造成伤害时，它受到等同于其造成伤害数额一半的光耀伤害。若你对某一生物发动攻击、施法或造成伤害，此特性对该生物失效直到长休。抗性条件确认与对攻击者的反噬伤害需人工处理。",
+  "triggers": [
+    {
+      "id": "emissaryResistance",
+      "label": "救赎使节：全伤害抗性",
+      "on": "damageIncoming",
+      "role": "target",
+      "window": "before",
+      "when": "ask('这伤害来自其他生物，且救赎使节对该生物仍有效（未攻击/施法/造成伤害）吗？')",
+      "modify": [
+        {
+          "op": "halveDamage"
+        }
+      ]
+    },
+    {
+      "id": "emissaryRebuke",
+      "label": "救赎使节：反噬光耀伤害",
+      "on": "damageTaken",
+      "role": "target",
+      "window": "after",
+      "when": "damage.amount > 0 && attacker != null && ask('此特性目前对该攻击者有效吗（长休前未对其攻击/施法/造成伤害）？')",
+      "do": [
+        {
+          "kind": "note",
+          "text": "救赎使节：攻击者受到等同于其对你造成伤害数额一半的光耀伤害（数值：floor(damage.amount / 2)）。请手动对攻击者结算。"
+        }
+      ]
+    }
+  ]
+}

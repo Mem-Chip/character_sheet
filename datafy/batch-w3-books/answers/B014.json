@@ -1,0 +1,38 @@
+{
+  "name": "荒漠",
+  "automation": "full",
+  "text": "狂暴期间，当处于你风暴灵光（10尺）内的生物以攻击命中你后，你可以立刻用反应迫使该生物进行一次敏捷豁免（DC = 8 + 熟练加值 + 体质调整值）。豁免失败则受到等同于你野蛮人等级半数（向下取整）点火焰伤害。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "狂怒风暴：荒漠",
+      "activation": "reaction",
+      "trigger": {
+        "on": "attackHit",
+        "role": "target",
+        "window": "after",
+        "when": "self.hasEffect('狂暴') && within(self, attacker, 10)"
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 10,
+        "filter": "target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "8 + self.pb + self.mod.con",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "floor(self.levelOf('野蛮人') / 2)",
+              "type": "火焰"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

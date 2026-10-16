@@ -1,0 +1,45 @@
+{
+  "name": "灵体防御",
+  "automation": "partial",
+  "text": "当你因一次攻击受到伤害时，可用反应使本次伤害减半（模拟获得该攻击所有伤害类型的抗性）。持续至当前回合结束，期间该攻击包含的伤害类型的抗性需人工确认处理。",
+  "triggers": [
+    {
+      "id": "spectral-defense",
+      "label": "灵体防御：伤害减半",
+      "on": "attackHit",
+      "role": "target",
+      "window": "before",
+      "deferTo": "damageIncoming",
+      "optional": true,
+      "cost": [
+        {
+          "economy": "reaction"
+        }
+      ],
+      "modify": [
+        {
+          "op": "halveDamage"
+        }
+      ],
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "灵体防御"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "灵体防御": {
+      "text": "获得触发攻击所含所有伤害类型的抗性，持续至当前回合结束。",
+      "duration": {
+        "endsOn": [
+          {
+            "event": "turnEnded"
+          }
+        ]
+      }
+    }
+  }
+}

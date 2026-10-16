@@ -1,0 +1,83 @@
+{
+  "name": "律令痛苦",
+  "automation": "partial",
+  "text": "选择 60 尺内一名可见生物造成 6d8 力场伤害。若目标生命值为 100 点或更少，则在持续时间内陷入魅惑状态：其速度上限变为 10 尺，除体质豁免外进行的 d20 检定具有劣势；试图施法时须通过体质豁免否则法术消散且动作浪费（法术位不消耗，需手动处理）。目标在每个回合结束时可进行体质豁免，成功则法术对其结束。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "律令痛苦",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 7
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "damage",
+          "dice": "6d8",
+          "type": "力场"
+        },
+        {
+          "kind": "if",
+          "when": "target.hp <= 100",
+          "then": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "律令痛苦"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "律令痛苦": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:魅惑"
+      ],
+      "duration": {
+        "minutes": 1,
+        "saveEnds": {
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "at": "turnEnd"
+        }
+      },
+      "statics": [
+        {
+          "kind": "speedSet",
+          "value": 10
+        }
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": "d20"
+          },
+          "who": "bearer",
+          "when": "roll.kind != 'save' || roll.ability != 'con'",
+          "op": "disadv",
+          "label": "律令痛苦：d20检定劣势（体质豁免除外）"
+        }
+      ],
+      "text": "陷入魅惑状态；速度不能超过 10 尺；除体质豁免外的 d20 检定具有劣势；施法前须通过体质豁免否则失败；每回合结束时可进行体质豁免以结束此效应。"
+    }
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "name": "操控风力",
+  "automation": "partial",
+  "text": "控制 300 尺内 100 尺立方的空气，持续至多 1 小时（专注）。施法时及后续可用动作选择或切换效果：【狂风】（大风/强风使进出或穿过该区域的远程武器攻击具劣势；强风使逆风移动消耗双倍移动力）、【下沉气流】（穿过或以其中生物为目标的远程武器攻击具劣势；飞行生物每回合首次飞入或在其中开始回合须进行力量豁免，失败摔落倒地）、【上升气流】（坠落伤害减半，垂直跳跃高度+10尺）。环境风力、飞行坠落与远程攻击劣势需手动处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "操控风力",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "hours": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 300,
+        "area": {
+          "shape": "cube",
+          "size": 100
+        }
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "选择操控风力模式",
+          "options": [
+            {
+              "label": "狂风",
+              "do": [
+                {
+                  "kind": "note",
+                  "text": "操控风力：狂风模式。进出或穿过区域的远程武器攻击具劣势；强风逆风移动消耗额外移动力。"
+                }
+              ]
+            },
+            {
+              "label": "下沉气流",
+              "do": [
+                {
+                  "kind": "forEach",
+                  "in": "area",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "str",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        {
+                          "kind": "applyEffect",
+                          "template": "下沉气流：倒地",
+                          "to": "target"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "note",
+                  "text": "操控风力：下沉气流。穿过或以其中生物为目标的远程武器攻击具劣势；飞行生物飞入或开始回合力量豁免失败摔落倒地。"
+                }
+              ]
+            },
+            {
+              "label": "上升气流",
+              "do": [
+                {
+                  "kind": "note",
+                  "text": "操控风力：上升气流。区域内坠落伤害减半；垂直跳跃高度增加 10 尺。"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "下沉气流：倒地": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:倒地"
+      ],
+      "text": "受下沉气流冲击摔落倒地。"
+    }
+  }
+}

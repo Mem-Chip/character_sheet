@@ -1,0 +1,40 @@
+{
+  "name": "冻原探索者",
+  "automation": "partial",
+  "text": "【冰霜抵抗】获得寒冷伤害抗性（已在人物卡体现）。【极地打击】用武器攻击命中生物时，可额外造成 1d4（11级时 1d6）点寒冷伤害，每名目标每回合仅受一次额外伤害。【刺骨严寒】武器攻击、游侠法术与游侠特性造成的伤害无视寒冷抗性，需人工手动处理。",
+  "triggers": [
+    {
+      "id": "polar-strike",
+      "label": "极地打击：额外寒冷伤害",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "attack.weapon && !target.hasEffect('极地打击标记')",
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "cond(self.levelOf('游侠') >= 11, 1d6, 1d4)",
+          "type": "寒冷"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "极地打击标记"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "极地打击标记": {
+      "text": "本回合已受过极地打击的额外伤害（每名目标每回合仅受一次）。",
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "source",
+          "nth": 0
+        }
+      }
+    }
+  }
+}

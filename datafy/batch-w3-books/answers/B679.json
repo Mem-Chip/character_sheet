@@ -1,0 +1,94 @@
+{
+  "name": "厄难黑潮",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。在 120 尺内指定一点创造半径 20 尺球状墨色黑雾（视为魔法黑暗）。黑雾出现时位于其中的生物进行感知豁免，失败受 5d6 心灵伤害且豁免检定受 1d6 减值直至其下一回合结束，成功仅受半伤。黑雾移入生物空间、生物进入或在其中结束回合同样须进行豁免（每回合限一次）。施法者每个回合开始时黑雾远离施法者移动 10 尺；强风可吹散黑雾并解除法术。结阵施法可增至 1 英里且无需专注（黑雾移动、进入判定与结阵施法需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "厄难黑潮",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "sphere",
+          "radius": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "dmg",
+                  "dice": "5d6",
+                  "type": "心灵"
+                },
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "厄难黑潮：心智侵蚀"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "dmg",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "厄难黑潮：心智侵蚀": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save"
+          },
+          "who": "bearer",
+          "op": "addDice",
+          "value": "-1d6",
+          "label": "厄难黑潮：豁免检定受 1d6 减值"
+        }
+      ],
+      "text": "豁免检定受到 1d6 减值，持续至其下一回合结束。"
+    }
+  }
+}

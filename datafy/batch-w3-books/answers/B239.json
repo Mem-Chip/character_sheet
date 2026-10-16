@@ -1,0 +1,30 @@
+{
+  "name": "警戒呵斥",
+  "automation": "partial",
+  "text": "当你或你 30 尺内可见生物在智力、感知或魅力豁免上成功时，你可以用反应对迫使进行豁免检定的生物造成 2d8 + 魅力调整值点力场伤害（迫使豁免的生物需手动指定为目标结算）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "警戒呵斥",
+      "activation": "reaction",
+      "trigger": {
+        "on": "d20Rolled",
+        "role": "any",
+        "window": "after",
+        "when": "roll.kind == 'save' && (roll.ability == 'int' || roll.ability == 'wis' || roll.ability == 'cha') && !roll.failing && (roll.roller == self.id || (within(self, combatant(roll.roller), 30) && canSee(self, combatant(roll.roller))))"
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "damage",
+          "dice": "2d8 + self.mod.cha",
+          "type": "力场"
+        }
+      ]
+    }
+  ]
+}

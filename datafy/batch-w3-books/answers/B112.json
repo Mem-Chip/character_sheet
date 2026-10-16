@@ -1,0 +1,52 @@
+{
+  "name": "一体共生",
+  "automation": "partial",
+  "text": "以一个动作消耗一次荒野形态使用次数，立刻获得等同于德鲁伊等级4倍的临时生命值，并进入一体共生状态，持续10分钟（失去全部临时生命值或再次使用荒野形态时提前结束）。状态激活期间：近战武器攻击命中造成额外1d6点黯蚀伤害；孢子环绕造成伤害时可多掷一枚伤害骰（需手动处理或在孢子环绕中多投）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "一体共生",
+      "activation": "action",
+      "cost": [
+        { "resource": "wildshape-uses" }
+      ],
+      "root": [
+        {
+          "kind": "tempHp",
+          "amount": "self.levelOf('德鲁伊') * 4",
+          "to": "self"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "一体共生",
+          "duration": {
+            "minutes": 10
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "一体共生": {
+      "text": "一体共生激活中：近战武器攻击命中造成额外1d6点黯蚀伤害；孢子环绕造成伤害时多掷一枚伤害骰。失去所有临时生命值或再次使用荒野形态时提前结束。",
+      "triggers": [
+        {
+          "id": "extra-damage",
+          "label": "一体共生：近战武器额外黯蚀伤害",
+          "on": "attackHit",
+          "role": "actor",
+          "window": "before",
+          "when": "attack.melee && attack.weapon",
+          "do": [
+            {
+              "kind": "addDamage",
+              "dice": "1d6",
+              "type": "黯蚀"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

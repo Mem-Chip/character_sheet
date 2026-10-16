@@ -1,0 +1,79 @@
+{
+  "name": "振奋魔法",
+  "automation": "partial",
+  "text": "以一个动作触碰一个生物（可为自己），提供以下增益之一：①10分钟内，该生物攻击检定或属性检定可额外加 1d3；②掷 1d3，目标恢复一个环数小于等于掷骰结果的法术位（目标自选环阶，该生物直到长休前无法再次享受恢复法术位，需手动调整法术位）。长休恢复，次数等于熟练加值。",
+  "resources": [
+    {
+      "id": "bolstering-magic",
+      "name": "振奋魔法",
+      "formula": "pb",
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "振奋魔法",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "bolstering-magic"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "振奋魔法：选择赋予的增益",
+          "options": [
+            {
+              "label": "检定加骰：10分钟内攻击与属性检定 +1d3",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "振奋检定",
+                  "duration": {
+                    "minutes": 10
+                  }
+                }
+              ]
+            },
+            {
+              "label": "恢复法术位：掷 1d3 恢复相应环阶法术位（每长休每人限一次）",
+              "do": [
+                {
+                  "kind": "note",
+                  "text": "目标掷 1d3，恢复一个环数小于等于掷出结果的法术位（由目标自选环阶）。该生物在完成下一次长休前无法再次从此特性恢复法术位，请手动恢复相应法术位。"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "振奋检定": {
+      "text": "在投掷攻击检定或属性检定时额外掷一枚 1d3 加到检定结果中。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": [
+              "attack",
+              "check"
+            ]
+          },
+          "who": "bearer",
+          "op": "addDice",
+          "value": "1d3",
+          "label": "振奋魔法：攻击与属性检定 +1d3"
+        }
+      ]
+    }
+  }
+}

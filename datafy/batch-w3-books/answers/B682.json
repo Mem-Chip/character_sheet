@@ -1,0 +1,102 @@
+{
+  "name": "桑缟的元灵显圣",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。你将巨灵的元素伟力注入自身：①获得所选伤害类型（强酸、寒冷、火焰、闪电或雷鸣）的抗性；②施展时及此后每个自身回合开始时，释放 15 尺光环元素波动，所选生物进行敏捷豁免，失败受 2d6 点所选元素类型伤害且倒地，成功半伤；③获得 30 尺飞行速度且可悬浮。结阵施法可使持续时间增至 10 分钟并将增益共享给额外至多 9 名生物（元素抗性类型、飞行速度及结阵施法需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "桑缟的元灵显圣",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "桑缟的元灵显圣"
+        }
+      ]
+    },
+    {
+      "id": "burst",
+      "name": "桑缟的元灵显圣：元素波动",
+      "activation": "none",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 15
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "burst_dmg",
+              "dice": "2d6",
+              "type": "火焰"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "XPHB:condition:倒地"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "burst_dmg",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "桑缟的元灵显圣": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "triggers": [
+        {
+          "id": "burst-turn-start",
+          "label": "桑缟的元灵显圣：回合开始元素波动",
+          "on": "turnStarted",
+          "role": "actor",
+          "window": "after",
+          "do": [
+            {
+              "kind": "note",
+              "text": "桑缟的元灵显圣：释放 15 尺元素波动，目标进行敏捷豁免，失败受 2d6 强酸/寒冷/火焰/闪电/雷鸣伤害且陷入倒地，成功半伤。"
+            }
+          ]
+        }
+      ],
+      "text": "获得 30 尺飞行速度且可悬浮；获得所选伤害类型的抗性（强酸/寒冷/火焰/闪电/雷鸣）；每回合开始可发动元素波动。"
+    }
+  }
+}

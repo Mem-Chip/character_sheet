@@ -1,0 +1,22 @@
+{
+  "name": "稳固法术",
+  "automation": "partial",
+  "text": "当你施展一道迫使生物进行豁免检定的法术，且一个你可见的生物在那个豁免检定上成功时，可消耗一次引导神力（无需动作），掷 1d6 从该目标对抗此法术效应的第一次豁免检定中减去。引擎在生物豁免可能成功时提供触发，法术来源与首次豁免需人工确认。",
+  "triggers": [
+    {
+      "id": "steady-spell",
+      "label": "稳固法术：目标豁免减1d6",
+      "on": "d20Rolled",
+      "role": "any",
+      "window": "before",
+      "optional": true,
+      "when": "roll.kind == 'save' && !roll.failing && canSee(self, combatant(roll.roller)) && ask('该生物是在对抗你刚施展的法术，且这是第一次豁免吗？')",
+      "cost": [
+        { "resource": "引导神力" }
+      ],
+      "modify": [
+        { "op": "addToRoll", "value": "-1d6" }
+      ]
+    }
+  ]
+}

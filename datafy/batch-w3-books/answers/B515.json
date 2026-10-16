@@ -1,0 +1,80 @@
+{
+  "name": "火焰符文",
+  "automation": "full",
+  "text": "铭刻此符文时，与熟练工具相关的属性检定熟练加值翻倍。用武器攻击命中生物时，可激活此符文额外造成 2d6 火焰伤害，且目标需通过力量豁免（DC 8 + PB + 体质调整值），失败则被炽热镣铐束缚 1 分钟；被束缚期间在其回合开始时受到 2d6 火焰伤害，在其每个回合结束时可重复力量豁免以提前摆脱。",
+  "resources": [
+    {
+      "id": "火焰符文",
+      "name": "火焰符文",
+      "formula": "cond(level >= 15, 2, 1)",
+      "recovery": "short"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "fire-rune",
+      "label": "火焰符文：炽热镣铐",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "cost": [
+        {
+          "resource": "火焰符文"
+        }
+      ],
+      "when": "attack.weapon",
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "2d6",
+          "type": "火焰"
+        },
+        {
+          "kind": "save",
+          "ability": "str",
+          "dc": "8 + self.pb + self.mod.con",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "炽热镣铐"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "炽热镣铐": {
+      "duration": {
+        "minutes": 1,
+        "saveEnds": {
+          "ability": "str",
+          "dc": "8 + source.pb + source.mod.con",
+          "at": "turnEnd"
+        }
+      },
+      "implies": [
+        "XPHB:condition:束缚"
+      ],
+      "triggers": [
+        {
+          "id": "fire-shackle-turn-dmg",
+          "label": "炽热镣铐：回合开始火焰伤害",
+          "on": "turnStarted",
+          "role": "actor",
+          "do": [
+            {
+              "kind": "damage",
+              "dice": "2d6",
+              "type": "火焰",
+              "to": "self"
+            }
+          ]
+        }
+      ],
+      "text": "陷入束缚状态；在自己的每个回合开始时受到 2d6 点火焰伤害；在每个自己回合结束时可重复力量豁免，成功则结束此效应。"
+    }
+  }
+}

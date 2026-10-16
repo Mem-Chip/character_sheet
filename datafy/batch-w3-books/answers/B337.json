@@ -1,0 +1,86 @@
+{
+  "name": "扭曲爆裂",
+  "automation": "partial",
+  "text": "以一个动作，传送到 120 尺内可见未占据位置，原位置 30 尺内生物须进行力量豁免，失败受 3d10 力场伤害并被拉向原位置，成功受半伤且不被拉扯。传送与位移需手动处理。每次长休免费使用 1 次，之后可消耗 5 点术法点恢复使用次数。",
+  "resources": [
+    {
+      "id": "warping-implosion",
+      "name": "扭曲爆裂",
+      "formula": 1,
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "扭曲爆裂",
+      "activation": "action",
+      "cost": [
+        { "resource": "warping-implosion" }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "sphere",
+          "radius": 30
+        }
+      },
+      "root": [
+        {
+          "kind": "move",
+          "mode": "teleport",
+          "ft": 120
+        },
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "str",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "warp_dmg",
+                  "dice": "3d10",
+                  "type": "力场"
+                },
+                {
+                  "kind": "note",
+                  "text": "目标被立即拉向你原本的位置并停在最靠近的未占据空间"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "warp_dmg",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "restore",
+      "name": "扭曲爆裂：恢复使用次数（5术法点）",
+      "activation": "free",
+      "cost": [
+        {
+          "resource": "sorcery_points",
+          "n": 5
+        }
+      ],
+      "root": [
+        {
+          "kind": "resource",
+          "id": "warping-implosion",
+          "delta": 1
+        }
+      ]
+    }
+  ]
+}

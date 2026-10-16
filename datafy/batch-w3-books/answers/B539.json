@@ -1,0 +1,82 @@
+{
+  "name": "岩石符文",
+  "automation": "full",
+  "text": "铭刻此符文时，进行的感知（洞悉）检定具有优势，并获得 120 尺黑暗视觉（黑暗视觉由人物卡处理）。此外，当 30 尺内生物结束回合时，可以反应迫使其进行感知豁免（DC 8 + PB + 体质调整值），失败则被魅惑 1 分钟；魅惑期间陷入失能且速度降为 0，在其每个回合结束时可重复豁免以提前摆脱。",
+  "resources": [
+    {
+      "id": "岩石符文",
+      "name": "岩石符文",
+      "formula": "cond(level >= 15, 2, 1)",
+      "recovery": "short"
+    }
+  ],
+  "rollMods": [
+    {
+      "on": {
+        "kind": "check",
+        "skill": "洞悉"
+      },
+      "who": "bearer",
+      "op": "adv",
+      "label": "岩石符文：洞悉优势"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "岩石符文：入梦恍惚",
+      "activation": "reaction",
+      "cost": [
+        {
+          "resource": "岩石符文"
+        }
+      ],
+      "trigger": {
+        "on": "turnEnded",
+        "role": "any"
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "8 + self.pb + self.mod.con",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "入梦恍惚"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "入梦恍惚": {
+      "duration": {
+        "minutes": 1,
+        "saveEnds": {
+          "ability": "wis",
+          "dc": "8 + source.pb + source.mod.con",
+          "at": "turnEnd"
+        }
+      },
+      "implies": [
+        "XPHB:condition:魅惑",
+        "XPHB:condition:失能"
+      ],
+      "statics": [
+        {
+          "kind": "speedSet",
+          "value": 0
+        }
+      ],
+      "text": "陷入魅惑与失能状态，移动速度降为 0。在每个自己回合结束时可重复感知豁免，成功则结束此效应。"
+    }
+  }
+}

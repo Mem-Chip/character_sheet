@@ -1,0 +1,83 @@
+{
+  "name": "圈套术",
+  "automation": "partial",
+  "text": "耗时 1 分钟在触及地面创造一个 5 尺半径的隐形魔法陷阱，持续 8 小时。体型为小型、中型或大型的生物进入时触发，必须进行敏捷豁免，失败则被束缚倒吊在半空中。目标在其每个回合结束时可重复敏捷豁免，其他触及生物亦可进行智力（奥秘）检定对抗法术 DC 协助解脱（陷阱触发需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "圈套术",
+      "activation": {
+        "minutes": 1
+      },
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "targeting": {
+        "type": "point",
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "在触及地面创造 5 尺半径的隐形魔法陷阱，持续 8 小时；生物进入触发时可使用「触发圈套」判定"
+        }
+      ]
+    },
+    {
+      "id": "trigger-snare",
+      "name": "圈套术：触发圈套",
+      "activation": "none",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 5
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "圈套倒吊"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "圈套倒吊": {
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "duration": {
+        "hours": 8,
+        "saveEnds": {
+          "ability": "dex",
+          "dc": "source.spell.dc",
+          "at": "turnEnd"
+        }
+      },
+      "implies": [
+        "XPHB:condition:束缚"
+      ],
+      "text": "陷入束缚状态，倒吊在半空中。在每个自己回合结束时可重复敏捷豁免以结束束缚；触及生物亦可进行智力（奥秘）检定对抗法术 DC 解除束缚。"
+    }
+  }
+}

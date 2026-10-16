@@ -1,0 +1,35 @@
+{
+  "name": "潇洒无畏",
+  "automation": "full",
+  "text": "先攻检定加上魅力调整值。此外获得一种全新的偷袭方式：只要目标在你周围 5 尺内、且你周围 5 尺内没有其他生物，且攻击检定没有劣势，无需优势亦可造成偷袭伤害（每回合限一次偷袭）。",
+  "rollMods": [
+    {
+      "on": {
+        "kind": "initiative"
+      },
+      "who": "bearer",
+      "op": "add",
+      "value": "max(0, self.mod.cha)",
+      "label": "潇洒无畏：先攻加魅力调整值"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "rakish-sneak",
+      "label": "潇洒无畏：偷袭",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "(attack.finesse || attack.ranged) && within(self, target, 5) && !roll.disadv && ask('除目标外，你周围5尺内没有其他生物吗？')",
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "classTable('偷袭')",
+          "type": "attack.damageType"
+        }
+      ]
+    }
+  ]
+}

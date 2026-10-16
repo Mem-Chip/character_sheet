@@ -1,0 +1,50 @@
+{
+  "name": "迅捷灵光",
+  "automation": "partial",
+  "text": "自身速度 +10 尺已在静态层。5 尺灵光内的盟友在自己回合开始时步行速度获得 +10 尺加值，直至那一回合结束；18 级灵光范围增至 10 尺需手动处理。",
+  "auras": [
+    {
+      "id": "alacrity",
+      "radius": 5,
+      "affects": "allies",
+      "includeSelf": false,
+      "requires": "!self.has('失能')",
+      "stackKey": "迅捷灵光",
+      "grant": {
+        "triggers": [
+          {
+            "id": "alacrity-start",
+            "label": "迅捷灵光：速度",
+            "on": "turnStarted",
+            "role": "actor",
+            "do": [
+              {
+                "kind": "applyEffect",
+                "to": "self",
+                "template": "迅捷灵光"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "effects": {
+    "迅捷灵光": {
+      "stackKey": "迅捷灵光",
+      "statics": [
+        {
+          "kind": "speed",
+          "bonus": 10
+        }
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        }
+      }
+    }
+  }
+}

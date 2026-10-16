@@ -1,0 +1,34 @@
+{
+  "name": "梦幻舞步",
+  "automation": "partial",
+  "text": "在你的回合中，如果你对某一生物发动近战攻击，该生物在你的本回合剩余时间内无法对你发起借机攻击。借机攻击由人手动发起与限制，此效果提供状态标记与提示。",
+  "triggers": [
+    {
+      "id": "fancyFootwork",
+      "label": "梦幻舞步：防止借机攻击",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "after",
+      "when": "turn.isMine && roll.kind == 'attack' && attack.melee && target != null",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "梦幻舞步",
+          "duration": {
+            "until": {
+              "at": "turnEnd",
+              "of": "source",
+              "nth": 0
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "梦幻舞步": {
+      "text": "本回合剩余时间内无法对来源剑客发起借机攻击。"
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "name": "兽之联结",
+  "automation": "full",
+  "text": "专注至多 10 分钟。触碰一只对你友好或被你魅惑、且智力低于 4 的野兽，建立心灵感应链接。只要彼此处于视觉线内，该野兽对你周围 5 尺内你可见的任何生物进行的攻击检定具有优势。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "兽之联结",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch",
+        "filter": "target.type == '野兽'"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "兽之联结"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "兽之联结": {
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "bearer",
+          "when": "canSee(source, self) && canSee(self, source) && within(target, source, 5) && canSee(source, target)",
+          "op": "adv",
+          "label": "兽之联结：攻击优势"
+        }
+      ],
+      "text": "与施法者建立心灵链接。彼此处于视觉线内时，对施法者周围 5 尺内施法者可见的生物进行攻击检定具有优势。"
+    }
+  }
+}

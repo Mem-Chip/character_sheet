@@ -1,0 +1,60 @@
+{
+  "name": "地之骨",
+  "automation": "partial",
+  "text": "在120尺内升起至多6根石柱（升环每高一环+2根）。若在生物脚下升起，该生物须进行敏捷豁免，失败则被顶起。若被天花板或其他障碍阻挡未能达到最大高度，受到6d6钝击伤害并陷入束缚（未被阻挡则仅顶起无伤害，需手动处理）。被束缚生物可用动作通过力量或敏捷检定（对抗法术DC）脱离。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "地之骨",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 6
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 6,
+        "range": 120
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "6d6",
+              "type": "钝击"
+            },
+            {
+              "kind": "applyEffect",
+              "template": "地之骨：束缚",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "地之骨：束缚": {
+      "implies": [
+        "XPHB:condition:束缚"
+      ],
+      "tags": [
+        "magical",
+        "spell",
+        "debuff"
+      ],
+      "text": "被石柱与障碍物挤压束缚。可用动作进行力量或敏捷检定对抗法术DC脱离。"
+    }
+  }
+}

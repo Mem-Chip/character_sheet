@@ -1,0 +1,21 @@
+{
+  "name": "守护之魂",
+  "automation": "full",
+  "text": "只要你未处于失能状态，在战斗中结束你的回合时，若剩余生命值少于最大生命值的一半（且大于 0），恢复 1d6 + 圣武士等级一半 点生命值。",
+  "triggers": [
+    {
+      "id": "protectiveSpirit",
+      "label": "守护之魂：回合结束自愈",
+      "on": "turnEnded",
+      "role": "actor",
+      "when": "!self.has('失能') && self.hp > 0 && self.hp * 2 < self.hpMax",
+      "do": [
+        {
+          "kind": "heal",
+          "amount": "1d6 + floor(self.levelOf('圣武士') / 2)",
+          "to": "self"
+        }
+      ]
+    }
+  ]
+}

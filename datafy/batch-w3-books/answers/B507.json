@@ -1,0 +1,39 @@
+{
+  "name": "爆裂弹",
+  "automation": "partial",
+  "text": "远程武器攻击命中生物并造成伤害时，消耗一次奥术射击使用次数（短休恢复）：目标额外受到两枚奥术射击骰的力场伤害；目标周围 10 尺范围内的每名生物受到同等力场伤害需手动处理。",
+  "resources": [
+    {
+      "id": "arcaneShot",
+      "name": "奥术射击",
+      "formula": "max(1, int)",
+      "recovery": "short"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "bursting",
+      "label": "爆裂弹",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "attack.ranged && attack.weapon",
+      "cost": [
+        { "resource": "arcaneShot" }
+      ],
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "cond(self.levelOf('战士') >= 18, 2d12, cond(self.levelOf('战士') >= 15, 2d10, cond(self.levelOf('战士') >= 10, 2d8, 2d6)))",
+          "type": "力场"
+        },
+        {
+          "kind": "note",
+          "text": "目标周围 10 尺内的每名生物亦立即受到两枚奥术射击骰的力场伤害（请手动扣除）"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "圣杯座",
+  "automation": "full",
+  "text": "处于星耀形态·圣杯座时，当你消耗法术位施展一个为生物恢复生命值的法术时，你可以令自身或周围30尺内的一名生物恢复1d8+感知调整值（10级变为2d8+感知调整值）点生命值。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "圣杯座：治疗",
+      "activation": "free",
+      "trigger": {
+        "on": "spellCast",
+        "role": "actor",
+        "window": "after",
+        "when": "ask('刚才施展的法术消耗了法术位，并且是为生物恢复生命值的法术吗？')"
+      },
+      "targeting": {
+        "type": "creature",
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "heal",
+          "to": "target",
+          "amount": "(cond(self.levelOf('德鲁伊') >= 10, 2, 1))d8 + self.mod.wis"
+        }
+      ]
+    }
+  ]
+}

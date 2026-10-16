@@ -1,0 +1,109 @@
+{
+  "name": "深海触手",
+  "automation": "full",
+  "text": "以附赠动作在60尺内创造持续1分钟的幽灵触手（熟练加值次/长休）。召唤时及后续以附赠动作移动触手至多30尺后，可对触手10尺内目标进行一次近战法术攻击：造成1d8（10级起2d8）寒冷伤害，且目标速度降低10尺直至你的下一回合开始。",
+  "resources": [
+    { "id": "tentacle-of-the-deeps", "name": "深海触手", "formula": "pb", "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "深海触手：召唤与攻击",
+      "activation": "bonus",
+      "requires": "turn.isMine",
+      "cost": [
+        { "resource": "tentacle-of-the-deeps" }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "melee": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "cond(self.levelOf('魔契师') >= 10, 2d8, 1d8)",
+              "type": "寒冷"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "inline": {
+                "name": "深海触手：减速",
+                "duration": {
+                  "until": {
+                    "at": "turnStart",
+                    "of": "source",
+                    "nth": 1
+                  }
+                },
+                "statics": [
+                  {
+                    "kind": "speed",
+                    "bonus": -10
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "attack",
+      "name": "深海触手：移动并攻击",
+      "activation": "bonus",
+      "requires": "turn.isMine",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "melee": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "cond(self.levelOf('魔契师') >= 10, 2d8, 1d8)",
+              "type": "寒冷"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "inline": {
+                "name": "深海触手：减速",
+                "duration": {
+                  "until": {
+                    "at": "turnStart",
+                    "of": "source",
+                    "nth": 1
+                  }
+                },
+                "statics": [
+                  {
+                    "kind": "speed",
+                    "bonus": -10
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

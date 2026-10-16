@@ -1,0 +1,63 @@
+{
+  "name": "催眠仪态",
+  "automation": "full",
+  "text": "以魔法动作指定 10 尺内一个可见生物。若其能看见或听见你，必须进行感知豁免，失败则陷入魅惑、失能且速度为 0，持续 1 分钟，或直至受到伤害、与你相距超过 10 尺、或既看不见也听不见你时提前结束。可用次数等于智力调整值（至少 1 次），长休恢复。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "催眠仪态",
+      "activation": "action",
+      "tags": [
+        "magical"
+      ],
+      "cost": [
+        {
+          "resource": "催眠仪态"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 10,
+        "filter": "target.id != self.id && canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "催眠仪态",
+              "duration": {
+                "minutes": 1,
+                "endsOn": [
+                  {
+                    "event": "damageTaken"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "催眠仪态": {
+      "text": "处于魅惑与失能状态，速度为 0。受到伤害、与施法者相距超过 10 尺、或既看不见也听不见施法者时提前结束。",
+      "implies": [
+        "XPHB:condition:魅惑",
+        "XPHB:condition:失能"
+      ],
+      "statics": [
+        {
+          "kind": "speedSet",
+          "value": 0
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "name": "元素叱喝",
+  "automation": "partial",
+  "text": "当你被一次攻击检定命中时，可用反应使该攻击对你造成的伤害减半，并迫使攻击者进行一次对抗你法术豁免DC的敏捷豁免。豁免失败攻击者受到2d10+魅力调整值的伤害（强酸、寒冷、火焰、闪电或雷鸣由你选择），成功受到一半伤害。因引擎目标为受击者，伤害减半自动生效，对攻击者的敏捷豁免与反击伤害需手动结算。长休恢复（次数等于魅力调整值，至少 1 次）。",
+  "resources": [
+    {
+      "id": "elemental-rebuke",
+      "name": "元素叱喝",
+      "formula": "max(1, cha)",
+      "recovery": "long"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "elemental-rebuke",
+      "label": "元素叱喝：伤害减半并反击",
+      "on": "attackHit",
+      "role": "target",
+      "window": "before",
+      "optional": true,
+      "cost": [
+        {
+          "economy": "reaction"
+        },
+        {
+          "resource": "elemental-rebuke"
+        }
+      ],
+      "modify": [
+        {
+          "op": "halveDamage"
+        }
+      ],
+      "do": [
+        {
+          "kind": "note",
+          "text": "元素叱喝：迫使攻击者进行敏捷豁免（DC 为你的法术豁免 DC），失败受到 2d10+魅力调整值 点所选类型伤害（强酸/寒冷/火焰/闪电/雷鸣），成功受到一半伤害，请手动结算。"
+        }
+      ]
+    }
+  ]
+}

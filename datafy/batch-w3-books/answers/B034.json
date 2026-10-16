@@ -1,0 +1,98 @@
+{
+  "name": "威仪作锦",
+  "automation": "partial",
+  "text": "以附赠动作施展命令术（无需法术位），同时获得超凡美貌并进入专注（至多 1 分钟）。持续时间内，每个你的回合都能以附赠动作再次施展命令术（无需法术位）。被你魅惑的生物对抗此特性施放的命令术时自动豁免失败。具体命令指令及效果由人手动处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "威仪作锦",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "majesty"
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "if",
+          "when": "target.has('魅惑')",
+          "then": [
+            {
+              "kind": "note",
+              "text": "目标处于魅惑状态，自动豁免失败！在它的下个回合服从你的命令（命令术）"
+            }
+          ],
+          "else": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "note",
+                  "text": "目标豁免失败，在它的下个回合服从你的命令（命令术）"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "威仪作锦"
+        }
+      ]
+    },
+    {
+      "id": "command",
+      "name": "威仪作锦：命令术",
+      "activation": "bonus",
+      "requires": "self.hasEffect('威仪作锦') && turn.isMine",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "if",
+          "when": "target.has('魅惑')",
+          "then": [
+            {
+              "kind": "note",
+              "text": "目标处于魅惑状态，自动豁免失败！在它的下个回合服从你的命令（命令术）"
+            }
+          ],
+          "else": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "note",
+                  "text": "目标豁免失败，在它的下个回合服从你的命令（命令术）"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "威仪作锦": {
+      "text": "超凡美貌：持续至多 1 分钟（专注）。持续时间内每个你的回合都可以附赠动作施展命令术，且无需法术位。"
+    }
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "name": "变化宗师",
+  "automation": "partial",
+  "text": "携带着变化师之石时，以一个魔法动作耗尽其魔力，选择一项增益：【高等转化】（触碰物件10分钟转化非魔法物件）、【万灵秘药】（触碰生物恢复其生命值上限半数的生命值，解除中毒、石化与诅咒）、【起死回生】（无需法术位与材料成分施展死者复活）、【返老还童】（力竭降为0，外表年轻3d10岁）。使用后石头崩解为灰尘，亦可消耗一个7环或更高法术位防止石头崩解。石头崩解、法术位消耗与诅咒解除由玩家手动处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "变化宗师",
+      "activation": "action",
+      "targeting": {
+        "type": "creature",
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "选择变化宗师的增益",
+          "options": [
+            {
+              "label": "万灵秘药",
+              "do": [
+                {
+                  "kind": "heal",
+                  "amount": "floor(target.hpMax / 2)"
+                },
+                {
+                  "kind": "removeEffect",
+                  "from": "target",
+                  "match": { "key": "XPHB:condition:中毒" }
+                },
+                {
+                  "kind": "removeEffect",
+                  "from": "target",
+                  "match": { "key": "XPHB:condition:石化" }
+                },
+                {
+                  "kind": "note",
+                  "text": "万灵秘药：已恢复生命值并移除中毒与石化；身上的诅咒与魔法疫病请手动移除。石头崩解或消耗7环及以上法术位防崩解。"
+                }
+              ]
+            },
+            {
+              "label": "返老还童",
+              "do": [
+                {
+                  "kind": "removeEffect",
+                  "from": "target",
+                  "match": { "key": "XPHB:condition:力竭" }
+                },
+                {
+                  "kind": "note",
+                  "text": "返老还童：力竭等级已重置为 0，外表永久年轻 3d10 岁。石头崩解或消耗7环及以上法术位防崩解。"
+                }
+              ]
+            },
+            {
+              "label": "起死回生 / 高等转化",
+              "do": [
+                {
+                  "kind": "note",
+                  "text": "无需法术位施展死者复活，或耗时10分钟转化非魔法物件。石头崩解或消耗7环及以上法术位防崩解。"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

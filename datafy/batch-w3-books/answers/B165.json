@@ -1,0 +1,51 @@
+{
+  "name": "集结如潮",
+  "automation": "partial",
+  "text": "使用动作如潮时，可选择 30 尺内至多魅力调整值（至少 1）个盟友，各可用反应发动一次武器/徒手攻击或移动半速且不触发借机攻击。盟友的反应由其自行执行。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "集结如潮",
+      "activation": "free",
+      "cost": [
+        {
+          "resource": "动作如潮"
+        }
+      ],
+      "requires": "turn.isMine && round > 0 && !self.hasEffect('动作如潮')",
+      "targeting": {
+        "type": "creature",
+        "count": "max(1, self.mod.cha)",
+        "range": 30,
+        "filter": "target.isAllyOf(self) && target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "economy",
+          "action": 1
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "动作如潮"
+        },
+        {
+          "kind": "note",
+          "text": "所选盟友可立即使用反应进行一次武器/徒手攻击，或移动半速且不触发借机攻击。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "动作如潮": {
+      "text": "本回合已经用过动作如潮。额外的动作不能用来执行魔法动作。",
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 0
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "name": "地颤",
+  "automation": "partial",
+  "text": "在 10 尺区域内引发地面颤动。区域内除你之外的其他生物必须进行敏捷豁免，失败受到 1d6（每升一环 +1d6）点钝击伤害并倒地。区域内地表若为松软土壤或石头则变为困难地形（困难地形需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "地颤",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 10,
+        "area": {
+          "shape": "sphere",
+          "radius": 10
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "if",
+              "when": "target.id != self.id",
+              "then": [
+                {
+                  "kind": "save",
+                  "ability": "dex",
+                  "dc": "self.spell.dc",
+                  "onFail": [
+                    {
+                      "kind": "damage",
+                      "dice": "(slot.level)d6",
+                      "type": "钝击"
+                    },
+                    {
+                      "kind": "applyEffect",
+                      "to": "target",
+                      "template": "XPHB:condition:倒地"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

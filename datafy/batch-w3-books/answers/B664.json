@@ -1,0 +1,94 @@
+{
+  "name": "爆破术",
+  "automation": "partial",
+  "text": "在 500 尺内一名可见生物体内植入爆裂之种。目标进行体质豁免，失败受 10d10 火焰伤害，成功受半伤。随后目标处发生爆炸，源自目标 60 尺光环内的所有其他生物进行敏捷豁免（若目标生命值被降为 0 则该豁免具有劣势），失败受 10d10 火焰伤害，成功受半伤。未被携带的非魔法可燃物开始燃烧（爆炸中心判定与劣势由人处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "爆破术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 9
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 500,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "seed_dmg",
+              "dice": "10d10",
+              "type": "火焰"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "seed_dmg",
+              "scale": 0.5
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "目标处随即发生爆炸。源自目标 60 尺范围内的除目标外所有生物须进行敏捷豁免（若原目标降为 0 生命值则具劣势），受 10d10 火焰伤害，成功半伤。"
+        }
+      ]
+    },
+    {
+      "id": "explosion",
+      "name": "爆破术：余波爆炸",
+      "activation": "none",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 500,
+        "area": {
+          "shape": "sphere",
+          "radius": 60
+        }
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "exp_dmg",
+              "dice": "10d10",
+              "type": "火焰"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "exp_dmg",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

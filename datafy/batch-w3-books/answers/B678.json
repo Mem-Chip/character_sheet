@@ -1,0 +1,59 @@
+{
+  "name": "反冲术",
+  "automation": "partial",
+  "text": "反应（当你受到伤害时）。令受到的该次伤害降低 4d6 + 你的施法属性调整值点。若伤害来源为 60 尺内一名生物，可迫使该生物进行一次体质豁免，失败受 4d6 力场伤害，成功仅受半伤。升环施法时，法术位每高一环减免伤害量与造成的力场伤害均增加 1d6（伤害减免需手动调整结算）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "反冲术",
+      "activation": "reaction",
+      "trigger": {
+        "on": "damageIncoming",
+        "role": "target",
+        "window": "before"
+      },
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "rebound_dmg",
+              "dice": "(slot.level)d6",
+              "type": "力场"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "rebound_dmg",
+              "scale": 0.5
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "反冲术：本次受到的伤害降低 (slot.level)d6 + self.spell.mod 点。"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "name": "匿影无踪",
+  "automation": "full",
+  "text": "受到伤害后，能以反应魔法性隐形至你下个回合结束；若发动攻击、造成伤害或迫使生物豁免则提前结束。短休或长休恢复1次。",
+  "resources": [
+    {
+      "id": "fade-away",
+      "name": "匿影无踪",
+      "formula": 1,
+      "recovery": "short"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "匿影无踪",
+      "activation": "reaction",
+      "trigger": {
+        "on": "damageTaken",
+        "role": "target",
+        "window": "after"
+      },
+      "cost": [
+        {
+          "resource": "fade-away"
+        }
+      ],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "匿影无踪：隐形",
+          "to": "self",
+          "duration": {
+            "until": {
+              "at": "turnEnd",
+              "of": "bearer",
+              "nth": 1
+            },
+            "endsOn": [
+              {
+                "event": "attackHit",
+                "when": "event.actor == self.id"
+              },
+              {
+                "event": "attackMissed",
+                "when": "event.actor == self.id"
+              },
+              {
+                "event": "damageIncoming",
+                "when": "event.actor == self.id"
+              },
+              {
+                "event": "saveForced",
+                "when": "event.actor == self.id"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "匿影无踪：隐形": {
+      "implies": [
+        "XPHB:condition:隐形"
+      ],
+      "text": "处于隐形状态。持续直至你的下一回合结束，若你发动攻击、造成伤害或迫使他人进行豁免则提前结束。"
+    }
+  }
+}

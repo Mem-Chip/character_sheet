@@ -1,0 +1,102 @@
+{
+  "name": "希伦的剧毒灵蛇",
+  "automation": "partial",
+  "text": "持续 1 小时。获得 15 点临时生命值，耗尽时法术提前结束。持续期间获得等同于速度的攀爬速度，并可以魔法动作（动作）发动【剧毒啃咬】：对 50 尺内一名生物进行远程法术攻击，命中造成 1d6 力场伤害且陷入中毒与失能状态直至你的下一回合开始。升环施法时，每高一环临时生命值增加 5 点，剧毒啃咬伤害增加 1d6（啃咬升环伤害及临时生命耗尽结束法术需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "希伦的剧毒灵蛇",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "tempHp",
+          "amount": "15 + (slot.level - 3) * 5"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "希伦的剧毒灵蛇"
+        }
+      ]
+    },
+    {
+      "id": "bite",
+      "name": "希伦的剧毒灵蛇：剧毒啃咬",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 50
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "ranged": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "1d6",
+              "type": "力场"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "希伦的剧毒灵蛇：毒噬"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "希伦的剧毒灵蛇": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "hours": 1
+      },
+      "text": "获得等同于自身速度的攀爬速度；当临时生命值耗尽时提前结束。"
+    },
+    "希伦的剧毒灵蛇：毒噬": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:中毒",
+        "XPHB:condition:失能"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        }
+      },
+      "text": "陷入中毒与失能状态，持续至施法者的下一回合开始。"
+    }
+  }
+}

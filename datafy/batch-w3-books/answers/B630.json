@@ -1,0 +1,77 @@
+{
+  "name": "塔莎心灵鞭",
+  "automation": "partial",
+  "text": "1 动作。对 90 尺内可见生物进行心灵猛击。目标必须进行一次智力豁免，失败受到 3d6 心灵伤害，且直到其下一回合结束前不能做反应；此外在其下一回合中，移动、动作、附赠动作只能三选一行使。豁免成功只受半伤且不受其他效应。升环施法：使用 3 环或更高法术位时，每比 2 环高 1 环可额外指定一个生物（各目标间距离 ≤ 30 尺；行动三选一限制需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "塔莎心灵鞭",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": "slot.level - 1",
+        "range": 90
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "int",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "3d6",
+              "type": "心灵",
+              "id": "mind-whip-damage"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "塔莎心灵鞭"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "mind-whip-damage",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "塔莎心灵鞭": {
+      "tags": [
+        "magical",
+        "spell",
+        "debuff"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "flags": {
+        "blocks": [
+          "reaction"
+        ]
+      },
+      "text": "直到下一回合结束前不能做反应；在其下一回合中，移动、动作或附赠动作只能采取其中一种。"
+    }
+  }
+}

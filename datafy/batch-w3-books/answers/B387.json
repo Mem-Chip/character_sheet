@@ -1,0 +1,88 @@
+{
+  "name": "剑歌",
+  "automation": "partial",
+  "text": "附赠动作唤起剑歌，持续 1 分钟。若未穿甲未持盾，获得 AC 加值（智力调整值，最低+1）、移动速度 +10 尺、敏捷（体操）检定优势、维持专注的体质豁免加智力调整值。可用智力替代力敏进行熟练武器的攻击与伤害掷骰。穿甲、持盾、双手武器攻击、失能或主动终止时结束。使用奥术回想时恢复一次已消耗的剑歌次数（请手动增加或由奥术回想触发）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "剑歌",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "bladesong"
+        }
+      ],
+      "requires": "!self.wearing('LA') && !self.wearing('MA') && !self.wearing('HA') && !self.wearing('S') && !self.hasEffect('剑歌')",
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "剑歌"
+        }
+      ]
+    }
+  ],
+  "triggers": [
+    {
+      "id": "regain-on-arcane-recovery",
+      "label": "剑歌：奥术回想恢复使用次数",
+      "on": "restCompleted",
+      "role": "actor",
+      "optional": true,
+      "when": "ask('在本次休息中是否使用了奥术回想？')",
+      "do": [
+        {
+          "kind": "resource",
+          "id": "bladesong",
+          "delta": 1
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "剑歌": {
+      "text": "AC 增加智力调整值（最低+1）；速度增加 10 尺；敏捷（体操）检定具有优势；维持专注的体质豁免增加智力调整值。熟练武器攻击/伤害可用智力替代力敏。穿甲、持盾、使用双手武器攻击或陷入失能时结束。",
+      "duration": {
+        "minutes": 1,
+        "endsOn": [
+          {
+            "event": "effectApplied",
+            "when": "event.bearer == self.id && self.has('失能')"
+          }
+        ]
+      },
+      "statics": [
+        {
+          "kind": "ac",
+          "bonus": "max(1, self.mod.int)"
+        },
+        {
+          "kind": "speed",
+          "bonus": 10
+        }
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": "check",
+            "ability": "dex",
+            "skill": "体操"
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "剑歌：敏捷（体操）检定具有优势"
+        },
+        {
+          "on": {
+            "kind": "concentration",
+            "ability": "con"
+          },
+          "who": "bearer",
+          "op": "add",
+          "value": "self.mod.int",
+          "label": "剑歌：维持专注的体质豁免增加智力调整值"
+        }
+      ]
+    }
+  }
+}

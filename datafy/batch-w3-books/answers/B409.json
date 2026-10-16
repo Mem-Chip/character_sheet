@@ -1,0 +1,40 @@
+{
+  "name": "死之尊主",
+  "automation": "partial",
+  "text": "持有法术书期间：【亡灵增幅】以附赠动作使60尺内任意数量由你死灵法术创造或召唤的亡灵获得等同于法师等级的临时生命值，长休恢复（1次）。【湮灭亡灵】可见亡灵降至0生命值时可令其爆裂，10尺光环内生物敏捷豁免，失败受暗蚀伤害且下回合开始前无法执行反应，成功减半；不受控亡灵需使用反应并消耗5环及以上法术位。爆裂与豁免判定由玩家手动处理。",
+  "resources": [
+    {
+      "id": "undead-empowerment",
+      "name": "亡灵增幅",
+      "formula": 1,
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "亡灵增幅",
+      "activation": "bonus",
+      "cost": [
+        { "resource": "undead-empowerment" }
+      ],
+      "targeting": {
+        "type": "area",
+        "area": { "shape": "emanation", "radius": 60 },
+        "filter": "target.type == '亡灵' && target.isAllyOf(self)"
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "tempHp",
+              "amount": "self.levelOf('法师')"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

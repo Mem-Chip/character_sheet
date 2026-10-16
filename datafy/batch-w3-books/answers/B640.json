@@ -1,0 +1,63 @@
+{
+  "name": "靡叶生华",
+  "automation": "partial",
+  "text": "在 60 尺内以一点为中心的 10 尺半径球状区域内唤起死气与生机。区域内由你选择的每个生物进行体质豁免，失败受 (1 + slot.level)d6 暗蚀伤害，成功受半伤。此外，区域内一个由你选择的生物能消耗并投掷一枚其未使用的生命值骰（升环施法时每高一环可多消耗投掷 1 颗），恢复等于骰值总和加你的施法属性调整值的生命值（生命骰消耗与恢复需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "靡叶生华",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": {
+          "shape": "sphere",
+          "radius": 10
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "wither",
+                  "dice": "(1 + slot.level)d6",
+                  "type": "暗蚀"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "wither",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "所选区域内的一名生物可消耗并投掷 1 枚未使用的生命值骰（升环每高一环多 1 枚），恢复等同于骰值加施法属性调整值的生命值（由玩家手动处理）。"
+        }
+      ]
+    }
+  ]
+}

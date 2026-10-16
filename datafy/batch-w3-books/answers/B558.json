@@ -1,0 +1,66 @@
+{
+  "name": "造成恐惧",
+  "automation": "full",
+  "text": "专注至多 1 分钟。60 尺内可见非构装且非不死的目标必须通过感知豁免，否则陷入恐慌。目标在每个自己回合结束时可重复豁免以提前摆脱。使用更高环位施放时，每高一环可多指定一个 30 尺内的目标。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "造成恐惧",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": "slot.level",
+        "range": 60,
+        "filter": "target.type != '构装生物' && target.type != '不死生物' && canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "造成恐慌"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "造成恐慌": {
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "duration": {
+        "minutes": 1,
+        "saveEnds": {
+          "ability": "wis",
+          "dc": "source.spell.dc",
+          "at": "turnEnd"
+        }
+      },
+      "implies": [
+        "XPHB:condition:恐慌"
+      ],
+      "text": "陷入恐慌状态。在每个自己回合结束时可重复进行感知豁免，成功则提前结束此效应。"
+    }
+  }
+}

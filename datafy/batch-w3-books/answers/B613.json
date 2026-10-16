@@ -1,0 +1,250 @@
+{
+  "name": "原初守护",
+  "automation": "full",
+  "text": "持续至多 1 分钟（专注）。期间你具有强酸、寒冷、火焰、闪电和雷鸣伤害的抗性。当你受到上述类型之一伤害时，可用反应获得对该类型伤害的免疫（并免疫触发的该次伤害），原初守护抗性消失，免疫效果持续直至你的下个回合结束（随后法术提前终止）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "原初守护",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 6
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "原初守护",
+          "to": "self"
+        }
+      ]
+    },
+    {
+      "id": "absorbReaction",
+      "name": "原初守护：元素免疫反应",
+      "activation": "reaction",
+      "trigger": {
+        "on": "damageIncoming",
+        "role": "target",
+        "window": "before"
+      },
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "选择转化为免疫的元素伤害类型",
+          "options": [
+            {
+              "label": "强酸",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "template": "原初守护：强酸免疫",
+                  "to": "self"
+                }
+              ]
+            },
+            {
+              "label": "寒冷",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "template": "原初守护：寒冷免疫",
+                  "to": "self"
+                }
+              ]
+            },
+            {
+              "label": "火焰",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "template": "原初守护：火焰免疫",
+                  "to": "self"
+                }
+              ]
+            },
+            {
+              "label": "闪电",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "template": "原初守护：闪电免疫",
+                  "to": "self"
+                }
+              ]
+            },
+            {
+              "label": "雷鸣",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "template": "原初守护：雷鸣免疫",
+                  "to": "self"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "removeEffect",
+          "match": {
+            "name": "原初守护"
+          },
+          "from": "self"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "原初守护": {
+      "tags": [
+        "magical",
+        "spell",
+        "buff"
+      ],
+      "text": "获得强酸、寒冷、火焰、闪电和雷鸣伤害的抗性。受到对应伤害时可用反应转化为单一元素免疫直至下回合结束。",
+      "statics": [
+        {
+          "kind": "resist",
+          "values": [
+            "强酸",
+            "寒冷",
+            "火焰",
+            "闪电",
+            "雷鸣"
+          ]
+        }
+      ]
+    },
+    "原初守护：强酸免疫": {
+      "tags": [
+        "magical",
+        "spell",
+        "buff"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer"
+        }
+      },
+      "statics": [
+        {
+          "kind": "immune",
+          "values": [
+            "强酸"
+          ]
+        }
+      ],
+      "text": "免疫强酸伤害，持续直至你的下个回合结束。"
+    },
+    "原初守护：寒冷免疫": {
+      "tags": [
+        "magical",
+        "spell",
+        "buff"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer"
+        }
+      },
+      "statics": [
+        {
+          "kind": "immune",
+          "values": [
+            "寒冷"
+          ]
+        }
+      ],
+      "text": "免疫寒冷伤害，持续直至你的下个回合结束。"
+    },
+    "原初守护：火焰免疫": {
+      "tags": [
+        "magical",
+        "spell",
+        "buff"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer"
+        }
+      },
+      "statics": [
+        {
+          "kind": "immune",
+          "values": [
+            "火焰"
+          ]
+        }
+      ],
+      "text": "免疫火焰伤害，持续直至你的下个回合结束。"
+    },
+    "原初守护：闪电免疫": {
+      "tags": [
+        "magical",
+        "spell",
+        "buff"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer"
+        }
+      },
+      "statics": [
+        {
+          "kind": "immune",
+          "values": [
+            "闪电"
+          ]
+        }
+      ],
+      "text": "免疫闪电伤害，持续直至你的下个回合结束。"
+    },
+    "原初守护：雷鸣免疫": {
+      "tags": [
+        "magical",
+        "spell",
+        "buff"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer"
+        }
+      },
+      "statics": [
+        {
+          "kind": "immune",
+          "values": [
+            "雷鸣"
+          ]
+        }
+      ],
+      "text": "免疫雷鸣伤害，持续直至你的下个回合结束。"
+    }
+  }
+}

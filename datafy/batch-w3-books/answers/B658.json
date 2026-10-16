@@ -1,0 +1,109 @@
+{
+  "name": "沉鱼落雁",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。选择 60 尺内可见生物进行魅力豁免，失败则陷入魅惑与失能状态。若距你超过 5 尺，其回合内将径直向你移动；若在其回合结束时处于你 5 尺内，受到 4d8（每升一环 +1d8）心灵伤害。进入伤害地形可重掷豁免；后续回合可使用动作指定新目标（移动轨迹与升环伤害需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "沉鱼落雁",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 7
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "cha",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "沉鱼落雁",
+              "state": {
+                "lvl": "slot.level"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "retarget",
+      "name": "沉鱼落雁：指定新目标",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "cha",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "沉鱼落雁"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "沉鱼落雁": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:魅惑",
+        "XPHB:condition:失能"
+      ],
+      "triggers": [
+        {
+          "id": "turn-end-dmg",
+          "label": "沉鱼落雁：回合结束心灵伤害",
+          "on": "turnEnded",
+          "role": "actor",
+          "when": "within(self, source, 5)",
+          "do": [
+            {
+              "kind": "damage",
+              "dice": "4d8",
+              "type": "心灵",
+              "to": "self"
+            }
+          ]
+        }
+      ],
+      "text": "陷入魅惑与失能状态；向施法者径直移动；在其回合结束时若处于施法者 5 尺内受到心灵伤害；即将进入伤害性地形可重复豁免以尝试结束此效应。"
+    }
+  }
+}

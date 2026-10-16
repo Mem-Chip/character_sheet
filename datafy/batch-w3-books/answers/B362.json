@@ -1,0 +1,25 @@
+{
+  "name": "守卫缠绕",
+  "automation": "full",
+  "text": "当你或你可见的位于深海触手10尺内的一个生物承受伤害时，可使用反应使该生物受到的伤害减少1d8（10级起2d8）。触手位置由玩家确认。",
+  "triggers": [
+    {
+      "id": "guardian-coil",
+      "label": "守卫缠绕：减免伤害",
+      "on": "damageIncoming",
+      "role": "any",
+      "window": "before",
+      "optional": true,
+      "cost": [
+        { "economy": "reaction" }
+      ],
+      "when": "(target.id == self.id || canSee(self, target)) && ask('受伤生物是否位于深海触手10尺内？')",
+      "modify": [
+        {
+          "op": "reduceDamage",
+          "value": "cond(self.levelOf('魔契师') >= 10, 2d8, 1d8)"
+        }
+      ]
+    }
+  ]
+}

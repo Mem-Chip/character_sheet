@@ -1,0 +1,58 @@
+{
+  "name": "龙之威怖",
+  "automation": "partial",
+  "text": "消耗一次吐息武器使用次数发起咆哮：30尺内由你选择的每个生物进行感知豁免（DC 8 + 熟练加值 + 魅力调整值；若生物无法听到或看到你则自动通过）。豁免失败的目标陷入对你的恐慌，持续1分钟。目标受到任何伤害时可重复此豁免，成功则提前结束效应。自动通过判定与受伤害重复豁免由玩家手动处理。",
+  "resources": [
+    {
+      "id": "吐息武器",
+      "name": "吐息武器",
+      "formula": "pb",
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "龙之威怖",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "吐息武器"
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "emanation",
+          "radius": 30
+        }
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "8 + self.pb + self.mod.cha",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "龙之威怖",
+              "to": "target",
+              "duration": {
+                "minutes": 1
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "龙之威怖": {
+      "text": "陷入对来源的恐慌状态，持续1分钟。受到任何伤害时可重复感知豁免，成功则提前结束。",
+      "implies": [
+        "XPHB:condition:恐慌"
+      ]
+    }
+  }
+}

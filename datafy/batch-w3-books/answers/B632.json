@@ -1,0 +1,174 @@
+{
+  "name": "魂灵环绕",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。亡者魂灵环绕身边。施法时在光耀、暗蚀或寒冷中选择一种伤害类型。在法术终止前，所有命中 10 尺内生物的攻击造成额外 1d8 伤害（所选类型），且受伤害生物直到施法者下回合开始无法恢复生命值。此外，任何 10 尺内可见生物回合开始时，可使其速度降低 10 尺直至施法者下回合开始。升环施法：使用 5 环/7 环/9 环法术位时，伤害分别提升至 2d8/3d8/4d8（速度降低与升环伤害需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "魂灵环绕",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "选择魂灵环绕的伤害类型",
+          "options": [
+            {
+              "label": "光耀",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "魂灵环绕：光耀"
+                }
+              ]
+            },
+            {
+              "label": "暗蚀",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "魂灵环绕：暗蚀"
+                }
+              ]
+            },
+            {
+              "label": "寒冷",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "魂灵环绕：寒冷"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "魂灵环绕：光耀": {
+      "tags": [
+        "magical",
+        "spell",
+        "buff"
+      ],
+      "triggers": [
+        {
+          "id": "spirit-shroud-radiant",
+          "label": "魂灵环绕：光耀伤害",
+          "on": "attackHit",
+          "role": "actor",
+          "window": "before",
+          "when": "within(self, target, 10)",
+          "do": [
+            {
+              "kind": "addDamage",
+              "dice": "1d8",
+              "type": "光耀"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "魂灵环绕：无法恢复生命"
+            }
+          ]
+        }
+      ],
+      "text": "命中 10 尺内生物时造成额外 1d8 光耀伤害，受创目标无法回血直到施法者下回合开始。"
+    },
+    "魂灵环绕：暗蚀": {
+      "tags": [
+        "magical",
+        "spell",
+        "buff"
+      ],
+      "triggers": [
+        {
+          "id": "spirit-shroud-necrotic",
+          "label": "魂灵环绕：暗蚀伤害",
+          "on": "attackHit",
+          "role": "actor",
+          "window": "before",
+          "when": "within(self, target, 10)",
+          "do": [
+            {
+              "kind": "addDamage",
+              "dice": "1d8",
+              "type": "黯蚀"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "魂灵环绕：无法恢复生命"
+            }
+          ]
+        }
+      ],
+      "text": "命中 10 尺内生物时造成额外 1d8 黯蚀伤害，受创目标无法回血直到施法者下回合开始。"
+    },
+    "魂灵环绕：寒冷": {
+      "tags": [
+        "magical",
+        "spell",
+        "buff"
+      ],
+      "triggers": [
+        {
+          "id": "spirit-shroud-cold",
+          "label": "魂灵环绕：寒冷伤害",
+          "on": "attackHit",
+          "role": "actor",
+          "window": "before",
+          "when": "within(self, target, 10)",
+          "do": [
+            {
+              "kind": "addDamage",
+              "dice": "1d8",
+              "type": "寒冷"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "魂灵环绕：无法恢复生命"
+            }
+          ]
+        }
+      ],
+      "text": "命中 10 尺内生物时造成额外 1d8 寒冷伤害，受创目标无法回血直到施法者下回合开始。"
+    },
+    "魂灵环绕：无法恢复生命": {
+      "tags": [
+        "magical",
+        "spell",
+        "debuff"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        }
+      },
+      "text": "无法恢复生命值，持续到施法者的下个回合开始。"
+    }
+  }
+}

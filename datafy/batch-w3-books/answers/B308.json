@@ -1,0 +1,72 @@
+{
+  "name": "心灵低语",
+  "automation": "partial",
+  "text": "以一个动作，从可见的生物中选择一到至多等同于你熟练加值数量的生物，掷一枚灵能骰。你在投掷结果数值小时内获得双向心灵感应交流能力（距离不超一里，无需共享语言，生物可随时终止）。长休后首次使用免费，之后每次消耗一枚灵能骰。感应时长、通信与距离由人手动处理。",
+  "resources": [
+    {
+      "id": "psychic-whispers-free",
+      "name": "心灵低语（免费）",
+      "formula": "1",
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "心灵低语",
+      "activation": "action",
+      "targeting": {
+        "type": "creature",
+        "count": "pb",
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "心灵低语：选择使用消耗方式",
+          "options": [
+            {
+              "label": "长休首次免费使用",
+              "when": "self.resource('psychic-whispers-free') > 0",
+              "do": [
+                {
+                  "kind": "resource",
+                  "id": "psychic-whispers-free",
+                  "delta": -1
+                }
+              ]
+            },
+            {
+              "label": "消耗一枚灵能骰",
+              "when": "self.resource('灵能力量') > 0",
+              "do": [
+                {
+                  "kind": "resource",
+                  "id": "灵能力量",
+                  "delta": -1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "心灵低语：掷一枚灵能骰，点数为心灵感应持续的小时数（请手动记录）。"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "each",
+          "template": "心灵低语",
+          "duration": {
+            "manual": true
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "心灵低语": {
+      "text": "与魂刃游荡者建立心灵感应链接（距离一里内，无需共享语言），生物可随时断开链接。"
+    }
+  }
+}

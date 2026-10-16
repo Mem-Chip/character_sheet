@@ -1,0 +1,82 @@
+{
+  "name": "传播鼓舞",
+  "automation": "partial",
+  "text": "当 60 尺内一个生物使用你的诗人激励骰增益攻击、属性检定或豁免成功后，你可以用反应鼓励另一个 60 尺内能听见你的生物（除你外），使其获得一个诗人激励骰而不消耗你的诗人激励次数。可用次数等于魅力调整值（至少 1 次），长休恢复。",
+  "resources": [
+    {
+      "id": "infectious-inspiration",
+      "name": "传播鼓舞",
+      "formula": "max(1, cha)",
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "传播鼓舞",
+      "activation": "reaction",
+      "trigger": {
+        "on": "d20Rolled",
+        "role": "any",
+        "window": "after",
+        "when": "ask('60尺内有生物使用你的诗人激励骰增益检定成功了吗？')"
+      },
+      "cost": [
+        {
+          "resource": "infectious-inspiration"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "诗人激励",
+          "duration": {
+            "hours": 1
+          },
+          "state": {
+            "die": "classTable('诗人骰')"
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "诗人激励": {
+      "stackKey": "诗人激励",
+      "text": "1 小时内，D20 检定失败时可以掷这颗骰子加到结果上，可能把失败变成成功。用掉即消失。",
+      "triggers": [
+        {
+          "id": "use",
+          "label": "诗人激励",
+          "on": "d20Rolled",
+          "role": "actor",
+          "window": "before",
+          "optional": true,
+          "when": "roll.failing",
+          "modify": [
+            {
+              "op": "addToRoll",
+              "value": "effect.state.die"
+            }
+          ],
+          "do": [
+            {
+              "kind": "removeEffect",
+              "match": {
+                "name": "诗人激励"
+              },
+              "from": "self"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

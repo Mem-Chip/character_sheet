@@ -1,0 +1,82 @@
+{
+  "name": "妖思魅缕",
+  "automation": "partial",
+  "text": "对抗或终止魅惑 / 恐慌的豁免优势：引擎无法自动判断豁免是否由魅惑/恐慌引起，通过询问确认。反应部分：120尺内你或可见生物通过对抗魅惑/恐慌豁免时，以反应迫使120尺内另一可见生物感知豁免，失败陷入魅惑或恐慌1分钟（回合结束可重复豁免）。",
+  "rollMods": [
+    {
+      "on": {
+        "kind": "save"
+      },
+      "who": "bearer",
+      "when": "ask('这次豁免是对抗或终止魅惑 / 恐慌状态的吗？')",
+      "op": "adv",
+      "label": "妖思魅缕：对抗魅惑 / 恐慌"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "妖思魅缕",
+      "activation": "reaction",
+      "trigger": {
+        "on": "d20Rolled",
+        "role": "any",
+        "window": "after",
+        "when": "roll.kind == 'save' && !roll.failing && ask('刚通过的是对抗或终止魅惑 / 恐慌状态的豁免，且豁免者是你或你 120 尺内你可见的生物吗？')"
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 120,
+        "filter": "target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "choose",
+              "prompt": "妖思魅缕：目标陷入哪种状态？",
+              "options": [
+                {
+                  "label": "魅惑",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "template": "XPHB:condition:魅惑",
+                      "duration": {
+                        "minutes": 1,
+                        "saveEnds": {
+                          "ability": "wis",
+                          "at": "turnEnd"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "label": "恐慌",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "template": "XPHB:condition:恐慌",
+                      "duration": {
+                        "minutes": 1,
+                        "saveEnds": {
+                          "ability": "wis",
+                          "at": "turnEnd"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

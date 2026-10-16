@@ -1,0 +1,52 @@
+{
+  "name": "异界光翼",
+  "automation": "partial",
+  "text": "以一个附赠动作从背上展开展开一对光翼，具有30尺飞行速度，持续到失能、死亡或以附赠动作主动遣散。飞行速度及三维移动由人处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "异界光翼",
+      "activation": "bonus",
+      "requires": "!self.hasEffect('异界光翼')",
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "异界光翼",
+          "duration": {
+            "endsOn": [
+              {
+                "event": "effectApplied",
+                "when": "event.bearer == self.id && self.has('失能')"
+              },
+              {
+                "event": "died",
+                "when": "event.bearer == self.id"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "dismiss",
+      "name": "遣散光翼",
+      "activation": "bonus",
+      "requires": "self.hasEffect('异界光翼')",
+      "root": [
+        {
+          "kind": "removeEffect",
+          "match": {
+            "name": "异界光翼"
+          },
+          "from": "self"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "异界光翼": {
+      "text": "具有30尺飞行速度。持续到失能、死亡或主动遣散。"
+    }
+  }
+}

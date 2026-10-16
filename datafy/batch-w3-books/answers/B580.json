@@ -1,0 +1,60 @@
+{
+  "name": "雷霆步",
+  "automation": "partial",
+  "text": "传送自身至 90 尺内一处未被占据的可见空间，可携带 5 尺内一名自愿生物。消失处周围 10 尺内每个生物须进行体质豁免，失败受 3d10（升环每高一环+1d10）雷鸣伤害，成功半伤（传送位移与携带同伴需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "雷霆步",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "emanation",
+          "radius": 10
+        },
+        "filter": "target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "thunder",
+                  "dice": "(slot.level)d10",
+                  "type": "雷鸣"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "thunder",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

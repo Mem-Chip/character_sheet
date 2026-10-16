@@ -1,0 +1,146 @@
+{
+  "name": "光墙术",
+  "automation": "partial",
+  "text": "在 120 尺内升起至多长 60 尺、高 10 尺、厚 5 尺的光墙，持续至多 10 分钟（专注）。墙体阻挡视线并发出 120 尺明亮+120 尺微光照明。出现时区域内生物须进行体质豁免，失败受 4d8（升环每高一环+1d8）光耀伤害且陷入目盲（回合结束可重复豁免以解除），成功受半伤且不目盲。在墙内结束回合的生物受 4d8 光耀伤害。后续可用动作从墙上发射光辉射线进行远程法术攻击，命中造成 4d8 光耀伤害；每次发射墙体长度缩短 10 尺，降至 0 尺时法术结束（墙体缩短与站位需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "光墙术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "line",
+          "length": 60,
+          "width": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "wallDmg",
+                  "dice": "4d8",
+                  "type": "光耀"
+                },
+                {
+                  "kind": "applyEffect",
+                  "template": "光墙术：目盲",
+                  "to": "target"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "wallDmg",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ray",
+      "name": "光墙术：光辉射线",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "bonus": "self.spell.atk",
+          "attack": {
+            "ranged": true,
+            "spell": true,
+            "damageType": "光耀"
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "4d8",
+              "type": "光耀"
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "无论击中或失手，光墙长度减少 10 尺。降至 0 尺时法术结束。升环施法时伤害每高一环增加 1d8。"
+        }
+      ]
+    },
+    {
+      "id": "endTurnDamage",
+      "name": "光墙术：回合结束伤害",
+      "activation": "none",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 120
+      },
+      "root": [
+        {
+          "kind": "damage",
+          "dice": "4d8",
+          "type": "光耀"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "光墙术：目盲": {
+      "tags": [
+        "magical",
+        "spell",
+        "debuff"
+      ],
+      "duration": {
+        "minutes": 10,
+        "saveEnds": {
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "at": "turnEnd"
+        }
+      },
+      "implies": [
+        "XPHB:condition:目盲"
+      ],
+      "text": "受到光墙耀光影响陷入目盲。在其每个回合结束时可重新进行体质豁免，成功则结束目盲。"
+    }
+  }
+}

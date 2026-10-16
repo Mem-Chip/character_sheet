@@ -1,0 +1,62 @@
+{
+  "name": "焰阳爆",
+  "automation": "partial",
+  "text": "以一个动作在 150 尺内创造光球爆炸，20 尺半径球状区域内生物进行体质豁免（DC = 8 + 熟练 + 感知），失败受到 2d6 光耀伤害，成功不受伤害。可消耗至多 3 点功力提高威力（每点 +2d6）。不透光掩护免除豁免由人判断。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "焰阳爆",
+      "activation": "action",
+      "targeting": {
+        "type": "area",
+        "range": 150,
+        "area": {
+          "shape": "sphere",
+          "radius": 20
+        }
+      },
+      "tags": [
+        "magical"
+      ],
+      "root": [
+        {
+          "kind": "number",
+          "prompt": "焰阳爆：消耗多少点功力来提高威力？（至多消耗 3 点，每点增加 2d6 光耀伤害）",
+          "var": "ki",
+          "min": 0,
+          "max": "min(3, self.resource('功力'))",
+          "default": 0
+        },
+        {
+          "kind": "if",
+          "when": "vars.ki > 0",
+          "then": [
+            {
+              "kind": "resource",
+              "id": "功力",
+              "delta": "-vars.ki"
+            }
+          ]
+        },
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "8 + self.pb + self.mod.wis",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "dice": "(2 + 2 * vars.ki)d6",
+                  "type": "光耀"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

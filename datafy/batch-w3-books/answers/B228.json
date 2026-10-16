@@ -1,0 +1,55 @@
+{
+  "name": "鼓舞斩",
+  "automation": "partial",
+  "text": "以至圣斩造成伤害时，可立即用附赠动作消耗 1 次引导神力，为你自身或 30 尺内由你选择的生物分配合计 2d8 + 你的圣武士等级 点临时生命值。自动化默认加给自身，分配给他人需手动调整。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "引导神力：鼓舞斩",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "channel-divinity"
+        }
+      ],
+      "requires": "ask('刚才是否以至圣斩造成了伤害？')",
+      "root": [
+        {
+          "kind": "tempHp",
+          "amount": "2d8 + self.levelOf('圣武士')",
+          "to": "self"
+        },
+        {
+          "kind": "note",
+          "text": "鼓舞斩：获得 2d8 + 圣武士等级点临时生命值。你可以为 30 尺内由你选择的生物或自身随意分配这些临时生命值（分配给他人需手动处理）。"
+        }
+      ]
+    }
+  ],
+  "triggers": [
+    {
+      "id": "inspire",
+      "label": "鼓舞斩：至圣斩后触发",
+      "on": "spellCast",
+      "role": "actor",
+      "optional": true,
+      "when": "event.key == 'XPHB:spell:至圣斩'",
+      "cost": [
+        {
+          "resource": "channel-divinity"
+        }
+      ],
+      "do": [
+        {
+          "kind": "tempHp",
+          "amount": "2d8 + self.levelOf('圣武士')",
+          "to": "self"
+        },
+        {
+          "kind": "note",
+          "text": "鼓舞斩：获得 2d8 + 圣武士等级点临时生命值。你可以为 30 尺内由你选择的生物或自身随意分配这些临时生命值（分配给他人需手动处理）。"
+        }
+      ]
+    }
+  ]
+}

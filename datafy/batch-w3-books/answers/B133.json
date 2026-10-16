@@ -1,0 +1,40 @@
+{
+  "name": "坚守战线",
+  "automation": "partial",
+  "text": "生物在你触及范围内移动5尺或更多距离会引发你的借机攻击（移动触发借机由人工判定）。当你以借机攻击命中生物时，该生物的速度降为0直至本回合结束。",
+  "triggers": [
+    {
+      "id": "hold-line",
+      "label": "坚守战线：借机攻击命中定身",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.melee && ask('这次命中是借机攻击吗？')",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "坚守战线：定身",
+          "duration": {
+            "until": {
+              "at": "turnEnd",
+              "of": "bearer",
+              "nth": 0
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "坚守战线：定身": {
+      "text": "被骁骑士借机攻击命中，速度降为0直至本回合结束。",
+      "statics": [
+        {
+          "kind": "speedSet",
+          "value": 0
+        }
+      ]
+    }
+  }
+}

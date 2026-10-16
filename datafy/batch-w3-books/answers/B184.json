@@ -1,0 +1,45 @@
+{
+  "name": "持弓审固",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "use",
+      "name": "持弓审固",
+      "activation": "bonus",
+      "requires": "turn.isMine",
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "inline": {
+            "name": "持弓审固",
+            "duration": {
+              "until": {
+                "at": "turnEnd",
+                "of": "bearer",
+                "nth": 0
+              }
+            },
+            "triggers": [
+              {
+                "id": "kenseiShot",
+                "label": "持弓审固：额外 1d4 伤害",
+                "on": "attackHit",
+                "role": "actor",
+                "window": "before",
+                "when": "attack.ranged && attack.weapon && ask('这次远程攻击是否使用的是剑圣武器？')",
+                "do": [
+                  {
+                    "kind": "addDamage",
+                    "dice": "1d4",
+                    "type": "attack.damageType"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

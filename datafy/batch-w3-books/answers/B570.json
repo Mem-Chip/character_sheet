@@ -1,0 +1,95 @@
+{
+  "name": "幽影刃",
+  "automation": "partial",
+  "text": "附赠动作具象化幽影刃，持续至多 1 分钟（专注）。视为熟练的简易近战武器（灵巧、轻型、投掷 20/60 尺），命中造成 2d8 心灵伤害（升环：3~4 环 3d8，5~6 环 4d8，7 环以上 5d8）。攻击微光或黑暗中的目标具有优势。放下或投掷后回合结束消散，持续时间内可以附赠动作召回手中（光照优势与武器特性需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "幽影刃",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "幽影刃"
+        }
+      ]
+    },
+    {
+      "id": "attack",
+      "name": "幽影刃：攻击",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.hasEffect('幽影刃')",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 20
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "melee": true,
+            "weapon": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "2d8",
+              "type": "心灵"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recall",
+      "name": "幽影刃：召回",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.hasEffect('幽影刃')",
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "以附赠动作使消散的幽影刃重现于手中。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "幽影刃": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "手中具象化一把幽影之剑，命中造成 2d8 心灵伤害（升环：3~4 环 3d8，5~6 环 4d8，7 环+ 5d8）。攻击微光或黑暗中的目标具有优势。放下或投掷后回合结束消散，可用附赠动作召回手中。"
+    }
+  }
+}

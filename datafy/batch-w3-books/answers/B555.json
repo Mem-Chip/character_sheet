@@ -1,0 +1,91 @@
+{
+  "name": "吸收元素",
+  "automation": "partial",
+  "text": "受到强酸、寒冷、火焰、闪电或雷鸣伤害时以反应施放，该次伤害减半并获得该类型抗性直至你的下个回合开始。在你的下个回合中，你的近战攻击首次命中时额外造成 1d6（每升一环 +1d6）同类型伤害，随后法术终止（伤害类型、触发减半及升环额外骰需手动调整）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "吸收元素",
+      "activation": "reaction",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "trigger": {
+        "on": "damageIncoming",
+        "role": "target",
+        "window": "before",
+        "when": "damage.type == '强酸' || damage.type == '寒冷' || damage.type == '火焰' || damage.type == '闪电' || damage.type == '雷鸣'"
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "吸收元素"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "吸收元素": {
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "statics": [
+        {
+          "kind": "resist",
+          "values": [
+            "强酸",
+            "寒冷",
+            "火焰",
+            "闪电",
+            "雷鸣"
+          ]
+        }
+      ],
+      "triggers": [
+        {
+          "id": "absorb-hit",
+          "label": "吸收元素：释放能量",
+          "on": "attackHit",
+          "role": "actor",
+          "window": "before",
+          "when": "attack.melee && turn.isMine",
+          "do": [
+            {
+              "kind": "addDamage",
+              "dice": "1d6",
+              "type": "火焰"
+            },
+            {
+              "kind": "removeEffect",
+              "match": {
+                "name": "吸收元素"
+              },
+              "from": "self"
+            }
+          ]
+        }
+      ],
+      "text": "获得对应元素伤害类型的抗性；下个回合近战攻击首次命中额外造成 1d6 点同类型伤害（每升一环 +1d6）并结束此效应。"
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "name": "寒地施法者",
+  "automation": "full",
+  "text": "【戏法】习得戏法冷冻射线（静态）。【霜噬】每回合一次，当你以攻击检定命中一名生物并造成寒冷伤害时，可削弱其防御：在你的下个回合结束前，该生物进行的下次豁免检定减少1d4。",
+  "triggers": [
+    {
+      "id": "frostbite",
+      "label": "霜噬",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "attack.damageType == '寒冷' || ask('本次攻击造成了寒冷伤害？')",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "霜噬"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "霜噬": {
+      "text": "在施加者的下个回合结束前，你进行的下次豁免检定减少1d4。",
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "source",
+          "nth": 1
+        },
+        "endsOn": [
+          {
+            "event": "d20Rolled",
+            "when": "event.kind == 'save' && event.roller == self.id"
+          }
+        ]
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save"
+          },
+          "who": "bearer",
+          "op": "addDice",
+          "value": "-1d4",
+          "label": "霜噬：豁免减少1d4"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "name": "凝冻之魂",
+  "automation": "full",
+  "text": "以一个动作选择等同于你感知调整值（至少 1 个）数量的可见生物。所选生物恢复 1d10+游侠等级 点生命值，且在接下来的 1 小时内，为避免或结束恐慌状态所进行的豁免具有优势。长休恢复 1 次。",
+  "resources": [
+    {
+      "id": "frozen-spirit",
+      "name": "凝冻之魂",
+      "formula": 1,
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "凝冻之魂",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "frozen-spirit"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": "max(1, self.mod.wis)"
+      },
+      "root": [
+        {
+          "kind": "heal",
+          "amount": "1d10 + self.levelOf('游侠')",
+          "to": "target"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "凝冻之魂"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "凝冻之魂": {
+      "text": "1 小时内，为避免或结束恐慌状态所进行的豁免具有优势。",
+      "duration": {
+        "hours": 1
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save"
+          },
+          "who": "bearer",
+          "when": "ask('该豁免是为了避免或结束恐慌状态吗？')",
+          "op": "adv",
+          "label": "凝冻之魂：避免或结束恐慌豁免优势"
+        }
+      ]
+    }
+  }
+}

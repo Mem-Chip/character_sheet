@@ -1,0 +1,34 @@
+{
+  "name": "真菌感染",
+  "automation": "partial",
+  "text": "10尺内有小型或中型野兽或类人生物死亡时，可以用反应消耗一次使用次数将其活化为具有1点生命值的丧尸，持续1小时。丧尸的回合紧接在你之后，只能执行攻击动作并进行一次近战攻击。丧尸属性与行动由人工处理。使用次数等同于感知调整值（至少1次），长休恢复。",
+  "resources": [
+    {
+      "id": "fungal-infestation",
+      "name": "真菌感染",
+      "formula": "max(1, wis)",
+      "recovery": "long"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "infest",
+      "label": "真菌感染：活化尸体",
+      "on": "reducedTo0",
+      "role": "any",
+      "window": "before",
+      "optional": true,
+      "cost": [
+        { "economy": "reaction" },
+        { "resource": "fungal-infestation" }
+      ],
+      "when": "within(self, target, 10) && ask('死者是小型或中型的野兽或类人生物吗？')",
+      "do": [
+        {
+          "kind": "note",
+          "text": "活化尸体为丧尸（生命值为1），持续1小时。丧尸紧接在你的回合后行动，只能进行一次近战攻击，数据与行动由人工处理。"
+        }
+      ]
+    }
+  ]
+}

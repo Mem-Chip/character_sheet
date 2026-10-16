@@ -1,0 +1,68 @@
+{
+  "name": "飞蝇斗篷",
+  "automation": "partial",
+  "text": "以一个附赠动作唤起蚊蝇灵光，散发以你为中心 5 尺距离，持续至你陷入失能或以附赠动作主动解消。灵光使你在魅力（威吓）检定具有优势，其他魅力检定具有劣势。任何在灵光内开始其回合的生物，受到等同于你魅力调整值点的毒素伤害（最低 0 点，由玩家手动结算）。短休或长休恢复 1 次。",
+  "resources": [
+    {
+      "id": "cloakOfFlies",
+      "name": "飞蝇斗篷",
+      "formula": 1,
+      "recovery": "short"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "飞蝇斗篷",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "cloakOfFlies"
+        }
+      ],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "飞蝇斗篷"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "飞蝇斗篷": {
+      "text": "蚊蝇灵光（5 尺）：魅力（威吓）检定具有优势，其他魅力检定具有劣势；在灵光内开始回合的生物受到你魅力调整值点毒素伤害（最低 0 点）。持续至陷入失能或以附赠动作主动解消。",
+      "duration": {
+        "manual": true,
+        "endsOn": [
+          {
+            "event": "effectApplied",
+            "when": "self.has('失能')"
+          }
+        ]
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "check",
+            "ability": "cha",
+            "skill": "威吓"
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "飞蝇斗篷：威吓优势"
+        },
+        {
+          "on": {
+            "kind": "check",
+            "ability": "cha"
+          },
+          "who": "bearer",
+          "when": "roll.skill != '威吓'",
+          "op": "disadv",
+          "label": "飞蝇斗篷：其他魅力检定劣势"
+        }
+      ]
+    }
+  }
+}

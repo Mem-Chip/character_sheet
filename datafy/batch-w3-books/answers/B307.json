@@ -1,0 +1,44 @@
+{
+  "name": "灵振诀窍",
+  "automation": "partial",
+  "text": "用熟练的技能或工具做属性检定失败时，可以掷一颗灵能骰加到结果上；只有加完变为成功才消耗这颗灵能骰。引擎无法判断检定是否用到熟练项，需自行确认。灵能骰大小：5级起为d8、11级起为d10、17级起为d12。",
+  "triggers": [
+    {
+      "id": "knack",
+      "label": "灵振诀窍：+灵能骰（仅限熟练的技能/工具）",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "roll.kind == 'check' && roll.failing",
+      "cost": [
+        {
+          "resource": "灵能力量"
+        }
+      ],
+      "modify": [
+        {
+          "op": "addToRoll",
+          "value": "cond(self.levelOf('游荡者') >= 17, 1d12, cond(self.levelOf('游荡者') >= 11, 1d10, cond(self.levelOf('游荡者') >= 5, 1d8, 1d6)))"
+        }
+      ],
+      "do": [
+        {
+          "kind": "if",
+          "when": "roll.failing",
+          "then": [
+            {
+              "kind": "resource",
+              "id": "灵能力量",
+              "delta": 1
+            },
+            {
+              "kind": "note",
+              "text": "灵振诀窍：检定仍然失败，不消耗灵能骰"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,163 @@
+{
+  "name": "自然之怒",
+  "automation": "partial",
+  "text": "活化 120 尺内 60 尺立方区域内的树木、岩石和草丛，持续至多 1 分钟（专注）。【草丛与灌木】地面对敌人为困难地形。【树木】施法者回合开始时，树木周围 10 尺内每个敌人须通过敏捷豁免，否则受 4d6 挥砍伤害。【根与藤】施法者回合结束时，区域内 1 名地表生物须通过力量豁免，否则陷入束缚（可用动作进行力量检定脱离）。【投石】附赠动作投掷岩石攻击区域内生物，命中造成 3d8 钝击伤害且目标须通过力量豁免否则被击倒倒地（树木与岩石位置需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "自然之怒",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "cube",
+          "size": 60
+        }
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "在 120 尺内活化 60 尺立方区域内的自然界精魂（草木困难地形），持续至多 1 分钟（专注）。"
+        }
+      ]
+    },
+    {
+      "id": "treeStrike",
+      "name": "自然之怒：树木挥击",
+      "activation": "none",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 120
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "4d6",
+              "type": "挥砍"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rootGrasp",
+      "name": "自然之怒：根藤缠绕",
+      "activation": "none",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 120
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "str",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "自然之怒：束缚",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "throwRock",
+      "name": "自然之怒：投石",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 120
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "bonus": "self.spell.atk",
+          "attack": {
+            "ranged": true,
+            "spell": true,
+            "damageType": "钝击"
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "3d8",
+              "type": "钝击"
+            },
+            {
+              "kind": "save",
+              "ability": "str",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "template": "自然之怒：倒地",
+                  "to": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "自然之怒：束缚": {
+      "tags": [
+        "magical",
+        "spell",
+        "debuff"
+      ],
+      "implies": [
+        "XPHB:condition:束缚"
+      ],
+      "text": "被根茎和藤蔓束缚。可用动作进行力量（运动）检定对抗法术 DC，成功则解除束缚。"
+    },
+    "自然之怒：倒地": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:倒地"
+      ],
+      "text": "被投石击倒倒地。"
+    }
+  }
+}

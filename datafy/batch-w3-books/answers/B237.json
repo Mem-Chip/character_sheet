@@ -1,0 +1,55 @@
+{
+  "name": "守望之志",
+  "automation": "full",
+  "text": "以动作消耗 1 次引导神力，你与 30 尺内至多等同于魅力调整值（至少 1 个）名可见生物在智力、感知与魅力豁免上获得优势，持续 1 分钟。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "守望之志",
+      "activation": "action",
+      "tags": ["magical"],
+      "cost": [
+        {
+          "resource": "channel-divinity"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": "max(1, self.mod.cha)",
+        "range": 30,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "守望之志"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "守望之志"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "守望之志": {
+      "text": "智力、感知、魅力豁免具有优势，持续 1 分钟。",
+      "duration": {
+        "minutes": 1
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save",
+            "ability": ["int", "wis", "cha"]
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "守望之志"
+        }
+      ]
+    }
+  }
+}

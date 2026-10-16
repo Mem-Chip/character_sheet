@@ -1,0 +1,68 @@
+{
+  "name": "步履维艰",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。选择 120 尺内至多三名可见生物进行智力豁免。豁免失败则目标速度减半且无法执行疾走动作。一名被妨碍的目标在其每个回合结束时重复此豁免，成功则终止法术（疾走限制需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "步履维艰",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 3,
+        "range": 120
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "int",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "步履维艰"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "步履维艰": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 1,
+        "saveEnds": {
+          "ability": "int",
+          "dc": "self.spell.dc",
+          "at": "turnEnd"
+        }
+      },
+      "statics": [
+        {
+          "kind": "speed",
+          "bonus": "-floor(self.speed / 2)"
+        }
+      ],
+      "text": "速度减半，且无法执行疾走动作。在其每个回合结束时重复智力豁免，成功则终止此法术。"
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "name": "斗战之魂",
+  "text": "在你的回合中，你可以用附赠动作为你本回合发动的任何武器攻击提供优势。此外，使用这一附赠动作时，你还能获得5点临时生命值（10级10点，15级15点）。完成长休后重获全部3次使用次数。",
+  "resources": [
+    {
+      "id": "fightingSpirit",
+      "name": "斗战之魂",
+      "formula": "3",
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "斗战之魂",
+      "activation": "bonus",
+      "requires": "turn.isMine",
+      "cost": [
+        {
+          "resource": "fightingSpirit"
+        }
+      ],
+      "root": [
+        {
+          "kind": "tempHp",
+          "amount": "cond(self.level >= 15, 15, cond(self.level >= 10, 10, 5))",
+          "to": "self"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "inline": {
+            "name": "斗战之魂",
+            "duration": {
+              "until": {
+                "at": "turnEnd",
+                "of": "bearer",
+                "nth": 0
+              }
+            },
+            "rollMods": [
+              {
+                "on": {
+                  "kind": "attack",
+                  "attack": {
+                    "weapon": true
+                  }
+                },
+                "who": "bearer",
+                "op": "adv",
+                "label": "斗战之魂：武器攻击具有优势"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

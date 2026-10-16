@@ -1,0 +1,93 @@
+{
+  "name": "溃烂爆发",
+  "automation": "full",
+  "text": "一道 60 尺长、10 尺宽的线状瘴气自你位置爆散。区域内每个生物进行体质豁免，失败受 (slot.level)d10 暗蚀伤害并在 1 分钟内陷入中毒。陷入中毒的生物在其每个回合开始时受 2d10 毒素伤害，且在其每个回合结束时可重复体质豁免，成功则结束此法术影响。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "溃烂爆发",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "line",
+          "length": 60,
+          "width": 10
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "dice": "(slot.level)d10",
+                  "type": "暗蚀"
+                },
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "溃烂爆发"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "溃烂爆发": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:中毒"
+      ],
+      "duration": {
+        "minutes": 1,
+        "saveEnds": {
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "at": "turnEnd"
+        }
+      },
+      "triggers": [
+        {
+          "id": "festering-tick",
+          "label": "溃烂爆发：回合开始毒素伤害",
+          "on": "turnStarted",
+          "role": "actor",
+          "do": [
+            {
+              "kind": "damage",
+              "dice": "2d10",
+              "type": "毒素",
+              "to": "self"
+            }
+          ]
+        }
+      ],
+      "text": "陷入中毒状态。在其每个回合开始时受到 2d10 毒素伤害。可在其每个回合结束时重复体质豁免，成功则结束此效应。"
+    }
+  }
+}

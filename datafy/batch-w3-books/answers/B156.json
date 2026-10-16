@@ -1,0 +1,39 @@
+{
+  "name": "符文之盾",
+  "automation": "full",
+  "text": "当 60 尺内且对你可见的另一名生物被一次攻击检定命中时，你可以使用反应强迫攻击者重新投掷 d20 并采用新的攻击检定结果。每次长休可用熟练加值次。",
+  "resources": [
+    {
+      "id": "runicShield",
+      "name": "符文之盾",
+      "formula": "pb",
+      "recovery": "long"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "reroll",
+      "label": "符文之盾：重骰攻击",
+      "on": "d20Rolled",
+      "role": "any",
+      "window": "before",
+      "optional": true,
+      "when": "roll.kind == 'attack' && !roll.failing && target.id != self.id && dist(self, target) <= 60 && canSee(self, target)",
+      "cost": [
+        {
+          "economy": "reaction"
+        },
+        {
+          "resource": "runicShield"
+        }
+      ],
+      "modify": [
+        {
+          "op": "reroll",
+          "die": "d20",
+          "keep": "new"
+        }
+      ]
+    }
+  ]
+}

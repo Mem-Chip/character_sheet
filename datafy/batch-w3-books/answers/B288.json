@@ -1,0 +1,68 @@
+{
+  "name": "战术洞悉",
+  "automation": "partial",
+  "text": "以附赠动作与周围一个可见且未失能的生物进行对抗（你的洞悉对抗目标的欺瞒）。若对抗成功，持续 1 分钟内，即使你对其攻击没有优势也能造成偷袭伤害（但攻击有劣势时依旧无法偷袭）。若对另一目标成功使用此特性，前一次增益提前结束。17级时（伺隙锐瞳），偷袭伤害额外增加 3d6。对抗检定由人手动判定。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "战术洞悉",
+      "activation": "bonus",
+      "targeting": {
+        "type": "creature",
+        "count": 1
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "战术洞悉：感知（洞悉）对抗目标魅力（欺瞒）是否成功？",
+          "options": [
+            {
+              "label": "对抗成功：施加战术洞悉",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "战术洞悉",
+                  "duration": {
+                    "minutes": 1
+                  },
+                  "state": {
+                    "mark": "target"
+                  }
+                }
+              ]
+            },
+            {
+              "label": "对抗失败：未能洞悉目标",
+              "do": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "战术洞悉": {
+      "text": "对洞悉目标发动攻击时，若没有劣势，无需优势亦可造成偷袭伤害。17级起额外造成 3d6 偷袭伤害。",
+      "triggers": [
+        {
+          "id": "insightful-sneak",
+          "label": "战术洞悉：偷袭",
+          "on": "attackHit",
+          "role": "actor",
+          "window": "before",
+          "optional": true,
+          "limit": "oncePerTurn",
+          "when": "(attack.finesse || attack.ranged) && target.id == effect.state.mark && !roll.disadv",
+          "do": [
+            {
+              "kind": "addDamage",
+              "dice": "classTable('偷袭') + cond(self.levelOf('游荡者') >= 17, 3d6, 0d6)",
+              "type": "attack.damageType"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

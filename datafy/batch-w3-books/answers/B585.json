@@ -1,0 +1,54 @@
+{
+  "name": "元素灾厄",
+  "automation": "partial",
+  "text": "选择90尺内一个可见生物并指定一种伤害类型（强酸、寒冷、火焰、闪电或雷鸣）。目标必须通过体质豁免，否则在持续时间内受其影响：失去对该伤害类型的抗性，且每回合首次受到该类型伤害时额外受2d6点伤害（升环：每高一环可多选一个30尺内的目标）。抗性剥夺与每回合首次额外伤害需手动处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "元素灾厄",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "range": 90
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "元素灾厄",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "元素灾厄": {
+      "tags": [
+        "magical",
+        "spell",
+        "debuff"
+      ],
+      "text": "失去选定类型（强酸/寒冷/火焰/闪电/雷鸣）的抗性，且每回合首次受到该类型伤害时额外受2d6伤害。"
+    }
+  }
+}

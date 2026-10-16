@@ -1,0 +1,65 @@
+{
+  "name": "闪避灵光",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。以自身为中心散发 30 尺光环，你和光环内的盟友进行敏捷豁免时具有优势。受允许敏捷豁免减半的效应影响时，成功不受伤害，失败只受半伤（失能生物无法获益；半伤/无伤效果需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "闪避灵光",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 7
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "闪避灵光"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "闪避灵光": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "aura": {
+        "id": "aura-of-evasion",
+        "radius": 30,
+        "affects": "allies",
+        "includeSelf": true,
+        "grant": {
+          "rollMods": [
+            {
+              "on": {
+                "kind": "save",
+                "ability": "dex"
+              },
+              "who": "bearer",
+              "when": "!self.has('失能')",
+              "op": "adv",
+              "label": "闪避灵光：敏捷豁免优势"
+            }
+          ]
+        }
+      },
+      "text": "30尺光环内你和盟友敏捷豁免具有优势；受允许敏捷豁免减半的效应影响时，成功不受伤害，失败只承受一半伤害；失能状态下无法获益（反射闪避需手动处理）。"
+    }
+  }
+}

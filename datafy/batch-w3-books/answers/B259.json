@@ -1,0 +1,66 @@
+{
+  "name": "位面战士",
+  "automation": "partial",
+  "text": "附赠动作指定 30 尺内可见的一名生物，本回合对其下一次武器攻击命中造成额外 1d8（11级 2d8）力场伤害。引擎无法自动将武器的基础伤害类型转为力场伤害，需人工处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "位面战士",
+      "activation": "bonus",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "位面战士",
+          "state": {
+            "mark": "target"
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "位面战士": {
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 0
+        }
+      },
+      "triggers": [
+        {
+          "id": "hit",
+          "label": "位面战士：命中造成额外力场伤害",
+          "on": "attackHit",
+          "role": "actor",
+          "window": "before",
+          "when": "attack.weapon && target.id == effect.state.mark",
+          "do": [
+            {
+              "kind": "addDamage",
+              "dice": "cond(self.levelOf('游侠') >= 11, 2d8, 1d8)",
+              "type": "力场"
+            },
+            {
+              "kind": "removeEffect",
+              "match": {
+                "name": "位面战士"
+              },
+              "from": "self"
+            },
+            {
+              "kind": "note",
+              "text": "位面战士：本次武器攻击的原有伤害类型也全部转化为力场伤害（引擎无法自动改写武器基础伤害类型，需人工处理）"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

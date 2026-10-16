@@ -1,0 +1,50 @@
+{
+  "name": "紫龙指挥官",
+  "automation": "full",
+  "text": "【鼓励盟友】以附赠动作增强30尺内一名可见盟友，使其获得 2d6 + 提升属性调整值 的临时生命值。次数等同于熟练加值，长休恢复。【背水一战】处于浴血状态（当前生命值不超过上限半数）期间，你的攻击检定具有优势。",
+  "resources": [
+    {
+      "id": "encourage-ally",
+      "name": "鼓励盟友",
+      "formula": "pb",
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "紫龙指挥官：鼓励盟友",
+      "activation": "bonus",
+      "requires": "turn.isMine",
+      "cost": [
+        {
+          "resource": "encourage-ally"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30,
+        "filter": "target.isAllyOf(self) && target.id != self.id && canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "tempHp",
+          "amount": "2d6 + max(self.mod.str, self.mod.dex, self.mod.cha)",
+          "to": "target"
+        }
+      ]
+    }
+  ],
+  "rollMods": [
+    {
+      "on": {
+        "kind": "attack"
+      },
+      "who": "bearer",
+      "when": "self.hp <= floor(self.hpMax / 2)",
+      "op": "adv",
+      "label": "背水一战：浴血攻击检定优势"
+    }
+  ]
+}

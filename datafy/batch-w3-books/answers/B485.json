@@ -1,0 +1,59 @@
+{
+  "name": "花开二度",
+  "automation": "full",
+  "text": "当一个你可见的生物以攻击检定命中你时，你可以使用你的反应迫使那个生物重骰之。此能力一旦被使用，直到你下次在战斗开始时骰先攻、你完成一次短休、或你完成一次长休之前都无法再次使用它。",
+  "resources": [
+    {
+      "id": "second-chance",
+      "name": "花开二度",
+      "formula": 1,
+      "recovery": "short"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "reroll-attack",
+      "label": "花开二度：迫使重骰攻击",
+      "on": "d20Rolled",
+      "role": "any",
+      "window": "before",
+      "optional": true,
+      "when": "roll.kind == 'attack' && !roll.failing && target.id == self.id && canSee(self, attacker)",
+      "cost": [
+        {
+          "economy": "reaction"
+        },
+        {
+          "resource": "second-chance"
+        }
+      ],
+      "modify": [
+        {
+          "op": "reroll",
+          "die": "d20",
+          "keep": "new"
+        }
+      ]
+    },
+    {
+      "id": "regain-on-initiative",
+      "label": "花开二度：投掷先攻重获使用次数",
+      "on": "initiativeRolled",
+      "role": "actor",
+      "window": "after",
+      "do": [
+        {
+          "kind": "if",
+          "when": "self.resource('second-chance') < 1",
+          "then": [
+            {
+              "kind": "resource",
+              "id": "second-chance",
+              "delta": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

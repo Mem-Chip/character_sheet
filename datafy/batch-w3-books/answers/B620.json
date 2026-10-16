@@ -1,0 +1,58 @@
+{
+  "name": "亚比达奇凋死术",
+  "automation": "partial",
+  "text": "1 动作。抽取 150 尺内由你指定的 30 尺立方空间内每个生物的水汽。每个生物必须进行一次体质豁免，构装生物和不死生物不受影响，植物和水元素进行此豁免检定时具有劣势。豁免失败受到 12d8 黯蚀伤害，成功只承受一半。区域内的非魔法非生物植物立即死亡。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "亚比达奇凋死术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 8
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 150,
+        "area": {
+          "shape": "cube",
+          "size": 30
+        },
+        "filter": "target.type != '构装生物' && target.type != '不死生物'"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "12d8",
+              "type": "黯蚀",
+              "id": "wilting-damage"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "wilting-damage",
+              "scale": 0.5
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "植物和水元素进行该豁免时具有劣势；区域内的非魔法非生物植物立即死亡。"
+        }
+      ]
+    }
+  ]
+}

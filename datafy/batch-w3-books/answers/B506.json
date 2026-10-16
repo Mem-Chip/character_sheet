@@ -1,0 +1,75 @@
+{
+  "name": "警戒",
+  "automation": "partial",
+  "text": "当可见生物移动进入你持握近战武器的触及范围时，可用反应消耗一枚卓越骰对其发起一次武器攻击；若命中，将消耗的卓越骰加入伤害掷骰中。敌方进入触及由人判断；使用本动作扣除反应与卓越骰，并为下一次攻击附加强化伤害。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "警戒",
+      "activation": "none",
+      "cost": [
+        { "economy": "reaction" },
+        { "resource": "卓越骰" }
+      ],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "警戒"
+        },
+        {
+          "kind": "note",
+          "text": "警戒：现在对进入触及的生物进行一次近战武器攻击；命中时卓越骰自动计入伤害"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "警戒": {
+      "text": "你下一次近战武器攻击命中时，卓越骰计入伤害；攻击结算后消失。",
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "triggers": [
+        {
+          "id": "brace-hit",
+          "label": "警戒：卓越骰计入伤害",
+          "on": "attackHit",
+          "role": "actor",
+          "window": "before",
+          "when": "attack.melee && attack.weapon",
+          "do": [
+            {
+              "kind": "addDamage",
+              "dice": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))",
+              "type": "attack.damageType"
+            },
+            {
+              "kind": "removeEffect",
+              "from": "self",
+              "match": { "name": "警戒" }
+            }
+          ]
+        },
+        {
+          "id": "brace-miss",
+          "label": "警戒：攻击失手",
+          "on": "attackMissed",
+          "role": "actor",
+          "when": "attack.melee && attack.weapon",
+          "do": [
+            {
+              "kind": "removeEffect",
+              "from": "self",
+              "match": { "name": "警戒" }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

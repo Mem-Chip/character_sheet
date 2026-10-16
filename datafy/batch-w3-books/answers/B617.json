@@ -1,0 +1,81 @@
+{
+  "name": "众星冠冕",
+  "automation": "partial",
+  "text": "持续 1 小时。7 个星型光点环绕头顶。可以使用附赠动作消耗 1 个光点袭向 120 尺内一生物或物体，进行一次远程法术攻击，命中造成 4d12 光耀伤害。无论命中与否该光点均被消耗；消耗最后一枚光点时法术提前结束。留存 ≥4 枚光点时提供 30 尺明亮及额外 30 尺微光照明；留存 1~3 枚时提供 30 尺微光照明。升环施法：使用 8 环或更高法术位时，每高一环额外创造 2 枚光点。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "众星冠冕",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 7
+          }
+        }
+      ],
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "众星冠冕"
+        }
+      ]
+    },
+    {
+      "id": "mote-attack",
+      "name": "众星冠冕：射出光点",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.hasEffect('众星冠冕')",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 120
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "ranged": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "4d12",
+              "type": "光耀"
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "无论是否命中均消耗 1 枚光点（7 环初始 7 枚，每高一环 +2 枚；耗尽时光点消散法术结束）。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "众星冠冕": {
+      "tags": [
+        "magical",
+        "spell",
+        "buff"
+      ],
+      "duration": {
+        "hours": 1
+      },
+      "text": "头顶环绕星型光点（7 环 7 枚，升环每高一环 +2 枚）。可用附赠动作消耗 1 枚发射攻击（120 尺远程法术攻击，4d12 光耀伤害）。光点耗尽时法术结束。"
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "name": "奥法预言家",
+  "automation": "full",
+  "text": "习得神导术属于人物卡静态层授予。助人预兆：你或 30 尺内可见生物豁免失败时，以反应投 1d4 加入豁免总值。次数等于熟练加值，长休恢复。",
+  "resources": [
+    {
+      "id": "helpful-omen",
+      "name": "助人预兆",
+      "formula": "pb",
+      "recovery": "long"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "helpful-omen",
+      "label": "奥法预言家：助人预兆",
+      "on": "d20Rolled",
+      "role": "any",
+      "window": "before",
+      "optional": true,
+      "when": "roll.kind == 'save' && roll.failing && (combatant(roll.roller).id == self.id || (within(self, combatant(roll.roller), 30) && canSee(self, combatant(roll.roller))))",
+      "cost": [
+        {
+          "economy": "reaction"
+        },
+        {
+          "resource": "helpful-omen"
+        }
+      ],
+      "modify": [
+        {
+          "op": "addToRoll",
+          "value": "1d4"
+        }
+      ]
+    }
+  ]
+}

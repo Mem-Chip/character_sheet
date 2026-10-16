@@ -1,0 +1,52 @@
+{
+  "name": "庇护力场",
+  "automation": "full",
+  "text": "你或你 30 尺内你可见的另一个生物受到伤害时，用反应消耗一枚灵能骰，降低等同于灵能骰点数加智力调整值的伤害（最少 1 点）。灵能骰大小：d6，5 级起 d8，11 级起 d10，17 级起 d12。",
+  "triggers": [
+    {
+      "id": "self",
+      "label": "庇护力场：保护自己",
+      "on": "damageIncoming",
+      "role": "target",
+      "window": "before",
+      "optional": true,
+      "cost": [
+        {
+          "economy": "reaction"
+        },
+        {
+          "resource": "灵能力量"
+        }
+      ],
+      "modify": [
+        {
+          "op": "reduceDamage",
+          "value": "max(1, cond(self.levelOf('战士') >= 17, 1d12, cond(self.levelOf('战士') >= 11, 1d10, cond(self.levelOf('战士') >= 5, 1d8, 1d6))) + self.mod.int)"
+        }
+      ]
+    },
+    {
+      "id": "ally",
+      "label": "庇护力场：保护 30 尺内的盟友",
+      "on": "damageIncoming",
+      "role": "ally",
+      "window": "before",
+      "optional": true,
+      "when": "canSee(self, target) && within(self, target, 30)",
+      "cost": [
+        {
+          "economy": "reaction"
+        },
+        {
+          "resource": "灵能力量"
+        }
+      ],
+      "modify": [
+        {
+          "op": "reduceDamage",
+          "value": "max(1, cond(self.levelOf('战士') >= 17, 1d12, cond(self.levelOf('战士') >= 11, 1d10, cond(self.levelOf('战士') >= 5, 1d8, 1d6))) + self.mod.int)"
+        }
+      ]
+    }
+  ]
+}

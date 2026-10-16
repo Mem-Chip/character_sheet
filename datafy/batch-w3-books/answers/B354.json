@@ -1,0 +1,68 @@
+{
+  "name": "灼光复仇",
+  "automation": "partial",
+  "text": "回合开始时需要进行死亡豁免检定时，可选择不进行并跃起：恢复等于最大生命值一半的生命值，可立刻起立结束倒地。周围30尺内由你选择的生物受到2d8+魅力调整值的光耀伤害，并陷入目盲直到你当前回合结束。长休后恢复。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "灼光复仇",
+      "activation": "free",
+      "cost": [
+        {
+          "resource": "searing-vengeance"
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "area": {
+          "shape": "emanation",
+          "radius": 30
+        }
+      },
+      "root": [
+        {
+          "kind": "heal",
+          "to": "self",
+          "amount": "floor(self.hpMax / 2)"
+        },
+        {
+          "kind": "if",
+          "when": "self.has('倒地') && ask('同时立刻起立（结束倒地状态）吗？')",
+          "then": [
+            {
+              "kind": "removeEffect",
+              "from": "self",
+              "match": {
+                "name": "倒地"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "damage",
+              "id": "sv",
+              "dice": "2d8 + self.mod.cha",
+              "type": "光耀"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "XPHB:condition:目盲",
+              "duration": {
+                "until": {
+                  "at": "turnEnd",
+                  "of": "source",
+                  "nth": 0
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

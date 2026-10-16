@@ -1,0 +1,67 @@
+{
+  "name": "塔莎酸蚀酿",
+  "automation": "partial",
+  "text": "喷出一股 30 尺长、5 尺宽的线状酸液，区域内生物敏捷豁免失败者被强酸覆盖（专注至多 1 分钟）。受影响生物在其每个回合开始时受到 2d4 强酸伤害。用动作刮下或洗下强酸可终止此效应。升环施法每比 1 环高 1 环，伤害增加 2d4（回合初伤害与清除动作需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "塔莎酸蚀酿",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "line",
+          "length": 30,
+          "width": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "template": "塔莎酸蚀酿",
+                  "to": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "塔莎酸蚀酿": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 1
+      },
+      "text": "被强酸覆盖：在每个自己回合开始时受到 2d4（每升 1 环 +2d4）强酸伤害。自身或他人可用一个动作刮下或洗下强酸。"
+    }
+  }
+}

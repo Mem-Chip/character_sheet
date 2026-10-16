@@ -1,0 +1,37 @@
+{
+  "name": "守护战技",
+  "automation": "partial",
+  "text": "持用近战武器或盾牌时，当你或5尺内可见生物被攻击命中时，可以消耗一次使用次数以反应投掷1d8加入其AC。若因此使AC超过攻击检定结果则攻击未命中；若依然命中，则该生物对本次攻击伤害具有抗性（由引擎自动将本次伤害减半）。使用次数等同于体质调整值（至少1次），长休恢复。",
+  "resources": [
+    {
+      "id": "warding-maneuver",
+      "name": "守护战技",
+      "formula": "max(1, con)",
+      "recovery": "long"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "ward",
+      "label": "守护战技：掷1d8加AC或减半伤害",
+      "on": "attackHit",
+      "role": "any",
+      "window": "before",
+      "optional": true,
+      "cost": [
+        { "economy": "reaction" },
+        { "resource": "warding-maneuver" }
+      ],
+      "when": "(target.id == self.id || (within(self, target, 5) && canSee(self, target))) && ask('持用近战武器或盾牌吗？')",
+      "modify": [
+        { "op": "halveDamage" }
+      ],
+      "do": [
+        {
+          "kind": "note",
+          "text": "掷 1d8 加入目标 AC。若加上后目标 AC 超过攻击检定结果，本次攻击未命中（请手动撤销伤害）；若依然命中，本次伤害已被自动减半。"
+        }
+      ]
+    }
+  ]
+}

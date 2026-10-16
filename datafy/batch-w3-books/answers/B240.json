@@ -1,0 +1,112 @@
+{
+  "name": "尘世壁垒",
+  "automation": "partial",
+  "text": "以附赠动作获得 1 分钟增益，每次长休 1 次（可消耗 5 环法术位重置）。获得 120 尺真实视觉（手动处理）。对异怪、天界生物、元素、精类或邪魔的攻击检定具有优势。攻击命中并造成伤害时可迫使其进行魅力豁免，失败且不属于此位面时被放逐回原生位面，成功则 24 小时内免疫该放逐（放逐与免疫需手动处理）。",
+  "resources": [
+    {
+      "id": "mortalBulwark",
+      "name": "尘世壁垒",
+      "formula": "1",
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "尘世壁垒",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "mortalBulwark"
+        }
+      ],
+      "requires": "!self.hasEffect('尘世壁垒')",
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "尘世壁垒"
+        }
+      ]
+    },
+    {
+      "id": "end",
+      "name": "结束尘世壁垒",
+      "activation": "free",
+      "requires": "self.hasEffect('尘世壁垒')",
+      "root": [
+        {
+          "kind": "removeEffect",
+          "from": "self",
+          "match": {
+            "name": "尘世壁垒"
+          }
+        }
+      ]
+    },
+    {
+      "id": "reset",
+      "name": "尘世壁垒：重置使用权（五环法术位）",
+      "activation": "free",
+      "cost": [
+        {
+          "slot": {
+            "min": 5,
+            "max": 5
+          }
+        }
+      ],
+      "requires": "self.resource('mortalBulwark') < 1",
+      "root": [
+        {
+          "kind": "resource",
+          "id": "mortalBulwark",
+          "delta": 1
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "尘世壁垒": {
+      "text": "1 分钟内：120 尺真实视觉；对异怪、天界生物、元素、精类或邪魔的攻击检定具有优势；攻击命中造成伤害时可迫使目标进行魅力豁免放逐。",
+      "duration": {
+        "minutes": 1
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "bearer",
+          "when": "target.type == '异怪' || target.type == '天界生物' || target.type == '元素' || target.type == '精类' || target.type == '邪魔'",
+          "op": "adv",
+          "label": "尘世壁垒：攻击优势"
+        }
+      ],
+      "triggers": [
+        {
+          "id": "banish",
+          "label": "尘世壁垒：放逐打击",
+          "on": "damageTaken",
+          "role": "any",
+          "window": "after",
+          "optional": true,
+          "when": "attacker != null && attacker.id == self.id && attack != null && damage.amount > 0",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "cha",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "note",
+                  "text": "尘世壁垒：目标若不属于此位面，被放逐回原生位面；豁免成功则 24 小时内免疫"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

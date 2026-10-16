@@ -1,0 +1,105 @@
+{
+  "name": "密斯特拉圣星",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。创造悬于上方的能量微尘（散发 5 尺明亮及 5 尺微光光照）。施法时及后续回合中可以附赠动作释放能量束：对 120 尺内一名生物发动远程法术攻击，命中造成 4d10 + 施法属性调整值点力场或光耀伤害（由你选择）。持续期间你具有掩护；若成功通过仅以你为目标、不制造效应区域的 7 环及以下法术豁免，可以反应将该法术反射回其施法者（对抗其自身 DC 豁免；掩护与法术反射需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "密斯特拉圣星",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 8
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "密斯特拉圣星"
+        }
+      ]
+    },
+    {
+      "id": "beam",
+      "name": "密斯特拉圣星：能量束",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 120
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "ranged": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "4d10 + self.spell.mod",
+              "type": "光耀"
+            },
+            {
+              "kind": "note",
+              "text": "伤害类型可由施法者在力场或光耀中选择。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reflect",
+      "name": "密斯特拉圣星：法术反射",
+      "activation": "reaction",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating",
+      "trigger": {
+        "on": "d20Rolled",
+        "role": "actor",
+        "window": "after",
+        "when": "ask('是否成功通过仅以你为目标的 7 环或更低法术的豁免？')"
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "密斯特拉圣星：将该法术反射回其施法者，该施法者必须对抗其自身的法术豁免 DC 进行豁免。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "密斯特拉圣星": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 1
+      },
+      "text": "悬于上方的能量微尘散发光照并赋予掩护；可以附赠动作发射能量束（4d10+调整值力场或光耀伤害）；可以反应反射成功豁免的单体法术。"
+    }
+  }
+}

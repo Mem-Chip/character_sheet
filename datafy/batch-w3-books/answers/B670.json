@@ -1,0 +1,71 @@
+{
+  "name": "制敌术",
+  "automation": "partial",
+  "text": "掷出令目标晕眩的魔法力场，目标进行体质豁免（构装和亡灵自动成功）。豁免失败受 2d4 力场伤害（每升一环 +2d4），速度减半至你的下回合开始，且在其下回合中仅可执行一个动作或一个附赠动作（不能同时执行二者）。豁免成功受半伤（构装/亡灵判定、速度减半与行动限制由人手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "制敌术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "dmg",
+              "dice": "(2 * slot.level)d4",
+              "type": "力场"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "制敌术"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "dmg",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "制敌术": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        }
+      },
+      "text": "速度减半至施法者的下个回合开始，且在其下一回合中仅可执行一个动作或一个附赠动作（不能同时执行二者）。"
+    }
+  }
+}

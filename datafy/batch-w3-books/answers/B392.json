@@ -1,0 +1,58 @@
+{
+  "name": "王车易位",
+  "automation": "partial",
+  "text": "以附赠动作传送至多 30 尺（6 级起 60 尺）到可见未占据空间；或选择该范围内愿意的中型或更小生物交换位置。使用次数等于智力调整值（至少 1 次），长休恢复。6 级起可消耗 3 环或更高法术位恢复一次使用次数。传送位置与生物交换需手动处理。",
+  "resources": [
+    {
+      "id": "benign-transposition",
+      "name": "王车易位",
+      "formula": "max(1, int)",
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "王车易位",
+      "activation": "bonus",
+      "tags": [
+        "magical"
+      ],
+      "cost": [
+        {
+          "resource": "benign-transposition"
+        }
+      ],
+      "targeting": {
+        "type": "point",
+        "range": "cond(self.levelOf('法师') >= 6, 60, 30)"
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "传送至多 30 尺（6 级起 60 尺）到可见未占据空间，或与该范围内自愿的中型或更小生物交换位置（手动处理移动）。"
+        }
+      ]
+    },
+    {
+      "id": "reset",
+      "name": "王车易位：消耗法术位恢复次数",
+      "activation": "free",
+      "requires": "self.levelOf('法师') >= 6 && self.resource('benign-transposition') < max(1, self.mod.int)",
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "root": [
+        {
+          "kind": "resource",
+          "id": "benign-transposition",
+          "delta": 1
+        }
+      ]
+    }
+  ]
+}

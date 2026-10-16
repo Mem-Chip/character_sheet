@@ -1,0 +1,41 @@
+{
+  "name": "海洋",
+  "automation": "full",
+  "text": "风暴灵光激活时（狂暴期间以附赠动作激活，进入狂暴时亦可激活）：选择灵光 10 尺内你能看见的一个其他生物，目标必须通过敏捷豁免（DC = 8 + PB + CON 调整值），否则受到 1d6 闪电伤害（10级 2d6，15级 3d6，20级 4d6），豁免成功减半。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "风暴灵光：海洋",
+      "activation": "bonus",
+      "requires": "self.hasEffect('狂暴') && turn.isMine",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 10,
+        "filter": "target.id != self.id && canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "8 + self.pb + self.mod.con",
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "lightning",
+              "dice": "(cond(self.levelOf('野蛮人') >= 20, 4, cond(self.levelOf('野蛮人') >= 15, 3, cond(self.levelOf('野蛮人') >= 10, 2, 1))))d6",
+              "type": "闪电"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "lightning",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

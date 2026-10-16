@@ -1,0 +1,28 @@
+{
+  "name": "慷慨吉运",
+  "automation": "partial",
+  "text": "30尺内可见盟友在攻击检定、技能检定或豁免检定的d20中掷出1时，可以反应使其重骰一次并接受新结果。使用后直到你下个回合结束前无法使用幸运种族特质（封禁需手动记录）。",
+  "triggers": [
+    {
+      "id": "bountiful-luck",
+      "label": "慷慨吉运：令盟友重骰",
+      "on": "d20Rolled",
+      "role": "any",
+      "window": "before",
+      "optional": true,
+      "when": "roll.natural == 1 && (roll.kind == 'attack' || roll.kind == 'save' || roll.kind == 'check') && roll.roller != self.id && within(self, combatant(roll.roller), 30) && canSee(self, combatant(roll.roller)) && combatant(roll.roller).side == self.side",
+      "cost": [
+        {
+          "economy": "reaction"
+        }
+      ],
+      "modify": [
+        {
+          "op": "reroll",
+          "die": "d20",
+          "keep": "new"
+        }
+      ]
+    }
+  ]
+}

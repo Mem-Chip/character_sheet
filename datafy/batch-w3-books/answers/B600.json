@@ -1,0 +1,73 @@
+{
+  "name": "大漩涡",
+  "automation": "partial",
+  "text": "在 120 尺内地面或水面创造半径 30 尺的大漩涡，持续至多 1 分钟（专注）。该区域视为困难地形。任何在该区域内开始其回合的生物须进行力量豁免，失败受到 6d6 钝击伤害并被拉向漩涡中心 10 尺，成功不受伤害且不被拉拽（漩涡范围、站位判定与拉拽需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "大漩涡",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "cylinder",
+          "radius": 30
+        }
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "在 120 尺内指定一点创造半径 30 尺的大漩涡（地面或水面，困难地形），持续至多 1 分钟（专注）。"
+        }
+      ]
+    },
+    {
+      "id": "turnStartSave",
+      "name": "大漩涡：回合开始豁免",
+      "activation": "none",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 120
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "str",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "6d6",
+              "type": "钝击"
+            },
+            {
+              "kind": "move",
+              "mode": "pull",
+              "ft": 10
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

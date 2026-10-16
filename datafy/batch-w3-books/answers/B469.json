@@ -1,0 +1,57 @@
+{
+  "name": "竖琴手协同",
+  "automation": "partial",
+  "text": "妙语连珠：执行协助动作辅助盟友对敌人的攻击检定时，该敌人在你的下个回合开始前的下次豁免检定也具有劣势。意志激励：成功通过结束自身恐慌或麻痹状态的豁免检定时，可选 30 尺内可见的一名具有相同状态的盟友结束该状态（手动结算）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "协助（妙语连珠）",
+      "activation": "action",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "XPHB:action:协助#协助攻击"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "妙语连珠"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "妙语连珠": {
+      "text": "你的下个回合开始前进行的下次豁免检定具有劣势。",
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        },
+        "endsOn": [
+          {
+            "event": "d20Rolled",
+            "when": "event.kind == 'save' && event.roller == self.id"
+          }
+        ]
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save"
+          },
+          "who": "bearer",
+          "op": "disadv",
+          "label": "妙语连珠"
+        }
+      ]
+    }
+  }
+}

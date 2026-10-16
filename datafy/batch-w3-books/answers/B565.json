@@ -1,0 +1,43 @@
+{
+  "name": "龙卷尘暴",
+  "automation": "partial",
+  "text": "在 60 尺内召唤持续至多 1 分钟（专注）的 5 尺立方尘卷风。任何在尘卷风 5 尺范围内结束回合的生物须进行力量豁免，失败受到 1d8 钝击伤害（升环每高一环+1d8）并推离 10 尺，成功伤害减半且不推离。附赠动作可移动尘卷风至多 30 尺并可能卷起残骸云造成重度遮蔽（移动、站位与残骸云需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "龙卷尘暴",
+      "activation": "action",
+      "tags": ["spell", "magical"],
+      "cost": [{ "slot": { "min": 2 } }],
+      "concentration": { "minutes": 1 },
+      "targeting": { "type": "point", "range": 60 },
+      "root": [
+        {
+          "kind": "note",
+          "text": "在 60 尺内创造尘卷风，持续至多 1 分钟（专注）。"
+        }
+      ]
+    },
+    {
+      "id": "endTurnSave",
+      "name": "龙卷尘暴：回合结束伤害",
+      "activation": "none",
+      "tags": ["spell", "magical"],
+      "targeting": { "type": "creature", "count": 1, "range": 5 },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "str",
+          "dc": "self.spell.dc",
+          "onFail": [
+            { "kind": "damage", "id": "dd", "dice": "1d8", "type": "钝击" },
+            { "kind": "move", "mode": "push", "ft": 10 }
+          ],
+          "onSuccess": [
+            { "kind": "damage", "ref": "dd", "scale": 0.5 }
+          ]
+        }
+      ]
+    }
+  ]
+}

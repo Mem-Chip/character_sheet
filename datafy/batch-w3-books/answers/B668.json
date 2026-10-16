@@ -1,0 +1,82 @@
+{
+  "name": "女妖之嚎",
+  "automation": "partial",
+  "text": "发出一阵惊怖尖啸，选择 60 尺内至多 10 名生物（听不到你的生物不受影响）。生命值为 50 或更低的目标直接死亡；生命值大于 50 的目标进行体质豁免，失败受 12d10 心灵伤害并陷入耳聋 1 小时，成功受半伤（听觉判定与直接致死由人手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "女妖之嚎",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 9
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 10,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "if",
+          "when": "target.hp <= 50",
+          "then": [
+            {
+              "kind": "note",
+              "text": "目标当前生命值为 50 或更低，直接死亡。"
+            }
+          ],
+          "else": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "dmg",
+                  "dice": "12d10",
+                  "type": "心灵"
+                },
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "女妖之嚎：耳聋"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "dmg",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "女妖之嚎：耳聋": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "hours": 1
+      },
+      "implies": [
+        "XPHB:condition:耳聋"
+      ],
+      "text": "陷入耳聋状态，持续 1 小时。"
+    }
+  }
+}

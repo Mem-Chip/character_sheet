@@ -1,0 +1,59 @@
+{
+  "name": "扰神之词",
+  "automation": "full",
+  "text": "以一个附赠动作消耗一次诗人激励，选择 60 尺内可见的一名生物。在你的下一个回合开始前，该生物的下一次豁免检定减去你的诗人激励骰。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "扰神之词",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "诗人激励"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "扰神之词",
+          "duration": {
+            "until": {
+              "at": "turnStart",
+              "of": "source",
+              "nth": 1
+            },
+            "endsOn": [
+              {
+                "event": "d20Rolled",
+                "when": "event.kind == 'save' && event.roller == self.id"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "扰神之词": {
+      "text": "在施法者下一个回合开始前进行的下一次豁免检定减去诗人激励骰。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save"
+          },
+          "who": "bearer",
+          "op": "addDice",
+          "value": "-1 * classTable('诗人骰')",
+          "label": "扰神之词"
+        }
+      ]
+    }
+  }
+}

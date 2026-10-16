@@ -1,0 +1,119 @@
+{
+  "name": "现世传说",
+  "automation": "partial",
+  "text": "附赠动作获得 1 分钟增益，每次长休一次；也可消耗一个五环法术位重置使用权。魅力检定具有优势。重掷豁免：豁免失败时用反应重投，必须采用新结果。无误打击：每个自己回合一次，武器攻击失手时改为命中（用给攻击检定 +100 近似，天然 1 是否仍算失手请人工判断）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "现世传说",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "livingLegend"
+        }
+      ],
+      "requires": "!self.hasEffect('现世传说')",
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "现世传说"
+        }
+      ]
+    },
+    {
+      "id": "end",
+      "name": "结束现世传说",
+      "activation": "free",
+      "requires": "self.hasEffect('现世传说')",
+      "root": [
+        {
+          "kind": "removeEffect",
+          "from": "self",
+          "match": {
+            "name": "现世传说"
+          }
+        }
+      ]
+    },
+    {
+      "id": "reset",
+      "name": "现世传说：重置使用权（五环法术位）",
+      "activation": "free",
+      "cost": [
+        {
+          "slot": {
+            "min": 5,
+            "max": 5
+          }
+        }
+      ],
+      "requires": "self.resource('livingLegend') < 1",
+      "root": [
+        {
+          "kind": "resource",
+          "id": "livingLegend",
+          "delta": 1
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "现世传说": {
+      "text": "1 分钟内：魅力检定具有优势；豁免失败时可用反应重投；每自己回合一次，武器攻击失手可改为命中。",
+      "duration": {
+        "minutes": 1
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "check",
+            "ability": "cha"
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "现世传说：神眷天恩"
+        }
+      ],
+      "triggers": [
+        {
+          "id": "rerun",
+          "label": "现世传说：重掷豁免",
+          "on": "d20Rolled",
+          "role": "actor",
+          "window": "before",
+          "optional": true,
+          "when": "roll.kind == 'save' && roll.failing",
+          "cost": [
+            {
+              "economy": "reaction"
+            }
+          ],
+          "modify": [
+            {
+              "op": "reroll",
+              "die": "d20",
+              "keep": "new"
+            }
+          ]
+        },
+        {
+          "id": "unerring",
+          "label": "现世传说：无误打击",
+          "on": "d20Rolled",
+          "role": "actor",
+          "window": "before",
+          "optional": true,
+          "limit": "oncePerTurn",
+          "when": "roll.kind == 'attack' && attack.weapon && roll.failing && turn.isMine",
+          "modify": [
+            {
+              "op": "addToRoll",
+              "value": 100
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

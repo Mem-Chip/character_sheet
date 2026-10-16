@@ -1,0 +1,47 @@
+{
+  "name": "神圣预知",
+  "automation": "full",
+  "resources": [
+    { "id": "divine-prescience", "name": "神圣预知", "formula": 1, "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "神圣预知",
+      "activation": "bonus",
+      "tags": ["magical"],
+      "cost": [{ "resource": "divine-prescience" }],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "神圣预知",
+          "to": "self"
+        }
+      ]
+    },
+    {
+      "id": "reset",
+      "name": "神圣预知：消耗法术位重置",
+      "activation": "free",
+      "requires": "self.resource('divine-prescience') == 0",
+      "cost": [{ "slot": { "min": 6 } }],
+      "root": [
+        { "kind": "resource", "id": "divine-prescience", "delta": 1 }
+      ]
+    }
+  ],
+  "effects": {
+    "神圣预知": {
+      "text": "在1小时内，你在D20检定上获得优势。",
+      "duration": { "hours": 1 },
+      "rollMods": [
+        {
+          "on": { "kind": "d20" },
+          "who": "bearer",
+          "op": "adv",
+          "label": "神圣预知：D20检定优势"
+        }
+      ]
+    }
+  }
+}

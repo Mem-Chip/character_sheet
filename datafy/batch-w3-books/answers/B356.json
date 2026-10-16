@@ -1,0 +1,83 @@
+{
+  "name": "咒剑诅咒",
+  "automation": "partial",
+  "text": "附赠动作诅咒30尺内一名可见生物，持续1分钟。目标死亡、你死亡或你陷入失能时提前结束。诅咒期间：对受咒目标的伤害掷骰获得等同于熟练加值的加值；攻击检定19-20即可形成重击；受咒目标死亡时你恢复魔契师等级+魅力调整值（至少1点）的生命值。短休或长休恢复使用次数。",
+  "resources": [
+    { "id": "hexblade-curse", "name": "咒剑诅咒", "formula": "1", "recovery": "short" }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "咒剑诅咒",
+      "activation": "bonus",
+      "cost": [
+        { "resource": "hexblade-curse" }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30,
+        "filter": "canSee(self, target) && target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "inline": {
+            "name": "咒剑诅咒",
+            "duration": {
+              "minutes": 1,
+              "endsOn": [
+                { "event": "died" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "rollMods": [
+    {
+      "on": {
+        "kind": "attack"
+      },
+      "who": "bearer",
+      "when": "target.hasEffect('咒剑诅咒')",
+      "op": "critRange",
+      "value": 19,
+      "label": "咒剑诅咒：19-20 暴击"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "hex-damage",
+      "label": "咒剑诅咒：伤害加熟练加值",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "target.hasEffect('咒剑诅咒')",
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "self.pb",
+          "type": "attack.damageType"
+        }
+      ]
+    },
+    {
+      "id": "hex-kill-heal",
+      "label": "咒剑诅咒：击杀恢复生命值",
+      "on": "reducedTo0",
+      "role": "actor",
+      "optional": true,
+      "when": "target.hasEffect('咒剑诅咒')",
+      "do": [
+        {
+          "kind": "heal",
+          "to": "self",
+          "amount": "max(1, self.levelOf('魔契师') + self.mod.cha)"
+        }
+      ]
+    }
+  ]
+}

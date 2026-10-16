@@ -1,0 +1,63 @@
+{
+  "name": "云雾符文",
+  "automation": "partial",
+  "text": "铭刻此符文时，进行的敏捷（巧手）与魅力（欺瞒）检定具有优势。此外，当你或 30 尺内可见生物被攻击命中时，可以反应激活此符文，将该次攻击的目标转移给 30 尺内除攻击者外的另一生物（攻击转移判定需手动处理）。",
+  "resources": [
+    {
+      "id": "云雾符文",
+      "name": "云雾符文",
+      "formula": "cond(level >= 15, 2, 1)",
+      "recovery": "short"
+    }
+  ],
+  "rollMods": [
+    {
+      "on": {
+        "kind": "check",
+        "skill": "巧手"
+      },
+      "who": "bearer",
+      "op": "adv",
+      "label": "云雾符文：巧手优势"
+    },
+    {
+      "on": {
+        "kind": "check",
+        "skill": "欺瞒"
+      },
+      "who": "bearer",
+      "op": "adv",
+      "label": "云雾符文：欺瞒优势"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "云雾符文：欺诈转移",
+      "activation": "reaction",
+      "cost": [
+        {
+          "resource": "云雾符文"
+        }
+      ],
+      "trigger": {
+        "on": "attackHit",
+        "role": "any",
+        "window": "before",
+        "when": "canSee(self, target) && (target.id == self.id || within(self, target, 30))"
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30,
+        "filter": "target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "选择距你 30 尺内除攻击者以外的另一生物，该次攻击的目标改为那个生物，使用同样的检定值"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "name": "轰雷剑",
+  "automation": "partial",
+  "text": "挥舞武器对 5 尺内一生物发动一次近战武器攻击。命中时造成武器正常伤害并包覆能量。5 级起近战攻击额外造成 1d8（随等级提升至 2d8/3d8）雷鸣伤害。目标在施法者下回合开始前若主动移动 5 尺或以上，立即承受 1d8（5/11/17 级提升至 2d8/3d8/4d8）雷鸣伤害并结束法术（移动触发伤害需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "轰雷剑",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 5
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "melee": true,
+            "weapon": true
+          },
+          "onHit": [
+            {
+              "kind": "if",
+              "when": "self.level >= 5",
+              "then": [
+                {
+                  "kind": "damage",
+                  "dice": "floor((self.level + 1) / 6)d8",
+                  "type": "雷鸣"
+                }
+              ]
+            },
+            {
+              "kind": "applyEffect",
+              "template": "轰雷剑",
+              "to": "target"
+            },
+            {
+              "kind": "note",
+              "text": "命中！结算武器攻击正常伤害。目标若在施法者下回合开始前主动移动 5 尺或以上，承受 (1 + floor((self.level + 1) / 6))d8 雷鸣伤害。"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "轰雷剑": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        }
+      },
+      "text": "若主动移动 5 尺或更多，立即受到 (1 + floor((self.level + 1) / 6))d8 雷鸣伤害并结束效应。"
+    }
+  }
+}

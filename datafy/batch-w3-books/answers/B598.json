@@ -1,0 +1,113 @@
+{
+  "name": "焚烧术",
+  "automation": "full",
+  "text": "使 90 尺内可见目标进行敏捷豁免，持续至多 1 分钟（专注）。豁免失败受到 8d6 火焰伤害并被魔法火焰点燃（散发 30 尺明亮+30 尺微光照明）；成功受到半数伤害且不被点燃。被点燃目标在每个自己回合结束时重复敏捷豁免，失败受到 4d6 火焰伤害，成功则法术提前结束。杀死的目标化为灰烬。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "焚烧术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 90
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "initDmg",
+              "dice": "8d6",
+              "type": "火焰"
+            },
+            {
+              "kind": "applyEffect",
+              "template": "焚烧术：点燃",
+              "to": "target"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "initDmg",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "turnEndSave",
+      "name": "焚烧术：回合结束豁免",
+      "activation": "none",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 90
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "4d6",
+              "type": "火焰"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "removeEffect",
+              "match": {
+                "name": "焚烧术：点燃"
+              },
+              "from": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "焚烧术：点燃": {
+      "tags": [
+        "magical",
+        "spell",
+        "debuff"
+      ],
+      "duration": {
+        "minutes": 1,
+        "saveEnds": {
+          "ability": "dex",
+          "dc": "self.spell.dc",
+          "at": "turnEnd"
+        }
+      },
+      "text": "被魔法火焰点燃，散发 30 尺明亮+30 尺微光照明。回合结束时须重复敏捷豁免，失败受 4d6 火焰伤害，成功则法术提前终止。"
+    }
+  }
+}

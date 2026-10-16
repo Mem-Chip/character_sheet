@@ -1,0 +1,52 @@
+{
+  "name": "夏之王庭的芬馥",
+  "automation": "full",
+  "text": "以一个附赠动作，你可以选择120尺内一名可见生物，消耗至多等同于你德鲁伊等级一半的妖精能量池骰子（d6）。目标恢复骰值之和的生命值，并获得每一枚骰子1点的临时生命值。能量池拥有等同于德鲁伊等级枚d6，长休恢复。",
+  "resources": [
+    {
+      "id": "balm-of-the-summer-court",
+      "name": "夏之王庭的芬馥",
+      "formula": "level",
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "夏之王庭的芬馥",
+      "activation": "bonus",
+      "requires": "self.resource('balm-of-the-summer-court') > 0",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 120,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "number",
+          "prompt": "消耗多少枚 d6 骰（至多德鲁伊等级一半，且不超过剩余可用骰数）？",
+          "var": "n",
+          "min": 1,
+          "max": "min(self.resource('balm-of-the-summer-court'), max(1, floor(self.levelOf('德鲁伊') / 2)))",
+          "default": 1
+        },
+        {
+          "kind": "heal",
+          "to": "target",
+          "amount": "(vars.n)d6"
+        },
+        {
+          "kind": "tempHp",
+          "to": "target",
+          "amount": "vars.n"
+        },
+        {
+          "kind": "resource",
+          "id": "balm-of-the-summer-court",
+          "delta": "-vars.n"
+        }
+      ]
+    }
+  ]
+}

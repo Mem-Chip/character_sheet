@@ -1,0 +1,40 @@
+{
+  "name": "治愈之光",
+  "automation": "full",
+  "resources": [
+    { "id": "healing-light", "name": "治愈之光", "formula": "1 + level", "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "治愈之光",
+      "activation": "bonus",
+      "requires": "self.resource('healing-light') > 0",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "number",
+          "prompt": "消耗多少枚治愈之光骰子（d6）？",
+          "var": "n",
+          "min": 1,
+          "max": "min(self.resource('healing-light'), max(1, self.mod.cha))",
+          "default": 1
+        },
+        {
+          "kind": "heal",
+          "amount": "(vars.n)d6"
+        },
+        {
+          "kind": "resource",
+          "id": "healing-light",
+          "delta": "-vars.n"
+        }
+      ]
+    }
+  ]
+}

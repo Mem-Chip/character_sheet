@@ -1,0 +1,59 @@
+{
+  "name": "先祖护卫",
+  "automation": "full",
+  "text": "狂暴期间，在每个你的回合中攻击命中的首个生物成为先祖护卫目标。直到你的下个回合开始，该目标对你以外的目标发动的攻击检定具有劣势，且击中你以外的生物时该生物对该伤害具有抗性。狂暴结束时此效果提前结束。",
+  "triggers": [
+    {
+      "id": "mark",
+      "label": "先祖护卫：标记目标",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "limit": "oncePerTurn",
+      "when": "turn.isMine && self.hasEffect('狂暴')",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "先祖护卫",
+          "duration": {
+            "until": { "at": "turnStart", "of": "source", "nth": 1 },
+            "endsOn": [
+              {
+                "event": "effectEnded",
+                "when": "event.name == '狂暴' && event.bearer == source.id"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "先祖护卫": {
+      "text": "对先祖守卫野蛮人以外的目标发动的攻击检定具有劣势；若攻击击中除该野蛮人以外的生物，受击生物对该伤害具有抗性。",
+      "rollMods": [
+        {
+          "on": { "kind": "attack" },
+          "who": "bearer",
+          "when": "target != null && target.id != source.id",
+          "op": "disadv",
+          "label": "先祖护卫：对野蛮人以外的目标发动的攻击检定具有劣势"
+        }
+      ],
+      "triggers": [
+        {
+          "id": "resist",
+          "label": "先祖护卫：除野蛮人以外的目标获得伤害抗性",
+          "on": "damageIncoming",
+          "role": "actor",
+          "window": "before",
+          "when": "target.id != source.id && attack != null",
+          "modify": [
+            { "op": "halveDamage" }
+          ]
+        }
+      ]
+    }
+  }
+}

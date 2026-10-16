@@ -1,0 +1,101 @@
+{
+  "name": "精神监狱",
+  "automation": "full",
+  "text": "试图将 60 尺内可见生物束缚在幻觉牢房中，持续至多 1 分钟（专注）。目标须进行智力豁免（免疫魅惑自动成功）。豁免成功受到 5d10 心灵伤害且法术结束；豁免失败受到 5d10 心灵伤害并陷入束缚，无法看穿或听穿幻象。若目标移出幻象、穿过它进行近战攻击或任何身体部分穿过幻象，目标受到 10d10 心灵伤害且法术结束。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "精神监狱",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 6
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "int",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "5d10",
+              "type": "心灵"
+            },
+            {
+              "kind": "applyEffect",
+              "template": "精神监狱：牢房束缚",
+              "to": "target"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "dice": "5d10",
+              "type": "心灵"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "escapeDamage",
+      "name": "精神监狱：穿破牢房伤害",
+      "activation": "none",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "damage",
+          "dice": "10d10",
+          "type": "心灵"
+        },
+        {
+          "kind": "removeEffect",
+          "match": {
+            "name": "精神监狱：牢房束缚"
+          },
+          "from": "target"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "精神监狱：牢房束缚": {
+      "tags": [
+        "magical",
+        "spell",
+        "debuff"
+      ],
+      "duration": {
+        "minutes": 1
+      },
+      "implies": [
+        "XPHB:condition:束缚"
+      ],
+      "text": "被困于幻觉牢房中陷入束缚，无法看穿或听穿外界。若移动出幻象、穿过幻象近战攻击或身体穿过幻象，将受到 10d10 心灵伤害且法术结束。"
+    }
+  }
+}

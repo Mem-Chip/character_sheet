@@ -1,0 +1,79 @@
+{
+  "name": "力场壁垒",
+  "automation": "full",
+  "text": "以附赠动作选择30尺内至多智力调整值数量的可见生物（包含自身，至少1个）。每个生物获得半掩护（AC+2，敏捷豁免+2），持续1分钟，若你失能则提前结束。每次长休可用一次（资源「力场壁垒」）；亦可消耗一枚灵能骰重置使用次数。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "力场壁垒",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "force-wall"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": "max(1, mod.int)",
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "each",
+          "template": "力场壁垒",
+          "duration": {
+            "minutes": 1,
+            "endsOn": [
+              {
+                "event": "effectApplied",
+                "when": "event.bearer == source.id && source.has('失能')"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "reset",
+      "name": "力场壁垒（消耗灵能骰重置）",
+      "activation": "free",
+      "cost": [
+        {
+          "resource": "灵能力量"
+        }
+      ],
+      "requires": "self.resource('force-wall') < 1",
+      "root": [
+        {
+          "kind": "resource",
+          "id": "force-wall",
+          "delta": 1
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "力场壁垒": {
+      "text": "处于力场壁垒保护中：获得半掩护（AC +2，敏捷豁免 +2）。施加者陷入失能状态时提前结束。",
+      "statics": [
+        {
+          "kind": "ac",
+          "bonus": 2
+        }
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save",
+            "ability": "dex"
+          },
+          "who": "bearer",
+          "op": "add",
+          "value": 2,
+          "label": "力场壁垒：敏捷豁免+2（半掩护）"
+        }
+      ]
+    }
+  }
+}

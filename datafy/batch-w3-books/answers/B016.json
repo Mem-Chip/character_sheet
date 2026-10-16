@@ -1,0 +1,58 @@
+{
+  "name": "冻原",
+  "automation": "partial",
+  "text": "每当激活风暴灵光时，可选灵光内一名可见生物进行力量豁免（DC 8 + 熟练 + 体质调整值），失败速度降为 0 直至你的下个回合开始。由于伴随进入狂暴或附赠动作激活灵光时一并触发，写为 free 动作，由人在激活灵光时使用。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "狂怒风暴：冻原",
+      "activation": "free",
+      "requires": "turn.isMine && self.hasEffect('狂暴')",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 10,
+        "filter": "target.id != self.id && canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "str",
+          "dc": "8 + self.pb + self.mod.con",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "冻结",
+              "duration": {
+                "until": {
+                  "at": "turnStart",
+                  "of": "source",
+                  "nth": 1
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "冻结": {
+      "text": "魔法冰霜覆盖，速度降为 0，持续直至施加者的下个回合开始。",
+      "statics": [
+        {
+          "kind": "speedSet",
+          "value": 0
+        }
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        }
+      }
+    }
+  }
+}

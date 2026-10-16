@@ -1,0 +1,79 @@
+{
+  "name": "群体恢复",
+  "automation": "full",
+  "text": "使用回气回复生命值时，可选择 30 尺内至多魅力调整值（至少 1）个盟友，各回复 1d4 + 战士等级点生命值。短休或长休恢复。7 级起被选盟友在你的下个回合开始前 D20 检定具有优势。",
+  "resources": [
+    {
+      "id": "rallyingCry",
+      "name": "群体恢复",
+      "formula": 1,
+      "recovery": "short"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "群体恢复",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "回气"
+        },
+        {
+          "resource": "rallyingCry"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": "max(1, self.mod.cha)",
+        "range": 30,
+        "filter": "target.isAllyOf(self) && target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "heal",
+          "to": "self",
+          "amount": "1d10 + self.levelOf('战士')"
+        },
+        {
+          "kind": "heal",
+          "to": "each",
+          "amount": "1d4 + self.levelOf('战士')"
+        },
+        {
+          "kind": "if",
+          "when": "self.levelOf('战士') >= 7",
+          "then": [
+            {
+              "kind": "applyEffect",
+              "template": "团体战术",
+              "to": "each",
+              "duration": {
+                "until": {
+                  "at": "turnStart",
+                  "of": "source",
+                  "nth": 1
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "团体战术": {
+      "name": "团体战术",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "d20"
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "团体战术：D20 检定优势"
+        }
+      ]
+    }
+  }
+}

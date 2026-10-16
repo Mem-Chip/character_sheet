@@ -1,0 +1,42 @@
+{
+  "name": "巩固法术",
+  "automation": "partial",
+  "text": "当你施展一道法术时，可以消耗一次引导神力次数（无需动作），使该法术的其中一个目标获得等于 2d8 + 你的牧师等级 的临时生命值。若目标不是施法者本人，需手动指定目标并结算临时生命值。",
+  "triggers": [
+    {
+      "id": "fortify-spell",
+      "label": "巩固法术：赋予临时生命值",
+      "on": "spellCast",
+      "role": "actor",
+      "optional": true,
+      "cost": [{ "resource": "引导神力" }],
+      "do": [
+        {
+          "kind": "choose",
+          "prompt": "巩固法术：获得临时生命值的目标是谁？",
+          "options": [
+            {
+              "label": "自己（施法者本人）",
+              "do": [
+                {
+                  "kind": "tempHp",
+                  "to": "self",
+                  "amount": "2d8 + self.levelOf('牧师')"
+                }
+              ]
+            },
+            {
+              "label": "该法术的其他目标生物（手动结算）",
+              "do": [
+                {
+                  "kind": "note",
+                  "text": "该法术的目标生物获得 2d8 + 牧师等级 点临时生命值（需手动结算）"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

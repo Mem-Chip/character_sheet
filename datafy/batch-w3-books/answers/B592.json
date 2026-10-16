@@ -1,0 +1,115 @@
+{
+  "name": "碧水法球",
+  "automation": "partial",
+  "text": "在 90 尺内召唤半径 5 尺的水球，持续至多 1 分钟（专注）。区域内生物须进行力量豁免（巨型及以上自动成功），失败陷入束缚并被水淹没，在其回合结束时可重复豁免。水球至多容纳 4 个中型或 1 个大型生物。后续可以动作直线移动水球至多 30 尺并撞击生物迫使其豁免。法术结束时水球落下熄灭 30 尺内非魔法火焰，被束缚者倒地（水球容纳上限、移动与淹没判定需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "碧水法球",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 90,
+        "area": {
+          "shape": "sphere",
+          "radius": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "str",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "template": "碧水法球：束缚",
+                  "to": "target"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "处于水球内的生物力量豁免失败陷入束缚；巨型及以上自动成功。水球至多容纳 4 个中型或 1 个大型生物。"
+        }
+      ]
+    },
+    {
+      "id": "moveSphere",
+      "name": "碧水法球：移动撞击",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 30,
+        "area": {
+          "shape": "sphere",
+          "radius": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "str",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "template": "碧水法球：束缚",
+                  "to": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "碧水法球：束缚": {
+      "tags": [
+        "magical",
+        "spell",
+        "debuff"
+      ],
+      "implies": [
+        "XPHB:condition:束缚"
+      ],
+      "duration": {
+        "saveEnds": {
+          "ability": "str",
+          "dc": "self.spell.dc",
+          "at": "turnEnd"
+        }
+      },
+      "text": "被水球束缚且被水淹没。在其每个回合结束时可重复力量豁免，成功则脱离束缚。"
+    }
+  }
+}

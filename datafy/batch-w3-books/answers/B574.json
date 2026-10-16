@@ -1,0 +1,54 @@
+{
+  "name": "敌群环绕",
+  "automation": "partial",
+  "text": "迫使 120 尺内一名可见生物进行智力豁免（免疫恐慌者自动通过）。豁免失败则在持续时间内（专注至多 1 分钟）将所有可见生物视作敌人，攻击或施法目标必须从有效范围内可见生物中随机选择，且必须进行可用的借机攻击。每次受伤害时目标可重复智力豁免以结束效应（恐慌免疫检测、随机选敌与受伤害重复豁免需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "敌群环绕",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 120
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "int",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "敌群环绕"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "敌群环绕": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "将所有可见生物视作敌人。选择目标时必须从射程内的可见目标中随机选择；若有生物引发借机攻击必须发动攻击；每次受到伤害时可重复智力豁免以结束此效应。"
+    }
+  }
+}

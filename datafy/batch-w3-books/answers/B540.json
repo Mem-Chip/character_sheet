@@ -1,0 +1,60 @@
+{
+  "name": "风暴符文",
+  "automation": "partial",
+  "text": "铭刻此符文时，进行的智力（奥秘）检定具有优势，且只要未失能就不会被突袭。此外，可以附赠动作激活此符文进入先知形态持续 1 分钟（陷入失能提前结束）。形态持续期间，每当你或 60 尺内可见另一生物进行攻击检定、豁免检定或属性检定时，可以使用反应赋予该次检定优势或劣势（反应赋予优劣势需手动处理）。",
+  "resources": [
+    {
+      "id": "风暴符文",
+      "name": "风暴符文",
+      "formula": "cond(level >= 15, 2, 1)",
+      "recovery": "short"
+    }
+  ],
+  "rollMods": [
+    {
+      "on": {
+        "kind": "check",
+        "skill": "奥秘"
+      },
+      "who": "bearer",
+      "op": "adv",
+      "label": "风暴符文：奥秘优势"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "风暴符文：先知形态",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "风暴符文"
+        }
+      ],
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "先知形态"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "先知形态": {
+      "duration": {
+        "minutes": 1,
+        "endsOn": [
+          {
+            "event": "effectApplied",
+            "when": "event.bearer == self.id && self.has('失能')"
+          }
+        ]
+      },
+      "text": "持续 1 分钟（失能提前结束）。每当你或 60 尺内可见的另一生物进行攻击检定、豁免检定或属性检定时，可以使用反应赋予这次检定优势或劣势。"
+    }
+  }
+}

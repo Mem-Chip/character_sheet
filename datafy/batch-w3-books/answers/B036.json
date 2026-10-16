@@ -1,0 +1,63 @@
+{
+  "name": "守御剑舞",
+  "automation": "full",
+  "text": "在你的回合内以攻击动作进行武器攻击命中时，可以消耗一次诗人激励（每回合限一次剑舞）。造成等同于激励骰结果的额外同类型伤害，且你的 AC 也获得等同于该激励骰结果的加值，持续直至你的下回合开始。",
+  "triggers": [
+    {
+      "id": "defensive-flourish",
+      "label": "守御剑舞：消耗激励加伤并加 AC",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "limit": "oncePerTurn",
+      "optional": true,
+      "cost": [
+        {
+          "resource": "诗人激励"
+        }
+      ],
+      "when": "turn.isMine && attack.weapon",
+      "do": [
+        {
+          "kind": "number",
+          "prompt": "守御剑舞：请掷诗人激励骰（classTable('诗人骰')），输入掷出的点数作为额外伤害与 AC 加值",
+          "var": "flourishRoll",
+          "min": 1,
+          "max": 12,
+          "default": 4
+        },
+        {
+          "kind": "addDamage",
+          "dice": "vars.flourishRoll",
+          "type": "attack.damageType"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "守御剑舞",
+          "state": {
+            "bonus": "vars.flourishRoll"
+          },
+          "duration": {
+            "until": {
+              "at": "turnStart",
+              "of": "self",
+              "nth": 1
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "守御剑舞": {
+      "text": "AC 获得等同于消耗的诗人激励骰投出点数的加值，持续至你的下个回合开始。",
+      "statics": [
+        {
+          "kind": "ac",
+          "bonus": "effect.state.bonus"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "name": "群体变形术",
+  "automation": "partial",
+  "text": "专注至多 1 小时。转变 120 尺内至多 10 个可见生物。非自愿目标须进行感知豁免对抗变形（变形生物豁免自动成功）。每个目标转变为你选择的野兽形态（CR ≤ 目标 CR 或等级的一半）；游戏数据被野兽取代，获得等同于新形态生命值的临时生命值（失去时变回原形）；不能说话或施法；装备融入新形态（野兽数据替换与临时生命值需手动结算）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "群体变形术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 9
+          }
+        }
+      ],
+      "concentration": {
+        "hours": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 10,
+        "range": 120
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "群体变形术"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "群体变形术": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "flags": {
+        "cannot": [
+          "castSpells",
+          "speak"
+        ]
+      },
+      "text": "转变为指定野兽形态。数据被野兽取代，获得等同于野兽生命值的临时生命值，失去这些临时生命值或死亡时恢复原形。不能说话或施展法术。非自愿的变形生物在豁免中自动成功。"
+    }
+  }
+}

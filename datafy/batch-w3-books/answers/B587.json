@@ -1,0 +1,143 @@
+{
+  "name": "自然守卫",
+  "automation": "full",
+  "text": "以附赠动作转变形态，持续至多 1 分钟（专注）。选择【原始猛兽】（步行速度+10尺、120尺黑暗视觉、力量攻击检定具优势、近战武器攻击命中额外造成1d6力场伤害）或【战争巨树】（获得10点临时生命、体质豁免具优势、敏捷与感知攻击检定具优势、地面上周围15尺地面成为敌人困难地形）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "自然守卫",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "选择守卫形态",
+          "options": [
+            {
+              "label": "原始猛兽",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "template": "自然守卫：原始猛兽",
+                  "to": "self"
+                }
+              ]
+            },
+            {
+              "label": "战争巨树",
+              "do": [
+                {
+                  "kind": "tempHp",
+                  "amount": 10,
+                  "to": "self"
+                },
+                {
+                  "kind": "applyEffect",
+                  "template": "自然守卫：战争巨树",
+                  "to": "self"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "自然守卫：原始猛兽": {
+      "tags": [
+        "magical",
+        "spell",
+        "buff"
+      ],
+      "text": "步行速度增加10尺；120尺黑暗视觉；力量攻击检定具有优势；近战武器攻击命中时额外造成1d6力场伤害。",
+      "statics": [
+        {
+          "kind": "speed",
+          "bonus": 10
+        }
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack",
+            "ability": "str"
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "原始猛兽：力量攻击优势"
+        }
+      ],
+      "triggers": [
+        {
+          "id": "primalBeastDamage",
+          "on": "attackHit",
+          "role": "actor",
+          "window": "before",
+          "when": "attack.melee && attack.weapon",
+          "do": [
+            {
+              "kind": "addDamage",
+              "dice": "1d6",
+              "type": "力场"
+            }
+          ],
+          "label": "原始猛兽：额外1d6力场伤害"
+        }
+      ]
+    },
+    "自然守卫：战争巨树": {
+      "tags": [
+        "magical",
+        "spell",
+        "buff"
+      ],
+      "text": "体质豁免具有优势；敏捷与感知攻击检定具有优势；在地面上时周围15尺地面视为敌人困难地形。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save",
+            "ability": "con"
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "战争巨树：体质豁免优势"
+        },
+        {
+          "on": {
+            "kind": "attack",
+            "ability": "dex"
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "战争巨树：敏捷攻击优势"
+        },
+        {
+          "on": {
+            "kind": "attack",
+            "ability": "wis"
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "战争巨树：感知攻击优势"
+        }
+      ]
+    }
+  }
+}

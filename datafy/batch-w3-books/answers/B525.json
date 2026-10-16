@@ -1,0 +1,42 @@
+{
+  "name": "怠惰之枪",
+  "automation": "full",
+  "text": "每个你的回合一次，当你用魔能爆击中一个生物时，你可以使目标的速度降低 10 尺，持续直至你的下个回合结束。",
+  "triggers": [
+    {
+      "id": "lanceOfLethargy",
+      "label": "怠惰之枪：减速 10 尺",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "turn.isMine && attack.spell && ask('这次攻击命中的是魔能爆吗？')",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "怠惰之枪：减速"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "怠惰之枪：减速": {
+      "text": "速度降低 10 尺，持续直至施法者的下个回合结束。",
+      "statics": [
+        {
+          "kind": "speed",
+          "bonus": -10
+        }
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "source",
+          "nth": 1
+        }
+      }
+    }
+  }
+}

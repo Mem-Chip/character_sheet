@@ -1,0 +1,129 @@
+{
+  "name": "坚定之印",
+  "automation": "full",
+  "text": "以近战武器攻击命中敌人时赋予印记，持续至你下个回合结束（失能、死亡或被他人赋予印记时提前结束）。被标记敌人身处你5尺内时，对你以外目标的攻击检定具有劣势。若被标记敌人对你以外生物造成伤害，在你下个回合中可用附赠动作消耗一次使用次数对其发动特殊近战武器攻击，该攻击具有优势且击中额外造成等同于战士等级一半的伤害。使用次数等同于力量调整值（至少1次），长休恢复。",
+  "resources": [
+    {
+      "id": "unwavering-mark",
+      "name": "坚定之印",
+      "formula": "max(1, str)",
+      "recovery": "long"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "mark",
+      "label": "坚定之印：标记目标",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.melee && attack.weapon",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "坚定之印",
+          "duration": {
+            "until": {
+              "at": "turnEnd",
+              "of": "source",
+              "nth": 1
+            },
+            "endsOn": [
+              {
+                "event": "effectApplied",
+                "when": "event.bearer == source.id && source.has('失能')"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "bonus-damage",
+      "label": "坚定之印：惩戒攻击额外伤害",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "self.hasEffect('坚定之印：惩戒') && attack.melee && attack.weapon",
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "floor(self.levelOf('战士') / 2)",
+          "type": "attack.damageType"
+        },
+        {
+          "kind": "removeEffect",
+          "from": "self",
+          "match": {
+            "name": "坚定之印：惩戒"
+          }
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "坚定之印：惩戒攻击",
+      "activation": "bonus",
+      "requires": "turn.isMine",
+      "cost": [
+        {
+          "resource": "unwavering-mark"
+        }
+      ],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "坚定之印：惩戒",
+          "duration": {
+            "until": {
+              "at": "turnEnd",
+              "of": "bearer",
+              "nth": 0
+            }
+          }
+        },
+        {
+          "kind": "note",
+          "text": "激活惩戒攻击：本回合内发动的下一次近战武器攻击具有优势，且击中时额外造成等同于战士等级一半的武器伤害。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "坚定之印": {
+      "text": "处于坚定之印标记中：若处于骁骑士5尺范围内，对骁骑士以外目标的攻击检定具有劣势。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "bearer",
+          "when": "target != null && target.id != source.id && within(self, source, 5)",
+          "op": "disadv",
+          "label": "坚定之印：对骁骑士以外目标的攻击具有劣势"
+        }
+      ]
+    },
+    "坚定之印：惩戒": {
+      "text": "本回合内近战武器攻击具有优势，击中时额外造成战士等级一半的武器伤害。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack",
+            "attack": {
+              "melee": true,
+              "weapon": true
+            }
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "坚定之印：惩戒攻击具有优势"
+        }
+      ]
+    }
+  }
+}

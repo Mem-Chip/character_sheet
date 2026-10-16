@@ -1,0 +1,44 @@
+{
+  "name": "闪电牵引",
+  "automation": "partial",
+  "text": "15 尺内可见一生物进行力量豁免，失败则以直线被拉近至多 10 尺；拉近后若处于施法者周围 5 尺内，受到 (1 + floor((self.level + 1) / 6))d8 点闪电伤害（位置与伤害条件需手动核对）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "闪电牵引",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 15
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "str",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "move",
+              "mode": "pull",
+              "ft": 10
+            },
+            {
+              "kind": "damage",
+              "dice": "(1 + floor((self.level + 1) / 6))d8",
+              "type": "闪电"
+            },
+            {
+              "kind": "note",
+              "text": "豁免失败者被直线拉近至多 10 尺；若此时处于施法者 5 尺范围内则受到上述闪电伤害，否则不受伤害。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

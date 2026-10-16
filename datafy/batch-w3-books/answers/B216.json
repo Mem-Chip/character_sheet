@@ -1,0 +1,77 @@
+{
+  "name": "不移胜者",
+  "automation": "partial",
+  "text": "以一个动作化身为征服化身，持续 1 分钟（长休恢复 1 次）：获得全伤害抗性；在自己回合执行攻击动作时可进行一次额外攻击；近战武器攻击在 d20 掷出 19 或 20 时即可造成重击。",
+  "resources": [
+    {
+      "id": "invincibleConqueror",
+      "name": "不移胜者",
+      "formula": 1,
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "不移胜者",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "invincibleConqueror"
+        }
+      ],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "不移胜者"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "不移胜者": {
+      "duration": {
+        "minutes": 1
+      },
+      "statics": [
+        {
+          "kind": "resistAll"
+        }
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "bearer",
+          "when": "attack.weapon && attack.melee",
+          "op": "critRange",
+          "value": 19,
+          "label": "不移胜者：重击范围 19-20"
+        }
+      ],
+      "triggers": [
+        {
+          "id": "invincibleExtraAttack",
+          "label": "不移胜者：额外攻击",
+          "on": "turnStarted",
+          "role": "actor",
+          "window": "after",
+          "limit": "oncePerTurn",
+          "when": "turn.isMine",
+          "do": [
+            {
+              "kind": "economy",
+              "attacks": 1
+            },
+            {
+              "kind": "note",
+              "text": "不移胜者：在你的回合执行攻击动作时，可进行一次额外攻击（增加 1 次攻击机会）。"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

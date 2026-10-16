@@ -1,0 +1,46 @@
+{
+  "name": "新晋龙巫教徒",
+  "automation": "partial",
+  "text": "【龙之舌】习得龙语（静态）。【龙之威】以魔法动作令30尺内可见生物进行DC 8+WIS+PB的感知豁免，失败陷入恐慌直到你的下个回合结束；豁免成功或效应结束24小时内免疫。【饮惧为励】令生物因你陷入恐慌且没有英雄激励时可获得激励，短休或长休恢复，由玩家手动记录。",
+  "resources": [
+    {
+      "id": "drink-fear",
+      "name": "饮惧为励",
+      "formula": 1,
+      "recovery": "short"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "新晋龙巫教徒：龙之威",
+      "activation": "action",
+      "targeting": {
+        "type": "creature",
+        "range": 30,
+        "filter": "canSee(self, target) && target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "8 + self.pb + self.mod.wis",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "XPHB:condition:恐慌",
+              "duration": {
+                "until": {
+                  "at": "turnEnd",
+                  "of": "source",
+                  "nth": 1
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

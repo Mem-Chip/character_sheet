@@ -1,0 +1,130 @@
+{
+  "name": "寒冰赋权",
+  "automation": "partial",
+  "text": "寒冰浸沐躯体，持续至多 10 分钟（专注）。获得寒冷免疫与火焰抗性；冰雪困难地形不消耗额外移动力；自身周围 10 尺对其他生物视为困难地形；你可以用动作创造一道 15 尺的寒风锥，锥内每个生物须进行体质豁免，失败受到 4d6 寒冷伤害且速度减半直至你的下个回合开始，成功受到半数伤害且速度不减半（周围困难地形与减速可通过次要动作触发）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "寒冰赋权",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 6
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "寒冰赋权",
+          "to": "self"
+        }
+      ]
+    },
+    {
+      "id": "iceCone",
+      "name": "寒冰赋权：寒风锥",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "cone",
+          "size": 15
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "iceConeDmg",
+                  "dice": "4d6",
+                  "type": "寒冷"
+                },
+                {
+                  "kind": "applyEffect",
+                  "template": "寒冰赋权：减速",
+                  "to": "target"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "iceConeDmg",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "寒冰赋权": {
+      "tags": [
+        "magical",
+        "spell",
+        "buff"
+      ],
+      "text": "免疫寒冷伤害，对火焰伤害具有抗性；在冰雪困难地形移动无额外消耗；周围 10 尺对其他生物视为困难地形。",
+      "statics": [
+        {
+          "kind": "immune",
+          "values": [
+            "寒冷"
+          ]
+        },
+        {
+          "kind": "resist",
+          "values": [
+            "火焰"
+          ]
+        }
+      ]
+    },
+    "寒冰赋权：减速": {
+      "tags": [
+        "magical",
+        "spell",
+        "debuff"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source"
+        }
+      },
+      "statics": [
+        {
+          "kind": "speed",
+          "bonus": "-floor(self.speed / 2)"
+        }
+      ],
+      "text": "受极寒冻结，速度减半直至施法者的下个回合开始。"
+    }
+  }
+}

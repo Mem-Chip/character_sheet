@@ -1,0 +1,49 @@
+{
+  "name": "万化本质",
+  "automation": "full",
+  "text": "大步流星（速度提升 5 尺）属于人物卡静态层。强韧内构：对抗迫使你违背意愿变形的效应进行的豁免具有优势；体质豁免失败时，能以反应投掷 1d4 加入豁免总值（次数等于熟练加值，长休恢复）。",
+  "resources": [
+    {
+      "id": "resilient-interior",
+      "name": "强韧内构",
+      "formula": "pb",
+      "recovery": "long"
+    }
+  ],
+  "rollMods": [
+    {
+      "on": {
+        "kind": "save"
+      },
+      "who": "bearer",
+      "when": "ask('这次豁免是对抗将迫使你违背意愿变形的效应吗？')",
+      "op": "adv",
+      "label": "强韧内构：对抗违背意愿变形"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "resilient-constitution",
+      "label": "强韧内构：体质豁免加骰",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "roll.kind == 'save' && roll.ability == 'con' && roll.failing",
+      "cost": [
+        {
+          "economy": "reaction"
+        },
+        {
+          "resource": "resilient-interior"
+        }
+      ],
+      "modify": [
+        {
+          "op": "addToRoll",
+          "value": "1d4"
+        }
+      ]
+    }
+  ]
+}

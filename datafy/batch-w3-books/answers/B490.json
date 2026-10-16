@@ -1,0 +1,66 @@
+{
+  "name": "咒火火花",
+  "automation": "full",
+  "text": "【魔法吸收】每回合一次，未陷入失能状态时受到来自法术或魔法效应的伤害，可使受到的总伤害减少 1d4。【咒火之焰】习得戏法圣火术（静态授予），且能以附赠动作施展圣火术，次数等同于熟练加值，长休恢复。",
+  "resources": [
+    {
+      "id": "spellfire-spark-sacred-flame",
+      "name": "咒火之焰：附赠圣火术",
+      "formula": "pb",
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "咒火之焰：圣火术",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "resource": "spellfire-spark-sacred-flame"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "(1 + floor((self.level + 1) / 6))d8",
+              "type": "光耀"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "triggers": [
+    {
+      "id": "magic-absorption",
+      "label": "魔法吸收：减免法术伤害",
+      "on": "damageIncoming",
+      "role": "target",
+      "window": "before",
+      "limit": "oncePerTurn",
+      "optional": true,
+      "when": "!self.has('失能') && ask('这次伤害来自法术或魔法效应吗？')",
+      "modify": [
+        {
+          "op": "reduceDamage",
+          "value": "1d4"
+        }
+      ]
+    }
+  ]
+}

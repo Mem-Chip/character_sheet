@@ -1,0 +1,122 @@
+{
+  "name": "清风赋权",
+  "automation": "full",
+  "text": "狂风回旋身旁，持续至多 10 分钟（专注）。对你进行的远程武器攻击具有劣势；获得 60 尺飞行速度（法术结束时若在空中将坠落）；你可以用动作在 60 尺内指定一点制造 15 尺立方的呼啸之风，其中的生物须进行体质豁免，失败受到 2d10 钝击伤害且体型不超过大型的生物被推离中心 10 尺，成功受到半数伤害且不被推离。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "清风赋权",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 6
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "清风赋权",
+          "to": "self"
+        }
+      ]
+    },
+    {
+      "id": "gust",
+      "name": "清风赋权：呼啸之风",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": {
+          "shape": "cube",
+          "size": 15
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "windDmg",
+                  "dice": "2d10",
+                  "type": "钝击"
+                },
+                {
+                  "kind": "if",
+                  "when": "target.size == 'tiny' || target.size == 'small' || target.size == 'medium' || target.size == 'large'",
+                  "then": [
+                    {
+                      "kind": "move",
+                      "mode": "push",
+                      "ft": 10
+                    }
+                  ]
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "windDmg",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "清风赋权": {
+      "tags": [
+        "magical",
+        "spell",
+        "buff"
+      ],
+      "text": "对你发起的远程武器攻击检定具有劣势；获得 60 尺飞行速度。",
+      "statics": [
+        {
+          "kind": "speed",
+          "bonus": 60
+        }
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack",
+            "attack": {
+              "ranged": true,
+              "weapon": true
+            }
+          },
+          "who": "against",
+          "op": "disadv",
+          "label": "清风赋权：远程武器攻击劣势"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "name": "山丘符文",
+  "automation": "full",
+  "text": "铭刻此符文时，对抗中毒状态的豁免检定具有优势，并获得毒素伤害抗性（恒定抗性由人物卡处理）。此外，可以附赠动作激活此符文，获得钝击、挥砍和穿刺伤害抗性，持续 1 分钟。",
+  "resources": [
+    {
+      "id": "山丘符文",
+      "name": "山丘符文",
+      "formula": "cond(level >= 15, 2, 1)",
+      "recovery": "short"
+    }
+  ],
+  "rollMods": [
+    {
+      "on": {
+        "kind": "save"
+      },
+      "who": "bearer",
+      "when": "ask('对抗中毒状态吗？')",
+      "op": "adv",
+      "label": "山丘符文：对抗中毒优势"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "山丘符文：巨人坚韧",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "山丘符文"
+        }
+      ],
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "山丘坚韧"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "山丘坚韧": {
+      "duration": {
+        "minutes": 1
+      },
+      "statics": [
+        {
+          "kind": "resist",
+          "values": [
+            "钝击",
+            "穿刺",
+            "挥砍"
+          ]
+        }
+      ],
+      "text": "获得钝击、穿刺和挥砍伤害的抗性，持续 1 分钟。"
+    }
+  }
+}

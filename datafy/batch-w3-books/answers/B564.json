@@ -1,0 +1,60 @@
+{
+  "name": "阿迦纳萨喷火术",
+  "automation": "full",
+  "text": "一道长 30 尺、宽 5 尺的火线从你蔓延向选定方向。线状区域内的生物必须进行敏捷豁免，失败受到 3d8（每升一环 +1d8）火焰伤害，成功受到一半伤害。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "阿迦纳萨喷火术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 30,
+        "area": {
+          "shape": "line",
+          "length": 30,
+          "width": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "dice": "(1 + slot.level)d8",
+                  "type": "火焰",
+                  "id": "fireDmg"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "fireDmg",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

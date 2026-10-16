@@ -1,0 +1,46 @@
+{
+  "name": "推击剑舞",
+  "automation": "partial",
+  "text": "在你的回合内以攻击动作进行武器攻击命中时，可以消耗一次诗人激励（每回合限一次剑舞）。造成等同于激励骰结果的额外同类型伤害，并将目标推离你至多 5 + 激励骰结果尺；之后可立即用反应移动至多自身步行速度距离来到目标 5 尺内未占据空间（战棋移动与反应由人手动处理）。",
+  "triggers": [
+    {
+      "id": "mobile-flourish",
+      "label": "推击剑舞：消耗激励加伤并击退",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "limit": "oncePerTurn",
+      "optional": true,
+      "cost": [
+        {
+          "resource": "诗人激励"
+        }
+      ],
+      "when": "turn.isMine && attack.weapon",
+      "do": [
+        {
+          "kind": "number",
+          "prompt": "推击剑舞：请掷诗人激励骰（classTable('诗人骰')），输入掷出的点数作为额外伤害与击退距离计算",
+          "var": "flourishRoll",
+          "min": 1,
+          "max": 12,
+          "default": 4
+        },
+        {
+          "kind": "addDamage",
+          "dice": "vars.flourishRoll",
+          "type": "attack.damageType"
+        },
+        {
+          "kind": "move",
+          "mode": "push",
+          "ft": "5 + vars.flourishRoll"
+        },
+        {
+          "kind": "note",
+          "text": "击退目标后，你可以立即用反应移动至多等于步行速度的距离来到目标 5 尺内未占据空间，请手动在战棋上移动并扣除反应。"
+        }
+      ]
+    }
+  ]
+}

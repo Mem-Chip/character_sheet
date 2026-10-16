@@ -1,0 +1,69 @@
+{
+  "name": "霜噬",
+  "automation": "full",
+  "text": "目标必须进行体质豁免。失败受到 1d6（随等级成长）寒冷伤害，且在其下个回合结束前进行的下一次武器攻击检定具有劣势。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "霜噬",
+      "activation": "action",
+      "tags": ["spell", "magical"],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "(1 + floor((self.level + 1) / 6))d6",
+              "type": "寒冷"
+            },
+            {
+              "kind": "applyEffect",
+              "template": "霜噬冻结",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "霜噬冻结": {
+      "tags": ["magical", "spell"],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        },
+        "endsOn": [
+          {
+            "event": "d20Rolled",
+            "when": "event.kind == 'attack' && event.roller == self.id"
+          }
+        ]
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack",
+            "attack": {
+              "weapon": true
+            }
+          },
+          "who": "bearer",
+          "op": "disadv",
+          "label": "霜噬：武器攻击劣势"
+        }
+      ],
+      "text": "在下个回合结束前进行的下一次武器攻击检定具有劣势。"
+    }
+  }
+}

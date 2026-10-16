@@ -1,0 +1,68 @@
+{
+  "name": "瞥见亘古一瞬",
+  "automation": "partial",
+  "text": "持续 1 分钟。欺骗 120 尺内一名可见生物，目标必须进行一次智力豁免。豁免失败受到 10d12 心灵伤害并陷入麻痹状态。被麻痹期间，目标可在每个回合结束时重复此豁免；失败获得一层力竭，成功则法术结束。5 尺内生物可用动作将其摇醒以提前结束法术（力竭与摇醒需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "瞥见亘古一瞬",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 9
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 120,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "int",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "10d12",
+              "type": "心灵"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "瞥见亘古一瞬"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "瞥见亘古一瞬": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 1,
+        "saveEnds": {
+          "ability": "int",
+          "dc": "self.spell.dc",
+          "at": "turnEnd"
+        }
+      },
+      "implies": [
+        "XPHB:condition:麻痹"
+      ],
+      "text": "陷入麻痹状态。每个回合结束时重复智力豁免，失败则获得一层力竭，成功则结束此效应。5 尺内生物可用动作将其摇醒以结束法术。"
+    }
+  }
+}

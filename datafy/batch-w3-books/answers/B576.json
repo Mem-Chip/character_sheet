@@ -1,0 +1,62 @@
+{
+  "name": "烈焰箭矢",
+  "automation": "partial",
+  "text": "接触一个装有弹药的箭袋，持续至多 1 小时（专注）。使用其中弹药进行的远程武器攻击命中时额外造成 1d6 火焰伤害。法术在取出 12 发弹药后结束（升环每高一环增加 2 发；弹药取用计数需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "烈焰箭矢",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "concentration": {
+        "hours": 1
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "烈焰箭矢"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "烈焰箭矢": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "triggers": [
+        {
+          "id": "fireDmg",
+          "label": "烈焰箭矢：额外火焰伤害",
+          "on": "attackHit",
+          "role": "actor",
+          "window": "before",
+          "when": "attack.weapon && attack.ranged",
+          "do": [
+            {
+              "kind": "addDamage",
+              "dice": "1d6",
+              "type": "火焰"
+            }
+          ]
+        }
+      ],
+      "text": "远程武器攻击命中时额外造成 1d6 火焰伤害。在从箭袋取出 12 发弹药后终结（升环每高一环+2发）。"
+    }
+  }
+}

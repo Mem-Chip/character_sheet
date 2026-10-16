@@ -1,0 +1,82 @@
+{
+  "name": "星图",
+  "automation": "full",
+  "text": "手持星图时始终准备神导术与光导箭（静态层）。可以不消耗法术位施展光导箭，次数等于熟练加值次，长休恢复。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "星图：光导箭（不消耗法术位）",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "text": "不消耗法术位施展 1 环光导箭：远程法术攻击，命中造成 4d6 光耀伤害，并使下一次针对目标的攻击检定具有优势（直到你的下个回合结束）。",
+      "cost": [
+        {
+          "resource": "星图光导箭"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 120
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "ranged": true,
+            "spell": true,
+            "ability": "wis",
+            "damageType": "光耀"
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "4d6",
+              "type": "光耀"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "光导箭"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "光导箭": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "下一次针对该生物的攻击检定具有优势（直到光导箭施法者的下个回合结束）。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "against",
+          "op": "adv",
+          "label": "光导箭"
+        }
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "source",
+          "nth": 1
+        },
+        "endsOn": [
+          {
+            "event": "d20Rolled",
+            "when": "event.kind == 'attack' && event.target == self.id"
+          }
+        ]
+      }
+    }
+  }
+}

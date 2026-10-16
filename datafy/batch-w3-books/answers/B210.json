@@ -1,0 +1,51 @@
+{
+  "name": "征服威压",
+  "automation": "full",
+  "text": "以一个动作消耗 1 次引导神力：强迫周围 30 尺范围内你可见且由你选择的生物进行一次感知豁免。豁免失败的目标陷入对你的恐慌，持续 1 分钟；恐慌生物可在其每个回合结束时重复此豁免，成功则结束该效应。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "引导神力：征服威压",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "channel-divinity"
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "sphere",
+          "radius": 30
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": "8 + self.pb + self.mod.cha",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "template": "XPHB:condition:恐慌",
+                  "duration": {
+                    "minutes": 1,
+                    "saveEnds": {
+                      "ability": "wis",
+                      "at": "turnEnd"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

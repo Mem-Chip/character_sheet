@@ -1,0 +1,33 @@
+{
+  "name": "专心炽志",
+  "automation": "full",
+  "text": "狂暴期间每次狂暴一次：豁免失败时可重骰，必须采用新结果。用「本次狂暴已用」标记记录，再次进入狂暴时清除。",
+  "triggers": [
+    {
+      "id": "fanatical-focus",
+      "label": "专心炽志：重骰豁免",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "roll.kind == 'save' && roll.failing && self.hasEffect('狂暴') && !self.hasEffect('专心炽志：本次狂暴已用')",
+      "modify": [
+        { "op": "reroll", "die": "d20", "keep": "new" }
+      ],
+      "do": [
+        { "kind": "applyEffect", "to": "self", "template": "专心炽志：本次狂暴已用" }
+      ]
+    }
+  ],
+  "effects": {
+    "专心炽志：本次狂暴已用": {
+      "text": "这次狂暴里已经用过专心炽志。再次进入狂暴时清除。",
+      "duration": {
+        "manual": true,
+        "endsOn": [
+          { "event": "effectApplied", "when": "event.bearer == self.id && event.name == '狂暴'" }
+        ]
+      }
+    }
+  }
+}

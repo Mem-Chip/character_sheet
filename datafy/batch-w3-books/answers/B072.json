@@ -1,0 +1,55 @@
+{
+  "name": "秩序之怒",
+  "automation": "full",
+  "text": "在你回合内对一名生物造成神圣打击伤害后，你可以诅咒该生物（每回合限一次）。下一次你的盟友以一次攻击命中被诅咒的生物时，目标额外受到 2d8 心灵伤害，随后诅咒结束。未使用的诅咒在你的下个回合开始时消失。",
+  "triggers": [
+    {
+      "id": "order-wrath-curse",
+      "label": "秩序之怒：诅咒目标",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "turn.isMine && attack.weapon",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "秩序之怒"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "秩序之怒": {
+      "text": "被诅咒。下一次被施加者的盟友以一次攻击命中时，受到 2d8 心灵伤害，随后诅咒结束。在施加者的下个回合开始时消失。",
+      "duration": {
+        "until": { "at": "turnStart", "of": "source", "nth": 1 }
+      },
+      "triggers": [
+        {
+          "id": "wrath-damage",
+          "label": "秩序之怒：额外心灵伤害",
+          "on": "attackHit",
+          "role": "target",
+          "window": "after",
+          "when": "attacker != null && attacker.isAllyOf(source) && attacker.id != source.id",
+          "do": [
+            {
+              "kind": "damage",
+              "dice": "2d8",
+              "type": "心灵",
+              "to": "self"
+            },
+            {
+              "kind": "removeEffect",
+              "match": { "name": "秩序之怒" },
+              "from": "self"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

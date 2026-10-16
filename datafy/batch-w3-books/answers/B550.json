@@ -1,0 +1,36 @@
+{
+  "name": "虫群孳生",
+  "automation": "partial",
+  "text": "迫使 30 尺内你能看见的一名生物进行体质豁免。豁免失败受到 1d6（随等级成长）毒素伤害，并向随机方向（掷 1d4：1北 2南 3东 4西）移动 5 尺（若可移动且速度至少 5 尺，不引发借机攻击，随机移动需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "虫群孳生",
+      "activation": "action",
+      "tags": ["spell", "magical"],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "(1 + floor((self.level + 1) / 6))d6",
+              "type": "毒素"
+            },
+            {
+              "kind": "note",
+              "text": "目标掷 1d4 决定随机方向（1北 2南 3东 4西）移动 5 尺（不引发借机攻击，受阻则不移动）"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

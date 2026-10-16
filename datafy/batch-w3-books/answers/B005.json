@@ -1,0 +1,31 @@
+{
+  "name": "荒漠",
+  "automation": "full",
+  "text": "风暴灵光激活时（狂暴期间以附赠动作激活，进入狂暴时亦可激活）：灵光 10 尺弥散内的所有其他生物受到火焰伤害（3级 2点，5级 3点，10级 4点，15级 5点，20级 6点）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "风暴灵光：荒漠",
+      "activation": "bonus",
+      "requires": "self.hasEffect('狂暴') && turn.isMine",
+      "targeting": {
+        "type": "area",
+        "area": { "shape": "emanation", "radius": 10 },
+        "filter": "target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "damage",
+              "dice": "2 + floor(self.levelOf('野蛮人') / 5)",
+              "type": "火焰"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

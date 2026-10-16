@@ -1,0 +1,69 @@
+{
+  "name": "光耀武器",
+  "automation": "full",
+  "text": "用此武器攻击检定和伤害掷骰获得 +1 加值（静态）。能以附赠动作点亮或熄灭 30 尺明亮加 30 尺微光光照。武器拥有 4 发充能（每日黎明恢复 1d4 发）。被近战攻击命中后，能以反应消耗 1 发充能迫使攻击者进行体质豁免（对抗你的法术豁免 DC），失败陷入目盲状态直至其下个回合结束。",
+  "resources": [
+    {
+      "id": "radiant-weapon-charges",
+      "name": "光耀武器充能",
+      "formula": 4,
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "光耀武器：致盲反击",
+      "activation": "reaction",
+      "trigger": {
+        "on": "attackHit",
+        "role": "target",
+        "window": "after",
+        "when": "attack.melee"
+      },
+      "cost": [
+        {
+          "economy": "reaction"
+        },
+        {
+          "resource": "radiant-weapon-charges"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "reach",
+        "filter": "target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "光耀致盲"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "光耀致盲": {
+      "implies": [
+        "XPHB:condition:目盲"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "text": "陷入目盲状态，持续直至其下个回合结束。"
+    }
+  }
+}

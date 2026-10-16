@@ -1,0 +1,53 @@
+{
+  "name": "旭日骄阳之恩惠",
+  "automation": "partial",
+  "text": "以附赠动作开启30尺阳光光环，驱散重叠的黑暗术。激活期间未失能且未死亡时，每个你的回合开始时，你及光环内可见盟友获得10临时生命值。解除光环无需动作。阳光照亮与黑暗驱散由人工判定。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "旭日骄阳之恩惠：如日当空",
+      "activation": "bonus",
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "如日当空"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "如日当空": {
+      "text": "30尺光环内散发如同阳光的明亮光照。每个你的回合开始时，你及光环内可见盟友获得10临时生命值。陷入失能或死亡时失效。",
+      "aura": {
+        "id": "sun-aura",
+        "radius": 30,
+        "affects": "allies",
+        "includeSelf": true,
+        "requires": "!self.has('失能') && !self.dead",
+        "grant": {
+          "triggers": [
+            {
+              "id": "guardian-light",
+              "label": "守御之光",
+              "on": "turnStarted",
+              "role": "any",
+              "window": "after",
+              "when": "turn.of == source && canSee(source, self)",
+              "do": [
+                {
+                  "kind": "tempHp",
+                  "amount": 10,
+                  "to": "self"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "name": "辉煌防御",
+  "automation": "partial",
+  "text": "你或周围 10 尺内你可见的其他生物被攻击命中时，可用反应使其获得等同于你魅力调整值（至少 +1）的 AC 加值，可能使该次攻击失手。若因此失手且攻击者在你武器触及范围内，你可以对其进行一次武器攻击（属于该反应的一部分，需手动发起）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "辉煌防御",
+      "activation": "reaction",
+      "trigger": {
+        "on": "attackHit",
+        "role": "any",
+        "window": "before",
+        "when": "target.id == self.id || (target.isAllyOf(self) && within(self, target, 10) && canSee(self, target))"
+      },
+      "cost": [
+        {
+          "resource": "radiantDefense"
+        }
+      ],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "辉煌防御"
+        },
+        {
+          "kind": "note",
+          "text": "辉煌防御：若这次攻击因此失手，且攻击者在你的武器触及范围内，你可以用武器对其进行一次攻击（视为本反应的一部分，请手动发起）"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "辉煌防御": {
+      "text": "对这次攻击获得 AC 加值：施放者的魅力调整值（至少 +1）。这次攻击结算后消失。",
+      "statics": [
+        {
+          "kind": "ac",
+          "bonus": "max(1, source.mod.cha)"
+        }
+      ],
+      "duration": {
+        "rounds": 1,
+        "endsOn": [
+          {
+            "event": "attackMissed"
+          },
+          {
+            "event": "damageTaken"
+          }
+        ]
+      }
+    }
+  }
+}

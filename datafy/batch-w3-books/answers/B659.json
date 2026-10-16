@@ -1,0 +1,79 @@
+{
+  "name": "迷魂魔镜",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。迷惑 90 尺内至多三名可见生物，各进行一次智力豁免。失败受 7d6 心灵伤害并陷入震慑，震慑期间速度减半；成功受半伤。目标在每个回合结束时可重复智力豁免，成功则结束该效应（速度减半需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "迷魂魔镜",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 8
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 3,
+        "range": 90,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "int",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "dmg",
+              "dice": "7d6",
+              "type": "心灵"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "迷魂魔镜"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "dmg",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "迷魂魔镜": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 1,
+        "saveEnds": {
+          "ability": "int",
+          "dc": "self.spell.dc",
+          "at": "turnEnd"
+        }
+      },
+      "implies": [
+        "XPHB:condition:震慑"
+      ],
+      "text": "陷入震慑状态且速度减半。每个回合结束时可重复智力豁免，成功则结束此效应。"
+    }
+  }
+}

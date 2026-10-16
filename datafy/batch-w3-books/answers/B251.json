@@ -1,0 +1,55 @@
+{
+  "name": "恐惧伏击",
+  "automation": "partial",
+  "text": "先攻检定加感知调整值、战斗首回合速度+10已自动化。在战斗首回合执行攻击动作时可额外发动一次武器攻击（由玩家手动进行），若该次攻击命中，可触发额外 1d8 武器同类型伤害。",
+  "rollMods": [
+    {
+      "on": { "kind": "initiative" },
+      "who": "bearer",
+      "op": "add",
+      "value": "max(0, self.mod.wis)",
+      "label": "恐惧伏击：先攻加感知调整值"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "ambush-speed",
+      "label": "恐惧伏击：首回合速度增加",
+      "on": "turnStarted",
+      "role": "actor",
+      "window": "after",
+      "when": "round == 1 && turn.isMine",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "inline": {
+            "name": "恐惧伏击：速度提升",
+            "duration": {
+              "until": { "at": "turnEnd", "of": "bearer", "nth": 0 }
+            },
+            "statics": [
+              { "kind": "speed", "bonus": 10 }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ambush-extra-damage",
+      "label": "恐惧伏击：额外攻击伤害（+1d8）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "round == 1 && turn.isMine && attack.weapon && ask('这次命中是首回合攻击动作中恐惧伏击提供的额外武器攻击吗？')",
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "1d8",
+          "type": "attack.damageType"
+        }
+      ]
+    }
+  ]
+}

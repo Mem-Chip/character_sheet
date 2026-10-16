@@ -1,0 +1,35 @@
+{
+  "name": "魔法力量护甲",
+  "automation": "partial",
+  "text": "盔甲拥有 6 发充能，每日黎明恢复 1d6 发。进行力量检定或力量豁免时，可消耗 1 点充能将智力调整值加到投掷上。将被撞击倒地时，可以用一个反应消耗 1 点充能避免被撞击倒地（引擎无倒地拦截窗口，倒地与反应消耗充能由玩家手动处理）。",
+  "resources": [
+    {
+      "id": "armorOfMagicalStrengthCharges",
+      "name": "魔法力量护甲充能",
+      "formula": 6,
+      "recovery": "long"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "add-int-to-str",
+      "label": "魔法力量护甲：加智力调整值",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "(roll.kind == 'check' || roll.kind == 'save') && roll.ability == 'str'",
+      "cost": [
+        {
+          "resource": "armorOfMagicalStrengthCharges"
+        }
+      ],
+      "modify": [
+        {
+          "op": "addToRoll",
+          "value": "self.mod.int"
+        }
+      ]
+    }
+  ]
+}

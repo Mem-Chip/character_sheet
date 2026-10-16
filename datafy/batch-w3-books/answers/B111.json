@@ -1,0 +1,38 @@
+{
+  "name": "孢子环绕",
+  "automation": "partial",
+  "text": "当一个生物进入你周围10尺范围内或在其中开始其回合时，你可以使用反应迫使其进行一次对抗你法术豁免DC的体质豁免，豁免失败受到 1d4 暗蚀伤害（6级 1d6，10级 1d8，14级 1d10）。移动进入10尺空间由玩家手动触发反应。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "孢子环绕",
+      "activation": "reaction",
+      "trigger": {
+        "on": "turnStarted",
+        "role": "any",
+        "window": "after",
+        "when": "ask('有生物进入你周围10尺空间或在其中开始其回合吗？')"
+      },
+      "targeting": {
+        "type": "creature",
+        "range": 10,
+        "filter": "target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "cond(self.levelOf('德鲁伊') >= 14, 1d10, cond(self.levelOf('德鲁伊') >= 10, 1d8, cond(self.levelOf('德鲁伊') >= 6, 1d6, 1d4)))",
+              "type": "黯蚀",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "name": "力竭波",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。以附赠动作呼唤灰色光环笼罩周身。持续时间内可执行魔法动作投射 60 尺锥状光幕，区域内生物须进行体质豁免，失败获得一层力竭（该法术无法将力竭提升至 4 级以上）。法术结束时移除其造成的所有力竭等级（力竭上限与法术结束移除需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "力竭波",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "力竭波"
+        }
+      ]
+    },
+    {
+      "id": "wave",
+      "name": "力竭波：投射光幕",
+      "activation": "action",
+      "requires": "self.hasEffect('力竭波')",
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "cone",
+          "length": 60
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "if",
+                  "when": "target.exhaustion < 4",
+                  "then": [
+                    {
+                      "kind": "applyEffect",
+                      "to": "target",
+                      "template": "力竭波：力竭"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "力竭波": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 1
+      },
+      "text": "周身笼罩灰色光环。持续时间内可执行魔法动作投射 60 尺锥状光幕。法术结束时移除其造成的所有力竭等级。"
+    },
+    "力竭波：力竭": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:力竭"
+      ],
+      "stack": "level",
+      "duration": {
+        "minutes": 1
+      },
+      "text": "获得 1 层力竭（此法术无法将力竭提升至 4 级以上）。法术结束时被移除。"
+    }
+  }
+}

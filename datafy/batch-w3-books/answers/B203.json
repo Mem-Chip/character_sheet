@@ -1,0 +1,65 @@
+{
+  "name": "星我觉醒",
+  "automation": "partial",
+  "text": "以一个附赠动作花费 5 点功力召唤星我之臂、星我之容与星我之躯并进入觉醒状态，持续 10 分钟，失能或死亡提前结束。觉醒期间 AC 获得 +2 加值；使用额外攻击特性进行攻击时可攻击三次（须全部使用星我之臂进行）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "星我觉醒",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "功力",
+          "n": 5
+        }
+      ],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "星我觉醒"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "星我觉醒": {
+      "duration": {
+        "minutes": 10,
+        "endsOn": [
+          {
+            "event": "effectApplied",
+            "when": "event.bearer == self.id && self.has('失能')"
+          }
+        ]
+      },
+      "statics": [
+        {
+          "kind": "ac",
+          "bonus": 2
+        }
+      ],
+      "triggers": [
+        {
+          "id": "astralBarrage",
+          "label": "星之连击",
+          "on": "turnStarted",
+          "role": "actor",
+          "window": "after",
+          "limit": "oncePerTurn",
+          "when": "turn.isMine && ask('本回合执行攻击动作时，是否所有攻击均使用星我之臂？')",
+          "do": [
+            {
+              "kind": "economy",
+              "attacks": 1
+            },
+            {
+              "kind": "note",
+              "text": "星之连击：执行攻击动作且均使用星我之臂时，额外攻击可改为三次（增加 1 次攻击机会）。"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

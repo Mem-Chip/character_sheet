@@ -1,0 +1,34 @@
+{
+  "name": "收割亡灵",
+  "automation": "partial",
+  "text": "因受伤陷入浴血但未降至0生命值时，可以立即使用反应将一个由你控制且可见的亡灵降至0生命值，并立即恢复等同于法师等级的生命值。亡灵受控状态与降至0生命值需人工确认。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "收割亡灵",
+      "activation": "reaction",
+      "trigger": {
+        "on": "damageTaken",
+        "role": "target",
+        "window": "after",
+        "when": "self.hp <= floor(self.hpMax / 2) && self.hp > 0"
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "filter": "target.type == '亡灵' && target.isAllyOf(self) && canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "将所选由你控制的亡灵生命值降至 0。"
+        },
+        {
+          "kind": "heal",
+          "amount": "self.levelOf('法师')",
+          "to": "self"
+        }
+      ]
+    }
+  ]
+}

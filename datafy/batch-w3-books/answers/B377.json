@@ -1,0 +1,110 @@
+{
+  "name": "奥术偏斜",
+  "automation": "full",
+  "text": "当你被一次攻击击中或豁免失败时，可以用反应使对抗该次攻击的AC+2，或在该次豁免检定中获得+4加值。使用后直到你下个回合结束不能施展戏法以外的法术。14级起（偏斜罩幕），使用此特性时可令60尺内至多3个可见目标各受法师等级一半的力场伤害。",
+  "triggers": [
+    {
+      "id": "deflect-attack",
+      "label": "奥术偏斜：对抗攻击（AC+2）",
+      "on": "attackHit",
+      "role": "target",
+      "window": "before",
+      "optional": true,
+      "cost": [
+        {
+          "economy": "reaction"
+        }
+      ],
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "奥术偏斜：护盾"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "奥术偏斜：法术限制"
+        },
+        {
+          "kind": "if",
+          "when": "self.levelOf('法师') >= 14",
+          "then": [
+            {
+              "kind": "note",
+              "text": "偏斜罩幕（14级）：选择至多三个60尺内可见目标，各受等同于法师等级一半的力场伤害。由人手动处理伤害扣除。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "deflect-save",
+      "label": "奥术偏斜：豁免检定（+4）",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "cost": [
+        {
+          "economy": "reaction"
+        }
+      ],
+      "when": "roll.kind == 'save' && roll.failing",
+      "modify": [
+        {
+          "op": "addToRoll",
+          "value": 4
+        }
+      ],
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "奥术偏斜：法术限制"
+        },
+        {
+          "kind": "if",
+          "when": "self.levelOf('法师') >= 14",
+          "then": [
+            {
+              "kind": "note",
+              "text": "偏斜罩幕（14级）：选择至多三个60尺内可见目标，各受等同于法师等级一半的力场伤害。由人手动处理伤害扣除。"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "奥术偏斜：护盾": {
+      "text": "对抗这次攻击的AC获得+2加值。",
+      "statics": [
+        {
+          "kind": "ac",
+          "bonus": 2
+        }
+      ],
+      "duration": {
+        "endsOn": [
+          {
+            "event": "attackMissed"
+          },
+          {
+            "event": "damageTaken"
+          }
+        ]
+      }
+    },
+    "奥术偏斜：法术限制": {
+      "text": "直到你的下个回合结束为止，你都不能施展戏法之外的法术。",
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 2
+        }
+      }
+    }
+  }
+}

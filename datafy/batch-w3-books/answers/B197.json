@@ -1,0 +1,24 @@
+{
+  "name": "生杀予夺",
+  "automation": "partial",
+  "text": "使用疾风连击时，每一次徒手打击都可以替换为使用予命之手（无需额外消耗功力）。另外，在疾风连击中发动的徒手打击命中时，可使用夺命之手而无需额外消耗功力（每回合限一次）。疾风连击中替换予命之手需手动处理；与普通夺命之手共用每回合一次限制需人工注意。",
+  "triggers": [
+    {
+      "id": "free-harm",
+      "label": "生杀予夺：免费夺命之手",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "attack.unarmed && ask('这次徒手打击来自疾风连击吗？')",
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "classTable('武艺') + self.mod.wis",
+          "type": "黯蚀"
+        }
+      ]
+    }
+  ]
+}

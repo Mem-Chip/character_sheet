@@ -1,0 +1,153 @@
+{
+  "name": "灵魂牢笼",
+  "automation": "partial",
+  "text": "1 反应（60 尺内看见类人生物死去时使用）。将死者灵魂困在笼中至多 8 小时。被困灵魂至多可被利用 6 次，用尽后法术结束。可进行的利用方式包括：【窃取生命】附赠动作恢复 2d8 生命值；【灵魂质问】无需动作提问并获得如实简短回答；【借鉴经验】附赠动作使下一次攻击检定、属性检定或豁免检定具优势（下回合开始前生效）；【亡者之眼】动作在死者生前见过的地点创造隐形传感器，专注至多 10 分钟。已死类人生物在灵魂被困期间无法复活。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "灵魂牢笼",
+      "activation": "reaction",
+      "trigger": {
+        "on": "reducedTo0",
+        "role": "any"
+      },
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 6
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "灵魂牢笼"
+        }
+      ]
+    },
+    {
+      "id": "steal-life",
+      "name": "灵魂牢笼：窃取生命",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.hasEffect('灵魂牢笼')",
+      "root": [
+        {
+          "kind": "heal",
+          "amount": "2d8",
+          "to": "self"
+        },
+        {
+          "kind": "note",
+          "text": "从灵魂中吸取活力恢复生命。消耗一次灵魂利用次数（上限6次，第6次用完后法术结束）。"
+        }
+      ]
+    },
+    {
+      "id": "borrow-experience",
+      "name": "灵魂牢笼：借鉴经验",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.hasEffect('灵魂牢笼')",
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "借鉴经验"
+        },
+        {
+          "kind": "note",
+          "text": "获得灵魂人生经验支持。消耗一次灵魂利用次数（上限6次，第6次用完后法术结束）。"
+        }
+      ]
+    },
+    {
+      "id": "eyes-of-the-dead",
+      "name": "灵魂牢笼：亡者之眼",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.hasEffect('灵魂牢笼')",
+      "concentration": {
+        "minutes": 10
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "说出死者生前见过的地点，在同位面创造隐形传感器，专注至多10分钟。消耗一次灵魂利用次数。"
+        }
+      ]
+    },
+    {
+      "id": "query-soul",
+      "name": "灵魂牢笼：灵魂质问",
+      "activation": "free",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.hasEffect('灵魂牢笼')",
+      "root": [
+        {
+          "kind": "note",
+          "text": "向灵魂提出一个问题，获得如实的简短心灵感应回答。消耗一次灵魂利用次数。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "灵魂牢笼": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "hours": 8
+      },
+      "text": "困有类人生物灵魂，最多可利用 6 次（窃取生命、借鉴经验、亡者之眼、灵魂质问）。"
+    },
+    "借鉴经验": {
+      "tags": [
+        "magical",
+        "spell",
+        "buff"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "d20"
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "借鉴经验：下一次检定优势"
+        }
+      ],
+      "text": "下一次攻击检定、属性检定或豁免检定具有优势。若下回合开始前未使用则失效。"
+    }
+  }
+}

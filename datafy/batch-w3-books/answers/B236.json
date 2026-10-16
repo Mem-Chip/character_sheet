@@ -1,0 +1,60 @@
+{
+  "name": "驱散异域",
+  "automation": "partial",
+  "text": "以动作消耗 1 次引导神力，展示圣徽，周围 30 尺内能听到祷言的异怪、天界生物、元素、精类或邪魔须进行感知豁免（DC 为法术豁免 DC），失败陷入恐慌 1 分钟（受到任何伤害提前结束）。被驱散生物远离移动、只能疾走或挣脱等行为限制需手动处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "驱散异域",
+      "activation": "action",
+      "tags": ["magical"],
+      "cost": [
+        {
+          "resource": "channel-divinity"
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "emanation",
+          "radius": 30
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "if",
+              "when": "target.id != self.id && (target.type == '异怪' || target.type == '天界生物' || target.type == '元素' || target.type == '精类' || target.type == '邪魔')",
+              "then": [
+                {
+                  "kind": "save",
+                  "ability": "wis",
+                  "dc": "self.spell.dc",
+                  "onFail": [
+                    {
+                      "kind": "applyEffect",
+                      "to": "target",
+                      "template": "XPHB:condition:恐慌",
+                      "duration": {
+                        "minutes": 1,
+                        "endsOn": [
+                          {
+                            "event": "damageTaken"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

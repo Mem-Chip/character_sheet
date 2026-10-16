@@ -1,0 +1,63 @@
+{
+  "name": "召唤野火精魂",
+  "automation": "partial",
+  "text": "以一个动作消耗一次荒野形态召唤野火灵魄，出现在30尺内未占据空间，灵魄10尺内除你之外的生物须通过敏捷豁免，失败受到2d6火焰伤害。野火灵魄持续1小时。后续回合可以附赠动作命令灵魄。灵魄的数据与具体行动手动处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "召唤野火精魂",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "wildshape-uses"
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 30,
+        "area": {
+          "shape": "sphere",
+          "radius": 10
+        },
+        "filter": "target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "dice": "2d6",
+                  "type": "火焰"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "野火灵魄出现于30尺内选定的未占据空间，持续1小时；灵魄生物数据及行动由人手动处理。"
+        }
+      ]
+    },
+    {
+      "id": "command",
+      "name": "命令野火精魂",
+      "activation": "bonus",
+      "requires": "turn.isMine",
+      "text": "以附赠动作命令野火灵魄执行动作（火焰种、炽烈传送或其他动作）。",
+      "root": [
+        {
+          "kind": "note",
+          "text": "命令野火灵魄执行动作（灵魄的行动手动处理）"
+        }
+      ]
+    }
+  ]
+}

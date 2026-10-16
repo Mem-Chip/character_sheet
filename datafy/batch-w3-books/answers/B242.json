@@ -1,0 +1,61 @@
+{
+  "name": "气巨灵之遁形",
+  "automation": "full",
+  "text": "施展至圣斩后，可消耗 1 次引导神力触发。你传送至 30 尺内可见未被占据空间，化为半虚体直至下个回合结束。在此形态期间具有钝击、穿刺、挥砍伤害抗性，并免疫受擒、倒地和束缚状态。",
+  "triggers": [
+    {
+      "id": "djinni-step",
+      "label": "气巨灵之遁形",
+      "on": "spellCast",
+      "role": "actor",
+      "optional": true,
+      "when": "event.spell == '至圣斩' || event.key == 'XPHB:spell:至圣斩' || event.key == 'XPHB:圣武士:圣武斩:2'",
+      "cost": [
+        {
+          "resource": "channel-divinity"
+        }
+      ],
+      "do": [
+        {
+          "kind": "note",
+          "text": "气巨灵之遁形：传送至 30 尺范围内一处你可见的未被占据空间"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "气巨灵之遁形"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "气巨灵之遁形": {
+      "text": "化为半虚体：具有钝击、穿刺、挥砍伤害抗性，免疫受擒、倒地和束缚状态，持续至下个回合结束。",
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "statics": [
+        {
+          "kind": "resist",
+          "values": [
+            "钝击",
+            "穿刺",
+            "挥砍"
+          ]
+        },
+        {
+          "kind": "conditionImmune",
+          "values": [
+            "受擒",
+            "倒地",
+            "束缚"
+          ]
+        }
+      ]
+    }
+  }
+}

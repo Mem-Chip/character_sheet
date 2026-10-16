@@ -1,0 +1,56 @@
+{
+  "name": "灼烧烈焰",
+  "automation": "partial",
+  "text": "当小型或更大生物在你或野火灵魄30尺内死亡时涌现幽火，持续1分钟。可见生物进入该空间时，你可以用反应熄灭幽火，对该生物造成 2d10+感知调整值 点火焰伤害或恢复等量生命值。幽火位置与进入时机由人工判定，进入时以自由动作（消耗反应与资源）结算。次数等于熟练加值，长休恢复。",
+  "resources": [
+    {
+      "id": "cauterizing-flames",
+      "name": "灼烧烈焰",
+      "formula": "pb",
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "灼烧烈焰",
+      "activation": "free",
+      "cost": [
+        { "economy": "reaction" },
+        { "resource": "cauterizing-flames" }
+      ],
+      "targeting": {
+        "type": "creature",
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "灼烧烈焰：选择造成伤害还是治疗",
+          "options": [
+            {
+              "label": "火焰伤害（2d10 + 感知调整值）",
+              "do": [
+                {
+                  "kind": "damage",
+                  "dice": "2d10 + self.mod.wis",
+                  "type": "火焰"
+                }
+              ]
+            },
+            {
+              "label": "恢复生命值（2d10 + 感知调整值）",
+              "do": [
+                {
+                  "kind": "heal",
+                  "to": "target",
+                  "amount": "2d10 + self.mod.wis"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

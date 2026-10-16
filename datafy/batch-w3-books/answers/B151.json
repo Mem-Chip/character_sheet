@@ -1,0 +1,63 @@
+{
+  "name": "念力宗师",
+  "automation": "partial",
+  "text": "无需成分施展心灵遥控（施法属性为智力，需专注至多10分钟）。维持专注的回合中（包括施展的回合），可用附赠动作进行一次武器攻击。长休可用一次（资源「tk-master」）；亦可消耗一枚灵能骰重置使用次数。心灵遥控具体控制与附赠武器攻击由人工结算。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "念力宗师：心灵遥控",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "resource": "tk-master"
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "无需任何成分施展心灵遥控（施法属性为智力，专注至多10分钟），效果由人处理。"
+        }
+      ]
+    },
+    {
+      "id": "attack",
+      "name": "念力宗师：附赠武器攻击",
+      "activation": "bonus",
+      "tags": [
+        "weapon"
+      ],
+      "requires": "turn.isMine && self.concentrating && ask('正在对心灵遥控维持专注吗？')",
+      "root": [
+        {
+          "kind": "note",
+          "text": "维持心灵遥控专注期间，以附赠动作进行一次武器攻击，由人选择武器并结算。"
+        }
+      ]
+    },
+    {
+      "id": "reset",
+      "name": "念力宗师（消耗灵能骰重置）",
+      "activation": "free",
+      "cost": [
+        {
+          "resource": "灵能力量"
+        }
+      ],
+      "requires": "self.resource('tk-master') < 1",
+      "root": [
+        {
+          "kind": "resource",
+          "id": "tk-master",
+          "delta": 1
+        }
+      ]
+    }
+  ]
+}

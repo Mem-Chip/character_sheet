@@ -1,0 +1,55 @@
+{
+  "name": "伏击大师",
+  "automation": "full",
+  "text": "先攻检定具有优势。此外，在战斗首轮被你命中的首个生物更容易受到攻击：直到你的下个回合开始，对该目标发动的攻击检定均具有优势。",
+  "rollMods": [
+    {
+      "on": {
+        "kind": "initiative"
+      },
+      "who": "bearer",
+      "op": "adv",
+      "label": "伏击大师：先攻检定优势"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "mark",
+      "label": "伏击大师：标记首轮命中的目标",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "limit": "oncePerRound",
+      "when": "round == 1",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "伏击大师",
+          "duration": {
+            "until": {
+              "at": "turnStart",
+              "of": "source",
+              "nth": 1
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "伏击大师": {
+      "text": "受到攻击检定具有优势，直到斥候的下个回合开始。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "against",
+          "op": "adv",
+          "label": "伏击大师：受到攻击具有优势"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "同筑坚城",
+  "automation": "full",
+  "text": "当 60 尺内你可见的一名盟友豁免检定失败时，你可以使用反应并消耗一次不屈次数，让该盟友立即重投该豁免并在新掷骰中加上你的战士等级加值，必须采用新结果。",
+  "triggers": [
+    {
+      "id": "bulwark",
+      "label": "同筑坚城：重骰豁免",
+      "on": "d20Rolled",
+      "role": "any",
+      "window": "before",
+      "optional": true,
+      "when": "roll.kind == 'save' && roll.failing && roll.roller != self.id && combatant(roll.roller).isAllyOf(self) && dist(self, combatant(roll.roller)) <= 60 && canSee(self, combatant(roll.roller))",
+      "cost": [
+        {
+          "economy": "reaction"
+        },
+        {
+          "resource": "不屈"
+        }
+      ],
+      "modify": [
+        {
+          "op": "reroll",
+          "die": "d20",
+          "keep": "new"
+        },
+        {
+          "op": "addToRoll",
+          "value": "self.levelOf('战士')"
+        }
+      ]
+    }
+  ]
+}

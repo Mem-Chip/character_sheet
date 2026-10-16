@@ -1,0 +1,76 @@
+{
+  "name": "心灵尖啸",
+  "automation": "partial",
+  "text": "1 动作。轰击 90 尺内至多 10 个可见生物的心智（智力值 ≤ 2 的生物不受影响）。每个目标必须进行一次智力豁免，失败受到 14d6 心灵伤害并陷入震慑，成功受到半伤且不被震慑。被震慑的生物在其每个回合结束时可重新进行智力豁免，成功则结束震慑。若有头的生物被此伤害杀死，其头颅爆炸。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "心灵尖啸",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 9
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 10,
+        "range": 90,
+        "filter": "target.score.int > 2"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "int",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "14d6",
+              "type": "心灵",
+              "id": "scream-damage"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "心灵尖啸：震慑"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "scream-damage",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "心灵尖啸：震慑": {
+      "tags": [
+        "magical",
+        "spell",
+        "debuff"
+      ],
+      "implies": [
+        "XPHB:condition:震慑"
+      ],
+      "duration": {
+        "saveEnds": {
+          "ability": "int",
+          "dc": "self.spell.dc",
+          "at": "turnEnd"
+        }
+      },
+      "text": "陷入震慑状态。在每个其自身回合结束时可重新进行智力豁免，成功则结束震慑。"
+    }
+  }
+}

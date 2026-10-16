@@ -1,0 +1,78 @@
+{
+  "name": "星我之臂",
+  "automation": "partial",
+  "text": "附赠动作消耗 1 点功力召唤星我之臂，对周围 10 尺内由你选择的生物造成 2 颗武艺骰力场伤害（敏捷豁免）。持续 10 分钟，失能或死亡提前结束。期间力量检定/豁免可用感知调整值代替；徒手打击触及加 5 尺，可使用感知调整值且造成力场伤害。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "召唤星我之臂",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "功力"
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "sphere",
+          "radius": 10
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "8 + self.pb + self.mod.wis",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "dice": "classTable('武艺') + classTable('武艺')",
+                  "type": "力场"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "星我之臂"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "星我之臂": {
+      "duration": {
+        "minutes": 10,
+        "endsOn": [
+          {
+            "event": "effectApplied",
+            "when": "event.bearer == self.id && self.has('失能')"
+          }
+        ]
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": [
+              "check",
+              "save"
+            ],
+            "ability": "str"
+          },
+          "who": "bearer",
+          "op": "add",
+          "value": "max(0, self.mod.wis - self.mod.str)",
+          "label": "星我之臂：感知代替力量"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "name": "灵巧格挡",
+  "automation": "partial",
+  "text": "持握近战剑圣武器并在你的回合中进行了一次徒手打击作为攻击动作的一部分时，AC +2 直至你的下一回合开始。武器脱手或陷入失能状态提前结束增益需手动处理。",
+  "triggers": [
+    {
+      "id": "agileParry",
+      "label": "灵巧格挡：AC +2",
+      "on": ["attackHit", "attackMissed"],
+      "role": "actor",
+      "window": "after",
+      "optional": true,
+      "limit": "oncePerRound",
+      "when": "turn.isMine && attack.unarmed && ask('这次攻击是否是攻击动作中的徒手打击，且你正持握一件近战剑圣武器？')",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "inline": {
+            "name": "灵巧格挡",
+            "duration": {
+              "until": {
+                "at": "turnStart",
+                "of": "bearer",
+                "nth": 1
+              }
+            },
+            "statics": [
+              { "kind": "ac", "bonus": 2 }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

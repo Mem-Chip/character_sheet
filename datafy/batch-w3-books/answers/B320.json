@@ -1,0 +1,34 @@
+{
+  "name": "恐怖化身",
+  "automation": "partial",
+  "text": "【割喉】完成短休时恢复一次已消耗的嗜血特性使用次数。【杀戮意图】当你投掷偷袭伤害时，可以将伤害骰投出的 1 和 2 都视为 3（掷伤害时确认是否为偷袭伤害）。",
+  "triggers": [
+    {
+      "id": "cutthroat",
+      "label": "割喉：短休恢复嗜血使用次数",
+      "on": "restCompleted",
+      "role": "actor",
+      "window": "after",
+      "when": "event.kind == 'short'",
+      "do": [
+        {
+          "kind": "resource",
+          "id": "嗜血",
+          "delta": 1
+        }
+      ]
+    }
+  ],
+  "rollMods": [
+    {
+      "on": {
+        "kind": "damage"
+      },
+      "who": "bearer",
+      "when": "ask('这是偷袭伤害掷骰吗？')",
+      "op": "minDie",
+      "value": 3,
+      "label": "杀戮意图：偷袭伤害骰1和2视为3"
+    }
+  ]
+}

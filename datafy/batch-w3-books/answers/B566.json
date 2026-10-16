@@ -1,0 +1,40 @@
+{
+  "name": "地缚",
+  "automation": "partial",
+  "text": "选择 300 尺内一名可见生物进行力量豁免。豁免失败则在持续时间内（专注至多 1 分钟）其飞行速度降为 0 尺；飞行中的受术生物以每轮 60 尺的速度安全降落，直至落地或法术结束（飞行速度与降落需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "地缚",
+      "activation": "action",
+      "tags": ["spell", "magical"],
+      "cost": [{ "slot": { "min": 2 } }],
+      "concentration": { "minutes": 1 },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 300
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "str",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "地缚"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "地缚": {
+      "tags": ["magical", "spell"],
+      "text": "飞行速度降为 0 尺。若正在飞行中，每轮以 60 尺速度安全降落直到触地或法术结束。"
+    }
+  }
+}

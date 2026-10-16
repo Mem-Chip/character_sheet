@@ -1,0 +1,155 @@
+{
+  "name": "闪电之环",
+  "automation": "partial",
+  "text": "专注至多 10 分钟。10 尺光环环绕自身，生物进入或在其内结束回合时，可迫使其进行体质豁免，失败受 3d6 闪电加 3d6 雷鸣伤害并陷入耳聋 1 分钟，成功受半伤。法术激活期间，可以魔法动作发射 60 尺长、5 尺宽的电能线，线状区域内生物敏捷豁免，失败受 6d6 闪电伤害，成功受半伤（光环进入/结束回合触发需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "闪电之环",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 8
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "闪电之环"
+        }
+      ]
+    },
+    {
+      "id": "ring-burst",
+      "name": "闪电之环：光环冲击",
+      "activation": "none",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 10
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "ring_lgt",
+              "dice": "3d6",
+              "type": "闪电"
+            },
+            {
+              "kind": "damage",
+              "id": "ring_thn",
+              "dice": "3d6",
+              "type": "雷鸣"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "闪电之环：耳聋"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "ring_lgt",
+              "scale": 0.5
+            },
+            {
+              "kind": "damage",
+              "ref": "ring_thn",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "beam",
+      "name": "闪电之环：电能射线",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating",
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "line",
+          "length": 60,
+          "width": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "beam_dmg",
+              "dice": "6d6",
+              "type": "闪电"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "beam_dmg",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "闪电之环": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 10
+      },
+      "text": "10 尺光环覆盖自身周围；生物进入或在区域内结束回合时体质豁免受闪电与雷鸣伤害并耳聋；可以魔法动作发射 60 尺长 5 尺宽的闪电线。"
+    },
+    "闪电之环：耳聋": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 1
+      },
+      "implies": [
+        "XPHB:condition:耳聋"
+      ],
+      "text": "陷入耳聋状态，持续 1 分钟。"
+    }
+  }
+}

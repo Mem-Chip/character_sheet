@@ -1,0 +1,80 @@
+{
+  "name": "潇洒气质",
+  "automation": "partial",
+  "text": "以一个动作进行魅力（游说）对抗目标感知（洞悉）检定（目标须能听见你且共享语言）。检定对抗由人手动判定。检定成功时，若敌对则施加嘲讽效果（对其除你之外的目标攻击有劣势且不能对其借机攻击，持续1分钟，队友攻击/法术影响或距离超60尺提前结束）；若非敌对则魅惑1分钟（视为友好熟人，受到伤害或有害行为提前结束）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "潇洒气质",
+      "activation": "action",
+      "targeting": {
+        "type": "creature",
+        "count": 1
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "潇洒气质：游说对抗洞悉检定是否成功？",
+          "options": [
+            {
+              "label": "成功：目标敌对（挑衅嘲讽）",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "挑衅",
+                  "duration": {
+                    "minutes": 1,
+                    "endsOn": [
+                      {
+                        "event": "damageTaken"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "label": "成功：目标非敌对（魅惑）",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "XPHB:condition:魅惑",
+                  "duration": {
+                    "minutes": 1,
+                    "endsOn": [
+                      {
+                        "event": "damageTaken"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "label": "失败：对抗未成功",
+              "do": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "挑衅": {
+      "text": "对剑客以外的目标发动的攻击检定具有劣势，且不能对除剑客以外的目标进行借机攻击。受到伤害、队友施法影响或离开60尺提前结束。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "bearer",
+          "when": "target != null && target.id != source.id",
+          "op": "disadv",
+          "label": "潇洒气质：对剑客以外的目标攻击具有劣势"
+        }
+      ]
+    }
+  }
+}

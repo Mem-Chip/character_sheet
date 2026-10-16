@@ -1,0 +1,130 @@
+{
+  "name": "咒唤机群",
+  "automation": "partial",
+  "text": "专注至多 10 分钟。在 60 尺内未占据空间咒唤中型机群。施法时或后续以魔法动作（动作），令机群指定其 5 尺内目标生效：【机关之力】目标敏捷豁免，失败受 3d6 力场伤害，成功半伤；【秩序守护】目标获得 1d6 + 施法属性调整值点临时生命。你在回合移动时可令机群移动至多 30 尺（升环每高一环伤害与临时生命各 +1d6；机群移动与升环需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "咒唤机群",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "选择咒唤机群的效果",
+          "options": [
+            {
+              "label": "机关之力（伤害）",
+              "do": [
+                {
+                  "kind": "save",
+                  "ability": "dex",
+                  "dc": "self.spell.dc",
+                  "onFail": [
+                    {
+                      "kind": "damage",
+                      "id": "dmg",
+                      "dice": "3d6",
+                      "type": "力场"
+                    }
+                  ],
+                  "onSuccess": [
+                    {
+                      "kind": "damage",
+                      "ref": "dmg",
+                      "scale": 0.5
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "秩序守护（临时生命）",
+              "do": [
+                {
+                  "kind": "tempHp",
+                  "amount": "1d6 + self.spell.mod"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "command",
+      "name": "咒唤机群：驱策机群",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "选择机群效果",
+          "options": [
+            {
+              "label": "机关之力（伤害）",
+              "do": [
+                {
+                  "kind": "save",
+                  "ability": "dex",
+                  "dc": "self.spell.dc",
+                  "onFail": [
+                    {
+                      "kind": "damage",
+                      "id": "cmd_dmg",
+                      "dice": "3d6",
+                      "type": "力场"
+                    }
+                  ],
+                  "onSuccess": [
+                    {
+                      "kind": "damage",
+                      "ref": "cmd_dmg",
+                      "scale": 0.5
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "秩序守护（临时生命）",
+              "do": [
+                {
+                  "kind": "tempHp",
+                  "amount": "1d6 + self.spell.mod"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

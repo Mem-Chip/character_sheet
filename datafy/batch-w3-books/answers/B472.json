@@ -1,0 +1,77 @@
+{
+  "name": "贵族信念",
+  "automation": "partial",
+  "text": "以附赠动作选择至多三名 60 尺内能看见你的生物，结束其倒地状态并增强信念 1 分钟（免疫魅惑与恐慌，对抗附身、魅惑或恐慌的新豁免具有优势）。目标起立需消耗其反应；陷入失能状态时提前结束。",
+  "resources": [
+    {
+      "id": "banneret",
+      "name": "执旗者",
+      "formula": 1,
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "执旗者",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "banneret"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 3,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "targets",
+          "do": [
+            {
+              "kind": "removeEffect",
+              "from": "target",
+              "match": {
+                "name": "倒地"
+              }
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "执旗者"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "执旗者": {
+      "duration": {
+        "minutes": 1
+      },
+      "statics": [
+        {
+          "kind": "conditionImmune",
+          "values": [
+            "魅惑",
+            "恐慌"
+          ]
+        }
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save"
+          },
+          "who": "bearer",
+          "when": "ask('这次豁免是对抗附身、魅惑或恐慌效应吗？')",
+          "op": "adv",
+          "label": "执旗者：对抗附身/魅惑/恐慌"
+        }
+      ]
+    }
+  }
+}

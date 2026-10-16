@@ -1,0 +1,76 @@
+{
+  "name": "死佑护甲",
+  "automation": "full",
+  "text": "持续 1 小时。触碰一名生物，墨色灵光环绕该目标。目标进行的死亡豁免检定具有优势；且每回合一次，当位于目标 5 尺内的生物用近战攻击检定命中目标时，该攻击者受到 2d4 暗蚀伤害。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "死佑护甲",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "死佑护甲"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "死佑护甲": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "hours": 1
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "deathSave"
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "死佑护甲：死亡豁免优势"
+        }
+      ],
+      "triggers": [
+        {
+          "id": "retaliation",
+          "label": "死佑护甲：近战反伤",
+          "on": "attackHit",
+          "role": "target",
+          "window": "after",
+          "limit": "oncePerTurn",
+          "when": "attack.melee && within(self, attacker, 5)",
+          "do": [
+            {
+              "kind": "damage",
+              "dice": "2d4",
+              "type": "暗蚀",
+              "to": "attacker"
+            }
+          ]
+        }
+      ],
+      "text": "死亡豁免检定具有优势；每回合一次，当 5 尺内生物用近战攻击命中目标时，攻击者受 2d4 暗蚀伤害。"
+    }
+  }
+}

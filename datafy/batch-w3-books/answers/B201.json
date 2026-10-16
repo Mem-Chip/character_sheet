@@ -1,0 +1,59 @@
+{
+  "name": "星我之容",
+  "automation": "partial",
+  "text": "以一个附赠动作花费 1 点功力召唤星我之容（亦可作为召唤星我之臂的附赠动作一部分同时召唤），持续 10 分钟，失能或死亡提前消失。期间获得 120 尺魔法/非魔法黑暗视觉，感知（洞悉）和魅力（威吓）检定具有优势，并可定向传音或放大声音至 600 尺。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "召唤星我之容",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "功力"
+        }
+      ],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "星我之容"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "星我之容": {
+      "duration": {
+        "minutes": 10,
+        "endsOn": [
+          {
+            "event": "effectApplied",
+            "when": "event.bearer == self.id && self.has('失能')"
+          }
+        ]
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "check",
+            "ability": "wis",
+            "skill": "洞悉"
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "精魂感知：感知（洞悉）优势"
+        },
+        {
+          "on": {
+            "kind": "check",
+            "ability": "cha",
+            "skill": "威吓"
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "精魂感知：魅力（威吓）优势"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "name": "扰神曲",
+  "automation": "full",
+  "text": "专注至多 1 分钟。扰乱心神的旋律回荡在 120 尺内指定的 20 尺半径球状区域。区域内所有生物必须进行一次体质豁免，豁免失败者失去专注，且在法术持续时间内维持专注的体质豁免具有劣势。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "扰神曲",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "sphere",
+          "radius": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "扰神曲：心神扰乱"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "扰神曲：心神扰乱": {
+      "tags": [
+        "magical",
+        "spell",
+        "debuff"
+      ],
+      "flags": {
+        "breaksConcentration": true
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "concentration"
+          },
+          "who": "bearer",
+          "op": "disadv",
+          "label": "扰神曲：维持专注豁免劣势"
+        }
+      ],
+      "text": "失去专注；在法术持续时间内维持专注的体质豁免具有劣势。"
+    }
+  }
+}

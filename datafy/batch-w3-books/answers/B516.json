@@ -1,0 +1,81 @@
+{
+  "name": "寒霜符文",
+  "automation": "full",
+  "text": "铭刻此符文时，进行的感知（驯兽）与魅力（威吓）检定具有优势。此外，可以附赠动作激活此符文强化体能，在接下来的 10 分钟内，力量和体质的属性检定与豁免检定均获得 +2 加值。",
+  "resources": [
+    {
+      "id": "寒霜符文",
+      "name": "寒霜符文",
+      "formula": "cond(level >= 15, 2, 1)",
+      "recovery": "short"
+    }
+  ],
+  "rollMods": [
+    {
+      "on": {
+        "kind": "check",
+        "skill": "驯兽"
+      },
+      "who": "bearer",
+      "op": "adv",
+      "label": "寒霜符文：驯兽优势"
+    },
+    {
+      "on": {
+        "kind": "check",
+        "skill": "威吓"
+      },
+      "who": "bearer",
+      "op": "adv",
+      "label": "寒霜符文：威吓优势"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "寒霜符文：体能强化",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "寒霜符文"
+        }
+      ],
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "寒霜符文强化"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "寒霜符文强化": {
+      "duration": {
+        "minutes": 10
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": [
+              "check",
+              "save"
+            ],
+            "ability": [
+              "str",
+              "con"
+            ]
+          },
+          "who": "bearer",
+          "op": "add",
+          "value": 2,
+          "label": "寒霜符文：力量与体质检定/豁免 +2"
+        }
+      ],
+      "text": "接下来的 10 分钟内，进行的使用力量属性或体质属性的属性检定与豁免检定具有 +2 加值。"
+    }
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "name": "马友夫微流星",
+  "automation": "partial",
+  "text": "制造 6 颗微型流星（升环每高一环+2颗），持续至多 10 分钟（专注）。施法时及后续每个回合可用附赠动作发射 1~2 颗流星袭击 120 尺内某点，5 尺半径内生物敏捷豁免，失败受 2d6 火焰伤害，成功半伤（流星发射数量与剩余计数需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "马友夫微流星",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "马友夫微流星"
+        }
+      ]
+    },
+    {
+      "id": "meteor",
+      "name": "马友夫微流星：发射",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.hasEffect('马友夫微流星')",
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "sphere",
+          "radius": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "meteorDmg",
+                  "dice": "2d6",
+                  "type": "火焰"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "meteorDmg",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "马友夫微流星": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "环绕周身的微型流星。附赠动作发射 1~2 颗袭击 120 尺内点，5 尺内敏捷豁免受 2d6 火焰半伤。"
+    }
+  }
+}

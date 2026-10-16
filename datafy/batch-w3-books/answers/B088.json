@@ -1,0 +1,106 @@
+{
+  "name": "引导神力：暮光圣域",
+  "automation": "full",
+  "text": "以一个动作消耗一次引导神力：散发出半径30尺的球体暮光，持续1分钟或直到你失能/死亡。每当生物（包括你）在球体中结束其回合时，你可赋予其以下好处之一：获得 1d6 + 牧师等级 点临时生命值；或结束一个正使其魅惑或恐慌的效应。17级起（暮光守护），你和盟友在该球体内获得半身掩护（+2 AC 与敏捷豁免）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "引导神力：暮光圣域",
+      "activation": "action",
+      "cost": [
+        { "resource": "引导神力" }
+      ],
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "暮光圣域",
+          "duration": {
+            "minutes": 1,
+            "endsOn": [
+              {
+                "event": "effectApplied",
+                "when": "self.has('失能') || self.dead"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "暮光圣域": {
+      "text": "30尺半径暮光球体。生物在此结束回合可获临时生命或解除魅惑/恐慌。17级时提供半身掩护（+2 AC 与敏捷豁免）。",
+      "aura": {
+        "id": "twilight-sanctuary",
+        "radius": 30,
+        "affects": "allies",
+        "includeSelf": true,
+        "requires": "!self.has('失能') && !self.dead",
+        "grant": {
+          "statics": [
+            {
+              "kind": "ac",
+              "bonus": "cond(source.levelOf('牧师') >= 17, 2, 0)"
+            }
+          ],
+          "rollMods": [
+            {
+              "on": { "kind": "save", "ability": "dex" },
+              "who": "bearer",
+              "when": "source.levelOf('牧师') >= 17",
+              "op": "add",
+              "value": 2,
+              "label": "暮光守护：半身掩护（+2敏捷豁免）"
+            }
+          ],
+          "triggers": [
+            {
+              "id": "twilight-sanctuary-turn-end",
+              "label": "暮光圣域：回合结束增益",
+              "on": "turnEnded",
+              "role": "actor",
+              "optional": true,
+              "do": [
+                {
+                  "kind": "choose",
+                  "prompt": "暮光圣域：选择获得的增益",
+                  "options": [
+                    {
+                      "label": "获得 1d6 + 牧师等级 临时生命值",
+                      "do": [
+                        {
+                          "kind": "tempHp",
+                          "to": "self",
+                          "amount": "1d6 + source.levelOf('牧师')"
+                        }
+                      ]
+                    },
+                    {
+                      "label": "结束一个魅惑或恐慌状态",
+                      "do": [
+                        {
+                          "kind": "removeEffect",
+                          "match": { "name": "魅惑" },
+                          "from": "self"
+                        },
+                        {
+                          "kind": "removeEffect",
+                          "match": { "name": "恐慌" },
+                          "from": "self"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "name": "优雅战技",
+  "automation": "full",
+  "text": "在你的回合中使用附赠动作，使同一回合中下一次敏捷（特技/体操）检定或力量（运动）检定获得优势。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "优雅战技",
+      "activation": "bonus",
+      "requires": "turn.isMine",
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "优雅战技"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "优雅战技": {
+      "text": "本回合下一次敏捷（体操/特技）或力量（运动）检定具有优势。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "check",
+            "skill": [
+              "体操",
+              "特技",
+              "运动"
+            ]
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "优雅战技：体操/特技或运动检定优势"
+        }
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 0
+        },
+        "endsOn": [
+          {
+            "event": "d20Rolled",
+            "when": "event.kind == 'check' && (event.skill == '体操' || event.skill == '特技' || event.skill == '运动') && event.roller == self.id"
+          }
+        ]
+      }
+    }
+  }
+}

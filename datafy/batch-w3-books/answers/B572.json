@@ -1,0 +1,58 @@
+{
+  "name": "史尼洛雪球群",
+  "automation": "full",
+  "actions": [
+    {
+      "id": "use",
+      "name": "史尼洛雪球群",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 90,
+        "area": {
+          "shape": "sphere",
+          "radius": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "snowball",
+                  "dice": "(1 + slot.level)d6",
+                  "type": "寒冷"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "snowball",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

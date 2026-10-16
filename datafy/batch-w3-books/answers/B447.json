@@ -1,0 +1,60 @@
+{
+  "name": "预言专家",
+  "automation": "partial",
+  "text": "准备法术属于人物卡静态层授予。【先见干预】60尺内可见生物进行D20检定时，可以反应令该生物本次掷骰获得优势或劣势。长休恢复1次；使用法术位施展预言法术亦可重获使用次数。优势或劣势需手动处理。",
+  "resources": [
+    {
+      "id": "glimpse-intervention",
+      "name": "先见干预",
+      "formula": 1,
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "预言专家：先见干预",
+      "activation": "reaction",
+      "trigger": {
+        "on": "d20Rolled",
+        "role": "any",
+        "window": "before",
+        "when": "within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))"
+      },
+      "cost": [
+        {
+          "resource": "glimpse-intervention"
+        }
+      ],
+      "root": [
+        {
+          "kind": "note",
+          "text": "先见干预：已消耗反应，请手动为本次 D20 检定赋予优势或劣势。"
+        }
+      ]
+    }
+  ],
+  "triggers": [
+    {
+      "id": "regain-intervention",
+      "label": "先见干预：施展预言法术重获次数",
+      "on": "spellCast",
+      "role": "actor",
+      "window": "after",
+      "when": "ask('刚才是使用法术位施展预言学派法术吗？')",
+      "do": [
+        {
+          "kind": "if",
+          "when": "self.resource('glimpse-intervention') < 1",
+          "then": [
+            {
+              "kind": "resource",
+              "id": "glimpse-intervention",
+              "delta": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "name": "幻影巨龙",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。在 120 尺内可见未占据空间创造巨型阴影巨龙幻象，免疫所有伤害和状态。出现时可见幻象的敌人须通过 DC 感知豁免，否则丢下持握物并陷入恐慌；回合结束若看不到幻象可重投豁免。以附赠动作可令巨龙移动至多 60 尺并喷吐 60 尺锥状区域，区域内生物须通过 DC 智力豁免，失败受 6d6 强酸/寒冷/火焰/闪电/暗蚀/毒素伤害（施法时选择），成功受半伤。生物通过智力（调查）检定可看穿幻象，其对抗恐慌与吐息的豁免具有优势（巨龙实体、移动、看穿检定与视线豁免由人判定）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "幻影巨龙",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 8
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "point",
+        "range": 120
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "创造巨型阴影巨龙幻象，选择其吐息伤害类型（强酸、寒冷、火焰、闪电、暗蚀或毒素）。看见巨龙的敌人须进行感知豁免，失败则丢下持握物品并陷入恐慌。"
+        }
+      ]
+    },
+    {
+      "id": "breath",
+      "name": "幻影巨龙：阴影吐息",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating",
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "cone",
+          "size": 60
+        }
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "int",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "dmg",
+              "dice": "6d6",
+              "type": "暗蚀"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "dmg",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "幻影巨龙：恐慌": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:恐慌"
+      ],
+      "text": "陷入恐慌状态。若在回合结束时无法看到幻象，可重投感知豁免，成功则结束该状态。"
+    }
+  }
+}

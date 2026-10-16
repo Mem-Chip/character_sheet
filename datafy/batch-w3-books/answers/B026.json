@@ -1,0 +1,85 @@
+{
+  "name": "狩猎之唤",
+  "automation": "full",
+  "text": "进入狂暴时，可指定周围 30 尺内至多 CON 调整值（至少 1）个可见的其他自愿生物。你获得等于接受特性生物数 5 倍的临时生命值；所选生物在狂暴期间，每回合一次攻击命中造成伤害时可额外造成 1d6 同类型伤害。长休恢复，次数等于熟练加值。",
+  "resources": [
+    {
+      "id": "call-the-hunt",
+      "name": "狩猎之唤",
+      "formula": "pb",
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "狩猎之唤",
+      "activation": "free",
+      "requires": "turn.isMine && self.hasEffect('狂暴')",
+      "cost": [
+        {
+          "resource": "call-the-hunt"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": "max(1, self.mod.con)",
+        "range": 30,
+        "filter": "target.id != self.id && canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "number",
+          "prompt": "狩猎之唤：请输入接受特性的自愿生物数量（至多等同于体质调整值，至少1）",
+          "var": "allyCount",
+          "min": 1,
+          "max": "max(1, self.mod.con)",
+          "default": "max(1, self.mod.con)"
+        },
+        {
+          "kind": "tempHp",
+          "amount": "vars.allyCount * 5",
+          "to": "self"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "狩猎之唤",
+          "duration": {
+            "minutes": 1,
+            "endsOn": [
+              {
+                "event": "effectEnded",
+                "when": "event.name == '狂暴' && event.bearer == source.id"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "狩猎之唤": {
+      "text": "每个自己的回合一次：当攻击检定命中一个目标并造成伤害时，掷 1d6 将结果加到伤害中。持续至野蛮人狂暴结束。",
+      "triggers": [
+        {
+          "id": "hunt-extra-damage",
+          "label": "狩猎之唤：额外伤害",
+          "on": "attackHit",
+          "role": "actor",
+          "window": "before",
+          "limit": "oncePerTurn",
+          "optional": true,
+          "when": "turn.isMine",
+          "do": [
+            {
+              "kind": "addDamage",
+              "dice": "1d6",
+              "type": "attack.damageType"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

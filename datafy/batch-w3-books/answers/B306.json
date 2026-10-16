@@ -1,0 +1,41 @@
+{
+  "name": "决斗大师",
+  "automation": "full",
+  "text": "当你的攻击检定将要失手时，你可以选择以优势重新投掷一次攻击检定。短休或长休恢复。",
+  "resources": [
+    {
+      "id": "master-duelist",
+      "name": "决斗大师",
+      "formula": "1",
+      "recovery": "short"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "master-duelist",
+      "label": "决斗大师：以优势重骰失手的攻击",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "roll.kind == 'attack' && roll.failing",
+      "cost": [
+        {
+          "resource": "master-duelist"
+        }
+      ],
+      "modify": [
+        {
+          "op": "reroll",
+          "die": "d20",
+          "keep": "new"
+        },
+        {
+          "op": "reroll",
+          "die": "d20",
+          "keep": "higher"
+        }
+      ]
+    }
+  ]
+}

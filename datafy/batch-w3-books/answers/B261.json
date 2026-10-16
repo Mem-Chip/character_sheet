@@ -1,0 +1,46 @@
+{
+  "name": "闪现打击",
+  "automation": "partial",
+  "text": "执行攻击动作时，每次攻击前可传送最多 10 尺至可见未占据空间。若在同一攻击动作中攻击了至少两个不同生物，可获得额外 1 次攻击机会以攻击第三个生物。",
+  "triggers": [
+    {
+      "id": "teleport-before-attack",
+      "label": "闪现打击：攻击前传送 10 尺",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "turn.isMine && roll.kind == 'attack' && attack.weapon && ask('这次攻击是否属于攻击动作，且需要在攻击前传送最多 10 尺？')",
+      "do": [
+        {
+          "kind": "move",
+          "mode": "teleport",
+          "ft": 10
+        }
+      ]
+    },
+    {
+      "id": "extra-attack-third",
+      "label": "闪现打击：额外攻击第三个生物",
+      "on": [
+        "attackHit",
+        "attackMissed"
+      ],
+      "role": "actor",
+      "window": "after",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "turn.isMine && attack.weapon && ask('你在本次攻击动作中是否已经攻击了至少两个不同的生物？')",
+      "do": [
+        {
+          "kind": "economy",
+          "attacks": 1
+        },
+        {
+          "kind": "note",
+          "text": "闪现打击：获得额外 1 次武器攻击，必须用来攻击第三个不同的生物"
+        }
+      ]
+    }
+  ]
+}

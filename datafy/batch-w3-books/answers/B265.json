@@ -1,0 +1,50 @@
+{
+  "name": "狩猎开始",
+  "automation": "full",
+  "text": "以附赠动作指定 60 尺内可见的一名生物作为本特性目标。每个回合中你首次以武器攻击命中该目标时，额外受到 1d6 点与武器伤害类型相同的伤害。增益持续至短休、长休或指定新目标。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "狩猎开始",
+      "activation": "bonus",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "狩猎开始",
+          "state": {
+            "mark": "target"
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "狩猎开始": {
+      "text": "指定 60 尺内可见的一名生物作为目标。每个回合中你首次以武器攻击命中该目标时，额外受到 1d6 点与武器伤害类型相同的伤害。持续至短休、长休或指定新目标。",
+      "triggers": [
+        {
+          "id": "slayers-prey-damage",
+          "label": "狩猎开始：额外武器伤害",
+          "on": "attackHit",
+          "role": "actor",
+          "window": "before",
+          "limit": "oncePerTurn",
+          "when": "attack.weapon && target.id == effect.state.mark",
+          "do": [
+            {
+              "kind": "addDamage",
+              "dice": "1d6",
+              "type": "attack.damageType"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

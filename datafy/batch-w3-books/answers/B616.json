@@ -1,0 +1,100 @@
+{
+  "name": "谭森变形术",
+  "automation": "partial",
+  "text": "专注至多 10 分钟。赋予自身耐久和武艺：获得 50 点临时生命（法术结束时失去）；使用简易或军用武器攻击检定具有优势；武器命中额外造成 2d12 力场伤害；获得所有盔甲、盾牌、简易与军用武器熟练；获得力量和体质豁免熟练；可进行两次攻击；法术期间不能施展法术。法术结束后必须通过 DC 15 体质豁免，否则承受 1 级力竭。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "谭森变形术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 6
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "tempHp",
+          "amount": 50,
+          "to": "self"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "谭森变形术"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "谭森变形术": {
+      "tags": [
+        "magical",
+        "spell",
+        "buff"
+      ],
+      "flags": {
+        "cannot": [
+          "castSpells"
+        ]
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack",
+            "attack": {
+              "weapon": true
+            }
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "谭森变形术：武器攻击优势"
+        }
+      ],
+      "triggers": [
+        {
+          "id": "tenser-damage",
+          "label": "谭森变形术：武器命中额外伤害",
+          "on": "attackHit",
+          "role": "actor",
+          "window": "before",
+          "when": "attack.weapon",
+          "do": [
+            {
+              "kind": "addDamage",
+              "dice": "2d12",
+              "type": "力场"
+            }
+          ]
+        }
+      ],
+      "onEnd": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": 15,
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "self",
+              "template": "XPHB:condition:力竭"
+            }
+          ]
+        }
+      ],
+      "text": "不能施法；武器攻击具有优势；武器命中额外造成 2d12 力场伤害；法术结束时若体质豁免低于 DC 15 则承受 1 级力竭。"
+    }
+  }
+}

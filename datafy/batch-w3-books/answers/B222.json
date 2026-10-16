@@ -1,0 +1,32 @@
+{
+  "name": "护卫灵光",
+  "automation": "partial",
+  "text": "当你周围 10 尺（18 级扩展至 30 尺）内的一个生物受到伤害时，你可以用反应代替该生物承受此伤害。该伤害无法被任何方式减免，也不会传递任何附带效果。引擎取消被保护生物受到的伤害，圣武士承受的伤害需手动扣除。",
+  "triggers": [
+    {
+      "id": "auraOfTheGuardian",
+      "label": "护卫灵光：替受伤害",
+      "on": "damageIncoming",
+      "role": "any",
+      "window": "before",
+      "optional": true,
+      "cost": [
+        {
+          "economy": "reaction"
+        }
+      ],
+      "when": "!self.has('失能') && target.id != self.id && within(self, target, cond(self.levelOf('圣武士') >= 18, 30, 10))",
+      "modify": [
+        {
+          "op": "cancel"
+        }
+      ],
+      "do": [
+        {
+          "kind": "note",
+          "text": "护卫灵光：圣武士使用反应代替该生物承受本次伤害。该伤害无法被任何方式减免，请手动扣除圣武士相应生命值。"
+        }
+      ]
+    }
+  ]
+}

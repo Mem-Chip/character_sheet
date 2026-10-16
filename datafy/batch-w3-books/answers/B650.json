@@ -1,0 +1,137 @@
+{
+  "name": "魂灵提灯",
+  "automation": "partial",
+  "text": "持续 10 分钟。上方悬浮一盏幽灵般的黑色提灯，散发 60 尺微光光照。敌人在光照内死亡时飞入提灯一枚灵魂碎片（容量上限为施法属性调整值，法术结束时消散）。可用附赠动作消耗一枚灵魂碎片对 60 尺内可见目标产生效应：【汲取生命】体质豁免，失败受 4d8 + 施法属性调整值暗蚀伤害，成功减半；【修复亡灵】亡灵目标恢复 4d8 + 施法属性调整值生命值；【护佑盟友】其他生物对其攻击检定劣势至你下回合开始。灵魂碎片收集与计数需手动处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "魂灵提灯",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "魂灵提灯"
+        }
+      ]
+    },
+    {
+      "id": "lantern-power",
+      "name": "魂灵提灯：释放碎片",
+      "activation": "bonus",
+      "requires": "self.hasEffect('魂灵提灯')",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "选择消耗一枚灵魂碎片产生的效应",
+          "options": [
+            {
+              "label": "汲取生命",
+              "do": [
+                {
+                  "kind": "save",
+                  "ability": "con",
+                  "dc": "self.spell.dc",
+                  "onFail": [
+                    {
+                      "kind": "damage",
+                      "dice": "4d8 + self.spell.mod",
+                      "type": "暗蚀"
+                    }
+                  ],
+                  "onSuccess": [
+                    {
+                      "kind": "damage",
+                      "dice": "4d8 + self.spell.mod",
+                      "type": "暗蚀",
+                      "scale": 0.5
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "修复亡灵",
+              "do": [
+                {
+                  "kind": "heal",
+                  "amount": "4d8 + self.spell.mod",
+                  "to": "target"
+                }
+              ]
+            },
+            {
+              "label": "护佑盟友",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "魂灵护佑"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "消耗 1 枚灵魂碎片（提灯容量上限等于施法属性调整值）。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "魂灵提灯": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 10
+      },
+      "text": "散发半径 60 尺微光光照。敌人在光照内死亡时一枚灵魂碎片飞入提灯（上限为施法属性调整值）。可以附赠动作消耗一枚灵魂碎片释放效应。"
+    },
+    "魂灵护佑": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "source",
+          "nth": 1
+        }
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "against",
+          "op": "disadv",
+          "label": "魂灵护佑：被攻击检定劣势"
+        }
+      ],
+      "text": "其他生物对其进行的攻击检定具有劣势，直至施法者的下一回合开始。"
+    }
+  }
+}

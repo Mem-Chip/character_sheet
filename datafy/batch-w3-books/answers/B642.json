@@ -1,0 +1,72 @@
+{
+  "name": "赋予怀疑",
+  "automation": "full",
+  "text": "专注至多 1 分钟。选择 120 尺内一名可见生物进行感知豁免，豁免失败则在法术持续时间内进行的 d20 检定具有劣势。目标可以在其每个回合结束时重复此豁免，成功则结束此法术。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "赋予怀疑",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 120
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "赋予怀疑"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "赋予怀疑": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 1,
+        "saveEnds": {
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "at": "turnEnd"
+        }
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "d20"
+          },
+          "who": "bearer",
+          "op": "disadv",
+          "label": "赋予怀疑：d20 检定劣势"
+        }
+      ],
+      "text": "进行的 d20 检定具有劣势。可在每个回合结束时重复感知豁免，成功则结束此效应。"
+    }
+  }
+}

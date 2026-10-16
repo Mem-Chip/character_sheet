@@ -1,0 +1,30 @@
+{
+  "name": "冲锋陷阵",
+  "automation": "full",
+  "text": "每个你的回合一次，若在攻击一个生物前至少直线移动了10尺且攻击命中，目标必须进行一次力量豁免（DC 8 + 熟练加值 + 力量调整值），豁免失败应击倒地。",
+  "triggers": [
+    {
+      "id": "ferocious-charger",
+      "label": "冲锋陷阵：击倒目标",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "limit": "oncePerTurn",
+      "when": "turn.isMine && ask('攻击该生物前至少直线移动了10尺吗？')",
+      "do": [
+        {
+          "kind": "save",
+          "ability": "str",
+          "dc": "8 + self.pb + self.mod.str",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "XPHB:condition:倒地"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

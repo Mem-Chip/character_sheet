@@ -1,0 +1,107 @@
+{
+  "name": "旋风术",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。在 300 尺内地表升起半径 10 尺、高 30 尺的旋风柱。在回合中第一次进入旋风或被旋风进入空间的生物（包括初始出现时）须进行敏捷豁免，失败受到 10d6 钝击伤害，成功减半；体型为大型或更小的生物敏捷豁免失败时还须进行力量豁免，失败则陷入束缚直到法术结束。被束缚者开始其回合时向上推动 5 尺，并随旋风移动；法术结束时坠落。被束缚者可用动作进行力量或敏捷检定对抗法术 DC，脱离后被向随机方向抛离 3d6×10 尺。后续可用动作水平移动旋风至多 30 尺。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "旋风术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 7
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 300,
+        "area": {
+          "shape": "cylinder",
+          "radius": 10
+        }
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "10d6",
+              "type": "钝击",
+              "id": "whirlwind-damage"
+            },
+            {
+              "kind": "if",
+              "when": "target.size != '巨型' && target.size != '超巨型'",
+              "then": [
+                {
+                  "kind": "save",
+                  "ability": "str",
+                  "dc": "self.spell.dc",
+                  "onFail": [
+                    {
+                      "kind": "applyEffect",
+                      "to": "target",
+                      "template": "旋风术：束缚"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "whirlwind-damage",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "move-whirlwind",
+      "name": "旋风术：移动旋风",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating",
+      "targeting": {
+        "type": "point",
+        "range": 300
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "在水平任何方向移动旋风至多 30 尺。进入旋风或被旋风进入空间的生物须进行敏捷豁免与力量豁免。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "旋风术：束缚": {
+      "tags": [
+        "magical",
+        "spell",
+        "debuff"
+      ],
+      "implies": [
+        "XPHB:condition:束缚"
+      ],
+      "text": "被旋风束缚。回合开始时向上升 5 尺并随旋风移动；法术结束时坠落。可用动作进行对抗法术 DC 的力量或敏捷检定以脱离，脱离后被抛离 3d6×10 尺。"
+    }
+  }
+}

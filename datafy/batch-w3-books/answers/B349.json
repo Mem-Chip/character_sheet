@@ -1,0 +1,45 @@
+{
+  "name": "咒火冠冕",
+  "automation": "partial",
+  "text": "使用先天术法时可将其转换为咒火冠冕，持续1分钟。转换后长休前不能再次使用，可消耗5点术法点（无需动作）恢复使用次数。激活期间获得：60尺飞行速度并可悬浮；法术闪避（豁免成功不受伤害，失败伤害减半，失能时无效）；燃尽（每回合一次被攻击命中时，可消耗至多魅力调整值枚生命骰掷骰减免伤害）。燃尽、飞行和法术闪避需手动处理。",
+  "resources": [
+    { "id": "spellfire-crown", "name": "咒火冠冕", "formula": "1", "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "咒火冠冕",
+      "activation": "bonus",
+      "cost": [
+        { "resource": "spellfire-crown" },
+        { "resource": "先天术法" }
+      ],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "inline": {
+            "name": "咒火冠冕",
+            "duration": { "minutes": 1 },
+            "text": "获得60尺悬浮飞行速度；法术闪避（受法术/魔法效应豁免减半时，成功免伤，失败减半）；燃尽（每回合一次被攻击命中时消耗至多魅力调整值枚生命骰减免等量伤害）。"
+          },
+          "to": "self"
+        }
+      ]
+    },
+    {
+      "id": "restore",
+      "name": "咒火冠冕：恢复使用次数",
+      "activation": "none",
+      "cost": [
+        { "resource": "sorcery_points", "n": 5 }
+      ],
+      "root": [
+        {
+          "kind": "resource",
+          "id": "spellfire-crown",
+          "delta": 1
+        }
+      ]
+    }
+  ]
+}

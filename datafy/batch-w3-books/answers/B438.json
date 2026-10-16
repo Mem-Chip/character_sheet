@@ -1,0 +1,49 @@
+{
+  "name": "惊魂落魄之恩惠",
+  "automation": "partial",
+  "text": "【无畏】免疫恐慌状态（静态）。【令人生畏】威吓技能熟练与专精（静态）。【逃吧，蠢料！】陷入恐慌的生物在60尺内开始其回合时，只要可见且无掩护，可以反应迫使其进行感知豁免（DC 8+CHA+PB），失败则其该回合必须以最快方式移动远离你。短休或长休恢复。生物逃跑移动由人工处理。",
+  "resources": [
+    {
+      "id": "flee-fools",
+      "name": "逃吧，蠢料！",
+      "formula": 1,
+      "recovery": "short"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "惊魂落魄之恩惠：逃吧，蠢料！",
+      "activation": "reaction",
+      "trigger": {
+        "on": "turnStarted",
+        "role": "any",
+        "window": "after",
+        "when": "canSee(self, attacker) && within(attacker, self, 60) && attacker.has('XPHB:condition:恐慌')"
+      },
+      "cost": [
+        {
+          "resource": "flee-fools"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "range": 60,
+        "filter": "target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "8 + self.pb + self.mod.cha",
+          "onFail": [
+            {
+              "kind": "note",
+              "text": "豁免失败：该生物需要消耗其回合以可用的最快方式移动远离你。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

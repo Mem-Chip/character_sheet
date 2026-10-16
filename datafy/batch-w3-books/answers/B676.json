@@ -1,0 +1,65 @@
+{
+  "name": "莱拉的银辉长枪",
+  "automation": "full",
+  "text": "银色能量自你之处爆发，覆盖 120 尺长、5 尺宽的线状区域。区域内由你选择的每名生物进行一次力量豁免，失败受 3d10 力场伤害且陷入倒地状态，成功仅受半伤。升环施法时，法术位每高一环伤害增加 1d10。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "莱拉的银辉长枪",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "line",
+          "length": 120,
+          "width": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "str",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "dmg",
+                  "dice": "(slot.level)d10",
+                  "type": "力场"
+                },
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "XPHB:condition:倒地"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "dmg",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

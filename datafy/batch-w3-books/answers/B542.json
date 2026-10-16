@@ -1,0 +1,56 @@
+{
+  "name": "莱维斯图斯之墓",
+  "automation": "partial",
+  "text": "当你受到伤害时，以反应将自己封锁在冰墓中（短休或长休恢复）：获得魔契师等级×10的临时生命值以吸收此次伤害，随后获得火焰易伤、速度降至0且陷入失能，持续至你的下个回合结束。冰墓融解时结束所有效果及剩余临时生命值（需手动处理）。",
+  "resources": [
+    {
+      "id": "tombOfLevistus",
+      "name": "莱维斯图斯之墓",
+      "formula": 1,
+      "recovery": "short"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "莱维斯图斯之墓",
+      "activation": "reaction",
+      "trigger": {
+        "on": "damageIncoming",
+        "role": "target",
+        "window": "before"
+      },
+      "cost": [
+        { "resource": "tombOfLevistus" }
+      ],
+      "root": [
+        {
+          "kind": "tempHp",
+          "to": "self",
+          "amount": "10 * self.levelOf('魔契师')"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "冰墓"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "冰墓": {
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "statics": [
+        { "kind": "vuln", "values": ["火焰"] },
+        { "kind": "speedSet", "value": 0 }
+      ],
+      "implies": ["XPHB:condition:失能"]
+    }
+  }
+}

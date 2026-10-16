@@ -1,0 +1,38 @@
+{
+  "name": "快手投掷",
+  "automation": "partial",
+  "text": "以一个附赠动作消耗一枚卓越骰，拔出一件具有投掷属性的武器发动一次远程武器攻击。若命中，将消耗的卓越骰加入此武器的伤害掷骰中（武器基础伤害及属性加值需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "快手投掷",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "卓越骰"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "bonus": "self.pb + max(self.mod.str, self.mod.dex)",
+          "attack": {
+            "ranged": true,
+            "weapon": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

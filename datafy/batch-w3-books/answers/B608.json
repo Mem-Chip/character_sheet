@@ -1,0 +1,127 @@
+{
+  "name": "炽焰赋权",
+  "automation": "partial",
+  "text": "火焰环绕躯体，照亮 30 尺明亮+30 尺微光，持续至多 10 分钟（专注）。获得火焰免疫与寒冷抗性；任何生物在回合中首次进入你周围 5 尺内或在你周围 5 尺内结束回合，受到 1d10 火焰伤害；你可以用动作创造一条 15 尺长、5 尺宽的火线，线中生物须进行敏捷豁免，失败受到 4d8 火焰伤害，成功半伤（火线与近身灼烧可通过次要动作触发）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "炽焰赋权",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 6
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "炽焰赋权",
+          "to": "self"
+        }
+      ]
+    },
+    {
+      "id": "fireLine",
+      "name": "炽焰赋权：火线",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "line",
+          "length": 15,
+          "width": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "fireLineDmg",
+                  "dice": "4d8",
+                  "type": "火焰"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "fireLineDmg",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "proximityBurn",
+      "name": "炽焰赋权：近身灼烧",
+      "activation": "none",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 5
+      },
+      "root": [
+        {
+          "kind": "damage",
+          "dice": "1d10",
+          "type": "火焰"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "炽焰赋权": {
+      "tags": [
+        "magical",
+        "spell",
+        "buff"
+      ],
+      "text": "免疫火焰伤害，对寒冷伤害具有抗性；散发 30 尺明亮+30 尺微光照明；任何生物回合中首次进入周围 5 尺或在周围 5 尺结束回合受 1d10 火焰伤害。",
+      "statics": [
+        {
+          "kind": "immune",
+          "values": [
+            "火焰"
+          ]
+        },
+        {
+          "kind": "resist",
+          "values": [
+            "寒冷"
+          ]
+        }
+      ]
+    }
+  }
+}

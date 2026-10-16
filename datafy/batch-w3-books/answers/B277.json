@@ -1,0 +1,46 @@
+{
+  "name": "翻腾浪涌",
+  "automation": "partial",
+  "text": "以附赠动作消耗一次翻腾浪涌使用次数，获得 10 尺飞行速度且能悬浮，持续 1 分钟。若陷入失能状态提前结束。飞行与悬浮需由人手动处理。",
+  "resources": [
+    {
+      "id": "writhing-tide",
+      "name": "翻腾浪涌",
+      "formula": "pb",
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "翻腾浪涌",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "writhing-tide"
+        }
+      ],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "翻腾浪涌"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "翻腾浪涌": {
+      "text": "获得10尺飞行速度且能悬浮（持续1分钟，陷入失能提前结束）。三维移动需由人手动处理。",
+      "duration": {
+        "minutes": 1,
+        "endsOn": [
+          {
+            "event": "effectApplied",
+            "when": "event.bearer == self.id && self.has('失能')"
+          }
+        ]
+      }
+    }
+  }
+}

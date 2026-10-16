@@ -1,0 +1,63 @@
+{
+  "name": "欣布的法愈秘术",
+  "automation": "partial",
+  "text": "持续 1 小时。触碰一名生物。每当该生物使用法术位施展法术时，可立即消耗等同于该法术位环阶枚生命骰，并恢复等同于掷骰结果 + 你的施法属性调整值点生命值（消耗生命骰与生命值恢复需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "欣布的法愈秘术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 7
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "欣布的法愈秘术"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "欣布的法愈秘术": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "hours": 1
+      },
+      "triggers": [
+        {
+          "id": "heal-on-cast",
+          "label": "欣布的法愈秘术：施法回血",
+          "on": "spellCast",
+          "role": "actor",
+          "window": "after",
+          "optional": true,
+          "do": [
+            {
+              "kind": "note",
+              "text": "欣布的法愈秘术：可消耗等同于该法术位环阶枚生命骰，恢复掷骰结果 + source.spell.mod 点生命值。"
+            }
+          ]
+        }
+      ],
+      "text": "每当使用法术位施展法术时，可消耗等同于该法术位环阶枚生命骰，恢复掷骰结果 + 施法者的施法属性调整值点生命值。"
+    }
+  }
+}

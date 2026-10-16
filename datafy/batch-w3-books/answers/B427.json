@@ -1,0 +1,67 @@
+{
+  "name": "血海漂橹之恩惠",
+  "automation": "full",
+  "text": "杀手机运：可见敌人生命值降至 0 时，你的下次攻击检定获得优势，持续至你的下个回合结束。痛心切骨：每回合一次，处于浴血状态时攻击命中可造成等同于熟练加值的同类型额外伤害。",
+  "triggers": [
+    {
+      "id": "killers-luck",
+      "label": "杀手机运",
+      "on": "reducedTo0",
+      "role": "any",
+      "window": "after",
+      "when": "target.isEnemyOf(self) && canSee(self, target)",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "杀手机运"
+        }
+      ]
+    },
+    {
+      "id": "heart-rending",
+      "label": "痛心切骨",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "self.hp <= floor(self.hpMax / 2)",
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "self.pb",
+          "type": "attack.damageType"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "杀手机运": {
+      "text": "你的下次攻击检定获得优势，持续至你的下个回合结束。",
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        },
+        "endsOn": [
+          {
+            "event": "d20Rolled",
+            "when": "event.kind == 'attack' && event.roller == self.id"
+          }
+        ]
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "杀手机运"
+        }
+      ]
+    }
+  }
+}

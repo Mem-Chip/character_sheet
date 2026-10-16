@@ -1,0 +1,37 @@
+{
+  "name": "征服灵光",
+  "automation": "partial",
+  "text": "只要你未处于失能，10 尺灵光内对你陷入恐慌的生物速度降为 0；若其在灵光内开始其回合，受到等同于圣武士等级一半的心灵伤害。第 18 级时灵光范围扩展至 30 尺（需手动处理扩大范围与速度清零）。",
+  "auras": [
+    {
+      "id": "conquestAura",
+      "radius": 10,
+      "affects": "enemies",
+      "includeSelf": false,
+      "requires": "!self.has('失能')",
+      "grant": {
+        "triggers": [
+          {
+            "id": "conquestDamage",
+            "label": "征服灵光：回合开始心灵伤害",
+            "on": "turnStarted",
+            "role": "actor",
+            "window": "after",
+            "when": "self.has('恐慌') && ask('该生物处于对圣武士恐慌的状态吗？')",
+            "do": [
+              {
+                "kind": "damage",
+                "dice": "floor(source.levelOf('圣武士') / 2)",
+                "type": "心灵"
+              },
+              {
+                "kind": "note",
+                "text": "征服灵光：对圣武士陷入恐慌的生物处于灵光内时，速度降为 0。"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "name": "潮涌",
+  "automation": "partial",
+  "text": "在 120 尺内召唤长至多 30 尺、宽至多 10 尺、高至多 10 尺的浪潮。区域内生物进行敏捷豁免，失败受到 4d8 钝击伤害并倒地，成功半伤且不倒地。随后浪潮向四周流散，熄灭区域及周围 30 尺内未受保护的火焰（灭火环境效果需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "潮涌",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "line",
+          "length": 30,
+          "width": 10
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "wave",
+                  "dice": "4d8",
+                  "type": "钝击"
+                },
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "XPHB:condition:倒地"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "wave",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

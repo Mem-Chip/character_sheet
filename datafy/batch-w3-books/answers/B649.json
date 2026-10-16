@@ -1,0 +1,75 @@
+{
+  "name": "负能量洪流",
+  "automation": "partial",
+  "text": "向 60 尺内一名可见生物发射负能量。若目标不是亡灵，其进行体质豁免，失败受 (slot.level - 2)d10 + 25 暗蚀伤害，成功受半伤；若被该伤害杀死，类人生物在施法者下回合开始转化为受控丧尸持续 24 小时。若目标是亡灵，则其获得 3d10 临时生命值。转化为丧尸与控制需手动处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "负能量洪流",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "目标是否为亡灵？",
+          "options": [
+            {
+              "label": "非亡灵（体质豁免承受伤害）",
+              "do": [
+                {
+                  "kind": "save",
+                  "ability": "con",
+                  "dc": "self.spell.dc",
+                  "onFail": [
+                    {
+                      "kind": "damage",
+                      "id": "flood",
+                      "dice": "(slot.level - 2)d10 + 25",
+                      "type": "暗蚀"
+                    },
+                    {
+                      "kind": "note",
+                      "text": "若被该伤害杀死，类人生物在施法者下个回合开始时转化为受控丧尸，持续 24 小时。"
+                    }
+                  ],
+                  "onSuccess": [
+                    {
+                      "kind": "damage",
+                      "ref": "flood",
+                      "scale": 0.5
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "亡灵（获得临时生命值）",
+              "do": [
+                {
+                  "kind": "tempHp",
+                  "amount": "3d10",
+                  "to": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

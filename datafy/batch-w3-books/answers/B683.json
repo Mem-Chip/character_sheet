@@ -1,0 +1,91 @@
+{
+  "name": "悲恸挽歌",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。源自你的 60 尺光环内，除施法时指定的生物外其余生物无法恢复生命值。当光环移入生物空间、生物进入光环或在其中结束其回合时，该生物须进行一次体质豁免，失败受 3d10 暗蚀伤害且陷入倒地状态，成功仅受半伤且速度减半（每名生物每回合限一次）。结阵施法持续时间增至 10 分钟且豁免失败获得 1 级力竭（无法恢复生命与速度减半等效果需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "悲恸挽歌",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 6
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "悲恸挽歌"
+        }
+      ]
+    },
+    {
+      "id": "wave",
+      "name": "悲恸挽歌：光环判定",
+      "activation": "none",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "dmg",
+              "dice": "3d10",
+              "type": "暗蚀"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "XPHB:condition:倒地"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "dmg",
+              "scale": 0.5
+            },
+            {
+              "kind": "note",
+              "text": "悲恸挽歌：豁免成功者速度减半。"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "悲恸挽歌": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "源自你的 60 尺光环内生物无法恢复生命值；进入光环或在其中结束回合进行体质豁免（3d10 暗蚀并倒地，成功半伤且速度减半）。"
+    }
+  }
+}

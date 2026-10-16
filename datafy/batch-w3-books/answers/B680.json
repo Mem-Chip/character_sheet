@@ -1,0 +1,62 @@
+{
+  "name": "咒火风暴",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。以 60 尺内一点为中心咒唤半径 20 尺、高 20 尺柱状明亮咒火光柱。出现时位于其中的生物进行体质豁免，失败受 4d10 光耀伤害，成功减半。生物进入区域或在其中结束回合同样须进行豁免（每回合限一次）。区域内生物试图施法时须通过体质豁免，否则法术消散且动作浪费（法术位不消耗）。施法时可指定不受影响的生物。升环施法时法术位每高一环伤害增加 1d10。结阵施法可无需专注并大幅扩展范围与持续时间（区域内施法打断判定、结阵施法及生物进入判定需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "咒火风暴",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": {
+          "shape": "cylinder",
+          "radius": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "dmg",
+                  "dice": "(slot.level)d10",
+                  "type": "光耀"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "dmg",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

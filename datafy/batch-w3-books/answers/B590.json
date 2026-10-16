@@ -1,0 +1,102 @@
+{
+  "name": "风暴法球",
+  "automation": "partial",
+  "text": "在 150 尺内指定一点创造 20 尺半径风暴球体，持续至多 1 分钟（专注）。出现时及在其中结束回合的生物须进行力量豁免，失败受 2d6（升环每高一环+1d6）钝击伤害。球体内为困难地形；周围 30 尺内聆听察觉检定具劣势。持续期间每回合可用附赠动作从中心发射闪电攻击 60 尺内生物，远程法术攻击命中造成 4d6（升环每高一环+1d6）闪电伤害，目标在球体内攻击检定具优势（回合结束豁免、困难地形与升环闪电伤害需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "风暴法球",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 150,
+        "area": {
+          "shape": "sphere",
+          "radius": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "str",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "dice": "(slot.level - 2)d6",
+                  "type": "钝击"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "applyEffect",
+          "template": "风暴法球",
+          "to": "self"
+        },
+        {
+          "kind": "note",
+          "text": "球体内为困难地形；在球体内结束回合的生物须进行力量豁免，失败受到钝击伤害；球体周围 30 尺内聆听察觉检定具劣势。"
+        }
+      ]
+    },
+    {
+      "id": "lightning",
+      "name": "风暴法球：闪电射击",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.hasEffect('风暴法球')",
+      "targeting": {
+        "type": "creature",
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "attack": {
+            "spell": true,
+            "ranged": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "4d6",
+              "type": "闪电"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "风暴法球": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "维持风暴法球。附赠动作射出闪电攻击 60 尺内生物（目标在球体内具有优势），命中受 4d6 闪电伤害（升环每高一环+1d6）。"
+    }
+  }
+}

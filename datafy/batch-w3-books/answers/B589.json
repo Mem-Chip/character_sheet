@@ -1,0 +1,74 @@
+{
+  "name": "致病辐射",
+  "automation": "partial",
+  "text": "在 120 尺内指定一点产生 30 尺半径绿色微光球体，绕过拐角传播，持续至多 10 分钟（专注）。生物在一回合内首次进入或在其中开始回合时，须进行体质豁免，失败受到 4d10 光耀伤害、承受 1 级力竭，并散发 5 尺微光且无法受益于隐形。法术结束时由此产生的力竭与光线消失（进入区域触发、多级力竭与光线消除需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "致病辐射",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "sphere",
+          "radius": 30
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "dice": "4d10",
+                  "type": "光耀"
+                },
+                {
+                  "kind": "applyEffect",
+                  "template": "致病辐射",
+                  "to": "target"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "一回合内首次进入或在其中开始回合的生物须进行体质豁免，失败受 4d10 光耀伤害并获 1 级力竭与 5 尺微光。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "致病辐射": {
+      "tags": [
+        "magical",
+        "spell",
+        "debuff"
+      ],
+      "stack": "level",
+      "text": "承受力竭；发散 5 尺微光，无法从隐形中获益。法术结束时此效应消除。"
+    }
+  }
+}

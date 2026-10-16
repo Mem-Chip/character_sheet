@@ -1,0 +1,65 @@
+{
+  "name": "放逐弹",
+  "automation": "partial",
+  "text": "远程武器攻击命中生物时，消耗一次奥术射击使用次数（短休恢复）：目标额外受到等于一枚奥术射击骰的心灵伤害，且必须通过魅力豁免，否则被放逐至其下个回合结束（陷入失能且速度降至0，离开与重新出现在空间需手动处理）。",
+  "resources": [
+    {
+      "id": "arcaneShot",
+      "name": "奥术射击",
+      "formula": "max(1, int)",
+      "recovery": "short"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "banishing",
+      "label": "放逐弹",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "attack.ranged && attack.weapon",
+      "cost": [
+        { "resource": "arcaneShot" }
+      ],
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 15, 1d10, cond(self.levelOf('战士') >= 10, 1d8, 1d6)))",
+          "type": "心灵"
+        },
+        {
+          "kind": "save",
+          "ability": "cha",
+          "dc": "8 + self.pb + self.mod.int",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "放逐"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "放逐": {
+      "text": "被放逐至半位面，陷入失能状态且速度降至0，在其下个回合结束时重新出现。",
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "statics": [
+        { "kind": "speedSet", "value": 0 }
+      ],
+      "implies": [
+        "XPHB:condition:失能"
+      ]
+    }
+  }
+}

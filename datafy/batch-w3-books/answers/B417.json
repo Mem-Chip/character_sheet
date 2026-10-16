@@ -1,0 +1,38 @@
+{
+  "name": "防护专家",
+  "automation": "full",
+  "text": "准备法术属于人物卡静态层授予。守护结界：使用法术位施展防护法术后，以 free 动作触发，为你或 30 尺内一名可见生物提供该法术位环阶两倍的临时生命值。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "防护专家：守护结界",
+      "activation": "free",
+      "trigger": {
+        "on": "spellCast",
+        "role": "actor",
+        "window": "after",
+        "when": "ask('刚才是用法术位施展防护学派法术吗？')"
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30,
+        "filter": "target.id == self.id || canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "number",
+          "prompt": "用的是几环法术位？",
+          "var": "slotLevel",
+          "min": 1,
+          "max": 9
+        },
+        {
+          "kind": "tempHp",
+          "to": "target",
+          "amount": "2 * vars.slotLevel"
+        }
+      ]
+    }
+  ]
+}

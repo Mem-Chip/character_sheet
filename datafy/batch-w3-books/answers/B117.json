@@ -1,0 +1,131 @@
+{
+  "name": "星耀形态",
+  "automation": "full",
+  "text": "以附赠动作消耗一次荒野形态使用次数，呈现星耀形态，持续10分钟（解除、失能、死亡或再次使用此特性时提前结束）。化身时选择射手座、圣杯座或巨龙座之一闪耀，提供对应增益（见各星座条目）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "星耀形态",
+      "activation": "bonus",
+      "cost": [
+        { "resource": "wildshape-uses" }
+      ],
+      "requires": "turn.isMine",
+      "root": [
+        {
+          "kind": "removeEffect",
+          "from": "self",
+          "match": { "tag": "starry-form" }
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "星耀形态"
+        },
+        {
+          "kind": "choose",
+          "prompt": "选择在你身上亮起的星座",
+          "options": [
+            {
+              "label": "射手座",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "星耀形态：射手座"
+                }
+              ]
+            },
+            {
+              "label": "圣杯座",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "星耀形态：圣杯座"
+                }
+              ]
+            },
+            {
+              "label": "巨龙座",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "self",
+                  "template": "星耀形态：巨龙座"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dismiss",
+      "name": "星耀形态：解除",
+      "activation": "free",
+      "requires": "self.hasEffect('星耀形态')",
+      "root": [
+        {
+          "kind": "removeEffect",
+          "from": "self",
+          "match": { "tag": "starry-form" }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "星耀形态": {
+      "tags": [ "starry-form" ],
+      "text": "星耀形态：保留游戏数据，身体明亮，散发10尺明亮光照与外10尺微光光照。持续10分钟；解除、失能、死亡或再次使用时提前结束。",
+      "duration": {
+        "minutes": 10,
+        "endsOn": [
+          {
+            "event": "effectApplied",
+            "when": "event.bearer == self.id && self.has('失能')"
+          }
+        ]
+      }
+    },
+    "星耀形态：射手座": {
+      "tags": [ "starry-form", "starry-constellation" ],
+      "text": "射手座在你身上亮起：可以用附赠动作发射光箭。",
+      "duration": {
+        "minutes": 10,
+        "endsOn": [
+          {
+            "event": "effectApplied",
+            "when": "event.bearer == self.id && self.has('失能')"
+          }
+        ]
+      }
+    },
+    "星耀形态：圣杯座": {
+      "tags": [ "starry-form", "starry-constellation" ],
+      "text": "圣杯座在你身上亮起：施展恢复生命值的法术时可额外治疗。",
+      "duration": {
+        "minutes": 10,
+        "endsOn": [
+          {
+            "event": "effectApplied",
+            "when": "event.bearer == self.id && self.has('失能')"
+          }
+        ]
+      }
+    },
+    "星耀形态：巨龙座": {
+      "tags": [ "starry-form", "starry-constellation" ],
+      "text": "巨龙座在你身上亮起：智力/感知检定及专注体质豁免 d20 低于 10 视为 10。",
+      "duration": {
+        "minutes": 10,
+        "endsOn": [
+          {
+            "event": "effectApplied",
+            "when": "event.bearer == self.id && self.has('失能')"
+          }
+        ]
+      }
+    }
+  }
+}

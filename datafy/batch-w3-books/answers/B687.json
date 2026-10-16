@@ -1,0 +1,92 @@
+{
+  "name": "灾厄之刃",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。在 60 尺内一处空间创造形如剑刃的位面裂隙，并立即对其 5 尺内目标发动两次近战法术攻击。命中造成 10d6 力场伤害，且 d20 投出 18 或更高即算作重击。后续回合中可以附赠动作令裂隙移动至多 60 尺并再次发动两次攻击。剑刃可无害穿过任何屏障（包括力场墙；裂隙移动与屏障穿透需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "灾厄之刃",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 9
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "repeat",
+          "n": 2,
+          "do": [
+            {
+              "kind": "attack",
+              "attack": {
+                "melee": true,
+                "spell": true
+              },
+              "critRange": 18,
+              "onHit": [
+                {
+                  "kind": "damage",
+                  "dice": "10d6",
+                  "type": "力场"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "attack",
+      "name": "灾厄之刃：移动并攻击",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "repeat",
+          "n": 2,
+          "do": [
+            {
+              "kind": "attack",
+              "attack": {
+                "melee": true,
+                "spell": true
+              },
+              "critRange": 18,
+              "onHit": [
+                {
+                  "kind": "damage",
+                  "dice": "10d6",
+                  "type": "力场"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

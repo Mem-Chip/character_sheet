@@ -1,0 +1,39 @@
+{
+  "name": "龙之瘢",
+  "automation": "full",
+  "text": "【伤害抗性】自选元素伤害抗性（静态）。【可怖伟力】在你的回合中以攻击动作或魔法动作对生物造成伤害后，可以附赠动作使用龙之威。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "可怖伟力：龙之威",
+      "activation": "bonus",
+      "requires": "turn.isMine && ask('本回合你是否已通过攻击动作或魔法动作对生物造成了伤害？')",
+      "targeting": {
+        "type": "creature",
+        "range": 30,
+        "filter": "canSee(self, target) && target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "8 + self.pb + self.mod.wis",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "XPHB:condition:恐慌",
+              "duration": {
+                "until": {
+                  "at": "turnEnd",
+                  "of": "source",
+                  "nth": 1
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

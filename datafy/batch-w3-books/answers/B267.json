@@ -1,0 +1,49 @@
+{
+  "name": "魔法使的克星",
+  "automation": "partial",
+  "text": "当你看见周围 60 尺内有生物施展法术或传送时，可以用反应迫使其进行感知豁免（DC 等于你的法术豁免 DC），豁免失败其法术或传送失败并浪费。短休或长休恢复 1 次。法术或传送的中断与浪费需由 DM / 人工处理。",
+  "resources": [
+    {
+      "id": "magic-users-nemesis",
+      "name": "魔法使的克星",
+      "formula": 1,
+      "recovery": "short"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "魔法使的克星",
+      "activation": "reaction",
+      "trigger": {
+        "on": "spellCast",
+        "role": "any",
+        "window": "before",
+        "when": "ask('周围60尺内有你可见的生物施展法术或传送吗？')"
+      },
+      "cost": [
+        {
+          "resource": "magic-users-nemesis"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "note",
+              "text": "魔法使的克星：目标感知豁免失败，其施展的法术或传送失败并被浪费，请手动取消该法术或传送。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

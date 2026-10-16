@@ -1,0 +1,61 @@
+{
+  "name": "穿梭弹",
+  "automation": "partial",
+  "text": "替换一次远程武器攻击，消耗一次奥术射击使用次数（短休恢复）：无需攻击检定，向前方射出长 30 尺、宽 1 尺穿透固体障碍的线状区域，线状区域内的每名生物须进行敏捷豁免，失败受到武器伤害加两枚奥术射击骰的穿刺伤害，成功受半伤。武器基础伤害可按所用武器调整。",
+  "resources": [
+    {
+      "id": "arcaneShot",
+      "name": "奥术射击",
+      "formula": "max(1, int)",
+      "recovery": "short"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "穿梭弹",
+      "activation": "none",
+      "requires": "turn.isMine",
+      "cost": [
+        { "economy": "attack" },
+        { "resource": "arcaneShot" }
+      ],
+      "targeting": {
+        "type": "area",
+        "area": {
+          "shape": "line",
+          "length": 30,
+          "width": 1
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "8 + self.pb + self.mod.int",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "dmg",
+                  "dice": "1d8 + self.mod.dex + cond(self.levelOf('战士') >= 18, 2d12, cond(self.levelOf('战士') >= 15, 2d10, cond(self.levelOf('战士') >= 10, 2d8, 2d6)))",
+                  "type": "穿刺"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "dmg",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "name": "叱喝暴力",
+  "automation": "partial",
+  "text": "当处于你周围 30 尺内的生物以一次攻击对你之外的生物造成伤害后，你可以用一个反应消耗 1 次引导神力，迫使攻击者进行感知豁免。豁免失败受到等同于其刚刚造成的伤害数额的光耀伤害，成功受到半数伤害（引擎反应窗口默认目标为受击者，对攻击者的豁免与反击需手动指定攻击者结算）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "叱喝暴力",
+      "activation": "reaction",
+      "trigger": {
+        "on": "attackHit",
+        "role": "any",
+        "window": "after",
+        "when": "within(self, attacker, 30) && target.id != self.id && damage.amount > 0"
+      },
+      "cost": [
+        {
+          "resource": "channel-divinity"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "rebuke",
+              "dice": "damage.amount",
+              "type": "光耀"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "rebuke",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

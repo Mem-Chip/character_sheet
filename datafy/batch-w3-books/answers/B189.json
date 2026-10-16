@@ -1,0 +1,107 @@
+{
+  "name": "耀阳箭",
+  "automation": "partial",
+  "text": "可以在攻击动作中发动特殊远程法术攻击（射程 30 尺，伤害为武艺骰 + 敏捷调整值点光耀伤害）。本回合在攻击动作中使用耀阳箭后，可消耗 1 点功力以附赠动作进行两次额外的耀阳箭攻击。若要将附赠动作的两次攻击分给不同目标，需手动处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "耀阳箭",
+      "activation": "none",
+      "cost": [
+        {
+          "economy": "attack"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30
+      },
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "root": [
+        {
+          "kind": "attack",
+          "bonus": "self.pb + self.mod.dex",
+          "attack": {
+            "ranged": true,
+            "spell": true,
+            "ability": "dex",
+            "damageType": "光耀"
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "classTable('武艺') + self.mod.dex",
+              "type": "光耀"
+            }
+          ]
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "耀阳箭：已使用"
+        }
+      ]
+    },
+    {
+      "id": "bonus",
+      "name": "耀阳箭（附赠额外攻击）",
+      "activation": "bonus",
+      "requires": "turn.isMine && self.hasEffect('耀阳箭：已使用')",
+      "cost": [
+        {
+          "resource": "功力"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30
+      },
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "root": [
+        {
+          "kind": "repeat",
+          "n": 2,
+          "do": [
+            {
+              "kind": "attack",
+              "bonus": "self.pb + self.mod.dex",
+              "attack": {
+                "ranged": true,
+                "spell": true,
+                "ability": "dex",
+                "damageType": "光耀"
+              },
+              "onHit": [
+                {
+                  "kind": "damage",
+                  "dice": "classTable('武艺') + self.mod.dex",
+                  "type": "光耀"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "耀阳箭：已使用": {
+      "text": "本回合已在攻击动作中使用了耀阳箭，可以用附赠动作消耗 1 点功力进行两次额外的耀阳箭攻击。",
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 0
+        }
+      }
+    }
+  }
+}

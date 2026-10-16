@@ -1,0 +1,110 @@
+{
+  "name": "艾拉斯卓的月辉之篷",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。以自身为中心散发半径 20 尺微光光环。你和光环内盟友获得掩护，并对寒冷、闪电及光耀伤害具有抗性。法术持续期间你可以使用以下选项之一（法术立即提前结束）：【解放】当你失败于一次用于避免或结束恐慌、受擒及束缚的豁免时，以反应将本次豁免改为成功；【回春】以魔法动作（动作）为你或区域内一名盟友恢复 4d10 + 施法属性调整值点生命值（掩护效果与法术提前结束需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "艾拉斯卓的月辉之篷",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "艾拉斯卓的月辉之篷"
+        }
+      ]
+    },
+    {
+      "id": "rejuvenate",
+      "name": "艾拉斯卓的月辉之篷：回春",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 20
+      },
+      "root": [
+        {
+          "kind": "heal",
+          "amount": "4d10 + self.spell.mod"
+        },
+        {
+          "kind": "note",
+          "text": "艾拉斯卓的月辉之篷已结算回春，此法术立即结束（需取消专注）。"
+        }
+      ]
+    },
+    {
+      "id": "liberate",
+      "name": "艾拉斯卓的月辉之篷：解放",
+      "activation": "reaction",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "requires": "self.concentrating",
+      "trigger": {
+        "on": "d20Rolled",
+        "role": "actor",
+        "window": "before",
+        "when": "ask('是否为避免或结束恐慌、受擒或束缚的豁免失败？')"
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "艾拉斯卓的月辉之篷：将本次豁免改为成功，此法术立即结束（需取消专注）。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "艾拉斯卓的月辉之篷": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "aura": {
+        "id": "alustriel-canopy-aura",
+        "radius": 20,
+        "affects": "allies",
+        "includeSelf": true,
+        "grant": {
+          "statics": [
+            {
+              "kind": "resist",
+              "values": [
+                "寒冷",
+                "闪电",
+                "光耀"
+              ]
+            }
+          ]
+        }
+      },
+      "text": "源自你的 20 尺光环内，你和盟友获得掩护，并具有对寒冷、闪电和光耀伤害的抗性。"
+    }
+  }
+}

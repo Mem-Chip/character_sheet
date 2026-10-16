@@ -1,0 +1,35 @@
+{
+  "name": "法术抗性",
+  "automation": "full",
+  "text": "魔法抗性（伤害抗性）属于人物卡静态层授予。魔法抵抗：对抗法术或魔法效应的豁免将要失败时，投掷 1d6 加入豁免总值（可能使失败改为成功）。次数等同于熟练加值，长休恢复。",
+  "resources": [
+    {
+      "id": "spell-resistance",
+      "name": "魔法抵抗",
+      "formula": "pb",
+      "recovery": "long"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "spell-resistance",
+      "label": "魔法抵抗：豁免加骰",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "roll.kind == 'save' && roll.failing && ask('这次豁免是对抗法术或魔法效应吗？')",
+      "cost": [
+        {
+          "resource": "spell-resistance"
+        }
+      ],
+      "modify": [
+        {
+          "op": "addToRoll",
+          "value": "1d6"
+        }
+      ]
+    }
+  ]
+}

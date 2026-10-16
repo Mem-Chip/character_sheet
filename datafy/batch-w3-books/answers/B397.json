@@ -1,0 +1,57 @@
+{
+  "name": "裂分召唤",
+  "automation": "partial",
+  "text": "使用法术位施展包含灵魄数据卡的咒法召唤法术时，可修改该法术召唤两个生物而非一个，生命值上限与当前生命值均减半，失去专注时两者均消失。每长休一次；亦可消耗五环或更高法术位重置使用权。召唤物实体与生命值由玩家手动处理。",
+  "resources": [
+    {
+      "id": "split-summons",
+      "name": "裂分召唤",
+      "formula": 1,
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "reset",
+      "name": "裂分召唤：消耗法术位重置",
+      "activation": "free",
+      "requires": "self.resource('split-summons') == 0",
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "root": [
+        {
+          "kind": "resource",
+          "id": "split-summons",
+          "delta": 1
+        }
+      ]
+    }
+  ],
+  "triggers": [
+    {
+      "id": "split-summons",
+      "label": "裂分召唤：召唤双倍灵魄",
+      "on": "spellCast",
+      "role": "actor",
+      "window": "after",
+      "optional": true,
+      "cost": [
+        {
+          "resource": "split-summons"
+        }
+      ],
+      "when": "ask('刚才是用法术位施展包含灵魄数据卡的咒法召唤法术吗？')",
+      "do": [
+        {
+          "kind": "note",
+          "text": "裂分召唤：改为召唤两个相同的灵魄，各自显现在施法距离内未占据空间，生命值上限与当前生命值均减半；失去专注时两者皆消失（召唤物实体需手动处理）。"
+        }
+      ]
+    }
+  ]
+}

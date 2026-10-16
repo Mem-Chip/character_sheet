@@ -1,0 +1,45 @@
+{
+  "name": "剑刃爆发",
+  "automation": "full",
+  "text": "一圈半透明利刃横扫周围。自身周围 5 尺范围内的所有其他生物必须进行敏捷豁免，失败受到 (1 + floor((self.level + 1) / 6))d6 点力场伤害。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "剑刃爆发",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "emanation",
+          "radius": 5
+        },
+        "filter": "target.id != self.id"
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "dice": "(1 + floor((self.level + 1) / 6))d6",
+                  "type": "力场"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

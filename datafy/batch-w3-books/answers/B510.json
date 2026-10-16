@@ -1,0 +1,62 @@
+{
+  "name": "虚弱弹",
+  "automation": "partial",
+  "text": "远程武器攻击命中生物时，消耗一次奥术射击使用次数（短休恢复）：目标额外受到两枚奥术射击骰的黯蚀伤害，且必须通过体质豁免，否则直到其下一回合结束前获得中毒状态。在此期间目标以攻击命中时伤害扣减一枚奥术射击骰需手动处理。",
+  "resources": [
+    {
+      "id": "arcaneShot",
+      "name": "奥术射击",
+      "formula": "max(1, int)",
+      "recovery": "short"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "weakening",
+      "label": "虚弱弹",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "attack.ranged && attack.weapon",
+      "cost": [
+        { "resource": "arcaneShot" }
+      ],
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "cond(self.levelOf('战士') >= 18, 2d12, cond(self.levelOf('战士') >= 15, 2d10, cond(self.levelOf('战士') >= 10, 2d8, 2d6)))",
+          "type": "黯蚀"
+        },
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "8 + self.pb + self.mod.int",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "虚弱中毒"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "虚弱中毒": {
+      "text": "陷入中毒状态，直到你的下一回合结束。在此期间每当你以攻击检定命中时，该次攻击的总伤害减去一枚奥术射击骰的数值。",
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "implies": [
+        "XPHB:condition:中毒"
+      ]
+    }
+  }
+}
