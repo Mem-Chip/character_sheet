@@ -126,10 +126,24 @@ export function AiDatafy(p: {
   );
 }
 
+/** AI 接口设置（自带密钥）的对话框：设置面板里内嵌用的是下面那个表单 */
 export function AiSettingsDialog(p: { onClose: () => void; onSaved: () => void }) {
+  return (
+    <Dialog title="AI 接口（自带密钥）" size="wide" onClose={p.onClose}>
+      <AiSettingsForm onSaved={p.onSaved} />
+    </Dialog>
+  );
+}
+
+/**
+ * AI 接口的表单主体：接口地址 / 模型 / 密钥，只存浏览器。
+ * 单独一个组件是为了上栏的「设置」面板能内嵌它（不再套一层对话框）。
+ */
+export function AiSettingsForm(p: { onSaved?: () => void } = {}) {
   const cur = useAiSettings();
   const [s, setS] = useState<AiSettings>(cur ?? { baseUrl: AI_PRESETS[0].baseUrl, model: AI_PRESETS[0].model, key: '' });
   const [msg, setMsg] = useState('');
+  const [saved, setSaved] = useState(false);
   const test = async () => {
     setMsg('试一下…');
     try {
@@ -137,24 +151,29 @@ export function AiSettingsDialog(p: { onClose: () => void; onSaved: () => void }
       setMsg(`通了：${out.slice(0, 40)}`);
     } catch (e) { setMsg((e as Error).message); }
   };
+  const save = () => {
+    setAiSettings({ baseUrl: s.baseUrl.trim(), model: s.model.trim(), key: s.key.trim() });
+    setSaved(true);
+    setMsg('存好了（只在这个浏览器里）');
+    p.onSaved?.();
+  };
   return (
-    <Dialog title="AI 接口（自带密钥）" onClose={p.onClose} footer={<>
-      {cur && <button className="btn ghost sm danger" onClick={() => { setAiSettings(null); p.onClose(); }}>清除</button>}
-      <span style={{ flex: 1 }} />
-      <button className="btn" onClick={() => void test()}>试一下</button>
-      <button className="btn primary" disabled={!s.baseUrl.trim() || !s.model.trim()} onClick={() => { setAiSettings({ baseUrl: s.baseUrl.trim(), model: s.model.trim(), key: s.key.trim() }); p.onSaved(); }}>存</button>
-    </>}>
-      <div className="stack" style={{ gap: 8 }}>
-        <div className="small muted">OpenAI 兼容的接口。密钥只存在这个浏览器里，浏览器直接调用，不经过我们的服务器。</div>
-        <div className="row small" style={{ gap: 4, flexWrap: 'wrap' }}>
-          {AI_PRESETS.map((x) => <button key={x.label} className="btn ghost sm" onClick={() => setS({ ...s, baseUrl: x.baseUrl, model: x.model })}>{x.label}</button>)}
-        </div>
-        <Field label="接口地址（到 /v1 为止）"><input value={s.baseUrl} onChange={(e) => setS({ ...s, baseUrl: e.target.value })} placeholder="https://api.deepseek.com/v1" /></Field>
-        <Field label="模型"><input value={s.model} onChange={(e) => setS({ ...s, model: e.target.value })} /></Field>
-        <Field label="密钥"><input type="password" value={s.key} onChange={(e) => setS({ ...s, key: e.target.value })} autoComplete="off" /></Field>
-        <div className="tiny faint">一条要发约 3 万 token 的说明书和例子；挑上下文长、写 JSON 稳的模型。</div>
-        {msg && <div className="small">{msg}</div>}
+    <div className="stack" style={{ gap: 8 }}>
+      <div className="small muted">OpenAI 兼容的接口。密钥只存在这个浏览器里，浏览器直接调用，不经过我们的服务器。</div>
+      <div className="row small" style={{ gap: 4, flexWrap: 'wrap' }}>
+        {AI_PRESETS.map((x) => <button key={x.label} className="btn ghost sm" onClick={() => { setS({ ...s, baseUrl: x.baseUrl, model: x.model }); setSaved(false); }}>{x.label}</button>)}
       </div>
-    </Dialog>
+      <Field label="接口地址（到 /v1 为止）"><input value={s.baseUrl} onChange={(e) => { setS({ ...s, baseUrl: e.target.value }); setSaved(false); }} placeholder="https://api.deepseek.com/v1" /></Field>
+      <Field label="模型"><input value={s.model} onChange={(e) => { setS({ ...s, model: e.target.value }); setSaved(false); }} /></Field>
+      <Field label="密钥"><input type="password" value={s.key} onChange={(e) => { setS({ ...s, key: e.target.value }); setSaved(false); }} autoComplete="off" /></Field>
+      <div className="tiny faint">一条要发约 3 万 token 的说明书和例子；挑上下文长、写 JSON 稳的模型。</div>
+      <div className="row" style={{ gap: 6 }}>
+        {cur && <button className="btn ghost sm danger" onClick={() => { setAiSettings(null); setS({ baseUrl: AI_PRESETS[0].baseUrl, model: AI_PRESETS[0].model, key: '' }); setMsg('清掉了'); setSaved(false); }}>清除</button>}
+        <span style={{ flex: 1 }} />
+        <button className="btn" onClick={() => void test()}>试一下</button>
+        <button className="btn primary" disabled={!s.baseUrl.trim() || !s.model.trim()} onClick={save}>{saved ? '已保存' : '保存'}</button>
+      </div>
+      {msg && <div className="small">{msg}</div>}
+    </div>
   );
 }
