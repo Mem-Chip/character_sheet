@@ -48,17 +48,18 @@ const SCOPE_FIELDS: Array<[ScopeKind, string]> = [
 
 /** 窗口：引擎在什么时候问「有没有能力要在这时生效」 */
 const WINDOWS: Array<[string, string, string, string, string]> = [
-  ['d20Rolled', 'before', '掷骰者 / 攻击检定的目标', 'roll（还没判定；roll.failing = 按现在的结果会失败）、attack', 'reroll、addToRoll、succeed（改成成功：传奇抗性）'],
+  ['d20Rolled', 'before', '掷骰者 / 攻击检定的目标', 'roll（还没判定；roll.failing = 按现在的结果会失败）、attack', 'reroll、addToRoll、succeed（改成成功 / 命中）、cancel、clearAdv（消掉优势 / 劣势）'],
   ['d20Rolled', 'after', '同上', 'roll（已判定）、attack', '—'],
-  ['attackHit', 'before', '攻击者 / 被命中者', 'attack、roll。先问防守方，再问进攻方', '防守方：halveDamage、cancel；进攻方用 do 里的 addDamage 加伤害'],
+  ['attackHit', 'before', '攻击者 / 被命中者', 'attack、roll。先问防守方，再问进攻方', '防守方：halveDamage、cancel（改为未命中）、redirect（改攻击目标）；进攻方：doubleDamage，或用 do 里的 addDamage 加伤害'],
   ['attackHit', 'after', '同上', 'attack、roll、damage（已结算）', '—'],
   ['attackMissed', 'after', '攻击者 / 目标', 'attack、roll', '—'],
   ['saveForced', 'after', '迫使豁免的人 / 豁免的人', '—', '—'],
-  ['damageIncoming', 'before', '伤害来源 / 承受者', 'damage（掷出来的总数）、attack', 'reduceDamage（值可以带骰子，掷一次）、halveDamage、cancel、evasion'],
+  ['damageIncoming', 'before', '伤害来源 / 承受者', 'damage（掷出来的总数）、attack', 'reduceDamage（值可以带骰子，掷一次）、halveDamage、doubleDamage、cancel、evasion、redirect（整包伤害转给自己）、absorb（用自己的临时生命值或生命值替盟友承伤）'],
   ['damageTaken', 'after', '来源 / 承受者', 'damage', '—'],
   ['reducedTo0', 'before', '来源 / 承受者', 'damage', 'setHp（「改为降到 1」这类）'],
   ['turnStarted / turnEnded', 'after', '回合的主人（触发器里 target 也是他）', '—', '—'],
   ['leftReach', 'after', '走开的人 / 被离开触及范围的人', '—（借机攻击引擎自己会问，不用写）', '—'],
+  ['spellCast', 'before', '施法者', 'event.spell、event.key', 'cancel（打断施法，缺省退回法术位；要消耗法术位写 refundSlot: false）'],
   ['spellCast', 'after', '施法者', 'event.spell、event.key', '—'],
   ['initiativeRolled', 'after', '掷先攻的人', '—', '—'],
   ['restCompleted', 'after', '休息的人', 'event.kind（short / long）', '—'],
@@ -195,10 +196,15 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
 13. **引擎做不到的**（传送、视线、光照）→ \`move\` / \`note\` 节点，或在 \`when\` 里用 \`ask('…')\` 问人。**没把握就整条写成 \`{ "automation": "manual", "text": "…" }\`**：不自动化，比写错强。
 14. 伤害类型用中文：${DAMAGE_TYPES.join(' ')}。技能用中文：${SKILLS.join(' ')}。
 15. 恒定的数值（AC +1、速度 +10、熟练）不写；只有带条件的写成 \`rollMods\` / \`statics\`（在效应里）。
-16. **对攻击者 / 伤害来源生效**（黯冰狱铠的反噬、火焰护盾）：节点上写 \`to: 'attacker'\`（damage、heal、tempHp、applyEffect 都行）。在命中、受伤这些窗口的触发器和反应里用。
+16. **对攻击者 / 伤害来源生效**（黯冰狱铠的反噬、火焰护盾、庇护术让攻击者做豁免）：节点上写 \`to: 'attacker'\`（damage、heal、tempHp、applyEffect、save 都行）。在命中、受伤这些窗口的触发器和反应里用。
 17. **反射闪避**这类（「豁免成功只受一半的效果：成功改为不受伤害，失败改为一半」）：\`damageIncoming\` before 的触发器，\`when: "damage.save == 'dex'"\`，\`modify: [{ op: 'evasion' }]\`。
    \`damage.save\` 是这次伤害来自哪项豁免（不是豁免带来的就是空字符串），\`damage.saved\` 是成功了没有。evasion 只对「成功分支里写了 \`scale: 0.5\`」的伤害起作用。
 18. **骰子取最大值**（极效治疗、超限导能）：\`rollMods\` 里 \`op: 'maxDice'\`，\`on: { kind: 'heal' }\` 或 \`{ kind: 'damage' }\`；只管法术的加 \`spell: true\`（\`on: { kind: 'damage', spell: true }\`）。
+19. **改攻击目标 / 让攻击落空**：在 \`attackHit\` before 窗口，\`{ op: 'redirect', to: 'self' }\` 把攻击改打自己（骑乘战斗、迎矢）；\`{ op: 'redirect', to: 'choose' }\` 让攻击者改选另一目标或取消这次攻击（庇护术：配 \`save\` 的 \`to: 'attacker'\`，在 \`onFail\` 里写 \`{ kind: 'modify', modify: [{ op: 'redirect', to: 'choose' }] }\`）。转火后会按新目标的 AC 重新判定。直接让攻击未命中用 \`{ op: 'cancel' }\`。
+20. **替盟友承受伤害**：在 \`damageIncoming\` before 窗口（\`role: 'ally'\`），用自己的临时生命值或生命值吸收伤害（原目标抗性算完之后先扣你的，扣不完再落回原目标）：写 \`{ op: 'absorb', from: 'tempHp' }\`（投射守御，配 \`when: 'self.tempHp > 0'\`）或 \`{ op: 'absorb', from: 'hp' }\`（护卫灵光）。整包伤害直接转给自己承受（按自己的抗性算）：写 \`{ op: 'redirect', to: 'self' }\`（保护联结）。
+21. **打断施法**（法术反制）：挂在 \`spellCast\` before 窗口（\`role: 'any'\`、\`aim: 'actor'\`），在豁免失败分支里写 \`{ kind: 'modify', modify: [{ op: 'cancel' }] }\`（2024 版不消耗对方体内的法术位，缺省 \`refundSlot: true\`）。
+22. **抹掉优势 / 劣势**：常驻「攻击检定不会对你有优势」（飘忽不定、序列意识）在 \`rollMods\` 里写 \`op: 'noAdv'\`；触发时消掉本次掷骰的优势 / 劣势（归复平衡、醉汉机运）在 \`d20Rolled\` before 写 \`modify: [{ op: 'clearAdv', which: 'both' | 'adv' | 'disadv' }]\`。
+23. **召唤生物**（野兽召唤术、原初伴侣、寻获魔宠、荒野伙伴）：用 \`{ kind: 'summon', name: '…', size: 'S' | 'M' | 'L', creatureType: '…', ac: '11 + slot.level', hp: '30 + 5 * (slot.level - 2)', speed: 30, attacksPerAction: 'floor(slot.level / 2)', attacks: [{ name: '…', damage: '1d8 + 4 + slot.level', damageType: '穿刺' }] }\`。有多种形态（陆生 / 空生 / 水生）的套在 \`choose\` 节点里。专注法术召唤出的生物默认随专注结束退场；非专注或独立存续的写 \`link: false\`。
 
 ## 6. 引擎怎么执行（容易想错的地方）
 

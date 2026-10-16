@@ -30,10 +30,10 @@ export const EMITTED_EVENTS = new Set([
 
 const NODE_KINDS = new Set([
   'attack', 'save', 'check', 'damage', 'addDamage', 'heal', 'tempHp', 'applyEffect', 'removeEffect', 'extendEffect',
-  'resource', 'economy', 'choose', 'if', 'forEach', 'repeat', 'move', 'note', 'number', 'modify', 'zone',
+  'resource', 'economy', 'choose', 'if', 'forEach', 'repeat', 'move', 'note', 'number', 'modify', 'zone', 'summon',
 ]);
-const ROLL_OPS = new Set(['adv', 'disadv', 'add', 'addDice', 'autoFail', 'autoSucceed', 'critRange', 'autoCritOnHit', 'minD20', 'minDie', 'targetAdd', 'maxDice']);
-const MODIFY_OPS = new Set(['reroll', 'addToRoll', 'reduceDamage', 'halveDamage', 'setHp', 'cancel', 'evasion', 'succeed']);
+const ROLL_OPS = new Set(['adv', 'disadv', 'noAdv', 'add', 'addDice', 'autoFail', 'autoSucceed', 'critRange', 'autoCritOnHit', 'minD20', 'minDie', 'targetAdd', 'maxDice']);
+const MODIFY_OPS = new Set(['reroll', 'addToRoll', 'reduceDamage', 'halveDamage', 'doubleDamage', 'setHp', 'cancel', 'evasion', 'succeed', 'redirect', 'absorb', 'clearAdv']);
 const STATIC_KINDS = new Set(['ac', 'speed', 'speedSet', 'spellDc', 'resist', 'resistAll', 'immune', 'vuln', 'conditionImmune']);
 
 const NUM = T.num;
@@ -151,6 +151,23 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
           if (!MODIFY_OPS.has(m.op)) out.push(`${where(at)}：未知修改「${m.op}」`);
           if ('value' in m) expr(m.value, 'node', m.op === 'addToRoll' || m.op === 'reduceDamage' ? DICE : NUM, `${at}.modify`);
         }
+        break;
+      case 'summon':
+        if (!n.name) out.push(`${where(at)}：summon 节点缺少 name`);
+        expr(n.count, 'node', NUM, `${at}.count`);
+        expr(n.ac, 'node', NUM, `${at}.ac`);
+        expr(n.hp, 'node', NUM, `${at}.hp`);
+        expr(n.speed, 'node', NUM, `${at}.speed`);
+        expr(n.pb, 'node', NUM, `${at}.pb`);
+        expr(n.attacksPerAction, 'node', NUM, `${at}.attacksPerAction`);
+        (n.attacks ?? []).forEach((a, i) => {
+          expr(a.bonus, 'node', NUM, `${at}.attacks[${i}].bonus`);
+          expr(a.damage, 'node', DICE, `${at}.attacks[${i}].damage`);
+          (a.extra ?? []).forEach((x, j) => expr(x.dice, 'node', DICE, `${at}.attacks[${i}].extra[${j}].dice`));
+        });
+        (n.actions ?? []).forEach((a) => action(a, `${at}.actions[${a.id}]`));
+        (n.triggers ?? []).forEach((t) => trigger(t, `${at}.triggers[${t.id}]`));
+        (n.rollMods ?? []).forEach((m, i) => rollMod(m, `${at}.rollMods[${i}]`));
         break;
       default:
         break;

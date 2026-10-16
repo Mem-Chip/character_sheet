@@ -166,8 +166,8 @@ function fire(tx: Tx, spec: WindowSpec, c: TriggerCand): void {
   const modify = spec.modify ? (m: Modify) => spec.modify!(m, c) : undefined;
   if (c.action) {
     // 窗口触发的动作：动作自己付代价（反应 / 附赠 + 法术位…），自己跑效果树；
-    // 目标 = 窗口里的目标（至圣斩打的是被命中的那个），没有就是自己；aim: 'actor' = 窗口的发起者（炼狱叱喝打伤害来源）
-    const aimed = c.action.trigger?.aim === 'actor' ? spec.actor : spec.target;
+    // 目标 = 窗口里的目标（至圣斩打的是被命中的那个），没有就是自己；aim: 'actor' = 窗口的发起者（炼狱叱喝打伤害来源、法术反制打施法者）
+    const aimed = c.action.trigger?.aim === 'actor' ? spec.actor : (spec.target ?? (c.action.targeting?.type === 'creature' ? spec.actor : undefined));
     executeAction(tx, {
       actor: c.owner, actionKey: `${c.from}#${c.action.id}`, action: c.action,
       targets: aimed && tx.state.combatants[aimed] ? [aimed] : [c.owner],
@@ -190,8 +190,8 @@ function fire(tx: Tx, spec: WindowSpec, c: TriggerCand): void {
   }
   if (t.do?.length) {
     // 窗口没有承受者（回合开始 / 结束）：目标就是事件的主人 —— 自己的回合就是自己（恐惧术、降咒的回合末豁免），
-    // 别人的回合就是那个人（「敌人在你 10 尺内开始回合时」）
-    const target = spec.target ?? spec.actor;
+    // 别人的回合就是那个人（「敌人在你 10 尺内开始回合时」）；aim: 'actor' = 显式打窗口发起者
+    const target = t.aim === 'actor' ? spec.actor : (spec.target ?? spec.actor);
     const ctx: ExecCtx = {
       self: c.owner,
       source: c.source,
@@ -310,6 +310,10 @@ function windowPrompt(tx: Tx, spec: WindowSpec): string {
     case 'damageIncoming': return `${t} 即将受到伤害。要使用以下能力吗？`;
     case 'd20Rolled': return `${rollText(spec, a, t)}要使用以下能力吗？`;
     case 'damageTaken': return `${t} 受到了伤害。要使用以下能力吗？`;
+    case 'spellCast': {
+      const sp = (spec.scope.event as Record<string, unknown> | undefined)?.spell;
+      return `${a} 正在施展${sp ? `「${sp}」` : '法术'}。要使用以下能力吗？`;
+    }
     default: return `「${spec.event}」时机：要使用以下能力吗？`;
   }
 }

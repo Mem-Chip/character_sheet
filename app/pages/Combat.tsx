@@ -9,7 +9,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { combat, initCombat, useCombat } from '../lib/combat';
 import type { Engine } from '../lib/engine';
 import { Actor } from './combat/Actor';
-import { AddMonsterDialog, AddPcDialog, DecisionDialog, SettingsDialog } from './combat/Dialogs';
+import { AddMonsterDialog, AddPcDialog, DecisionDialog, SettingsDialog, SummonDialog, WildShapeDialog } from './combat/Dialogs';
 import { Hotbar } from './combat/Hotbar';
 import { Initiative } from './combat/Initiative';
 import { Log } from './combat/Log';
@@ -148,6 +148,8 @@ export function CombatPage({ engine }: { engine: Engine }) {
     {dlg === 'monster' && <AddMonsterDialog canHide={!!remote && dm} loadMonsters={() => loadMonsters(engine, remote?.campaignId)} onClose={() => setDlg(null)} />}
     {dlg === 'online' && <OnlineDialog engine={engine} onClose={() => setDlg(null)} />}
     {dlg === 'settings' && <SettingsDialog s={s} ui={ui} onClose={() => setDlg(null)} />}
+    {ui.formPick && <WildShapeDialog s={s} pick={ui.formPick} loadMonsters={() => loadMonsters(engine, remote?.campaignId)} onClose={() => combat.cancelFormPick()} />}
+    {ui.summonFor && s.state.combatants[ui.summonFor] && <SummonDialog s={s} summonerId={ui.summonFor} loadMonsters={() => loadMonsters(engine, remote?.campaignId)} onClose={() => combat.openSummon(null)} />}
     {ui.toast && <div className={'toast ' + ui.toast.tone} role="status">{ui.toast.text}</div>}
   </>;
 

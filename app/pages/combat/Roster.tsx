@@ -24,7 +24,8 @@ export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: Comba
       {ids.length === 0 && <div className="empty">还没有人。从卡片库加角色，或者加几个怪物。</div>}
       {ids.map((id) => {
         const c = st.combatants[id];
-        const max = c.base.hpMax;
+        const v = s.view(id);
+        const max = v.hpMax;
         const pct = max ? Math.max(0, Math.min(100, (c.live.hp / max) * 100)) : 0;
         const effects = Object.values(st.effects).filter((e) => e.bearer === id);
         const down = c.live.hp === 0 && !c.live.dead;
@@ -41,6 +42,7 @@ export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: Comba
             <span className="init">{c.initiative ?? '—'}</span>
             <span className="nm">
               {c.name}
+              {c.summoner && <span className="tiny faint" style={{ marginLeft: 4 }}>（{st.combatants[c.summoner]?.name ?? c.summoner}）</span>}
               <span className={'faction ' + (c.side === 'party' ? 'party' : c.side === 'enemy' ? 'enemy' : '')}>{c.side === 'party' ? '友' : c.side === 'enemy' ? '敌' : c.side}</span>
             </span>
             {secret
@@ -56,8 +58,8 @@ export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: Comba
               {c.live.dead && <Tag tone="danger">死亡</Tag>}
               {down && <Tag tone="danger">{c.live.stable ? '稳定' : `濒死 ${c.live.deathSaves.s}✓ ${c.live.deathSaves.f}✗`}</Tag>}
               {effects.map((e) => (
-                <Tag key={e.id} tone={e.key === 'concentration' ? 'accent' : undefined} title={e.suppressed ? '被同名效应压制' : undefined}>
-                  <span style={e.suppressed ? { opacity: 0.5 } : undefined}>{e.key === 'concentration' ? `专注·${e.name}` : e.name}</span>
+                <Tag key={e.id} tone={e.key === 'concentration' || e.form ? 'accent' : undefined} title={e.suppressed ? '被同名效应压制' : undefined}>
+                  <span style={e.suppressed ? { opacity: 0.5 } : undefined}>{e.key === 'concentration' ? `专注·${e.name}` : e.form ? `${e.name}·${e.form.name}` : e.name}</span>
                 </Tag>
               ))}
               <span style={{ flex: 1 }} />

@@ -88,6 +88,29 @@
         "root": [{ "kind": "heal", "amount": "(2 * slot.level)d4 + self.spell.mod" }]
       }]
     },
+    "XPHB:spell:疗伤术": {
+      "name": "疗伤术",
+      "automation": "full",
+      "actions": [{
+        "id": "cast", "name": "疗伤术", "activation": "action", "tags": ["spell", "magical"],
+        "cost": [{ "slot": { "min": 1 } }],
+        "targeting": { "type": "creature", "count": 1, "range": "touch" },
+        "root": [{ "kind": "heal", "amount": "(2 * slot.level)d8 + self.spell.mod" }]
+      }]
+    },
+    "XPHB:spell:点点星芒": {
+      "name": "点点星芒",
+      "automation": "full",
+      "actions": [{
+        "id": "cast", "name": "点点星芒", "activation": "action", "tags": ["spell", "magical"],
+        "targeting": { "type": "creature", "count": 1, "range": 60 },
+        "root": [{
+          "kind": "attack",
+          "attack": { "melee": false, "ranged": true, "spell": true, "damageType": "光耀" },
+          "onHit": [{ "kind": "damage", "dice": "(1 + floor((self.level + 1) / 6))d8", "type": "光耀" }]
+        }]
+      }]
+    },
     "XPHB:spell:猎人印记": {
       "name": "猎人印记",
       "automation": "partial",
@@ -122,6 +145,494 @@
           { "kind": "addDamage", "dice": "(1 + slot.level)d8", "type": "光耀" },
           { "kind": "if", "when": "target.type == '邪魔' || target.type == '不死生物'", "then": [{ "kind": "addDamage", "dice": "1d8", "type": "光耀" }] }
         ]
+      }]
+    },
+    "XPHB:spell:寻获魔宠": {
+      "name": "寻获魔宠",
+      "automation": "full",
+      "text": "召唤一只为你效劳的魔宠（可从图鉴选择 CR 0 野兽或使用默认魔宠数据，生物类型为妖精/天界/邪魔），随你的先攻行动。",
+      "actions": [{
+        "id": "cast", "name": "寻获魔宠", "activation": "action", "tags": ["spell", "magical", "familiar"],
+        "cost": [{ "slot": { "min": 1 } }],
+        "root": [{
+          "kind": "summon", "name": "魔宠", "size": "T", "creatureType": "fey", "ac": 12, "hp": 3, "speed": 40,
+          "score": { "str": 3, "dex": 15, "con": 10, "int": 3, "wis": 12, "cha": 7 }, "link": false,
+          "attacks": [{ "name": "爪抓", "bonus": 4, "damage": "1", "damageType": "挥砍" }]
+        }]
+      }]
+    },
+    "XPHB:spell:野兽召唤术": {
+      "name": "野兽召唤术",
+      "automation": "full",
+      "text": "在 90 尺内召唤一个野兽灵魄（天空 / 大地 / 海洋），与你共用先攻并在你回合后立即行动；生命值降至 0 或专注结束时消失。",
+      "actions": [{
+        "id": "cast", "name": "野兽召唤术", "activation": "action", "tags": ["spell", "magical"],
+        "cost": [{ "slot": { "min": 2 } }],
+        "concentration": { "hours": 1 },
+        "targeting": { "type": "point", "range": 90 },
+        "root": [{
+          "kind": "choose", "prompt": "选择野兽灵魄的环境形态",
+          "options": [
+            {
+              "label": "天空野兽灵魄（飞行 60 尺、飞掠）",
+              "do": [{
+                "kind": "summon", "name": "天空野兽灵魄", "size": "S", "creatureType": "beast",
+                "ac": "11 + slot.level", "hp": "20 + 5 * (slot.level - 2)", "speed": 60,
+                "score": { "str": 18, "dex": 11, "con": 16, "int": 4, "wis": 14, "cha": 5 },
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "撕裂", "damage": "1d8 + 4 + slot.level", "damageType": "穿刺" }],
+                "notes": ["飞掠：飞行离开敌人触及范围时不引发借机攻击"]
+              }]
+            },
+            {
+              "label": "大地野兽灵魄（攀爬 30 尺、群体战术）",
+              "do": [{
+                "kind": "summon", "name": "大地野兽灵魄", "size": "S", "creatureType": "beast",
+                "ac": "11 + slot.level", "hp": "30 + 5 * (slot.level - 2)", "speed": 30,
+                "score": { "str": 18, "dex": 11, "con": 16, "int": 4, "wis": 14, "cha": 5 },
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "撕裂", "damage": "1d8 + 4 + slot.level", "damageType": "穿刺" }],
+                "rollMods": [{
+                  "on": { "kind": "attack" }, "who": "bearer",
+                  "when": "allyWithin(target, 5, { exclude: [self], notCond: '失能' })",
+                  "op": "adv", "label": "群体战术"
+                }]
+              }]
+            },
+            {
+              "label": "海洋野兽灵魄（游泳 30 尺、水陆两栖）",
+              "do": [{
+                "kind": "summon", "name": "海洋野兽灵魄", "size": "S", "creatureType": "beast",
+                "ac": "11 + slot.level", "hp": "30 + 5 * (slot.level - 2)", "speed": 30,
+                "score": { "str": 18, "dex": 11, "con": 16, "int": 4, "wis": 14, "cha": 5 },
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "撕裂", "damage": "1d8 + 4 + slot.level", "damageType": "穿刺" }],
+                "notes": ["水陆两栖：可在空气与水中呼吸"]
+              }]
+            }
+          ]
+        }]
+      }]
+    },
+    "XPHB:spell:妖精召唤术": {
+      "name": "妖精召唤术",
+      "automation": "full",
+      "text": "在 90 尺内召唤一个妖精灵魄（愤怒 / 欢欣 / 诡诈），与你共用先攻并在你回合后行动；生命值降至 0 或专注结束时消失。",
+      "actions": [{
+        "id": "cast", "name": "妖精召唤术", "activation": "action", "tags": ["spell", "magical"],
+        "cost": [{ "slot": { "min": 3 } }],
+        "concentration": { "hours": 1 },
+        "targeting": { "type": "point", "range": 90 },
+        "root": [{
+          "kind": "choose", "prompt": "选择妖精灵魄的情绪形态",
+          "options": [
+            {
+              "label": "愤怒妖精灵魄（传送后下次攻击具有优势）",
+              "do": [{
+                "kind": "summon", "name": "愤怒妖精灵魄", "size": "S", "creatureType": "fey",
+                "ac": "12 + slot.level", "hp": "30 + 10 * (slot.level - 3)", "speed": 30,
+                "score": { "str": 13, "dex": 16, "con": 14, "int": 14, "wis": 11, "cha": 16 },
+                "conditionImmune": ["魅惑"],
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "妖精之刃", "damage": "1d6 + 3 + slot.level", "damageType": "穿刺", "extra": [{ "dice": "1d6", "type": "力场" }] }],
+                "notes": ["妖精步伐（附赠动作）：传送至多 30 尺；愤怒：本回合下次攻击检定具有优势"]
+              }]
+            },
+            {
+              "label": "欢欣妖精灵魄（传送后魅惑 10 尺内一名生物）",
+              "do": [{
+                "kind": "summon", "name": "欢欣妖精灵魄", "size": "S", "creatureType": "fey",
+                "ac": "12 + slot.level", "hp": "30 + 10 * (slot.level - 3)", "speed": 30,
+                "score": { "str": 13, "dex": 16, "con": 14, "int": 14, "wis": 11, "cha": 16 },
+                "conditionImmune": ["魅惑"],
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "妖精之刃", "damage": "1d6 + 3 + slot.level", "damageType": "穿刺", "extra": [{ "dice": "1d6", "type": "力场" }] }],
+                "notes": ["妖精步伐（附赠动作）：传送至多 30 尺；欢欣：10 尺内一名生物进行感知豁免否则陷入魅惑"]
+              }]
+            },
+            {
+              "label": "诡诈妖精灵魄（传送后制造 5 尺魔法黑暗）",
+              "do": [{
+                "kind": "summon", "name": "诡诈妖精灵魄", "size": "S", "creatureType": "fey",
+                "ac": "12 + slot.level", "hp": "30 + 10 * (slot.level - 3)", "speed": 30,
+                "score": { "str": 13, "dex": 16, "con": 14, "int": 14, "wis": 11, "cha": 16 },
+                "conditionImmune": ["魅惑"],
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "妖精之刃", "damage": "1d6 + 3 + slot.level", "damageType": "穿刺", "extra": [{ "dice": "1d6", "type": "力场" }] }],
+                "notes": ["妖精步伐（附赠动作）：传送至多 30 尺；诡诈：在 5 尺内制造魔法黑暗直至下回合开始"]
+              }]
+            }
+          ]
+        }]
+      }]
+    },
+    "XPHB:spell:亡灵召唤术": {
+      "name": "亡灵召唤术",
+      "automation": "full",
+      "text": "在 90 尺内召唤一个亡灵灵魄（幽体 / 腐尸 / 骷髅），与你共用先攻并在你回合后行动；生命值降至 0 或专注结束时消失。",
+      "actions": [{
+        "id": "cast", "name": "亡灵召唤术", "activation": "action", "tags": ["spell", "magical"],
+        "cost": [{ "slot": { "min": 3 } }],
+        "concentration": { "hours": 1 },
+        "targeting": { "type": "point", "range": 90 },
+        "root": [{
+          "kind": "choose", "prompt": "选择亡灵灵魄的形态",
+          "options": [
+            {
+              "label": "幽体亡灵灵魄（飞行 40 尺、命中恐慌）",
+              "do": [{
+                "kind": "summon", "name": "幽体亡灵灵魄", "size": "M", "creatureType": "undead",
+                "ac": "11 + slot.level", "hp": "30 + 10 * (slot.level - 3)", "speed": 40,
+                "score": { "str": 12, "dex": 16, "con": 15, "int": 4, "wis": 10, "cha": 9 },
+                "immune": ["黯蚀", "毒素"], "conditionImmune": ["力竭", "恐慌", "麻痹", "中毒"],
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "腐朽之爪", "damage": "1d8 + 3 + slot.level", "damageType": "黯蚀" }],
+                "notes": ["虚体移动；腐朽之爪命中时目标进行感知豁免否则陷入恐慌直至其下回合结束"]
+              }]
+            },
+            {
+              "label": "腐尸亡灵灵魄（恶臭灵光、中毒麻痹）",
+              "do": [{
+                "kind": "summon", "name": "腐尸亡灵灵魄", "size": "M", "creatureType": "undead",
+                "ac": "11 + slot.level", "hp": "30 + 10 * (slot.level - 3)", "speed": 30,
+                "score": { "str": 12, "dex": 16, "con": 15, "int": 4, "wis": 10, "cha": 9 },
+                "immune": ["黯蚀", "毒素"], "conditionImmune": ["力竭", "恐慌", "麻痹", "中毒"],
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "腐烂之爪", "damage": "1d6 + 3 + slot.level", "damageType": "挥砍" }],
+                "notes": ["恶臭灵光：5 尺内开始回合的生物体质豁免失败陷入中毒；对中毒目标命中时其体质豁免失败陷入麻痹"]
+              }]
+            },
+            {
+              "label": "骷髅亡灵灵魄（远程坟墓矢 2d4+3+环阶）",
+              "do": [{
+                "kind": "summon", "name": "骷髅亡灵灵魄", "size": "M", "creatureType": "undead",
+                "ac": "11 + slot.level", "hp": "20 + 10 * (slot.level - 3)", "speed": 30,
+                "score": { "str": 12, "dex": 16, "con": 15, "int": 4, "wis": 10, "cha": 9 },
+                "immune": ["黯蚀", "毒素"], "conditionImmune": ["力竭", "恐慌", "麻痹", "中毒"],
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "坟墓矢", "melee": false, "ranged": true, "range": 150, "damage": "2d4 + 3 + slot.level", "damageType": "黯蚀" }]
+              }]
+            }
+          ]
+        }]
+      }]
+    },
+    "XPHB:spell:元素召唤术": {
+      "name": "元素召唤术",
+      "automation": "full",
+      "text": "在 90 尺内召唤一个元素灵魄（气 / 土 / 火 / 水），与你共用先攻并在你回合后行动；生命值降至 0 或专注结束时消失。",
+      "actions": [{
+        "id": "cast", "name": "元素召唤术", "activation": "action", "tags": ["spell", "magical"],
+        "cost": [{ "slot": { "min": 4 } }],
+        "concentration": { "hours": 1 },
+        "targeting": { "type": "point", "range": 90 },
+        "root": [{
+          "kind": "choose", "prompt": "选择元素灵魄的类别",
+          "options": [
+            {
+              "label": "气元素灵魄（飞行 40 尺、闪电/雷鸣抗性）",
+              "do": [{
+                "kind": "summon", "name": "气元素灵魄", "size": "M", "creatureType": "elemental",
+                "ac": "11 + slot.level", "hp": "50 + 10 * (slot.level - 4)", "speed": 40,
+                "score": { "str": 18, "dex": 15, "con": 17, "int": 4, "wis": 10, "cha": 16 },
+                "resist": ["闪电", "雷鸣"], "immune": ["毒素"],
+                "conditionImmune": ["力竭", "麻痹", "石化", "中毒", "昏迷"],
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "猛击", "damage": "1d10 + 4 + slot.level", "damageType": "钝击" }],
+                "notes": ["无定形：可穿过 1 寸宽缝隙"]
+              }]
+            },
+            {
+              "label": "土元素灵魄（掘穴 40 尺、穿刺/挥砍抗性）",
+              "do": [{
+                "kind": "summon", "name": "土元素灵魄", "size": "M", "creatureType": "elemental",
+                "ac": "11 + slot.level", "hp": "50 + 10 * (slot.level - 4)", "speed": 40,
+                "score": { "str": 18, "dex": 15, "con": 17, "int": 4, "wis": 10, "cha": 16 },
+                "resist": ["穿刺", "挥砍"], "immune": ["毒素"],
+                "conditionImmune": ["力竭", "麻痹", "石化", "中毒", "昏迷"],
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "猛击", "damage": "1d10 + 4 + slot.level", "damageType": "钝击" }]
+              }]
+            },
+            {
+              "label": "火元素灵魄（火焰免疫、火焰猛击）",
+              "do": [{
+                "kind": "summon", "name": "火元素灵魄", "size": "M", "creatureType": "elemental",
+                "ac": "11 + slot.level", "hp": "50 + 10 * (slot.level - 4)", "speed": 40,
+                "score": { "str": 18, "dex": 15, "con": 17, "int": 4, "wis": 10, "cha": 16 },
+                "immune": ["火焰", "毒素"],
+                "conditionImmune": ["力竭", "麻痹", "石化", "中毒", "昏迷"],
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "猛击", "damage": "1d10 + 4 + slot.level", "damageType": "火焰" }],
+                "notes": ["无定形：可穿过 1 寸宽缝隙"]
+              }]
+            },
+            {
+              "label": "水元素灵魄（游泳 40 尺、强酸抗性）",
+              "do": [{
+                "kind": "summon", "name": "水元素灵魄", "size": "M", "creatureType": "elemental",
+                "ac": "11 + slot.level", "hp": "50 + 10 * (slot.level - 4)", "speed": 40,
+                "score": { "str": 18, "dex": 15, "con": 17, "int": 4, "wis": 10, "cha": 16 },
+                "resist": ["强酸"], "immune": ["毒素"],
+                "conditionImmune": ["力竭", "麻痹", "石化", "中毒", "昏迷"],
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "猛击", "damage": "1d10 + 4 + slot.level", "damageType": "钝击" }],
+                "notes": ["无定形：可穿过 1 寸宽缝隙"]
+              }]
+            }
+          ]
+        }]
+      }]
+    },
+    "XPHB:spell:异怪召唤术": {
+      "name": "异怪召唤术",
+      "automation": "full",
+      "text": "在 90 尺内召唤一个异怪灵魄（类眼魔 / 夺心魔 / 史拉蟾），与你共用先攻并在你回合后行动；生命值降至 0 或专注结束时消失。",
+      "actions": [{
+        "id": "cast", "name": "异怪召唤术", "activation": "action", "tags": ["spell", "magical"],
+        "cost": [{ "slot": { "min": 4 } }],
+        "concentration": { "hours": 1 },
+        "targeting": { "type": "point", "range": 90 },
+        "root": [{
+          "kind": "choose", "prompt": "选择异怪灵魄的类别",
+          "options": [
+            {
+              "label": "类眼魔异怪灵魄（飞行 30 尺、远程眼波射线）",
+              "do": [{
+                "kind": "summon", "name": "类眼魔异怪灵魄", "size": "M", "creatureType": "aberration",
+                "ac": "11 + slot.level", "hp": "40 + 10 * (slot.level - 4)", "speed": 30,
+                "score": { "str": 16, "dex": 10, "con": 19, "int": 16, "wis": 10, "cha": 6 },
+                "immune": ["心灵"],
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "眼波射线", "melee": false, "ranged": true, "range": 150, "damage": "1d8 + 3 + slot.level", "damageType": "心灵" }]
+              }]
+            },
+            {
+              "label": "夺心魔异怪灵魄（心灵猛击、低语灵光）",
+              "do": [{
+                "kind": "summon", "name": "夺心魔异怪灵魄", "size": "M", "creatureType": "aberration",
+                "ac": "11 + slot.level", "hp": "40 + 10 * (slot.level - 4)", "speed": 30,
+                "score": { "str": 16, "dex": 10, "con": 19, "int": 16, "wis": 10, "cha": 6 },
+                "immune": ["心灵"],
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "心灵猛击", "damage": "1d8 + 3 + slot.level", "damageType": "心灵" }],
+                "notes": ["低语灵光：5 尺内开始回合的生物进行感知豁免失败受 2d6 心灵伤害"]
+              }]
+            },
+            {
+              "label": "史拉蟾异怪灵魄（利爪、每回合再生 5 HP）",
+              "do": [{
+                "kind": "summon", "name": "史拉蟾异怪灵魄", "size": "M", "creatureType": "aberration",
+                "ac": "11 + slot.level", "hp": "40 + 10 * (slot.level - 4)", "speed": 30,
+                "score": { "str": 16, "dex": 10, "con": 19, "int": 16, "wis": 10, "cha": 6 },
+                "immune": ["心灵"],
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "利爪", "damage": "1d10 + 3 + slot.level", "damageType": "挥砍" }],
+                "triggers": [{
+                  "id": "regen", "label": "再生", "on": "turnStarted", "role": "actor",
+                  "when": "self.hp > 0",
+                  "do": [{ "kind": "heal", "to": "self", "amount": 5 }]
+                }]
+              }]
+            }
+          ]
+        }]
+      }]
+    },
+    "XPHB:spell:构装召唤术": {
+      "name": "构装召唤术",
+      "automation": "full",
+      "text": "在 90 尺内召唤一个构装灵魄（粘土 / 金属 / 岩石），与你共用先攻并在你回合后行动；生命值降至 0 或专注结束时消失。",
+      "actions": [{
+        "id": "cast", "name": "构装召唤术", "activation": "action", "tags": ["spell", "magical"],
+        "cost": [{ "slot": { "min": 4 } }],
+        "concentration": { "hours": 1 },
+        "targeting": { "type": "point", "range": 90 },
+        "root": [{
+          "kind": "choose", "prompt": "选择构装灵魄的材料",
+          "options": [
+            {
+              "label": "粘土构装灵魄（狂乱鞭笞）",
+              "do": [{
+                "kind": "summon", "name": "粘土构装灵魄", "size": "M", "creatureType": "construct",
+                "ac": "13 + slot.level", "hp": "40 + 15 * (slot.level - 4)", "speed": 30,
+                "score": { "str": 18, "dex": 10, "con": 18, "int": 14, "wis": 11, "cha": 5 },
+                "resist": ["毒素"], "conditionImmune": ["魅惑", "力竭", "恐慌", "麻痹", "中毒"],
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "猛击", "damage": "1d8 + 4 + slot.level", "damageType": "钝击" }],
+                "notes": ["狂乱鞭笞：受伤害时可用反应对 5 尺内攻击者发动一次近战攻击"]
+              }]
+            },
+            {
+              "label": "金属构装灵魄（炽热之躯：近战受击反伤 1d10 火焰）",
+              "do": [{
+                "kind": "summon", "name": "金属构装灵魄", "size": "M", "creatureType": "construct",
+                "ac": "13 + slot.level", "hp": "40 + 15 * (slot.level - 4)", "speed": 30,
+                "score": { "str": 18, "dex": 10, "con": 18, "int": 14, "wis": 11, "cha": 5 },
+                "resist": ["毒素"], "conditionImmune": ["魅惑", "力竭", "恐慌", "麻痹", "中毒"],
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "猛击", "damage": "1d8 + 4 + slot.level", "damageType": "钝击" }],
+                "triggers": [{
+                  "id": "heated-body", "label": "炽热之躯", "on": "attackHit", "role": "target", "window": "after",
+                  "when": "attack.melee && dist(self, attacker) <= 5",
+                  "do": [{ "kind": "damage", "to": "attacker", "dice": "1d10", "type": "火焰" }]
+                }]
+              }]
+            },
+            {
+              "label": "岩石构装灵魄（石化迟缓灵光）",
+              "do": [{
+                "kind": "summon", "name": "岩石构装灵魄", "size": "M", "creatureType": "construct",
+                "ac": "13 + slot.level", "hp": "40 + 15 * (slot.level - 4)", "speed": 30,
+                "score": { "str": 18, "dex": 10, "con": 18, "int": 14, "wis": 11, "cha": 5 },
+                "resist": ["毒素"], "conditionImmune": ["魅惑", "力竭", "恐慌", "麻痹", "中毒"],
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "猛击", "damage": "1d8 + 4 + slot.level", "damageType": "钝击" }],
+                "notes": ["石化迟缓：10 尺内开始回合的生物进行感知豁免否则速度减半且不能使用反应"]
+              }]
+            }
+          ]
+        }]
+      }]
+    },
+    "XPHB:spell:龙类召唤术": {
+      "name": "龙类召唤术",
+      "automation": "full",
+      "text": "在 60 尺内召唤一个大型龙类灵魄，与你共用先攻并在你回合后行动；生命值降至 0 或专注结束时消失。",
+      "actions": [{
+        "id": "cast", "name": "龙类召唤术", "activation": "action", "tags": ["spell", "magical"],
+        "cost": [{ "slot": { "min": 5 } }],
+        "concentration": { "hours": 1 },
+        "targeting": { "type": "point", "range": 60 },
+        "root": [{
+          "kind": "summon", "name": "龙类灵魄", "size": "L", "creatureType": "dragon",
+          "ac": "14 + slot.level", "hp": "50 + 10 * (slot.level - 5)", "speed": 60,
+          "score": { "str": 18, "dex": 12, "con": 16, "int": 14, "wis": 14, "cha": 14 },
+          "resist": ["强酸", "寒冷", "火焰", "闪电", "毒素"],
+          "conditionImmune": ["魅惑", "恐慌", "中毒"],
+          "attacksPerAction": "floor(slot.level / 2)",
+          "attacks": [{ "name": "撕裂", "reach": true, "damage": "1d6 + 4 + slot.level", "damageType": "穿刺" }],
+          "actions": [{
+            "id": "breath", "name": "吐息武器（30 尺锥状）", "activation": "action",
+            "targeting": { "type": "area", "range": 0, "area": { "shape": "cone", "length": 30 } },
+            "root": [{
+              "kind": "choose", "prompt": "选择吐息武器伤害类型", "var": "elem",
+              "options": [
+                { "label": "火焰", "value": "火焰", "do": [] },
+                { "label": "寒冷", "value": "寒冷", "do": [] },
+                { "label": "闪电", "value": "闪电", "do": [] },
+                { "label": "强酸", "value": "强酸", "do": [] },
+                { "label": "毒素", "value": "毒素", "do": [] }
+              ]
+            }, {
+              "kind": "save", "ability": "dex", "dc": "self.spell.dc",
+              "onFail": [{ "kind": "damage", "id": "breath", "dice": "2d6", "type": "vars.elem" }],
+              "onSuccess": [{ "kind": "damage", "ref": "breath", "scale": 0.5, "type": "vars.elem" }]
+            }]
+          }],
+          "notes": ["共享抗性：召唤时施法者获得其一项伤害抗性"]
+        }]
+      }]
+    },
+    "XPHB:spell:天界召唤术": {
+      "name": "天界召唤术",
+      "automation": "full",
+      "text": "在 90 尺内召唤一个大型天界灵魄（复仇圣灵 / 守护圣灵），与你共用先攻并在你回合后行动；生命值降至 0 或专注结束时消失。",
+      "actions": [{
+        "id": "cast", "name": "天界召唤术", "activation": "action", "tags": ["spell", "magical"],
+        "cost": [{ "slot": { "min": 5 } }],
+        "concentration": { "hours": 1 },
+        "targeting": { "type": "point", "range": 90 },
+        "root": [{
+          "kind": "choose", "prompt": "选择天界灵魄形态",
+          "options": [
+            {
+              "label": "复仇圣灵（远程光耀弓 2d6+2+环阶）",
+              "do": [{
+                "kind": "summon", "name": "复仇天界灵魄", "size": "L", "creatureType": "celestial",
+                "ac": "11 + slot.level", "hp": "40 + 10 * (slot.level - 5)", "speed": 40,
+                "score": { "str": 16, "dex": 14, "con": 16, "int": 10, "wis": 14, "cha": 16 },
+                "resist": ["光耀"], "conditionImmune": ["魅惑", "恐慌"],
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "光耀之弓", "melee": false, "ranged": true, "range": 150, "damage": "2d6 + 2 + slot.level", "damageType": "光耀" }],
+                "actions": [{
+                  "id": "heal-touch", "name": "治愈之触（1/日）", "activation": "action",
+                  "targeting": { "type": "creature", "count": 1, "range": 5 },
+                  "root": [{ "kind": "heal", "to": "target", "amount": "2d8 + 5" }]
+                }]
+              }]
+            },
+            {
+              "label": "守护圣灵（AC 13+环阶、近战光耀锤并赐予 1d10 临时生命）",
+              "do": [{
+                "kind": "summon", "name": "守护天界灵魄", "size": "L", "creatureType": "celestial",
+                "ac": "13 + slot.level", "hp": "40 + 10 * (slot.level - 5)", "speed": 40,
+                "score": { "str": 16, "dex": 14, "con": 16, "int": 10, "wis": 14, "cha": 16 },
+                "resist": ["光耀"], "conditionImmune": ["魅惑", "恐慌"],
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "光耀之锤", "damage": "1d10 + 3 + slot.level", "damageType": "光耀" }],
+                "actions": [{
+                  "id": "heal-touch", "name": "治愈之触（1/日）", "activation": "action",
+                  "targeting": { "type": "creature", "count": 1, "range": 5 },
+                  "root": [{ "kind": "heal", "to": "target", "amount": "2d8 + 5" }]
+                }],
+                "notes": ["光耀之锤命中时可令 10 尺内一名生物获得 1d10 临时生命值"]
+              }]
+            }
+          ]
+        }]
+      }]
+    },
+    "XPHB:spell:邪魔召唤术": {
+      "name": "邪魔召唤术",
+      "automation": "full",
+      "text": "在 90 尺内召唤一个大型邪魔灵魄（恶魔 / 魔鬼 / 尤格罗斯魔），与你共用先攻并在你回合后行动；生命值降至 0 或专注结束时消失。",
+      "actions": [{
+        "id": "cast", "name": "邪魔召唤术", "activation": "action", "tags": ["spell", "magical"],
+        "cost": [{ "slot": { "min": 6 } }],
+        "concentration": { "hours": 1 },
+        "targeting": { "type": "point", "range": 90 },
+        "root": [{
+          "kind": "choose", "prompt": "选择邪魔灵魄类别",
+          "options": [
+            {
+              "label": "恶魔邪魔灵魄（HP 50+15×升环、咬噬 1d12+3+环阶）",
+              "do": [{
+                "kind": "summon", "name": "恶魔邪魔灵魄", "size": "L", "creatureType": "fiend",
+                "ac": "12 + slot.level", "hp": "50 + 15 * (slot.level - 6)", "speed": 40,
+                "score": { "str": 13, "dex": 16, "con": 15, "int": 10, "wis": 10, "cha": 16 },
+                "resist": ["火焰"], "immune": ["毒素"], "conditionImmune": ["魅惑", "恐慌", "中毒"],
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "咬噬", "damage": "1d12 + 3 + slot.level", "damageType": "黯蚀" }],
+                "notes": ["死亡爆裂：降为 0 生命值或法术结束时，10 尺内生物敏捷豁免受 2d6+环阶火焰伤害"]
+              }]
+            },
+            {
+              "label": "魔鬼邪魔灵魄（飞行 60 尺、投掷魔火 2d6+3+环阶）",
+              "do": [{
+                "kind": "summon", "name": "魔鬼邪魔灵魄", "size": "L", "creatureType": "fiend",
+                "ac": "12 + slot.level", "hp": "40 + 15 * (slot.level - 6)", "speed": 60,
+                "score": { "str": 13, "dex": 16, "con": 15, "int": 10, "wis": 10, "cha": 16 },
+                "resist": ["火焰"], "immune": ["毒素"], "conditionImmune": ["魅惑", "恐慌", "中毒"],
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "投掷魔火", "melee": false, "ranged": true, "range": 150, "damage": "2d6 + 3 + slot.level", "damageType": "火焰" }],
+                "notes": ["魔鬼视界：魔法黑暗不会阻碍其黑暗视觉"]
+              }]
+            },
+            {
+              "label": "尤格罗斯魔邪魔灵魄（HP 60+15×升环、利爪与攻击后传送）",
+              "do": [{
+                "kind": "summon", "name": "尤格罗斯魔邪魔灵魄", "size": "L", "creatureType": "fiend",
+                "ac": "12 + slot.level", "hp": "60 + 15 * (slot.level - 6)", "speed": 40,
+                "score": { "str": 13, "dex": 16, "con": 15, "int": 10, "wis": 10, "cha": 16 },
+                "resist": ["火焰"], "immune": ["毒素"], "conditionImmune": ["魅惑", "恐慌", "中毒"],
+                "attacksPerAction": "floor(slot.level / 2)",
+                "attacks": [{ "name": "利爪", "damage": "1d8 + 3 + slot.level", "damageType": "挥砍" }],
+                "notes": ["每次利爪攻击后可传送至多 30 尺到盟友身旁"]
+              }]
+            }
+          ]
+        }]
       }]
     }
   }

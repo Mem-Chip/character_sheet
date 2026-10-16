@@ -202,7 +202,7 @@ export function d20Test(tx: Tx, req: RollRequest): RollResult {
 
   // ③ 合成
   const mods: AppliedMod[] = [];
-  let adv = false, disadv = false, autoFail = false, autoSucceed = false;
+  let adv = false, disadv = false, noAdv = false, autoFail = false, autoSucceed = false;
   let flat = 0;
   let minD20 = 0;
   let targetAdd = 0;
@@ -217,6 +217,7 @@ export function d20Test(tx: Tx, req: RollRequest): RollResult {
     switch (m.op) {
       case 'adv': adv = true; break;
       case 'disadv': disadv = true; break;
+      case 'noAdv': noAdv = true; break;
       case 'autoFail': autoFail = true; break;
       case 'autoSucceed': autoSucceed = true; break;
       case 'add':
@@ -233,6 +234,7 @@ export function d20Test(tx: Tx, req: RollRequest): RollResult {
       case 'minDie': break; // 伤害用
     }
   }
+  if (noAdv) adv = false;
   const cancelled = adv && disadv;
   if (cancelled) { adv = false; disadv = false; }
   if (autoFail && autoSucceed) autoSucceed = false;   // 冲突时自动失败优先（回执上两条都会列出来）
@@ -291,10 +293,24 @@ export function d20Test(tx: Tx, req: RollRequest): RollResult {
         result.extra.push({ label: by.label, dice: v.toString(), faces: fs.flat(), total });
         recompute();
       } else if (m.op === 'succeed') {
-        // 传奇抗性：失败改成成功（连自动失败也盖过）
+        // 传奇抗性、现世传说：失败改成成功 / 命中（连自动失败也盖过）
         result.autoFail = false;
         result.autoSucceed = true;
         result.mods.push({ op: 'autoSucceed', label: by.label, owner: by.owner, from: by.from });
+      } else if (m.op === 'cancel') {
+        result.autoSucceed = false;
+        result.autoFail = true;
+        result.mods.push({ op: 'autoFail', label: by.label, owner: by.owner, from: by.from });
+      } else if (m.op === 'clearAdv') {
+        const which = m.which ?? 'both';
+        if (which === 'both' || which === 'adv') result.adv = false;
+        if (which === 'both' || which === 'disadv') result.disadv = false;
+        if (!result.adv && !result.disadv && result.d20.length > 1) {
+          result.d20 = [result.d20[0]];
+          result.natural = result.d20[0];
+        }
+        result.mods.push({ op: 'noAdv', label: by.label, owner: by.owner, from: by.from });
+        recompute();
       }
     },
     refresh: () => rollValue(result),
@@ -323,9 +339,10 @@ export function d20Test(tx: Tx, req: RollRequest): RollResult {
 export function judge(tx: Tx, req: Pick<RollRequest, 'kind'>, r: RollResult): void {
   if (r.vs === null) { r.outcome = null; r.crit = false; return; }
   if (req.kind === 'attack') {
-    // 2024：天然 20 必定命中并重击；天然 1 必定未命中。扩大的重击范围同样视为重击（必定命中）
+    if (r.autoFail) { r.outcome = 'miss'; r.crit = false; return; }
+    // 2024：天然 20 必定命中并重击；天然 1 必定未命中。扩大的重击范围同样视为重击（必定命中）；autoSucceed（现世传说）连天然 1 也改成命中
     r.crit = r.natural >= r.critRange;
-    const hit = r.crit || (r.natural !== 1 && r.total >= r.vs);
+    const hit = r.autoSucceed || r.crit || (r.natural !== 1 && r.total >= r.vs);
     r.outcome = hit ? 'hit' : 'miss';
     if (!hit) r.crit = false;
     return;

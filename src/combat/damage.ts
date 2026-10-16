@@ -32,12 +32,15 @@ export interface DamagePacket {
   /** 豁免成功减半之类 */
   scale?: number;
   halve?: boolean;
+  double?: boolean;
   cancel?: boolean;
   /** 来自豁免的伤害：哪项豁免、成没成功、成功是否只受一半（反射闪避看这个） */
   save?: { ability: string; success: boolean; half: boolean };
   /** 伤害骰全部取最大值（超限导能） */
   max?: boolean;
   reduce: Array<{ value: number; types?: string[] }>;
+  /** 替承受者吸收伤害的人（投射守御用 tempHp 吸收，溢出仍归原目标；护卫灵光用 hp 吸收全部） */
+  absorbers?: Array<{ id: Id; from: 'tempHp' | 'hp'; label: string }>;
 }
 
 export interface DamageResult {
@@ -82,8 +85,6 @@ export function rollComponent(tx: Tx, c: DamageComponent, crit: boolean, user: s
 }
 
 export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null): DamageResult {
-  const target = tx.state.combatants[p.target];
-  const tv = effectiveView(tx, p.target);
   const user = p.source ? controllerOf(tx, p.source) : 'dm';
 
   // ① 攻击者的伤害修正（狂暴伤害、巨武器战斗…）
@@ -144,6 +145,7 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
     packet: p,
     modify: (m, by) => {
       if (m.op === 'halveDamage') p.halve = true;
+      else if (m.op === 'doubleDamage') p.double = true;
       else if (m.op === 'cancel') p.cancel = true;
       else if (m.op === 'evasion') {
         // 只管「豁免成功只受一半」的伤害：成功 → 不受伤害，失败 → 一半
@@ -158,16 +160,27 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
         let total = v.flat;
         v.terms.forEach((t, i) => { total += t.sign * fs[i].reduce((a, b) => a + b, 0); });
         p.reduce.push({ value: Math.max(0, total), types: m.types });
+      } else if (m.op === 'redirect') {
+        if (by.owner !== p.target && tx.state.combatants[by.owner] && !tx.state.combatants[by.owner].live.dead) {
+          const old = p.target;
+          p.target = by.owner;
+          tx.emit('note', { text: `${by.label}：由 ${nameOf(tx, by.owner)} 代替 ${nameOf(tx, old)} 承受伤害`, owner: by.owner, target: old }, rolledSeq);
+        }
+      } else if (m.op === 'absorb') {
+        (p.absorbers ??= []).push({ id: by.owner, from: m.from ?? 'tempHp', label: by.label });
       }
     },
   });
 
-  // ④ 调整：加减值 → 抗性 → 易伤；免疫
+  // ④ 调整：加减值 → 抗性 → 易伤；免疫（redirect 后按新承受者算）
+  const target = tx.state.combatants[p.target];
+  const tv = effectiveView(tx, p.target);
   const notes: string[] = [];
   const final: Record<string, number> = {};
   for (const [type, raw] of Object.entries(byType)) {
     let v = raw;
     if (p.cancel) { v = 0; notes.push('伤害被抵消'); }
+    if (p.double) v *= 2;
     if (p.halve) v = Math.floor(v / 2);
     for (const r of p.reduce) if (!r.types || r.types.includes(type)) v = Math.max(0, v - r.value);
     if (tv.immune.includes(type)) { v = 0; notes.push(`免疫${type}`); }
@@ -178,13 +191,41 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
     final[type] = v;
   }
   if (p.halve) notes.unshift('伤害减半');
+  if (p.double) notes.unshift('伤害加倍');
   const ov = tx.overrideDamage(index);
   if (ov) {
     for (const k of Object.keys(final)) final[k] = ov.amounts[k] ?? final[k];
     for (const [k, v] of Object.entries(ov.amounts)) final[k] = v;
     notes.push(`[DM 裁定] ${ov.reason ?? '伤害改写'}`);
   }
-  const total = sum(Object.values(final));
+  let total = sum(Object.values(final));
+
+  // ④.5 替承受者吸收伤害（投射守御：先算原目标的抗性与易伤，再扣法师的临时生命值，溢出仍归原目标；护卫灵光：代受全部）
+  for (const ab of p.absorbers ?? []) {
+    const ac = tx.state.combatants[ab.id];
+    if (!ac || ac.live.dead || total <= 0) continue;
+    if (ab.from === 'tempHp') {
+      const taken = Math.min(ac.live.tempHp, total);
+      if (taken > 0) {
+        total -= taken;
+        tx.emit('hpChanged', { id: ab.id, hp: ac.live.hp, tempHp: ac.live.tempHp - taken }, rolledSeq);
+        notes.push(`${nameOf(tx, ab.id)}（${ab.label}）吸收 ${taken} 点伤害`);
+      }
+    } else {
+      const taken = total;
+      total = 0;
+      const tAbs = Math.min(ac.live.tempHp, taken);
+      const hpLoss = taken - tAbs;
+      const abBefore = ac.live.hp;
+      const abAfter = Math.max(0, abBefore - hpLoss);
+      tx.emit('hpChanged', { id: ab.id, hp: abAfter, tempHp: ac.live.tempHp - tAbs }, rolledSeq);
+      notes.push(`${nameOf(tx, ab.id)}（${ab.label}）代受 ${taken} 点伤害（生命值 ${abBefore} → ${abAfter}${tAbs ? `，临时生命值吸收 ${tAbs}` : ''}）`);
+      if (abBefore > 0 && abAfter === 0) {
+        if (ac.summoner || (ac.kind !== 'pc' && tx.state.settings.monsterAt0 === 'dead')) kill(tx, ab.id, `${nameOf(tx, ab.id)} 被击倒`, rolledSeq);
+        else knockOut(tx, ab.id, rolledSeq);
+      }
+    }
+  }
 
   // ⑤ 临时生命值先扣
   const hpBefore = target.live.hp;
@@ -222,7 +263,7 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
     if (hpBefore > 0 && hpAfter === 0) {
       const overflow = rest - hpBefore;
       if (target.kind !== 'pc') {
-        if (tx.state.settings.monsterAt0 === 'dead') { kill(tx, p.target, `${nameOf(tx, p.target)} 被击倒`, seq); killed = true; }
+        if (target.summoner || tx.state.settings.monsterAt0 === 'dead') { kill(tx, p.target, `${nameOf(tx, p.target)} 被击倒`, seq); killed = true; }
         else { knockOut(tx, p.target, seq); downed = true; }
       } else if (massive && overflow >= tv.hpMax) {
         kill(tx, p.target, `即死：溢出伤害 ${overflow} ≥ 生命值上限 ${tv.hpMax}`, seq);
