@@ -5,6 +5,7 @@ import { Source } from '../../src/sheet';
 import { healDiceOf, isConsumable } from '../../src/bridge/from-sheet';
 import { NumInput, Panel } from '../components/ui';
 import { Term } from '../components/Term';
+import { StartingEquipmentDialog } from '../components/StartingEquipmentDialog';
 import type { Engine } from '../lib/engine';
 import { actions } from '../lib/store';
 
@@ -48,6 +49,7 @@ export function SheetItems({ engine, id, char, sheet }: { engine: Engine; id: st
   const [flowNote, setFlowNote] = useState('');
   const [flowErr, setFlowErr] = useState('');
   const [msg, setMsg] = useState('');
+  const [openEq, setOpenEq] = useState(false);
 
   const total = COINS.reduce((a, [k, , v]) => a + (Number(purse[k]) || 0) * v, 0);
   const applyFlow = () => {
@@ -160,9 +162,10 @@ export function SheetItems({ engine, id, char, sheet }: { engine: Engine; id: st
         )}
       </Panel>
 
-      <div className="row items-meta" style={{ gap: 18 }}>
+      <div className="row items-meta" style={{ gap: 18, alignItems: 'center' }}>
         <span className={weight.over ? 'warnline' : ''}>负重 <b>{weight.total}</b> / {weight.capacity} 磅{weight.over ? '（超重了）' : ''}{weight.unknown ? <span className="faint tiny">（{weight.unknown} 样不知道重量）</span> : null}</span>
         <span className={attuned > 3 ? 'warnline' : ''}>同调 <b>{attuned}</b> / 3</span>
+        <button className="btn sm" style={{ marginLeft: 'auto' }} onClick={() => setOpenEq(true)}>填写起始装备…</button>
       </div>
       {msg && <div className="okline small">{msg} <button className="tag-x" onClick={() => setMsg('')}>✕</button></div>}
 
@@ -170,8 +173,22 @@ export function SheetItems({ engine, id, char, sheet }: { engine: Engine; id: st
         {rows.some((x) => x.e.equipped) ? table(rows.filter((x) => x.e.equipped)) : <div className="empty">没有装备任何东西。</div>}
       </Panel>
       <Panel title="背包" flush>
-        {rows.some((x) => !x.e.equipped) ? table(rows.filter((x) => !x.e.equipped)) : <div className="empty">背包是空的。</div>}
+        {rows.some((x) => !x.e.equipped) ? table(rows.filter((x) => !x.e.equipped)) : (
+          <div className="empty">
+            背包是空的。
+            <button className="btn sm primary" style={{ marginLeft: 8 }} onClick={() => setOpenEq(true)}>填写起始装备…</button>
+          </div>
+        )}
       </Panel>
+      {openEq && (
+        <StartingEquipmentDialog
+          engine={engine}
+          id={id}
+          char={char as CharData}
+          onClose={() => setOpenEq(false)}
+          onApplied={(note) => setMsg(note)}
+        />
+      )}
       <AddItem engine={engine} id={id} />
     </div>
   );
@@ -213,8 +230,8 @@ function AddItem({ engine, id }: { engine: Engine; id: string }) {
       {hits.length > 0 && (
         <div className="row" style={{ marginTop: 6, flexWrap: 'wrap', gap: 4 }}>
           {hits.map((x) => (
-            <button key={x.name} className="chip" onClick={() => add(x.name)} title="加进背包">
-              {x.name}<small className="faint"> {x.label}</small>
+            <button key={x.name} className="chip" onClick={() => add(x.name)} title="点击加进背包">
+              <Term kind="item" name={x.name} inButton>{x.name}</Term><small className="faint"> {x.label}</small>
             </button>
           ))}
         </div>

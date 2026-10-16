@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react';
 import type { Json } from '../../../src/sheet';
 import type { Session } from '../../../src/combat';
 import { Term } from '../../components/Term';
-import { termOfKey } from '../../lib/terms';
+import { termOfKey, termOfResource } from '../../lib/terms';
 import { combat, type CombatUi } from '../../lib/combat';
 import { setResHidden, useHiddenRes } from '../../lib/hotres';
 import { Clip } from '../../components/ui';
@@ -199,9 +199,11 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
             {resList.map(([k, n]) => {
               const used = c.live.resourcesUsed[k] ?? 0;
               const set = (u: number) => combat.dispatch({ type: 'setUsage', id, resource: k, used: Math.max(0, Math.min(n, u)) });
+              const tr = termOfResource({ key: k, name: (v.resourceNames ?? {})[k] ?? k });
+              const label = (v.resourceNames ?? {})[k] ?? k;
               return (
                 <span key={k} className={'hot-res-item' + (used >= n ? ' empty' : '')}>
-                  <Clip text={(v.resourceNames ?? {})[k] ?? k} />
+                  {tr ? <Term {...tr} inButton><Clip text={label} /></Term> : <Clip text={label} />}
                   <b className="num">{n - used}<small>/{n}</small></b>
                   {mine && <>
                     <button className="tag-x" disabled={used >= n} onClick={() => set(used + 1)} title="用掉 1">−</button>

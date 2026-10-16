@@ -9,7 +9,7 @@ import {
 } from '../../../src/combat';
 import { Clip, NumInput, Panel, Pips, Stat, Tag, sgn } from '../../components/ui';
 import { Term } from '../../components/Term';
-import { termOfKey, type TermRef } from '../../lib/terms';
+import { termOfKey, termOfResource, type TermRef } from '../../lib/terms';
 import { combat, type CombatUi } from '../../lib/combat';
 import { getApp } from '../../lib/store';
 import type { Engine } from '../../lib/engine';
@@ -377,12 +377,19 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
                   <td className="r"><Usage max={n} used={c.live.slotsUsed[Number(L)] ?? 0} onChange={(used) => combat.dispatch({ type: 'setUsage', id, slot: Number(L), used })} /></td>
                 </tr>
               ))}
-              {Object.entries(v.resources).map(([k, n]) => (
-                <tr key={'r' + k}>
-                  <td><Clip text={(v.resourceNames ?? {})[k] ?? k} />{hiddenRes.includes(k) && <button className="btn ghost sm" onClick={() => setResHidden(id, k, false)} title="放回底部动作栏">放回动作栏</button>}</td>
-                  <td className="r"><Usage max={n} used={c.live.resourcesUsed[k] ?? 0} onChange={(used) => combat.dispatch({ type: 'setUsage', id, resource: k, used })} /></td>
-                </tr>
-              ))}
+              {Object.entries(v.resources).map(([k, n]) => {
+                const tr = termOfResource({ key: k, name: (v.resourceNames ?? {})[k] ?? k });
+                const label = (v.resourceNames ?? {})[k] ?? k;
+                return (
+                  <tr key={'r' + k}>
+                    <td>
+                      {tr ? <Term {...tr} inButton><Clip text={label} /></Term> : <Clip text={label} />}
+                      {hiddenRes.includes(k) && <button className="btn ghost sm" onClick={() => setResHidden(id, k, false)} title="放回底部动作栏">放回动作栏</button>}
+                    </td>
+                    <td className="r"><Usage max={n} used={c.live.resourcesUsed[k] ?? 0} onChange={(used) => combat.dispatch({ type: 'setUsage', id, resource: k, used })} /></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </Panel>

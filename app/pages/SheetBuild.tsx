@@ -5,6 +5,8 @@ import {
   pointBuyCost, subclassCandidates, subclassLabel, type CharData, type Json,
 } from '../../src/sheet';
 import { Field, NumInput, Panel, Tag, sgn } from '../components/ui';
+import { Term } from '../components/Term';
+import { StartingEquipmentDialog } from '../components/StartingEquipmentDialog';
 import type { Engine } from '../lib/engine';
 import { actions } from '../lib/store';
 
@@ -45,7 +47,7 @@ function Basics({ engine, id, char }: Props) {
           <Field label="阵营"><input value={char.alignment || ''} onChange={(e) => upd(id, (c) => { c.alignment = e.target.value; })} /></Field>
         </div>
         <div className="row">
-          <Field label="种族">
+          <Field label={<>种族{char.race ? <> · <Term kind="race" name={char.race}>词条</Term></> : null}</>}>
             <select value={char.race || ''} onChange={(e) => upd(id, (c) => { c.race = e.target.value; c.size = 'M'; })}>
               <option value="">—</option>
               {env.store.races2024.map((r) => <option key={r.name} value={r.name}>{r.name}</option>)}
@@ -58,7 +60,7 @@ function Basics({ engine, id, char }: Props) {
               </select>
             </Field>
           )}
-          <Field label="背景">
+          <Field label={<>背景{char.background ? <> · <Term kind="background" name={char.background}>词条</Term></> : null}</>}>
             <select value={char.background || ''} onChange={(e) => upd(id, (c) => { c.background = e.target.value; c.backgroundBonus = null; })}>
               <option value="">—</option>
               {env.store.backgrounds2024.map((b) => <option key={b.name} value={b.name}>{b.name}</option>)}
@@ -86,7 +88,7 @@ function Basics({ engine, id, char }: Props) {
           </div>
         )}
         {bg && (
-          <Field label={`起源专长${origin ? `（背景提供：${origin.name}${origin.lockList ? `，锁定${origin.lockList}法表` : ''}）` : ''}`}>
+          <Field label={<>起源专长{origin ? <>（背景提供：<Term kind="feat" name={origin.name}>{origin.name}</Term>{origin.lockList ? `，锁定${origin.lockList}法表` : ''}）</> : ''}{curOrigin && curOrigin !== origin?.name ? <> · <Term kind="feat" name={curOrigin}>词条</Term></> : null}</>}>
             <select value={curOrigin} onChange={(e) => upd(id, (c) => {
               c.feats = (c.feats || []).filter((n: string) => !originFeats.some((o) => o.name === n));
               if (e.target.value) c.feats.push(e.target.value);
@@ -254,7 +256,7 @@ function Skills({ engine, id, char, sheet }: Props) {
               disabled={granted && !s?.exp}
               onClick={() => cycle(k)}
             >
-              {cn}{exp.has(k) || s?.exp ? ' ×2' : ''}{budget?.pool.includes(k) ? ' ·' : ''}
+              <Term kind="skill" name={cn} inButton>{cn}</Term>{exp.has(k) || s?.exp ? ' ×2' : ''}{budget?.pool.includes(k) ? ' ·' : ''}
             </button>
           );
         })}
@@ -264,20 +266,39 @@ function Skills({ engine, id, char, sheet }: Props) {
 }
 
 function Equipment({ engine, id, char, sheet }: Props) {
+  const [openDialog, setOpenDialog] = useState(false);
   const env = engine.env;
   const allowance = env.mastery.allowance(char).total;
   const masteryWeapons = env.mastery.weapons(char, sheet.weaponProfs).filter((w: Json) => w.proficient);
   const picked: string[] = char.masteries || [];
   return (
     <>
-      <Panel title="装备">
+      <Panel
+        title="装备"
+        aside={<button className="btn sm primary" onClick={() => setOpenDialog(true)}>一键填写起始装备…</button>}
+      >
         <div className="small">
           {(char.equipment || []).length
-            ? (char.equipment as Json[]).map((e) => `${e.name}${(e.qty ?? 1) > 1 ? ` ×${e.qty}` : ''}${e.equipped ? '（装备中）' : ''}`).join('、')
-            : <span className="faint">还没有物品。</span>}
+            ? (char.equipment as Json[]).map((e, idx) => (
+                <span key={idx}>
+                  {idx > 0 && '、'}
+                  <Term kind="item" name={e.name}>{e.name}</Term>
+                  {(e.qty ?? 1) > 1 ? ` ×${e.qty}` : ''}
+                  {e.equipped ? '（装备中）' : ''}
+                </span>
+              ))
+            : <span className="faint">还没有物品。点右上角一键导入起始装备，或在「物品」页添加。</span>}
         </div>
         <div className="tiny faint" style={{ marginTop: 4 }}>装备、背包、金钱、同调都在上面的「物品」页里管理。</div>
       </Panel>
+      {openDialog && (
+        <StartingEquipmentDialog
+          engine={engine}
+          id={id}
+          char={char}
+          onClose={() => setOpenDialog(false)}
+        />
+      )}
       {allowance > 0 && (
         <Panel title="武器精通" aside={<span className={picked.length > allowance ? 'warnline' : ''}>{picked.length} / {allowance}</span>}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
@@ -286,7 +307,9 @@ function Equipment({ engine, id, char, sheet }: Props) {
               return (
                 <button key={w.name} className={'chip' + (on ? ' on' : '')} title={w.mastery.join('、')} onClick={() => upd(id, (c) => {
                   c.masteries = on ? picked.filter((x) => x !== w.name) : [...picked, w.name];
-                })}>{w.name} · {w.mastery[0]}</button>
+                })}>
+                  <Term kind="item" name={w.name} inButton>{w.name}</Term> · <Term kind="itemMastery" name={w.mastery[0]} inButton>{w.mastery[0]}</Term>
+                </button>
               );
             })}
           </div>
@@ -306,7 +329,7 @@ function LangsTools({ engine, id, char }: Props) {
       <div className="stack">
         <div className="row">
           <span className="small faint" style={{ minWidth: 36 }}>语言</span>
-          {(char.languages || []).map((l: string) => <Tag key={l} onRemove={() => upd(id, (c) => { c.languages = c.languages.filter((x: string) => x !== l); })}>{l}</Tag>)}
+          {(char.languages || []).map((l: string) => <Tag key={l} onRemove={() => upd(id, (c) => { c.languages = c.languages.filter((x: string) => x !== l); })}><Term kind="language" name={l}>{l}</Term></Tag>)}
           <select value={lang} onChange={(e) => setLang(e.target.value)}>
             <option value="">选语言…</option>
             {langs.filter((l) => !(char.languages || []).includes(l.name)).map((l) => <option key={l.name} value={l.name}>{l.name}{l.type === 'rare' ? '（稀有）' : ''}</option>)}
@@ -315,7 +338,7 @@ function LangsTools({ engine, id, char }: Props) {
         </div>
         <div className="row">
           <span className="small faint" style={{ minWidth: 36 }}>工具</span>
-          {(char.tools || []).map((t: string) => <Tag key={t} onRemove={() => upd(id, (c) => { c.tools = c.tools.filter((x: string) => x !== t); })}>{t}</Tag>)}
+          {(char.tools || []).map((t: string) => <Tag key={t} onRemove={() => upd(id, (c) => { c.tools = c.tools.filter((x: string) => x !== t); })}><Term kind="item" name={t}>{t}</Term></Tag>)}
           <input placeholder="工具名" value={tool} onChange={(e) => setTool(e.target.value)} style={{ width: 140 }} />
           <button className="btn sm" disabled={!tool.trim()} onClick={() => { upd(id, (c) => { c.tools = [...(c.tools || []), tool.trim()]; }); setTool(''); }}>添加</button>
         </div>

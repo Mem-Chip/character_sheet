@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { ABILS, ABIL_CN, abilityPlans, choiceOptions, type CharData, type Json } from '../../src/sheet';
 import type { Engine } from '../lib/engine';
 import { actions } from '../lib/store';
+import { canLookup } from '../lib/terms';
+import { Term } from './Term';
 import { Panel, Tag } from './ui';
 
 const KIND_CN: Record<string, string> = {
@@ -92,6 +94,20 @@ function Choice(p: { engine: Engine; id: string; char: CharData; sheet: Json; ch
     );
   }
 
+function termForChoiceOption(ch: Json, o: { value: string; label: string }): { kind: string; name: string } | null {
+  const kind = String(ch.kind ?? '');
+  const pool = String(ch.pool ?? '');
+  if (kind === 'feat' || pool.includes('feat')) return { kind: 'feat', name: o.value };
+  if (kind === 'skill' || kind === 'expertise') return { kind: 'skill', name: o.label };
+  if (kind === 'language' || pool === 'language') return { kind: 'language', name: o.value };
+  if (kind === 'itemMastery' || pool === 'mastery') return { kind: 'itemMastery', name: o.value };
+  if (kind === 'tool' || pool.includes('tool') || pool === 'artisan' || pool === 'instrument') return { kind: 'item', name: o.value };
+  if (kind === 'spell' || kind === 'cantrip') return { kind: 'spell', name: o.value };
+  if (pool === 'subclass') return { kind: 'subclassFeature', name: o.value };
+  if (o.value && canLookup('auto')) return { kind: 'auto', name: o.value };
+  return null;
+}
+
   const res = choiceOptions(engine.env, char, sheet, ch);
   const vals = asList(cur);
   // 别处已经有了的（背景给的技能、另一项选择选过的语言…）：不能再选，标出来
@@ -105,18 +121,20 @@ function Choice(p: { engine: Engine; id: string; char: CharData; sheet: Json; ch
             const on = vals.includes(o.value);
             const full = !on && vals.length >= need;
             const had = !on && taken.has(o.value);
+            const tr = termForChoiceOption(ch, o);
             return (
               <button
                 key={o.value}
                 className={'chip' + (on ? ' on' : '')}
                 disabled={(full && need > 1) || had}
-                title={had ? `${o.label}：别处已经有了` : o.label}
+                title={had ? `${o.label}：别处已经有了` : undefined}
                 onClick={() => {
                   if (need === 1) write(on ? null : (isSub || ch.pick ? o.value : [o.value]));
                   else write(on ? vals.filter((x) => x !== o.value) : [...vals, o.value]);
                 }}
               >
-                {o.label}{had && <span className="faint">（已有）</span>}
+                {tr ? <Term {...tr} inButton>{o.label}</Term> : o.label}
+                {had && <span className="faint">（已有）</span>}
               </button>
             );
           })}
