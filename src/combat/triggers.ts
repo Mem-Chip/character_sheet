@@ -189,11 +189,13 @@ function fire(tx: Tx, spec: WindowSpec, c: TriggerCand): void {
     }
   }
   if (t.do?.length) {
+    // 窗口没有承受者、事件又是自己的（回合开始 / 结束）：目标就是自己（恐惧术、降咒的回合末豁免，诱捕打击的回合初伤害）
+    const target = spec.target ?? (spec.actor === c.owner ? c.owner : undefined);
     const ctx: ExecCtx = {
       self: c.owner,
       source: c.source,
-      targets: spec.target ? [spec.target] : [],
-      target: spec.target,
+      targets: target ? [target] : [],
+      target,
       attacker: spec.scope.attacker ?? spec.actor,
       entryKey: c.from,
       actionName: c.label,

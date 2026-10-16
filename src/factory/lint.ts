@@ -30,7 +30,7 @@ const KEYS = {
   flags: ['blocks', 'breaksConcentration', 'cannot', 'forbidTarget'],
   aura: ['id', 'radius', 'affects', 'includeSelf', 'requires', 'grant', 'stackKey'],
   grant: ['rollMods', 'statics', 'triggers'],
-  targeting: ['type', 'count', 'range', 'area', 'filter'],
+  targeting: ['type', 'count', 'repeat', 'range', 'area', 'filter'],
   area: ['shape', 'radius', 'size', 'length', 'width'],
   attackInfo: ['melee', 'ranged', 'weapon', 'spell', 'unarmed', 'finesse', 'reach', 'ability', 'damageType', 'item', 'mastery'],
 } as const;

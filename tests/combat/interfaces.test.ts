@@ -65,6 +65,14 @@ const TEST: RuleFile = {
     },
     'T:极效治疗': { rollMods: [{ on: { kind: 'heal' }, who: 'bearer', op: 'maxDice', label: '极效治疗' }] },
     'T:超限': { rollMods: [{ on: { kind: 'damage', spell: true }, who: 'bearer', op: 'maxDice', label: '超限导能' }] },
+    // 效应：承受者回合开始时做体质豁免，失败受 5 点伤害（窗口里没有目标 → 目标是承受者自己）
+    'T:spell:灼烧': {
+      actions: [{
+        id: 'cast', name: '灼烧', activation: 'action', tags: ['spell'], targeting: { type: 'creature', count: 1 },
+        root: [{ kind: 'applyEffect', template: '灼烧', duration: { rounds: 10 } }],
+      }],
+      effects: { 灼烧: { triggers: [{ id: 'burn', label: '灼烧', on: 'turnStarted', role: 'actor', do: [{ kind: 'save', ability: 'con', dc: '10', onFail: [{ kind: 'damage', dice: '5', type: '火焰' }] }] }] } },
+    },
     'T:spell:治疗': {
       actions: [{ id: 'cast', name: '治疗', activation: 'action', tags: ['spell'], targeting: { type: 'creature', count: 1 }, root: [{ kind: 'heal', amount: '2d8' }] }],
     },
@@ -161,5 +169,18 @@ describe('骰子取最大值（maxDice）', () => {
     dice.push(18, 1);
     done(s.dispatch({ type: 'useAction', actor: 'w', action: 'weapon:d', targets: ['g'] }));
     expect(hp(s, 'g')).toBe(39);
+  });
+});
+
+describe('回合开始 / 结束时的效应触发器', () => {
+  it('窗口里没有目标：豁免和伤害落在承受者自己身上', () => {
+    const { s, dice } = setupT([wizard({ sources: ['T:spell:灼烧'] }), goblin('g', { hpMax: 30 })]);
+    done(s.dispatch({ type: 'startCombat', order: ['w', 'g'] }));
+    done(s.dispatch({ type: 'useAction', actor: 'w', action: 'T:spell:灼烧#cast', targets: ['g'] }));
+    dice.push(2);   // 地精的体质豁免失败
+    done(s.dispatch({ type: 'nextTurn' }));
+    expect(last(s, 'd20Rolled').roller).toBe('g');
+    expect(hp(s, 'g')).toBe(25);
+    expect(hp(s, 'w')).toBe(20);
   });
 });
