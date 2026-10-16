@@ -13,7 +13,8 @@ import { Entries } from '../components/Entries';
 import { SpellBrowser } from '../components/SpellBrowser';
 import { NumInput, Panel, Tag } from '../components/ui';
 import type { Engine } from '../lib/engine';
-import { actions, stripDerived } from '../lib/store';
+import { tagCampaign } from '../lib/hub';
+import { actions, getApp, stripDerived } from '../lib/store';
 
 interface Props { engine: Engine; id: string; char: CharData; sheet: Json }
 
@@ -48,7 +49,7 @@ export function SheetLevelUp({ engine, id, char, sheet }: Props) {
     if (!cls || total >= 20) { setPreview(null); return; }
     let alive = true;
     const work = leveled(char, cls);
-    engine.env.compute(work).then((s: Json) => { if (alive) setPreview({ sheet: s, char: work }); }, () => alive && setPreview(null));
+    tagCampaign(work, getApp().cards[id]?.campaignId).then(() => engine.env.compute(work)).then((s: Json) => { if (alive) setPreview({ sheet: s, char: work }); }, () => alive && setPreview(null));
     return () => { alive = false; };
   }, [engine, char, cls, total]);
 

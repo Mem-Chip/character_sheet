@@ -8,6 +8,7 @@ import abilitiesBuiltin from '../../data/abilities-builtin.json';
 import { RuleBook } from '../../src/combat';
 import { RULE_FILES } from '../../src/bridge/rule-files';
 import { BASE_URL, SheetEnv, type DataProvider } from '../../src/sheet';
+import { installHub } from './hub';
 
 const memo = new Map<string, Promise<unknown>>();
 
@@ -39,7 +40,10 @@ export { RULE_FILES };
 
 export interface Engine {
   env: SheetEnv;
+  /** 现在用的规则书：战役遭遇里是带本团房规的那本，其余时候 = base */
   rules: RuleBook;
+  /** 官方规则书 */
+  base: RuleBook;
   problems: string[];
 }
 
@@ -55,7 +59,9 @@ export function loadEngine(): Promise<Engine> {
     });
     const bad = await env.init(['items', 'optionalfeatures', 'spellsXphb', 'spellsSources']);
     const rules = new RuleBook(RULE_FILES);
-    return { env, rules, problems: [...bad.map((k) => `没能装载 ${k}`), ...rules.problems] };
+    const engine: Engine = { env, rules, base: rules, problems: [] };
+    installHub(engine);
+    return { ...engine, problems: [...bad.map((k) => `没能装载 ${k}`), ...rules.problems] };
   })();
   return ready;
 }

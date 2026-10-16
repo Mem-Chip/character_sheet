@@ -23,6 +23,7 @@ import { DiceCaption } from './combat/DiceCaption';
 import { namer } from './combat/shared';
 import { Roster } from './combat/Roster';
 import { Tag } from '../components/ui';
+import { loadMonsters } from '../lib/hub';
 
 type Drawer = null | 'roster' | 'detail';
 
@@ -144,7 +145,7 @@ export function CombatPage({ engine }: { engine: Engine }) {
 
   const dialogs = <>
     {dlg === 'pc' && <AddPcDialog engine={engine} ui={ui} onClose={() => setDlg(null)} />}
-    {dlg === 'monster' && <AddMonsterDialog canHide={!!remote && dm} loadMonsters={() => engine.env.store.ensure('bestiaryXmm').then((d) => d?.monster ?? [])} onClose={() => setDlg(null)} />}
+    {dlg === 'monster' && <AddMonsterDialog canHide={!!remote && dm} loadMonsters={() => loadMonsters(engine, remote?.campaignId)} onClose={() => setDlg(null)} />}
     {dlg === 'online' && <OnlineDialog engine={engine} onClose={() => setDlg(null)} />}
     {dlg === 'settings' && <SettingsDialog s={s} ui={ui} onClose={() => setDlg(null)} />}
     {ui.toast && <div className={'toast ' + ui.toast.tone} role="status">{ui.toast.text}</div>}
@@ -167,6 +168,7 @@ export function CombatPage({ engine }: { engine: Engine }) {
             <button onClick={() => setDlg('settings')}>{dm ? '遭遇设置与骰子' : '我的骰子'}</button>
             <button onClick={() => setShowMap(false)}>切到列表布局</button>
             {dm && inCombat && <button onClick={() => { if (confirm('结束战斗？')) combat.dispatch({ type: 'endCombat' }); }}>结束战斗</button>}
+            {dm && <button onClick={() => { if (confirm('把战役资料（本团家规、补的战斗数据）现在的样子用到这场遭遇？整场会按新规则重算一遍。')) combat.refreshRules(); }} title="开遭遇时抄了一份战役资料；之后改了资料，点这个才生效">更新本团规则</button>}
             {dm && <button className="danger" onClick={confirmReset}>清空遭遇</button>}
             <button onClick={() => combat.leave(engine)}>回到本地遭遇</button>
           </Menu>

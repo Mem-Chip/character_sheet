@@ -155,7 +155,7 @@ function Spells({ engine, id, char, sheet }: Props) {
   const sc = sheet.spell || {};
   const [browse, setBrowse] = useState(false);
   if (!sc.casters?.length && !(char.spells || []).length && !sc.granted?.length) return null;
-  const all: Json[] = engine.env.store.data.spellsXphb?.spell || [];
+  const all: Json[] = engine.env.store.spellsAll;
   const ent = (n: string) => all.find((s) => s.name === n);
   // 按环阶排（戏法在前），同环按名字
   const order = (char.spells || []).map((s: Json, i: number) => ({ s, i, lv: ent(s.name)?.level ?? 1 }))

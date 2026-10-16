@@ -28,6 +28,9 @@ const FILES = [
   // 其他书的法术（数据化第 3 波用）：BOOKS=XGE,TCE,AU,FRHoF 可以改；文件名按站点的 spells/index.json
   ...(process.env.BOOKS ?? 'XGE,TCE,AU,FRHoF').split(',').map((b) => `/data/spells/spells-${b.trim().toLowerCase()}.json`),
   '/data/bestiary/bestiary-xmm.json',
+  // 战役「资料」里选书用的书目；启用的书的法术 / 怪物文件按 spells、bestiary 的 index.json 现取
+  '/data/books.json',
+  '/data/bestiary/index.json',
 ];
 
 async function get(path: string): Promise<string> {

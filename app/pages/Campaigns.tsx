@@ -7,6 +7,7 @@ import { api, type Campaign } from '../lib/api';
 import { actions, useApp } from '../lib/store';
 import { pull, useSync } from '../lib/sync';
 import { Panel, Tag } from '../components/ui';
+import { CampaignHub } from './CampaignHub';
 
 export function CampaignsPage() {
   const sync = useSync();
@@ -121,6 +122,11 @@ function CampaignPanel({ c, act }: { c: Campaign; act: (fn: () => Promise<unknow
             <div className="small muted" style={{ marginTop: 6 }}>队伍的卡已经同步到你的卡片库（标「来自 某某」）。战斗页「加角色」里直接选；战斗后写回会改到玩家的卡上。</div>
           )}
         </div>
+
+        <details>
+          <summary className="small faint" style={{ cursor: 'pointer' }}>资料（启用的书、本团家规）</summary>
+          <div style={{ marginTop: 6 }}><CampaignHub c={c} /></div>
+        </details>
 
         <div className="row">
           <select value={pick} onChange={(e) => setPick(e.target.value)} style={{ minWidth: 180 }}>

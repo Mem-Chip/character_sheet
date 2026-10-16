@@ -10,6 +10,15 @@ type Ent = { source?: unknown; reprintedAs?: unknown; edition?: unknown; classSo
 export const Source = {
   baseUrl: BASE_URL,
   OFFICIAL_2024: new Set(['XPHB', 'XDMG', 'XMM']),
+  /**
+   * 战役启用的其他书（5etools 来源代号，大写）：这些书里没有被 2024 重印的内容也能选。
+   * 算一张卡之前按它所在的战役设置（SheetEnv.useCampaign）；不在战役里 = 空。
+   */
+  extra: new Set<string>(),
+  /** 来源是不是战役启用的书 */
+  isExtra(ent: Ent | null | undefined): boolean {
+    return !!ent && this.extra.size > 0 && this.extra.has(String(ent.source || '').toUpperCase()) && !this.isReprinted(ent);
+  },
   CLASS_SRC_2024: 'XPHB',
   /** 带 reprintedAs 的条目有更新的版本 → 一律不算 2024 */
   isReprinted(ent: Ent | null | undefined): boolean {
@@ -21,13 +30,13 @@ export const Source = {
     if (this.isReprinted(ent)) return false;
     const s = String(ent.source || '').toUpperCase();
     if (this.OFFICIAL_2024.has(s)) return true;
-    return s === 'EFA';
+    return s === 'EFA' || this.isExtra(ent);
   },
   /** 只认 2024 三本核心书（大小写不敏感：背景数据里的来源是小写） */
   isCore2024(ent: Ent | null | undefined): boolean {
     if (!ent) return false;
     if (this.isReprinted(ent)) return false;
-    return this.OFFICIAL_2024.has(String(ent.source || '').toUpperCase());
+    return this.OFFICIAL_2024.has(String(ent.source || '').toUpperCase()) || this.isExtra(ent);
   },
   isClass2024(c: Ent | null | undefined): boolean { return this.is2024(c); },
   /** 子职是不是按 2024 规则写的那一版：看条目自带的 edition === 'one'，再对齐 classSource */
@@ -35,7 +44,9 @@ export const Source = {
     if (!s) return false;
     if (this.isReprinted(s)) return false;
     if (classSource && s.classSource !== classSource) return false;
-    return String(s.edition || '').toLowerCase() === 'one';
+    const ed = String(s.edition || '').toLowerCase();
+    // 启用的书里的子职：站点给 2024 职业挂了一份（classSource = XPHB、没有 edition），旧版那份是 classic
+    return ed === 'one' || (ed !== 'classic' && this.isExtra(s));
   },
   FILES: {
     classIndex: '/data/class/index.json',
@@ -49,6 +60,8 @@ export const Source = {
     optionalfeatures: '/data/optionalfeatures.json',
     spellsXphb: '/data/spells/spells-xphb.json',
     spellsSources: '/data/spells/sources.json',
+    spellsIndex: '/data/spells/index.json',
+    books: '/data/books.json',
     variantrules: '/data/variantrules.json',
     items: '/data/items.json',
     skills: '/data/skills.json',

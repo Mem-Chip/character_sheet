@@ -27,6 +27,8 @@ export interface HouseRule {
   patch?: Record<string, unknown>;
   /** 核心参数的新值（key 为 `core.*` 时） */
   value?: unknown;
+  /** 官方能力还没有战斗数据，这条（entry）是给它补上的：键不存在不算错 */
+  fill?: boolean;
 }
 
 export interface RuleLayer {
@@ -82,7 +84,8 @@ export class RuleBook {
     }
     const isNew = r.key.startsWith('HR:');
     const cur = this.entries.get(r.key);
-    if (!isNew && !cur) { this.problems.push(`${where}：要覆盖的官方条目「${r.key}」不存在`); return; }
+    // 官方键还没有战斗数据：写明了 fill（给它补上）才行，不然多半是键拼错了
+    if (!isNew && !cur && !(r.entry && r.fill)) { this.problems.push(`${where}：要覆盖的官方条目「${r.key}」不存在`); return; }
     if (r.entry && r.patch) { this.problems.push(`${where}：一条房规不能同时整条替换和字段覆盖`); return; }
 
     if (r.entry) {

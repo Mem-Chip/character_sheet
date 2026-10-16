@@ -59,13 +59,18 @@ const EXTRA_ATTACK: Record<string, number> = { 额外攻击: 2, '额外攻击（
 /** 规则条目键：职业特性 `<来源>:<职业>:<名字>:<等级>`，其余 `<来源>:<名字>`，家规 `HR:<id>` */
 export function sourceKeys(env: SheetEnv, char: CharData): string[] {
   const keys: string[] = [];
-  for (const s of env.abilities.collectSources(char)) keys.push(sourceKeyOf(s));
+  for (const s of env.abilities.collectSources(char)) {
+    keys.push(sourceKeyOf(s));
+    // 覆盖官方能力的家规：战斗数据还在官方键上（本团房规层可能改了它）
+    if (s.kind === 'homerule' && s.covers?.includes(':')) keys.push(s.covers);
+  }
   // 能用的法术：已准备的（或没标 prepared 的）、戏法、能力授予的
   const spells = new Set<string>();
   for (const sp of char.spells || []) if (sp?.name && sp.prepared !== false) spells.add(sp.name);
   for (const n of char._derived?.spells || []) spells.add(n);
   for (const n of char._derived?.cantrips || []) spells.add(n);
-  for (const n of spells) keys.push(`XPHB:spell:${n}`);
+  // 别的书的法术（战役启用的）：键用那本书的来源
+  for (const n of spells) keys.push(`${env.store.spellByName(n)?.source || 'XPHB'}:spell:${n}`);
   return [...new Set(keys)];
 }
 

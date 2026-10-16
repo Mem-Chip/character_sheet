@@ -1,4 +1,4 @@
-export { SheetEnv, type SheetEnvOptions } from './env';
+export { SheetEnv, type SheetEnvOptions, type CampaignData } from './env';
 export { DataStore, type DataProvider, type Json } from './store';
 export { Source, subclassCandidates, subclassLabel, classSlug, CLASS_SLUG_BY_NAME, BASE_URL } from './source';
 export { blankCharacter, featNames, resolveCharacter, computeCharacter, applyOriginFeatDefault, totalLevel, type CharData } from './character';

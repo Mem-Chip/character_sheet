@@ -5,7 +5,8 @@
 import { useEffect, useState } from 'react';
 import type { CharData, Json } from '../../src/sheet';
 import { loadEngine, type Engine } from './engine';
-import { actions, stripDerived } from './store';
+import { tagCampaign, useHubVersion } from './hub';
+import { actions, getApp, stripDerived } from './store';
 
 export interface Computed {
   char: CharData;
@@ -25,13 +26,17 @@ export function useEngine(): { engine: Engine | null; error: string | null } {
 
 export function useComputed(engine: Engine | null, id: string | null, char: CharData | null): Computed | null {
   const [out, setOut] = useState<Computed | null>(null);
+  // 战役资料（启用的书、本团家规）变了也要重算
+  const hubV = useHubVersion();
   useEffect(() => {
     if (!engine || !char || !id) { setOut(null); return; }
     let alive = true;
     (async () => {
       const work = structuredClone(stripDerived(char));
+      await tagCampaign(work, getApp().cards[id]?.campaignId);
       let sheet = await engine.env.compute(work);
       if (engine.env.applyOriginFeatDefault(work)) sheet = await engine.env.compute(work);
+      delete (work as { _campaign?: string })._campaign;
       if (!alive) return;
       const before = JSON.stringify(stripDerived(char));
       const after = JSON.stringify(stripDerived(work));
@@ -39,6 +44,6 @@ export function useComputed(engine: Engine | null, id: string | null, char: Char
       setOut({ char: work, sheet });
     })().catch((e) => console.error('计算失败', e));
     return () => { alive = false; };
-  }, [engine, id, char]);
+  }, [engine, id, char, hubV]);
   return out;
 }

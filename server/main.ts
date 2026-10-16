@@ -17,6 +17,7 @@ import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { createEncounters } from './encounters';
+import { createHub } from './hub';
 
 const PORT = Number(process.env.PORT ?? 8789);
 const DB_FILE = resolve(process.env.DB ?? 'data/server.db');
@@ -224,6 +225,7 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
   }
 
   if (await encounters(req, res, u, path, method)) return;
+  if (await hub.handle(req, res, u, path, method)) return;
 
   /* 人物卡 */
   if (method === 'GET' && path === '/api/cards') return send(res, 200, { cards: visibleCards(u).map(cardJson) });
@@ -334,10 +336,12 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
   throw new HttpError(404, '没有这个接口');
 }
 
-const encounters = createEncounters({
-  one, all, run, exec: (sql) => db.exec(sql), bodyOf, send, roleIn,
-  fail: (status, message) => new HttpError(status, message),
-});
+const deps = {
+  one, all, run, exec: (sql: string) => db.exec(sql), bodyOf, send, roleIn,
+  fail: (status: number, message: string) => new HttpError(status, message),
+};
+const hub = createHub(deps);
+const encounters = createEncounters({ ...deps, campaignRules: hub.campaignRules });
 
 /* ───────────── 命令行 ───────────── */
 

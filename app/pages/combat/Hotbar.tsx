@@ -63,7 +63,7 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
   s: Session; ui: CombatUi; engine: Engine; name: Namer; onDetail: () => void; turnButton: React.ReactNode; collapsed: boolean; onToggle: () => void;
 }) {
   const id = ui.selected && s.state.combatants[ui.selected] && !combat.isHidden(ui.selected) ? ui.selected : null;
-  const spells: Json[] = engine.env.store.data.spellsXphb?.spell || [];
+  const spells: Json[] = useMemo(() => [...engine.env.store.spellsAll, ...[...engine.env.store.bookSpells.values()].flat()], [engine, ui.version]);
   const items = useMemo(() => (id && !combat.isSecret(id) ? actionsFor(s, engine.rules, spells, id) : []), [s, engine.rules, spells, id, ui.version]);
   const [tab, setTab] = useState('weapon');
   /** 升环：点左边的法术位选一个环阶，下一个法术就按这一环放（放完回到默认的最低环）；换人就清掉 */

@@ -9,7 +9,14 @@ import { FeatRules } from './feats';
 import { FeatureOptions, ItemRules, LanguageRules, OptionalFeatureRules, ToolRules } from './items';
 import { createRules, type Pipeline } from './pipeline';
 import { Resources, Rest } from './resources';
+import { Source } from './source';
 import { DataStore, type DataProvider, type Json } from './store';
+
+/** 一张卡所在战役的资料：启用的书 + 本团家规（卡面那部分） */
+export interface CampaignData {
+  sources: string[];
+  homerules: HomeRuleEntry[];
+}
 
 export interface SheetEnvOptions {
   provider: DataProvider;
@@ -39,6 +46,12 @@ export class SheetEnv {
   readonly wildShape: WildShape;
   readonly unlocks: Unlocks;
   readonly homelib: { server: HomeRuleEntry[]; camp: (char: CharData) => HomeRuleEntry[] };
+  /**
+   * 这张卡在哪个战役、那个战役的资料（由界面挂进来：卡上的 _campaign 是战役 id）。
+   * 不在战役里 / 没挂 = 只有 2024 核心书。
+   */
+  campaignOf: (char: CharData) => CampaignData | null = () => null;
+  private campRules: HomeRuleEntry[] = [];
   /** 计算前改角色的钩子（原项目 Plugins.applyCharHooks） */
   readonly charHooks: Array<(char: CharData) => void> = [];
   readonly log: (msg: string, level?: number) => void;
@@ -46,7 +59,7 @@ export class SheetEnv {
   constructor(o: SheetEnvOptions) {
     this.log = o.log ?? (() => {});
     this.store = new DataStore(o.provider, this.log);
-    this.homelib = { server: o.homelib?.server ?? [], camp: o.homelib?.camp ?? (() => []) };
+    this.homelib = { server: o.homelib?.server ?? [], camp: o.homelib?.camp ?? (() => this.campRules) };
     this.tools = new ToolRules(this);
     this.languages = new LanguageRules(this);
     this.items = new ItemRules(this);
@@ -71,7 +84,22 @@ export class SheetEnv {
     return bad;
   }
 
-  compute(char: CharData): Promise<Record<string, any>> { return computeCharacter(this, char); }
+  /** 切到某个战役的资料：启用的书（法术文件按需装）+ 本团家规。算卡、列选项之前调用 */
+  async useCampaign(c: CampaignData | null): Promise<void> {
+    const want = (c?.sources ?? []).map((s) => String(s).toUpperCase());
+    Source.extra.clear();
+    for (const s of want) Source.extra.add(s);
+    this.campRules = c?.homerules ?? [];
+    if (want.length) {
+      const bad = await this.store.loadBookSpells(want);
+      if (bad.length) this.log('没能装载这些书的法术：' + bad.join('、'), 1);
+    }
+  }
+
+  async compute(char: CharData): Promise<Record<string, any>> {
+    await this.useCampaign(this.campaignOf(char));
+    return computeCharacter(this, char);
+  }
   applyOriginFeatDefault(char: CharData): boolean { return applyOriginFeatDefault(this, char); }
   classSkillBudget(char: CharData) { return classSkillBudget(this, char); }
 }

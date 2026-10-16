@@ -53,12 +53,16 @@ export function spellInClassList(env: SheetEnv, spell: Json, className: string):
   const has = (list: Json[] | undefined) => (list || []).some((c) => (typeof c === 'string' ? c : c?.name) === className);
   if (has(d.spellsSources?.XPHB?.[spell.name]?.class)) return true;
   for (const v of Object.values(d.spellsSources || {})) if (has((v as Json)?.[spell.name]?.class)) return true;
+  // 别的书加到职业列表里的（classVariant，比如 XGE 给法师加的）：那本书启用了才算
+  for (const v of Object.values(d.spellsSources || {})) {
+    if (has(((v as Json)?.[spell.name]?.classVariant || []).filter((c: Json) => Source.extra.has(String(c?.definedInSource || '').toUpperCase())))) return true;
+  }
   return has(spell.class);
 }
 
 /** 某职业法术列表里的法术（可限定环阶） */
 export function classSpells(env: SheetEnv, className: string, opts: { level?: number; maxLevel?: number } = {}): Json[] {
-  return (env.store.data.spellsXphb?.spell || [])
+  return env.store.spellsAll
     .filter((s: Json) => (opts.level === undefined || s.level === opts.level) && (opts.maxLevel === undefined || s.level <= opts.maxLevel))
     .filter((s: Json) => spellInClassList(env, s, className))
     .sort((a: Json, b: Json) => a.level - b.level || String(a.name).localeCompare(String(b.name), 'zh'));

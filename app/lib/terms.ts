@@ -133,6 +133,11 @@ async function find(engine: Engine, ref: TermRef): Promise<TermData | null> {
     const hit = pick(d?.[arr] || [], ref.name, ref.source);
     if (hit) return done(hit);
   }
+  // 战役启用的书里的法术
+  if (ref.kind === 'spell') {
+    const hit = pick([...store.bookSpells.values()].flat(), ref.name, ref.source);
+    if (hit) return done(hit);
+  }
   return null;
 }
 

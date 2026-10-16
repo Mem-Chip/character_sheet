@@ -17,7 +17,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import {
   DICE_MODES, RuleBook, Session, createEncounter, defaultDiceMode, diceSourceFor, footprint, gridFeet, lineCells, chatEntry, type ChatRoll, type DiceMode,
-  type Command, type DispatchResult, type EngineCtx, type Diagonal, type OverridePatch, type Positions, type SessionSave,
+  type Command, type DispatchResult, type EngineCtx, type Diagonal, type HouseRule, type OverridePatch, type Positions, type SessionSave,
 } from '../src/combat';
 import { RULE_FILES } from '../src/bridge/rule-files';
 
@@ -32,6 +32,8 @@ export interface Deps {
   send: (res: ServerResponse, status: number, data: unknown, headers?: Record<string, string>) => void;
   roleIn: (u: User, campaignId: string) => 'dm' | 'player' | null;
   fail: (status: number, message: string) => Error;
+  /** 战役资料里的战斗部分（开遭遇时抄进遭遇） */
+  campaignRules?: (campaignId: string) => HouseRule[];
 }
 
 export interface Stroke { id: string; by: number; color: string; width: number; pts: number[] }
@@ -86,6 +88,8 @@ interface Live {
   diceOpen: boolean;
   /** DM 在日志里把某次掷骰转明 / 转暗（'r:事务:第几次 d20' / 'd:事务:第几次伤害' → true = 明骰）；不写 = 按默认 */
   reveal: Record<string, boolean>;
+  /** 开遭遇时抄进来的本团房规（之后重放都用这份；DM 点「更新规则」才换） */
+  rules: HouseRule[];
   ctx: EngineCtx;
   seq: number;
   watchers: Set<ServerResponse>;
@@ -109,10 +113,24 @@ export function createEncounters(d: Deps) {
   const live = new Map<string, Live>();
 
   /** 每场遭遇自己的引擎上下文：骰子按这场的设置，棋子位置按这场的地图 */
-  function ctxOf(e: { dice: Live['dice']; map: MapState; session?: Session; actingAs?: string | null }): EngineCtx {
+  /** 带本团房规的规则书（同一份房规共用一本） */
+  const books = new Map<string, RuleBook>();
+  function bookOf(hr: HouseRule[] | undefined): RuleBook {
+    if (!hr?.length) return rules;
+    const k = JSON.stringify(hr);
+    let b = books.get(k);
+    if (!b) {
+      b = new RuleBook(RULE_FILES, [{ scope: 'camp', name: '本团', rules: hr }]);
+      if (books.size > 50) books.clear();
+      books.set(k, b);
+    }
+    return b;
+  }
+
+  function ctxOf(e: { dice: Live['dice']; map: MapState; session?: Session; actingAs?: string | null; rules?: HouseRule[] }): EngineCtx {
     const modeOf = (user: string) => e.dice[user] ?? e.dice['*'] ?? defaultDiceMode(user);
     return {
-      rules,
+      rules: bookOf(e.rules),
       diceFor: (user) => diceSourceFor(e.actingAs === user ? modeOf('dm') : modeOf(user)),
       positions: () => {
         const st = e.session?.state;
@@ -137,7 +155,7 @@ export function createEncounters(d: Deps) {
     const e = {
       id, campaignId: String(r.campaign_id), name: String(r.name),
       owners: meta.owners ?? {}, cards: meta.cards ?? {}, dice: meta.dice ?? {}, hidden: meta.hidden ?? [], chat: meta.chat ?? [],
-      actingAs: meta.actingAs ?? null, autoHid: meta.autoHid ?? [], dicePhys: meta.dicePhys ?? {}, diceColors: meta.diceColors ?? {}, diceOpen: !!meta.diceOpen, reveal: meta.reveal ?? {}, map: { ...newMap(), ...(meta.map ?? {}) }, seq: 0, watchers: new Set(),
+      actingAs: meta.actingAs ?? null, autoHid: meta.autoHid ?? [], dicePhys: meta.dicePhys ?? {}, diceColors: meta.diceColors ?? {}, diceOpen: !!meta.diceOpen, reveal: meta.reveal ?? {}, map: { ...newMap(), ...(meta.map ?? {}) }, rules: meta.rules ?? [], seq: 0, watchers: new Set(),
     } as unknown as Live;
     e.ctx = ctxOf(e);
     e.session = Session.restore(JSON.parse(String(r.save)) as SessionSave, e.ctx);
@@ -147,9 +165,9 @@ export function createEncounters(d: Deps) {
 
   const stateOf = (e: Live) => ({
     id: e.id, name: e.name, campaignId: e.campaignId, seq: e.seq, owners: e.owners, cards: e.cards,
-    dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, dicePhys: e.dicePhys, diceColors: e.diceColors, diceOpen: e.diceOpen, reveal: e.reveal, save: e.session.save(),
+    dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, dicePhys: e.dicePhys, diceColors: e.diceColors, diceOpen: e.diceOpen, reveal: e.reveal, rules: e.rules, save: e.session.save(),
   });
-  const metaOf = (e: Live) => JSON.stringify({ owners: e.owners, cards: e.cards, dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, autoHid: e.autoHid, dicePhys: e.dicePhys, diceColors: e.diceColors, diceOpen: e.diceOpen, reveal: e.reveal });
+  const metaOf = (e: Live) => JSON.stringify({ owners: e.owners, cards: e.cards, dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, autoHid: e.autoHid, dicePhys: e.dicePhys, diceColors: e.diceColors, diceOpen: e.diceOpen, reveal: e.reveal, rules: e.rules });
   const broadcast = (e: Live, event: string, data: unknown) => {
     const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
     for (const w of e.watchers) w.write(msg);
@@ -370,14 +388,15 @@ export function createEncounters(d: Deps) {
         const b = await d.bodyOf(req);
         const id = randomUUID();
         const name = String(b.name ?? '').trim().slice(0, 40) || '遭遇';
-        const s = new Session(createEncounter(id), ctxOf({ dice: {}, map: newMap() }));
+        const hr = d.campaignRules?.(m[1]) ?? [];
+        const s = new Session(createEncounter(id), ctxOf({ dice: {}, map: newMap(), rules: hr }));
         const now = Date.now();
         // 从上一场复制地图（底图、格子、画笔；棋子不带）
         const src = typeof b.copyMapFrom === 'string' ? load(b.copyMapFrom) : null;
         const map = src && src.campaignId === m[1] ? { ...structuredClone(src.map), tokens: {}, trail: null } : null;
         if (map?.bg) map.bg.img = randomUUID();
         d.run('INSERT INTO encounters (id, campaign_id, name, save, meta, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          id, m[1], name, JSON.stringify(s.save()), map ? JSON.stringify({ map }) : '{}', now, now);
+          id, m[1], name, JSON.stringify(s.save()), JSON.stringify({ ...(map ? { map } : {}), rules: hr }), now, now);
         if (map?.bg) d.run('INSERT INTO map_images (id, encounter_id, mime, data, created) SELECT ?, ?, mime, data, ? FROM map_images WHERE encounter_id = ?', map.bg.img, id, now, src!.id);
         d.send(res, 200, { id, name });
         return true;
@@ -462,6 +481,18 @@ export function createEncounters(d: Deps) {
           r = s.decide(b.value === 'roll-dark' && role !== 'dm' ? 'roll' : b.value);
           applyMoves(e, r);
         } else s.cancelPending();
+      } else if (op === 'refreshRules') {
+        // 战役资料改了，想在这场里立刻生效：换成现在的本团房规，整场按新规则重算
+        if (role !== 'dm') return reject('只有 DM 能更新规则');
+        if (s.pending) return reject('还有一个决定没做完');
+        const before = e.rules;
+        e.rules = d.campaignRules?.(e.campaignId) ?? [];
+        e.ctx = ctxOf(e);
+        try { e.session = Session.restore(s.save(), e.ctx); } catch (err) {
+          e.rules = before;
+          e.ctx = ctxOf(e);
+          return reject('按新规则重算失败：' + (err as Error).message);
+        }
       } else if (op === 'undo' || op === 'override' || op === 'reset') {
         if (role !== 'dm') return reject('只有 DM 能撤销、裁定、清空');
         if (op === 'undo') {

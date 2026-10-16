@@ -84,8 +84,8 @@ export function actionsFor(s: Session, rules: RuleBook, spells: Json[], id: stri
   }
   // 准备了、但规则书里还没有动态数据的法术：可以手动施放（付代价，效果由人处理）
   for (const key of v.sources) {
-    if (!key.startsWith('XPHB:spell:') || rules.entry(key)?.actions?.length) continue;
-    const nm = key.slice('XPHB:spell:'.length);
+    if (!/^[^:]+:spell:/.test(key) || rules.entry(key)?.actions?.length) continue;
+    const nm = key.slice(key.indexOf(':spell:') + ':spell:'.length);
     const sp = spells.find((x) => x.name === nm);
     const level = Number(sp?.level ?? 1);
     const unit = sp?.time?.[0]?.unit as string | undefined;
@@ -164,7 +164,7 @@ function durText(d: Duration, e: ActiveEffect): string {
 
 export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engine: Engine; name: Namer }) {
   const id = ui.selected && s.state.combatants[ui.selected] ? ui.selected : null;
-  const spells: Json[] = engine.env.store.data.spellsXphb?.spell || [];
+  const spells: Json[] = useMemo(() => [...engine.env.store.spellsAll, ...[...engine.env.store.bookSpells.values()].flat()], [engine, ui.version]);
   const items = useMemo(() => (id ? actionsFor(s, engine.rules, spells, id) : []), [s, engine.rules, spells, id, ui.version]);
   const [slotPick, setSlotPick] = useState<Record<string, number>>({});
   const [asReaction, setAsReaction] = useState(false);

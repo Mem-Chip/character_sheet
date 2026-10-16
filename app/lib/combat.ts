@@ -11,7 +11,10 @@ import {
   type Area, type Positions,
   type Command, type DispatchResult, type EngineCtx, type OverridePatch, type SessionSave, type ViewInit,
 } from '../../src/combat';
+import { RULE_FILES } from '../../src/bridge/rule-files';
+import { RuleBook, type HouseRule } from '../../src/combat';
 import { api } from './api';
+import { tagCampaign } from './hub';
 import type { Tpl } from './area';
 import { setDiceLocalColor, setDiceLocalPhys, type DicePhysics } from './dicefx';
 import type { Engine } from './engine';
@@ -109,6 +112,8 @@ export interface MapState {
   trail?: { id: string; key: string; cells: Array<{ x: number; y: number }> } | null;
 }
 interface RemoteState {
+  /** 开遭遇时抄进来的本团房规 */
+  rules?: HouseRule[];
   save: SessionSave; owners: Record<string, number>; cards: Record<string, string>; name: string;
   dice?: Record<string, DiceMode>; hidden?: string[]; map?: MapState; chat?: ChatRoll[]; actingAs?: string | null; dicePhys?: DicePhysics; diceColors?: Record<string, string>; diceOpen?: boolean; reveal?: Record<string, boolean>;
 }
@@ -230,8 +235,18 @@ function act(body: Record<string, unknown>): DispatchResult {
 }
 
 /** 服务器推来的完整状态：在本地重放一遍用来画界面 */
+/** 遭遇用的规则书：官方 + 这场抄进来的本团房规（同一份房规共用一本）；离开遭遇换回官方的 */
+let bookKey = '';
+function useEncounterRules(engine: Engine, hr: HouseRule[] | undefined): void {
+  const k = hr?.length ? JSON.stringify(hr) : '';
+  if (k === bookKey && (k || engine.rules === engine.base)) return;
+  bookKey = k;
+  engine.rules = k ? new RuleBook(RULE_FILES, [{ scope: 'camp', name: '本团', rules: hr! }]) : engine.base;
+}
+
 function applyRemote(data: RemoteState): void {
   if (!ui.remote || !engineRef) return;
+  useEncounterRules(engineRef, data.rules);
   try {
     const session = Session.restore(data.save, ctxFor(engineRef));
     const st = session.state;
@@ -272,6 +287,7 @@ export const combat = {
   leave(engine: Engine): void {
     stream?.close();
     stream = null;
+    useEncounterRules(engine, undefined);
     ui = { ...ui, session: null, remote: null, links: {}, selected: null, targets: [], aim: null };
     initCombat(engine);
   },
@@ -406,6 +422,10 @@ export const combat = {
     if (ui.remote) return act({ op: 'override', txIndex, patch });
     return after(ui.session!.override(txIndex, patch));
   },
+  /** 战役资料改了：这场遭遇换成现在的本团房规，整场重算（DM） */
+  refreshRules(): void {
+    if (ui.remote) act({ op: 'refreshRules' });
+  },
   reset(engine: Engine): void {
     if (ui.remote) { act({ op: 'reset' }); return; }
     set({ session: new Session(createEncounter('enc'), ctxFor(engine)), links: {}, selected: null, targets: [] });
@@ -497,6 +517,7 @@ export const combat = {
     const card = getApp().cards[cardId];
     if (!card) return;
     const work = structuredClone(stripDerived(card.char));
+    await tagCampaign(work, card.campaignId);
     const sheet = await engine.env.compute(work);
     const id = uniqueId('pc');
     const c = combatantFromSheet(engine.env, work, sheet, { id, controller: id, side: 'party' });
@@ -513,6 +534,7 @@ export const combat = {
     const card = getApp().cards[ui.links[id]];
     if (!card) { toast('这个参与者没有对应的人物卡（或者卡不在这台电脑上）'); return; }
     const work = structuredClone(stripDerived(card.char));
+    await tagCampaign(work, card.campaignId);
     const sheet = await engine.env.compute(work);
     const view = viewFromSheet(engine.env, work, sheet);
     if (!view.name) view.name = card.char.name || '未命名';
@@ -539,8 +561,10 @@ export const combat = {
     const c = ui.session!.state.combatants[id];
     if (!card || !c) { if (!quiet) toast('这个参与者没有对应的人物卡'); return false; }
     const work = structuredClone(stripDerived(card.char));
+    await tagCampaign(work, card.campaignId);
     const sheet = await engine.env.compute(work);
     syncLiveToChar(work, sheet, c);
+    delete (work as { _campaign?: string })._campaign;
     cardActions.replace(cardId, work);
     return true;
   },

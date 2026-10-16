@@ -38,7 +38,7 @@ export function SpellBrowser({ engine, id, char, sheet, onClose }: Props) {
   const entryOf = (name: string) => spells.find((s) => s.name === name && mine(s));
   const cantrips = spells.filter((s) => mine(s) && lvlOf(s.name) === 0).length;
   const prepared = spells.filter((s) => mine(s) && lvlOf(s.name) > 0 && s.prepared !== false).length;
-  function lvlOf(name: string) { return list.find((x) => x.name === name)?.level ?? (engine.env.store.data.spellsXphb?.spell || []).find((x: Json) => x.name === name)?.level ?? 1; }
+  function lvlOf(name: string) { return list.find((x) => x.name === name)?.level ?? engine.env.store.spellByName(name)?.level ?? 1; }
 
   const toggle = (name: string, level: number) => actions.update(id, (c) => {
     const arr: Json[] = c.spells || [];

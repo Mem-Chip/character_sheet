@@ -16,6 +16,7 @@ import { Term } from '../components/Term';
 import { termOfKey } from '../lib/terms';
 import { Field, Panel, Tag } from '../components/ui';
 import type { Engine } from '../lib/engine';
+import { useCardCampaign, useHub } from '../lib/hub';
 import { actions } from '../lib/store';
 
 interface Props { engine: Engine; id: string; char: Json; sheet: Json }
@@ -61,6 +62,14 @@ export function SheetData(p: Props) {
   const homerules: HomeRuleEntry[] = char.homerules || [];
   const [open, setOpen] = useState<string | null>(null);
   const [editing, setEditing] = useState<HomeRuleEntry | null>(null);
+  const hub = useHub(useCardCampaign(p.id));
+  const campIds = new Set((hub?.items ?? []).map((x) => x.id));
+  const pickables = (hub?.items ?? []).filter((x) => x.pickable);
+  const picked: string[] = char.hrPicked || [];
+  const togglePick = (hrId: string) => actions.update(p.id, (c) => {
+    const cur: string[] = c.hrPicked || [];
+    c.hrPicked = cur.includes(hrId) ? cur.filter((x) => x !== hrId) : [...cur, hrId];
+  });
 
   const saveHr = (e: HomeRuleEntry) => {
     actions.update(p.id, (c) => {
@@ -98,7 +107,7 @@ export function SheetData(p: Props) {
               return (
                 <FragmentRow key={key}>
                   <tr className={rowOpen ? 'on' : ''} onClick={() => setOpen(rowOpen ? null : key)} style={{ cursor: 'pointer' }}>
-                    <td className="serif">{isHr ? hr?.name || s.name : (() => { const t = termOfKey(key); return t ? <Term {...t} inButton>{s.name}</Term> : s.name; })()}{s.level ? <span className="faint small"> {s.level} 级</span> : null}</td>
+                    <td className="serif">{isHr ? <>{hr?.name || s.displayName || s.name}{campIds.has(s.name) && <Tag>本团</Tag>}</> : (() => { const t = termOfKey(key); return t ? <Term {...t} inButton>{s.name}</Term> : s.name; })()}{s.level ? <span className="faint small"> {s.level} 级</span> : null}</td>
                     <td className="small muted">{KIND_CN[s.kind] ?? s.kind}{s.cls ? ` · ${s.cls}` : ''}</td>
                     <td>
                       {hr && !isHr ? <Tag tone="warn">家规覆盖</Tag>
@@ -151,6 +160,20 @@ export function SheetData(p: Props) {
         </table>
       </Panel>
 
+      {pickables.length > 0 && (
+        <Panel title="本团可选内容" aside={<span className="small muted">DM 在战役「资料」里加的；勾上才对这张卡生效</span>}>
+          <div className="stack" style={{ gap: 4 }}>
+            {pickables.map((x) => (
+              <label key={x.id} className="row small" style={{ gap: 6, alignItems: 'flex-start' }}>
+                <input type="checkbox" checked={picked.includes(x.id)} onChange={() => togglePick(x.id)} />
+                <span className="serif" style={{ minWidth: 100 }}>{x.name}</span>
+                <span className="muted">{x.text.slice(0, 120)}{x.text.length > 120 ? '…' : ''}</span>
+              </label>
+            ))}
+          </div>
+        </Panel>
+      )}
+
       <ImportPanel engine={engine} onAdd={(e) => setEditing(e)} />
 
       {editing && <HrEditor engine={engine} entry={editing} onCancel={() => setEditing(null)} onSave={saveHr} />}
@@ -173,7 +196,7 @@ function libraryOf(engine: Engine): LibItem[] {
   add('feat', d.feats?.feat);
   add('optfeature', d.optionalfeatures?.optionalfeature);
   add('item', d.items?.item);
-  add('spell', d.spellsXphb?.spell);
+  add('spell', engine.env.store.spellsAll);
   return out;
 }
 

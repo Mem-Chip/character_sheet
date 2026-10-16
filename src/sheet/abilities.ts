@@ -653,7 +653,9 @@ export class AbilityBook {
       }
     }
     this.ensureHomerules(char);
-    const hrList = this.homelibAll(char).filter((e) => e && !e.pickable && this.hrIdOK(e.id));
+    // 可选的（pickable）家规：卡上选了才算（char.hrPicked 记 id）
+    const picked = new Set<string>(Array.isArray(char.hrPicked) ? char.hrPicked : []);
+    const hrList = this.homelibAll(char).filter((e) => e && (!e.pickable || picked.has(e.id)) && this.hrIdOK(e.id));
     const applied = new Set<string>();
     for (const e of hrList) {
       const a = this.hrTable[HR_SOURCE + ':' + e.id];
@@ -661,6 +663,8 @@ export class AbilityBook {
       if (off) {
         const i = out.findIndex((x) => sourceKeyOf(x) === off || `${x.source}:${x.name}` === off);
         if (i >= 0) out.splice(i, 1);
+        // 战役 / 全服的覆盖只改有这项能力的卡（本卡的家规是自己加的，照加）
+        else if (e._scope !== 'card') continue;
       }
       if (!out.some((x) => x.source === HR_SOURCE && x.name === e.id)) out.push(this.hrSpec(e));
       applied.add(e.id);
