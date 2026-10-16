@@ -71,3 +71,16 @@ describe('在战斗里', () => {
     expect(s.state.combatants.d.live.resourcesUsed['传奇抗性']).toBe(1);
   });
 });
+
+describe('贴文本的自制怪物', () => {
+  it('模板：数值、两种攻击、多重攻击取总数 3、吐息（充能）；特性列为手动', async () => {
+    const { MONSTER_TEMPLATE, textToMonster } = await import('../../src/bridge/from-text-monster');
+    const p = parseMonster(textToMonster(MONSTER_TEMPLATE));
+    expect(p.view).toMatchObject({ name: '洞穴巨魔', size: '大型', type: '巨人', ac: 15, hpMax: 84, pb: 3, attacksPerAction: 3 });
+    expect(p.view.save).toEqual({ con: 8 });
+    expect(p.view.attacks!.map((a) => [a.name, a.bonus, a.damage, a.damageType])).toEqual([['啃咬', 7, '1d6+4', '穿刺'], ['爪击', 7, '2d6+4', '挥砍']]);
+    const breath = p.view.entries![p.key].actions![0];
+    expect(breath).toMatchObject({ name: '腐臭吐息', cost: [{ recharge: '5-6' }], targeting: { area: { shape: 'cone', length: 15 } } });
+    expect(p.notes.map((n) => n.name)).toEqual(['再生']);
+  });
+});

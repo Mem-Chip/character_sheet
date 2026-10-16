@@ -5,7 +5,7 @@ import { Dialog, Field, NumInput } from '../../components/ui';
 import { combat, useCombat, type CombatUi, type DiceMode } from '../../lib/combat';
 import type { Engine } from '../../lib/engine';
 import { DiceSettings } from './DiceSettings';
-import { BestiaryPicker } from './Bestiary';
+import { BestiaryPicker, TextMonster } from './Bestiary';
 import { useApp } from '../../lib/store';
 import { previewLines } from './Log';
 import { CREATURE_TYPES, DAMAGE_TYPES, type Namer } from './shared';
@@ -216,7 +216,7 @@ const PRESETS: Array<[string, Partial<MonsterForm>]> = [
 
 export function AddMonsterDialog({ onClose, canHide, loadMonsters }: { onClose: () => void; canHide?: boolean; loadMonsters?: () => Promise<unknown[]> }) {
   const [hidden, setHidden] = useState(false);
-  const [tab, setTab] = useState<'book' | 'custom'>(loadMonsters ? 'book' : 'custom');
+  const [tab, setTab] = useState<'book' | 'text' | 'custom'>(loadMonsters ? 'book' : 'custom');
   // 图鉴按需加载（1 MB 多）
   const [monsters, setMonsters] = useState<unknown[] | null>(null);
   useEffect(() => { void loadMonsters?.().then(setMonsters, () => setMonsters([])); }, []);
@@ -240,9 +240,19 @@ export function AddMonsterDialog({ onClose, canHide, loadMonsters }: { onClose: 
   const tabs = (
     <div className="row" style={{ gap: 4, marginBottom: 8 }}>
       {loadMonsters && <button className={'btn sm' + (tab === 'book' ? ' on' : '')} onClick={() => setTab('book')}>图鉴</button>}
-      <button className={'btn sm' + (tab === 'custom' ? ' on' : '')} onClick={() => setTab('custom')}>自己填</button>
+      <button className={'btn sm' + (tab === 'text' ? ' on' : '')} onClick={() => setTab('text')} title="贴一段数据块文本：自制怪物、别的书里的怪物">贴文本</button>
+      <button className={'btn sm' + (tab === 'custom' ? ' on' : '')} onClick={() => setTab('custom')}>快速填</button>
     </div>
   );
+  const added = (view: ViewInit, n: number, side: string, hid: boolean) => { combat.addMonster(view, n, side, hid); onClose(); };
+  if (tab === 'text') {
+    return (
+      <Dialog title="加怪物" onClose={onClose}>
+        {tabs}
+        <TextMonster canHide={canHide} onAdd={added} />
+      </Dialog>
+    );
+  }
   if (tab === 'book' && loadMonsters) {
     return (
       <Dialog title="加怪物" onClose={onClose}>

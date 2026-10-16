@@ -60,12 +60,15 @@ export function crNum(cr: unknown): number {
 }
 export const pbOfCr = (cr: number) => (cr < 5 ? 2 : cr < 9 ? 3 : cr < 13 ? 4 : cr < 17 ? 5 : cr < 21 ? 6 : cr < 25 ? 7 : cr < 29 ? 8 : 9);
 
-const slug = (s: string) => s.replace(/\{@[^}]*\}/g, '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'a';
+const slug = (s: string) => s.replace(/\{@[^}]*\}/g, '').trim().toLowerCase().replace(/[^a-z0-9一-鿿]+/g, '-').replace(/^-|-$/g, '') || 'a';
 
 /** 「三次」「两次」「2 次」→ 数字；「一次啃咬和两次爪击」→ 3 */
 function countAttacks(text: string): number {
   // 只看第一句（「其中一次攻击可以替换为……」不算）
   const t = text.split(/[，。；]|替换|代替|取代/)[0];
+  // 「进行三次攻击：一次啃咬和两次爪击」：有总数就用总数
+  const total = /([一二两三四五六七八九十]|\d+)\s*次攻击/.exec(t);
+  if (total) return Math.max(1, Math.min(10, CN_NUM[total[1]] ?? Number(total[1])));
   let n = 0;
   for (const m of t.matchAll(/([一二两三四五六七八九十]|\d+)\s*次/g)) n += CN_NUM[m[1]] ?? Number(m[1]);
   return Math.max(1, Math.min(10, n));
@@ -143,7 +146,7 @@ export function parseMonster(m: Json): ParsedMonster {
           const reach = Number(/触及\s*(\d+)\s*(?:英)?尺/.exec(raw)?.[1] ?? 5);
           const rng = /射程\s*(\d+)(?:\s*\/\s*(\d+))?\s*(?:英)?尺/.exec(raw);
           attacks.push({
-            id: slug(a.ENG_name ?? name) + (attacks.some((x) => x.id === slug(a.ENG_name ?? name)) ? `-${attacks.length}` : ''),
+            id: slug(a.ENG_name || bare) + (attacks.some((x) => x.id === slug(a.ENG_name || bare)) ? `-${attacks.length}` : ''),
             name: bare, bonus: Number(atk[2]), damage: ds[0].dice, damageType: ds[0].type,
             melee, ranged, finesse: false, ability: ranged && !melee ? 'dex' : 'str', reach: melee && reach >= 10,
             ...(rng ? { range: Number(rng[1]), ...(rng[2] ? { long: Number(rng[2]) } : {}) } : {}),
@@ -169,7 +172,7 @@ export function parseMonster(m: Json): ParsedMonster {
         if (ds.length) {
           const len = area ? Number(area[1]) : 0;
           const shape = area?.[2];
-          const aid = slug(a.ENG_name ?? name);
+          const aid = slug(a.ENG_name || bare);
           const hit: Node[] = ds.map((d, i) => ({ kind: 'damage', id: `${aid}${i}`, dice: d.dice, type: d.type }));
           const onSuccess: Node[] = half ? ds.map((_, i) => ({ kind: 'damage', ref: `${aid}${i}`, scale: 0.5 })) : [];
           const extraFx = /\{@condition/.test(fail) || /\{@condition/.test(succ);
@@ -222,7 +225,7 @@ export function parseMonster(m: Json): ParsedMonster {
     for (const l of m.legendary) {
       const nm = plain(l.name ?? '');
       actions.push({
-        id: `legend-${slug(l.ENG_name ?? nm)}`, name: `传奇动作：${nm}`, activation: 'free', cost: [{ resource: '传奇动作' }],
+        id: `legend-${slug(l.ENG_name || nm)}`, name: `传奇动作：${nm}`, activation: 'free', cost: [{ resource: '传奇动作' }],
         root: [{ kind: 'note', text: `${nm}：${plain(flat(l.entries))}` }],
       });
     }
