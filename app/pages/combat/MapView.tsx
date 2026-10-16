@@ -17,6 +17,7 @@ import { footprint, gridFeet, pathFeet, type Session } from '../../../src/combat
 import { cellHit, coveredCells, directional, snapHalf, snapLen, spellTpl, tplLabel, tplOrigin, tplPath, type Tpl } from '../../lib/area';
 import { PING_LIFE } from '../../lib/combat';
 import { tokenMenu } from './TokenMenu';
+import { effectLabel } from './shared';
 import { NumInput } from '../../components/ui';
 import { combat, type CombatUi, type MapState, type Remote } from '../../lib/combat';
 import type { Namer } from './shared';
@@ -255,9 +256,11 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
       const p = toWorld(e);
       if (sh && 'dir' in sh.tpl) setDrag({ ...drag, dir: Math.atan2(p.y - sh.tpl.y, p.x - sh.tpl.x) });
     } else if (drag.kind === 'shapeMove') {
-      // 按整格挪，形状和格子的相对位置不变
+      // 自由挪；按住 Shift 按整格挪（和格子的相对位置不变）
       const p = toWorld(e);
-      const d = { x: Math.round((p.x - drag.start.x) / g) * g, y: Math.round((p.y - drag.start.y) / g) * g };
+      const d = e.shiftKey
+        ? { x: Math.round((p.x - drag.start.x) / g) * g, y: Math.round((p.y - drag.start.y) / g) * g }
+        : { x: p.x - drag.start.x, y: p.y - drag.start.y };
       if (d.x !== drag.d.x || d.y !== drag.d.y) setDrag({ ...drag, d });
     } else if (drag.kind === 'token') {
       // 鼠标在哪，棋子的中心就在哪（不管当初按在棋子的哪个位置）
@@ -387,7 +390,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
   };
   /** 每个人身上的状态名（棋子角标用；专注不算） */
   const effOf: Record<string, string[]> = {};
-  for (const e of Object.values(st.effects)) if (e.key !== 'concentration') (effOf[e.bearer] ??= []).push(e.name);
+  for (const e of Object.values(st.effects)) if (e.key !== 'concentration') (effOf[e.bearer] ??= []).push(effectLabel(e.name).text);
   // 当前回合的人这一回合走过的路（服务器记的；换人 / 换轮作废）
   const trail = (() => {
     const tr = map.trail;

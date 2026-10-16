@@ -11,6 +11,7 @@ import { combat, type CombatUi } from '../../lib/combat';
 import type { Engine } from '../../lib/engine';
 import { CostIcon, actionsFor, costKind, freeSlots, runAction, type ActItem, type Group } from './Actor';
 import { woundOf } from './Initiative';
+import { effectLabel } from './shared';
 import type { Namer } from './shared';
 
 /** 动作分页：未自动化的法术并进「法术」；时机能力只是列出来让人知道 */
@@ -104,6 +105,9 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
             </span>
           );
         }
+        // 「睡眠术：失能」显示成失能（悬停看状态原文），来源小字
+        const lb = effectLabel(e.name);
+        if (lb.cond) return <span key={e.id} className="tag"><Term kind="condition" name={lb.cond}>{lb.text}</Term>{lb.from && <small className="faint"> · {lb.from}</small>}</span>;
         return <span key={e.id} className="tag">{t ? <Term {...t}>{e.name}</Term> : e.name}</span>;
       })}
     </div>

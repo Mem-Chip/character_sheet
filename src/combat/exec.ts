@@ -659,7 +659,9 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
         if (!tx.state.combatants[tid]) throw new Rejected(`目标 ${tid} 不在遭遇中`);
         const forbidden = activeTemplates(tx, actor).some((a) => a.tpl.flags?.forbidTarget === 'source' && a.effect.source === tid);
         if (forbidden && tx.state.combatants[tid]) throw new Rejected(`${c.name} 处于魅惑状态，不能以 ${nameOf(tx, tid)} 为目标`);
-        if (t.filter !== undefined) {
+        // 范围法术里「你选择的生物」（filter 写成 ask(...)）：人已经在选目标时挑过了，不再逐个问
+        const picked = t.type === 'area' && typeof t.filter === 'string' && /^\s*ask\(/.test(t.filter);
+        if (t.filter !== undefined && !picked) {
           const ok = resolveBool(tx, t.filter, { self: actor, target: tid, slot: o.slotLevel }, actor, `${action.name} 的目标限制`);
           if (!ok) throw new Rejected(`${nameOf(tx, tid)} 不是「${action.name}」的合法目标`);
         }

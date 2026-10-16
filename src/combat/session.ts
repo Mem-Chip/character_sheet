@@ -130,6 +130,8 @@ function handle(tx: Tx, cmd: Command): void {
       const max = effectiveView(tx, cmd.id).hpMax;
       const hp = Math.max(0, Math.min(max, cmd.set ?? c.live.hp + (cmd.delta ?? 0)));
       const seq = tx.emit('manualOverride', { what: 'hp', id: cmd.id, from: c.live.hp, to: hp });
+      // 手动把死了的人调回正数生命值 = DM 让他活过来
+      if (c.live.dead && hp > 0) revive(tx, cmd.id, seq);
       tx.emit('hpChanged', { id: cmd.id, hp, tempHp: cmd.temp ?? c.live.tempHp }, seq);
       return;
     }
@@ -144,6 +146,8 @@ function handle(tx: Tx, cmd: Command): void {
     case 'heal': {
       if (!tx.state.combatants[cmd.id]) throw new Rejected(`没有参与者 ${cmd.id}`);
       const seq = tx.emit('manualOverride', { what: 'heal', id: cmd.id, amount: cmd.amount });
+      // 手动治疗死了的人：DM 的裁定，先让他活过来（规则里的治疗不能复活，走 applyHeal 会被挡）
+      if (tx.state.combatants[cmd.id].live.dead && cmd.amount > 0) revive(tx, cmd.id, seq);
       applyHeal(tx, cmd.id, cmd.amount, '手动治疗', seq);
       return;
     }
@@ -360,4 +364,11 @@ function sameTarget(a: OverridePatch, b: OverridePatch): boolean {
   if ('roll' in a && 'roll' in b) return a.roll === b.roll;
   if ('damage' in a && 'damage' in b) return a.damage === b.damage;
   return false;
+}
+
+/** DM 手动复活：去掉死亡、清空死亡豁免 */
+function revive(tx: Tx, id: string, cause: number): void {
+  tx.emit('deadChanged', { id, dead: false }, cause);
+  tx.emit('deathSavesChanged', { id, s: 0, f: 0 }, cause);
+  tx.emit('note', { text: `${tx.state.combatants[id].name} 被 DM 复活`, owner: id }, cause);
 }

@@ -43,6 +43,8 @@ export interface TapeEntry {
   sig: string;
   faces: number[][];
   source: string;
+  /** 掷的时候这笔事务已经有几条事件（界面上找「这次掷骰对应哪一行日志」用；不影响重放） */
+  ev?: number;
 }
 
 export interface TxInput {
@@ -156,7 +158,7 @@ export class Tx {
         default: null,
       }, this.events.slice());
     }
-    this.tapeOut[idx] = { sig, faces, source: src.id };
+    this.tapeOut[idx] = { sig, faces, source: src.id, ev: this.events.length };
     return faces;
   }
 

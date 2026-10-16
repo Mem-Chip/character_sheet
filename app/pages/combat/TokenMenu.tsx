@@ -8,7 +8,7 @@ import { combat, type CombatUi } from '../../lib/combat';
 import type { Engine } from '../../lib/engine';
 import { termOfKey } from '../../lib/terms';
 import { Term } from '../../components/Term';
-import type { Namer } from './shared';
+import { effectLabel, type Namer } from './shared';
 
 let open: { id: string; x: number; y: number } | null = null;
 const subs = new Set<() => void>();
@@ -57,8 +57,8 @@ export function TokenMenu({ s, ui, engine, name }: { s: Session; ui: CombatUi; e
   const conditions = engine.rules.keys().filter((k) => k.startsWith('XPHB:condition:'));
   // 身上已有的状态：手动加的按模板认，法术 / 特性带来的按名字认
   const label = (k: string) => k.split(':').pop()!;
-  const has = (k: string) => effects.find((e) => e.origin?.ref === k || e.name === label(k));
-  const isCond = (e: (typeof effects)[number]) => conditions.some((k) => e.origin?.ref === k || e.name === label(k));
+  const has = (k: string) => effects.find((e) => e.origin?.ref === k || effectLabel(e.name).cond === label(k));
+  const isCond = (e: (typeof effects)[number]) => conditions.some((k) => e.origin?.ref === k || effectLabel(e.name).cond === label(k));
   const act = (f: () => void) => () => { f(); close(); };
 
   return (

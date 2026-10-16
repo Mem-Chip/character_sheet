@@ -128,8 +128,8 @@ export function spellTpl(spec: AreaSpec, gr: Grid, caster: { x: number; y: numbe
       case 'emanation': case 'sphere': case 'cylinder':
         return { shape: 'circle', cx: caster.x, cy: caster.y, r: px(a.radius ?? a.size) + caster.half };
       case 'cone': case 'line': {
-        // 原点默认在施法者的格子中间；按住 Shift 换到它身边（边的中点 / 角）朝鼠标那一侧最远的那个点
-        let o = { x: caster.x, y: caster.y };
+        // 原点默认在施法者身边一圈（朝鼠标的方向）；按住 Shift 吸附到它身边的边中点 / 角
+        let o = { x: caster.x + caster.half * Math.cos(dir), y: caster.y + caster.half * Math.sin(dir) };
         if (snap) {
           const h = caster.half;
           let best = -Infinity;

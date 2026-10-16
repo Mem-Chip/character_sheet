@@ -17,7 +17,9 @@ import { MapView } from './combat/MapView';
 import { OnlineDialog } from './combat/Online';
 import { TokenMenu } from './combat/TokenMenu';
 import { diceColor, diceLocalColor, diceLocalPhys, scanChat, scanTape } from '../lib/dicefx';
-import { txTitle } from '../lib/events';
+import { describe, txTitle } from '../lib/events';
+import type { GameEvent } from '../../src/combat';
+import { DiceCaption } from './combat/DiceCaption';
 import { namer } from './combat/shared';
 import { Roster } from './combat/Roster';
 import { Tag } from '../components/ui';
@@ -69,6 +71,18 @@ export function CombatPage({ engine }: { engine: Engine }) {
       // 玩家的角色用玩家的颜色，其余（怪物、DM 的 NPC）用 DM 的
       color: (id) => diceColor(r ? r.owners[ctlOf(id) ?? ''] ?? 'dm' : 0, colors),
       label: (cmd) => txTitle(cmd as { type: string }, nm),
+      // 这次掷骰对应的日志：从掷的位置往后找第一条 d20 / 伤害骰事件，连同它前面那句结论
+      line: (events, from) => {
+        const evs = events as GameEvent[];
+        const secret = (id: unknown) => combat.isSecret(String(id ?? ''));
+        for (let i = from; i < evs.length; i++) {
+          if (evs[i].type !== 'd20Rolled' && evs[i].type !== 'damageRolled') continue;
+          const l = describe(evs[i], nm, secret);
+          if (!l) return null;
+          return { title: l.text, detail: l.receipt };
+        }
+        return null;
+      },
     });
     scanChat(enc, r ? r.chat : ui.chat, r ? r.me : 0, phys, colors);
   });
@@ -166,6 +180,7 @@ export function CombatPage({ engine }: { engine: Engine }) {
         </div>
         <div className="hud-prompt">{prompts}</div>
         {dialogs}
+        <DiceCaption />
         <TokenMenu s={s} ui={ui} engine={engine} name={name} />
       </div>
     );
@@ -201,6 +216,7 @@ export function CombatPage({ engine }: { engine: Engine }) {
       </div>
       {prompts}
       {dialogs}
+      <DiceCaption />
       <TokenMenu s={s} ui={ui} engine={engine} name={name} />
     </div>
   );

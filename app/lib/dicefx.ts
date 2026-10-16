@@ -10,7 +10,7 @@
  * - 其余参数（镜头、灯光、外观、时长、播谁的）只影响自己的屏幕，存在本机。
  * - dice3d 连同 three.js 一起按需加载：第一次要播的时候才下载。
  */
-import type { ChatRoll, RolledExpr, Session } from '../../src/combat';
+import { describeRoll, type ChatRoll, type RolledExpr, type Session } from '../../src/combat';
 import type { DiceOptions, DieSpec, RollRequest } from './dice3d';
 import { DEFAULT_DICE_OPTIONS } from './dice3d/options';
 
@@ -80,8 +80,30 @@ function load(): Promise<Mod> {
 }
 const themeNow = (): 'light' | 'dark' => (document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
 
-async function play(req: RollRequest, physics?: DicePhysics): Promise<void> {
-  if (!req.dice.length) return;
+/* ───── 提示条：正在掷什么（和动画一起出现、一起消失，可以手动关） ───── */
+export interface DiceCaption { id: number; title: string; detail?: string }
+let caption: DiceCaption | null = null;
+let capSeq = 0;
+const capSubs = new Set<() => void>();
+export const diceCaption = () => caption;
+export const subscribeCaption = (f: () => void) => { capSubs.add(f); return () => { capSubs.delete(f); }; };
+const setCaption = (c: DiceCaption | null) => { caption = c; for (const f of capSubs) f(); };
+export const closeCaption = () => setCaption(null);
+
+let chain: Promise<void> = Promise.resolve();
+/** 排队播；轮到这一次时换上它的提示条，播完收起 */
+function play(req: RollRequest, physics?: DicePhysics, cap?: { title: string; detail?: string }): Promise<void> {
+  if (!req.dice.length) return Promise.resolve();
+  const job = chain.then(async () => {
+    const c = cap ? { id: ++capSeq, ...cap } : null;
+    setCaption(c);
+    try { await playNow(req, physics); } finally { if (c && caption?.id === c.id) setCaption(null); }
+  });
+  chain = job.catch(() => {});
+  return job;
+}
+
+async function playNow(req: RollRequest, physics?: DicePhysics): Promise<void> {
   const m = await load();
   const key = JSON.stringify(physics ?? {});
   if (key !== applied) {
@@ -108,7 +130,7 @@ export const diceColor = (user: number | 'dm' | null | undefined, chosen?: Recor
 /** 设置界面的「试掷一下」 */
 export function previewDice(color: string, physics?: DicePhysics): void {
   const r = (n: number) => 1 + Math.floor(Math.random() * n);
-  void play({ dice: [{ faces: 20, value: r(20), color }, { faces: 20, value: r(20), color, dropped: true }, { faces: 6, value: r(6), color }, { faces: 8, value: r(8), color }], label: '试掷' }, physics);
+  void play({ dice: [{ faces: 20, value: r(20), color }, { faces: 20, value: r(20), color, dropped: true }, { faces: 6, value: r(6), color }, { faces: 8, value: r(8), color }] }, physics, { title: '试掷' });
 }
 
 const SUPPORTED = new Set([4, 6, 8, 10, 12, 20, 100]);
@@ -143,7 +165,10 @@ export function scanChat(encounter: string, chat: ReadonlyArray<ChatRoll>, me: n
     if ((c.private || scope === 'mine') && !mine) continue;
     const color = diceColor(c.by, colors);
     const dice = c.results.flatMap((r) => diceOfExpr(r, color));
-    void play({ dice, seed: seedOf('chat:' + c.id), label: `${c.byName}${c.note ? `：${c.note}` : ''}` }, physics);
+    void play({ dice, seed: seedOf('chat:' + c.id) }, physics, {
+      title: `${c.byName} 掷骰${c.note ? `：${c.note}` : ''}`,
+      detail: c.results.map((r) => describeRoll(r).replace(/~(\d+)~/g, '($1)')).join('\n'),
+    });
   }
 }
 
@@ -162,11 +187,13 @@ export interface TapeCtx {
   mine: (id: string | null) => boolean;
   color: (id: string | null) => string;
   label: (cmd: unknown) => string;
+  /** 这次掷骰对应的那行日志（标题 + 掷骰明细）；找不到返回 null */
+  line?: (events: ReadonlyArray<unknown>, from: number) => { title: string; detail?: string } | null;
 }
 
 /** 扫一遍事务（含正在等待决定的那笔）：tape 里新出现的、引擎掷的骰子播一下 */
 export function scanTape(s: Session, ctx: TapeCtx): void {
-  const txs: Array<{ input: { cmd: unknown; tape: Array<{ sig: string; faces: number[][]; source: string } | undefined> } }> = [...s.transactions];
+  const txs: Array<{ events?: ReadonlyArray<unknown>; input: { cmd: unknown; tape: Array<{ sig: string; faces: number[][]; source: string; ev?: number } | undefined> } }> = [...s.transactions];
   const p = (s as unknown as { pending?: { input?: (typeof txs)[number]['input'] } | null }).pending;
   if (p?.input) txs.push({ input: p.input });
   const keys: Array<{ key: string; tx: number; i: number }> = [];
@@ -190,6 +217,8 @@ export function scanTape(s: Session, ctx: TapeCtx): void {
       const faces = reqs[j];
       if (SUPPORTED.has(faces)) for (const v of vals) dice.push({ faces: faces as DieSpec['faces'], value: v, color });
     });
-    void play({ dice, seed: seedOf(`${ctx.encounter}|${k.tx}|${k.i}`), label: ctx.label(t.cmd) }, ctx.physics);
+    const ev = txs[k.tx].events;
+    const detail = ev && e.ev != null && ctx.line ? ctx.line(ev, e.ev) : null;
+    void play({ dice, seed: seedOf(`${ctx.encounter}|${k.tx}|${k.i}`) }, ctx.physics, detail ?? { title: ctx.label(t.cmd) });
   }
 }
