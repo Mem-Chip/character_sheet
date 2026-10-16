@@ -16,12 +16,12 @@ import { Term } from '../components/Term';
 import { termOfKey } from '../lib/terms';
 import { Field, Panel, Tag } from '../components/ui';
 import type { Engine } from '../lib/engine';
-import { saveItem, useCardCampaign, useHub, type HubItem } from '../lib/hub';
+import { cardCampaign, combatFor, effectiveItems, newItemId, pickablesOf, pickablesOfItems, saveLibraryItem, shareItem, useHub, useLibrary, type LibraryItem } from '../lib/library';
 import { AiDatafy } from '../components/AiDatafy';
-import { isSkip } from '../../src/factory/ai';
-import { hubItemForKey, jobForKey } from '../lib/ai';
-import type { Entry } from '../../src/combat';
-import { actions } from '../lib/store';
+import { kindOfKey } from '../../src/library';
+import { aiExamples, aiSheetExamplesText, aiSpec, partsFromAnswer, partsJobForKey } from '../lib/ai';
+import { actions, stripDerived, useApp } from '../lib/store';
+import { useSync } from '../lib/sync';
 
 interface Props { engine: Engine; id: string; char: Json; sheet: Json }
 
@@ -66,14 +66,18 @@ export function SheetData(p: Props) {
   const homerules: HomeRuleEntry[] = char.homerules || [];
   const [open, setOpen] = useState<string | null>(null);
   const [editing, setEditing] = useState<HomeRuleEntry | null>(null);
-  const cid = useCardCampaign(p.id);
+  const cid = cardCampaign(useApp().cards[p.id]);
   const hub = useHub(cid);
-  const isDm = hub?.role === 'dm';
-  const [ai, setAi] = useState<{ s: SourceSpec; key: string; card: Json; existing?: HubItem } | null>(null);
-  /** 本团内容里给这条能力补的战斗数据（遭遇里才进规则书，这里单独标出来） */
-  const hubCombatOf = (key: string) => (hub?.items ?? []).find((x) => x.combat?.entry !== undefined && (x.combat.key === key || (!x.combat.key && x.covers === key)));
-  const campIds = new Set((hub?.items ?? []).map((x) => x.id));
-  const pickables = (hub?.items ?? []).filter((x) => x.pickable);
+  const sync = useSync();
+  const [msg, setMsg] = useState('');
+  const [ai, setAi] = useState<{ s: SourceSpec; key: string; card: Json; existing?: LibraryItem } | null>(null);
+  /** 生效内容（我的库 + 这个战役开着的）里给这条能力补的战斗数据 */
+  const hubCombatOf = (key: string) => combatFor(key, hub);
+  const campIds = new Set(effectiveItems(hub).flatMap((it) => (it.parts ?? []).map((x) => x.id)));
+  // 可选内容 = 我的库里「选了才生效」的 + 本团生效的（同一条只列一次）
+  const myItems = useLibrary();
+  const pickables = [...pickablesOfItems(myItems), ...pickablesOf(hub)]
+    .filter((x, i, a) => a.findIndex((y) => y.part.id === x.part.id) === i);
   const picked: string[] = char.hrPicked || [];
   const togglePick = (hrId: string) => actions.update(p.id, (c) => {
     const cur: string[] = c.hrPicked || [];
@@ -110,8 +114,8 @@ export function SheetData(p: Props) {
               const isHr = s.source === HR_SOURCE;
               const hr = isHr ? homerules.find((x) => x.id === s.name) : homerules.find((x) => x.covers === key);
               const card = engine.env.abilities.resolve(s);
-              const hubC = isHr ? undefined : hubCombatOf(key);
-              const combat = isHr ? undefined : (hubC?.combat?.entry as Entry | undefined) ?? engine.rules.entry(key);
+              const hubC = isHr ? null : hubCombatOf(key);
+              const combat = isHr ? undefined : (hubC?.part.combat?.entry as import('../../src/combat').Entry | undefined) ?? engine.rules.entry(key);
               const aiTag = (combat?.tags || []).includes('ai');
               const rowOpen = open === key;
               return (
@@ -126,7 +130,7 @@ export function SheetData(p: Props) {
                     </td>
                     <td>
                       {isHr ? <span className="faint small">—</span>
-                        : combat ? <Tag tone={aiTag ? undefined : 'accent'}>{hubC ? '本团 · ' : ''}{aiTag ? (hubC?.reviewed ? 'AI · 已审' : 'AI 未审') : '手写'}{combat.automation && combat.automation !== 'full' ? ` · ${combat.automation === 'manual' ? '手动' : '部分'}` : ''}</Tag>
+                        : combat ? <Tag tone={aiTag ? undefined : 'accent'}>{hubC ? (hubC.from === 'mine' ? '我的库 · ' : '本团 · ') : ''}{aiTag ? (hubC?.item.reviewed ? 'AI · 已看过' : 'AI 未审') : '手写'}{combat.automation && combat.automation !== 'full' ? ` · ${combat.automation === 'manual' ? '手动' : '部分'}` : ''}</Tag>
                           : <span className="faint small">没有</span>}
                     </td>
                     <td className="tiny faint">{rowOpen ? '收起' : '展开'}</td>
@@ -160,8 +164,8 @@ export function SheetData(p: Props) {
                             <button className="btn ghost sm danger" onClick={() => { if (confirm('删掉这条家规，恢复官方数据？')) removeHr(hr.id); }}>恢复官方数据</button>
                           </>
                           : <button className="btn sm" onClick={() => startCover(s, card)}>用家规覆盖（只改这张卡）</button>)}
-                        {!isHr && isDm && cid && (!combat || combat.automation === 'manual' || hubC) && (
-                          <button className="btn sm" onClick={() => setAi({ s, key, card, existing: hubC })}>{hubC ? 'AI 再改战斗数据…' : 'AI 补战斗数据（存进本团资料）…'}</button>
+                        {!isHr && sync.user && (!combat || combat.automation === 'manual' || hubC) && (
+                          <button className="btn sm" onClick={() => setAi({ s, key, card, existing: hubC?.from === 'mine' ? hubC.item : undefined })}>{hubC ? 'AI 再写一遍（卡面 + 战斗）…' : 'AI 写数据（卡面 + 战斗，存进我的资料库）…'}</button>
                         )}
                       </div>
                     </td></tr>
@@ -173,14 +177,16 @@ export function SheetData(p: Props) {
         </table>
       </Panel>
 
+      {msg && <div className="small ok">{msg}</div>}
+
       {pickables.length > 0 && (
-        <Panel title="本团可选内容" aside={<span className="small muted">DM 在战役「资料」里加的；勾上才对这张卡生效</span>}>
+        <Panel title="可选内容" aside={<span className="small muted">你的资料库 / 本团里的；勾上才对这张卡生效</span>}>
           <div className="stack" style={{ gap: 4 }}>
-            {pickables.map((x) => (
-              <label key={x.id} className="row small" style={{ gap: 6, alignItems: 'flex-start' }}>
-                <input type="checkbox" checked={picked.includes(x.id)} onChange={() => togglePick(x.id)} />
-                <span className="serif" style={{ minWidth: 100 }}>{x.name}</span>
-                <span className="muted">{x.text.slice(0, 120)}{x.text.length > 120 ? '…' : ''}</span>
+            {pickables.map(({ part, item }) => (
+              <label key={part.id} className="row small" style={{ gap: 6, alignItems: 'flex-start' }}>
+                <input type="checkbox" checked={picked.includes(part.id)} onChange={() => togglePick(part.id)} />
+                <span className="serif" style={{ minWidth: 100 }}>{part.name || item.name}</span>
+                <span className="muted">{(part.text ?? item.text ?? '').slice(0, 120)}{(part.text ?? item.text ?? '').length > 120 ? '…' : ''}</span>
               </label>
             ))}
           </div>
@@ -189,15 +195,39 @@ export function SheetData(p: Props) {
 
       <ImportPanel engine={engine} onAdd={(e) => setEditing(e)} />
 
-      {ai && cid && (
+      {ai && (
         <AiDatafy
-          title={`AI 补「${ai.s.name}」的战斗数据`}
-          initial={ai.existing?.combat?.entry}
-          saveLabel="存进本团资料"
-          prepare={() => jobForKey(engine, cid, ai.key, { name: ai.s.name, text: '' })}
+          title={`AI 写「${ai.s.name}」的数据（卡面 + 战斗）`}
+          initial={ai.existing ? {
+            parts: ai.existing.parts.map((p) => ({
+              key: p.key, name: p.name, text: p.text, sheet: p.sheet, combat: p.combat?.entry ?? p.combat,
+            })),
+          } : undefined}
+          saveLabel="存进我的资料库"
+          spec={aiSpec('both')}
+          examples={`${aiExamples()}\n\n## 卡面数据的例子（真实数据，照这个粒度写）\n\n${aiSheetExamplesText()}`}
+          prepare={() => partsJobForKey(engine, cid, { key: ai.key, name: ai.s.name, text: '', smokeChar: stripDerived(p.char) })}
           onSave={async (a, by) => {
-            if (isSkip(a)) return [`AI 认为这条没有战斗里要写的：${a.skip}`];
-            return saveItem(cid, hubItemForKey(ai.key, ai.s.name, a as Entry, by, ai.card, ai.existing));
+            const parts = partsFromAnswer(a, { key: ai.key, existing: ai.existing });
+            if (!parts.length) return ['AI 没给出内容（parts 是空的）'];
+            const item: LibraryItem = {
+              id: ai.existing?.id ?? newItemId(),
+              kind: ai.existing?.kind ?? kindOfKey(ai.key),
+              name: ai.existing?.name ?? ai.s.name,
+              text: ai.existing?.text ?? `给「${ai.s.name}」写的数据（卡面 + 战斗）`,
+              parts, by, reviewed: false,
+            };
+            const problems = await saveLibraryItem(item);
+            if (problems.length) return problems;
+            if (cid) {
+              const state = await shareItem(cid, item.id);
+              setMsg(state === 'pending'
+                ? `「${item.name}」存进你的资料库了。它覆盖官方规则，已挂到这个战役，等 DM 点头。`
+                : `「${item.name}」存进你的资料库了，这个战役里的人立刻能用。`);
+            } else {
+              setMsg(`「${item.name}」存进你的资料库了，你自己的卡都能用。`);
+            }
+            return [];
           }}
           onClose={() => setAi(null)}
         />

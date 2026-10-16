@@ -3,6 +3,7 @@ export { DataStore, type DataProvider, type Json } from './store';
 export { Source, subclassCandidates, subclassLabel, classSlug, CLASS_SLUG_BY_NAME, BASE_URL } from './source';
 export { blankCharacter, featNames, resolveCharacter, computeCharacter, applyOriginFeatDefault, totalLevel, type CharData } from './character';
 export { AbilityBook, HR_SOURCE, sourceKeyOf, type SourceSpec, decisionComplete, abilityPlans, applyChoiceGrant, parseAcFormula, resolveNum, type HomeRuleEntry, type Derived } from './abilities';
+export { MOD_KIND_DOC, GRANT_KINDS, CHOICE_POOLS } from './abilities';
 export { Pipeline, CalcCtx, Chooser, buildOrigins, createRules } from './pipeline';
 export { FeatRules, fmtPrereq, sourceShort, type FeatSlot } from './feats';
 export { COUNT_ONLY, Resources, Rest } from './resources';
@@ -10,3 +11,4 @@ export { MasteryRules, SoftLimits, WildShape, Unlocks, classSkillBudget, spellbo
 export { normalizeSheet, normalizeValue } from './normalize';
 export * from './constants';
 export { choiceOptions, decisionValue, classSpells, spellInClassList, spellSourcesReady, abilitySummary, pointBuyCost, STANDARD_ARRAY, backgroundBonusFrom, backgroundOriginFeat, type PoolOption, type PoolResult } from './pools';
+export { CAT_KIND, KIND_CN, SUPPORTED, hitWhere, loadSearchHits, parseIndex, resetSearchCache, searchHits, type SearchHit, type SearchOptions } from './search';

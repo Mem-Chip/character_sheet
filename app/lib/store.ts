@@ -5,7 +5,7 @@
 import { useSyncExternalStore } from 'react';
 import { blankCharacter, type CharData } from '../../src/sheet';
 
-export type Page = 'library' | 'sheet' | 'combat' | 'campaigns';
+export type Page = 'library' | 'data' | 'sheet' | 'combat' | 'campaigns';
 export type Theme = 'light' | 'dark';
 
 export interface Card {

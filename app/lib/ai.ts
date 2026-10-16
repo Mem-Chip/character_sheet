@@ -10,14 +10,15 @@ import typesSource from '../../src/combat/types.ts?raw';
 import type { ParsedMonster } from '../../src/bridge/from-monster';
 import { GOLDEN_FILES, RULE_FILES } from '../../src/bridge/rule-files';
 import type { CombatantView, Entry } from '../../src/combat';
-import { buildSpec, declaredResources, lintEntry, renderTask, type Task } from '../../src/factory';
+import { buildSpec, declaredResources, lintEntry, lintSheet, renderTask, sheetHasContent, type Task } from '../../src/factory';
 import { isSkip, type Chat, type ChatMsg } from '../../src/factory/ai';
 import { createTaskBuilder } from '../../src/factory/build';
 import { genericOwner, smoke } from '../../src/factory/smoke';
 import type { Json } from '../../src/sheet';
+import { kindOfKey, type LibraryItem, type ResPart } from '../../src/library';
 import { api } from './api';
 import type { Engine } from './engine';
-import { newItemId, tagCampaign, type HubItem } from './hub';
+import { newItemId, newPartId, tagCampaign } from './library';
 
 /* ───── 设置 ───── */
 
@@ -89,8 +90,13 @@ export function makeChat(s: AiSettings, opts: { json?: boolean } = {}): Chat {
 
 /* ───── 说明书、例子、任务 ───── */
 
-let specMemo: string | null = null;
-export const aiSpec = () => (specMemo ??= buildSpec({ typesSource }));
+let specMemo = new Map<string, string>();
+/** 说明书：`combat` = 只讲动态层（怪物那种）；`both` = 卡面 + 战斗（资料库那种） */
+export const aiSpec = (mode: 'combat' | 'both' = 'combat') => {
+  let s = specMemo.get(mode);
+  if (!s) specMemo.set(mode, (s = buildSpec({ typesSource, mode })));
+  return s;
+};
 let examplesMemo: string | null = null;
 export function aiExamples(): string {
   if (examplesMemo) return examplesMemo;
@@ -98,6 +104,24 @@ export function aiExamples(): string {
   for (const f of GOLDEN_FILES) Object.assign(all, f.entries);
   return (examplesMemo = JSON.stringify(all));
 }
+
+/** 卡面数据的例子：直接从 data/abilities-2024.json 里挑几条真实数据，不手抄 */
+const SHEET_EXAMPLE_KEYS = ['XPHB:野蛮人:狂暴:1', 'XPHB:野蛮人:无甲防御:1', 'XPHB:战士:动作如潮:2', 'XPHB:游荡者:偷袭:1'];
+export function aiSheetExamples(abilities: Record<string, Json>): string {
+  const out: Record<string, unknown> = {};
+  for (const k of SHEET_EXAMPLE_KEYS) {
+    const a = abilities[k];
+    if (!a) continue;
+    const e: Record<string, unknown> = {};
+    for (const f of ['mods', 'grants', 'choices', 'resources']) if (Array.isArray(a[f]) && a[f].length) e[f] = a[f];
+    if (Object.keys(e).length) out[k] = e;
+  }
+  return JSON.stringify(out, null, 1);
+}
+let sheetExamplesMemo: string | null = null;
+/** 卡面例子的现成一份（用 data/abilities-2024.json 里的真实数据） */
+export const aiSheetExamplesText = () =>
+  (sheetExamplesMemo ??= aiSheetExamples((abilities2024 as { entries: Record<string, Json> }).entries));
 
 const builders = new Map<string, ReturnType<typeof createTaskBuilder>>();
 /** 拼任务（战役里的：探针角色按战役的书算，启用的书里的子职才找得到） */
@@ -133,6 +157,126 @@ export function checkEntry(answer: unknown, c: CheckCtx): string[] {
 export const checkCtxOf = (t: Task, owner?: CombatantView | null): CheckCtx => ({
   key: t.key, resourceIds: Object.keys(t.resources ?? {}), classTableColumns: Object.keys(t.classTable ?? {}), owner,
 });
+
+/* ───── 双写：卡面 + 战斗（LIBRARY.md 第五节） ───── */
+
+/** 试算卡面公式用的假数值（和家规编辑器里那份一致） */
+const PROBE_SHEET = { level: 20, pb: 6, 'mod:str': 3, 'mod:dex': 3, 'mod:con': 3, 'mod:int': 3, 'mod:wis': 3, 'mod:cha': 3 };
+
+export interface PartsCheckCtx extends CheckCtx {
+  /** 资源上限算不算得出数（浏览器传 `env.resources.resolveFormula`） */
+  resolveFormula?: (formula: unknown, cls?: string) => number | null;
+}
+
+const isObj = (x: unknown): x is Record<string, unknown> => !!x && typeof x === 'object' && !Array.isArray(x);
+
+/**
+ * 检查一份双写答卷 `{ parts: [...] }`：卡面走 `lintSheet`，战斗走 `lintEntry` + 试算小遭遇。
+ *
+ * 两边是**互通**的：卡面 `sheet.resources` 里声明的次数池，战斗那边 `cost: [{ resource: … }]`
+ * 花得掉才算对（不然战斗会报「没有这个资源」）。所以池子写在卡面、cost 写在战斗。
+ */
+export function checkParts(answer: unknown, c: PartsCheckCtx): string[] {
+  if (isSkip(answer)) return [];
+  if (!isObj(answer)) return ['应该是一个对象：{ "parts": [ … ] }'];
+  if (!Array.isArray(answer.parts)) return ['缺 parts 数组（只有一条也要包在 parts 里）'];
+  if (!answer.parts.length) return [];
+  const out: string[] = [];
+  const seen = new Set<string>();
+  answer.parts.forEach((raw, i) => {
+    const at = `第 ${i + 1} 条`;
+    if (!isObj(raw)) { out.push(`${at}：应该是对象`); return; }
+    const key = String(raw.key ?? '').trim() || c.key;
+    if (seen.has(key)) out.push(`${at}：条目键「${key}」和前面重复了`);
+    seen.add(key);
+    const sheet = raw.sheet;
+    const combat = raw.combat;
+    if (sheet === undefined && combat === undefined) { out.push(`${at}：sheet 和 combat 至少要写一个`); return; }
+    const pools = isObj(sheet) && Array.isArray(sheet.resources)
+      ? sheet.resources.map((r) => (isObj(r) ? String(r.id ?? '') : '')).filter(Boolean) : [];
+    if (sheet !== undefined) out.push(...lintSheet(sheet, { resolveFormula: c.resolveFormula }).map((m) => `${at} 卡面：${m}`));
+    // combat 要么直接是 Entry，要么是 { entry } / { patch } / { value } 的包装
+    const entry = !isObj(combat) ? null
+      : 'entry' in combat ? combat.entry
+        : ('patch' in combat || 'value' in combat) ? null : combat;
+    if (entry) out.push(...checkEntry(entry, { ...c, resourceIds: [...(c.resourceIds ?? []), ...pools] }).map((m) => `${at} 战斗：${m}`));
+  });
+  return out;
+}
+
+const withAiTag = (entry: unknown): unknown =>
+  (isObj(entry) ? { ...entry, tags: [...new Set([...((entry.tags as string[] | undefined) ?? []), 'ai'])] } : entry);
+
+/** 试算只看这些字段：数值、资源池、熟练、抗免 —— 「加了效果但什么都没变」才看得出来 */
+const pickSheet = (s: Json): Json => ({
+  ac: s.ac, hpMax: s.hpMax, speed: s.speed, initiative: s.initiative, pb: s.pb,
+  resources: (s.resources || []).map((r: Json) => `${r.name ?? r.id}:${r.max ?? ''}`),
+  skills: Object.entries(s.skills || {}).filter(([, v]) => v).map(([k]) => k),
+  saves: s.saves, senses: s.senses, resist: s.resist, immune: s.immune,
+  armorProf: s.armorProf, weaponProf: s.weaponProf, spellDC: s.spellDC, spellAtk: s.spellAtk,
+});
+
+/**
+ * 卡面试算：把这条卡面数据临时挂到这张卡上算一遍，比一比关键数值。
+ * 只报两种问题：**算的时候报错**、**声称有内容但关键数值一点没变**（多半 kind / 字段写对了却不起作用）。
+ * 「只有 note」的那种不算错（它本来就不改数值）。
+ */
+export async function smokeSheet(engine: Engine, char: Json, sheet: unknown): Promise<string[]> {
+  if (!isObj(sheet) || !sheetHasContent(sheet)) return [];
+  const mods = Array.isArray(sheet.mods) ? sheet.mods : [];
+  const meaningful = mods.some((m) => isObj(m) && m.kind !== 'note')
+    || (Array.isArray(sheet.grants) && sheet.grants.length > 0)
+    || (Array.isArray(sheet.choices) && sheet.choices.length > 0)
+    || (Array.isArray(sheet.resources) && sheet.resources.length > 0);
+  if (!meaningful) return [];
+
+  const env = engine.env;
+  const orig = env.homelib.user;
+  let before: Json | null = null;
+  try {
+    env.homelib.user = () => [];
+    before = await env.compute(structuredClone(char));
+  } catch { before = null; }
+  let after: Json | null;
+  try {
+    env.homelib.user = () => [{ id: 'hr-smoke01', name: '试算', text: '', ...(sheet as Record<string, unknown>) }];
+    after = await env.compute(structuredClone(char));
+  } catch (e) {
+    return [`试算时报错：${(e as Error).message}`];
+  } finally {
+    env.homelib.user = orig;
+  }
+  if (before && JSON.stringify(pickSheet(before)) === JSON.stringify(pickSheet(after))) {
+    return ['试算：这条卡面数据没有让这张卡的数值 / 资源 / 熟练发生任何变化（kind 和字段是对的，但看起来没起作用）'];
+  }
+  return [];
+}
+
+/**
+ * 双写答卷 → parts。id 尽量沿用已有的（卡上「选了才生效」勾的是 id，重写一次不能把勾选弄丢）。
+ * `combat` 直接是 Entry；写 `{ entry }` / `{ patch }` / `{ value }` 的包装也认。
+ */
+export function partsFromAnswer(answer: unknown, o: { key: string; existing?: LibraryItem }): ResPart[] {
+  const list = isObj(answer) && Array.isArray(answer.parts) ? answer.parts : [];
+  const out: ResPart[] = [];
+  for (const raw of list) {
+    if (!isObj(raw)) continue;
+    const key = String(raw.key ?? '').trim() || o.key;
+    const id = o.existing?.parts?.find((p) => p.key === key)?.id ?? newPartId();
+    const combat = raw.combat;
+    const c: ResPart['combat'] | undefined = !isObj(combat) ? undefined
+      : ('entry' in combat || 'patch' in combat || 'value' in combat) ? (combat as ResPart['combat'])
+        : { entry: combat };
+    out.push({
+      id, key,
+      ...(typeof raw.name === 'string' && raw.name.trim() ? { name: raw.name.trim() } : {}),
+      ...(typeof raw.text === 'string' && raw.text.trim() ? { text: raw.text } : {}),
+      ...(isObj(raw.sheet) && sheetHasContent(raw.sheet) ? { sheet: raw.sheet as ResPart['sheet'] } : {}),
+      ...(c ? { combat: { ...c, ...(c.entry !== undefined ? { entry: withAiTag(c.entry) } : {}) } } : {}),
+    });
+  }
+  return out;
+}
 
 /* ───── 怪物 AI 结果（全服共享） ───── */
 
@@ -234,7 +378,12 @@ export async function tidyMonsterText(s: AiSettings, template: string, hint: str
 
 /* ───── 拼任务的几种来源 ───── */
 
-export interface AiJob { task: string; check: (answer: unknown) => string[] | Promise<string[]> }
+export interface AiJob {
+  task: string;
+  check: (answer: unknown) => string[] | Promise<string[]>;
+  /** 检查用的上下文（双写流程要拿它接卡面检查） */
+  ctx?: CheckCtx;
+}
 
 /**
  * 一个条目键 → 任务。官方的、启用的书里的能力从站点原文拼（资源、职业表按探针角色）；
@@ -251,23 +400,60 @@ export async function jobForKey(engine: Engine, cid: string | null | undefined, 
     t = { id: 'AI', key, name: o.name, kind: 'feat', where: '本团内容（家规 / 自制能力）', text: o.text.trim() || o.name, resources: {} };
   }
   if (o.houseRule?.trim()) t = { ...t, extra: [...(t.extra ?? []), `本团家规改过这条，以家规为准：${o.houseRule.trim()}`] };
-  return { task: renderTask(t), check: (a) => checkEntry(a, checkCtxOf(t, owner)) };
+  const ctx = checkCtxOf(t, owner);
+  return { task: renderTask(t), check: (a) => checkEntry(a, ctx), ctx };
 }
 
 /**
- * 给一张卡上没自动化的能力补战斗数据 → 本团内容。
- * 只写战斗部分（键 = 那条能力）；条目自己声明了次数池的，卡面也得有这个池：
- * 这时改成「覆盖这条能力」，卡面 = 官方卡面数据 + 新的池（只作用在有这项能力的卡上）。
+ * 双写任务：同一份原文和上下文，但要求输出 `{ parts: [...] }`（卡面 + 战斗）。
+ * `keys` 是「这份资源要拆成几条」时用的（一个子职 = 每级特性一条）。
  */
-export function hubItemForKey(key: string, name: string, entry: Entry, by: string, card: Json, existing?: HubItem): HubItem {
-  const decls = declaredResources(entry);
-  const base: HubItem = {
-    id: existing?.id ?? newItemId(), name: existing?.name ?? name, text: existing?.text ?? `给「${name}」补的战斗数据`,
-    combat: { key, entry: { ...entry, tags: [...new Set([...(entry.tags ?? []), 'ai'])] } }, by, reviewed: false,
+export interface PartsTaskOpts {
+  key: string;
+  name: string;
+  text: string;
+  houseRule?: string;
+  /** 要拆成几条（键 + 名字）；不给 = 就写这一条 */
+  keys?: Array<{ key: string; name: string }>;
+  /** 有真角色就传进来：卡面部分会拿它试算一遍（看数值有没有变） */
+  smokeChar?: Json | null;
+}
+
+export async function partsJobForKey(engine: Engine, cid: string | null | undefined, o: PartsTaskOpts): Promise<AiJob> {
+  const job = await jobForKey(engine, cid, o.key, { name: o.name, text: o.text, houseRule: o.houseRule });
+  const ctx: PartsCheckCtx = {
+    ...(job.ctx ?? { key: o.key }),
+    resolveFormula: (f, cls) => engine.env.resources.resolveFormula(f, PROBE_SHEET, null, cls),
   };
-  if (!decls.length) return { ...base, ...(existing?.covers ? { covers: existing.covers, sheet: existing.sheet } : {}) };
-  const strip = (xs: unknown[] | undefined) => (xs ?? []).map((x) => Object.fromEntries(Object.entries(x as Json).filter(([k]) => !k.startsWith('_'))));
-  const res = strip(card?.resources);
-  for (const d of decls) if (!res.some((r) => r.id === d.id)) res.push({ id: d.id, name: d.name, formula: d.formula, recovery: d.recovery, by: 'ai' });
-  return { ...base, covers: key, sheet: { mods: strip(card?.mods), grants: strip(card?.grants), choices: strip(card?.choices), resources: res } };
+  const lines = [
+    '', '## 输出格式（以这里为准，和上面第 1 节一样）', '',
+    '一个 JSON 对象：`{ "parts": [ … ] }`，每个 part 是 `{ key, name, text, sheet, combat }`。',
+    o.keys?.length
+      ? `- 下面每一条各写一个 part，\`key\` 原样照抄：\n${o.keys.map((p) => `  - \`${p.key}\`（${p.name}）`).join('\n')}`
+      : `- 这一条写一个 part；覆盖官方就写 \`key: "${o.key}"\`，新内容就**不写 key**。`,
+    '- `sheet` 写卡面（第 7 节：mods / grants / choices / resources），`combat` 写战斗（第 2～6 节的 Entry，**直接写**，不要包成 `{ "entry": … }`）。',
+    '- **两边互通**：次数池声明在 `sheet.resources` 里，战斗里用 `cost: [{ resource: \'<id>\' }]` 花它；',
+    '  「带条件才生效」的写 `combat`，「恒定的加值 / 授予 / 池子上限」写 `sheet`。',
+    '- 哪一边确实没有内容就不写那一边；两边都没有就别写这个 part。',
+  ];
+  return {
+    task: job.task + lines.join('\n'),
+    check: async (a) => {
+      const problems = checkParts(a, ctx);
+      if (problems.length || !o.smokeChar) return problems;
+      // 结构没问题再试算：拿真角色算一遍，看关键数值有没有变
+      const out: string[] = [];
+      for (const [i, p] of partsOfAnswer(a).entries()) {
+        if (!isObj(p) || !isObj(p.sheet)) continue;
+        out.push(...(await smokeSheet(engine, o.smokeChar, p.sheet)).map((m) => `第 ${i + 1} 条 ${m}`));
+      }
+      return out;
+    },
+    ctx,
+  };
+}
+
+/** 答卷里的 parts 数组（不是数组就给空的；checkParts 已经报过这个问题） */
+function partsOfAnswer(a: unknown): unknown[] {
+  return isObj(a) && Array.isArray(a.parts) ? a.parts : [];
 }

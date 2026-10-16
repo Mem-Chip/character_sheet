@@ -36,6 +36,8 @@ export function useSync(): SyncState {
   return useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l); }, () => st);
 }
 export const getSync = () => st;
+/** 订阅账户状态（资料库用它判断登录 / 退出，好清掉缓存） */
+export function subscribeSync(l: () => void): () => void { listeners.add(l); return () => listeners.delete(l); }
 
 /* ───── 待删除（离线时删的卡，下次联网再告诉服务器） ───── */
 

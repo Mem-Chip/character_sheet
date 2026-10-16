@@ -58,8 +58,9 @@ worktree 里没有 git 忽略的东西，要自己补：
 | `src/combat/` | 战斗引擎：`types.ts`（数据形状）、`session.ts`（命令 → 事务 → 事件，撤销 / 事后裁定 / 重放）、`exec.ts`（效果树）、`d20.ts` / `damage.ts`（检定、伤害管线）、`triggers.ts`、`effects.ts`、`turns.ts`、`space.ts`（地图移动、区域）、`rulebook.ts`（规则书 + 房规层）、`audit.ts`（数据审计） |
 | `src/bridge/` | 人物卡 → 战斗参与者（`from-sheet.ts`），战斗结果写回卡；怪物数据块 → 参与者（`from-monster.ts`、`from-text-monster.ts`）；规则数据文件清单（`rule-files.ts`） |
 | `src/factory/` | 数据化工厂：说明书（`spec.ts`，从代码生成）、拼任务（`build.ts`）、检查（`lint.ts`）、试算（`smoke.ts`）、AI 循环（`ai.ts`）。浏览器和 Node 共用 |
+| `src/library/` | 账户资料库（[LIBRARY.md](LIBRARY.md)）：条目形状 `types.ts`、结构检查 `check.ts`、条目 → 卡面 / 战斗两层规则 `rules.ts`。浏览器和服务器共用 |
 | `app/` | 界面（React + Vite，无路由库，页面状态在 `app/lib/store.ts`）。`lib/` 是状态和接口，`pages/` 是页面，`pages/combat/` 是战斗页的各块，`components/ui.tsx` 是基础组件（Dialog、Field、Tag、Panel、NumInput） |
-| `server/` | 后端（Node 原生 http + `node:sqlite`，无框架）：`main.ts` 账户、卡同步、战役；`encounters.ts` 服务器跑遭遇（SSE 推送）；`hub.ts` 战役资料库、怪物 AI 结果 |
+| `server/` | 后端（Node 原生 http + `node:sqlite`，无框架）：`main.ts` 账户、卡同步、战役；`encounters.ts` 服务器跑遭遇（SSE 推送）；`library.ts` 账户资料库（条目归账户、挂到战役、DM 开关）；`hub.ts` 战役启用的书、全服怪物 AI 结果 |
 | `data/rules-2024.json` | 状态、通用动作、武器精通、核心参数（手写） |
 | `data/dyn/*.json` | 手写的动态层数据（法术、特性）；`data/dyn/ai/*.json` 是 AI 写的（标 `ai`、未审），同键时手写的盖过 AI 的 |
 | `data/abilities-*.json` | 静态层能力数据（人物卡怎么加值、授予、选择、资源池） |
@@ -70,7 +71,8 @@ worktree 里没有 git 忽略的东西，要自己补：
 设计文档（要改核心机制时再读）：
 [COMBAT-DESIGN.md](COMBAT-DESIGN.md)（战斗引擎，§十六是实现时的修订）、
 [SERVER-DESIGN.md](SERVER-DESIGN.md)（账户、战役、服务器遭遇）、
-[DATA-HUB.md](DATA-HUB.md)（战役资料库、AI 工具）、
+[LIBRARY.md](LIBRARY.md)（账户资料库 + 数据面板 + AI 双写 + 全 5etools 搜索，取代 DATA-HUB.md 第一～三节）、
+[DATA-HUB.md](DATA-HUB.md)（战役资料库、AI 工具的历史设计）、
 [FACTORY.md](FACTORY.md)（数据化工厂的考试）、
 [PORTING.md](PORTING.md)（静态层从原项目移植）、[DICE3D.md](DICE3D.md)（3D 骰子）。
 
@@ -108,8 +110,8 @@ worktree 里没有 git 忽略的东西，要自己补：
   `src/factory/lint.ts` 的 `NODE_KEYS` / `MODIFY_KEYS` 加上字段 → `src/combat/audit.ts` 审计要认得 → 说明书 `src/factory/spec.ts` 补一句约定（类型部分是从 types.ts 自动生成的）→ `tests/combat/` 写黄金场景。
 - **改某条能力、法术的战斗数据**：手写的在 `data/dyn/features.json`、`data/dyn/spells.json`、`data/rules-2024.json`；改完 `npm run check:data`。
   AI 写的在 `data/dyn/ai/`（同键时手写的盖过它，所以「修 AI 的错」= 在手写文件里写一份同键的）。
-- **后端接口**：`server/main.ts`（账户、卡、战役）、`server/encounters.ts`（遭遇）、`server/hub.ts`（资料库）。路由就是 `if (method === … && path …)`，
-  encounters / hub 用 `d.send` / `d.fail` / `d.bodyOf`，main.ts 里直接用 `send` / `bodyOf` / `HttpError`。表在各自的 `CREATE TABLE IF NOT EXISTS` 里；现在还没有迁移机制，给已有的表加列要自己写 `ALTER TABLE`（先查列在不在），线上库是有数据的。
+- **后端接口**：`server/main.ts`（账户、卡、战役）、`server/encounters.ts`（遭遇）、`server/library.ts`（账户资料库）、`server/hub.ts`（启用的书、怪物 AI）。路由就是 `if (method === … && path …)`，
+  library / encounters / hub 用 `d.send` / `d.fail` / `d.bodyOf`，main.ts 里直接用 `send` / `bodyOf` / `HttpError`。表在各自的 `CREATE TABLE IF NOT EXISTS` 里；现在还没有迁移机制，给已有的表加列要自己写 `ALTER TABLE`（先查列在不在），线上库是有数据的。
   界面调用走 `app/lib/api.ts` 的 `api(方法, 路径, 内容)`。
 - **AI 工具**：浏览器侧 `app/lib/ai.ts`，对话框 `app/components/AiDatafy.tsx`，共享逻辑 `src/factory/ai.ts`。
   没有真密钥时，起一个本地假接口（返回 `{ choices: [{ message: { content: '…' } }] }`、带跨域头）把接口地址填成它，就能走完整个流程。

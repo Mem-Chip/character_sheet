@@ -124,7 +124,7 @@ function CampaignPanel({ c, act }: { c: Campaign; act: (fn: () => Promise<unknow
         </div>
 
         <details>
-          <summary className="small faint" style={{ cursor: 'pointer' }}>资料（启用的书、本团家规）</summary>
+          <summary className="small faint" style={{ cursor: 'pointer' }}>资料（启用的书、挂上来的内容）</summary>
           <div style={{ marginTop: 6 }}><CampaignHub c={c} /></div>
         </details>
 

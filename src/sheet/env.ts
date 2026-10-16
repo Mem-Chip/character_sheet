@@ -24,8 +24,13 @@ export interface SheetEnvOptions {
   builtinAbilities: Record<string, Json>;
   /** abilities-2024.json 的 entries；null = 只用内嵌兜底 */
   abilities: Record<string, Json> | null;
-  /** 全服 / 战役两层家规（本卡那层在角色自己的 homerules 里） */
-  homelib?: { server?: HomeRuleEntry[]; camp?: (char: CharData) => HomeRuleEntry[] };
+  /** 全服 / 战役 / 我的资料库 / 本卡四层家规（本卡那层在角色自己的 homerules 里） */
+  homelib?: {
+    server?: HomeRuleEntry[];
+    /** 我自己的资料库（账户级，对自己的卡永远生效） */
+    user?: (char: CharData) => HomeRuleEntry[];
+    camp?: (char: CharData) => HomeRuleEntry[];
+  };
   log?: (msg: string, level?: number) => void;
 }
 
@@ -45,12 +50,18 @@ export class SheetEnv {
   readonly softLimits: SoftLimits;
   readonly wildShape: WildShape;
   readonly unlocks: Unlocks;
-  readonly homelib: { server: HomeRuleEntry[]; camp: (char: CharData) => HomeRuleEntry[] };
+  homelib: {
+    server: HomeRuleEntry[];
+    user: (char: CharData) => HomeRuleEntry[];
+    camp: (char: CharData) => HomeRuleEntry[];
+  };
   /**
    * 这张卡在哪个战役、那个战役的资料（由界面挂进来：卡上的 _campaign 是战役 id）。
-   * 不在战役里 / 没挂 = 只有 2024 核心书。
+   * 不在战役里 / 没挂 = 只有 2024 核心书 + 我自己资料库带的书。
    */
   campaignOf: (char: CharData) => CampaignData | null = () => null;
+  /** 我自己资料库里的条目带的来源书（不在战役里也要能选到那本书的内容）；界面挂进来 */
+  userSources: () => string[] = () => [];
   private campRules: HomeRuleEntry[] = [];
   /** 计算前改角色的钩子（原项目 Plugins.applyCharHooks） */
   readonly charHooks: Array<(char: CharData) => void> = [];
@@ -59,7 +70,11 @@ export class SheetEnv {
   constructor(o: SheetEnvOptions) {
     this.log = o.log ?? (() => {});
     this.store = new DataStore(o.provider, this.log);
-    this.homelib = { server: o.homelib?.server ?? [], camp: o.homelib?.camp ?? (() => this.campRules) };
+    this.homelib = {
+      server: o.homelib?.server ?? [],
+      user: o.homelib?.user ?? (() => []),
+      camp: o.homelib?.camp ?? (() => this.campRules),
+    };
     this.tools = new ToolRules(this);
     this.languages = new LanguageRules(this);
     this.items = new ItemRules(this);
@@ -86,7 +101,8 @@ export class SheetEnv {
 
   /** 切到某个战役的资料：启用的书（法术文件按需装）+ 本团家规。算卡、列选项之前调用 */
   async useCampaign(c: CampaignData | null): Promise<void> {
-    const want = (c?.sources ?? []).map((s) => String(s).toUpperCase());
+    // 启用的书 = 这个战役启用的 ∪ 我自己资料库条目带的（后者让不在战役里的卡也能选到扩展书内容）
+    const want = [...new Set([...(c?.sources ?? []), ...this.userSources()].map((s) => String(s).toUpperCase()))];
     Source.extra.clear();
     for (const s of want) Source.extra.add(s);
     this.campRules = c?.homerules ?? [];

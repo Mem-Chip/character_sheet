@@ -1,10 +1,38 @@
 import { describe, expect, it } from 'vitest';
-import { RuleBook, auditRuleBook, type RuleFile, type RuleLayer } from '../../src/combat';
+import { RuleBook, auditRuleBook, encounterLayers, type RuleFile, type RuleLayer } from '../../src/combat';
 import {
   FILES, LONGSWORD, SHORTBOW, cleric, wizard, done, effectNames, evs, fighter, goblin, has, last, pending, rogue, setup,
 } from './helpers';
 
 const camp = (rules: RuleLayer['rules']): RuleLayer[] => [{ scope: 'camp', name: '测试团', rules }];
+
+/* ==================== 遭遇的规则层（官方 → 本团 → 参战者各自的资料库） ==================== */
+
+describe('#18 遭遇的规则层：本团 → 每个参战者自己的资料库', () => {
+  const hr = (id: string, value: unknown, text = id) => ({ id, key: 'core.critDamage', text, value });
+
+  it('层的顺序、名字；空的层不出现', () => {
+    const ls = encounterLayers([hr('c1', 'max')], [{ name: '小明', rules: [hr('u1', 'maxPlusRoll')] }]);
+    expect(ls.map((l) => [l.scope, l.name])).toEqual([['camp', '本团'], ['card', '小明']]);
+    expect(encounterLayers(undefined, undefined)).toEqual([]);
+    expect(encounterLayers([], [{ name: '没人', rules: [] }])).toEqual([]);
+  });
+
+  it('同一个键：参战者自己的资料库盖住本团（靠后的赢）', () => {
+    const book = new RuleBook(FILES, encounterLayers([hr('c1', 'max')], [{ name: '小明', rules: [hr('u1', 'maxPlusRoll')] }]));
+    expect(book.coreParam('critDamage')).toBe('maxPlusRoll');
+    expect(book.overriddenBy('core.critDamage')?.layer).toBe('小明');
+  });
+
+  it('两个参战者改同一个键：后加入的那个赢（并记下是谁盖的）', () => {
+    const book = new RuleBook(FILES, encounterLayers([], [
+      { name: '小明', rules: [hr('u1', 'max')] },
+      { name: '小红', rules: [hr('u2', 'maxPlusRoll')] },
+    ]));
+    expect(book.coreParam('critDamage')).toBe('maxPlusRoll');
+    expect(book.overriddenBy('core.critDamage')?.layer).toBe('小红');
+  });
+});
 
 /* ============================== 房规（§十五） ============================== */
 
