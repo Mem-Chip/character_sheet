@@ -103,7 +103,7 @@ function collect(tx: Tx, spec: WindowSpec, done: Set<string>): TriggerCand[] {
         self: owner,
         source: base.source,
         effect: base.effect,
-        target: spec.target,
+        target: spec.target ?? spec.actor,
         attacker: spec.scope.attacker ?? spec.actor,
         roll: spec.refresh ? spec.refresh() : spec.scope.roll,
       };
@@ -189,8 +189,9 @@ function fire(tx: Tx, spec: WindowSpec, c: TriggerCand): void {
     }
   }
   if (t.do?.length) {
-    // 窗口没有承受者、事件又是自己的（回合开始 / 结束）：目标就是自己（恐惧术、降咒的回合末豁免，诱捕打击的回合初伤害）
-    const target = spec.target ?? (spec.actor === c.owner ? c.owner : undefined);
+    // 窗口没有承受者（回合开始 / 结束）：目标就是事件的主人 —— 自己的回合就是自己（恐惧术、降咒的回合末豁免），
+    // 别人的回合就是那个人（「敌人在你 10 尺内开始回合时」）
+    const target = spec.target ?? spec.actor;
     const ctx: ExecCtx = {
       self: c.owner,
       source: c.source,

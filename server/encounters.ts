@@ -16,7 +16,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import {
-  DICE_MODES, RuleBook, Session, createEncounter, defaultDiceMode, diceSourceFor, footprint, gridFeet, chatEntry, type ChatRoll, type DiceMode,
+  DICE_MODES, RuleBook, Session, createEncounter, defaultDiceMode, diceSourceFor, footprint, gridFeet, lineCells, chatEntry, type ChatRoll, type DiceMode,
   type Command, type DispatchResult, type EngineCtx, type Diagonal, type OverridePatch, type Positions, type SessionSave,
 } from '../src/combat';
 import { RULE_FILES } from '../src/bridge/rule-files';
@@ -174,6 +174,16 @@ export function createEncounters(d: Deps) {
     broadcast(e, 'map', e.map);
   }
 
+  /** 引擎移动了棋子（推离、拉近，被借机攻击打倒停在半路）：照着改地图 */
+  function applyMoves(e: Live, r: DispatchResult): void {
+    if (r.status !== 'done') return;
+    for (const ev of r.events) {
+      if (ev.type !== 'moved') continue;
+      const p = ev.payload as { id: string; to: { x: number; y: number } };
+      if (e.session.state.combatants[p.id]) e.map.tokens[p.id] = { x: p.to.x, y: p.to.y };
+    }
+  }
+
   /** 这条命令针对哪个参与者（玩家只能动自己的） */
   function subjectOf(cmd: Command): string | null {
     const c = cmd as unknown as Row;
@@ -221,11 +231,13 @@ export function createEncounters(d: Deps) {
         if (turn && !(dm && b.free)) {
           if (e.session.pending) return '还有一个决定没做完';
           const ft = gridFeet(to.x - from.x, to.y - from.y, m.grid.diagonal ?? '5');
-          const r = e.session.dispatch({ type: 'move', id, ft });
+          // 带上一格一格走过的格子：引擎据此问借机攻击、算进入区域（要等决定的话棋子先放到终点）
+          const r = e.session.dispatch({ type: 'move', id, ft, path: lineCells(from, to) });
           if (r.status === 'rejected') return r.reason + (dm ? '（按住 Shift 拖不扣移动）' : '');
           out.state = true;
-        }
-        m.tokens[id] = to;
+          m.tokens[id] = to;
+          applyMoves(e, r);
+        } else m.tokens[id] = to;
         // 记下这一回合走过的路（换人、换轮就重新开始）
         if (turn) {
           const key = `${st.round}:${st.turnIndex}`;
@@ -407,6 +419,7 @@ export function createEncounters(d: Deps) {
         const ctl = subj ? e.session.state.combatants[subj]?.controller ?? subj : null;
         e.actingAs = role === 'dm' && ctl && e.owners[ctl] != null ? ctl : null;
         r = s.dispatch(cmd);
+        applyMoves(e, r);
         if (r.status !== 'rejected' && cmd.type === 'addCombatant') {
           const ctl = cmd.combatant.controller ?? cmd.combatant.id;
           // 玩家加的归自己；DM 替玩家加（带了卡主）就归卡主；DM 自己的怪不登记
@@ -424,8 +437,10 @@ export function createEncounters(d: Deps) {
         const to = s.pending.decision.to;
         if (role !== 'dm' && e.owners[to] !== u.id) return reject('这个决定不是问你的');
         // 暗骰只有 DM 能选；玩家发来的当普通确认
-        if (op === 'decide') r = s.decide(b.value === 'roll-dark' && role !== 'dm' ? 'roll' : b.value);
-        else s.cancelPending();
+        if (op === 'decide') {
+          r = s.decide(b.value === 'roll-dark' && role !== 'dm' ? 'roll' : b.value);
+          applyMoves(e, r);
+        } else s.cancelPending();
       } else if (op === 'undo' || op === 'override' || op === 'reset') {
         if (role !== 'dm') return reject('只有 DM 能撤销、裁定、清空');
         if (op === 'undo') {

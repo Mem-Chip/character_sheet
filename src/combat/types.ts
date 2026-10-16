@@ -231,13 +231,52 @@ export type Node =
   | { kind: 'if'; when: ExprSrc; then?: Node[]; else?: Node[] }
   | { kind: 'forEach'; in: 'targets' | 'area'; do: Node[] }
   | { kind: 'repeat'; n: ExprSrc; do: Node[] }
+  /** 推离 / 拉近：有地图就真的移动目标的棋子（直线，碰到别的棋子停下）；传送还是提示人手动拖 */
   | { kind: 'move'; mode: 'push' | 'pull' | 'teleport'; ft: ExprSrc }
+  /**
+   * 在地图上留下一个持续的区域（法术选的范围那些格子）。生物进入、在里面开始 / 结束回合时，对它执行 do
+   * （self = 施法者，target = 那个生物）。随专注结束；没有专注的写 rounds。
+   */
+  | {
+      kind: 'zone'; name?: string; on: ZoneWhen[]; do: Node[];
+      affects?: 'all' | 'enemies' | 'allies'; oncePerTurn?: boolean; rounds?: number;
+    }
   | { kind: 'note'; text: string }
   /** 在窗口里改正在结算的东西（反应动作的 root、触发器的 do 里用）：值在当前作用域里求（能用 slot.level），带骰子的当场掷 */
   | { kind: 'modify'; modify: Modify[] };
 
 /** attacker = 窗口的发起者（攻击者、伤害来源） */
 export type NodeTarget = 'target' | 'self' | 'attacker';
+
+export type ZoneWhen = 'enter' | 'turnStart' | 'turnEnd';
+
+/** 地图上持续存在的区域（法术留下的、DM 画的） */
+export interface Zone {
+  id: string;
+  name: string;
+  /** 占的格子 "x,y" */
+  cells: string[];
+  /** 画图用的形状（地图的像素坐标，引擎不读） */
+  tpl?: Record<string, unknown>;
+  /** 施法者；DM 画的 = null */
+  source: Id | null;
+  entryKey: string;
+  on: ZoneWhen[];
+  do: Node[];
+  affects: 'all' | 'enemies' | 'allies';
+  /** 同一个生物每回合最多受一次（进入 + 回合开始 / 结束合起来算） */
+  oncePerTurn: boolean;
+  /** 每次生效前问 DM */
+  confirm: boolean;
+  /** 随这个专注结束 */
+  link: EffectId | null;
+  /** 到第几轮开始时消失（null = 一直在，等人删） */
+  untilRound: number | null;
+  /** 施放时的环阶（区域里的表达式用 slot.level） */
+  slot?: number;
+  /** 这回合已经受过影响的：参与者 → 回合标记 */
+  hits: Record<Id, string>;
+}
 
 /** 一个规则条目（官方条目的动态层 / 状态 / 通用动作 / 精通 / 房规） */
 export interface Entry {
@@ -396,6 +435,8 @@ export interface EncounterState {
   settings: Settings;
   seq: number;
   nextId: number;
+  /** 地图上的区域（旧存档没有） */
+  zones?: Record<string, Zone>;
 }
 
 /* ============================================================================
@@ -417,7 +458,8 @@ export type Command =
   | { type: 'startCombat'; order?: Id[] }
   | { type: 'nextTurn' }
   | { type: 'endCombat' }
-  | { type: 'useAction'; actor: Id; action: string; targets?: Id[]; slotLevel?: number; options?: Record<string, unknown>; force?: boolean }
+  /** area：范围法术选的那些格子（"x,y"）和画图用的形状 —— 留下区域的法术（zone 节点）用 */
+  | { type: 'useAction'; actor: Id; action: string; targets?: Id[]; slotLevel?: number; options?: Record<string, unknown>; force?: boolean; area?: { cells: string[]; tpl?: Record<string, unknown> } }
   | { type: 'roll'; roller: Id; kind: RollKind; ability?: Ability; skill?: string; dc?: number; label?: string }
   | { type: 'applyEffect'; to: Id; template?: string; inline?: EffectTemplate; name?: string; duration?: Duration; source?: Id | null }
   | { type: 'removeEffect'; id: EffectId }
@@ -434,8 +476,14 @@ export type Command =
   /** 手动改次数：资源或某一环法术位「已用」多少 */
   | { type: 'setUsage'; id: Id; resource?: string; slot?: number; used: number }
   | { type: 'endConcentration'; id: Id }
-  /** 在地图上走了 ft 尺：回合中扣移动力，不够就拒绝（force = DM 不管够不够，扣到 0 为止） */
-  | { type: 'move'; id: Id; ft: number; force?: boolean }
+  /**
+   * 在地图上走了 ft 尺：回合中扣移动力，不够就拒绝（force = DM 不管够不够，扣到 0 为止）。
+   * path：一格一格走过的格子（含起点、终点，棋子左上角）—— 有它才检查借机攻击和进入区域
+   */
+  | { type: 'move'; id: Id; ft: number; force?: boolean; path?: Array<{ x: number; y: number }> }
+  /** DM 在地图上画的区域（伤害 / 效果） */
+  | { type: 'createZone'; zone: Pick<Zone, 'name' | 'cells' | 'tpl' | 'on' | 'do' | 'affects' | 'oncePerTurn' | 'confirm'> & { rounds?: number } }
+  | { type: 'removeZone'; id: string }
   | { type: 'advanceTime'; minutes: number }
   | { type: 'rest'; kind: 'short' | 'long'; ids?: Id[] }
   | { type: 'setSettings'; settings: Partial<Settings> };

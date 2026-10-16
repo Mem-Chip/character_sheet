@@ -57,6 +57,8 @@ export interface Aim {
   range: number | null;
   /** 范围法术：在地图上放模板，圈里的人自动选中；self = 从施法者身上出发 */
   area?: { area: Area; self: boolean };
+  /** 范围定下来的格子和形状（留下区域的法术要用） */
+  placed?: { cells: string[]; tpl: Record<string, unknown> };
 }
 
 /** 标点 / 分享的测距（不存，广播完过几秒就淡出） */
@@ -431,9 +433,9 @@ export const combat = {
     set({ aim: { ...a, picks: [...a.picks, id] } }, false);
   },
   /** 范围模板圈到的人：整个换掉 */
-  aimSet(ids: string[]): void {
+  aimSet(ids: string[], placed?: Aim['placed']): void {
     const a = ui.aim;
-    if (a) set({ aim: { ...a, picks: ids } }, false);
+    if (a) set({ aim: { ...a, picks: ids, ...(placed ? { placed } : {}) } }, false);
   },
   /** 去掉一份 */
   aimUnpick(id: string): void {
@@ -445,9 +447,10 @@ export const combat = {
   aimCancel(): void { if (ui.aim) set({ aim: null }, false); },
   aimConfirm(): void {
     const a = ui.aim;
-    if (!a || !a.picks.length) return;
+    // 范围里一个人都没有也能放（只留下区域的火墙）
+    if (!a || (!a.picks.length && !a.placed)) return;
     set({ aim: null, targets: [] });
-    combat.dispatch({ ...a.cmd, targets: a.picks } as Command);
+    combat.dispatch({ ...a.cmd, targets: a.picks, ...(a.placed && a.cmd.type === 'useAction' ? { area: a.placed } : {}) } as Command);
   },
   /** 点了参与者（地图棋子、先攻条、列表）：选目标模式里是加目标，平时是选中 */
   clickCombatant(id: string): void {

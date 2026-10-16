@@ -87,6 +87,11 @@ export function describe(ev: GameEvent, name: (id: unknown) => string, secret: S
     case 'effectResumed': return L(`${name(p.bearer)} 的「${p.name}」恢复生效`);
     case 'triggerFired': return L(`${name(p.owner)}：${p.label}`, 'warn');
     case 'note': return L(String(p.text));
+    case 'moved': return p.forced ? L(`${name(p.id)} 被移动到新位置`) : null;
+    case 'leftReach': return L(`${name(p.id)} 离开了 ${name(p.from)} 的触及范围`, 'warn');
+    case 'zoneCreated': return L(`地图上出现区域「${p.zone.name}」`);
+    case 'zoneRemoved': return L(`区域「${p.name}」消失${p.reason ? `（${p.reason}）` : ''}`);
+    case 'zoneHit': return L(`${name(p.id)} ${p.why === 'enter' ? '进入' : p.why === 'turnStart' ? '在里面开始回合' : '在里面结束回合'}：区域「${p.name}」`, 'warn');
     case 'died': return L(`${name(p.id)} 死亡（${p.reason}）`, 'danger');
     case 'deathSaveResult': return L(`${name(p.id)}：${p.result}`, 'heal');
     case 'deathSaveFailed': return L(`${name(p.id)} 死亡豁免失败 ×${p.failures}（${p.by}）`, 'danger');
@@ -173,6 +178,8 @@ export function txTitle(cmd: { type: string } & P, name: (id: unknown) => string
     case 'setUsage': return '调整次数';
     case 'endConcentration': return `${name(cmd.id)} 终止专注`;
     case 'move': return `${name(cmd.id)} 移动`;
+    case 'createZone': return `DM 放下区域「${cmd.zone.name}」`;
+    case 'removeZone': return 'DM 删除区域';
     case 'advanceTime': return `时间流逝 ${cmd.minutes} 分钟`;
     case 'rest': return cmd.kind === 'long' ? '长休' : '短休';
     case 'setSettings': return '设置';

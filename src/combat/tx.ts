@@ -114,9 +114,15 @@ export class Tx {
   get rules(): RuleBook { return this.ctx.rules; }
 
   private sp: Spatial | null | undefined;
+  private posLive: Positions | null | undefined;
+  /** 这笔事务里的棋子位置：起点是发起时的快照（不改输入），引擎移动棋子时跟着改 */
+  get pos(): Positions | null {
+    if (this.posLive === undefined) this.posLive = this.input.positions ? structuredClone(this.input.positions) : null;
+    return this.posLive;
+  }
   /** 空间查询：这笔操作记了棋子位置就按位置算，否则用 ctx 给的（没有就是 null → 问人） */
   get spatial(): Spatial | null {
-    if (this.sp === undefined) this.sp = this.input.positions ? gridSpatial(this.input.positions, this.state, this.input.diagonal) : this.ctx.spatial ?? null;
+    if (this.sp === undefined) this.sp = this.pos ? gridSpatial(this.pos, this.state, this.input.diagonal) : this.ctx.spatial ?? null;
     return this.sp;
   }
 

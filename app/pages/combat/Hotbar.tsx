@@ -48,7 +48,7 @@ export function AimBar({ ui, name }: { ui: CombatUi; name: Namer }) {
         {!a.picks.length && <span className="faint small">还没选。</span>}
         <span style={{ flex: 1 }} />
         <button className="btn sm" onClick={combat.aimCancel}>取消</button>
-        <button className="btn primary" disabled={!a.picks.length} onClick={combat.aimConfirm}>确认{a.cmd.type === 'useAction' && a.cmd.slotLevel ? `（${a.cmd.slotLevel} 环）` : ''}</button>
+        <button className="btn primary" disabled={!a.picks.length && !a.placed} onClick={combat.aimConfirm}>确认{a.cmd.type === 'useAction' && a.cmd.slotLevel ? `（${a.cmd.slotLevel} 环）` : ''}</button>
       </div>
     </div>
   );

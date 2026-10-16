@@ -57,7 +57,8 @@ const WINDOWS: Array<[string, string, string, string, string]> = [
   ['damageIncoming', 'before', '伤害来源 / 承受者', 'damage（掷出来的总数）、attack', 'reduceDamage（值可以带骰子，掷一次）、halveDamage、cancel、evasion'],
   ['damageTaken', 'after', '来源 / 承受者', 'damage', '—'],
   ['reducedTo0', 'before', '来源 / 承受者', 'damage', 'setHp（「改为降到 1」这类）'],
-  ['turnStarted / turnEnded', 'after', '回合的主人', '—', '—'],
+  ['turnStarted / turnEnded', 'after', '回合的主人（触发器里 target 也是他）', '—', '—'],
+  ['leftReach', 'after', '走开的人 / 被离开触及范围的人', '—（借机攻击引擎自己会问，不用写）', '—'],
   ['spellCast', 'after', '施法者', 'event.spell、event.key', '—'],
   ['initiativeRolled', 'after', '掷先攻的人', '—', '—'],
   ['restCompleted', 'after', '休息的人', 'event.kind（short / long）', '—'],
@@ -152,6 +153,20 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
 
 反应类能力想「看到伤害再决定」（直觉闪避）：挂在 \`attackHit\` before，再写 \`deferTo: 'damageIncoming'\`。
 
+**某人开始 / 结束回合时**（「敌人在你 10 尺内开始回合时」）：\`on: 'turnStarted'\`、\`role: 'enemy'\`（或 ally / any），\`when: 'dist(self, target) <= 10'\` —— 回合窗口里 \`target\` 就是回合的主人；
+写在效应里、只管承受者自己回合的用 \`role: 'actor'\`。灵光（aura）授予的触发器也一样。
+
+**借机攻击**引擎自己处理：走的人离开敌人的触及范围（有触及武器 10 尺，否则 5 尺）时，问那个敌人要不要用反应打一下；撤离了的不会被打。
+「移动不引发借机攻击」的效应写 \`flags: { cannot: ['provoke'] }\`；被离开时还要做点什么的（哨兵）挂 \`leftReach\` 窗口。
+
+**地图区域**（火墙、蛛网、刃之屏障这类持续存在的范围）：动作的 \`targeting.type\` 是 \`area\`，root 里写
+\`{ kind: 'zone', on: ['enter', 'turnStart'], do: [ …对进来的生物做什么… ] }\`。区域占的就是施法时选的那些格子；
+生物进入（自己走进来、被推进来）、在里面开始 / 结束回合时执行 do（\`self\` = 施法者，\`target\` = 那个生物，能用 \`slot.level\`）。
+同一个生物每回合最多受一次（\`oncePerTurn\`，缺省 true）；只对敌人 / 盟友的写 \`affects\`。专注法术的区域随专注结束，否则写 \`rounds\`。
+施放当下就在范围里的生物要受的效果，照常写在 root 的其他节点里（区域只管之后）。
+
+**推离 / 拉近**（\`move\` 节点）在地图上会真的移动目标：沿两者连线的方向走直线，碰到别的棋子停下；拉近到贴身为止。传送还是提示人手动拖。
+
 **带 \`trigger\` 的反应动作也能改正在结算的东西**：在 \`root\` 里写 \`{ kind: 'modify', modify: [ … ] }\`（和触发器的 modify 一样的写法），只能挂在 before 窗口。
 值在动作自己的作用域里求，所以能用 \`slot.level\`：反冲术 = \`damageIncoming\` before 的反应法术，\`root: [{ kind: 'modify', modify: [{ op: 'reduceDamage', value: '(slot.level)d6 + self.spell.mod' }] }, …]\`。
 反应动作默认打窗口的承受者（至圣斩打被命中的、护盾术护自己）；要打**窗口的发起者**（攻击者、伤害来源、施法者），在 \`trigger\` 上写 \`aim: 'actor'\`（炼狱叱喝、法术反制）。
@@ -177,7 +192,7 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
 12. **让人选**：几个选项选一个 → \`choose\` 节点（选项可以带 \`when\`，条件不满足就不列）；选一个数 → \`number\` 节点，结果在 \`vars.<var>\`。
    \`choose\` 也可以写 \`var\`：选中项的 \`value\`（没写就是 \`label\`）放进 \`vars.<var>\`，后面的节点能用 —— 伤害类型 \`type: 'vars.elem'\`；
    要让效应记住（防护能量伤害），\`applyEffect\` 上写 \`state: { type: 'vars.elem' }\`，效应里 \`statics: [{ kind: 'resist', values: ['effect.state.type'] }]\`（抗性 / 免疫 / 易伤的类型可以写成表达式）。
-13. **引擎做不到的**（移动、视线、地形）→ \`move\` / \`note\` 节点，或在 \`when\` 里用 \`ask('…')\` 问人。**没把握就整条写成 \`{ "automation": "manual", "text": "…" }\`**：不自动化，比写错强。
+13. **引擎做不到的**（传送、视线、光照）→ \`move\` / \`note\` 节点，或在 \`when\` 里用 \`ask('…')\` 问人。**没把握就整条写成 \`{ "automation": "manual", "text": "…" }\`**：不自动化，比写错强。
 14. 伤害类型用中文：${DAMAGE_TYPES.join(' ')}。技能用中文：${SKILLS.join(' ')}。
 15. 恒定的数值（AC +1、速度 +10、熟练）不写；只有带条件的写成 \`rollMods\` / \`statics\`（在效应里）。
 16. **对攻击者 / 伤害来源生效**（黯冰狱铠的反噬、火焰护盾）：节点上写 \`to: 'attacker'\`（damage、heal、tempHp、applyEffect 都行）。在命中、受伤这些窗口的触发器和反应里用。

@@ -5,9 +5,10 @@ import { applyEffect, checkEndsOn, effectiveView, endConcentration, endEffect } 
 import { Dice } from '../expr';
 import { engineDice } from './dice';
 import { executeAction, findAction } from './exec';
+import { travel } from './space';
 import { advanceTime, nextTurn, rest, startCombat } from './turns';
 import { NeedDecision, Rejected, Tx, setPostEmit, type EngineCtx, type TapeEntry, type TxInput } from './tx';
-import type { Action, CombatantView, Command, Decision, EncounterState, GameEvent, OverridePatch, Settings, UserId } from './types';
+import type { Action, CombatantView, Command, Decision, EncounterState, GameEvent, OverridePatch, Settings, UserId, Zone } from './types';
 
 setPostEmit(checkEndsOn);
 
@@ -94,6 +95,7 @@ function handle(tx: Tx, cmd: Command): void {
       executeAction(tx, {
         actor: cmd.actor, actionKey: key, action, targets: cmd.targets ?? [], slotLevel: cmd.slotLevel,
         force: cmd.force, cause: null, options: cmd.options,
+        ...(cmd.area ? { area: cmd.area } : {}),
       });
       return;
     }
@@ -193,6 +195,26 @@ function handle(tx: Tx, cmd: Command): void {
       if (ft > left && !cmd.force) throw new Rejected(`${c.name} 只剩 ${left} 尺移动，这一步要 ${ft} 尺`);
       const seq = tx.emit('note', { text: `${c.name} 移动 ${ft} 尺（剩 ${Math.max(0, left - ft)} 尺）`, owner: cmd.id });
       tx.emit('economyChanged', { id: cmd.id, patch: { move: Math.max(0, left - ft) } }, seq);
+      // 一格一格走：借机攻击、进入区域
+      if (cmd.path && cmd.path.length > 1) travel(tx, cmd.id, cmd.path, { forced: false, cause: seq });
+      return;
+    }
+    case 'createZone': {
+      const z = cmd.zone;
+      if (!z.cells?.length) throw new Rejected('区域里没有格子');
+      const round = tx.state.round;
+      const zone: Zone = {
+        id: tx.nextId('z'), name: z.name || '区域', cells: z.cells.slice(), ...(z.tpl ? { tpl: z.tpl } : {}), source: null, entryKey: 'zone',
+        on: z.on, do: z.do, affects: 'all', oncePerTurn: z.oncePerTurn ?? true, confirm: !!z.confirm, link: null,
+        untilRound: z.rounds && round !== null ? round + z.rounds : null, hits: {},
+      };
+      tx.emit('zoneCreated', { zone });
+      return;
+    }
+    case 'removeZone': {
+      const z = tx.state.zones?.[cmd.id];
+      if (!z) throw new Rejected('没有这个区域');
+      tx.emit('zoneRemoved', { id: z.id, name: z.name, reason: '移除' });
       return;
     }
     case 'advanceTime':

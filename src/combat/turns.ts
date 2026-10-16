@@ -3,6 +3,7 @@ import { applyHeal, kill } from './damage';
 import { d20Test } from './d20';
 import { effectiveView, effectsOf, endEffect, roundsOf } from './effects';
 import { makeEnv } from './scope';
+import { expireZones, zonesOnTurn } from './space';
 import { fireWindow } from './triggers';
 import { Rejected, type Tx } from './tx';
 import { freshEconomy } from './view';
@@ -66,7 +67,10 @@ export function nextTurn(tx: Tx, cause: number | null): void {
     const c = tx.state.combatants[order[idx]];
     if (c && !(c.live.dead && c.kind !== 'pc')) break;     // 死掉的怪物跳过；PC 死了也照常轮到（方便 DM 处理）
   }
-  if (round !== tx.state.round) tx.emit('roundStarted', { round }, cause);
+  if (round !== tx.state.round) {
+    tx.emit('roundStarted', { round }, cause);
+    expireZones(tx, round, cause);
+  }
   const seq = tx.emit('turnChanged', { round, turnIndex: idx }, cause);
   beginTurn(tx, order[idx], seq);
 }
@@ -94,6 +98,7 @@ export function beginTurn(tx: Tx, id: Id, cause: number | null): void {
   saveEndsCheck(tx, id, 'turnStart', seq);
   if (c.kind === 'pc' && c.live.hp === 0 && !c.live.dead && !c.live.stable) deathSave(tx, id, seq);
   fireWindow(tx, { event: 'turnStarted', window: 'after', actor: id, scope: {}, cause: seq });
+  zonesOnTurn(tx, id, 'turnStart', seq);
 }
 
 export function endTurn(tx: Tx, id: Id, cause: number | null): void {
@@ -105,6 +110,7 @@ export function endTurn(tx: Tx, id: Id, cause: number | null): void {
     if (u && u.at === 'turnEnd' && untilOf(e) === id && e.timing.untilCount >= (u.nth ?? 1)) endEffect(tx, e.id, '持续时间到', seq);
   }
   fireWindow(tx, { event: 'turnEnded', window: 'after', actor: id, scope: {}, cause: seq });
+  zonesOnTurn(tx, id, 'turnEnd', seq);
   tx.emit('turnEnded', { id }, seq);
 }
 

@@ -1,6 +1,7 @@
 import { run, runBool, runInt, Unknown } from '../expr';
 import { kill, normType } from './damage';
 import { runNodes } from './exec';
+import { zonesOfConcentration } from './space';
 import { makeEnv } from './scope';
 import type { Tx } from './tx';
 import type { ActiveEffect, CombatantView, Duration, EffectId, EffectTemplate, GameEvent, Id } from './types';
@@ -246,6 +247,7 @@ export function endEffect(tx: Tx, id: EffectId, reason: string, cause: number | 
     for (const linked of Object.values(tx.state.effects).filter((x) => x.link?.concentration === id)) {
       endEffect(tx, linked.id, `专注结束（${e.name}）`, seq);
     }
+    zonesOfConcentration(tx, id, seq);
   }
   restack(tx, e.bearer, seq);
   if (tpl?.onEnd?.length && tx.state.combatants[e.bearer]) {

@@ -17,7 +17,7 @@ import type { Action, EffectTemplate, Entry, Node, RollMod, Trigger } from './ty
 /** 引擎会打开窗口的事件（触发器只能挂这些） */
 export const WINDOW_EVENTS = new Set([
   'turnStarted', 'turnEnded', 'initiativeRolled', 'spellCast', 'd20Rolled', 'attackHit', 'attackMissed',
-  'saveForced', 'damageIncoming', 'damageTaken', 'reducedTo0', 'restCompleted',
+  'saveForced', 'damageIncoming', 'damageTaken', 'reducedTo0', 'restCompleted', 'leftReach',
 ]);
 
 /** 引擎会发出的事件（endsOn 能监听的） */
@@ -25,11 +25,12 @@ export const EMITTED_EVENTS = new Set([
   ...WINDOW_EVENTS,
   'actionUsed', 'actionDone', 'saveFailed', 'saveSucceeded', 'damageApplied', 'damageRolled', 'healed', 'tempHpGained',
   'effectApplied', 'effectEnded', 'turnEnding', 'roundStarted', 'combatStarted', 'combatEnded', 'died', 'timeAdvanced',
+  'moved', 'zoneHit',
 ]);
 
 const NODE_KINDS = new Set([
   'attack', 'save', 'check', 'damage', 'addDamage', 'heal', 'tempHp', 'applyEffect', 'removeEffect', 'extendEffect',
-  'resource', 'economy', 'choose', 'if', 'forEach', 'repeat', 'move', 'note', 'number', 'modify',
+  'resource', 'economy', 'choose', 'if', 'forEach', 'repeat', 'move', 'note', 'number', 'modify', 'zone',
 ]);
 const ROLL_OPS = new Set(['adv', 'disadv', 'add', 'addDice', 'autoFail', 'autoSucceed', 'critRange', 'autoCritOnHit', 'minD20', 'minDie', 'targetAdd', 'maxDice']);
 const MODIFY_OPS = new Set(['reroll', 'addToRoll', 'reduceDamage', 'halveDamage', 'setHp', 'cancel', 'evasion']);
@@ -139,6 +140,11 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
         break;
       case 'move':
         expr(n.ft, 'node', NUM, `${at}.ft`);
+        break;
+      case 'zone':
+        if (!n.on?.length) out.push(`${where(at)}：zone 节点缺少 on（进入 / 回合开始 / 回合结束）`);
+        for (const w of n.on ?? []) if (!['enter', 'turnStart', 'turnEnd'].includes(w)) out.push(`${where(at)}：zone 的 on 不认识「${w}」`);
+        nodes(n.do, `${at}.do`);
         break;
       case 'modify':
         for (const m of n.modify ?? []) {

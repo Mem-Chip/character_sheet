@@ -3,9 +3,10 @@ import { applyDamagePacket, applyHeal, grantTempHp, maxDiceFor, normType, rollCo
 import { controllerOf, d20Test, rollValue } from './d20';
 import { activeTemplates, applyEffect, effectiveView, effectsOf, endEffect, startConcentration } from './effects';
 import { makeEnv, nameOf, type ScopeData } from './scope';
+import { shove } from './space';
 import { blockedEconomy, fireWindow } from './triggers';
 import { Rejected, type Tx } from './tx';
-import type { Action, ActiveEffect, AttackInfo, AttackRow, Cost, Duration, EffectId, Id, Modify, Node } from './types';
+import type { Action, ActiveEffect, AttackInfo, AttackRow, Cost, Duration, EffectId, Id, Modify, Node, Zone } from './types';
 
 /**
  * 效果树解释器 + 动作执行（COMBAT-DESIGN §4.1 / §4.2）。
@@ -51,6 +52,8 @@ export interface ExecCtx {
   vars?: Record<string, number | string>;
   /** 窗口里能改正在结算的东西（modify 节点用）；不在 before 窗口里就没有 */
   modify?: (m: Modify) => void;
+  /** 范围法术选的格子（zone 节点用） */
+  area?: { cells: string[]; tpl?: Record<string, unknown> };
   /** 当前在豁免的哪个分支里（伤害包据此知道「成功减半」，反射闪避用） */
   save?: { ability: string; success: boolean; half: boolean };
 }
@@ -286,9 +289,28 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
       for (let i = 0; i < k; i++) runNodes(tx, n.do, ctx);
       return;
     }
-    case 'move':
-      tx.emit('note', { kind: 'move', text: `${ctx.actionName}：${n.mode === 'push' ? '推离' : n.mode === 'pull' ? '拉近' : '传送'} ${num(tx, ctx, n.ft, '距离')} 尺（请在地图上移动）`, target: ctx.target }, ctx.cause);
+    case 'move': {
+      const ft = num(tx, ctx, n.ft, '距离');
+      // 推离 / 拉近：有地图就真的动棋子；传送、或者不在地图上 → 提示人手动拖
+      const done = n.mode !== 'teleport' && !!ctx.target && shove(tx, ctx.self, ctx.target, ft, n.mode, ctx.cause);
+      if (!done) tx.emit('note', { kind: 'move', text: `${ctx.actionName}：${n.mode === 'push' ? '推离' : n.mode === 'pull' ? '拉近' : '传送'} ${ft} 尺（请在地图上移动）`, target: ctx.target }, ctx.cause);
       return;
+    }
+    case 'zone': {
+      if (!ctx.area?.cells.length) {
+        tx.emit('note', { text: `${ctx.actionName}：没有在地图上选范围，区域没有放上去（效果请手动处理）`, owner: ctx.self }, ctx.cause);
+        return;
+      }
+      const round = tx.state.round;
+      const zone: Zone = {
+        id: tx.nextId('z'), name: n.name ?? ctx.actionName, cells: ctx.area.cells.slice(), ...(ctx.area.tpl ? { tpl: ctx.area.tpl } : {}),
+        source: ctx.self, entryKey: ctx.entryKey, on: n.on, do: n.do, affects: n.affects ?? 'all',
+        oncePerTurn: n.oncePerTurn ?? true, confirm: false, link: ctx.concentrationId ?? null,
+        untilRound: n.rounds && round !== null ? round + n.rounds : null, hits: {}, ...(ctx.slot !== undefined ? { slot: ctx.slot } : {}),
+      };
+      tx.emit('zoneCreated', { zone }, ctx.cause);
+      return;
+    }
     case 'note':
       tx.emit('note', { text: n.text, owner: ctx.self, target: ctx.target }, ctx.cause);
       return;
@@ -550,7 +572,7 @@ export function payCosts(tx: Tx, id: Id, costs: Cost[], label: string, cause: nu
  * 动作
  * ========================================================================== */
 
-function collectDamageDefs(nodes: Node[], out: Record<string, Extract<Node, { kind: 'damage' }>> = {}): Record<string, Extract<Node, { kind: 'damage' }>> {
+export function collectDamageDefs(nodes: Node[], out: Record<string, Extract<Node, { kind: 'damage' }>> = {}): Record<string, Extract<Node, { kind: 'damage' }>> {
   for (const n of nodes) {
     if (n.kind === 'damage' && n.id) out[n.id] = n;
     for (const v of Object.values(n)) {
@@ -604,6 +626,7 @@ export interface ExecuteOpts {
   options?: Record<string, unknown>;
   /** 由窗口触发的动作（至圣斩、护盾术）：带上窗口的上下文 —— 命中窗口里的伤害包、攻击信息、检定 */
   window?: Pick<ExecCtx, 'packet' | 'attack' | 'attacker' | 'roll' | 'damage' | 'event' | 'modify'>;
+  area?: ExecCtx['area'];
 }
 
 /** 这个动作的代价（动作经济 + 声明的代价） */
@@ -683,7 +706,8 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
     }
     const t = action.targeting;
     if (t && (t.type === 'creature' || t.type === 'area')) {
-      if (!o.targets.length) throw new Rejected(`「${action.name}」需要选择目标`);
+      // 范围里可以一个生物都没有（只留下区域的火墙），只要选了范围
+      if (!o.targets.length && !(t.type === 'area' && o.area)) throw new Rejected(`「${action.name}」需要选择目标`);
       if (t.count !== undefined && t.type === 'creature') {
         const max = maxTargets(tx, actor, action, o.slotLevel) ?? Infinity;
         if (o.targets.length > max) throw new Rejected(`「${action.name}」最多 ${max} 个目标，选了 ${o.targets.length} 个`);
@@ -760,6 +784,7 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
     damageDefs: collectDamageDefs(action.root),
     originKind: isSpell ? 'spell' : (action.tags ?? []).includes('weapon') ? 'item' : 'feature',
     vars: {},
+    ...(o.area ? { area: o.area } : {}),
     ...o.window,
   };
   runNodes(tx, action.root, ctx);

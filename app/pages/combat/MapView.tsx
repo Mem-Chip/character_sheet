@@ -13,7 +13,8 @@
  * - 改动先在本地生效（乐观更新），再发给服务器；服务器广播回来的地图为准。
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { footprint, gridFeet, pathFeet, type Session } from '../../../src/combat';
+import { footprint, gridFeet, pathFeet, reachOf, type Session } from '../../../src/combat';
+import { ZoneDialog } from './ZoneDialog';
 import { cellHit, coveredCells, directional, snapHalf, snapLen, spellTpl, tplLabel, tplOrigin, tplPath, type Tpl } from '../../lib/area';
 import { PING_LIFE } from '../../lib/combat';
 import { tokenMenu } from './TokenMenu';
@@ -67,6 +68,8 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
   const [fixed, setFixed] = useState<Tpl | null>(null);
   /** 选中的形状（移动工具下点一下）：拖着挪，Delete 删，Esc 取消 */
   const [selShape, setSelShape] = useState<string | null>(null);
+  /** DM 正在把哪个形状变成区域 */
+  const [zoneOf, setZoneOf] = useState<string | null>(null);
   const selShapeRef = useRef<string | null>(null);
   selShapeRef.current = selShape;
   const space = useRef(false);
@@ -156,6 +159,26 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
   const current = st.round !== null ? st.order[st.turnIndex] : null;
   const visible = (id: string) => !combat.isHidden(id);
   const tokens = Object.entries(map.tokens).filter(([id]) => st.combatants[id] && visible(id));
+  /** 选中的棋子在哪些敌人的触及范围里：把那些敌人的触及范围框出来（走出去会被借机攻击） */
+  const threats = useMemo(() => {
+    const id = ui.selected, me = id ? map.tokens[id] : undefined, c = id ? st.combatants[id] : undefined;
+    if (!id || !me || !c || c.live.dead) return [];
+    const n = footprint(c.base.size);
+    const out: Array<{ id: string; x: number; y: number; w: number }> = [];
+    for (const [eid, t] of tokens) {
+      const e = st.combatants[eid];
+      if (eid === id || e.live.dead || e.side === c.side) continue;
+      const reach = s.peek((tx) => reachOf(tx, eid));
+      if (reach == null) continue;
+      const m = footprint(e.base.size);
+      const dx = Math.max(0, me.x - (t.x + m - 1), t.x - (me.x + n - 1));
+      const dy = Math.max(0, me.y - (t.y + m - 1), t.y - (me.y + n - 1));
+      if (gridFeet(dx, dy, diagonal) > reach) continue;
+      const r = reach / 5;
+      out.push({ id: eid, x: t.x - r, y: t.y - r, w: m + 2 * r });
+    }
+    return out;
+  }, [ui.selected, map.tokens, s, diagonal]);
   const offMap = Object.keys(st.combatants).filter((id) => !map.tokens[id] && visible(id) && (dm || combat.canControl(id)));
 
   /* ───── 范围法术的模板 ───── */
@@ -183,7 +206,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
     for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (cellHit(t, map.grid, tk.x + i, tk.y + j)) return true;
     return false;
   }).map(([id]) => id);
-  const fix = (t: Tpl) => { setFixed(t); combat.aimSet(caught(t)); };
+  const fix = (t: Tpl) => { setFixed(t); combat.aimSet(caught(t), { cells: coveredCells(t, map.grid).map((c) => `${c.x},${c.y}`), tpl: t as unknown as Record<string, unknown> }); };
   // 换了动作：模板重来；不用选方向的贴身范围（光环、身边一圈）直接定下来
   useEffect(() => {
     setFixed(null);
@@ -431,6 +454,28 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
           {dm && <button className="btn ghost sm danger" onClick={() => { if (confirm('擦掉所有人画的线和形状？')) void combat.map({ action: 'clear' }); }}>全部擦掉</button>}
         </div>
       )}
+      {dm && tool === 'move' && selShape && (map.shapes ?? []).some((x) => x.id === selShape) && (
+        <div className="hud map-bar">
+          <span className="tiny faint">选中了一个形状</span>
+          <button className="btn sm" onClick={() => setZoneOf(selShape)} title="变成持续的区域：进入、在里面开始 / 结束回合时受伤害或状态">设为区域…</button>
+        </div>
+      )}
+      {zoneOf && (() => {
+        const sh = (map.shapes ?? []).find((x) => x.id === zoneOf);
+        if (!sh) return null;
+        const t = tplOf(sh);
+        return (
+          <ZoneDialog
+            cells={coveredCells(t, map.grid).map((c) => `${c.x},${c.y}`)} tpl={t as unknown as Record<string, unknown>}
+            onClose={() => setZoneOf(null)}
+            onDone={() => {
+              setZoneOf(null); setSelShape(null);
+              combat.patchMap((m) => { m.shapes = (m.shapes ?? []).filter((x) => x.id !== sh.id); });
+              void combat.map({ action: 'erase', ids: [sh.id] });
+            }}
+          />
+        );
+      })()}
       {tool === 'erase' && <div className="hud map-bar tiny faint">按住拖过线条或形状就擦掉。{dm ? '' : '只能擦你自己画的。'}</div>}
       {setup && dm && <MapSetup map={map} />}
       {offMap.length > 0 && (
@@ -465,6 +510,27 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
                 className={drag?.kind === 'erase' && drag.ids.has(x.id) ? 'erasing' : undefined}
                 style={{ pointerEvents: tool === 'erase' ? 'stroke' : 'none' }}
               />
+            ))}
+            {Object.values(st.zones ?? {}).map((z) => {
+              const cells = z.cells.map((k) => { const [x, y] = k.split(',').map(Number); return { x, y }; });
+              const tpl = z.tpl as Tpl | undefined;
+              const lb = tpl ? tplLabel(tpl, g) : { x: map.grid.ox + (cells[0].x + 0.5) * g, y: map.grid.oy + (cells[0].y + 0.5) * g };
+              return (
+                <g key={z.id} className="map-zone">
+                  <path d={cellsPath(cells, map.grid)} className="zcells" />
+                  {tpl && <path d={tplPath(tpl)} className="zline" strokeWidth={2 / view.k} strokeDasharray={`${8 / view.k} ${4 / view.k}`} />}
+                  <text className={'map-dist zname' + (dm ? ' del' : '')} fontSize={13 / view.k} x={lb.x} y={lb.y - 16 / view.k}
+                    style={{ pointerEvents: dm ? 'auto' : 'none' }}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => { if (dm && confirm(`删除区域「${z.name}」？`)) combat.dispatch({ type: 'removeZone', id: z.id }); }}>
+                    {z.name}{dm && <title>点一下删除</title>}
+                  </text>
+                </g>
+              );
+            })}
+            {threats.map((t) => (
+              <rect key={'th' + t.id} className="map-threat" x={map.grid.ox + t.x * g} y={map.grid.oy + t.y * g} width={t.w * g} height={t.w * g}
+                strokeWidth={2 / view.k} strokeDasharray={`${6 / view.k} ${4 / view.k}`}><title>{name(t.id)} 的触及范围：走出去会被借机攻击</title></rect>
             ))}
             {(map.shapes ?? []).map((x) => {
               const tpl = tplOf(x);

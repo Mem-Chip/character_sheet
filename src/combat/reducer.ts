@@ -1,4 +1,4 @@
-import type { ActiveEffect, Combatant, EncounterState, Economy, GameEvent, RememberedAnswer, Settings } from './types';
+import type { ActiveEffect, Combatant, EncounterState, Economy, GameEvent, RememberedAnswer, Settings, Zone } from './types';
 
 /**
  * Reducer：**唯一**修改遭遇状态的地方。
@@ -17,6 +17,21 @@ export function applyEvent(s: EncounterState, ev: GameEvent): void {
     return x;
   };
   switch (ev.type) {
+    case 'zoneCreated': {
+      const z = p.zone as Zone;
+      (s.zones ??= {})[z.id] = structuredClone(z);
+      const n = Number(/^z(\d+)$/.exec(z.id)?.[1]);
+      if (Number.isFinite(n) && s.nextId <= n) s.nextId = n + 1;
+      break;
+    }
+    case 'zoneRemoved':
+      if (s.zones) delete s.zones[p.id as string];
+      break;
+    case 'zoneHit': {
+      const z = s.zones?.[p.zone as string];
+      if (z) z.hits[p.id as string] = p.at as string;
+      break;
+    }
     case 'combatantAdded': {
       const cb = p.combatant as Combatant;
       s.combatants[cb.id] = structuredClone(cb);
