@@ -184,3 +184,20 @@ describe('回合开始 / 结束时的效应触发器', () => {
     expect(hp(s, 'w')).toBe(20);
   });
 });
+
+describe('瞬发法术', () => {
+  it('先声明（不占动作，花 2 术法点），下一道动作法术用附赠动作施放，动作还留着', () => {
+    const { s, dice } = setupT([
+      wizard({ sources: ['XPHB:spell:火球术', 'XPHB:瞬发法术'], resources: { sorcery_points: 4 }, slots: { 3: 1 } }),
+      goblin('g', { hpMax: 60 }),
+    ]);
+    done(s.dispatch({ type: 'startCombat', order: ['w', 'g'] }));
+    done(s.dispatch({ type: 'useAction', actor: 'w', action: 'XPHB:瞬发法术#use', targets: [] }));
+    expect(s.state.combatants.w.live.resourcesUsed.sorcery_points).toBe(2);
+    dice.push(5, 1, 1, 1, 1, 1, 1, 1, 1);
+    done(s.dispatch({ type: 'useAction', actor: 'w', action: 'XPHB:spell:火球术#cast', targets: ['g'], slotLevel: 3 }));
+    const e = s.state.combatants.w.economy;
+    expect([e.action, e.bonus]).toEqual([1, 0]);
+    expect(Object.values(s.state.effects).some((x) => x.name === '瞬发法术')).toBe(false);
+  });
+});

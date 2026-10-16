@@ -120,6 +120,7 @@ function overrideText(p: P, name: (id: unknown) => string): string {
     case 'tempHp': return `给 ${name(p.id)} ${p.amount} 点临时生命值`;
     case 'applyEffect': return `给 ${name(p.to)} 施加「${String(p.template).split(':').pop()}」`;
     case 'removeEffect': return '移除效应';
+    case 'economy': return `${name(p.id)} 的${Object.entries(p.patch as Record<string, number>).map(([k, v]) => `${({ action: '动作', bonus: '附赠动作', reaction: '反应', move: '移动' } as Record<string, string>)[k] ?? k}${k === 'move' ? ` ${v} 尺` : v ? '可用' : '已用'}`).join('、')}`;
     case 'usage': return `${name(p.id)} 的${p.slot != null ? ` ${p.slot} 环法术位` : `「${p.resource}」`}已用次数改为 ${p.used}`;
     default: return String(p.what);
   }
@@ -176,6 +177,7 @@ export function txTitle(cmd: { type: string } & P, name: (id: unknown) => string
     case 'tempHp': return '临时生命值';
     case 'manualCast': return `${name(cmd.actor)} 施放「${cmd.spell}」`;
     case 'setUsage': return '调整次数';
+    case 'setEconomy': return `${name(cmd.id)} 调整动作`;
     case 'endConcentration': return `${name(cmd.id)} 终止专注`;
     case 'move': return `${name(cmd.id)} 移动`;
     case 'createZone': return `DM 放下区域「${cmd.zone.name}」`;

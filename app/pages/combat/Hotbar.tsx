@@ -8,11 +8,15 @@ import type { Session } from '../../../src/combat';
 import { Term } from '../../components/Term';
 import { termOfKey } from '../../lib/terms';
 import { combat, type CombatUi } from '../../lib/combat';
+import { setResHidden, useHiddenRes } from '../../lib/hotres';
+import { Clip } from '../../components/ui';
 import type { Engine } from '../../lib/engine';
 import { CostIcon, actionsFor, costKind, freeSlots, runAction, type ActItem, type Group } from './Actor';
 import { woundOf } from './Initiative';
 import { effectLabel } from './shared';
 import type { Namer } from './shared';
+
+const ECON_CN = { action: '动作', bonus: '附赠', reaction: '反应' } as const;
 
 /** 动作分页：未自动化的法术并进「法术」；时机能力只是列出来让人知道 */
 const TABS: Array<{ k: string; label: string; groups: Group[] }> = [
@@ -64,6 +68,7 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
   /** 升环：点左边的法术位选一个环阶，下一个法术就按这一环放（放完回到默认的最低环）；换人就清掉 */
   const [castAt, setCastAt] = useState<{ id: string; L: number } | null>(null);
   const [asReaction, setAsReaction] = useState(false);
+  const hiddenRes = useHiddenRes(id ?? '');
 
   const fold = <button className="btn ghost sm hot-fold" onClick={onToggle} title={collapsed ? '展开行动栏' : '收起行动栏'}>{collapsed ? '展开' : '收起'}</button>;
   // 收起：一行，只剩名字、生命值和结束回合
@@ -131,6 +136,7 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
   const tabs = TABS.map((t) => ({ ...t, list: items.filter((x) => t.groups.includes(x.group)) })).filter((t) => t.list.length);
   const cur = tabs.find((t) => t.k === tab) ?? tabs[0];
   const econ = c.economy;
+  const resList = Object.entries(v.resources).filter(([k, n]) => n > 0 && !hiddenRes.includes(k));
   const slots = Object.entries(v.slots).filter(([, n]) => n > 0);
   const pct = v.hpMax ? Math.max(0, Math.min(100, (c.live.hp / v.hpMax) * 100)) : 0;
 
@@ -159,9 +165,14 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
         </div>
         {inCombat && (
           <div className="hot-econ">
-            <span className={econ.action ? 'on' : ''}><CostIcon kind="action" />动作</span>
-            <span className={econ.bonus ? 'on' : ''}><CostIcon kind="bonus" />附赠</span>
-            <span className={econ.reaction ? 'on' : ''}><CostIcon kind="reaction" />反应</span>
+            {/* 点一下在「可用 / 已用」之间切换（裁定、规则没覆盖到的额外动作），记进日志 */}
+            {(['action', 'bonus', 'reaction'] as const).map((k) => (
+              <button key={k} className={econ[k] ? 'on' : ''} disabled={!mine}
+                title={`${ECON_CN[k]}：${econ[k] ? `可用${econ[k] > 1 ? ` ×${econ[k]}` : ''}` : '已用'}。点一下手动改成${econ[k] ? '已用' : '可用'}`}
+                onClick={() => combat.dispatch({ type: 'setEconomy', id, patch: { [k]: econ[k] ? 0 : 1 } })}>
+                <CostIcon kind={k} />{ECON_CN[k]}{econ[k] > 1 ? `×${econ[k]}` : ''}
+              </button>
+            ))}
             {econ.attacksLeft > 0 && <span className="on">攻击 ×{econ.attacksLeft}</span>}
           </div>
         )}
@@ -178,6 +189,25 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
                 >
                   <i>{L}</i>{Array.from({ length: n }, (_, k) => <b key={k} className={k < left ? 'on' : ''} />)}
                 </button>
+              );
+            })}
+          </div>
+        )}
+        {resList.length > 0 && (
+          <div className="hot-res">
+            {resList.map(([k, n]) => {
+              const used = c.live.resourcesUsed[k] ?? 0;
+              const set = (u: number) => combat.dispatch({ type: 'setUsage', id, resource: k, used: Math.max(0, Math.min(n, u)) });
+              return (
+                <span key={k} className={'hot-res-item' + (used >= n ? ' empty' : '')}>
+                  <Clip text={(v.resourceNames ?? {})[k] ?? k} />
+                  <b className="num">{n - used}<small>/{n}</small></b>
+                  {mine && <>
+                    <button className="tag-x" disabled={used >= n} onClick={() => set(used + 1)} title="用掉 1">−</button>
+                    <button className="tag-x" disabled={used <= 0} onClick={() => set(used - 1)} title="恢复 1">+</button>
+                  </>}
+                  <button className="tag-x" onClick={() => setResHidden(id, k, true)} title="从动作栏拿掉（「详情」的资源表里可以加回来）">✕</button>
+                </span>
               );
             })}
           </div>

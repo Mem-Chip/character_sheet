@@ -195,7 +195,7 @@ export function createEncounters(d: Deps) {
   };
 
   /** 玩家能发的命令 */
-  const PLAYER_CMDS = new Set(['useAction', 'roll', 'addCombatant', 'removeCombatant', 'refreshCombatant', 'heal', 'tempHp', 'setUsage', 'manualCast', 'damage']);
+  const PLAYER_CMDS = new Set(['useAction', 'roll', 'addCombatant', 'removeCombatant', 'refreshCombatant', 'heal', 'tempHp', 'setUsage', 'manualCast', 'damage', 'setEconomy']);
 
   function check(e: Live, u: User, role: 'dm' | 'player', cmd: Command): string | null {
     if (role === 'dm') return null;

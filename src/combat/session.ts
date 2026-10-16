@@ -183,6 +183,17 @@ function handle(tx: Tx, cmd: Command): void {
       else if (cmd.resource) tx.emit('resourceUsed', { id: cmd.id, resource: cmd.resource, used }, seq);
       return;
     }
+    case 'setEconomy': {
+      if (!tx.state.combatants[cmd.id]) throw new Rejected(`没有参与者 ${cmd.id}`);
+      const patch: Record<string, number> = {};
+      for (const k of ['action', 'bonus', 'reaction', 'move'] as const) {
+        const v = cmd.patch[k];
+        if (typeof v === 'number' && Number.isFinite(v)) patch[k] = Math.max(0, Math.min(k === 'move' ? 1000 : 9, Math.round(v)));
+      }
+      const seq = tx.emit('manualOverride', { what: 'economy', id: cmd.id, patch });
+      tx.emit('economyChanged', { id: cmd.id, patch }, seq);
+      return;
+    }
     case 'endConcentration':
       endConcentration(tx, cmd.id, '主动终止', null);
       return;

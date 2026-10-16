@@ -1,9 +1,10 @@
 /** 选中的参与者：数值、行动经济、可用动作、效应、手动调整 */
+import { setResHidden, useHiddenRes } from '../../lib/hotres';
 import { useMemo, useState } from 'react';
 import { ABIL_CN, ABILS, type Ability } from '../../../src/expr';
 import type { Json } from '../../../src/sheet';
 import {
-  actionCosts, canPay, concentrationOf, describeCost, maxTargets, weaponAction,
+  actionCosts, canPay, concentrationOf, describeCost, effectiveAction, maxTargets, weaponAction,
   type Action, type Command, type ActiveEffect, type Cost, type Duration, type RuleBook, type Session,
 } from '../../../src/combat';
 import { Clip, NumInput, Panel, Pips, Stat, Tag, sgn } from '../../components/ui';
@@ -109,11 +110,13 @@ export function actionsFor(s: Session, rules: RuleBook, spells: Json[], id: stri
     seen.add(key);
     for (const a of e.actions) {
       if (a.trigger) continue;   // 窗口触发的动作列在「时机到了会问」里
-      const costs = actionCosts(a);
+      // 瞬发法术：动作法术按附赠动作算代价
+      const eff = s.peek((tx) => effectiveAction(tx, id, a));
+      const costs = actionCosts(eff);
       const ok = s.peek((tx) => canPay(tx, id, costs));
       const slotCost = (a.cost ?? []).find((k): k is Extract<Cost, { slot: unknown }> => 'slot' in k);
       const group: Group = (a.tags ?? []).includes('spell') ? '法术' : key.includes(':action:') ? '通用动作' : '特性';
-      const act = typeof a.activation === 'string' ? ACT_CN[a.activation] : '';
+      const act = typeof eff.activation === 'string' ? ACT_CN[eff.activation] + (eff !== a ? '（瞬发）' : '') : '';
       const t = a.targeting;
       out.push({
         ref: `${key}#${a.id}`, group, name: a.name, term: termOfKey(key),
@@ -170,6 +173,7 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
   const [cond, setCond] = useState('');
   const [mark, setMark] = useState('');
   const [roll, setRoll] = useState<{ kind: 'check' | 'save'; ability: Ability; skill: string; dc: string }>({ kind: 'save', ability: 'dex', skill: '', dc: '' });
+  const hiddenRes = useHiddenRes(id ?? '');
 
   if (!id) return <Panel title="行动"><div className="empty">在左边选一个参与者。</div></Panel>;
 
@@ -365,7 +369,7 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
               ))}
               {Object.entries(v.resources).map(([k, n]) => (
                 <tr key={'r' + k}>
-                  <td><Clip text={(v.resourceNames ?? {})[k] ?? k} /></td>
+                  <td><Clip text={(v.resourceNames ?? {})[k] ?? k} />{hiddenRes.includes(k) && <button className="btn ghost sm" onClick={() => setResHidden(id, k, false)} title="放回底部动作栏">放回动作栏</button>}</td>
                   <td className="r"><Usage max={n} used={c.live.resourcesUsed[k] ?? 0} onChange={(used) => combat.dispatch({ type: 'setUsage', id, resource: k, used })} /></td>
                 </tr>
               ))}

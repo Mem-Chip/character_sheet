@@ -671,8 +671,21 @@ const scalesWithSlot = (a: Action) => JSON.stringify(a.root).includes('slot.leve
 
 const ACT_CN: Record<string, string> = { action: '动作', bonus: '附赠动作', reaction: '反应', free: '免费', none: '' };
 
+/** 瞬发：持有者身上带 quicken 标记的效应（没有 = undefined） */
+function quickenOf(tx: Tx, actor: Id, action: Action): ActiveEffect | undefined {
+  if (action.activation !== 'action' || !(action.tags ?? []).includes('spell')) return undefined;
+  return activeTemplates(tx, actor).find((a) => a.tpl.flags?.quicken)?.effect;
+}
+
+/** 这个动作实际怎么施放（瞬发法术：施法时间为动作的法术改成附赠动作）。界面算代价也用它 */
+export function effectiveAction(tx: Tx, actor: Id, action: Action): Action {
+  return quickenOf(tx, actor, action) ? { ...action, activation: 'bonus' } : action;
+}
+
 export function executeAction(tx: Tx, o: ExecuteOpts): void {
-  const { actor, action } = o;
+  const quick = o.options?.as === 'reaction' ? undefined : quickenOf(tx, o.actor, o.action);
+  const actor = o.actor;
+  const action = quick ? { ...o.action, activation: 'bonus' as const } : o.action;
   const c = tx.state.combatants[actor];
   if (!c) throw new Rejected(`没有参与者 ${actor}`);
   const isSpell = (action.tags ?? []).includes('spell');
@@ -760,6 +773,7 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
     }
   }
   const slot = payCosts(tx, actor, costs, action.name, seq, slotLevel);
+  if (quick) endEffect(tx, quick.id, `用在了「${action.name}」上（附赠动作施放）`, seq);
   if (slot !== undefined && inCombat(tx) && isSpell) tx.emit('economyChanged', { id: actor, patch: { slotSpellCast: true } }, seq);
   if (isSpell) {
     const cast = tx.emit('spellCast', { actor, spell: action.name, key: entryKey, slotLevel: slot ?? null }, seq);

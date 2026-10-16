@@ -418,6 +418,23 @@
           "rollMods": [{ "on": { "kind": "attack", "attack": { "spell": true } }, "who": "bearer", "op": "adv", "label": "先天术法" }]
         }
       }
+    },
+    "XPHB:瞬发法术": {
+      "name": "瞬发法术",
+      "automation": "full",
+      "text": "超魔法：消耗 2 术法点，本回合下一道施法时间为动作的法术改用附赠动作施放。先声明（不占动作），再照常施法。2024：一回合只能消耗一个法术位施法，引擎照常限制。",
+      "actions": [{
+        "id": "use", "name": "瞬发法术", "activation": "free",
+        "cost": [{ "resource": "sorcery_points", "n": 2 }],
+        "requires": "!self.hasEffect('瞬发法术')",
+        "root": [{ "kind": "applyEffect", "to": "self", "template": "瞬发法术", "duration": { "until": { "at": "turnEnd", "of": "bearer", "nth": 0 } } }]
+      }],
+      "effects": {
+        "瞬发法术": {
+          "text": "本回合下一道施法时间为动作的法术改用附赠动作施放。",
+          "flags": { "quicken": true }
+        }
+      }
     }
   }
 }

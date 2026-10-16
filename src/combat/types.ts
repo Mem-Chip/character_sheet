@@ -65,6 +65,8 @@ export interface Flags {
   cannot?: string[];
   /** 选目标时排除效应来源（魅惑） */
   forbidTarget?: 'source';
+  /** 瞬发法术：下一道施法时间为动作的法术改用附赠动作施放（放完这个效应就结束） */
+  quicken?: boolean;
 }
 
 export interface Duration {
@@ -475,6 +477,8 @@ export type Command =
     }
   /** 手动改次数：资源或某一环法术位「已用」多少 */
   | { type: 'setUsage'; id: Id; resource?: string; slot?: number; used: number }
+  /** 手动改动作经济（DM 裁定、规则没覆盖到的额外动作）：给的那几项改成这个数 */
+  | { type: 'setEconomy'; id: Id; patch: { action?: number; bonus?: number; reaction?: number; move?: number } }
   | { type: 'endConcentration'; id: Id }
   /**
    * 在地图上走了 ft 尺：回合中扣移动力，不够就拒绝（force = DM 不管够不够，扣到 0 为止）。
