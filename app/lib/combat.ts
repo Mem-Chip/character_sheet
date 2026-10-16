@@ -169,7 +169,15 @@ function ctxFor(engine: Engine): EngineCtx {
     rules: engine.rules,
     // 读档重跑时磁带里有骰面，不会走到这里；只有新掷的骰子按当前设置取来源。
     // 战役遭遇：骰子只由服务器掷。服务器那边正停着等骰面时，本地重放也必须停在同一处，不能自己补一颗
-    diceFor: (user) => (ui.remote ? physicalDice : diceSourceFor(ui.dice[user] ?? ui.dice['*'] ?? defaultDiceMode(user))),
+    // 战役遭遇：客户端从不自己掷（骰面都在服务器的磁带里）；没掷的就停下来等。
+    // 停下来的样子要和服务器一致：按这个人的骰子设置（DM 代操作时按 DM 的），实体骰 → 填骰面，其余 → 确认
+    diceFor: (user) => {
+      const r = ui.remote;
+      if (!r) return diceSourceFor(ui.dice[user] ?? ui.dice['*'] ?? defaultDiceMode(user));
+      const who = r.actingAs === user ? 'dm' : user;
+      const mode = r.dice[who] ?? r.dice['*'] ?? defaultDiceMode(who);
+      return mode === 'physical' ? physicalDice : { id: 'confirm', roll: () => null };
+    },
   };
 }
 
