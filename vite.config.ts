@@ -29,10 +29,17 @@ function localData(): Plugin {
   };
 }
 
+/** 命令行的 --port（vite 自己也认它） */
+const argPort = (() => { const i = process.argv.indexOf('--port'); return i > 0 ? Number(process.argv[i + 1]) : NaN; })();
+const UI_PORT = Number.isFinite(argPort) ? argPort : Number(process.env.VITE_PORT ?? 5280);
+const API_PORT = Number(process.env.API_PORT ?? 8789 + (UI_PORT - 5280));
+
 export default defineConfig({
   // 相对路径：构建产物放在任何子路径下都能用（线上在 /v2/）
   base: './',
   plugins: [react(), localData()],
-  // 后端（server/main.ts，默认 8789）：开发时把 /api 转过去。几个 worktree 同时开发时用 VITE_PORT / API_PORT 错开端口（后端那边是 PORT=…）
-  server: { port: Number(process.env.VITE_PORT ?? 5280), proxy: { '/api': `http://127.0.0.1:${process.env.API_PORT ?? 8789}` } },
+  // 后端（server/main.ts，默认 8789）：开发时把 /api 转过去。
+  // 几个 worktree 同时开发：`npx vite --port 5281` 配 `npx tsx server/main.ts --port 8790`（界面端口 +1，后端端口跟着 +1）；
+  // 也可以用环境变量 VITE_PORT / API_PORT。
+  server: { port: UI_PORT, proxy: { '/api': `http://127.0.0.1:${API_PORT}` } },
 });

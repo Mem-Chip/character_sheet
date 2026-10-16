@@ -36,9 +36,17 @@ worktree 里没有 git 忽略的东西，要自己补：
 2. **5etools 数据**（`data/5etools/`，约 11 MB）：复制主检出的那份，或者链过去（PowerShell）：
    `New-Item -ItemType Junction -Path data\5etools -Target C:\Users\70278\Desktop\ProjectAI\claude\data\5etools`
    没有这份数据时，静态层的测试会**整组跳过**（`hasLocalData()`），看起来是绿的，其实没测。
-3. 几个 worktree 同时开服务器要错开端口：后端 `PORT=8790 npm run server`，界面 `VITE_PORT=5281 API_PORT=8790 npm run dev`
-   （Claude 的预览：`.claude/launch.json` 不进 git，自己加一条配置）。
-4. 本地数据库是新的、空的：自己注册测试账号（只在本地库里）。
+3. 几个 worktree 同时开服务器要错开端口：界面 `npx vite --port 5281`、后端 `npx tsx server/main.ts --port 8790`。
+   界面端口每 +1，它转发 /api 的后端端口也自动 +1（5281 → 8790、5282 → 8791），任何 shell 都一样写；要单独指定就用环境变量 `API_PORT`。
+   Claude 的预览读 `.claude/launch.json`（没进 git，别提交），在 worktree 里自己建一份：
+   ```json
+   { "version": "0.0.1", "configurations": [
+     { "name": "app", "runtimeExecutable": "npx", "runtimeArgs": ["vite", "--port", "5281"], "port": 5281 },
+     { "name": "api", "runtimeExecutable": "npx", "runtimeArgs": ["tsx", "server/main.ts", "--port", "8790"], "port": 8790 } ] }
+   ```
+   后端改了代码要重启（没有热更新）；界面是 Vite 热更新。
+4. 本地数据库（`data/server.db`，每个 worktree 各一份，开始是空的）：在界面上注册测试账号（只在本地库里）。
+   测战役功能要两个号：一个建团当 DM，另一个用邀请码加入。
 5. **不要从 worktree 部署。** 部署（`.deploy.env` 也不在 worktree 里）只在主检出、合并之后做，而且要用户同意。
 
 ## 目录
@@ -82,6 +90,37 @@ worktree 里没有 git 忽略的东西，要自己补：
 - **5etools 数据**取自 https://5e.kiwee.top（中文站，允许跨域），本地缓存在 `data/5etools`，构建时复制进 `dist/5etools`。
   2024 判据、重印过滤在 `src/sheet/source.ts`。
 
+## 常见改动从哪下手
+
+照着已有的同类改动写最稳：`git log --stat` 找一个相近的提交看它动了哪些文件。
+
+- **人物卡上加显示 / 加一项计算**：算在 `src/sheet/pipeline.ts`（按阶段：属性 → 调整值 → … → 汇总，用 `ctx.addEffect` / `ctx.pluck` 传值，`ctx.set` 出结果），
+  显示在 `app/pages/SheetView.tsx`（卡面）/ `SheetItems.tsx`（物品）/ `SheetData.tsx`（数据页）。结果变了要更新快照。
+  要进战斗的，`src/bridge/from-sheet.ts` 的 `viewFromSheet` 把它带进参与者。
+- **战斗界面的小改动**：战斗页是 `app/pages/Combat.tsx` 拼起来的，各块在 `app/pages/combat/`：
+  `Hotbar.tsx`（底部动作栏）、`Actor.tsx`（详情抽屉：动作、资源、手动调整）、`MapView.tsx` / `TokenMenu.tsx`（地图、棋子菜单）、
+  `Log.tsx`（日志）、`Dialogs.tsx`（决定弹窗）、`Initiative.tsx`、`Roster.tsx`、`Bestiary.tsx`（加怪物）。
+  界面状态和发命令在 `app/lib/combat.ts`（`combat.dispatch(命令)`）。日志的每一行怎么写在 `app/lib/events.ts` 的 `describe`。
+- **新的战斗命令**（比如短休）：`src/combat/types.ts` 的 `Command` 加一种 → `src/combat/session.ts` 的 `switch (cmd.type)` 里处理（在事务里 `tx.emit` 事件）→
+  事件怎么改状态写在 `src/combat/reducer.ts` → 日志文字在 `app/lib/events.ts`。玩家也能发的命令要加进 `server/encounters.ts` 的 `PLAYER_CMDS`。
+  战斗结果要写回人物卡的，改 `from-sheet.ts` 的 `syncLiveToChar`。
+- **数据里的新写法**（新的效果节点、新的 modify 操作）：`types.ts` 加形状 → `exec.ts`（节点）或 `triggers.ts` / `d20.ts` / `damage.ts`（窗口里的操作）实现 →
+  `src/factory/lint.ts` 的 `NODE_KEYS` / `MODIFY_KEYS` 加上字段 → `src/combat/audit.ts` 审计要认得 → 说明书 `src/factory/spec.ts` 补一句约定（类型部分是从 types.ts 自动生成的）→ `tests/combat/` 写黄金场景。
+- **改某条能力、法术的战斗数据**：手写的在 `data/dyn/features.json`、`data/dyn/spells.json`、`data/rules-2024.json`；改完 `npm run check:data`。
+  AI 写的在 `data/dyn/ai/`（同键时手写的盖过它，所以「修 AI 的错」= 在手写文件里写一份同键的）。
+- **后端接口**：`server/main.ts`（账户、卡、战役）、`server/encounters.ts`（遭遇）、`server/hub.ts`（资料库）。路由就是 `if (method === … && path …)`，
+  encounters / hub 用 `d.send` / `d.fail` / `d.bodyOf`，main.ts 里直接用 `send` / `bodyOf` / `HttpError`。表在各自的 `CREATE TABLE IF NOT EXISTS` 里；现在还没有迁移机制，给已有的表加列要自己写 `ALTER TABLE`（先查列在不在），线上库是有数据的。
+  界面调用走 `app/lib/api.ts` 的 `api(方法, 路径, 内容)`。
+- **AI 工具**：浏览器侧 `app/lib/ai.ts`，对话框 `app/components/AiDatafy.tsx`，共享逻辑 `src/factory/ai.ts`。
+  没有真密钥时，起一个本地假接口（返回 `{ choices: [{ message: { content: '…' } }] }`、带跨域头）把接口地址填成它，就能走完整个流程。
+
+## 怎么验证
+
+- `npm run typecheck && npm test`；动了规则数据再加 `npm run check:data`。
+- 界面改动：起 app + api，登录本地测试账号实际点一遍。战斗相关的，本地遭遇（不用登录）就能测大部分；
+  多人同步、DM / 玩家权限要用战役遭遇（两个账号，两个浏览器窗口或一个无痕窗口）。
+- 改了引擎：本地遭遇和战役遭遇都试一下（战役遭遇是服务器跑的，后端要重启才用上新代码）。
+
 ## 写代码的习惯
 
 - 照着周围代码的风格写：中文注释，说「为什么」和「这是什么」，简短；文件头一段说明这个模块管什么。
@@ -96,7 +135,8 @@ worktree 里没有 git 忽略的东西，要自己补：
 
 - 提交说明用中文，第一行概括，后面分点说做了什么；结尾带用户要求的署名行（看系统提示里的 attribution）。
 - 只在用户要求时提交 / 推送。部署前要用户点头。
-- 开发分支 `feat/ui`，worktree 的分支做完合并回 `feat/ui`。
+- 开发分支 `feat/ui`，worktree 的分支做完合并回 `feat/ui`（合并前先把 `feat/ui` 的新提交合进来，跑一遍测试）。
+- 做完 BACKLOG 里的一条就把它删掉，发现新问题就加一条（写清楚「在哪」）。几个 worktree 都改 BACKLOG 时合并会冲突：两边的增删都保留。
 
 ## 安全
 

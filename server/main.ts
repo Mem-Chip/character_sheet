@@ -19,7 +19,8 @@ import { DatabaseSync } from 'node:sqlite';
 import { createEncounters } from './encounters';
 import { createHub } from './hub';
 
-const PORT = Number(process.env.PORT ?? 8789);
+const argPort = process.argv.indexOf('--port');
+const PORT = Number(argPort > 0 ? process.argv[argPort + 1] : process.env.PORT ?? 8789);
 const DB_FILE = resolve(process.env.DB ?? 'data/server.db');
 const SECURE_COOKIE = process.env.SECURE_COOKIE === '1';
 const COOKIE = 'dnd2_sid';
@@ -345,7 +346,7 @@ const encounters = createEncounters({ ...deps, campaignRules: hub.campaignRules 
 
 /* ───────────── 命令行 ───────────── */
 
-const [cmd, ...args] = process.argv.slice(2);
+const [cmd, ...args] = process.argv.slice(2).filter((_, i, a) => a[i] !== '--port' && a[i - 1] !== '--port');
 if (cmd === 'reset-password') {
   const [name, password] = args;
   if (!name || !password) { console.error('用法：node server/main.ts reset-password 名字 新密码'); process.exit(1); }
