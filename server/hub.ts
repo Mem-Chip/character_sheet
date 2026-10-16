@@ -122,7 +122,7 @@ export function createHub(d: Deps) {
       const role = d.roleIn(u, cid);
       if (!role) throw d.fail(404, '没有这个战役');
       if (method === 'GET' && !sub) {
-        d.send(res, 200, { sources: sourcesOf(cid), items: itemsOf(cid) });
+        d.send(res, 200, { sources: sourcesOf(cid), items: itemsOf(cid), role });
         return true;
       }
       if (role !== 'dm') throw d.fail(403, '只有 DM 能改战役资料');

@@ -10,7 +10,7 @@
 import {
   RuleBook, Session, createEncounter, engineDice, makeCombatant, makeView, seededRng,
   type AttackRow, type CombatantView, type Command, type DispatchResult, type Entry, type RuleFile,
-} from '../../src/combat';
+} from '../combat';
 
 export interface SmokeResult {
   /** 运行时的规则错误（空 = 通过） */

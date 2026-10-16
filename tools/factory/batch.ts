@@ -20,7 +20,7 @@ import type { Entry, RuleFile } from '../../src/combat';
 import { buildSpec, declaredResources, flattenEntries, lintEntry, renderTask, type ResourceDecl } from '../../src/factory';
 import type { Json } from '../../src/sheet';
 import { createNodeEnv } from '../../src/sheet/node-env';
-import { genericOwner, smoke } from './smoke';
+import { genericOwner, smoke } from '../../src/factory/smoke';
 import { buildTask, ownerView, spellsOf } from './sources';
 
 const ROOT = resolve(import.meta.dirname, '..', '..');

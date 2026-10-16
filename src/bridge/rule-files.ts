@@ -12,3 +12,6 @@ import aiItems from '../../data/dyn/ai/items.json';
 import type { RuleFile } from '../combat';
 
 export const RULE_FILES = [aiItems, aiBooks, aiFeatures, aiSpells, rules2024, spellsDyn, featuresDyn] as unknown as RuleFile[];
+
+/** 手写的（AI 数据化的例子从这里取） */
+export const GOLDEN_FILES = [rules2024, spellsDyn, featuresDyn] as unknown as RuleFile[];

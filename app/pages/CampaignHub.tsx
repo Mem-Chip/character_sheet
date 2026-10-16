@@ -3,9 +3,13 @@
  * DM 能改，玩家只能看。卡在战役里时，建卡、升级、战斗都按这里的资料来。
  */
 import { useEffect, useMemo, useState } from 'react';
+import { AiDatafy } from '../components/AiDatafy';
 import { Dialog, Field, Tag } from '../components/ui';
+import { declaredResources } from '../../src/factory';
+import { isSkip } from '../../src/factory/ai';
+import { jobForKey } from '../lib/ai';
 import type { Campaign } from '../lib/api';
-import { loadBooks, removeItem, saveItem, setSources, useHub, type Book, type HubItem } from '../lib/hub';
+import { loadBooks, newItemId, removeItem, saveItem, setSources, useHub, type Book, type HubItem } from '../lib/hub';
 import { useEngine } from '../lib/useSheet';
 
 /** 2024 核心三本：一直在 */
@@ -16,8 +20,6 @@ const GROUP_CN: Record<string, string> = {
 };
 /** 没有规则内容的书，默认不列 */
 const HIDDEN_GROUPS = new Set(['screen', 'recipe', 'homecraft']);
-
-const newItemId = () => 'hr-' + Date.now().toString(36).slice(-6) + Math.random().toString(36).slice(2, 6);
 
 export function CampaignHub({ c }: { c: Campaign }) {
   const hub = useHub(c.id);
@@ -73,7 +75,7 @@ export function CampaignHub({ c }: { c: Campaign }) {
       </div>
 
       {picking && <BookPicker books={books} chosen={hub.sources} onClose={() => setPicking(false)} onSave={async (list) => { await setSources(c.id, list); setPicking(false); }} />}
-      {edit && <ItemEditor item={edit} readOnly={!dm} onClose={() => setEdit(null)} onSave={(it) => saveItem(c.id, it)} />}
+      {edit && <ItemEditor cid={c.id} item={edit} readOnly={!dm} onClose={() => setEdit(null)} onSave={(it) => saveItem(c.id, it)} />}
     </div>
   );
 }
@@ -129,7 +131,10 @@ function BookPicker(p: { books: Book[]; chosen: string[]; onClose: () => void; o
 
 const pretty = (v: unknown) => (v === undefined ? '' : JSON.stringify(v, null, 2));
 
-function ItemEditor(p: { item: HubItem; readOnly: boolean; onClose: () => void; onSave: (it: HubItem) => Promise<string[]> }) {
+function ItemEditor(p: { cid: string; item: HubItem; readOnly: boolean; onClose: () => void; onSave: (it: HubItem) => Promise<string[]> }) {
+  const { engine } = useEngine();
+  const [ai, setAi] = useState(false);
+  const [by, setBy] = useState(p.item.by);
   const [name, setName] = useState(p.item.name);
   const [text, setText] = useState(p.item.text);
   const [covers, setCovers] = useState(p.item.covers ?? '');
@@ -147,7 +152,7 @@ function ItemEditor(p: { item: HubItem; readOnly: boolean; onClose: () => void; 
       try { return JSON.parse(s); } catch { bad.push(`${what}不是合法的 JSON`); return undefined; }
     };
     const it: HubItem = {
-      id: p.item.id, name: name.trim(), text, by: p.item.by, reviewed,
+      id: p.item.id, name: name.trim(), text, by, reviewed,
       ...(covers.trim() ? { covers: covers.trim() } : {}),
       ...(pickable ? { pickable: true } : {}),
     };
@@ -164,7 +169,7 @@ function ItemEditor(p: { item: HubItem; readOnly: boolean; onClose: () => void; 
 
   return (
     <Dialog title={ro ? name : p.item.name ? `编辑「${p.item.name}」` : '新的本团内容'} onClose={p.onClose} footer={<>
-      {!ro && p.item.by !== 'hand' && <label className="row small"><input type="checkbox" checked={reviewed} onChange={(e) => setReviewed(e.target.checked)} />审过了</label>}
+      {!ro && by !== 'hand' && <label className="row small"><input type="checkbox" checked={reviewed} onChange={(e) => setReviewed(e.target.checked)} />审过了</label>}
       <span style={{ flex: 1 }} />
       <button className="btn" onClick={p.onClose}>{ro ? '关闭' : '取消'}</button>
       {!ro && <button className="btn primary" disabled={!name.trim()} onClick={() => void save()}>保存</button>}
@@ -185,9 +190,45 @@ function ItemEditor(p: { item: HubItem; readOnly: boolean; onClose: () => void; 
         <Field label="战斗数据（JSON：{ entry } 整条；{ key, patch } 改官方条目的字段；key 不写 = 覆盖的那条 / 新内容）">
           <textarea rows={8} className="mono" value={combat} readOnly={ro} onChange={(e) => setCombat(e.target.value)} placeholder='{ "entry": { "name": "…", "actions": [] } }' />
         </Field>
-        {!ro && <div className="small muted">改了之后：人物卡马上按新的算；已经开着的遭遇要 DM 在遭遇菜单里点「更新本团规则」。AI 帮写的入口下一步做。</div>}
+        {!ro && (
+          <div className="row small" style={{ gap: 6 }}>
+            <button className="btn sm" disabled={!engine || !name.trim()} onClick={() => setAi(true)}>AI 写战斗数据…</button>
+            <span className="muted">按上面的名字和说明（覆盖官方能力的，再加上官方原文）让 AI 写，检查过了填进「战斗数据」。卡面数据还是手写。</span>
+          </div>
+        )}
+        {!ro && <div className="small muted">改了之后：人物卡马上按新的算；已经开着的遭遇要 DM 在遭遇菜单里点「更新本团规则」。</div>}
         {problems.length > 0 && <div className="dangerline small">{problems.map((x, i) => <div key={i}>{x}</div>)}</div>}
       </div>
+      {ai && engine && (() => {
+        let cur: Record<string, unknown> = {};
+        try { cur = combat.trim() ? JSON.parse(combat) : {}; } catch { /* 坏的就当没有 */ }
+        const key = String(cur.key ?? '').trim() || covers.trim() || `HR:${p.item.id}`;
+        return (
+          <AiDatafy
+            title={`AI 写「${name.trim()}」的战斗数据`}
+            initial={cur.entry}
+            saveLabel="填进战斗数据"
+            prepare={() => jobForKey(engine, p.cid, key, { name: name.trim(), text, houseRule: covers.trim() ? text : undefined })}
+            onSave={async (a, aiBy) => {
+              if (isSkip(a)) return [`AI 认为这条没有战斗里要写的：${a.skip}`];
+              const { patch: _p, value: _v, ...rest } = cur;
+              setCombat(pretty({ ...rest, entry: a }));
+              // 条目自己声明的次数池，卡面也要有（人物卡据此生成这个池）
+              const decls = declaredResources(a);
+              if (decls.length) {
+                let sh: Record<string, unknown[]> = {};
+                try { sh = sheet.trim() ? JSON.parse(sheet) : {}; } catch { /* 坏的就当没有 */ }
+                const res = [...(sh.resources ?? [])] as Array<Record<string, unknown>>;
+                for (const d of decls) if (!res.some((r) => r.id === d.id)) res.push({ id: d.id, name: d.name, formula: d.formula, recovery: d.recovery });
+                setSheet(pretty({ ...sh, resources: res }));
+              }
+              setBy(aiBy);
+              setReviewed(false);
+            }}
+            onClose={() => setAi(false)}
+          />
+        );
+      })()}
     </Dialog>
   );
 }

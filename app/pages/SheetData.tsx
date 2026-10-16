@@ -16,7 +16,11 @@ import { Term } from '../components/Term';
 import { termOfKey } from '../lib/terms';
 import { Field, Panel, Tag } from '../components/ui';
 import type { Engine } from '../lib/engine';
-import { useCardCampaign, useHub } from '../lib/hub';
+import { saveItem, useCardCampaign, useHub, type HubItem } from '../lib/hub';
+import { AiDatafy } from '../components/AiDatafy';
+import { isSkip } from '../../src/factory/ai';
+import { hubItemForKey, jobForKey } from '../lib/ai';
+import type { Entry } from '../../src/combat';
 import { actions } from '../lib/store';
 
 interface Props { engine: Engine; id: string; char: Json; sheet: Json }
@@ -62,7 +66,12 @@ export function SheetData(p: Props) {
   const homerules: HomeRuleEntry[] = char.homerules || [];
   const [open, setOpen] = useState<string | null>(null);
   const [editing, setEditing] = useState<HomeRuleEntry | null>(null);
-  const hub = useHub(useCardCampaign(p.id));
+  const cid = useCardCampaign(p.id);
+  const hub = useHub(cid);
+  const isDm = hub?.role === 'dm';
+  const [ai, setAi] = useState<{ s: SourceSpec; key: string; card: Json; existing?: HubItem } | null>(null);
+  /** 本团内容里给这条能力补的战斗数据（遭遇里才进规则书，这里单独标出来） */
+  const hubCombatOf = (key: string) => (hub?.items ?? []).find((x) => x.combat?.entry !== undefined && (x.combat.key === key || (!x.combat.key && x.covers === key)));
   const campIds = new Set((hub?.items ?? []).map((x) => x.id));
   const pickables = (hub?.items ?? []).filter((x) => x.pickable);
   const picked: string[] = char.hrPicked || [];
@@ -101,8 +110,9 @@ export function SheetData(p: Props) {
               const isHr = s.source === HR_SOURCE;
               const hr = isHr ? homerules.find((x) => x.id === s.name) : homerules.find((x) => x.covers === key);
               const card = engine.env.abilities.resolve(s);
-              const combat = isHr ? undefined : engine.rules.entry(key);
-              const ai = (combat?.tags || []).includes('ai');
+              const hubC = isHr ? undefined : hubCombatOf(key);
+              const combat = isHr ? undefined : (hubC?.combat?.entry as Entry | undefined) ?? engine.rules.entry(key);
+              const aiTag = (combat?.tags || []).includes('ai');
               const rowOpen = open === key;
               return (
                 <FragmentRow key={key}>
@@ -116,7 +126,7 @@ export function SheetData(p: Props) {
                     </td>
                     <td>
                       {isHr ? <span className="faint small">—</span>
-                        : combat ? <Tag tone={ai ? undefined : 'accent'}>{ai ? 'AI 未审' : '手写'}{combat.automation && combat.automation !== 'full' ? ` · ${combat.automation === 'manual' ? '手动' : '部分'}` : ''}</Tag>
+                        : combat ? <Tag tone={aiTag ? undefined : 'accent'}>{hubC ? '本团 · ' : ''}{aiTag ? (hubC?.reviewed ? 'AI · 已审' : 'AI 未审') : '手写'}{combat.automation && combat.automation !== 'full' ? ` · ${combat.automation === 'manual' ? '手动' : '部分'}` : ''}</Tag>
                           : <span className="faint small">没有</span>}
                     </td>
                     <td className="tiny faint">{rowOpen ? '收起' : '展开'}</td>
@@ -150,6 +160,9 @@ export function SheetData(p: Props) {
                             <button className="btn ghost sm danger" onClick={() => { if (confirm('删掉这条家规，恢复官方数据？')) removeHr(hr.id); }}>恢复官方数据</button>
                           </>
                           : <button className="btn sm" onClick={() => startCover(s, card)}>用家规覆盖（只改这张卡）</button>)}
+                        {!isHr && isDm && cid && (!combat || combat.automation === 'manual' || hubC) && (
+                          <button className="btn sm" onClick={() => setAi({ s, key, card, existing: hubC })}>{hubC ? 'AI 再改战斗数据…' : 'AI 补战斗数据（存进本团资料）…'}</button>
+                        )}
                       </div>
                     </td></tr>
                   )}
@@ -175,6 +188,20 @@ export function SheetData(p: Props) {
       )}
 
       <ImportPanel engine={engine} onAdd={(e) => setEditing(e)} />
+
+      {ai && cid && (
+        <AiDatafy
+          title={`AI 补「${ai.s.name}」的战斗数据`}
+          initial={ai.existing?.combat?.entry}
+          saveLabel="存进本团资料"
+          prepare={() => jobForKey(engine, cid, ai.key, { name: ai.s.name, text: '' })}
+          onSave={async (a, by) => {
+            if (isSkip(a)) return [`AI 认为这条没有战斗里要写的：${a.skip}`];
+            return saveItem(cid, hubItemForKey(ai.key, ai.s.name, a as Entry, by, ai.card, ai.existing));
+          }}
+          onClose={() => setAi(null)}
+        />
+      )}
 
       {editing && <HrEditor engine={engine} entry={editing} onCancel={() => setEditing(null)} onSave={saveHr} />}
     </div>

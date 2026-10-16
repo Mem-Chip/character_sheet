@@ -24,7 +24,7 @@ export interface HubItem {
   rev?: number;
   updated?: number;
 }
-export interface Hub { sources: string[]; items: HubItem[] }
+export interface Hub { sources: string[]; items: HubItem[]; /** 我在这个战役里的身份 */ role?: string }
 
 const cache = new Map<string, Hub | null>();
 const jobs = new Map<string, Promise<Hub | null>>();
@@ -60,6 +60,8 @@ export function useHub(cid: string | null | undefined): Hub | null {
 }
 
 /* ───── 改（DM） ───── */
+
+export const newItemId = () => 'hr-' + Date.now().toString(36).slice(-6) + Math.random().toString(36).slice(2, 6);
 
 export async function setSources(cid: string, sources: string[]): Promise<void> {
   const r = await api<{ sources: string[] }>('PUT', `campaigns/${cid}/hub/sources`, { sources });
