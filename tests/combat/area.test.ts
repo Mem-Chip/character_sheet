@@ -6,8 +6,12 @@ const gr = { size: 50, ox: 0, oy: 0 };
 const hits = (t: Tpl, x: number, y: number, n = 1) => cellCenters(gr, { x, y }, n).some(([px, py]) => inside(t, px, py));
 
 describe('范围模板', () => {
-  it('火球（半径 20 尺）：放在格点上，圈住 8×8 格里中心在圆内的', () => {
-    const t = spellTpl({ area: { shape: 'sphere', radius: 20 }, self: false }, gr, null, { x: 510, y: 495 })!;
+  it('火球（半径 20 尺）：默认放在鼠标处；按住 Shift 吸附到九点（格子中心、边中点、角）', () => {
+    const free = spellTpl({ area: { shape: 'sphere', radius: 20 }, self: false }, gr, null, { x: 510, y: 495 })!;
+    expect(free).toEqual({ shape: 'circle', cx: 510, cy: 495, r: 200 });
+    expect(spellTpl({ area: { shape: 'sphere', radius: 20 }, self: false }, gr, null, { x: 520, y: 528 }, undefined, true))
+      .toEqual({ shape: 'circle', cx: 525, cy: 525, r: 200 }); // 格子中心
+    const t = spellTpl({ area: { shape: 'sphere', radius: 20 }, self: false }, gr, null, { x: 510, y: 495 }, undefined, true)!;
     expect(t).toEqual({ shape: 'circle', cx: 500, cy: 500, r: 200 });
     expect(hits(t, 10, 10)).toBe(true);
     expect(hits(t, 13, 10)).toBe(true); // 中心离圆心 175

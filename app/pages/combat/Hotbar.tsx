@@ -60,7 +60,8 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
   const spells: Json[] = engine.env.store.data.spellsXphb?.spell || [];
   const items = useMemo(() => (id && !combat.isSecret(id) ? actionsFor(s, engine.rules, spells, id) : []), [s, engine.rules, spells, id, ui.version]);
   const [tab, setTab] = useState('weapon');
-  const [pick, setPick] = useState<string | null>(null);
+  /** 升环：点左边的法术位选一个环阶，下一个法术就按这一环放（放完回到默认的最低环）；换人就清掉 */
+  const [castAt, setCastAt] = useState<{ id: string; L: number } | null>(null);
   const [asReaction, setAsReaction] = useState(false);
 
   const fold = <button className="btn ghost sm hot-fold" onClick={onToggle} title={collapsed ? '展开行动栏' : '收起行动栏'}>{collapsed ? '展开' : '收起'}</button>;
@@ -95,7 +96,15 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
     <div className="hot-effects">
       {effects.map((e) => {
         const t = termOfKey(String(e.key ?? ''));
-        return <span key={e.id} className={'tag' + (e.key === 'concentration' ? ' accent' : '')}>{e.key === 'concentration' ? `专注·${e.name}` : t ? <Term {...t}>{e.name}</Term> : e.name}</span>;
+        if (e.key === 'concentration') {
+          return (
+            <span key={e.id} className="tag accent">
+              专注·{e.name}
+              {combat.canControl(id) && <button className="tag-x" title="结束专注" onClick={() => combat.dispatch({ type: 'endConcentration', id })}>✕</button>}
+            </span>
+          );
+        }
+        return <span key={e.id} className="tag">{t ? <Term {...t}>{e.name}</Term> : e.name}</span>;
       })}
     </div>
   );
@@ -121,12 +130,14 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
   const slots = Object.entries(v.slots).filter(([, n]) => n > 0);
   const pct = v.hpMax ? Math.max(0, Math.min(100, (c.live.hp / v.hpMax) * 100)) : 0;
 
+  const at = castAt?.id === id ? castAt.L : null;
+  /** 选了环阶时，这个法术能不能用这一环放 */
+  const fits = (it: ActItem) => !it.slot || at == null || (it.slot.min <= at && at <= (it.slot.max ?? 9));
   const click = (it: ActItem) => {
-    if (it.passive || !mine) return;
-    const avail = it.slot ? freeSlots(s, id, it.slot.min, it.slot.max) : [];
-    if (avail.length > 1) { setPick(pick === it.ref ? null : it.ref); return; }
-    setPick(null);
-    runAction(s, ui, id, it, undefined, asReaction);
+    if (it.passive || !mine || !fits(it)) return;
+    // 默认按最低的可用环；选了环阶就按那一环（放完回到默认）
+    runAction(s, ui, id, it, it.slot && at != null ? at : undefined, asReaction);
+    if (it.slot && at != null) setCastAt(null);
   };
 
   return (
@@ -154,7 +165,16 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
           <div className="hot-slots">
             {slots.map(([L, n]) => {
               const left = n - (c.live.slotsUsed[Number(L)] ?? 0);
-              return <span key={L} title={`${L} 环法术位：剩 ${left} / ${n}`}><i>{L}</i>{Array.from({ length: n }, (_, k) => <b key={k} className={k < left ? 'on' : ''} />)}</span>;
+              const on = at === Number(L);
+              return (
+                <button
+                  key={L} className={'slot-pick' + (on ? ' on' : '')} disabled={!left || !mine}
+                  title={on ? '取消：回到默认（最低环）' : `${L} 环法术位：剩 ${left} / ${n}。点一下，下一个法术按 ${L} 环放`}
+                  onClick={() => setCastAt(on ? null : { id, L: Number(L) })}
+                >
+                  <i>{L}</i>{Array.from({ length: n }, (_, k) => <b key={k} className={k < left ? 'on' : ''} />)}
+                </button>
+              );
             })}
           </div>
         )}
@@ -165,31 +185,28 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
       {ui.aim ? <div className="hot-actions"><AimBar ui={ui} name={name} /></div> : <div className="hot-actions">
         <div className="hot-tabs">
           {tabs.map((t) => (
-            <button key={t.k} className={t.k === cur?.k ? 'on' : ''} onClick={() => { setTab(t.k); setPick(null); }}>{t.label}<small>{t.list.length}</small></button>
+            <button key={t.k} className={t.k === cur?.k ? 'on' : ''} onClick={() => setTab(t.k)}>{t.label}<small>{t.list.length}</small></button>
           ))}
           <span style={{ flex: 1 }} />
+          {at != null && <span className="tiny cast-at">按 {at} 环放 <button className="tag-x" onClick={() => setCastAt(null)} title="回到默认（最低环）">✕</button></span>}
           {cur?.k === 'weapon' && <label className="tiny faint"><input type="checkbox" checked={asReaction} onChange={(e) => setAsReaction(e.target.checked)} /> 用反应攻击</label>}
         </div>
         <div className="hot-grid">
           {!cur && <span className="faint small">没有可用的动作。</span>}
           {cur?.list.map((it) => {
             const avail = it.slot ? freeSlots(s, id, it.slot.min, it.slot.max) : [];
+            const ok = fits(it);
             return (
               <span key={it.ref} className="hot-act-wrap">
                 <button
-                  className={'hot-act' + (it.ok ? '' : ' no') + (it.passive ? ' passive' : '') + (pick === it.ref ? ' open' : '')}
-                  onClick={() => click(it)} disabled={!mine && !it.passive}
+                  className={'hot-act' + (it.ok ? '' : ' no') + (it.passive ? ' passive' : '') + (ok ? '' : ' off')}
+                  onClick={() => click(it)} disabled={(!mine && !it.passive) || !ok}
                   title={it.term ? undefined : [it.sub, it.why].filter(Boolean).join('\n')}
                 >
                   <CostIcon kind={costKind(it, asReaction)} />
                   {it.term ? <Term {...it.term} inButton>{it.name}</Term> : it.name}
-                  {it.slot && <small>{avail.length ? `${avail[0]}环` : '无位'}</small>}
+                  {it.slot && <small>{at != null && ok ? `${at}环` : avail.length ? `${avail[0]}环` : '无位'}</small>}
                 </button>
-                {pick === it.ref && (
-                  <span className="hot-pick">
-                    {avail.map((L) => <button key={L} className="btn sm" onClick={() => { setPick(null); runAction(s, ui, id, it, L, asReaction); }}>{L} 环</button>)}
-                  </span>
-                )}
               </span>
             );
           })}

@@ -65,7 +65,8 @@ export function tplPath(t: Tpl): string {
 export function tplLabel(t: Tpl, g: number): { text: string; x: number; y: number } {
   const ft = (px: number) => Math.round((px / g) * 5);
   switch (t.shape) {
-    case 'circle': return { text: `半径 ${ft(t.r)} 尺`, x: t.cx, y: t.cy };
+    // 圆心要画个点，标签往上挪一点
+    case 'circle': return { text: `半径 ${ft(t.r)} 尺`, x: t.cx, y: t.cy - t.r * 0.45 };
     case 'rect': return { text: `${ft(t.w)} × ${ft(t.h)} 尺`, x: t.x + t.w / 2, y: t.y + t.h / 2 };
     case 'cone': return { text: `锥 ${ft(t.len)} 尺`, x: t.x + (t.len * 0.6) * Math.cos(t.dir), y: t.y + (t.len * 0.6) * Math.sin(t.dir) };
     case 'line': return { text: `线 ${ft(t.len)} 尺`, x: t.x + (t.len / 2) * Math.cos(t.dir), y: t.y + (t.len / 2) * Math.sin(t.dir) };
@@ -91,6 +92,11 @@ export const snapPt = (gr: Grid, x: number, y: number) => ({
   x: gr.ox + Math.round((x - gr.ox) / gr.size) * gr.size,
   y: gr.oy + Math.round((y - gr.oy) / gr.size) * gr.size,
 });
+/** 吸附到最近的「九点」：格子中心、四条边的中点、四个角（也就是半格的格点） */
+export const snapHalf = (gr: Grid, x: number, y: number) => ({
+  x: gr.ox + Math.round(((x - gr.ox) / gr.size) * 2) * (gr.size / 2),
+  y: gr.oy + Math.round(((y - gr.oy) / gr.size) * 2) * (gr.size / 2),
+});
 /** 吸附到 5 尺的整数倍 */
 export const snapLen = (px: number, g: number) => Math.max(g, Math.round(px / g) * g);
 
@@ -109,8 +115,10 @@ export const directional = (a: Area) => a.shape === 'cone' || a.shape === 'line'
  * 范围法术的模板。
  * caster：施法者中心和半个身位（像素）；at：鼠标 / 选的点；origin：已经选好的原点（点出发的锥 / 线要先选原点再选方向）。
  */
-export function spellTpl(spec: AreaSpec, gr: Grid, caster: { x: number; y: number; half: number } | null, at: { x: number; y: number }, origin?: { x: number; y: number }): Tpl | null {
+export function spellTpl(spec: AreaSpec, gr: Grid, caster: { x: number; y: number; half: number } | null, at: { x: number; y: number }, origin?: { x: number; y: number }, snap = false): Tpl | null {
   const g = gr.size;
+  // 放在哪：默认就是鼠标的位置；按住 Shift 吸附到九点
+  const pt = (x: number, y: number) => (snap ? snapHalf(gr, x, y) : { x, y });
   const px = (ft: number | undefined) => ((ft ?? 5) / 5) * g;
   const a = spec.area;
   if (spec.self) {
@@ -119,8 +127,23 @@ export function spellTpl(spec: AreaSpec, gr: Grid, caster: { x: number; y: numbe
     switch (a.shape) {
       case 'emanation': case 'sphere': case 'cylinder':
         return { shape: 'circle', cx: caster.x, cy: caster.y, r: px(a.radius ?? a.size) + caster.half };
-      case 'cone': return { shape: 'cone', x: caster.x + caster.half * Math.cos(dir), y: caster.y + caster.half * Math.sin(dir), len: px(a.length ?? a.size), dir };
-      case 'line': return { shape: 'line', x: caster.x + caster.half * Math.cos(dir), y: caster.y + caster.half * Math.sin(dir), len: px(a.length ?? a.size), width: px(a.width ?? 5), dir };
+      case 'cone': case 'line': {
+        // 原点默认在施法者的格子中间；按住 Shift 换到它身边（边的中点 / 角）朝鼠标那一侧最远的那个点
+        let o = { x: caster.x, y: caster.y };
+        if (snap) {
+          const h = caster.half;
+          let best = -Infinity;
+          for (const ox of [-h, 0, h]) for (const oy of [-h, 0, h]) {
+            if (!ox && !oy) continue;
+            const d = ox * Math.cos(dir) + oy * Math.sin(dir) - 1e-3 * Math.hypot(ox, oy);
+            if (d > best) { best = d; o = { x: caster.x + ox, y: caster.y + oy }; }
+          }
+        }
+        const d2 = Math.atan2(at.y - o.y, at.x - o.x);
+        return a.shape === 'cone'
+          ? { shape: 'cone', x: o.x, y: o.y, len: px(a.length ?? a.size), dir: d2 }
+          : { shape: 'line', x: o.x, y: o.y, len: px(a.length ?? a.size), width: px(a.width ?? 5), dir: d2 };
+      }
       case 'cube': {
         // 贴着施法者的一面（或一角），朝鼠标的方向，八个方向吸附
         const S = px(a.size);
@@ -135,16 +158,17 @@ export function spellTpl(spec: AreaSpec, gr: Grid, caster: { x: number; y: numbe
   }
   switch (a.shape) {
     case 'sphere': case 'cylinder': case 'emanation': {
-      const p = snapPt(gr, at.x, at.y);
+      const p = pt(at.x, at.y);
       return { shape: 'circle', cx: p.x, cy: p.y, r: px(a.radius ?? a.size) };
     }
     case 'cube': {
+      // 鼠标在立方的中心
       const S = px(a.size);
-      const p = snapPt(gr, at.x - S / 2, at.y - S / 2);
-      return { shape: 'rect', x: p.x, y: p.y, w: S, h: S };
+      const p = pt(at.x, at.y);
+      return { shape: 'rect', x: p.x - S / 2, y: p.y - S / 2, w: S, h: S };
     }
     case 'cone': case 'line': {
-      const o = origin ?? snapPt(gr, at.x, at.y);
+      const o = origin ?? pt(at.x, at.y);
       const dir = origin ? Math.atan2(at.y - o.y, at.x - o.x) : 0;
       return a.shape === 'cone'
         ? { shape: 'cone', x: o.x, y: o.y, len: px(a.length ?? a.size), dir }

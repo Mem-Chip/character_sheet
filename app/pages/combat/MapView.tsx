@@ -14,7 +14,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { footprint, gridFeet, pathFeet, type Session } from '../../../src/combat';
-import { cellHit, coveredCells, directional, snapLen, snapPt, spellTpl, tplLabel, tplOrigin, tplPath, type Tpl } from '../../lib/area';
+import { cellHit, coveredCells, directional, snapHalf, snapLen, spellTpl, tplLabel, tplOrigin, tplPath, type Tpl } from '../../lib/area';
 import { PING_LIFE } from '../../lib/combat';
 import { tokenMenu } from './TokenMenu';
 import { NumInput } from '../../components/ui';
@@ -69,6 +69,8 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
   const selShapeRef = useRef<string | null>(null);
   selShapeRef.current = selShape;
   const space = useRef(false);
+  /** Shift：放形状、范围法术时吸附到九点（格子中心、边中点、角） */
+  const [shift, setShift] = useState(false);
   /** 范围法术：按住拖着调（转向 / 挪位置），松手定下来 */
   const aimDrag = useRef(false);
   const dragRef = useRef<Drag | null>(null);
@@ -88,6 +90,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
     const down = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.code === 'Space') space.current = true;
+      if (e.key === 'Shift') setShift(true);
       if (e.key === 'Escape') setSelShape(null);
       // 测距时按 Ctrl：把现在这条线分享给所有人
       if (e.key === 'Control' && !e.repeat) {
@@ -97,7 +100,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
       // 测距时按 Q：在当前格打个折点，接着量
       if (e.code === 'KeyQ') setDrag((d) => (d?.kind === 'measure' && !sameCell(d.to, d.pts[d.pts.length - 1]) ? { ...d, pts: [...d.pts, d.to] } : d));
     };
-    const up = (e: KeyboardEvent) => { if (e.code === 'Space') space.current = false; };
+    const up = (e: KeyboardEvent) => { if (e.code === 'Space') space.current = false; if (e.key === 'Shift') setShift(false); };
     window.addEventListener('keydown', down);
     window.addEventListener('keyup', up);
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); };
@@ -161,7 +164,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
   const casterTok = aim ? map.tokens[aim.actor] : undefined;
   const casterN = aim ? footprint(st.combatants[aim.actor]?.base.size) : 1;
   const caster = casterTok ? { x: map.grid.ox + (casterTok.x + casterN / 2) * g, y: map.grid.oy + (casterTok.y + casterN / 2) * g, half: (casterN * g) / 2 } : null;
-  const tplAt = (p: { x: number; y: number }) => (areaAim ? spellTpl(areaAim, map.grid, caster, p) : null);
+  const tplAt = (p: { x: number; y: number }, snap = shift) => (areaAim ? spellTpl(areaAim, map.grid, caster, p, undefined, snap) : null);
   /** 模板的原点离施法者多远（尺）；自身出发的不算 */
   const originFeet = (t: Tpl): number | null => {
     if (!areaAim || areaAim.self || !casterTok) return null;
@@ -216,7 +219,8 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
       setDrag({ kind: 'measure', pts: [c], to: c });
     } else if (tool === 'shape') {
       (e.currentTarget as Element).setPointerCapture(e.pointerId);
-      const s0 = snapPt(map.grid, p.x, p.y);
+      // 起点默认就在鼠标处；按住 Shift 吸附到九点
+      const s0 = e.shiftKey ? snapHalf(map.grid, p.x, p.y) : p;
       setDrag({ kind: 'shape', from: s0, to: s0 });
     } else if (tool === 'pen') {
       (e.currentTarget as Element).setPointerCapture(e.pointerId);
@@ -229,6 +233,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
     }
   };
   const onMove = (e: React.PointerEvent) => {
+    if (e.shiftKey !== shift) setShift(e.shiftKey);
     if (areaAim && !fixed) setPt(toWorld(e));
     if (!drag) return;
     if (drag.kind === 'pan') setView({ ...view, x: drag.vx + e.clientX - drag.sx, y: drag.vy + e.clientY - drag.sy });
@@ -264,7 +269,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
   const onUp = (e?: React.PointerEvent) => {
     if (aimDrag.current) {
       aimDrag.current = false;
-      const t = e ? tplAt(toWorld(e)) : pt ? tplAt(pt) : null;
+      const t = e ? tplAt(toWorld(e), e.shiftKey) : pt ? tplAt(pt) : null;
       if (t && outOfRange(t)) combat.toast(`超出「${aim!.name}」的射程 ${aim!.range} 尺`);
       else if (t) fix(t);
       return;
@@ -304,12 +309,13 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
     const hit = [...map.strokes, ...(map.shapes ?? [])].find((x) => x.id === id);
     return hit && (dm || hit.by === remote.me) ? id : null;
   };
-  /** 拖出来的形状：方 = 两个格点之间；圆 = 中心 + 半径；锥 = 顶点 + 长度 + 朝向。长度按 5 尺取整 */
+  /** 拖出来的形状：方 = 从一角拖到对角；圆 = 中心 + 半径；锥 = 顶点 + 长度 + 朝向。边长、半径、长度按 5 尺取整 */
   const shapeTpl = (a: { x: number; y: number }, b: { x: number; y: number }): Tpl | null => {
     if (shapeKind === 'rect') {
-      const q = snapPt(map.grid, b.x, b.y);
-      const w = Math.abs(q.x - a.x), h = Math.abs(q.y - a.y);
-      return w && h ? { shape: 'rect', x: Math.min(a.x, q.x), y: Math.min(a.y, q.y), w, h } : null;
+      const dx = b.x - a.x, dy = b.y - a.y;
+      if (Math.abs(dx) < g / 2 || Math.abs(dy) < g / 2) return null;
+      const w = snapLen(Math.abs(dx), g), h = snapLen(Math.abs(dy), g);
+      return { shape: 'rect', x: dx < 0 ? a.x - w : a.x, y: dy < 0 ? a.y - h : a.y, w, h };
     }
     const d = Math.hypot(b.x - a.x, b.y - a.y);
     if (d < g / 2) return null;
@@ -391,7 +397,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
   const aimed: Record<string, number> = {};
   for (const p of ui.aim?.picks ?? []) aimed[p] = (aimed[p] ?? 0) + 1;
 
-  const hint = `滚轮缩放 · 拖空白处或按住空格平移 · 点棋子选中、右键开菜单、Delete 拿下地图、Esc 取消选中 · 双击地图标点 · 测距时按 Q 打折点、按 Ctrl 分享 · 形状可以点选拖动，Delete 删 · DM 按住 Shift 拖棋子不扣移动力 · 每格 5 尺，斜走${diagonal === '5' ? '也算 5 尺' : '交替 5 / 10 尺'}，引擎按棋子位置自动判断距离`;
+  const hint = `滚轮缩放 · 拖空白处或按住空格平移 · 放形状 / 范围法术时按住 Shift 吸附到格子中心、边、角 · 点棋子选中、右键开菜单、Delete 拿下地图、Esc 取消选中 · 双击地图标点 · 测距时按 Q 打折点、按 Ctrl 分享 · 形状可以点选拖动，Delete 删 · DM 按住 Shift 拖棋子不扣移动力 · 每格 5 尺，斜走${diagonal === '5' ? '也算 5 尺' : '交替 5 / 10 尺'}，引擎按棋子位置自动判断距离`;
   return (
     <div className="map-root">
       <div className="hud map-rail" title={hint}>
@@ -467,6 +473,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
                   <path d={tplPath(tpl)} data-shape={x.id} fill={x.color} fillOpacity={0.14} stroke={x.color} strokeWidth={(selShape === x.id ? 3 : 2) / view.k}
                     onPointerDown={(e) => shapeDown(e, x.id, x.by)}
                     style={{ pointerEvents: tool === 'erase' || (tool === 'move' && !ui.aim && !placing) ? 'visiblePainted' : 'none' }} />
+                  <OriginDot t={tpl} k={view.k} color={x.color} />
                   <text className="map-dist" fontSize={12 / view.k} x={lb.x} y={lb.y}>{lb.text}</text>
                   {selShape === x.id && mine && tool === 'move' && 'dir' in tpl && (
                     <circle className="rot-handle" cx={tpl.x + tpl.len * Math.cos(tpl.dir)} cy={tpl.y + tpl.len * Math.sin(tpl.dir)} r={7 / view.k}
@@ -483,6 +490,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
                 <g className="map-shape">
                   <path d={cellsPath(coveredCells(t, map.grid), map.grid)} fill={color} fillOpacity={0.16} className="cells" />
                   <path d={tplPath(t)} fill={color} fillOpacity={0.14} stroke={color} strokeWidth={2 / view.k} strokeDasharray={`${6 / view.k} ${4 / view.k}`} />
+                  <OriginDot t={t} k={view.k} color={color} />
                   <text className="map-dist" fontSize={14 / view.k} x={lb.x} y={lb.y}>{lb.text}</text>
                 </g>
               );
@@ -583,6 +591,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
                 <g className={'map-aoe' + (fixed ? ' fixed' : '') + (bad ? ' bad' : '')}>
                   <path d={cellsPath(coveredCells(t, map.grid), map.grid)} className="cells" />
                   <path d={tplPath(t)} strokeWidth={2 / view.k} />
+                  <OriginDot t={t} k={view.k} />
                   <text className="map-dist" fontSize={13 / view.k} x={lb.x} y={lb.y}>{lb.text}{d != null ? ` · 距你 ${d} 尺` : ''}</text>
                 </g>
               );
@@ -706,3 +715,16 @@ const shiftTpl = (t: Tpl, dx: number, dy: number): Tpl => (t.shape === 'circle' 
 /** 一串格子 → 一条 SVG 路径（每格一个方块） */
 const cellsPath = (cells: Array<{ x: number; y: number }>, gr: { size: number; ox: number; oy: number }) =>
   cells.map((c) => `M${gr.ox + c.x * gr.size} ${gr.oy + c.y * gr.size}h${gr.size}v${gr.size}h${-gr.size}Z`).join('');
+
+/** 形状的原点：圆心、锥 / 线的顶点（画个小十字点，看得出从哪出发）；方的不画（中间是尺寸标签） */
+function OriginDot({ t, k, color }: { t: Tpl; k: number; color?: string }) {
+  if (t.shape === 'rect') return null;
+  const o = tplOrigin(t);
+  const r = 4 / k, a = 7 / k;
+  return (
+    <g className="origin-dot" style={color ? { color } : undefined}>
+      <path d={`M${o.x - a} ${o.y}H${o.x + a}M${o.x} ${o.y - a}V${o.y + a}`} strokeWidth={1.5 / k} />
+      <circle cx={o.x} cy={o.y} r={r} strokeWidth={1.5 / k} />
+    </g>
+  );
+}
