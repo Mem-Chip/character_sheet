@@ -31,6 +31,8 @@ const FILES = [
   // 战役「资料」里选书用的书目；启用的书的法术 / 怪物文件按 spells、bestiary 的 index.json 现取
   '/data/books.json',
   '/data/bestiary/index.json',
+  // 全库搜索（约 2.9 MB、1.8 万条）：搜条目名 → 条目键 + 原文，见 src/sheet/search.ts
+  '/search/index.json',
 ];
 
 async function get(path: string): Promise<string> {

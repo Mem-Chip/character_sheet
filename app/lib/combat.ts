@@ -12,9 +12,9 @@ import {
   type Command, type DispatchResult, type EngineCtx, type OverridePatch, type SessionSave, type ViewInit,
 } from '../../src/combat';
 import { RULE_FILES } from '../../src/bridge/rule-files';
-import { RuleBook, type HouseRule } from '../../src/combat';
+import { RuleBook, encounterLayers, type HouseRule } from '../../src/combat';
 import { api } from './api';
-import { tagCampaign } from './hub';
+import { applyLocalRules, tagCampaign } from './library';
 import type { Tpl } from './area';
 import { setDiceLocalColor, setDiceLocalPhys, type DicePhysics } from './dicefx';
 import type { Engine } from './engine';
@@ -125,6 +125,8 @@ export interface MapState {
 interface RemoteState {
   /** 开遭遇时抄进来的本团房规 */
   rules?: HouseRule[];
+  /** 参战者各自的资料库（按加入顺序；靠后的盖前面） */
+  ownerRules?: Array<{ name: string; rules: HouseRule[] }>;
   save: SessionSave; owners: Record<string, number>; cards: Record<string, string>; name: string;
   dice?: Record<string, DiceMode>; hidden?: string[]; map?: MapState; chat?: ChatRoll[]; actingAs?: string | null; dicePhys?: DicePhysics; diceColors?: Record<string, string>; diceOpen?: boolean; reveal?: Record<string, boolean>;
 }
@@ -204,6 +206,8 @@ function ctxFor(engine: Engine): EngineCtx {
 export function initCombat(engine: Engine): void {
   engineRef = engine;
   if (ui.session) return;
+  // 本地遭遇：规则书 = 官方 + 我自己的资料库（战役遭遇由服务器发快照，不走这里）
+  if (!ui.remote) applyLocalRules(engine);
   let saved: { save: SessionSave; links?: Record<string, string>; dice?: Record<string, DiceMode>; selected?: string | null; targets?: string[]; chat?: ChatRoll[] } | null = null;
   try {
     const raw = localStorage.getItem(KEY);
@@ -246,18 +250,19 @@ function act(body: Record<string, unknown>): DispatchResult {
 }
 
 /** 服务器推来的完整状态：在本地重放一遍用来画界面 */
-/** 遭遇用的规则书：官方 + 这场抄进来的本团房规（同一份房规共用一本）；离开遭遇换回官方的 */
+/** 遭遇用的规则书：官方 + 这场抄进来的本团房规 + 参战者各自的资料库（同一组层共用一本）；离开遭遇换回本地那份 */
 let bookKey = '';
-function useEncounterRules(engine: Engine, hr: HouseRule[] | undefined): void {
-  const k = hr?.length ? JSON.stringify(hr) : '';
+function useEncounterRules(engine: Engine, camp: HouseRule[] | undefined, owners: Array<{ name: string; rules: HouseRule[] }> | undefined): void {
+  const layers = encounterLayers(camp, owners);
+  const k = layers.length ? JSON.stringify(layers) : '';
   if (k === bookKey && (k || engine.rules === engine.base)) return;
   bookKey = k;
-  engine.rules = k ? new RuleBook(RULE_FILES, [{ scope: 'camp', name: '本团', rules: hr! }]) : engine.base;
+  engine.rules = k ? new RuleBook(RULE_FILES, layers) : engine.base;
 }
 
 function applyRemote(data: RemoteState): void {
   if (!ui.remote || !engineRef) return;
-  useEncounterRules(engineRef, data.rules);
+  useEncounterRules(engineRef, data.rules, data.ownerRules);
   try {
     const session = Session.restore(data.save, ctxFor(engineRef));
     const st = session.state;
@@ -298,7 +303,7 @@ export const combat = {
   leave(engine: Engine): void {
     stream?.close();
     stream = null;
-    useEncounterRules(engine, undefined);
+    useEncounterRules(engine, undefined, undefined);
     ui = { ...ui, session: null, remote: null, links: {}, selected: null, targets: [], aim: null, formPick: null, summonFor: null };
     initCombat(engine);
   },

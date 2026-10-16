@@ -15,7 +15,9 @@ function localData(): Plugin {
     name: 'local-5etools',
     configResolved(c) { outDir = resolve(c.root, c.build.outDir); },
     closeBundle() {
-      if (existsSync(dir)) cpSync(dir, resolve(outDir, '5etools'), { recursive: true });
+      // dereference：worktree 里 data/5etools 常是指向主检出的 junction，
+      // 不 dereference 的话 cpSync 会想照着建符号链接，Windows 上没权限（EPERM）
+      if (existsSync(dir)) cpSync(dir, resolve(outDir, '5etools'), { recursive: true, dereference: true });
       else this.warn('没有 data/5etools（先 npm run fetch:data）：部署后的页面只能直接去站点取数据');
     },
     configureServer(server) {

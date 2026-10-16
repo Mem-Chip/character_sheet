@@ -9,6 +9,7 @@ import { tyName, type FnSig, type Ty } from '../expr';
 import { EMITTED_EVENTS, WINDOW_EVENTS } from '../combat/audit';
 import { REF_SHAPE, scopeDef, type ScopeKind } from '../combat/scope';
 import { CREATURE_TYPE_CN } from '../bridge/from-sheet';
+import { CHOICE_POOLS, GRANT_KINDS, MOD_KIND_DOC } from '../sheet';
 
 /** 伤害类型（站点 2024 译名） */
 export const DAMAGE_TYPES = ['钝击', '穿刺', '挥砍', '火焰', '寒冷', '闪电', '雷鸣', '强酸', '毒素', '黯蚀', '光耀', '心灵', '力场'];
@@ -68,9 +69,15 @@ const WINDOWS: Array<[string, string, string, string, string]> = [
 export interface SpecInput {
   /** src/combat/types.ts 的源码（Node 里 readFileSync，浏览器里 `?raw` 导入） */
   typesSource: string;
+  /**
+   * `combat`（缺省）= 只写动态层，回答是一个 `Entry`（怪物那种「按名字一条条回答」的流程用这个）；
+   * `both` = 卡面 + 战斗都写，回答是 `{ parts: [ { key, name, text, sheet, combat } ] }`（资料库的流程用这个）。
+   */
+  mode?: 'combat' | 'both';
 }
 
 export function buildSpec(input: SpecInput): string {
+  const both = input.mode === 'both';
   const scopeRows = SCOPE_FIELDS.map(([k, where]) => {
     const roots = scopeDef(k).roots;
     const names = Object.entries(roots).map(([n, t]) => `\`${n}\`${t.k === 'obj' && t.fields ? fmtTy(t) : `：${fmtTy(t)}`}`);
@@ -82,17 +89,30 @@ export function buildSpec(input: SpecInput): string {
   const missing = [...WINDOW_EVENTS].filter((e) => !WINDOWS.some(([w]) => w.split(' / ').includes(e)));
   if (missing.length) throw new Error(`说明书的窗口表漏了：${missing.join('、')}`);
 
-  return `# 动态层规则数据：写法说明
+  return `# ${both ? '规则数据' : '动态层规则数据'}：写法说明
 
-你要把一条 D&D 2024 规则（职业特性、专长、法术）写成引擎能执行的 JSON。
+你要把一条 D&D 2024 规则（职业特性、专长、法术、物品）写成引擎能执行的 JSON。
 
 ## 1. 产出什么
 
-一个 JSON 对象，类型是下面的 \`Entry\`，描述这条规则**在游戏进行中、按时机生效**的部分：
+${both ? `一个 JSON 对象，里面的 \`parts\` 是**一条或多条条目**：
+
+\`\`\`json
+{ "parts": [
+  { "key": "XPHB:野蛮人:狂暴:1", "name": "狂暴", "text": "原文摘要（中文，照抄不要编）",
+    "sheet": { "mods": [], "grants": [], "choices": [], "resources": [ { "id": "rage", "name": "狂暴", "formula": "cond(level >= 17, 6, 2)", "recovery": "long" } ] },
+    "combat": { "name": "狂暴", "actions": [ … ] } }
+] }
+\`\`\`
+
+- **一个 part = 一条条目（一个键）**。一份资源拆成几条就写几个 part：一个子职 = 每级特性一条，各写自己的键。
+- \`key\`：覆盖官方就写任务里给的官方键；**新内容不写 \`key\`**（保存时会自动填 \`HR:<id>\`）。
+- \`sheet\` 写这张卡上恒定的东西（第 7 节），\`combat\` 写按时机生效的东西（第 2～6 节，**直接写 Entry 的内容**，
+  不要包成 \`{ "entry": … }\`）。两个至少写一个；确实都没有就输出 \`{ "parts": [] }\`。` : `一个 JSON 对象，类型是下面的 \`Entry\`，描述这条规则**在游戏进行中、按时机生效**的部分：
 主动使用的动作（actions）、在某个时机触发的能力（triggers）、对检定的修正（rollMods）、灵光（auras）、它施加的效应（effects）。
 
 **不要写静态部分**：属性加值、熟练、授予法术、资源池上限、恒定的 AC / 速度加值，人物卡已经算好了（任务里会列出来）。
-条件性的东西才写在这里：「豁免具有优势」「命中时加伤害」「失败时可以重骰」。
+条件性的东西才写在这里：「豁免具有优势」「命中时加伤害」「失败时可以重骰」。`}
 
 只输出这个 JSON 对象本身，不要包在别的结构里，不要解释。
 
@@ -225,8 +245,59 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
 9. \`allyWithin(x, 尺, { exclude: [self], notCond: '失能' })\`：第三个参数可选，\`exclude\` 不算哪些人，\`notCond\` 要求那个盟友不处于某个状态。
 10. 原文说「另一名生物」→ \`targeting.filter: 'target.id != self.id'\`。
 
-## 7. 例子
+${both ? sheetSection() : ''}## 8. 例子
 
-例子文件里是一批写好的条目（键 → Entry），照着它们的风格和粒度写。
+${both
+    ? '例子文件里是一批写好的条目（键 → Entry）；卡面那一侧照任务里另外给的那几条真实卡面数据写。'
+    : '例子文件里是一批写好的条目（键 → Entry），照着它们的风格和粒度写。'}
+`;
+}
+
+/* ───────────── 卡面那一节（mode: 'both' 时接在战斗那几节后面） ───────────── */
+
+function sheetSection(): string {
+  const mods = Object.entries(MOD_KIND_DOC).map(([k, d]) => `| \`${k}\` | ${d.doc} | ${d.fields} |`).join('\n');
+  const grants = Object.entries(GRANT_KINDS)
+    .map(([k, d]) => `| \`${k}\` | ${d.doc} | ${d.needs === 'values' ? '`values: […]`' : d.needs === 'formula' ? '`formula`' : '`text`'} |`)
+    .join('\n');
+  return `## 7. 卡面数据（静态层）怎么写
+
+一条 part 的 \`sheet\` 描述**这张卡上恒定的东西**：改数值（mods）、授予实体（grants）、要玩家做的决定（choices）、
+次数池（resources）。和 \`combat\` 用同一个条目键；一个能力两边都要写时写在一个 part 里。
+
+### 7.1 \`mods\`：改数值
+
+| kind | 是什么 | 怎么写 |
+|---|---|---|
+${mods}
+
+每个 mod 都可以带 \`note\`（显示用的一句话）。
+
+### 7.2 \`grants\`：授予实体（熟练、法术、专长…）
+
+| kind | 是什么 | 要写 |
+|---|---|---|
+${grants}
+
+### 7.3 \`choices\`：要玩家做的决定
+
+\`{ "id": "…", "kind": "ability" | "skill" | "spell" | …, "label": "…", "pool": "…" 或 "from": [ … ], "count": 1 }\`。
+\`pool\` 只能用这些（不在里面就给 \`from\` 数组）：${[...CHOICE_POOLS].join(' ')}。
+**id 必须和 combat 里用到的对上**（选择的结果在战斗里用 \`vars\` / decisions 读）。
+
+### 7.4 \`resources\`：次数池
+
+\`{ "id": "rage", "name": "狂暴", "formula": "…", "recovery": "short" | "long" }\`。
+\`formula\` 写法：数字、\`'pb'\`、\`'max(1, wis)'\`（属性调整值）、\`'level * 5'\`（level 是**该职业**等级）、
+\`'cond(level >= 17, 6, 2)'\`、\`'table'\`（等级表里已经有了，别重复）。
+战斗里花的写法：动作上 \`cost: [{ resource: '<id>' }]\`。
+
+### 7.5 分界线（很重要）
+
+- **恒定**的加值、熟练、授予、次数池上限 → \`sheet\`；
+- **带条件的**（「豁免具有优势」「命中时加伤害」「失败时重骰」）→ \`combat\`；
+- 「人物卡（静态层）已经算进去的」那一节列过的东西**不要重复写**（物品的固定加值、属性定值、固定的速度都算过了）；
+- 引擎做不到的（传送、视线、光照）→ 照旧写 \`combat\` 里的 \`manual\` / \`note\`，卡面这一侧不要硬凑。
+
 `;
 }

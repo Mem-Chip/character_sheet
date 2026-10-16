@@ -2,12 +2,13 @@ import { AccountButton } from './components/Account';
 import { TermLayer, setTermEngine } from './components/Term';
 import { CampaignsPage } from './pages/Campaigns';
 import { CombatPage } from './pages/Combat';
+import { DataPanel } from './pages/DataPanel';
 import { Library } from './pages/Library';
 import { SheetPage } from './pages/Sheet';
 import { PALETTES, TERM_DELAYS, WIDTHS, actions, useApp, type Page, type PageWidth, type Palette } from './lib/store';
 import { useEngine } from './lib/useSheet';
 
-const NAV: Array<[Page, string]> = [['library', '卡片库'], ['sheet', '人物卡'], ['combat', '战斗'], ['campaigns', '战役']];
+const NAV: Array<[Page, string]> = [['library', '卡片库'], ['data', '资料库'], ['sheet', '人物卡'], ['combat', '战斗'], ['campaigns', '战役']];
 
 export function App() {
   const app = useApp();
@@ -66,9 +67,10 @@ export function App() {
         {error ? <div className="page dangerline">规则数据装载失败：{error}</div>
           : !engine ? <div className="page empty">正在装载规则数据…</div>
             : app.page === 'library' ? <Library />
-              : app.page === 'sheet' ? <SheetPage engine={engine} />
-                : app.page === 'campaigns' ? <CampaignsPage />
-                  : <CombatPage engine={engine} />}
+              : app.page === 'data' ? <DataPanel engine={engine} />
+                : app.page === 'sheet' ? <SheetPage engine={engine} />
+                  : app.page === 'campaigns' ? <CampaignsPage />
+                    : <CombatPage engine={engine} />}
       </main>
       <TermLayer />
     </div>

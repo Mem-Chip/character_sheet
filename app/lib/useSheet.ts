@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 import type { CharData, Json } from '../../src/sheet';
 import { loadEngine, type Engine } from './engine';
-import { tagCampaign, useHubVersion } from './hub';
+import { loadLibrary, tagCampaign, useLibraryVersion } from './library';
 import { actions, getApp, stripDerived } from './store';
 
 export interface Computed {
@@ -26,13 +26,15 @@ export function useEngine(): { engine: Engine | null; error: string | null } {
 
 export function useComputed(engine: Engine | null, id: string | null, char: CharData | null): Computed | null {
   const [out, setOut] = useState<Computed | null>(null);
-  // 战役资料（启用的书、本团家规）变了也要重算
-  const hubV = useHubVersion();
+  // 战役资料（启用的书、本团家规）或我自己的库变了都要重算
+  const hubV = useLibraryVersion();
   useEffect(() => {
     if (!engine || !char || !id) { setOut(null); return; }
     let alive = true;
     (async () => {
       const work = structuredClone(stripDerived(char));
+      // 我自己的资料库是卡面的第 3 层，算之前先确保取到了
+      await loadLibrary();
       await tagCampaign(work, getApp().cards[id]?.campaignId);
       let sheet = await engine.env.compute(work);
       if (engine.env.applyOriginFeatDefault(work)) sheet = await engine.env.compute(work);

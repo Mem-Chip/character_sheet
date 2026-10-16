@@ -1,16 +1,21 @@
 /**
- * 战役页的「资料」：这个战役启用了哪些书（5etools 书目里挑），以及本团内容（家规、补的数据）。
- * DM 能改，玩家只能看。卡在战役里时，建卡、升级、战斗都按这里的资料来。
+ * 战役页的「资料」：这个战役启用了哪些书，以及挂上来的内容（谁挂的、现在什么状态）。
+ *
+ * 内容本身存在各人的账户资料库里（[LIBRARY.md](LIBRARY.md)），这里只管这个战役的开关：
+ * - 新内容（没覆盖官方规则）挂上就生效；
+ * - 覆盖官方规则的，DM 在这里点开才对全团生效；同一个键被几条覆盖时列出来，指出现在用的是哪条。
  */
 import { useEffect, useMemo, useState } from 'react';
-import { AiDatafy } from '../components/AiDatafy';
-import { Dialog, Field, Tag } from '../components/ui';
-import { declaredResources } from '../../src/factory';
-import { isSkip } from '../../src/factory/ai';
-import { jobForKey } from '../lib/ai';
-import type { Campaign } from '../lib/api';
-import { loadBooks, newItemId, removeItem, saveItem, setSources, useHub, type Book, type HubItem } from '../lib/hub';
+import {
+  effectiveItems, hubNow, loadBooks, removeLibraryItem, saveLibraryItem, setShareState, setSources, shareItem, unshareItem,
+  useHub, useLibrary, useLibraryVersion, type Book, type LibraryItem, type ShareView,
+} from '../lib/library';
+import { useSync } from '../lib/sync';
+import { ItemTags, LibraryEditor, kindLabel } from '../components/LibraryEditor';
+import { Dialog, Tag } from '../components/ui';
+import { actions } from '../lib/store';
 import { useEngine } from '../lib/useSheet';
+import type { Campaign } from '../lib/api';
 
 /** 2024 核心三本：一直在 */
 const BUILTIN = new Set(['XPHB', 'XDMG', 'XMM']);
@@ -21,17 +26,52 @@ const GROUP_CN: Record<string, string> = {
 /** 没有规则内容的书，默认不列 */
 const HIDDEN_GROUPS = new Set(['screen', 'recipe', 'homecraft']);
 
+const coversOfItem = (s: ShareView): string[] =>
+  (s.item.parts ?? []).filter((p) => !p.key.startsWith('HR:')).map((p) => p.key);
+
+const STATE_CN: Record<string, [string, 'accent' | 'warn' | 'danger' | undefined]> = {
+  auto: ['自动生效', 'accent'],
+  pending: ['等 DM 点头', 'warn'],
+  on: ['开着', 'accent'],
+  off: ['关掉了', 'danger'],
+};
+
 export function CampaignHub({ c }: { c: Campaign }) {
   const hub = useHub(c.id);
+  useLibraryVersion();
+  const sync = useSync();
   const dm = c.role === 'dm';
   const [picking, setPicking] = useState(false);
-  const [edit, setEdit] = useState<HubItem | null>(null);
+  const [attach, setAttach] = useState(false);
+  const [edit, setEdit] = useState<LibraryItem | null>(null);
+  const [err, setErr] = useState('');
   const [books, setBooks] = useState<Book[]>([]);
   const { engine } = useEngine();
   useEffect(() => { if (engine) loadBooks(engine).then(setBooks, () => {}); }, [engine]);
   const bookName = (id: string) => books.find((b) => b.id === id)?.name ?? id;
 
+  const attached = hub?.attached ?? [];
+  /** 同一个官方键被多条覆盖：列出来，指出按层序现在生效的是哪条（最后一条开着的） */
+  const conflicts = useMemo(() => {
+    const byKey = new Map<string, ShareView[]>();
+    for (const s of attached) for (const k of coversOfItem(s)) byKey.set(k, [...(byKey.get(k) ?? []), s]);
+    return [...byKey.entries()].filter(([, list]) => list.length > 1)
+      .map(([key, list]) => {
+        const live = [...list].reverse().find((s) => s.state === 'auto' || s.state === 'on');
+        return { key, list, live };
+      });
+  }, [attached]);
+
   if (!hub) return <div className="small muted">正在读取资料…</div>;
+
+  const toggle = (s: ShareView) => {
+    const next = s.state === 'off' ? 'on' : 'off';
+    setShareState(c.id, s.ownerId, s.itemId, next).catch((e: Error) => setErr(e.message));
+  };
+  const detach = (s: ShareView) => {
+    unshareItem(c.id, s.itemId).catch((e: Error) => setErr(e.message));
+  };
+
   return (
     <div className="stack" style={{ gap: 8 }}>
       <div>
@@ -49,34 +89,115 @@ export function CampaignHub({ c }: { c: Campaign }) {
 
       <div>
         <div className="row small" style={{ marginBottom: 4 }}>
-          <span className="faint">本团内容</span>
-          <span className="muted">（家规、改官方能力、给没自动化的能力补战斗数据）</span>
+          <span className="faint">挂上来的内容</span>
+          <span className="muted">（各人自己的资料库挂过来的；新内容直接生效，覆盖官方规则的要 {dm ? '你' : 'DM'} 点头）</span>
           <span style={{ flex: 1 }} />
-          {dm && <button className="btn ghost sm" onClick={() => setEdit({ id: newItemId(), name: '', text: '', by: 'hand', reviewed: true })}>新建</button>}
+          <button className="btn ghost sm" onClick={() => setAttach(true)}>挂我的内容…</button>
         </div>
-        {!hub.items.length ? <div className="small muted">还没有。</div> : (
-          <div className="stack" style={{ gap: 4 }}>
-            {hub.items.map((it) => (
-              <div key={it.id} className="row small">
-                <span className="serif" style={{ minWidth: 110 }}>{it.name}</span>
-                <span className="row" style={{ gap: 4, flex: 1, flexWrap: 'wrap' }}>
-                  {it.covers ? <Tag tone="warn" title="覆盖了这条官方能力">覆盖 {it.covers}</Tag> : <Tag>新内容</Tag>}
-                  {it.pickable && <Tag>建卡时可选</Tag>}
-                  {it.sheet && <Tag>卡面</Tag>}
-                  {it.combat && <Tag>战斗</Tag>}
-                  {it.by !== 'hand' && <Tag tone={it.reviewed ? undefined : 'warn'}>{it.reviewed ? 'AI · 已审' : 'AI · 未审'}</Tag>}
-                </span>
-                <button className="btn ghost sm" onClick={() => setEdit(it)}>{dm ? '编辑' : '查看'}</button>
-                {dm && <button className="btn ghost sm danger" onClick={() => { if (confirm(`删除「${it.name}」？`)) void removeItem(c.id, it.id); }}>删除</button>}
+
+        {conflicts.length > 0 && (
+          <div className="small warnline" style={{ marginBottom: 6 }}>
+            {conflicts.map((x) => (
+              <div key={x.key}>
+                「{x.key}」有 {x.list.length} 条都在改：{x.list.map((s) => `${s.item.name}（${s.ownerName}）`).join('、')}
+                {x.live ? `　现在生效的是「${x.live.item.name}」（后面开着的盖前面）` : '　现在都没开'}
               </div>
             ))}
           </div>
         )}
+
+        {!attached.length ? <div className="small muted">还没有。点「挂我的内容…」把自己库里的东西挂上来。</div> : (
+          <div className="stack" style={{ gap: 4 }}>
+            {attached.map((s) => {
+              const cn = STATE_CN[s.state] ?? ['—', undefined];
+              const mine = s.ownerId === sync.user?.id;
+              return (
+                <div key={`${s.ownerId}/${s.itemId}`} className="row small" style={{ gap: 6, flexWrap: 'wrap' }}>
+                  <span className="serif" style={{ minWidth: 110 }}>{s.item.name}</span>
+                  <Tag>{kindLabel(s.item.kind)}</Tag>
+                  <span className="row" style={{ gap: 4, flexWrap: 'wrap', flex: 1 }}>
+                    <ItemTags item={s.item} />
+                    {!mine && <Tag title={`${s.ownerName} 的库`}>{s.ownerName}</Tag>}
+                  </span>
+                  <Tag tone={cn[1]}>{cn[0]}</Tag>
+                  {dm && <button className="btn ghost sm" onClick={() => toggle(s)}>{s.state === 'off' ? '打开' : '关掉'}</button>}
+                  {mine && <button className="btn ghost sm" onClick={() => setEdit(s.item)}>编辑</button>}
+                  {mine && <button className="btn ghost sm danger" onClick={() => { if (confirm(`把「${s.item.name}」从「${c.name}」拿下来？（内容还在你的资料库里）`)) detach(s); }}>摘下</button>}
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {err && <div className="dangerline small" style={{ marginTop: 4 }}>{err}</div>}
+        <div className="row small" style={{ marginTop: 6 }}>
+          <span className="muted">生效的内容：{effectiveItems(hub).length} 条；你自己的卡还额外按你自己的资料库算。</span>
+          <span style={{ flex: 1 }} />
+          <button className="btn ghost sm" onClick={() => actions.go('data')}>打开我的资料库</button>
+        </div>
       </div>
 
       {picking && <BookPicker books={books} chosen={hub.sources} onClose={() => setPicking(false)} onSave={async (list) => { await setSources(c.id, list); setPicking(false); }} />}
-      {edit && <ItemEditor cid={c.id} item={edit} readOnly={!dm} onClose={() => setEdit(null)} onSave={(it) => saveItem(c.id, it)} />}
+      {attach && <AttachDialog cid={c.id} onClose={() => setAttach(false)} />}
+      {edit && engine && (
+        <LibraryEditor
+          item={edit}
+          engine={engine}
+          cid={c.id}
+          onClose={() => setEdit(null)}
+          onSave={async (it) => saveLibraryItem(it)}
+          onDelete={async () => { await removeLibraryItem(edit.id); setEdit(null); }}
+        />
+      )}
     </div>
+  );
+}
+
+/** 把我库里的内容挂到这个战役 / 摘下来 */
+function AttachDialog({ cid, onClose }: { cid: string; onClose: () => void }) {
+  useLibraryVersion();
+  const items = useLibrary();
+  const [msg, setMsg] = useState('');
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState('');
+  const attachedTo = (id: string) => (hubNow(cid)?.attached ?? []).find((s) => s.itemId === id);
+
+  const toggle = async (it: LibraryItem, on: boolean) => {
+    setBusy(it.id); setErr(''); setMsg('');
+    try {
+      if (on) {
+        const state = await shareItem(cid, it.id);
+        setMsg(state === 'pending' ? `「${it.name}」覆盖了官方规则，挂上了，等 DM 点头。` : `「${it.name}」挂上了，团里的人立刻能用。`);
+      } else {
+        await unshareItem(cid, it.id);
+        setMsg(`「${it.name}」拿下来了。`);
+      }
+    } catch (e) { setErr((e as Error).message); }
+    setBusy('');
+  };
+
+  return (
+    <Dialog title="挂我的内容到这个战役" onClose={onClose} footer={<>
+      <span style={{ flex: 1 }} />
+      <button className="btn" onClick={onClose}>关闭</button>
+    </>}>
+      <div className="stack" style={{ gap: 6 }}>
+        <div className="small muted">新内容挂上就生效；覆盖官方规则的挂上后要 DM 点头。</div>
+        {!items.length ? <div className="small muted">你的资料库还是空的。先去「资料库」页建一条，或者从人物卡「数据」页让 AI 补一条。</div>
+          : items.map((it) => {
+            const s = attachedTo(it.id);
+            return (
+              <label key={it.id} className="row small" style={{ gap: 8, alignItems: 'center' }}>
+                <input type="checkbox" checked={!!s} disabled={busy === it.id} onChange={(e) => void toggle(it, e.target.checked)} />
+                <span className="serif" style={{ minWidth: 110 }}>{it.name}</span>
+                <span className="row" style={{ gap: 4, flexWrap: 'wrap', flex: 1 }}><ItemTags item={it} /></span>
+                {s && <Tag tone={STATE_CN[s.state]?.[1]}>{STATE_CN[s.state]?.[0]}</Tag>}
+              </label>
+            );
+          })}
+        {msg && <div className="small ok">{msg}</div>}
+        {err && <div className="dangerline small">{err}</div>}
+      </div>
+    </Dialog>
   );
 }
 
@@ -125,110 +246,6 @@ function BookPicker(p: { books: Book[]; chosen: string[]; onClose: () => void; o
           </div>
         ))}
       </div>
-    </Dialog>
-  );
-}
-
-const pretty = (v: unknown) => (v === undefined ? '' : JSON.stringify(v, null, 2));
-
-function ItemEditor(p: { cid: string; item: HubItem; readOnly: boolean; onClose: () => void; onSave: (it: HubItem) => Promise<string[]> }) {
-  const { engine } = useEngine();
-  const [ai, setAi] = useState(false);
-  const [by, setBy] = useState(p.item.by);
-  const [name, setName] = useState(p.item.name);
-  const [text, setText] = useState(p.item.text);
-  const [covers, setCovers] = useState(p.item.covers ?? '');
-  const [pickable, setPickable] = useState(!!p.item.pickable);
-  const [reviewed, setReviewed] = useState(p.item.reviewed);
-  const [sheet, setSheet] = useState(pretty(p.item.sheet));
-  const [combat, setCombat] = useState(pretty(p.item.combat));
-  const [problems, setProblems] = useState<string[]>([]);
-  const ro = p.readOnly;
-
-  const save = async () => {
-    const bad: string[] = [];
-    const parse = (s: string, what: string) => {
-      if (!s.trim()) return undefined;
-      try { return JSON.parse(s); } catch { bad.push(`${what}不是合法的 JSON`); return undefined; }
-    };
-    const it: HubItem = {
-      id: p.item.id, name: name.trim(), text, by, reviewed,
-      ...(covers.trim() ? { covers: covers.trim() } : {}),
-      ...(pickable ? { pickable: true } : {}),
-    };
-    const sh = parse(sheet, '卡面数据');
-    const cb = parse(combat, '战斗数据');
-    if (sh !== undefined) it.sheet = sh;
-    if (cb !== undefined) it.combat = cb;
-    if (bad.length) { setProblems(bad); return; }
-    try {
-      const r = await p.onSave(it);
-      if (r.length) setProblems(r); else p.onClose();
-    } catch (e) { setProblems([(e as Error).message]); }
-  };
-
-  return (
-    <Dialog title={ro ? name : p.item.name ? `编辑「${p.item.name}」` : '新的本团内容'} onClose={p.onClose} footer={<>
-      {!ro && by !== 'hand' && <label className="row small"><input type="checkbox" checked={reviewed} onChange={(e) => setReviewed(e.target.checked)} />审过了</label>}
-      <span style={{ flex: 1 }} />
-      <button className="btn" onClick={p.onClose}>{ro ? '关闭' : '取消'}</button>
-      {!ro && <button className="btn primary" disabled={!name.trim()} onClick={() => void save()}>保存</button>}
-    </>}>
-      <div className="stack" style={{ gap: 8 }}>
-        <Field label="名字"><input value={name} readOnly={ro} onChange={(e) => setName(e.target.value)} /></Field>
-        <Field label="说明（给人看的原文 / 家规内容）"><textarea rows={4} value={text} readOnly={ro} onChange={(e) => setText(e.target.value)} /></Field>
-        <Field label="覆盖哪条官方能力（条目键，比如 XPHB:警觉、XPHB:野蛮人:狂暴:1；空 = 新内容）">
-          <input value={covers} readOnly={ro} onChange={(e) => setCovers(e.target.value)} placeholder="空 = 新内容" />
-        </Field>
-        <label className="row small" style={{ alignItems: 'flex-start', whiteSpace: 'normal' }}>
-          <input type="checkbox" checked={pickable} disabled={ro} onChange={(e) => setPickable(e.target.checked)} />
-          不是人人都有：卡上选了才生效（不勾 = 团里每张卡都生效；覆盖官方能力的只改有这项能力的卡）
-        </label>
-        <Field label="卡面数据（JSON：mods / grants / choices / resources，写法同能力数据）">
-          <textarea rows={6} className="mono" value={sheet} readOnly={ro} onChange={(e) => setSheet(e.target.value)} placeholder='{ "mods": [], "grants": [], "choices": [], "resources": [] }' />
-        </Field>
-        <Field label="战斗数据（JSON：{ entry } 整条；{ key, patch } 改官方条目的字段；key 不写 = 覆盖的那条 / 新内容）">
-          <textarea rows={8} className="mono" value={combat} readOnly={ro} onChange={(e) => setCombat(e.target.value)} placeholder='{ "entry": { "name": "…", "actions": [] } }' />
-        </Field>
-        {!ro && (
-          <div className="row small" style={{ gap: 6 }}>
-            <button className="btn sm" disabled={!engine || !name.trim()} onClick={() => setAi(true)}>AI 写战斗数据…</button>
-            <span className="muted">按上面的名字和说明（覆盖官方能力的，再加上官方原文）让 AI 写，检查过了填进「战斗数据」。卡面数据还是手写。</span>
-          </div>
-        )}
-        {!ro && <div className="small muted">改了之后：人物卡马上按新的算；已经开着的遭遇要 DM 在遭遇菜单里点「更新本团规则」。</div>}
-        {problems.length > 0 && <div className="dangerline small">{problems.map((x, i) => <div key={i}>{x}</div>)}</div>}
-      </div>
-      {ai && engine && (() => {
-        let cur: Record<string, unknown> = {};
-        try { cur = combat.trim() ? JSON.parse(combat) : {}; } catch { /* 坏的就当没有 */ }
-        const key = String(cur.key ?? '').trim() || covers.trim() || `HR:${p.item.id}`;
-        return (
-          <AiDatafy
-            title={`AI 写「${name.trim()}」的战斗数据`}
-            initial={cur.entry}
-            saveLabel="填进战斗数据"
-            prepare={() => jobForKey(engine, p.cid, key, { name: name.trim(), text, houseRule: covers.trim() ? text : undefined })}
-            onSave={async (a, aiBy) => {
-              if (isSkip(a)) return [`AI 认为这条没有战斗里要写的：${a.skip}`];
-              const { patch: _p, value: _v, ...rest } = cur;
-              setCombat(pretty({ ...rest, entry: a }));
-              // 条目自己声明的次数池，卡面也要有（人物卡据此生成这个池）
-              const decls = declaredResources(a);
-              if (decls.length) {
-                let sh: Record<string, unknown[]> = {};
-                try { sh = sheet.trim() ? JSON.parse(sheet) : {}; } catch { /* 坏的就当没有 */ }
-                const res = [...(sh.resources ?? [])] as Array<Record<string, unknown>>;
-                for (const d of decls) if (!res.some((r) => r.id === d.id)) res.push({ id: d.id, name: d.name, formula: d.formula, recovery: d.recovery });
-                setSheet(pretty({ ...sh, resources: res }));
-              }
-              setBy(aiBy);
-              setReviewed(false);
-            }}
-            onClose={() => setAi(false)}
-          />
-        );
-      })()}
     </Dialog>
   );
 }

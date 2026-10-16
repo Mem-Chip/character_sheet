@@ -8,7 +8,7 @@ import abilitiesBuiltin from '../../data/abilities-builtin.json';
 import { RuleBook } from '../../src/combat';
 import { RULE_FILES } from '../../src/bridge/rule-files';
 import { BASE_URL, SheetEnv, type DataProvider } from '../../src/sheet';
-import { installHub } from './hub';
+import { installLibrary } from './library';
 
 const memo = new Map<string, Promise<unknown>>();
 
@@ -60,7 +60,7 @@ export function loadEngine(): Promise<Engine> {
     const bad = await env.init(['items', 'optionalfeatures', 'spellsXphb', 'spellsSources']);
     const rules = new RuleBook(RULE_FILES);
     const engine: Engine = { env, rules, base: rules, problems: [] };
-    installHub(engine);
+    installLibrary(engine);
     return { ...engine, problems: [...bad.map((k) => `没能装载 ${k}`), ...rules.problems] };
   })();
   return ready;

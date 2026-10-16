@@ -13,6 +13,10 @@ export function AiDatafy(p: {
   /** 已有的结果（再改一版用） */
   initial?: unknown;
   saveLabel?: string;
+  /** 说明书：缺省只讲动态层（怪物那种按名字回答的流程）；资料库的双写流程传 `aiSpec('both')` */
+  spec?: string;
+  /** 例子：缺省是战斗黄金条目；双写流程再拼上卡面数据的例子 */
+  examples?: string;
   onSave: (answer: unknown, by: string) => Promise<string[] | void>;
   onClose: () => void;
 }) {
@@ -44,7 +48,7 @@ export function AiDatafy(p: {
     abort.current = new AbortController();
     try {
       const r = await datafy({
-        chat: makeChat(settings), spec: aiSpec(), examples: aiExamples(), task: job.task, check: job.check,
+        chat: makeChat(settings), spec: p.spec ?? aiSpec(), examples: p.examples ?? aiExamples(), task: job.task, check: job.check,
         ...(revise ? { previous: parsed(), feedback } : {}),
         onStep: setStep, signal: abort.current.signal,
       });

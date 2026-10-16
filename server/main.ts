@@ -18,6 +18,7 @@ import { dirname, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { createEncounters } from './encounters';
 import { createHub } from './hub';
+import { createLibrary } from './library';
 
 const argPort = process.argv.indexOf('--port');
 const PORT = Number(argPort > 0 ? process.argv[argPort + 1] : process.env.PORT ?? 8789);
@@ -226,6 +227,7 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
   }
 
   if (await encounters(req, res, u, path, method)) return;
+  if (await library.handle(req, res, u, path, method)) return;
   if (await hub.handle(req, res, u, path, method)) return;
 
   /* 人物卡 */
@@ -317,6 +319,7 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
       if (isOwner) throw bad('建团的人不能退出（可以删掉战役）');
       run('UPDATE cards SET campaign_id = NULL WHERE campaign_id = ? AND owner_id = ?', hit[1], u.id);
       run('DELETE FROM members WHERE campaign_id = ? AND user_id = ?', hit[1], u.id);
+      library.detachAll(hit[1], u.id);
       return send(res, 200, { ok: true });
     }
     if (method === 'POST' && sub === '/kick') {
@@ -325,6 +328,7 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
       if (Number(b.userId) === Number(c.owner_id)) throw bad('不能请建团的人离开');
       run('UPDATE cards SET campaign_id = NULL WHERE campaign_id = ? AND owner_id = ?', hit[1], Number(b.userId));
       run('DELETE FROM members WHERE campaign_id = ? AND user_id = ?', hit[1], Number(b.userId));
+      library.detachAll(hit[1], Number(b.userId));
       return send(res, 200, { campaign: campaignJson(c, u) });
     }
     if (method === 'DELETE' && sub === '') {
@@ -341,8 +345,9 @@ const deps = {
   one, all, run, exec: (sql: string) => db.exec(sql), bodyOf, send, roleIn,
   fail: (status: number, message: string) => new HttpError(status, message),
 };
-const hub = createHub(deps);
-const encounters = createEncounters({ ...deps, campaignRules: hub.campaignRules });
+const library = createLibrary(deps);
+const hub = createHub(deps, library);
+const encounters = createEncounters({ ...deps, campaignRules: library.campaignRules, ownerRules: library.rulesOfOwner });
 
 /* ───────────── 命令行 ───────────── */
 

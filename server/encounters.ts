@@ -16,8 +16,8 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import {
-  DICE_MODES, RuleBook, Session, createEncounter, defaultDiceMode, diceSourceFor, footprint, gridFeet, lineCells, chatEntry, type ChatRoll, type DiceMode,
-  type Command, type DispatchResult, type EngineCtx, type Diagonal, type HouseRule, type OverridePatch, type Positions, type SessionSave,
+  DICE_MODES, RuleBook, Session, createEncounter, defaultDiceMode, diceSourceFor, encounterLayers, footprint, gridFeet, lineCells, chatEntry, type ChatRoll, type DiceMode,
+  type Command, type DispatchResult, type EngineCtx, type Diagonal, type HouseRule, type OverridePatch, type Positions, type RuleLayer, type SessionSave,
 } from '../src/combat';
 import { RULE_FILES } from '../src/bridge/rule-files';
 
@@ -34,6 +34,8 @@ export interface Deps {
   fail: (status: number, message: string) => Error;
   /** 战役资料里的战斗部分（开遭遇时抄进遭遇） */
   campaignRules?: (campaignId: string) => HouseRule[];
+  /** 某个账户自己的资料库的战斗部分（参战者带卡进场时叠成一层） */
+  ownerRules?: (ownerId: number) => HouseRule[];
 }
 
 export interface Stroke { id: string; by: number; color: string; width: number; pts: number[] }
@@ -90,6 +92,8 @@ interface Live {
   reveal: Record<string, boolean>;
   /** 开遭遇时抄进来的本团房规（之后重放都用这份；DM 点「更新规则」才换） */
   rules: HouseRule[];
+  /** 参战者自己的资料库（按加入顺序叠上来，一个人的只叠一次；也是快照，点「更新规则」才换） */
+  ownerRules: Array<{ ownerId: number; name: string; rules: HouseRule[] }>;
   ctx: EngineCtx;
   seq: number;
   watchers: Set<ServerResponse>;
@@ -113,24 +117,24 @@ export function createEncounters(d: Deps) {
   const live = new Map<string, Live>();
 
   /** 每场遭遇自己的引擎上下文：骰子按这场的设置，棋子位置按这场的地图 */
-  /** 带本团房规的规则书（同一份房规共用一本） */
+  /** 带房规 / 参战者资料库的规则书（同一份层共用一本） */
   const books = new Map<string, RuleBook>();
-  function bookOf(hr: HouseRule[] | undefined): RuleBook {
-    if (!hr?.length) return rules;
-    const k = JSON.stringify(hr);
+  function bookOf(layers: RuleLayer[]): RuleBook {
+    if (!layers.length) return rules;
+    const k = JSON.stringify(layers);
     let b = books.get(k);
     if (!b) {
-      b = new RuleBook(RULE_FILES, [{ scope: 'camp', name: '本团', rules: hr }]);
+      b = new RuleBook(RULE_FILES, layers);
       if (books.size > 50) books.clear();
       books.set(k, b);
     }
     return b;
   }
 
-  function ctxOf(e: { dice: Live['dice']; map: MapState; session?: Session; actingAs?: string | null; rules?: HouseRule[] }): EngineCtx {
+  function ctxOf(e: { dice: Live['dice']; map: MapState; session?: Session; actingAs?: string | null; rules?: HouseRule[]; ownerRules?: Live['ownerRules'] }): EngineCtx {
     const modeOf = (user: string) => e.dice[user] ?? e.dice['*'] ?? defaultDiceMode(user);
     return {
-      rules: bookOf(e.rules),
+      rules: bookOf(encounterLayers(e.rules, e.ownerRules)),
       diceFor: (user) => diceSourceFor(e.actingAs === user ? modeOf('dm') : modeOf(user)),
       positions: () => {
         const st = e.session?.state;
@@ -155,7 +159,7 @@ export function createEncounters(d: Deps) {
     const e = {
       id, campaignId: String(r.campaign_id), name: String(r.name),
       owners: meta.owners ?? {}, cards: meta.cards ?? {}, dice: meta.dice ?? {}, hidden: meta.hidden ?? [], chat: meta.chat ?? [],
-      actingAs: meta.actingAs ?? null, autoHid: meta.autoHid ?? [], dicePhys: meta.dicePhys ?? {}, diceColors: meta.diceColors ?? {}, diceOpen: !!meta.diceOpen, reveal: meta.reveal ?? {}, map: { ...newMap(), ...(meta.map ?? {}) }, rules: meta.rules ?? [], seq: 0, watchers: new Set(),
+      actingAs: meta.actingAs ?? null, autoHid: meta.autoHid ?? [], dicePhys: meta.dicePhys ?? {}, diceColors: meta.diceColors ?? {}, diceOpen: !!meta.diceOpen, reveal: meta.reveal ?? {}, map: { ...newMap(), ...(meta.map ?? {}) }, rules: meta.rules ?? [], ownerRules: meta.ownerRules ?? [], seq: 0, watchers: new Set(),
     } as unknown as Live;
     e.ctx = ctxOf(e);
     e.session = Session.restore(JSON.parse(String(r.save)) as SessionSave, e.ctx);
@@ -165,9 +169,36 @@ export function createEncounters(d: Deps) {
 
   const stateOf = (e: Live) => ({
     id: e.id, name: e.name, campaignId: e.campaignId, seq: e.seq, owners: e.owners, cards: e.cards,
-    dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, dicePhys: e.dicePhys, diceColors: e.diceColors, diceOpen: e.diceOpen, reveal: e.reveal, rules: e.rules, save: e.session.save(),
+    dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, dicePhys: e.dicePhys, diceColors: e.diceColors, diceOpen: e.diceOpen, reveal: e.reveal, rules: e.rules,
+    // 参战者各自的资料库也发给客户端：它要按同一份层重放
+    ownerRules: e.ownerRules.map(({ name, rules: rs }) => ({ name, rules: rs })),
+    save: e.session.save(),
   });
-  const metaOf = (e: Live) => JSON.stringify({ owners: e.owners, cards: e.cards, dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, autoHid: e.autoHid, dicePhys: e.dicePhys, diceColors: e.diceColors, diceOpen: e.diceOpen, reveal: e.reveal, rules: e.rules });
+  const metaOf = (e: Live) => JSON.stringify({ owners: e.owners, cards: e.cards, dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, autoHid: e.autoHid, dicePhys: e.dicePhys, diceColors: e.diceColors, diceOpen: e.diceOpen, reveal: e.reveal, rules: e.rules, ownerRules: e.ownerRules });
+
+  /**
+   * 参战者带着卡进来：把卡主资料库的战斗部分叠成一层，然后重放（这样他的自定义数据从进场就生效）。
+   * 一个人的库只叠一次；这层规则让重放失败的话撤回去（别把整场弄坏），DM 可以点「更新规则」再试。
+   */
+  function addOwnerLayer(e: Live, cardId: string): void {
+    if (!d.ownerRules) return;
+    const ownerId = Number(d.one('SELECT owner_id FROM cards WHERE id = ?', cardId)?.owner_id ?? 0);
+    if (!ownerId || e.ownerRules.some((o) => o.ownerId === ownerId)) return;
+    const rs = d.ownerRules(ownerId);
+    if (!rs.length) return;
+    const name = String(d.one('SELECT name FROM users WHERE id = ?', ownerId)?.name ?? '玩家');
+    const before = e.ownerRules;
+    e.ownerRules = [...before, { ownerId, name, rules: rs }];
+    e.ctx = ctxOf(e);
+    try {
+      e.session = Session.restore(e.session.save(), e.ctx);
+    } catch (err) {
+      e.ownerRules = before;
+      e.ctx = ctxOf(e);
+      e.session = Session.restore(e.session.save(), e.ctx);
+      console.warn(`「${name}」的资料库规则叠加失败，这一场先不用它：`, (err as Error).message);
+    }
+  }
   const broadcast = (e: Live, event: string, data: unknown) => {
     const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
     for (const w of e.watchers) w.write(msg);
@@ -472,7 +503,11 @@ export function createEncounters(d: Deps) {
           // 玩家加的归自己；DM 替玩家加（带了卡主）就归卡主；DM 自己的怪不登记
           const owner = role === 'player' ? u.id : typeof b.owner === 'number' ? b.owner : null;
           if (owner != null) e.owners[ctl] = owner;
-          if (typeof b.cardId === 'string') e.cards[cmd.combatant.id] = b.cardId;
+          if (typeof b.cardId === 'string') {
+            e.cards[cmd.combatant.id] = b.cardId;
+            // 卡主自己的资料库（自定义战斗数据）从进场就生效
+            addOwnerLayer(e, b.cardId);
+          }
           if (role === 'dm' && b.hidden) e.hidden.push(cmd.combatant.id);
         }
         if (r.status !== 'rejected' && cmd.type === 'removeCombatant') {
@@ -489,14 +524,16 @@ export function createEncounters(d: Deps) {
           applyMoves(e, r);
         } else s.cancelPending();
       } else if (op === 'refreshRules') {
-        // 战役资料改了，想在这场里立刻生效：换成现在的本团房规，整场按新规则重算
+        // 战役资料 / 参战者各自的资料库改了，想在这场里立刻生效：换成现在的，整场按新规则重算
         if (role !== 'dm') return reject('只有 DM 能更新规则');
         if (s.pending) return reject('还有一个决定没做完');
-        const before = e.rules;
+        const before = { rules: e.rules, ownerRules: e.ownerRules };
         e.rules = d.campaignRules?.(e.campaignId) ?? [];
+        e.ownerRules = e.ownerRules.map((o) => ({ ...o, rules: d.ownerRules?.(o.ownerId) ?? [] }));
         e.ctx = ctxOf(e);
         try { e.session = Session.restore(s.save(), e.ctx); } catch (err) {
-          e.rules = before;
+          e.rules = before.rules;
+          e.ownerRules = before.ownerRules;
           e.ctx = ctxOf(e);
           return reject('按新规则重算失败：' + (err as Error).message);
         }

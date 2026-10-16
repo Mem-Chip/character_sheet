@@ -44,6 +44,10 @@
 - **物件当目标**（门、箱子，有 AC 和生命值）。在哪：`makeView`（`src/combat/view.ts`）、目标选择。
 - **旧数据重写**：新接口写好之后，外包重写用得上它们的旧数据（反冲术、炼狱叱喝、黯冰狱铠、反射闪避、极效治疗、元素同调、庇护术、投射守御、法术反制…，约 58 条，
   见 `datafy/manual-audit/report.md`），以及地图区域类法术。外包流程见 `datafy/README.md`。
+- **自定义整个职业 / 自定义种族「建卡时能选到」**：账户资料库（[LIBRARY.md](LIBRARY.md)）现在支持特性、法术、物品、专长、可选特性、子职的数据化；整个职业（等级表、特性表、施法进度）和自定义种族要接静态层的职业表 / 种族候选，工程量大，先搁着。
+  在哪：`src/sheet/`（`class-state.ts` 的职业表、`source.ts` 的候选过滤）、`app/lib/library.ts` 的 `pickable`。
+- **易伤（vulnerability）在卡面数据里表达不出来**：`mods` 里只有 `resist` 和 `immune`（`immune` 是这轮补的），
+  伤害易伤只有战斗侧的 statics 支持，人物卡不算它。在哪：`src/sheet/abilities.ts`（注册 mod kind）、`src/sheet/pipeline.ts`（把 `vuln` 也 pluck 出来写进 sheet）。
 
 ## 大块，暂时不做
 

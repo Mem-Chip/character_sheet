@@ -37,6 +37,20 @@ export interface RuleLayer {
   rules: HouseRule[];
 }
 
+/**
+ * 遭遇的规则层：官方文件 → 本团（战役挂载且 DM 开着的）→ 每个参战者自己的资料库（按加入顺序，靠后的盖前面）。
+ * 服务器开遭遇 / 加人时用它定格快照，客户端拿同一份（`state.rules` / `state.ownerRules`）重放，两边才一模一样。
+ */
+export function encounterLayers(
+  camp: HouseRule[] | undefined,
+  owners: Array<{ name: string; rules: HouseRule[] }> | undefined,
+): RuleLayer[] {
+  const out: RuleLayer[] = [];
+  if (camp?.length) out.push({ scope: 'camp', name: '本团', rules: camp });
+  for (const o of owners ?? []) if (o.rules?.length) out.push({ scope: 'card', name: o.name || '玩家的资料库', rules: o.rules });
+  return out;
+}
+
 export interface Overridden {
   layer: string;
   scope: RuleLayer['scope'];

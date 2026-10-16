@@ -169,12 +169,71 @@ export interface SourceSpec {
   covers?: string;
 }
 
+/**
+ * mods 的 kind 表：一句话说明 + 能写哪些字段（`keys`，用于检查拼错的字段名）+ 给人看的字段说明。
+ * 这是**唯一的一份**：注册、说明书（`buildSpec` 的卡面那一节）、检查（`lintSheet`）都从这里取，
+ * 加新 kind 时忘了写说明会直接抛错，模型也就不会照着过时的说明写。所有 kind 都可以带 `note`。
+ */
+export const MOD_KIND_DOC: Record<string, { doc: string; keys: string[]; fields: string }> = {
+  ability: { doc: '给属性值加成', keys: ['set'], fields: '`set: { str: 1 }`（直接加在属性值上）' },
+  ac: {
+    doc: 'AC：算式或固定加值', keys: ['formula', 'ability', 'ability2', 'bonus', 'set'],
+    fields: '`formula: \'10 + dex + con\'`、`ability: \'con\'`（配 formula 用）、`bonus: 1`（固定加值）、`set: 13`（定值）、`ability2`（定值用哪个属性）',
+  },
+  speed: { doc: '速度加成', keys: ['bonus', 'set'], fields: '`bonus: 10` 或 `set: 30`（写死）' },
+  initiative: { doc: '先攻加成', keys: ['bonus'], fields: '`bonus: 2` / `\'pb\'` / `\'dex\'`' },
+  hp: { doc: '生命值加成', keys: ['perLevel', 'bonus'], fields: '`perLevel: 1`（每级加，乘等级）、`bonus: 5`（一次性）' },
+  resist: { doc: '伤害抗性', keys: ['values'], fields: '`values: [\'火焰\', \'寒冷\']`（伤害类型用中文）' },
+  immune: { doc: '伤害免疫', keys: ['values'], fields: '`values: [\'毒素\']`' },
+  darkvision: { doc: '黑暗视觉', keys: ['value'], fields: '`value: 120`（尺）' },
+  saveProf: { doc: '豁免熟练', keys: ['values'], fields: '`values: [\'con\', \'wis\']`（属性缩写）' },
+  skillBonus: { doc: '特定技能加值', keys: ['skill', 'bonus'], fields: '`skill: \'察觉\'`、`bonus: 2`' },
+  note: { doc: '只作展示，不改数值（会出现在「能力一览」里）', keys: ['note'], fields: '`note: \'文字\'`' },
+  armorProf: { doc: '护甲熟练', keys: ['values'], fields: '`values: [\'轻甲\', \'中甲\', \'重甲\', \'盾牌\']`' },
+  weaponProf: { doc: '武器熟练', keys: ['values'], fields: '`values: [\'简易\', \'军用\']`' },
+  sense: { doc: '特殊感官', keys: ['sense', 'value'], fields: '`sense: \'blindsight\' | \'tremorsense\' | \'truesight\'`、`value: 30`（尺）' },
+  moveSpeed: { doc: '移动模式速度', keys: ['mode', 'value'], fields: '`mode: \'fly\' | \'swim\' | \'climb\'`、`value: 20`' },
+  tempHp: { doc: '临时生命值（和最大生命值分开算）', keys: ['perLevel', 'bonus', 'per'], fields: '`perLevel: 2`（每级）、`bonus: \'2d8 + 牧师等级\'`、`per`' },
+  saveBonus: { doc: '豁免加值', keys: ['value', 'ability'], fields: '`value: 2`（数字或说明文字）、`ability: \'cha\'`（只对某项豁免）' },
+  conditionImmune: { doc: '状态免疫', keys: ['value'], fields: '`value: \'魅惑\'`（一次一个，状态用中文）' },
+  resource: { doc: '资源池标注（池子本身写在 resources 里）', keys: ['id'], fields: '`id: \'<resources 里的 id>\'`' },
+};
+
+/** grants 的 kind 表：授予实体；`needs` 说这条必须有哪个字段 */
+export const GRANT_KINDS: Record<string, { doc: string; needs: 'values' | 'formula' | 'text' }> = {
+  skill: { doc: '技能熟练', needs: 'values' },
+  expertise: { doc: '技能专精', needs: 'values' },
+  save: { doc: '豁免熟练', needs: 'values' },
+  language: { doc: '语言', needs: 'values' },
+  tool: { doc: '工具熟练', needs: 'values' },
+  feat: { doc: '授予专长', needs: 'values' },
+  spell: { doc: '授予法术（算已准备，可用法术位施放）', needs: 'values' },
+  cantrip: { doc: '授予戏法', needs: 'values' },
+  itemMastery: { doc: '武器精通', needs: 'values' },
+  classFeature: { doc: '带出另一条职业特性的原文', needs: 'values' },
+  subclass: { doc: '获得子职', needs: 'values' },
+  acFormula: { doc: '无甲防御这类算式', needs: 'formula' },
+  custom: { doc: '一段自定义说明（进「特性」列表）', needs: 'text' },
+  note: { doc: '一段备注（进「特性」列表，标着来自哪条）', needs: 'text' },
+};
+
+/** choices 的 pool 白名单：不在里面就必须写 from 数组 */
+export const CHOICE_POOLS: ReadonlySet<string> = new Set([
+  'skill', 'skillOrTool', 'profSkill', 'anyProfSkill', 'instrument', 'artisan',
+  'weapon', 'weaponMastery', 'cleric', 'druid', 'spellList', 'byClass', 'byClassL1', 'spellBySchool',
+  'language', 'tool', 'ability', 'subclass', 'classFeature', 'originFeat',
+]);
+
 function registerDefaultKinds(book: AbilityBook): void {
-  const reg = (k: string, fn: ModFn, describe: string) => book.registerKind(k, fn, describe);
+  const reg = (k: string, fn: ModFn) => {
+    const doc = MOD_KIND_DOC[k];
+    if (!doc) throw new Error(`mod kind「${k}」没写进 MOD_KIND_DOC`);
+    book.registerKind(k, fn, doc.doc);
+  };
   reg('ability', (ctx, m) => {
     const set = m.set || {};
     if (Object.keys(set).length) ctx.addEffect({ kind: 'ability', set, source: m.note });
-  }, '给属性值加成');
+  });
   reg('ac', (ctx, m) => {
     if (m.formula || m.ability) {
       const parsed = parseAcFormula(m.formula) || { base: 10, abils: m.ability ? [m.ability] : [] };
@@ -182,28 +241,29 @@ function registerDefaultKinds(book: AbilityBook): void {
     }
     if (m.set) ctx.addEffect({ kind: 'acSet', value: m.set, ability: m.ability2 || 'dex', source: m.note });
     if (m.bonus) ctx.addEffect({ kind: 'ac', value: m.bonus, source: m.note });
-  }, 'AC：算式（+ 敏捷 + 某属性）或固定加值');
-  reg('speed', (ctx, m) => { ctx.addEffect({ kind: 'speed', value: m.bonus ?? m.set ?? 0, source: m.note }); }, '速度加成');
-  reg('initiative', (ctx, m) => { ctx.addEffect({ kind: 'initiative', value: m.bonus, source: m.note }); }, '先攻加成（bonus 可为数字、"pb" 或属性名）');
+  });
+  reg('speed', (ctx, m) => { ctx.addEffect({ kind: 'speed', value: m.bonus ?? m.set ?? 0, source: m.note }); });
+  reg('initiative', (ctx, m) => { ctx.addEffect({ kind: 'initiative', value: m.bonus, source: m.note }); });
   reg('hp', (ctx, m) => {
     if (m.perLevel) ctx.addEffect({ kind: 'hpPerLevel', value: m.perLevel, source: m.note });
     if (m.bonus) ctx.addEffect({ kind: 'hp', value: m.bonus, source: m.note });
-  }, '生命值加成（含每级）');
-  reg('resist', (ctx, m) => { for (const d of m.values || []) ctx.addEffect({ kind: 'resist', damage: d, source: m.note }); }, '伤害抗性/免疫/易伤');
-  reg('darkvision', (ctx, m) => { ctx.addEffect({ kind: 'darkvision', value: m.value ?? 60, source: m.note }); }, '黑暗视觉');
-  reg('saveProf', (ctx, m) => { for (const a of m.values || []) ctx.addEffect({ kind: 'saveProf', ability: a, source: m.note }); }, '豁免熟练');
-  reg('skillBonus', (ctx, m) => { ctx.addEffect({ kind: 'skillBonus', skill: m.skill, value: m.bonus, source: m.note }); }, '特定技能加值');
-  reg('note', () => {}, '只作展示，不改数值（但会出现在「能力一览」里）');
-  reg('armorProf', (ctx, m) => { for (const a of m.values || []) ctx.addEffect({ kind: 'armorProf', value: a, source: m.note }); }, '护甲熟练');
-  reg('weaponProf', (ctx, m) => { for (const w of m.values || []) ctx.addEffect({ kind: 'weaponProf', value: w, source: m.note }); }, '武器熟练');
-  reg('sense', (ctx, m) => { ctx.addEffect({ kind: 'sense', sense: m.sense, value: m.value ?? 0, source: m.note }); }, '特殊感官（盲视/震颤感知/真实视觉）');
-  reg('moveSpeed', (ctx, m) => { ctx.addEffect({ kind: 'moveSpeed', mode: m.mode, value: m.value ?? 0, source: m.note }); }, '移动模式速度（fly/swim/climb）');
+  });
+  reg('resist', (ctx, m) => { for (const d of m.values || []) ctx.addEffect({ kind: 'resist', damage: d, source: m.note }); });
+  reg('immune', (ctx, m) => { for (const d of m.values || []) ctx.addEffect({ kind: 'immune', damage: d, source: m.note }); });
+  reg('darkvision', (ctx, m) => { ctx.addEffect({ kind: 'darkvision', value: m.value ?? 60, source: m.note }); });
+  reg('saveProf', (ctx, m) => { for (const a of m.values || []) ctx.addEffect({ kind: 'saveProf', ability: a, source: m.note }); });
+  reg('skillBonus', (ctx, m) => { ctx.addEffect({ kind: 'skillBonus', skill: m.skill, value: m.bonus, source: m.note }); });
+  reg('note', () => {});
+  reg('armorProf', (ctx, m) => { for (const a of m.values || []) ctx.addEffect({ kind: 'armorProf', value: a, source: m.note }); });
+  reg('weaponProf', (ctx, m) => { for (const w of m.values || []) ctx.addEffect({ kind: 'weaponProf', value: w, source: m.note }); });
+  reg('sense', (ctx, m) => { ctx.addEffect({ kind: 'sense', sense: m.sense, value: m.value ?? 0, source: m.note }); });
+  reg('moveSpeed', (ctx, m) => { ctx.addEffect({ kind: 'moveSpeed', mode: m.mode, value: m.value ?? 0, source: m.note }); });
   reg('tempHp', (ctx, m, _a, s) => {
     ctx.addEffect({ kind: 'tempHp', perLevel: m.perLevel ?? null, bonus: m.bonus ?? null, per: m.per ?? null, cls: s?.cls || null, note: m.note });
-  }, '临时生命值（与最大生命值分开）');
-  reg('saveBonus', (ctx, m) => { ctx.addEffect({ kind: 'saveBonus', value: m.value, ability: m.ability, note: m.note }); }, '豁免加值');
-  reg('conditionImmune', (ctx, m) => { ctx.addEffect({ kind: 'conditionImmune', value: m.value, note: m.note }); }, '状态免疫');
-  reg('resource', (ctx, m) => { ctx.addEffect({ kind: 'abilityResource', id: m.id, note: m.note }); }, '资源池（由 resources 声明，这里只做标注）');
+  });
+  reg('saveBonus', (ctx, m) => { ctx.addEffect({ kind: 'saveBonus', value: m.value, ability: m.ability, note: m.note }); });
+  reg('conditionImmune', (ctx, m) => { ctx.addEffect({ kind: 'conditionImmune', value: m.value, note: m.note }); });
+  reg('resource', (ctx, m) => { ctx.addEffect({ kind: 'abilityResource', id: m.id, note: m.note }); });
 }
 
 /* ============================================================================
@@ -367,9 +427,6 @@ export class AbilityBook {
   audit(): Json {
     const problems: string[] = [];
     const unknownKinds = new Map<string, number>();
-    const POOLS = new Set(['skill', 'skillOrTool', 'profSkill', 'anyProfSkill', 'instrument', 'artisan',
-      'weapon', 'weaponMastery', 'cleric', 'druid', 'spellList', 'byClass', 'byClassL1', 'spellBySchool',
-      'language', 'tool', 'ability', 'subclass', 'classFeature', 'originFeat']);
     let nMods = 0, nGrants = 0, nChoices = 0, nRes = 0;
     for (const [key, a] of Object.entries(this.data.entries)) {
       if (!key.includes(':')) problems.push(`${key}: 键格式应为 "<source>:<name>"`);
@@ -382,21 +439,24 @@ export class AbilityBook {
       for (const g of a.grants || []) {
         nGrants++;
         if (!g.kind) { problems.push(`${key}: grant 缺 kind`); continue; }
-        if (g.kind === 'note') { if (!g.text) problems.push(`${key}: grant(note) 缺 text`); continue; }
-        if (!['acFormula', 'custom'].includes(g.kind) && (!Array.isArray(g.values) || !g.values.length)) problems.push(`${key}: grant(${g.kind}) 缺 values`);
+        const spec = GRANT_KINDS[g.kind];
+        if (!spec) { problems.push(`${key}: 不认识的 grant 类型「${g.kind}」`); continue; }
+        if (spec.needs === 'values' && (!Array.isArray(g.values) || !g.values.length)) problems.push(`${key}: grant(${g.kind}) 缺 values`);
+        if (spec.needs === 'formula' && !g.formula) problems.push(`${key}: grant(${g.kind}) 缺 formula`);
+        if (spec.needs === 'text' && !g.text) problems.push(`${key}: grant(${g.kind}) 缺 text`);
       }
       for (const c of a.choices || []) {
         nChoices++;
         if (!c.id) problems.push(`${key}: choice 缺 id`);
         if (!c.kind) problems.push(`${key}: choice 缺 kind`);
-        const ok = Array.isArray(c.from) || POOLS.has(c.pool) || c.kind === 'ability';
+        const ok = Array.isArray(c.from) || CHOICE_POOLS.has(c.pool) || c.kind === 'ability';
         if (!ok) problems.push(`${key}: choice(${c.id}) 的 pool "${c.pool}" 无法解析（不在已知池里，也不是 from 数组）`);
       }
       for (const r of a.resources || []) { nRes++; if (!r.id) problems.push(`${key}: resource 缺 id`); }
     }
     this.stats = {
       abilities: Object.keys(this.data.entries).length, mods: nMods, grants: nGrants, choices: nChoices, resources: nRes,
-      problems, unknownKinds: [...unknownKinds.entries()], kindsRegistered: [...this.kinds.keys()], poolsKnown: [...POOLS],
+      problems, unknownKinds: [...unknownKinds.entries()], kindsRegistered: [...this.kinds.keys()], poolsKnown: [...CHOICE_POOLS],
     };
     return this.stats;
   }
@@ -413,11 +473,15 @@ export class AbilityBook {
     return { id: this.newHrId(), name: '', text: '', covers: '', pickable: false, mods: [], grants: [], choices: [], resources: [] };
   }
 
-  /** 三层合成：同 key 靠后的赢，被盖住的那条标 _shadowedBy */
+  /**
+   * 四层合成：同 id 靠后的赢，被盖住的那条标 _shadowedBy。
+   * 顺序 = 优先级：全服 → 本团（战役挂载的）→ 我的资料库（账户级）→ 本卡。
+   */
   homelibAll(char: Json): HomeRuleEntry[] {
     const layers = [
       { scope: 'server', rules: this.env.homelib.server },
       { scope: 'camp', rules: this.env.homelib.camp(char) },
+      { scope: 'user', rules: this.env.homelib.user(char) },
       { scope: 'card', rules: this.hrEntries(char) },
     ].filter((l) => l.rules && l.rules.length);
     const out: HomeRuleEntry[] = [];

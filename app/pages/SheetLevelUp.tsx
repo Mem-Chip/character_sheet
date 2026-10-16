@@ -14,7 +14,7 @@ import { SpellBrowser } from '../components/SpellBrowser';
 import { NumInput, Panel, Tag } from '../components/ui';
 import { Term } from '../components/Term';
 import type { Engine } from '../lib/engine';
-import { tagCampaign } from '../lib/hub';
+import { tagCampaign } from '../lib/library';
 import { actions, getApp, stripDerived } from '../lib/store';
 
 interface Props { engine: Engine; id: string; char: CharData; sheet: Json }
