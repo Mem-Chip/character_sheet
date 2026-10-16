@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import type { Decision, Session, Settings, ViewInit } from '../../../src/combat';
 import { Dialog, Field, NumInput } from '../../components/ui';
-import { combat, type CombatUi, type DiceMode } from '../../lib/combat';
+import { combat, useCombat, type CombatUi, type DiceMode } from '../../lib/combat';
 import type { Engine } from '../../lib/engine';
 import { DiceSettings } from './DiceSettings';
 import { useApp } from '../../lib/store';
@@ -19,21 +19,8 @@ export function DecisionDialog({ s, name, onClose, docked }: { s: Session; name:
   const d = p.decision;
   const preview = previewLines(p.preview, name);
   const who = s.state.combatants[d.to]?.name ?? (d.to === 'dm' ? 'DM' : name(d.to));
-  const [manual, setManual] = useState(false);
-  // 确认掷骰：小窗口，一行写清楚在掷什么，下面三个按钮
-  if (d.kind === 'physicalDice' && d.confirm && !manual) {
-    return (
-      <div className={'panel dice-ask' + (docked ? ' docked' : '')}>
-        <div className="q">{d.prompt}{onClose && <span className="tiny faint">（DM 代 {who} 掷）</span>}</div>
-        <div className="row">
-          <button className="btn primary" autoFocus onClick={() => combat.decide('roll')}>掷</button>
-          <button className="btn" onClick={() => setManual(true)}>手动输入</button>
-          <span style={{ flex: 1 }} />
-          <button className="btn ghost danger" onClick={() => (onClose ? onClose() : combat.cancelPending())} title={onClose ? '不代答了' : '当作这笔操作没有发生过'}>取消</button>
-        </div>
-      </div>
-    );
-  }
+  // 掷骰：小窗口，一行写清楚在掷什么，下面是按钮（实体骰模式直接带着填骰面的框）
+  if (d.kind === 'physicalDice') return <DiceAsk d={d} who={who} proxy={!!onClose} onClose={onClose} />;
   return (
     <Dialog title={<>{KIND_CN[d.kind] ?? '需要决定'} <span className="faint small">· 交给 {who}{onClose ? '（DM 代答）' : ''}</span></>} onClose={onClose} docked={docked}>
       {preview.length > 0 && (
@@ -50,7 +37,6 @@ export function DecisionDialog({ s, name, onClose, docked }: { s: Session; name:
       {d.kind === 'optionalTrigger' || d.kind === 'choose' || d.kind === 'slotLevel' ? <PickOptions d={d} />
         : d.kind === 'number' ? <NumberPick d={d} />
         : d.kind === 'ask' ? <AskQuestions d={d} />
-          : d.kind === 'physicalDice' ? <DiceInput d={d} />
             : <div className="dangerline">界面还不支持这种决定（{d.kind}）。可以放弃这次操作。</div>}
       <div className="row" style={{ justifyContent: 'flex-end' }}>
         <button className="btn ghost sm danger" onClick={() => combat.cancelPending()} title="当作这笔操作没有发生过">放弃这次操作</button>
@@ -135,40 +121,45 @@ function AskQuestions({ d }: { d: Decision }) {
   );
 }
 
-function DiceInput({ d }: { d: Decision }) {
+function DiceAsk({ d, who, proxy, onClose }: { d: Decision; who: string; proxy: boolean; onClose?: () => void }) {
   const reqs = d.dice ?? [];
+  const [manual, setManual] = useState(!d.confirm);
   const [faces, setFaces] = useState<string[][]>(reqs.map((r) => Array.from({ length: r.count }, () => '')));
-  // 确认掷骰：一个大按钮；想用实体骰再展开输入框
-  const valid = reqs.every((r, i) => faces[i].every((f) => Number.isInteger(Number(f)) && Number(f) >= 1 && Number(f) <= r.faces && f !== ''));
-  const sig = reqs.map((r) => `${r.count}d${r.faces}`).join(' + ');
+  const ui = useCombat();
+  const dmHere = !!ui.remote && ui.remote.role === 'dm';
+  // DM 可以选这一次暗骰（玩家那边的 3D 骰子不显示点数）；默认：替怪物掷的暗骰，替玩家掷的明骰
+  const [dark, setDark] = useState(() => dmHere && !ui.remote!.owners[d.to] && !ui.remote!.diceOpen);
+  const valid = reqs.every((r, i) => faces[i].every((f) => f !== '' && Number.isInteger(Number(f)) && Number(f) >= 1 && Number(f) <= r.faces));
+  // 「请输入骰子结果：」这类前缀去掉，只留在掷什么
+  const what = d.prompt.replace(/^请输入骰子结果：/, '');
+  const submit = () => { if (valid) combat.decide(faces.map((row) => row.map(Number))); };
   return (
-    <>
-      <div className="stack" style={{ gap: 6 }}>
-        {reqs.map((r, i) => (
-          <div key={i} className="row">
-            <span className="mono" style={{ width: 52 }}>{r.count}d{r.faces}</span>
-            {faces[i].map((f, j) => (
-              <input
-                key={j}
-                type="number"
-                min={1}
-                max={r.faces}
-                value={f}
-                autoFocus={i === 0 && j === 0}
-                aria-label={`第 ${j + 1} 颗 d${r.faces}`}
-                onChange={(e) => setFaces(faces.map((row, a) => (a === i ? row.map((x, b) => (b === j ? e.target.value : x)) : row)))}
-                onKeyDown={(e) => { if (e.key === 'Enter' && valid) combat.decide(faces.map((row) => row.map(Number))); }}
-                style={{ width: 52 }}
-              />
-            ))}
-          </div>
-        ))}
+    <div className="panel dice-ask">
+      <div className="q">{what}{proxy && <span className="tiny faint">（DM 代 {who} 掷）</span>}</div>
+      {manual && (
+        <div className="dice-fields">
+          {reqs.map((r, i) => faces[i].map((f, j) => (
+            <input
+              key={`${i}-${j}`} type="number" min={1} max={r.faces} value={f} placeholder={`d${r.faces}`}
+              autoFocus={i === 0 && j === 0} aria-label={`第 ${j + 1} 颗 d${r.faces}`}
+              onChange={(e) => setFaces(faces.map((row, a) => (a === i ? row.map((x, b) => (b === j ? e.target.value : x)) : row)))}
+              onKeyDown={(e) => { if (e.key === 'Enter') submit(); }}
+            />
+          )))}
+        </div>
+      )}
+      <div className="row">
+        {manual
+          ? <button className="btn primary" disabled={!valid} onClick={submit}>确定</button>
+          : <button className="btn primary" autoFocus onClick={() => combat.decide(dark ? 'roll-dark' : 'roll')}>掷</button>}
+        {manual
+          ? <button className="btn" onClick={() => combat.decide(dark ? 'roll-dark' : 'roll')}>让网页掷</button>
+          : <button className="btn" onClick={() => setManual(true)}>手动输入</button>}
+        {dmHere && <label className="tiny" title="玩家那边的 3D 骰子不显示点数"><input type="checkbox" checked={dark} onChange={(e) => setDark(e.target.checked)} /> 暗骰</label>}
+        <span style={{ flex: 1 }} />
+        <button className="btn ghost danger" onClick={() => (onClose ? onClose() : combat.cancelPending())} title={onClose ? '不代答了' : '当作这笔操作没有发生过'}>取消</button>
       </div>
-      <div className="row" style={{ justifyContent: 'flex-end' }}>
-        <button className="btn" onClick={() => combat.decide('roll')}>让网页掷</button>
-        <button className="btn primary" disabled={!valid} onClick={() => combat.decide(faces.map((row) => row.map(Number)))}>确定</button>
-      </div>
-    </>
+    </div>
   );
 }
 

@@ -43,6 +43,16 @@ configureDice({ theme: 'light' }); // 运行中改参数，只改给出的那些
 | `DEFAULT_DICE_OPTIONS` | 全部默认值 |
 | 类型 | `DieSpec`、`RollRequest`、`DiceOptions`、`ResolvedDiceOptions`、`DieKind`、`LabelPosition` |
 
+### 空白骰子（暗骰）
+
+`DieSpec` 加 `blank: true` 时，这颗骰子所有面都不印数字，`value` 可以省略（给了也忽略）。物理照常滚，颜色、`dropped` 变暗照常生效；`faces: 100` 会掷两颗空白 d10。适合 GM 暗骰：其他玩家看得到有人在掷、掷了什么骰，但看不到点数。
+
+```ts
+rollDice({ dice: [{ faces: 20, blank: true, color: '#555' }], label: 'GM 暗骰' });
+```
+
+TypeScript 类型上，普通骰子仍然必须给 `value`，只有 `blank: true` 时才能省略。
+
 页面上带 `data-dice-noskip` 属性的元素（及其子元素）里点击**不会**触发跳过，适合聊天输入框、设置面板等。
 
 ## 参数

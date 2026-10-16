@@ -8,7 +8,7 @@
 import { useState, type ReactNode } from 'react';
 import { combat, type CombatUi } from '../../lib/combat';
 import {
-  diceColor, diceFxScope, diceLocal, diceLocalColor, diceLocalPhys, previewDice, setDiceFxScope, setDiceLocal,
+  diceColor, diceDarkShow, setDiceDarkShow, type DarkShow, diceFxScope, diceLocal, diceLocalColor, diceLocalPhys, previewDice, setDiceFxScope, setDiceLocal,
   type DiceFxScope, type DiceLocal, type DicePhysics,
 } from '../../lib/dicefx';
 import { DEFAULT_DICE_OPTIONS as D } from '../../lib/dice3d/options';
@@ -20,6 +20,7 @@ export function DiceSettings({ ui }: { ui: CombatUi }) {
   const dm = !r || r.role === 'dm';
   const [scope, setScope] = useState<DiceFxScope>(diceFxScope);
   const [loc, setLoc] = useState<DiceLocal>(diceLocal);
+  const [dark, setDark] = useState<DarkShow>(diceDarkShow);
   const phys: DicePhysics = r ? r.dicePhys : diceLocalPhys();
   const myColor = r ? r.diceColors[String(r.me)] ?? '' : diceLocalColor() ?? '';
   const shownColor = myColor || diceColor(r ? r.me : 0);
@@ -64,6 +65,20 @@ export function DiceSettings({ ui }: { ui: CombatUi }) {
           <option value="off">不播</option>
         </select>
       </Row>
+      <Row label="别人的暗骰" hint="/pr、DM 的暗骰、怪物的骰子">
+        <select value={dark} onChange={(e) => { const v = e.target.value as DarkShow; setDark(v); setDiceDarkShow(v); }}>
+          <option value="blank">显示空白骰子</option>
+          <option value="none">不显示</option>
+        </select>
+      </Row>
+      {r && dm && (
+        <Row label="怪物 / NPC 的骰子" hint="玩家那边的 3D 骰子显不显示点数（日志照旧不给玩家看明细）；掷骰小窗里也可以每次单独选">
+          <select value={r.diceOpen ? 'open' : 'dark'} onChange={(e) => combat.setDiceOpen(e.target.value === 'open')}>
+            <option value="dark">暗骰（默认）</option>
+            <option value="open">明骰</option>
+          </select>
+        </Row>
+      )}
       <Row label="我的骰子颜色" hint={r ? '别人看到你的骰子也是这个颜色' : undefined}>
         <i className="hex-dot" style={{ background: shownColor }} />
         <HexBox value={myColor} placeholder={shownColor} onChange={(v) => combat.setDiceColor(v)} />

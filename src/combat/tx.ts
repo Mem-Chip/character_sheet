@@ -45,6 +45,8 @@ export interface TapeEntry {
   source: string;
   /** 掷的时候这笔事务已经有几条事件（界面上找「这次掷骰对应哪一行日志」用；不影响重放） */
   ev?: number;
+  /** 暗骰：别人看到的 3D 骰子不显示点数（只影响显示） */
+  dark?: boolean;
 }
 
 export interface TxInput {
@@ -139,7 +141,8 @@ export class Tx {
     const idx = this.tapeIdx++;
     const rec = this.input.tape[idx];
     if (!this.diverged && rec && rec.sig === sig) {
-      this.tapeOut[idx] = rec;
+      // 回答进来的骰面（确认掷骰、实体骰）补上位置
+      this.tapeOut[idx] = rec.ev == null ? { ...rec, ev: this.events.length } : rec;
       return rec.faces;
     }
     if (rec) this.diverged = true;

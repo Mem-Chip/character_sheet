@@ -82,6 +82,8 @@ interface Live {
   dicePhys: { tableWidth?: number; tableDepth?: number; tableGrow?: boolean; dieScale?: number; layFlat?: boolean };
   /** 每个人的骰子颜色（用户 id → hex；DM 的同时记在 'dm' 下，怪物的骰子用它） */
   diceColors: Record<string, string>;
+  /** 怪物 / NPC 的骰子在玩家那边的 3D 动画显示点数（明骰）；默认暗骰（空白骰子） */
+  diceOpen: boolean;
   ctx: EngineCtx;
   seq: number;
   watchers: Set<ServerResponse>;
@@ -133,7 +135,7 @@ export function createEncounters(d: Deps) {
     const e = {
       id, campaignId: String(r.campaign_id), name: String(r.name),
       owners: meta.owners ?? {}, cards: meta.cards ?? {}, dice: meta.dice ?? {}, hidden: meta.hidden ?? [], chat: meta.chat ?? [],
-      actingAs: meta.actingAs ?? null, autoHid: meta.autoHid ?? [], dicePhys: meta.dicePhys ?? {}, diceColors: meta.diceColors ?? {}, map: { ...newMap(), ...(meta.map ?? {}) }, seq: 0, watchers: new Set(),
+      actingAs: meta.actingAs ?? null, autoHid: meta.autoHid ?? [], dicePhys: meta.dicePhys ?? {}, diceColors: meta.diceColors ?? {}, diceOpen: !!meta.diceOpen, map: { ...newMap(), ...(meta.map ?? {}) }, seq: 0, watchers: new Set(),
     } as unknown as Live;
     e.ctx = ctxOf(e);
     e.session = Session.restore(JSON.parse(String(r.save)) as SessionSave, e.ctx);
@@ -143,9 +145,9 @@ export function createEncounters(d: Deps) {
 
   const stateOf = (e: Live) => ({
     id: e.id, name: e.name, campaignId: e.campaignId, seq: e.seq, owners: e.owners, cards: e.cards,
-    dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, dicePhys: e.dicePhys, diceColors: e.diceColors, save: e.session.save(),
+    dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, dicePhys: e.dicePhys, diceColors: e.diceColors, diceOpen: e.diceOpen, save: e.session.save(),
   });
-  const metaOf = (e: Live) => JSON.stringify({ owners: e.owners, cards: e.cards, dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, autoHid: e.autoHid, dicePhys: e.dicePhys, diceColors: e.diceColors });
+  const metaOf = (e: Live) => JSON.stringify({ owners: e.owners, cards: e.cards, dice: e.dice, hidden: e.hidden, map: e.map, chat: e.chat, actingAs: e.actingAs, autoHid: e.autoHid, dicePhys: e.dicePhys, diceColors: e.diceColors, diceOpen: e.diceOpen });
   const broadcast = (e: Live, event: string, data: unknown) => {
     const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
     for (const w of e.watchers) w.write(msg);
@@ -419,7 +421,8 @@ export function createEncounters(d: Deps) {
         if (!s.pending) return reject('没有等待中的决定');
         const to = s.pending.decision.to;
         if (role !== 'dm' && e.owners[to] !== u.id) return reject('这个决定不是问你的');
-        if (op === 'decide') r = s.decide(b.value);
+        // 暗骰只有 DM 能选；玩家发来的当普通确认
+        if (op === 'decide') r = s.decide(b.value === 'roll-dark' && role !== 'dm' ? 'roll' : b.value);
         else s.cancelPending();
       } else if (op === 'undo' || op === 'override' || op === 'reset') {
         if (role !== 'dm') return reject('只有 DM 能撤销、裁定、清空');
@@ -442,6 +445,9 @@ export function createEncounters(d: Deps) {
           layFlat: typeof b.layFlat === 'boolean' ? b.layFlat : undefined,
           tableGrow: typeof b.tableGrow === 'boolean' ? b.tableGrow : undefined,
         }).filter(([, v]) => v !== undefined));
+      } else if (op === 'diceOpen') {
+        if (role !== 'dm') return reject('只有 DM 能改');
+        e.diceOpen = !!b.open;
       } else if (op === 'diceColor') {
         // 自己的骰子颜色（大家看到的都是这个颜色）；空 = 回到默认
         const c = String(b.color ?? '');

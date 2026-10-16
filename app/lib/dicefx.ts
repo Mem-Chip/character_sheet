@@ -27,6 +27,18 @@ export function setDiceFxScope(v: DiceFxScope): void {
   try { localStorage.setItem(PREF_KEY, v); } catch { /* 无所谓 */ }
 }
 
+/** 别人的暗骰（/pr、DM 的暗骰、怪物的骰子）在我这里怎么显示：空白骰子（看得到在掷，看不到点数）/ 不显示 */
+export type DarkShow = 'blank' | 'none';
+const DARK_KEY = 'dnd2024-engine:dice3d:dark';
+export function diceDarkShow(): DarkShow {
+  try { return localStorage.getItem(DARK_KEY) === 'none' ? 'none' : 'blank'; } catch { return 'blank'; }
+}
+export function setDiceDarkShow(v: DarkShow): void {
+  try { localStorage.setItem(DARK_KEY, v); } catch { /* 无所谓 */ }
+}
+/** 把骰子换成空白的（面上不印数字） */
+const blankOf = (dice: DieSpec[]): DieSpec[] => dice.map(({ faces, color, dropped }) => ({ faces, color, dropped, blank: true }));
+
 /** 会改变滚法的物理参数（各端必须一样，否则同一个种子滚法不同）；没给的用默认 */
 export interface DicePhysics { tableWidth?: number; tableDepth?: number; tableGrow?: boolean; dieScale?: number; layFlat?: boolean }
 export const PHYS_KEYS = ['tableWidth', 'tableDepth', 'tableGrow', 'dieScale', 'layFlat'] as const;
@@ -164,9 +176,15 @@ export function scanChat(encounter: string, chat: ReadonlyArray<ChatRoll>, me: n
     seenChat.add(c.id);
     if (scope === 'off' || !c.results.length) continue;
     const mine = c.by === me;
-    if ((c.private || scope === 'mine') && !mine) continue;
+    if (scope === 'mine' && !mine) continue;
     const color = diceColor(c.by, colors);
     const dice = c.results.flatMap((r) => diceOfExpr(r, color));
+    // 别人的 /pr：空白骰子（或者不显示）
+    if (c.private && !mine) {
+      if (diceDarkShow() === 'none') continue;
+      void play({ dice: blankOf(dice), seed: seedOf('chat:' + c.id) }, physics, { title: `${c.byName} 暗骰` });
+      continue;
+    }
     void play({ dice, seed: seedOf('chat:' + c.id) }, physics, {
       title: `${c.byName} 掷骰${c.note ? `：${c.note}` : ''}`,
       result: c.results.map((r) => r.total).join('，'),
@@ -187,6 +205,8 @@ export interface TapeCtx {
   subject: (cmd: unknown) => string | null;
   /** 我能不能看这个人的骰子（玩家看不到怪物的） */
   visible: (id: string | null) => boolean;
+  /** 这一次在我这里是不是暗骰（显示空白骰子）：DM 选了暗骰掷、或者是怪物的骰子而 DM 没开明骰 */
+  dark: (who: string | null, entry: { dark?: boolean }) => boolean;
   mine: (id: string | null) => boolean;
   color: (id: string | null) => string;
   label: (cmd: unknown) => string;
@@ -196,7 +216,7 @@ export interface TapeCtx {
 
 /** 扫一遍事务（含正在等待决定的那笔）：tape 里新出现的、引擎掷的骰子播一下 */
 export function scanTape(s: Session, ctx: TapeCtx): void {
-  const txs: Array<{ events?: ReadonlyArray<unknown>; input: { cmd: unknown; tape: Array<{ sig: string; faces: number[][]; source: string; ev?: number } | undefined> } }> = [...s.transactions];
+  const txs: Array<{ events?: ReadonlyArray<unknown>; input: { cmd: unknown; tape: Array<{ sig: string; faces: number[][]; source: string; ev?: number; dark?: boolean } | undefined> } }> = [...s.transactions];
   const p = (s as unknown as { pending?: { input?: (typeof txs)[number]['input'] } | null }).pending;
   if (p?.input) txs.push({ input: p.input });
   const keys: Array<{ key: string; tx: number; i: number }> = [];
@@ -212,6 +232,8 @@ export function scanTape(s: Session, ctx: TapeCtx): void {
     if (scope === 'off' || e.source !== 'engine') continue;
     const who = ctx.subject(t.cmd);
     if (!ctx.visible(who) || (scope === 'mine' && !ctx.mine(who))) continue;
+    const dark = ctx.dark(who, e);
+    if (dark && diceDarkShow() === 'none') continue;
     const color = ctx.color(who);
     // sig：2d20、1d8+2d6 …… 和 faces 一一对应
     const reqs = e.sig.split('+').map((x) => Number(x.split('d')[1]));
@@ -220,6 +242,10 @@ export function scanTape(s: Session, ctx: TapeCtx): void {
       const faces = reqs[j];
       if (SUPPORTED.has(faces)) for (const v of vals) dice.push({ faces: faces as DieSpec['faces'], value: v, color });
     });
+    if (dark) {
+      void play({ dice: blankOf(dice), seed: seedOf(`${ctx.encounter}|${k.tx}|${k.i}`) }, ctx.physics, { title: `${ctx.label(t.cmd)}（暗骰）` });
+      continue;
+    }
     const ev = txs[k.tx].events;
     const detail = ev && e.ev != null && ctx.line ? ctx.line(ev, e.ev) : null;
     void play({ dice, seed: seedOf(`${ctx.encounter}|${k.tx}|${k.i}`) }, ctx.physics, detail ?? { title: ctx.label(t.cmd) });

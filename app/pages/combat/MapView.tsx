@@ -92,7 +92,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.code === 'Space') space.current = true;
       if (e.key === 'Shift') setShift(true);
-      if (e.key === 'Escape') setSelShape(null);
+      if (e.key === 'Escape') { setSelShape(null); setSetup(false); }
       // 测距时按 Ctrl：把现在这条线分享给所有人
       if (e.key === 'Control' && !e.repeat) {
         const d = dragRef.current;

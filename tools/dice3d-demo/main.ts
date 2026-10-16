@@ -30,7 +30,7 @@ function log(text: string) {
 /** 按点数从高到低取 keep 颗，其余标 dropped */
 function keepHighest(faces: DieSpec['faces'], count: number, keep: number, color: string): DieSpec[] {
   const dice: DieSpec[] = Array.from({ length: count }, () => ({ faces, value: r(faces), color }));
-  const order = dice.map((_, i) => i).sort((a, b) => dice[b].value - dice[a].value);
+  const order = dice.map((_, i) => i).sort((a, b) => dice[b].value! - dice[a].value!);
   order.slice(keep).forEach((i) => (dice[i].dropped = true));
   return dice;
 }
@@ -61,6 +61,8 @@ function build(kind: string): RollRequest[] {
       ];
     case '20d20':
       return [{ dice: Array.from({ length: 20 }, () => ({ faces: 20 as const, value: r(20), color })), label: '20d20' }];
+    case 'blank':
+      return [{ dice: [{ faces: 20, blank: true, color }, { faces: 6, blank: true, color }], label: 'GM 暗骰' }];
     case 'queue':
       return [
         { dice: [{ faces: 20, value: r(20), color: '#c0392b' }], label: '玩家 A' },
@@ -71,7 +73,7 @@ function build(kind: string): RollRequest[] {
   return [];
 }
 
-const describe = (d: DieSpec) => `d${d.faces}=${d.value}${d.dropped ? '(弃)' : ''}`;
+const describe = (d: DieSpec) => `d${d.faces}=${d.blank ? '空白' : d.value}${d.dropped ? '(弃)' : ''}`;
 
 document.querySelectorAll<HTMLButtonElement>('[data-roll]').forEach((btn) =>
   btn.addEventListener('click', () => {

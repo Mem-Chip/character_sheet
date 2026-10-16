@@ -272,12 +272,13 @@ export class Session {
     if (p.decision.kind === 'physicalDice') {
       const idx = Number(p.decision.id.split(':')[1]);
       const reqs = p.decision.dice ?? [];
-      // 'roll'：确认掷骰 —— 由引擎（战役遭遇里是服务器）来掷
-      const auto = value === 'roll';
+      // 'roll'：确认掷骰 —— 由引擎（战役遭遇里是服务器）来掷；'roll-dark'：同上，但是暗骰（别人的 3D 骰子不显示点数）
+      const dark = value === 'roll-dark';
+      const auto = value === 'roll' || dark;
       const faces = auto ? engineDice().roll(reqs, '')! : value as number[][];
       const bad = reqs.some((r, i) => !Array.isArray(faces?.[i]) || faces[i].length !== r.count || faces[i].some((f) => !Number.isInteger(f) || f < 1 || f > r.faces));
       if (bad) return { status: 'rejected', reason: '骰面不合法（个数或点数不对）' };
-      input.tape[idx] = { sig: reqs.map((r) => `${r.count}d${r.faces}`).join('+'), faces, source: auto ? 'engine' : 'physical' };
+      input.tape[idx] = { sig: reqs.map((r) => `${r.count}d${r.faces}`).join('+'), faces, source: auto ? 'engine' : 'physical', ...(dark ? { dark: true } : {}) };
     } else {
       input.answers[p.decision.id] = { kind: p.decision.kind, value };
     }

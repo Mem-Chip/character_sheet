@@ -15,18 +15,23 @@ import { STRIDE, simulate, type Arena } from './sim';
 export { DEFAULT_DICE_OPTIONS };
 export type { DiceOptions, DieKind, LabelPosition, ResolvedDiceOptions } from './options';
 
-export interface DieSpec {
+interface DieBase {
   faces: 4 | 6 | 8 | 10 | 12 | 20 | 100; // d100 = 十位骰 + 个位骰两颗 d10
-  value: number; // 要停在几（1..faces）
   dropped?: boolean; // 没被取的：落地后变暗
   color?: string; // 骰子颜色，hex
 }
+
+/**
+ * 一颗骰子。普通骰子必须给 value；空白骰子（blank: true）面上不印数字，value 可省略。
+ * 空白骰子适合暗骰：其他玩家看得到在掷，但看不到点数。
+ */
+export type DieSpec = DieBase & ({ value: number; blank?: false } | { blank: true; value?: number });
 
 export interface RollRequest {
   dice: DieSpec[];
   seed?: number; // 同一个种子 → 同样的滚法
   label?: string; // 显示在角落
-  onSettle?: () => void; // 骰子停稳（或被跳过、不滚直接摆好）时调一次
+  onSettle?: () => void; // 骰子停稳（或被跳过、不滚直接摆好）时调一次（接入方加的）
 }
 
 /** 保险：正常流程之外再多给这么久，到点一定结束（比如窗口被遮挡、rAF 被浏览器暂停），队列不会卡死 */
@@ -49,13 +54,24 @@ function expand(specs: DieSpec[], o: ResolvedDiceOptions): PhysDie[] {
   const range = (n: number, f: (i: number) => string) => Array.from({ length: n }, (_, i) => f(i));
   for (const spec of specs) {
     const faces = spec.faces;
+    const color = normalizeColor(spec.color, fallback);
+    const dropped = !!spec.dropped;
+    if (spec.blank) {
+      // 空白骰子：所有面都没有数字，物理照常滚，不需要对调点数
+      const kinds: DieKind[] = faces === 100 ? [10, 10] : [faces as DieKind];
+      if (!kinds.every((k) => [4, 6, 8, 10, 12, 20].includes(k))) {
+        console.warn(`[dice3d] 不支持 d${faces}，跳过`);
+        continue;
+      }
+      if (out.length + kinds.length > max) break;
+      for (const k of kinds) out.push({ shape: shape(k), labels: range(k, () => ''), target: '', color, dropped });
+      continue;
+    }
     let v = Math.round(Number(spec.value));
     if (!(v >= 1 && v <= faces)) {
       console.warn(`[dice3d] d${faces} 的点数 ${spec.value} 不合法，已截到范围内`);
       v = Math.min(faces, Math.max(1, Number.isFinite(v) ? v : 1));
     }
-    const color = normalizeColor(spec.color, fallback);
-    const dropped = !!spec.dropped;
     if (faces === 100) {
       if (out.length + 2 > max) break;
       const tens = Math.floor(v / 10) % 10; // 100 → 00 + 0

@@ -47,10 +47,22 @@ export function CombatPage({ engine }: { engine: Engine }) {
       if (uiRef.current.aim) { combat.aimCancel(); return; }
       combat.select(null);
       if (uiRef.current.targets.length) combat.clearTargets();
+      // 能收起的面板都收起（行动栏除外）
+      setDrawer(null);
+      setLogOpen(false);
+      try { localStorage.setItem('dnd2024-engine:dock:log', '0'); } catch { /* 无所谓 */ }
     };
     window.addEventListener('keydown', esc);
     return () => window.removeEventListener('keydown', esc);
   }, []);
+  // 轮到一个我能操控的人：自动选中他（DM 换着操作怪物、玩家的魔宠之类）
+  const turnKey = ui.session && ui.session.state.round !== null ? `${ui.session.state.round}:${ui.session.state.turnIndex}` : '';
+  useEffect(() => {
+    const st = ui.session?.state;
+    if (!st || st.round === null) return;
+    const cur = st.order[st.turnIndex];
+    if (cur && combat.canControl(cur) && !combat.isHidden(cur)) combat.select(cur);
+  }, [turnKey]);
   // 3D 掷骰动画：新掷出来的骰子（引擎掷的、指令框 /r）播一下
   useEffect(() => {
     const ss = ui.session;
@@ -66,7 +78,13 @@ export function CombatPage({ engine }: { engine: Engine }) {
       encounter: enc,
       physics: phys,
       subject: (cmd) => { const c = cmd as Record<string, unknown>; return String(c.actor ?? c.roller ?? c.id ?? '') || null; },
-      visible: (id) => !id || !combat.isSecret(id),
+      visible: (id) => !id || !combat.isHidden(id),
+      // 玩家这边：DM 选了暗骰掷的、怪物 / NPC 的（DM 没开明骰）显示空白骰子；藏起来的人干脆不播（不然暴露了位置）
+      dark: (id, e) => {
+        if (!r || r.role === 'dm') return false;
+        if (e.dark) return true;
+        return !!id && combat.isSecret(id) && !r.diceOpen;
+      },
       mine: (id) => !r || (!!id && r.owners[ctlOf(id) ?? ''] === r.me) || (!id && r.role === 'dm'),
       // 玩家的角色用玩家的颜色，其余（怪物、DM 的 NPC）用 DM 的
       color: (id) => diceColor(r ? r.owners[ctlOf(id) ?? ''] ?? 'dm' : 0, colors),
