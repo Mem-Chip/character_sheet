@@ -274,7 +274,7 @@ slug 是「名字_来源」或「名字_职业_来源_等级_职业来源」，�
 
 ## 八、分期
 
-每期都能单独 `npm run typecheck && npm test` 后合并回 `feat/ui`。
+每期都能单独 `npm run typecheck && npm test` 后合并回 `main`。
 
 | 期 | 内容 | 验收 |
 |---|---|---|
