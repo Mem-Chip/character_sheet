@@ -1,7 +1,7 @@
 {
   "name": "灵能面纱",
-  "automation": "partial",
-  "text": "魔法动作：获得隐形，至多 1 小时，或直到主动解除（无需动作）。造成伤害或迫使生物豁免时隐形立即结束，引擎不会自动结束，需人手动移除。每次长休可用一次；消耗一枚灵能骰（无需动作）可重置。",
+  "automation": "full",
+  "text": "魔法动作：获得隐形，至多 1 小时，或直到主动解除（无需动作）。你造成伤害或迫使生物进行豁免时，隐形立即结束。每次长休可用一次；消耗一枚灵能骰（无需动作）可重置。",
   "resources": [
     { "id": "灵能面纱", "name": "灵能面纱", "formula": 1, "recovery": "long" }
   ],
@@ -16,8 +16,23 @@
           "kind": "applyEffect",
           "to": "self",
           "template": "XPHB:condition:隐形",
-          "duration": { "manual": true }
+          "duration": {
+            "hours": 1,
+            "endsOn": [
+              { "event": "damageApplied", "when": "event.source == self.id" },
+              { "event": "saveForced", "when": "event.actor == self.id" }
+            ]
+          }
         }
+      ]
+    },
+    {
+      "id": "end",
+      "name": "灵能面纱（解除隐形）",
+      "activation": "free",
+      "requires": "self.has('隐形')",
+      "root": [
+        { "kind": "removeEffect", "from": "self", "match": { "key": "XPHB:condition:隐形" } }
       ]
     },
     {

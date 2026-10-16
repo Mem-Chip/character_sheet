@@ -1,7 +1,7 @@
 {
   "name": "擒拿击",
-  "automation": "partial",
-  "text": "以近战攻击命中生物时，可消耗一枚卓越骰并以附赠动作尝试擒抱该生物。目标必须通过力量或敏捷豁免（DC = 8 + 熟练加值 + 力量或敏捷调整值），失败则陷入受擒状态；若采用力量（运动）检定对抗则将卓越骰加入检定掷骰中。",
+  "automation": "full",
+  "text": "以近战攻击命中生物时，可消耗一枚卓越骰，以附赠动作对目标进行一次擒抱：目标进行力量或敏捷豁免（目标选高的那个，DC = 8 + 熟练加值 + 力量或敏捷调整值），失败则陷入受擒状态。2024 的擒抱是豁免而不是力量（运动）检定，没有可以加卓越骰的检定，卓越骰只作为代价消耗。",
   "triggers": [
     {
       "id": "grappling",
@@ -12,19 +12,29 @@
       "optional": true,
       "when": "turn.isMine && attack.melee",
       "cost": [
-        { "economy": "bonus" },
-        { "resource": "卓越骰" }
+        {
+          "economy": "bonus"
+        },
+        {
+          "resource": "卓越骰"
+        }
       ],
       "do": [
         {
           "kind": "save",
-          "ability": ["str", "dex"],
+          "ability": [
+            "str",
+            "dex"
+          ],
           "dc": "8 + self.pb + max(self.mod.str, self.mod.dex)",
           "onFail": [
             {
               "kind": "applyEffect",
               "to": "target",
-              "template": "XPHB:condition:受擒"
+              "template": "XPHB:condition:受擒",
+              "state": {
+                "escapeDc": "8 + self.pb + max(self.mod.str, self.mod.dex)"
+              }
             }
           ]
         }

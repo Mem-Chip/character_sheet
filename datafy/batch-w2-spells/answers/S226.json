@@ -1,7 +1,7 @@
 {
   "name": "魅影杀手",
-  "automation": "partial",
-  "text": "专注至多 1 分钟。目标进行感知豁免，失败受到 4d10（每升一环 +1d10）心灵伤害，且持续期间所有属性检定与攻击检定具有劣势；成功则受半数伤害且法术终止。持续期间目标每回合结束时重新进行感知豁免（成功自动解除效应；失败再次受伤害需手动处理）。",
+  "automation": "full",
+  "text": "专注至多 1 分钟。目标进行感知豁免，失败受到 (slot.level)d10（4 环 4d10，每高一环 +1d10）心灵伤害，且持续期间所有属性检定与攻击检定具有劣势；成功则受半数伤害，法术（连同专注）终止。持续期间目标每个回合结束时再进行一次感知豁免：失败再受同样骰数的心灵伤害，成功则法术终止。",
   "actions": [
     {
       "id": "cast",
@@ -41,7 +41,18 @@
             {
               "kind": "applyEffect",
               "to": "target",
-              "template": "魅影杀手"
+              "template": "魅影杀手",
+              "state": {
+                "lvl": "slot.level",
+                "dc": "self.spell.dc"
+              },
+              "duration": {
+                "minutes": 1,
+                "saveEnds": {
+                  "ability": "wis",
+                  "at": "turnEnd"
+                }
+              }
             }
           ],
           "onSuccess": [
@@ -49,6 +60,13 @@
               "kind": "damage",
               "ref": "psi",
               "scale": 0.5
+            },
+            {
+              "kind": "removeEffect",
+              "from": "self",
+              "match": {
+                "key": "concentration"
+              }
             }
           ]
         }
@@ -61,13 +79,6 @@
         "magical",
         "spell"
       ],
-      "duration": {
-        "minutes": 1,
-        "saveEnds": {
-          "ability": "wis",
-          "at": "turnEnd"
-        }
-      },
       "rollMods": [
         {
           "on": {
@@ -86,7 +97,25 @@
           "label": "魅影杀手：攻击检定劣势"
         }
       ],
-      "text": "属性检定与攻击检定具有劣势。每回合结束时重新进行感知豁免，成功法术终止，失败再次受到心灵伤害。"
+      "text": "属性检定与攻击检定具有劣势。每个回合结束时重新进行感知豁免：失败再受 (施法所用法术位环阶)d10 心灵伤害，成功则法术终止。",
+      "triggers": [
+        {
+          "id": "nightmare",
+          "label": "魅影杀手：回合结束再受心灵伤害",
+          "on": "d20Rolled",
+          "role": "actor",
+          "window": "after",
+          "when": "roll.kind == 'save' && roll.ability == 'wis' && roll.sub == null && roll.failing && turn.isMine && roll.vs == effect.state.dc",
+          "do": [
+            {
+              "kind": "damage",
+              "dice": "(effect.state.lvl)d10",
+              "type": "心灵",
+              "to": "self"
+            }
+          ]
+        }
+      ]
     }
   }
 }

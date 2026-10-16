@@ -2,7 +2,7 @@
 
 - 任务 545；写进 AI 数据 392；跳过 153；没过 0；没交 0
 - AI 数据文件现在共 392 条：data/dyn/ai/features.json
-- 新声明的资源池写进人物卡数据：1 个（data/abilities-2024.json，标 by: 'ai'）
+- 新声明的资源池写进人物卡数据：0 个（data/abilities-2024.json，标 by: 'ai'）
 
 ## 跳过
 

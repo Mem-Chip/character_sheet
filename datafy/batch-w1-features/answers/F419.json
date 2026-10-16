@@ -1,24 +1,32 @@
 {
   "name": "暗夜精魂之恩惠",
   "automation": "partial",
-  "text": "是否身处微光光照或黑暗由人判断；隐形在你执行动作、附赠动作或反应后立即结束，需要手动移除；离开微光/黑暗时用「结束幽影化身」去掉抗性。",
+  "text": "身处微光光照或黑暗期间才能用融身入影（使用时询问）；隐形在你执行动作、附赠动作或反应后立即结束（攻击检定后、或开始其他动作 / 附赠动作 / 反应时结束）。幽影化身的抗性是否生效取决于你是否身处微光光照或黑暗，由人判断：进入时用「幽影化身」启用，离开时用「结束幽影化身」去掉。",
   "actions": [
     {
       "id": "use",
       "name": "暗夜精魂之恩惠：融身入影",
       "activation": "bonus",
-      "text": "需身处微光光照或黑暗中。获得隐形状态，直到你执行动作、附赠动作或反应后立即结束（手动移除）。",
-      "requires": "!self.has('隐形')",
+      "text": "需身处微光光照或黑暗中。获得隐形状态，直到你执行动作、附赠动作或反应后立即结束。",
+      "requires": "!self.has('隐形') && ask('你身处微光光照或黑暗中吗？')",
       "root": [
         {
           "kind": "applyEffect",
           "to": "self",
           "template": "XPHB:condition:隐形",
-          "duration": { "manual": true }
-        },
-        {
-          "kind": "note",
-          "text": "融身入影：你执行动作、附赠动作或反应后，隐形立即结束（请手动移除）"
+          "duration": {
+            "manual": true,
+            "endsOn": [
+              {
+                "event": "d20Rolled",
+                "when": "event.kind == 'attack' && event.roller == self.id"
+              },
+              {
+                "event": "actionUsed",
+                "when": "event.actor == self.id && (event.activation == 'action' || event.activation == 'bonus' || event.activation == 'reaction')"
+              }
+            ]
+          }
         }
       ]
     },
@@ -33,7 +41,9 @@
           "kind": "applyEffect",
           "to": "self",
           "template": "幽影化身",
-          "duration": { "manual": true }
+          "duration": {
+            "manual": true
+          }
         }
       ]
     },
@@ -47,7 +57,9 @@
         {
           "kind": "removeEffect",
           "from": "self",
-          "match": { "name": "幽影化身" }
+          "match": {
+            "name": "幽影化身"
+          }
         }
       ]
     }
@@ -58,10 +70,24 @@
       "statics": [
         {
           "kind": "resist",
-          "values": ["钝击", "穿刺", "挥砍", "火焰", "寒冷", "闪电", "雷鸣", "强酸", "毒素", "黯蚀", "力场"]
+          "values": [
+            "钝击",
+            "穿刺",
+            "挥砍",
+            "火焰",
+            "寒冷",
+            "闪电",
+            "雷鸣",
+            "强酸",
+            "毒素",
+            "黯蚀",
+            "力场"
+          ]
         }
       ],
-      "duration": { "manual": true }
+      "duration": {
+        "manual": true
+      }
     }
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "炽焰斩",
-  "automation": "partial",
-  "text": "近战命中后以附赠动作施展，额外造成 (slot.level)d6 火焰伤害，并施加炽焰斩效应。受术目标在回合开始时承受火焰伤害并在回合开始进行体质豁免对抗法术 DC，成功则结束效应（回合开始的伤害由玩家手动处理）。",
+  "automation": "full",
+  "text": "近战武器或徒手打击命中后以附赠动作施展，该次攻击额外造成 (slot.level)d6 火焰伤害，并让目标带上炽焰斩效应，持续 1 分钟：目标每个回合开始时受到 (slot.level)d6 火焰伤害并进行体质豁免（对抗法术 DC），失败则继续，成功则效应结束。",
   "actions": [
     {
       "id": "cast",
@@ -34,7 +34,19 @@
         {
           "kind": "applyEffect",
           "to": "target",
-          "template": "炽焰斩"
+          "template": "炽焰斩",
+          "state": {
+            "lvl": "slot.level",
+            "dc": "self.spell.dc"
+          },
+          "duration": {
+            "minutes": 1,
+            "saveEnds": {
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "at": "turnStart"
+            }
+          }
         }
       ]
     }
@@ -45,15 +57,25 @@
         "magical",
         "spell"
       ],
-      "duration": {
-        "minutes": 1,
-        "saveEnds": {
-          "ability": "con",
-          "dc": "self.spell.dc",
-          "at": "turnStart"
+      "text": "每个回合开始时受到 (施法所用法术位环阶)d6 火焰伤害并进行体质豁免，成功则法术终止。引擎在回合开始时先做这次豁免；伤害挂在这次豁免的掷骰上（无论成败都先受伤害，成功则效应随后结束）。",
+      "triggers": [
+        {
+          "id": "burn",
+          "label": "炽焰斩：回合开始火焰伤害",
+          "on": "d20Rolled",
+          "role": "actor",
+          "window": "after",
+          "when": "roll.kind == 'save' && roll.ability == 'con' && roll.sub == null && turn.isMine && roll.vs == effect.state.dc",
+          "do": [
+            {
+              "kind": "damage",
+              "dice": "(effect.state.lvl)d6",
+              "type": "火焰",
+              "to": "self"
+            }
+          ]
         }
-      },
-      "text": "回合开始时受到火焰伤害并进行体质豁免，成功则法术终止。"
+      ]
     }
   }
 }

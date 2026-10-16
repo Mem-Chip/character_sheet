@@ -314,26 +314,32 @@
   "XPHB:暗夜精魂之恩惠": {
    "name": "暗夜精魂之恩惠",
    "automation": "partial",
-   "text": "是否身处微光光照或黑暗由人判断；隐形在你执行动作、附赠动作或反应后立即结束，需要手动移除；离开微光/黑暗时用「结束幽影化身」去掉抗性。",
+   "text": "身处微光光照或黑暗期间才能用融身入影（使用时询问）；隐形在你执行动作、附赠动作或反应后立即结束（攻击检定后、或开始其他动作 / 附赠动作 / 反应时结束）。幽影化身的抗性是否生效取决于你是否身处微光光照或黑暗，由人判断：进入时用「幽影化身」启用，离开时用「结束幽影化身」去掉。",
    "actions": [
     {
      "id": "use",
      "name": "暗夜精魂之恩惠：融身入影",
      "activation": "bonus",
-     "text": "需身处微光光照或黑暗中。获得隐形状态，直到你执行动作、附赠动作或反应后立即结束（手动移除）。",
-     "requires": "!self.has('隐形')",
+     "text": "需身处微光光照或黑暗中。获得隐形状态，直到你执行动作、附赠动作或反应后立即结束。",
+     "requires": "!self.has('隐形') && ask('你身处微光光照或黑暗中吗？')",
      "root": [
       {
        "kind": "applyEffect",
        "to": "self",
        "template": "XPHB:condition:隐形",
        "duration": {
-        "manual": true
+        "manual": true,
+        "endsOn": [
+         {
+          "event": "d20Rolled",
+          "when": "event.kind == 'attack' && event.roller == self.id"
+         },
+         {
+          "event": "actionUsed",
+          "when": "event.actor == self.id && (event.activation == 'action' || event.activation == 'bonus' || event.activation == 'reaction')"
+         }
+        ]
        }
-      },
-      {
-       "kind": "note",
-       "text": "融身入影：你执行动作、附赠动作或反应后，隐形立即结束（请手动移除）"
       }
      ]
     },
@@ -1932,12 +1938,7 @@
         },
         {
          "label": "这次不寻找预兆",
-         "do": [
-          {
-           "kind": "note",
-           "text": "没有参照星图，不获得预兆"
-          }
-         ]
+         "do": []
         }
        ]
       }
@@ -4016,8 +4017,24 @@
   },
   "XPHB:巨武器战斗": {
    "name": "巨武器战斗",
-   "automation": "manual",
-   "text": "用双手持握且具「双手」或「多用」词条的近战武器进行伤害掷骰时，可将骰出的 1 和 2 都视为 3。引擎不支持改写伤害骰点数，需人工处理。",
+   "automation": "full",
+   "text": "用双手持握且具「双手」或「多用」词条的近战武器进行伤害掷骰时，可将骰出的 1 和 2 都视为 3（掷伤害时询问是否满足双手持握与词条）。",
+   "rollMods": [
+    {
+     "on": {
+      "kind": "damage",
+      "attack": {
+       "melee": true,
+       "weapon": true
+      }
+     },
+     "who": "bearer",
+     "when": "ask('这把武器是你双手持握、且具有「双手」或「多用」词条的近战武器吗？')",
+     "op": "minDie",
+     "value": 3,
+     "label": "巨武器战斗：伤害骰 1 和 2 视为 3"
+    }
+   ],
    "tags": [
     "ai",
     "未审"
@@ -12400,8 +12417,8 @@
   },
   "XPHB:武僧:元能爆发:6": {
    "name": "元能爆发",
-   "text": "魔法动作，消耗 2 点功力，在 120 尺内一点产生半径 20 尺的球形能量爆发，选择强酸、寒冷、火焰、闪电或雷鸣。区域内生物进行敏捷豁免（DC 原文未写，暂按功力 DC：8 + 感知 + 熟练，请核对），失败受到 3 个武艺骰的所选类型伤害，成功减半。",
-   "automation": "partial",
+   "text": "魔法动作，消耗 2 点功力，在 120 尺内一点产生半径 20 尺的球形能量爆发，选择强酸、寒冷、火焰、闪电或雷鸣。区域内生物进行敏捷豁免（DC 为武僧的功力豁免 DC：8 + 感知调整值 + 熟练加值），失败受到 3 个武艺骰的所选类型伤害，成功减半。",
+   "automation": "full",
    "actions": [
     {
      "id": "use",
@@ -14248,10 +14265,6 @@
          "kind": "resource",
          "id": "诗人激励",
          "delta": 1
-        },
-        {
-         "kind": "note",
-         "text": "超凡技艺：检定仍然失败，不消耗诗人激励次数"
         }
        ]
       }
@@ -15365,8 +15378,8 @@
   },
   "XPHB:游荡者:灵能面纱:13": {
    "name": "灵能面纱",
-   "automation": "partial",
-   "text": "魔法动作：获得隐形，至多 1 小时，或直到主动解除（无需动作）。造成伤害或迫使生物豁免时隐形立即结束，引擎不会自动结束，需人手动移除。每次长休可用一次；消耗一枚灵能骰（无需动作）可重置。",
+   "automation": "full",
+   "text": "魔法动作：获得隐形，至多 1 小时，或直到主动解除（无需动作）。你造成伤害或迫使生物进行豁免时，隐形立即结束。每次长休可用一次；消耗一枚灵能骰（无需动作）可重置。",
    "actions": [
     {
      "id": "use",
@@ -15383,7 +15396,32 @@
        "to": "self",
        "template": "XPHB:condition:隐形",
        "duration": {
-        "manual": true
+        "hours": 1,
+        "endsOn": [
+         {
+          "event": "damageApplied",
+          "when": "event.source == self.id"
+         },
+         {
+          "event": "saveForced",
+          "when": "event.actor == self.id"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "id": "end",
+     "name": "灵能面纱（解除隐形）",
+     "activation": "free",
+     "requires": "self.has('隐形')",
+     "root": [
+      {
+       "kind": "removeEffect",
+       "from": "self",
+       "match": {
+        "key": "XPHB:condition:隐形"
        }
       }
      ]
@@ -15925,10 +15963,6 @@
          "kind": "resource",
          "id": "灵能力量",
          "delta": 1
-        },
-        {
-         "kind": "note",
-         "text": "寻的攻击：加完仍然未命中，灵能骰不消耗"
         }
        ]
       }

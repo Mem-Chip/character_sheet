@@ -1584,8 +1584,8 @@
   },
   "XPHB:spell:炽焰斩": {
    "name": "炽焰斩",
-   "automation": "partial",
-   "text": "近战命中后以附赠动作施展，额外造成 (slot.level)d6 火焰伤害，并施加炽焰斩效应。受术目标在回合开始时承受火焰伤害并在回合开始进行体质豁免对抗法术 DC，成功则结束效应（回合开始的伤害由玩家手动处理）。",
+   "automation": "full",
+   "text": "近战武器或徒手打击命中后以附赠动作施展，该次攻击额外造成 (slot.level)d6 火焰伤害，并让目标带上炽焰斩效应，持续 1 分钟：目标每个回合开始时受到 (slot.level)d6 火焰伤害并进行体质豁免（对抗法术 DC），失败则继续，成功则效应结束。",
    "actions": [
     {
      "id": "cast",
@@ -1618,7 +1618,19 @@
       {
        "kind": "applyEffect",
        "to": "target",
-       "template": "炽焰斩"
+       "template": "炽焰斩",
+       "state": {
+        "lvl": "slot.level",
+        "dc": "self.spell.dc"
+       },
+       "duration": {
+        "minutes": 1,
+        "saveEnds": {
+         "ability": "con",
+         "dc": "self.spell.dc",
+         "at": "turnStart"
+        }
+       }
       }
      ]
     }
@@ -1629,15 +1641,25 @@
       "magical",
       "spell"
      ],
-     "duration": {
-      "minutes": 1,
-      "saveEnds": {
-       "ability": "con",
-       "dc": "self.spell.dc",
-       "at": "turnStart"
+     "text": "每个回合开始时受到 (施法所用法术位环阶)d6 火焰伤害并进行体质豁免，成功则法术终止。引擎在回合开始时先做这次豁免；伤害挂在这次豁免的掷骰上（无论成败都先受伤害，成功则效应随后结束）。",
+     "triggers": [
+      {
+       "id": "burn",
+       "label": "炽焰斩：回合开始火焰伤害",
+       "on": "d20Rolled",
+       "role": "actor",
+       "window": "after",
+       "when": "roll.kind == 'save' && roll.ability == 'con' && roll.sub == null && turn.isMine && roll.vs == effect.state.dc",
+       "do": [
+        {
+         "kind": "damage",
+         "dice": "(effect.state.lvl)d6",
+         "type": "火焰",
+         "to": "self"
+        }
+       ]
       }
-     },
-     "text": "回合开始时受到火焰伤害并进行体质豁免，成功则法术终止。"
+     ]
     }
    },
    "tags": [
@@ -6772,8 +6794,8 @@
   },
   "XPHB:spell:假死术": {
    "name": "假死术",
-   "automation": "partial",
-   "text": "触碰一名自愿生物使其进入僵直假死状态，持续 1 小时。目标陷入目盲与失能，速度降为 0；对除心灵伤害外的所有伤害类型具有抗性，免疫中毒状态。肉体检查和法术检测显示其已死亡（需叙事处理）。",
+   "automation": "full",
+   "text": "触碰一名自愿生物使其进入僵直假死状态，持续 1 小时。目标陷入目盲与失能，速度降为 0；对除心灵伤害外的所有伤害类型具有抗性，免疫中毒状态。肉体检查和法术检测显示其已死亡。",
    "actions": [
     {
      "id": "cast",
@@ -9514,8 +9536,8 @@
   },
   "XPHB:spell:马友夫强酸箭": {
    "name": "马友夫强酸箭",
-   "automation": "partial",
-   "text": "远程法术攻击，命中造成 4d4（升环每环+1d4）强酸伤害，目标在其下一回合结束时再受到 2d4 强酸伤害（升环后续额外伤害需手动调整）；未命中则造成初始伤害的一半。",
+   "automation": "full",
+   "text": "远程法术攻击，命中造成 4d4（升环每高二环的一环 +1d4）强酸伤害，目标在其下一回合结束时再受到 2d4（同样随升环增加）强酸伤害；未命中则造成初始伤害的一半。",
    "actions": [
     {
      "id": "cast",
@@ -9555,11 +9577,14 @@
          "kind": "applyEffect",
          "to": "target",
          "template": "强酸附着",
+         "state": {
+          "lvl": "slot.level"
+         },
          "duration": {
           "until": {
            "at": "turnEnd",
            "of": "bearer",
-           "nth": 1
+           "nth": 2
           }
          }
         }
@@ -9581,12 +9606,28 @@
       "magical",
       "spell"
      ],
-     "text": "在其回合结束时受到 2d4 强酸伤害（高环法术位施展时每高一环增加 1d4）。",
-     "onEnd": [
+     "text": "目标在其下一个回合结束时受到 (施法所用法术位环阶)d4 强酸伤害（2 环为 2d4，每高一环多 1d4）。",
+     "triggers": [
       {
-       "kind": "damage",
-       "dice": "2d4",
-       "type": "强酸"
+       "id": "acid-tail",
+       "label": "马友夫强酸箭：回合结束强酸伤害",
+       "on": "turnEnded",
+       "role": "actor",
+       "do": [
+        {
+         "kind": "damage",
+         "dice": "(effect.state.lvl)d4",
+         "type": "强酸",
+         "to": "self"
+        },
+        {
+         "kind": "removeEffect",
+         "match": {
+          "name": "强酸附着"
+         },
+         "from": "self"
+        }
+       ]
       }
      ]
     }
@@ -9731,8 +9772,8 @@
   },
   "XPHB:spell:魅影杀手": {
    "name": "魅影杀手",
-   "automation": "partial",
-   "text": "专注至多 1 分钟。目标进行感知豁免，失败受到 4d10（每升一环 +1d10）心灵伤害，且持续期间所有属性检定与攻击检定具有劣势；成功则受半数伤害且法术终止。持续期间目标每回合结束时重新进行感知豁免（成功自动解除效应；失败再次受伤害需手动处理）。",
+   "automation": "full",
+   "text": "专注至多 1 分钟。目标进行感知豁免，失败受到 (slot.level)d10（4 环 4d10，每高一环 +1d10）心灵伤害，且持续期间所有属性检定与攻击检定具有劣势；成功则受半数伤害，法术（连同专注）终止。持续期间目标每个回合结束时再进行一次感知豁免：失败再受同样骰数的心灵伤害，成功则法术终止。",
    "actions": [
     {
      "id": "cast",
@@ -9772,7 +9813,18 @@
         {
          "kind": "applyEffect",
          "to": "target",
-         "template": "魅影杀手"
+         "template": "魅影杀手",
+         "state": {
+          "lvl": "slot.level",
+          "dc": "self.spell.dc"
+         },
+         "duration": {
+          "minutes": 1,
+          "saveEnds": {
+           "ability": "wis",
+           "at": "turnEnd"
+          }
+         }
         }
        ],
        "onSuccess": [
@@ -9780,6 +9832,13 @@
          "kind": "damage",
          "ref": "psi",
          "scale": 0.5
+        },
+        {
+         "kind": "removeEffect",
+         "from": "self",
+         "match": {
+          "key": "concentration"
+         }
         }
        ]
       }
@@ -9792,13 +9851,6 @@
       "magical",
       "spell"
      ],
-     "duration": {
-      "minutes": 1,
-      "saveEnds": {
-       "ability": "wis",
-       "at": "turnEnd"
-      }
-     },
      "rollMods": [
       {
        "on": {
@@ -9817,7 +9869,25 @@
        "label": "魅影杀手：攻击检定劣势"
       }
      ],
-     "text": "属性检定与攻击检定具有劣势。每回合结束时重新进行感知豁免，成功法术终止，失败再次受到心灵伤害。"
+     "text": "属性检定与攻击检定具有劣势。每个回合结束时重新进行感知豁免：失败再受 (施法所用法术位环阶)d10 心灵伤害，成功则法术终止。",
+     "triggers": [
+      {
+       "id": "nightmare",
+       "label": "魅影杀手：回合结束再受心灵伤害",
+       "on": "d20Rolled",
+       "role": "actor",
+       "window": "after",
+       "when": "roll.kind == 'save' && roll.ability == 'wis' && roll.sub == null && roll.failing && turn.isMine && roll.vs == effect.state.dc",
+       "do": [
+        {
+         "kind": "damage",
+         "dice": "(effect.state.lvl)d10",
+         "type": "心灵",
+         "to": "self"
+        }
+       ]
+      }
+     ]
     }
    },
    "tags": [
@@ -12044,8 +12114,8 @@
   },
   "XPHB:spell:群体疗伤术": {
    "name": "群体疗伤术",
-   "automation": "partial",
-   "text": "以施法距离 60 尺内指定一点为中心，为 30 尺半径球状区域内至多六个生物恢复 5d8 + 施法属性调整值点生命值。使用 6 环及以上法术位施展时，每高一环治疗量增加 1d8。指定区域点与区域内目标选择需由玩家在地图上确定。",
+   "automation": "full",
+   "text": "以施法距离 60 尺内指定一点为中心，为 30 尺半径球状区域内至多六个生物恢复 5d8 + 施法属性调整值点生命值。使用 6 环及以上法术位施展时，每高一环治疗量增加 1d8。",
    "actions": [
     {
      "id": "cast",
@@ -12063,9 +12133,13 @@
       }
      ],
      "targeting": {
-      "type": "creature",
+      "type": "area",
       "count": 6,
-      "range": 60
+      "range": 60,
+      "area": {
+       "shape": "sphere",
+       "radius": 30
+      }
      },
      "root": [
       {
@@ -16564,7 +16638,7 @@
   },
   "XPHB:spell:迅捷箭袋": {
    "name": "迅捷箭袋",
-   "automation": "partial",
+   "automation": "full",
    "text": "专注至多 1 分钟。以附赠动作施展时，你可以用射出箭矢或弩矢的武器进行两次攻击。在法术结束前，你每个回合都能用附赠动作再次进行两次这种攻击。法术会自动为每次攻击生成弹药（攻击后瓦解）。",
    "actions": [
     {
@@ -16597,10 +16671,6 @@
       {
        "kind": "economy",
        "attacks": 2
-      },
-      {
-       "kind": "note",
-       "text": "施展时可用射出箭矢或弩矢的武器进行两次攻击（自动生成所需弹药）"
       }
      ]
     },
@@ -16620,10 +16690,6 @@
       {
        "kind": "economy",
        "attacks": 2
-      },
-      {
-       "kind": "note",
-       "text": "以附赠动作使用射出箭矢或弩矢的武器进行两次攻击（自动生成所需弹药）"
       }
      ]
     }

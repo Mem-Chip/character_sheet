@@ -1,7 +1,7 @@
 {
   "name": "马友夫强酸箭",
-  "automation": "partial",
-  "text": "远程法术攻击，命中造成 4d4（升环每环+1d4）强酸伤害，目标在其下一回合结束时再受到 2d4 强酸伤害（升环后续额外伤害需手动调整）；未命中则造成初始伤害的一半。",
+  "automation": "full",
+  "text": "远程法术攻击，命中造成 4d4（升环每高二环的一环 +1d4）强酸伤害，目标在其下一回合结束时再受到 2d4（同样随升环增加）强酸伤害；未命中则造成初始伤害的一半。",
   "actions": [
     {
       "id": "cast",
@@ -41,11 +41,14 @@
               "kind": "applyEffect",
               "to": "target",
               "template": "强酸附着",
+              "state": {
+                "lvl": "slot.level"
+              },
               "duration": {
                 "until": {
                   "at": "turnEnd",
                   "of": "bearer",
-                  "nth": 1
+                  "nth": 2
                 }
               }
             }
@@ -67,12 +70,28 @@
         "magical",
         "spell"
       ],
-      "text": "在其回合结束时受到 2d4 强酸伤害（高环法术位施展时每高一环增加 1d4）。",
-      "onEnd": [
+      "text": "目标在其下一个回合结束时受到 (施法所用法术位环阶)d4 强酸伤害（2 环为 2d4，每高一环多 1d4）。",
+      "triggers": [
         {
-          "kind": "damage",
-          "dice": "2d4",
-          "type": "强酸"
+          "id": "acid-tail",
+          "label": "马友夫强酸箭：回合结束强酸伤害",
+          "on": "turnEnded",
+          "role": "actor",
+          "do": [
+            {
+              "kind": "damage",
+              "dice": "(effect.state.lvl)d4",
+              "type": "强酸",
+              "to": "self"
+            },
+            {
+              "kind": "removeEffect",
+              "match": {
+                "name": "强酸附着"
+              },
+              "from": "self"
+            }
+          ]
         }
       ]
     }

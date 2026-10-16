@@ -1,7 +1,7 @@
 {
   "name": "星我之躯",
-  "automation": "partial",
-  "text": "星我之臂与星我之容同时存在时星我之躯显现。受到强酸、冷冻、火焰、力场、闪电或雷鸣伤害时，可以反应拔挡该伤害，减少 1d10 + 感知调整值（至少减少 1 点）；在自己回合用星我之臂攻击命中目标时，每回合一次可造成额外等同于武艺骰的力场伤害。",
+  "automation": "full",
+  "text": "星我之臂与星我之容同时存在（或星我觉醒中）时星我之躯显现。受到强酸、寒冷、火焰、力场、闪电或雷鸣伤害时，可以用反应拨挡，所受伤害减少 1d10 + 感知调整值（至少减少 1 点）；在自己回合用星我之臂进行徒手打击命中时，每回合一次可造成额外等同于武艺骰的力场伤害。",
   "triggers": [
     {
       "id": "deflectEnergy",
@@ -15,14 +15,14 @@
           "economy": "reaction"
         }
       ],
-      "when": "ask('星我之臂与星我之容是否同时存在（星我之躯显现）？')",
+      "when": "((self.hasEffect('星我之臂') && self.hasEffect('星我之容')) || self.hasEffect('星我觉醒')) && (damage.type == '强酸' || damage.type == '寒冷' || damage.type == '火焰' || damage.type == '力场' || damage.type == '闪电' || damage.type == '雷鸣')",
       "modify": [
         {
           "op": "reduceDamage",
           "value": "1d10 + self.mod.wis",
           "types": [
             "强酸",
-            "冷冻",
+            "寒冷",
             "火焰",
             "力场",
             "闪电",
@@ -39,7 +39,7 @@
       "window": "before",
       "limit": "oncePerTurn",
       "optional": true,
-      "when": "turn.isMine && ask('本次命中是否使用了星我之臂，且星我之躯处于显现状态？')",
+      "when": "turn.isMine && attack.unarmed && ((self.hasEffect('星我之臂') && self.hasEffect('星我之容')) || self.hasEffect('星我觉醒'))",
       "do": [
         {
           "kind": "addDamage",
