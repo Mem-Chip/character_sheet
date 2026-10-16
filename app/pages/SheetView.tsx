@@ -146,7 +146,7 @@ function Attacks({ sheet }: Props) {
             ))}
           </tbody>
         </table>
-      ) : <div className="empty">没有装备武器。去「建卡」的装备里加。</div>}
+      ) : <div className="empty">没有装备武器。去「物品」页加。</div>}
     </Panel>
   );
 }

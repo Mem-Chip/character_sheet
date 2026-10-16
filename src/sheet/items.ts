@@ -196,7 +196,7 @@ export class ItemRules {
     let count = 0;
     for (const q of char.equipment || []) {
       const ent = this.find(q.name);
-      const w = ent?.weight;
+      const w = q.custom ? Number(q.custom.weight) || 0 : ent?.weight;
       const qty = Math.max(1, +q.qty || 1);
       count += qty;
       if (typeof w === 'number') total += w * qty; else unknown++;

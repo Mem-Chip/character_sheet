@@ -16,7 +16,7 @@ import type { Engine } from '../../lib/engine';
 import { AimBar } from './Hotbar';
 import { DAMAGE_TYPES, type Namer } from './shared';
 
-export type Group = '武器攻击' | '法术' | '法术（未自动化）' | '特性' | '通用动作' | '时机到了会问';
+export type Group = '武器攻击' | '法术' | '法术（未自动化）' | '特性' | '物品' | '通用动作' | '时机到了会问';
 export const GROUPS: Group[] = ['武器攻击', '法术', '法术（未自动化）', '特性', '通用动作', '时机到了会问'];
 
 /** 触发时机的说法（「时机到了会问」那一组用） */
@@ -115,7 +115,7 @@ export function actionsFor(s: Session, rules: RuleBook, spells: Json[], id: stri
       const costs = actionCosts(eff);
       const ok = s.peek((tx) => canPay(tx, id, costs));
       const slotCost = (a.cost ?? []).find((k): k is Extract<Cost, { slot: unknown }> => 'slot' in k);
-      const group: Group = (a.tags ?? []).includes('spell') ? '法术' : key.includes(':action:') ? '通用动作' : '特性';
+      const group: Group = (a.tags ?? []).includes('spell') ? '法术' : (a.tags ?? []).includes('item') ? '物品' : key.includes(':action:') ? '通用动作' : '特性';
       const act = typeof eff.activation === 'string' ? ACT_CN[eff.activation] + (eff !== a ? '（瞬发）' : '') : '';
       const t = a.targeting;
       out.push({

@@ -23,6 +23,7 @@ const TABS: Array<{ k: string; label: string; groups: Group[] }> = [
   { k: 'weapon', label: '武器', groups: ['武器攻击'] },
   { k: 'spell', label: '法术', groups: ['法术', '法术（未自动化）'] },
   { k: 'feature', label: '特性', groups: ['特性'] },
+  { k: 'item', label: '物品', groups: ['物品'] },
   { k: 'general', label: '通用', groups: ['通用动作'] },
   { k: 'timed', label: '时机', groups: ['时机到了会问'] },
 ];
@@ -136,7 +137,7 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
   const tabs = TABS.map((t) => ({ ...t, list: items.filter((x) => t.groups.includes(x.group)) })).filter((t) => t.list.length);
   const cur = tabs.find((t) => t.k === tab) ?? tabs[0];
   const econ = c.economy;
-  const resList = Object.entries(v.resources).filter(([k, n]) => n > 0 && !hiddenRes.includes(k));
+  const resList = Object.entries(v.resources).filter(([k, n]) => n > 0 && !hiddenRes.includes(k) && !k.startsWith('物品:'));
   const slots = Object.entries(v.slots).filter(([, n]) => n > 0);
   const pct = v.hpMax ? Math.max(0, Math.min(100, (c.live.hp / v.hpMax) * 100)) : 0;
 
@@ -240,6 +241,7 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
                   <CostIcon kind={costKind(it, asReaction)} />
                   {it.term ? <Term {...it.term} inButton>{it.name}</Term> : it.name}
                   {it.slot && <small>{at != null && ok ? `${at}环` : avail.length ? `${avail[0]}环` : '无位'}</small>}
+                  {it.group === '物品' && <small>×{(v.resources['物品:' + it.name] ?? 0) - (c.live.resourcesUsed['物品:' + it.name] ?? 0)}</small>}
                 </button>
               </span>
             );

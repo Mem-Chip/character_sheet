@@ -6,7 +6,8 @@
  */
 import { normType } from '../combat/damage';
 import { freshEconomy } from '../combat/view';
-import type { AttackRow, Combatant, CombatantView, LiveState } from '../combat/types';
+import type { AttackRow, Combatant, CombatantView, Entry, LiveState } from '../combat/types';
+import { plain } from './from-monster';
 import { ABILS, COUNT_ONLY, SIZE_CN, sourceKeyOf, type CharData, type Json, type SheetEnv } from '../sheet';
 import type { Ability } from '../expr';
 
@@ -94,6 +95,42 @@ export function resourceMap(char: CharData, sheet: Json): ResourceMap {
   return out;
 }
 
+const ITEM_RES = '物品:';
+/** 用得掉的物品：药水、标了「消耗品」的 */
+export function isConsumable(ent: Json): boolean {
+  return String(ent?.type ?? '').split('|')[0] === 'P' || (ent?.miscTags || []).includes('CNS');
+}
+/** 治疗药水这类：「恢复 2d4 + 2 点生命值」→ '2d4 + 2'（认不出 = null） */
+export function healDiceOf(ent: Json): string | null {
+  const text = plain((ent?.entries ?? []).filter((x: unknown) => typeof x === 'string').join(' '));
+  const m = /恢复\s*(\d+d\d+(?:\s*[+-]\s*\d+)?)\s*点?\s*生命值/.exec(text);
+  return m ? m[1].replace(/\s+/g, ' ') : null;
+}
+/** 带着的消耗品 → 资源（数量）+ 一个动作：治疗药水按「恢复 XdY 点生命值」自动治疗，其他的照原文手动 */
+function consumables(char: CharData): { max: Record<string, number>; name: Record<string, string>; entries: Record<string, Entry> } {
+  const out = { max: {} as Record<string, number>, name: {} as Record<string, string>, entries: {} as Record<string, Entry> };
+  for (const eq of char._resolved?.equipment || []) {
+    const ent = eq._ent;
+    if (!ent || !isConsumable(ent)) continue;
+    const id = ITEM_RES + eq.name;
+    const qty = Math.max(0, Number(eq.qty ?? 1) || 0);
+    if (!qty) continue;
+    out.max[id] = (out.max[id] ?? 0) + qty;
+    out.name[id] = eq.name;
+    const heal = healDiceOf(ent);
+    const potion = String(ent.type ?? '').split('|')[0] === 'P';
+    out.entries['ITEM:' + eq.name] = {
+      name: eq.name,
+      actions: [{
+        id: 'use', name: eq.name, activation: potion ? 'bonus' : 'action', tags: ['item'], cost: [{ resource: id }],
+        ...(heal ? { targeting: { type: 'creature', count: 1, range: 5 } } : {}),
+        root: heal ? [{ kind: 'heal', amount: heal }] : [{ kind: 'note', text: `${eq.name}：${plain((ent.entries ?? []).filter((x: unknown) => typeof x === 'string').join(' '))}（效果请手动处理）` }],
+      }],
+    };
+  }
+  return out;
+}
+
 export function viewFromSheet(env: SheetEnv, char: CharData, sheet: Json): CombatantView {
   const res = resourceMap(char, sheet);
   const score = Object.fromEntries(ABILS.map((a) => [a, sheet['score:' + a] ?? 10])) as Record<Ability, number>;
@@ -143,6 +180,8 @@ export function viewFromSheet(env: SheetEnv, char: CharData, sheet: Json): Comba
     if (['LA', 'MA', 'HA', 'S'].includes(t)) wearing.push(t);
   }
 
+  // 消耗品（药水之类）：数量记成资源「物品:名字」，用掉一次 = 资源用掉一次；各自一个动作
+  const items = consumables(char);
   const ctype = char._resolved?.race?.creatureTypes?.[0];
   return {
     name: char.name || '未命名',
@@ -166,9 +205,10 @@ export function viewFromSheet(env: SheetEnv, char: CharData, sheet: Json): Comba
     conditionImmune: sheet.conditionImmune || [],
     attacks,
     attacksPerAction,
-    sources: sourceKeys(env, char),
-    resources: res.max,
-    resourceNames: res.name,
+    sources: [...sourceKeys(env, char), ...Object.keys(items.entries)],
+    resources: { ...res.max, ...items.max },
+    resourceNames: { ...res.name, ...items.name },
+    ...(Object.keys(items.entries).length ? { entries: items.entries } : {}),
     slots,
     classTable: classTableRow(char),
     wearing,
@@ -218,6 +258,16 @@ export function combatantFromSheet(env: SheetEnv, char: CharData, sheet: Json, o
  * 只写记账字段；build 半边（属性、职业、装备…）一概不碰。
  */
 export function syncLiveToChar(char: CharData, sheet: Json, c: Combatant): void {
+  // 消耗品：带进来多少 − 用掉多少（绝对值，重复写回不会重复扣）
+  for (const [id, max] of Object.entries(c.base.resources)) {
+    if (!id.startsWith(ITEM_RES)) continue;
+    const name = id.slice(ITEM_RES.length);
+    const left = Math.max(0, max - (c.live.resourcesUsed[id] ?? 0));
+    const i = (char.equipment || []).findIndex((e: Json) => (typeof e === 'string' ? e : e.name) === name);
+    if (i < 0) continue;
+    if (left <= 0) char.equipment.splice(i, 1);
+    else char.equipment[i] = { ...(typeof char.equipment[i] === 'string' ? { name } : char.equipment[i]), qty: left };
+  }
   const view = c.base;
   char.hp = { ...(char.hp || {}), current: c.live.hp >= view.hpMax ? null : c.live.hp, temp: c.live.tempHp };
   char.deathSaves = { success: c.live.deathSaves.s, failure: c.live.deathSaves.f };

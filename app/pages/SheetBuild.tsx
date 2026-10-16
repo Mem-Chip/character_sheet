@@ -265,54 +265,18 @@ function Skills({ engine, id, char, sheet }: Props) {
 
 function Equipment({ engine, id, char, sheet }: Props) {
   const env = engine.env;
-  const [q, setQ] = useState('');
-  const groups = useMemo(() => ({
-    护甲: env.store.armors2024.filter((x) => x.source === 'XPHB'),
-    武器: env.store.weapons2024.filter((x) => x.source === 'XPHB' && x.age !== 'futuristic' && x.age !== 'modern' && x.age !== 'renaissance'),
-    其他: env.store.gear2024.filter((x) => x.source === 'XPHB'),
-  }), [env]);
-  const hits = q.trim() ? Object.values(groups).flat().filter((x) => x.name.includes(q.trim())).slice(0, 30) : [];
-  const add = (name: string) => upd(id, (c) => {
-    const eq = c.equipment || [];
-    const has = eq.find((x: Json) => x.name === name);
-    if (has) has.qty = (has.qty || 1) + 1; else eq.push({ name, qty: 1, equipped: true });
-    c.equipment = eq;
-  });
   const allowance = env.mastery.allowance(char).total;
   const masteryWeapons = env.mastery.weapons(char, sheet.weaponProfs).filter((w: Json) => w.proficient);
   const picked: string[] = char.masteries || [];
   return (
     <>
-      <Panel title="装备" flush>
-        <table className="rows">
-          <tbody>
-            {(char.equipment || []).map((e: Json, i: number) => {
-              const res = char._resolved?.equipment?.[i];
-              return (
-                <tr key={i} className={e.equipped ? '' : 'dim'}>
-                  <td className="serif">{e.name}{!res?._ent && <span className="warnline tiny"> 数据里找不到</span>}</td>
-                  <td style={{ width: 70 }}><NumInput min={1} value={e.qty ?? 1} onChange={(n) => upd(id, (c) => { c.equipment[i].qty = n; })} style={{ width: 56 }} /></td>
-                  <td className="r">
-                    <button className={'btn sm' + (e.equipped ? ' on' : '')} onClick={() => upd(id, (c) => { c.equipment[i].equipped = !e.equipped; })}>{e.equipped ? '已装备' : '未装备'}</button>
-                    <button className="btn ghost sm" onClick={() => upd(id, (c) => { c.equipment.splice(i, 1); })}>移除</button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        <div className="body" style={{ borderTop: '1px solid var(--line)' }}>
-          <div className="row">
-            <input placeholder="搜索物品：长剑、板甲、背包…" value={q} onChange={(e) => setQ(e.target.value)} style={{ flex: 1 }} />
-            {(['护甲', '武器'] as const).map((g) => (
-              <select key={g} value="" onChange={(e) => e.target.value && add(e.target.value)}>
-                <option value="">加{g}…</option>
-                {groups[g].map((x) => <option key={x.name} value={x.name}>{x.name}</option>)}
-              </select>
-            ))}
-          </div>
-          {hits.length > 0 && <div className="row" style={{ marginTop: 6 }}>{hits.map((x) => <button key={x.name} className="chip" onClick={() => { add(x.name); setQ(''); }}>{x.name}</button>)}</div>}
+      <Panel title="装备">
+        <div className="small">
+          {(char.equipment || []).length
+            ? (char.equipment as Json[]).map((e) => `${e.name}${(e.qty ?? 1) > 1 ? ` ×${e.qty}` : ''}${e.equipped ? '（装备中）' : ''}`).join('、')
+            : <span className="faint">还没有物品。</span>}
         </div>
+        <div className="tiny faint" style={{ marginTop: 4 }}>装备、背包、金钱、同调都在上面的「物品」页里管理。</div>
       </Panel>
       {allowance > 0 && (
         <Panel title="武器精通" aside={<span className={picked.length > allowance ? 'warnline' : ''}>{picked.length} / {allowance}</span>}>

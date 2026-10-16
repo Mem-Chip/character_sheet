@@ -75,11 +75,19 @@ export async function resolveCharacter(env: SheetEnv, char: CharData): Promise<J
   const items = d.items?.item || [];
   res.equipment = (char.equipment || []).map((eq: Json) => {
     const n = typeof eq === 'string' ? eq : eq.name;
-    const ent = baseItems.find((x: Json) => x.name === n && Source.is2024(x))
+    let ent = baseItems.find((x: Json) => x.name === n && Source.is2024(x))
       || baseItems.find((x: Json) => x.name === n)
       || items.find((x: Json) => x.name === n && Source.is2024(x))
       || items.find((x: Json) => x.name === n)
       || null;
+    // 魔法武器 / 护甲：底材（「黑刃」= 巨剑）的数据补进来，攻击、AC 照底材算，再加魔法加值
+    if (ent?.baseItem && !ent.weapon && !ent.armor) {
+      const bn = String(ent.baseItem).split('|')[0];
+      const base = baseItems.find((x: Json) => x.name === bn && Source.is2024(x)) || baseItems.find((x: Json) => x.name === bn);
+      if (base) ent = { ...base, ...ent, name: ent.name, weight: ent.weight ?? base.weight };
+    }
+    // 自定义物品：只有名字、重量、说明
+    if (!ent && eq?.custom) ent = { name: n, weight: Number(eq.custom.weight) || 0, entries: eq.custom.desc ? [eq.custom.desc] : [], custom: true };
     if (!ent) {
       const grp = env.items.groupOf(n);
       if (grp) res.warnings.push(`「${n}」是一类物品，还没选具体哪一件（可选：${grp.items.join('、')}）`);

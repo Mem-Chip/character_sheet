@@ -7,6 +7,7 @@ import { actions, useApp } from '../lib/store';
 import { useComputed } from '../lib/useSheet';
 import { SheetBuild } from './SheetBuild';
 import { SheetData } from './SheetData';
+import { SheetItems } from './SheetItems';
 import { SheetLevelUp } from './SheetLevelUp';
 import { SheetHero, SheetView } from './SheetView';
 
@@ -23,7 +24,7 @@ export function SheetPage({ engine }: { engine: Engine }) {
   const id = app.currentId;
   const card = id ? app.cards[id] : null;
   const computed = useComputed(engine, id, card?.char ?? null);
-  const [tab, setTab] = useState<'view' | 'levelup' | 'build' | 'data'>(card && !card.char.race && !card.char.classes?.[0]?.name ? 'build' : 'view');
+  const [tab, setTab] = useState<'view' | 'items' | 'levelup' | 'build' | 'data'>(card && !card.char.race && !card.char.classes?.[0]?.name ? 'build' : 'view');
 
   if (!card || !id) {
     return <div className="page"><div className="empty">还没有打开角色。去 <button className="btn sm" onClick={() => actions.go('library')}>卡片库</button> 选一张，或者新建。</div></div>;
@@ -48,6 +49,7 @@ export function SheetPage({ engine }: { engine: Engine }) {
       />
       <div className="tabs" role="tablist">
         <button role="tab" aria-selected={tab === 'view'} onClick={() => setTab('view')}>卡面</button>
+        <button role="tab" aria-selected={tab === 'items'} onClick={() => setTab('items')}>物品</button>
         <button role="tab" aria-selected={tab === 'levelup'} onClick={() => setTab('levelup')}>升级{pending > 0 && <span className="count">●{pending}</span>}</button>
         <button role="tab" aria-selected={tab === 'build'} onClick={() => setTab('build')}>建卡 / 编辑</button>
         <button role="tab" aria-selected={tab === 'data'} onClick={() => setTab('data')}>数据</button>
@@ -55,6 +57,7 @@ export function SheetPage({ engine }: { engine: Engine }) {
         <button className="btn ghost sm" onClick={() => download(`${char.name || '人物卡'}.json`, actions.exportJson(id))}>导出 JSON</button>
       </div>
       {tab === 'view' ? <SheetView engine={engine} id={id} char={char} sheet={sheet} />
+        : tab === 'items' ? <SheetItems engine={engine} id={id} char={char} sheet={sheet} />
         : tab === 'levelup' ? <SheetLevelUp engine={engine} id={id} char={char} sheet={sheet} />
         : tab === 'data' ? <SheetData engine={engine} id={id} char={char} sheet={sheet} />
           : <SheetBuild engine={engine} id={id} char={char} sheet={sheet} />}

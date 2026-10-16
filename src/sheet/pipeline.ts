@@ -54,6 +54,13 @@ export class Pipeline {
 }
 
 /** 计算结果累加器：标量（out）、结构化效果（effects）、审计轨迹（trace）分开存 */
+/** 「+1」「-2」→ 数字 */
+const num = (v: unknown): number => Number(String(v ?? '').replace(/\s/g, '')) || 0;
+/** 生效中的装备：装备着；要同调的同调了 */
+function itemsActive(c: Json): Json[] {
+  return (c._resolved?.equipment || []).filter((e: Json) => e.equipped && e._ent && (!e._ent.reqAttune || e.attuned));
+}
+
 export class CalcCtx {
   readonly out: Record<string, any> = {};
   readonly effects: Json[] = [];
@@ -142,6 +149,16 @@ export function createRules(): Pipeline {
   /* ---- 属性值（背景 / 专长 / 能力选择 / 效应，属性上限在计算层硬卡） ---- */
   R.add('abilities', (ctx) => {
     const c = ctx.char;
+    // 魔法物品的固定加值（装备着；要同调的同调了才算）：AC、豁免、法术攻击 / DC。武器的加值在攻击那里算
+    for (const eq of itemsActive(c)) {
+      const e = eq._ent, src = e.name;
+      const isArmor = !!e.armor || String(e.type).split('|')[0] === 'S';
+      const ac = num(e.bonusAc) + (isArmor ? Number(eq.bonus) || 0 : 0);
+      if (ac) ctx.addEffect({ kind: 'ac', value: ac, source: src });
+      if (num(e.bonusSavingThrow)) ctx.addEffect({ kind: 'saveBonus', value: num(e.bonusSavingThrow), source: src });
+      if (num(e.bonusSpellAttack)) ctx.addEffect({ kind: 'spellAtkBonus', value: num(e.bonusSpellAttack), source: src });
+      if (num(e.bonusSpellSaveDc)) ctx.addEffect({ kind: 'spellDcBonus', bonus: num(e.bonusSpellSaveDc), source: src });
+    }
     const base: Record<string, number> = { ...(c.abilities || {}) };
     const score: Record<string, number> = { ...base };
     for (const [key, val] of Object.entries(c.decisions || {})) {
@@ -469,12 +486,15 @@ export function createRules(): Pipeline {
       if (ranged) abil = 'dex';
       else if (finesse) abil = (ctx.out['mod:dex'] || 0) >= (ctx.out['mod:str'] || 0) ? 'dex' : 'str';
       const prof = isProf(w);
-      const atk = (ctx.out['mod:' + abil] || 0) + (prof ? ctx.out.pb : 0);
+      // 魔法武器：+N（物品自带的、或者给普通武器标的 +N）；要同调的没同调不算
+      const magicOn = !w.reqAttune || eq.attuned;
+      const plus = magicOn ? num(w.bonusWeapon) + (Number(eq.bonus) || 0) : 0;
+      const atk = (ctx.out['mod:' + abil] || 0) + (prof ? ctx.out.pb : 0) + plus + (magicOn ? num(w.bonusWeaponAttack) : 0);
       const pd = parseDiceText(w.dmg1);
       const dmg = w.dmg1 ? ((pd?.n || 1) + 'd' + (pd?.f || 4)) : '—';
       const bonus = pd?.b || 0;
       const isTwo = props.includes('2H');
-      const dmgMod = ctx.out['mod:' + abil] + bonus;
+      const dmgMod = ctx.out['mod:' + abil] + bonus + plus + (magicOn ? num(w.bonusWeaponDamage) : 0);
       rows.push({
         name: w.name, ent: w, prof, abil, atk, dmg,
         dmgText: `${dmg} ${dmgMod >= 0 ? '+' + dmgMod : dmgMod} ${DMG_CN[w.dmgType] || ''}`.trim(),
@@ -541,7 +561,7 @@ export function createRules(): Pipeline {
       sc.ability = abilSet[0];
       sc.allAbilities = abilSet;
       sc.dc = 8 + ctx.out.pb + (ctx.out['mod:' + sc.ability] || 0);
-      sc.atk = ctx.out.pb + (ctx.out['mod:' + sc.ability] || 0);
+      sc.atk = ctx.out.pb + (ctx.out['mod:' + sc.ability] || 0) + ctx.sumEffects('spellAtkBonus');
       const dcBonus = ctx.pluck('spellDcBonus').filter((e) => !e.list || e.list === sc.abilityCls || casters.some((k: Json) => k.cls.name === e.list));
       const dcSum = dcBonus.reduce((a, e) => a + (e.bonus || 0), 0);
       if (dcSum) {
