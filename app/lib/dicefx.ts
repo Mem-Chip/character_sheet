@@ -81,7 +81,8 @@ function load(): Promise<Mod> {
 const themeNow = (): 'light' | 'dark' => (document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
 
 /* ───── 提示条：正在掷什么（和动画一起出现、一起消失，可以手动关） ───── */
-export interface DiceCaption { id: number; title: string; detail?: string }
+/** rolling：骰子还在滚，只写在干什么（title）；停稳后补上结果（result + detail） */
+export interface DiceCaption { id: number; title: string; result?: string; detail?: string; settled: boolean }
 let caption: DiceCaption | null = null;
 let capSeq = 0;
 const capSubs = new Set<() => void>();
@@ -92,12 +93,13 @@ export const closeCaption = () => setCaption(null);
 
 let chain: Promise<void> = Promise.resolve();
 /** 排队播；轮到这一次时换上它的提示条，播完收起 */
-function play(req: RollRequest, physics?: DicePhysics, cap?: { title: string; detail?: string }): Promise<void> {
+function play(req: RollRequest, physics?: DicePhysics, cap?: { title: string; result?: string; detail?: string }): Promise<void> {
   if (!req.dice.length) return Promise.resolve();
   const job = chain.then(async () => {
-    const c = cap ? { id: ++capSeq, ...cap } : null;
+    const c: DiceCaption | null = cap ? { id: ++capSeq, ...cap, settled: false } : null;
     setCaption(c);
-    try { await playNow(req, physics); } finally { if (c && caption?.id === c.id) setCaption(null); }
+    const onSettle = () => { if (c && caption?.id === c.id) setCaption({ ...c, settled: true }); };
+    try { await playNow({ ...req, onSettle }, physics); } finally { if (c && caption?.id === c.id) setCaption(null); }
   });
   chain = job.catch(() => {});
   return job;
@@ -167,6 +169,7 @@ export function scanChat(encounter: string, chat: ReadonlyArray<ChatRoll>, me: n
     const dice = c.results.flatMap((r) => diceOfExpr(r, color));
     void play({ dice, seed: seedOf('chat:' + c.id) }, physics, {
       title: `${c.byName} 掷骰${c.note ? `：${c.note}` : ''}`,
+      result: c.results.map((r) => r.total).join('，'),
       detail: c.results.map((r) => describeRoll(r).replace(/~(\d+)~/g, '($1)')).join('\n'),
     });
   }
@@ -188,7 +191,7 @@ export interface TapeCtx {
   color: (id: string | null) => string;
   label: (cmd: unknown) => string;
   /** 这次掷骰对应的那行日志（标题 + 掷骰明细）；找不到返回 null */
-  line?: (events: ReadonlyArray<unknown>, from: number) => { title: string; detail?: string } | null;
+  line?: (events: ReadonlyArray<unknown>, from: number) => { title: string; result?: string; detail?: string } | null;
 }
 
 /** 扫一遍事务（含正在等待决定的那笔）：tape 里新出现的、引擎掷的骰子播一下 */

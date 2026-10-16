@@ -26,6 +26,7 @@ export interface RollRequest {
   dice: DieSpec[];
   seed?: number; // 同一个种子 → 同样的滚法
   label?: string; // 显示在角落
+  onSettle?: () => void; // 骰子停稳（或被跳过、不滚直接摆好）时调一次
 }
 
 /** 保险：正常流程之外再多给这么久，到点一定结束（比如窗口被遮挡、rAF 被浏览器暂停），队列不会卡死 */
@@ -106,6 +107,7 @@ interface Playback {
   holdMs: number;
   watchdog: number;
   resolve: () => void;
+  onSettle?: () => void;
 }
 
 const UP = new THREE.Vector3(0, 1, 0);
@@ -426,6 +428,7 @@ class DiceStage {
           t.maxRollMs + Math.max(t.holdMs, t.skipHoldMs, t.dimMs) + t.fadeMs + WATCHDOG_EXTRA_MS,
         ),
         resolve,
+        onSettle: req.onSettle,
       };
       this.current = pb;
       this.applyFrame(pb, 0);
@@ -498,6 +501,9 @@ class DiceStage {
   }
 
   private enterHold(pb: Playback, now: number, holdMs: number) {
+    const f = pb.onSettle;
+    pb.onSettle = undefined;
+    f?.();
     pb.phase = 'hold';
     pb.phaseStart = now;
     pb.holdMs = holdMs;

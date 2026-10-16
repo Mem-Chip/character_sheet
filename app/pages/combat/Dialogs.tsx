@@ -19,6 +19,21 @@ export function DecisionDialog({ s, name, onClose, docked }: { s: Session; name:
   const d = p.decision;
   const preview = previewLines(p.preview, name);
   const who = s.state.combatants[d.to]?.name ?? (d.to === 'dm' ? 'DM' : name(d.to));
+  const [manual, setManual] = useState(false);
+  // 确认掷骰：小窗口，一行写清楚在掷什么，下面三个按钮
+  if (d.kind === 'physicalDice' && d.confirm && !manual) {
+    return (
+      <div className={'panel dice-ask' + (docked ? ' docked' : '')}>
+        <div className="q">{d.prompt}{onClose && <span className="tiny faint">（DM 代 {who} 掷）</span>}</div>
+        <div className="row">
+          <button className="btn primary" autoFocus onClick={() => combat.decide('roll')}>掷</button>
+          <button className="btn" onClick={() => setManual(true)}>手动输入</button>
+          <span style={{ flex: 1 }} />
+          <button className="btn ghost danger" onClick={() => (onClose ? onClose() : combat.cancelPending())} title={onClose ? '不代答了' : '当作这笔操作没有发生过'}>取消</button>
+        </div>
+      </div>
+    );
+  }
   return (
     <Dialog title={<>{KIND_CN[d.kind] ?? '需要决定'} <span className="faint small">· 交给 {who}{onClose ? '（DM 代答）' : ''}</span></>} onClose={onClose} docked={docked}>
       {preview.length > 0 && (
@@ -124,17 +139,8 @@ function DiceInput({ d }: { d: Decision }) {
   const reqs = d.dice ?? [];
   const [faces, setFaces] = useState<string[][]>(reqs.map((r) => Array.from({ length: r.count }, () => '')));
   // 确认掷骰：一个大按钮；想用实体骰再展开输入框
-  const [manual, setManual] = useState(!d.confirm);
   const valid = reqs.every((r, i) => faces[i].every((f) => Number.isInteger(Number(f)) && Number(f) >= 1 && Number(f) <= r.faces && f !== ''));
   const sig = reqs.map((r) => `${r.count}d${r.faces}`).join(' + ');
-  if (!manual) {
-    return (
-      <div className="dice-go">
-        <button className="btn primary dice-roll" autoFocus onClick={() => combat.decide('roll')} onKeyDown={(e) => { if (e.key === ' ') e.preventDefault(); }}>掷！<small>{sig}</small></button>
-        <button className="btn ghost sm" onClick={() => setManual(true)}>用实体骰填</button>
-      </div>
-    );
-  }
   return (
     <>
       <div className="stack" style={{ gap: 6 }}>

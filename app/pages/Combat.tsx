@@ -79,7 +79,9 @@ export function CombatPage({ engine }: { engine: Engine }) {
           if (evs[i].type !== 'd20Rolled' && evs[i].type !== 'damageRolled') continue;
           const l = describe(evs[i], nm, secret);
           if (!l) return null;
-          return { title: l.text, detail: l.receipt };
+          // 「… 对 AC 10 → 命中」：滚的时候只写前半句，停稳再补结论和明细
+          const k = l.text.lastIndexOf(' → ');
+          return k > 0 ? { title: l.text.slice(0, k), result: l.text.slice(k + 3), detail: l.receipt } : { title: l.text, detail: l.receipt };
         }
         return null;
       },

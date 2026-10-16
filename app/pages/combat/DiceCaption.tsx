@@ -7,8 +7,8 @@ export function DiceCaption() {
   if (!c) return null;
   return (
     <div className="dice-cap" data-dice-noskip>
-      <div className="t">{c.title}</div>
-      {c.detail && <div className="d">{c.detail}</div>}
+      <div className="t">{c.title}{c.settled && c.result && <b> → {c.result}</b>}</div>
+      {c.settled && c.detail && <div className="d">{c.detail}</div>}
       <button className="tag-x" onClick={closeCaption} title="关掉提示（骰子照样播）">✕</button>
     </div>
   );
