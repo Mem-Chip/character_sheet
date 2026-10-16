@@ -1,0 +1,72 @@
+{
+  "name": "节肢斗篷",
+  "automation": "partial",
+  "text": "着装此斗篷期间，你获得对毒素伤害的抗性，获得等同于步行速度的攀爬速度，且不会被蛛网困住。每日黎明前可以使用动作施展一次蛛网术（DC 13），其创造的蛛网覆盖区域为普通蛛网术的两倍（专注至多 1 小时）。",
+  "resources": [
+    {
+      "id": "物品次数:节肢斗篷",
+      "name": "节肢斗篷",
+      "formula": 1,
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "节肢斗篷：蛛网术",
+      "activation": "action",
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "cost": [
+        {
+          "resource": "物品次数:节肢斗篷"
+        }
+      ],
+      "concentration": {
+        "hours": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": {
+          "shape": "cube",
+          "size": 40
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": 13,
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "蛛网束缚"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "蛛网束缚": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:束缚"
+      ],
+      "text": "陷入束缚状态。可用动作进行对抗 DC 13 的力量（运动）检定，成功则挣脱束缚。"
+    }
+  }
+}

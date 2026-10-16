@@ -1,0 +1,65 @@
+{
+  "name": "波涛",
+  "automation": "partial",
+  "text": "+3 三叉戟。攻击掷出 20 时额外造成 21 点暗蚀伤害。先攻检定具有优势。水下可正常呼吸。消耗 1 充能对有游泳速度的野兽施展支配野兽（DC 20）。次日黎明前可施展一次 9 环法术无效结界。固定加值已在人物卡处理。",
+  "resources": [
+    { "id": "物品次数:波涛:法术无效结界", "name": "波涛：法术无效结界", "formula": 1, "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "dominate-beast",
+      "name": "波涛：支配野兽",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:波涛", "n": 1 }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": 20,
+          "onFail": [
+            {
+              "kind": "note",
+              "text": "目标野兽（须具有游泳速度）陷入魅惑，施法者可通过心灵感应下达指令。受到伤害时可重掷豁免。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "globe-of-invulnerability",
+      "name": "波涛：法术无效结界（9环）",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品次数:波涛:法术无效结界" }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "施展 9 环法术无效结界（以自身为中心半径 10 尺的光障，完全阻挡 8 环及以下的法术效应进入，需专注至多 1 分钟）。直至次日黎明无法再次施展。"
+        }
+      ]
+    }
+  ],
+  "rollMods": [
+    {
+      "on": { "kind": "initiative" },
+      "who": "bearer",
+      "op": "adv",
+      "label": "战斗预备：先攻检定优势"
+    }
+  ]
+}

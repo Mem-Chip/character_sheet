@@ -1,0 +1,56 @@
+{
+  "name": "凋零法杖",
+  "text": "作为魔法长棍命中时，可消耗1充能额外造成2d10暗蚀伤害，并迫使其进行DC 15体质豁免，失败在1小时内力量与体质相关的属性检定和豁免检定具有劣势。",
+  "triggers": [
+    {
+      "id": "withering-strike",
+      "label": "凋零打击",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "cost": [
+        { "resource": "物品充能:凋零法杖", "n": 1 }
+      ],
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "2d10",
+          "type": "暗蚀"
+        },
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": 15,
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "凋零",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "凋零": {
+      "tags": ["magical"],
+      "duration": {
+        "hours": 1
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": ["check", "save"],
+            "ability": ["str", "con"]
+          },
+          "who": "bearer",
+          "op": "disadv",
+          "label": "凋零：力量与体质检定及豁免劣势"
+        }
+      ],
+      "text": "任何使用力量或体质的属性检定或豁免检定具有劣势，持续1小时。"
+    }
+  }
+}

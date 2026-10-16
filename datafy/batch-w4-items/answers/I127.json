@@ -1,0 +1,64 @@
+{
+  "name": "喷嚏粉",
+  "automation": "partial",
+  "text": "用操作动作将粉末洒向空中，使你及30尺光环内的生物进行DC 15体质豁免（构装、元素、泥怪、植物和亡灵自动成功，需手动处理）。失败陷入失能与窒息，其回合结束时可重复豁免以终止。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "撒布喷嚏粉",
+      "activation": "action",
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": { "shape": "emanation", "radius": 30 }
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": 15,
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "self",
+              "template": "喷嚏与窒息"
+            }
+          ]
+        },
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": 15,
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "喷嚏与窒息"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "喷嚏与窒息": {
+      "implies": [
+        "XPHB:condition:失能"
+      ],
+      "text": "陷入失能并窒息。每回合结束时可重复进行DC 15体质豁免，成功则终止。",
+      "duration": {
+        "saveEnds": {
+          "ability": "con",
+          "dc": 15,
+          "at": "turnEnd"
+        }
+      }
+    }
+  }
+}

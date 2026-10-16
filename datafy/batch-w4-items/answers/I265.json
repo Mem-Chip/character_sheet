@@ -1,0 +1,60 @@
+{
+  "name": "火球项链",
+  "automation": "partial",
+  "text": "以魔法动作取下1颗或多颗珠子投掷至多60尺，在末端引爆造成3环火球术（DC 15敏捷豁免，8d6火焰伤害，成功半数）。每额外投掷1颗珠子伤害增加1d6（至多12d6）。珠子为消耗品，投掷后消失，消耗请手动在物品中扣除。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "投掷火球珠",
+      "activation": "action",
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": {
+          "shape": "sphere",
+          "radius": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "number",
+          "prompt": "选择投掷的珠子数量（1~5颗，伤害为8d6~12d6）",
+          "var": "beads",
+          "min": 1,
+          "max": 5,
+          "default": 1
+        },
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": 15,
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "fire",
+                  "dice": "(7 + vars.beads)d6",
+                  "type": "火焰"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "fire",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "珠子投掷后永久消耗，请手动在物品中扣除投掷的珠子数量。"
+        }
+      ]
+    }
+  ]
+}

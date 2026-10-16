@@ -1,0 +1,59 @@
+{
+  "name": "音爆号角",
+  "automation": "partial",
+  "text": "以一个魔法动作说出命令语并吹响号角，产生 30 尺锥状音爆。区域内生物须进行 DC 15 体质豁免，失败受 5d8 雷鸣伤害并耳聋 1 分钟，成功受半伤且不耳聋。玻璃/晶体生物或物件豁免具劣势且受 10d8 伤害。每次使用有 20% 几率自爆并对吹奏者造成 10d6 火焰伤害（特殊目标伤害与自爆需手动处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "吹响音爆号角",
+      "activation": "action",
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "cone",
+          "length": 30
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": 15,
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "d",
+                  "dice": "5d8",
+                  "type": "雷鸣"
+                },
+                {
+                  "kind": "applyEffect",
+                  "template": "XPHB:condition:耳聋",
+                  "duration": {
+                    "minutes": 1
+                  }
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "d",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "玻璃或晶体构成的生物或物件豁免具有劣势，且受到 10d8 点雷鸣伤害。每次使用有 20% 概率号角爆炸被摧毁，且对吹响者造成 10d6 点火焰伤害。"
+        }
+      ]
+    }
+  ]
+}

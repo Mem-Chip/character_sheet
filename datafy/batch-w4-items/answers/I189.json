@@ -1,0 +1,78 @@
+{
+  "name": "心灵感应头盔",
+  "automation": "partial",
+  "text": "着装期间具有 30 尺心灵感应。可用头盔施展侦测思想与暗示术（DC 13），各自每日黎明前限用一次。",
+  "resources": [
+    {
+      "id": "物品次数:心灵感应头盔:侦测思想",
+      "name": "心灵感应头盔：侦测思想",
+      "formula": 1,
+      "recovery": "long"
+    },
+    {
+      "id": "物品次数:心灵感应头盔:暗示术",
+      "name": "心灵感应头盔：暗示术",
+      "formula": 1,
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "detectThoughts",
+      "name": "侦测思想",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "物品次数:心灵感应头盔:侦测思想"
+        }
+      ],
+      "root": [
+        {
+          "kind": "note",
+          "text": "施展侦测思想（DC 13，专注至多 1 分钟）。读取 30 尺内生物表层思想，或深入探测心智（目标感知豁免对抗 DC 13）。"
+        }
+      ]
+    },
+    {
+      "id": "suggestion",
+      "name": "暗示术",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "物品次数:心灵感应头盔:暗示术"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": 13,
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "暗示术",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "暗示术": {
+      "implies": [
+        "XPHB:condition:魅惑"
+      ],
+      "duration": {
+        "hours": 8
+      },
+      "text": "被魅惑。尽其所能执行行动暗示（专注至多 8 小时）。受到伤害时提前结束。"
+    }
+  }
+}

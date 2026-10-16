@@ -1,0 +1,146 @@
+{
+  "name": "凯斯之剑",
+  "automation": "partial",
+  "text": "+3 长剑。19~20 产生重击。对亡灵额外造成 2d10 挥砍伤害。先攻检定 +1d10。获得暗蚀伤害抗性。发动攻击时可将至多 +3 攻击加值转移为 AC 至下回合开始。出鞘后 1 分钟未见血需 DC 15 魅力豁免，成功受 3d6 心灵伤害，失败被剑控制。施展法术（豁免 DC 18，每个法术次日黎明前限一次）：召雷术、圣言术、死亡一指。固定加值已在人物卡处理。",
+  "resources": [
+    { "id": "物品次数:凯斯之剑:召雷术", "name": "凯斯之剑：召雷术", "formula": 1, "recovery": "long" },
+    { "id": "物品次数:凯斯之剑:圣言术", "name": "凯斯之剑：圣言术", "formula": 1, "recovery": "long" },
+    { "id": "物品次数:凯斯之剑:死亡一指", "name": "凯斯之剑：死亡一指", "formula": 1, "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "call-lightning",
+      "name": "凯斯之剑：召雷术",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品次数:凯斯之剑:召雷术" }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "cylinder",
+          "radius": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": 18,
+              "onFail": [
+                { "kind": "damage", "id": "d", "dice": "3d10", "type": "闪电" }
+              ],
+              "onSuccess": [
+                { "kind": "damage", "ref": "d", "scale": 0.5 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "divine-word",
+      "name": "凯斯之剑：圣言术",
+      "activation": "bonus",
+      "cost": [
+        { "resource": "物品次数:凯斯之剑:圣言术" }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "emanation",
+          "radius": 30
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "cha",
+              "dc": 18,
+              "onFail": [
+                {
+                  "kind": "note",
+                  "text": "豁免失败者按当前生命值受到惩戒：<=50 耳聋1分钟；<=40 耳聋且目盲10分钟；<=30 耳聋、目盲且震慑1小时；<=20 立即死亡。非本位面天界生物、元素、邪魔、妖精被驱逐回原籍位面。"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "finger-of-death",
+      "name": "凯斯之剑：死亡一指",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品次数:凯斯之剑:死亡一指" }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": 18,
+          "onFail": [
+            { "kind": "damage", "id": "d", "dice": "7d8 + 30", "type": "暗蚀" },
+            { "kind": "note", "text": "死亡一指：若目标类人生物被杀死，在施法者下一回合开始时将其唤起为一只受控丧尸。" }
+          ],
+          "onSuccess": [
+            { "kind": "damage", "ref": "d", "scale": 0.5 }
+          ]
+        }
+      ]
+    }
+  ],
+  "triggers": [
+    {
+      "id": "undead-slayer",
+      "label": "凯斯之剑：对亡灵额外伤害",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "target.type == '亡灵' || target.type == 'undead'",
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "2d10",
+          "type": "挥砍"
+        }
+      ]
+    }
+  ],
+  "rollMods": [
+    {
+      "on": { "kind": "initiative" },
+      "who": "bearer",
+      "op": "addDice",
+      "value": "1d10",
+      "label": "战斗饥渴：先攻 +1d10"
+    },
+    {
+      "on": { "kind": "attack", "attack": { "weapon": true } },
+      "who": "bearer",
+      "op": "critRange",
+      "value": 19,
+      "label": "凯斯之剑：19-20 重击"
+    }
+  ]
+}

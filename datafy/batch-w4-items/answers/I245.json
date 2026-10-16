@@ -1,0 +1,62 @@
+{
+  "name": "打击之锤",
+  "automation": "partial",
+  "text": "+1魔法武器（已在人物卡处理）。攻击构装生物时加值提升为+3（额外+2攻击与伤害）。攻击检定掷出20时目标额外受7钝击伤害；若目标为构装生物则受14钝击伤害，且若生命值降至25及以下直接被摧毁（摧毁需手动处理）。",
+  "rollMods": [
+    {
+      "on": {
+        "kind": "attack"
+      },
+      "who": "bearer",
+      "when": "attack.weapon && (target.type == '构装生物' || target.type == 'construct')",
+      "op": "add",
+      "value": 2,
+      "label": "打击之锤（构装生物）：攻击检定额外+2"
+    },
+    {
+      "on": {
+        "kind": "damage"
+      },
+      "who": "bearer",
+      "when": "attack.weapon && (target.type == '构装生物' || target.type == 'construct')",
+      "op": "add",
+      "value": 2,
+      "label": "打击之锤（构装生物）：伤害掷骰额外+2"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "smiting-crit",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.weapon && roll.natural == 20",
+      "do": [
+        {
+          "kind": "if",
+          "when": "target.type == '构装生物' || target.type == 'construct'",
+          "then": [
+            {
+              "kind": "damage",
+              "dice": 14,
+              "type": "钝击",
+              "to": "target"
+            },
+            {
+              "kind": "note",
+              "text": "打击之锤：构装生物受到该伤害后生命值若降至25及以下，则直接被摧毁。"
+            }
+          ],
+          "else": [
+            {
+              "kind": "damage",
+              "dice": 7,
+              "type": "钝击",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

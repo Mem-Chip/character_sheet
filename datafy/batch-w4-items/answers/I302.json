@@ -1,0 +1,54 @@
+{
+  "name": "火焰吐息药水",
+  "text": "以附赠动作饮用此药水，获得喷吐火焰的能力（1 小时内至多喷吐 3 次）。喷吐火焰为附赠动作，指定 30 尺内一名目标进行 DC 13 敏捷豁免，失败受 4d6 火焰伤害，成功半数伤害。",
+  "resources": [
+    { "id": "物品次数:火焰吐息药水", "name": "火焰吐息", "formula": 3, "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "饮用火焰吐息药水",
+      "activation": "bonus",
+      "cost": [
+        { "resource": "物品:火焰吐息药水" }
+      ],
+      "root": [
+        { "kind": "note", "text": "饮用后 1 小时内可执行附赠动作喷吐火焰，至多喷吐 3 次。" }
+      ]
+    },
+    {
+      "id": "breath",
+      "name": "火焰吐息",
+      "activation": "bonus",
+      "cost": [
+        { "resource": "物品次数:火焰吐息药水", "n": 1 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": 13,
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "fire",
+              "dice": "4d6",
+              "type": "火焰"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "fire",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

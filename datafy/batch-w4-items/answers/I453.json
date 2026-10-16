@@ -1,0 +1,119 @@
+{
+  "name": "魅惑法杖",
+  "automation": "partial",
+  "text": "具有10充能。每日黎明重获1d8+2充能，充能耗尽时掷d20出1摧毁。\n【施法】消耗1充能施展魅惑类人、命令术或通晓语言（使用自身法术豁免DC）。\n【惑控反射】若仅以你为目标的惑控法术豁免成功，可以反应消耗1充能将法术反射给原施法者。\n【惑控抵抗】若仅以你为目标的惑控法术豁免失败，可将其改为成功（次日黎明前限用一次）。",
+  "resources": [
+    { "id": "物品次数:魅惑法杖", "name": "魅惑法杖：惑控抵抗", "formula": 1, "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "charm-person",
+      "name": "魅惑法杖：魅惑类人",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:魅惑法杖", "n": 1 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "魅惑类人"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "command",
+      "name": "魅惑法杖：命令术",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:魅惑法杖", "n": 1 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "note",
+              "text": "目标豁免失败，在其下一回合必须服从指定指令（趴下、阻拦、过来、放下或走开）。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "comprehend-languages",
+      "name": "魅惑法杖：通晓语言",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:魅惑法杖", "n": 1 }
+      ],
+      "root": [
+        {
+          "kind": "note",
+          "text": "持续 1 小时内，你能理解所听到的任何口头语言字面含义，并能理解读到的任何书面文字字面含义。"
+        }
+      ]
+    },
+    {
+      "id": "enchantment-reflection",
+      "name": "魅惑法杖：惑控反射",
+      "activation": "reaction",
+      "trigger": {
+        "on": "d20Rolled"
+      },
+      "cost": [
+        { "resource": "物品充能:魅惑法杖", "n": 1 }
+      ],
+      "root": [
+        {
+          "kind": "note",
+          "text": "若一道惑控学派法术仅以你为目标且你豁免成功，反应消耗1充能将法术反射给原施法者，如同你施展了该法术（使用自身法术DC）。"
+        }
+      ]
+    },
+    {
+      "id": "enchantment-resistance",
+      "name": "魅惑法杖：惑控抵抗",
+      "activation": "none",
+      "cost": [
+        { "resource": "物品次数:魅惑法杖" }
+      ],
+      "root": [
+        {
+          "kind": "note",
+          "text": "若一道惑控学派法术仅以你为目标且你豁免失败，可将失败的豁免改为成功。次日黎明前无法再次使用。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "魅惑类人": {
+      "tags": ["magical", "spell"],
+      "implies": ["XPHB:condition:魅惑"],
+      "duration": {
+        "hours": 1,
+        "endsOn": [{ "event": "damageTaken" }]
+      },
+      "text": "陷入魅惑状态，视施法者为友好同伴。受到伤害时此效应提前终止。"
+    }
+  }
+}

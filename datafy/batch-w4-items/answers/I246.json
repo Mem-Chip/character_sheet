@@ -1,0 +1,58 @@
+{
+  "name": "恐惧之锤",
+  "automation": "partial",
+  "text": "持握期间可以魔法动作消耗1充能释放恐惧波动，30尺内自选生物须通过DC 15感知豁免，否则陷入恐慌1分钟。恐慌期间须尽力远离持有者、无法发动借机攻击、只能疾走或摆脱阻碍移动（无路可逃时可回避）。其回合结束时可重复豁免结束效应。特定移动限制需手动处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "恐惧波动",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:恐惧之锤", "n": 1 }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "sphere",
+          "radius": 30
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": 15,
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "template": "恐惧之锤恐慌",
+                  "to": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "恐惧之锤恐慌": {
+      "name": "恐惧之锤：恐慌",
+      "implies": ["XPHB:condition:恐慌"],
+      "duration": {
+        "minutes": 1,
+        "saveEnds": {
+          "ability": "wis",
+          "dc": 15,
+          "at": "turnEnd"
+        }
+      },
+      "text": "恐慌1分钟。回合内必须尽可能远离来源移动，不能发动借机攻击，只能执行疾走或摆脱阻止移动的效应（无路可走可回避）。回合结束可进行DC 15感知豁免。"
+    }
+  }
+}

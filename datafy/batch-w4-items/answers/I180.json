@@ -1,0 +1,121 @@
+{
+  "name": "维克那魔掌",
+  "automation": "partial",
+  "text": "同调需切断左手压在断肢上，取下立即死亡。阵营变为中立邪恶。力量属性变为 20（已在人物卡处理）。以魔掌进行的近战法术攻击或以魔掌持握武器进行的近战攻击命中时，额外造成 2d8 寒冷伤害。消耗充能施法（豁免 DC 18，每次施法后魔掌对你施展暗示术要求犯下恶行）：睡眠术（1充能）、缓慢术（2充能）、传送术（3充能）、死亡一指（5充能）。",
+  "actions": [
+    {
+      "id": "sleep",
+      "name": "维克那魔掌：睡眠术",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:维克那魔掌", "n": 1 }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 90,
+        "area": {
+          "shape": "sphere",
+          "radius": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "施展睡眠术（DC 18）。施法后魔掌对你施展暗示术（DC 18 感知豁免，无需专注）要求你犯下恶行。"
+        }
+      ]
+    },
+    {
+      "id": "slow",
+      "name": "维克那魔掌：缓慢术",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:维克那魔掌", "n": 2 }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "cube",
+          "size": 40
+        }
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": 18,
+          "onFail": [
+            {
+              "kind": "note",
+              "text": "目标速度减半，AC与敏捷豁免-2，无法使用反应，回合中动作或附赠动作二选一且无法发动多于一次攻击。施法后魔掌对你施展暗示术（DC 18 感知豁免，无需专注）要求你犯下恶行。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "teleport",
+      "name": "维克那魔掌：传送术",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:维克那魔掌", "n": 3 }
+      ],
+      "root": [
+        {
+          "kind": "note",
+          "text": "施展传送术（Teleport）。施法后魔掌对你施展暗示术（DC 18 感知豁免，无需专注）要求你犯下恶行。"
+        }
+      ]
+    },
+    {
+      "id": "finger-of-death",
+      "name": "维克那魔掌：死亡一指",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:维克那魔掌", "n": 5 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": 18,
+          "onFail": [
+            { "kind": "damage", "id": "d", "dice": "7d8 + 30", "type": "暗蚀" },
+            { "kind": "note", "text": "死亡一指：若目标类人生物被杀死，在施法者下一回合开始时将其唤起为一只受控丧尸。" }
+          ],
+          "onSuccess": [
+            { "kind": "damage", "ref": "d", "scale": 0.5 }
+          ]
+        },
+        { "kind": "note", "text": "施法后魔掌对你施展暗示术（DC 18 感知豁免，无需专注）要求你犯下恶行。" }
+      ]
+    }
+  ],
+  "triggers": [
+    {
+      "id": "cold-touch",
+      "label": "维克那魔掌：极寒之抚",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "attack.melee",
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "2d8",
+          "type": "寒冷"
+        }
+      ]
+    }
+  ]
+}

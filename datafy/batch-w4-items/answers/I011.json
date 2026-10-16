@@ -1,0 +1,58 @@
+{
+  "name": "炽火胶",
+  "automation": "partial",
+  "text": "当你执行攻击动作时，可以将其中一次攻击替换为丢出一扁瓶炽火胶，选择20尺内可见的一个生物或物件。目标必须通过敏捷豁免（DC 8 + 你的敏捷调整值 + 你的熟练），否则承受1d4点火焰伤害并开始燃烧。燃烧的目标在其每回合开始时受到1d4点火焰伤害，生物可用一个动作熄灭火焰（熄灭火焰需手动操作）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "投掷炽火胶",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品:炽火胶" }
+      ],
+      "targeting": {
+        "type": "creature",
+        "range": 20
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "8 + self.mod.dex + self.pb",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "1d4",
+              "type": "火焰"
+            },
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "燃烧"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "燃烧": {
+      "text": "在你的每个回合开始时承受 1d4 点火焰伤害。生物可以使用一个动作扑灭自己或5尺内另一生物身上的火焰。",
+      "triggers": [
+        {
+          "id": "burn",
+          "label": "燃烧：回合开始受伤害",
+          "on": "turnStarted",
+          "role": "actor",
+          "do": [
+            {
+              "kind": "damage",
+              "dice": "1d4",
+              "type": "火焰"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

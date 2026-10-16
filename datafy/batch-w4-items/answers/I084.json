@@ -1,0 +1,54 @@
+{
+  "name": "链条",
+  "automation": "partial",
+  "text": "以一个操作动作对5尺内处于受擒、失能或束缚状态的非自愿生物进行一次DC 13的力量（运动）检定。检定成功可用链条捆住目标，若绑住腿则目标陷入束缚状态直至挣脱。挣脱需动作通过DC 18敏捷（特技）检定，扯坏需动作通过DC 20力量（运动）检定。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "链条捆绑",
+      "activation": "action",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 5
+      },
+      "root": [
+        {
+          "kind": "if",
+          "when": "target.has('受擒') || target.has('失能') || target.has('束缚')",
+          "then": [
+            {
+              "kind": "check",
+              "ability": "str",
+              "skill": "运动",
+              "dc": 13,
+              "onSuccess": [
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "XPHB:condition:束缚"
+                },
+                {
+                  "kind": "note",
+                  "text": "成功捆住目标（若绑住腿陷入束缚状态直至挣脱）。挣脱需动作通过DC 18敏捷（特技）检定，扯坏需动作通过DC 20力量（运动）检定。"
+                }
+              ],
+              "onFail": [
+                {
+                  "kind": "note",
+                  "text": "力量（运动）检定失败，未成功捆住目标。"
+                }
+              ]
+            }
+          ],
+          "else": [
+            {
+              "kind": "note",
+              "text": "目标未处于受擒、失能或束缚状态，无法使用链条捆绑。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

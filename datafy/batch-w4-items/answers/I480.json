@@ -1,0 +1,104 @@
+{
+  "name": "雷霆巨棒",
+  "automation": "partial",
+  "text": "力量设为20（人物卡已处理）。\n命中生物额外造成 1d8 雷鸣伤害，命中未被携带的物件额外造成 3d8 雷鸣伤害。\n【雷霆霹雳】：以动作击打坚硬表面，制造30尺锥状区域，区域内生物须通过 DC 15 力量豁免否则倒地，未被携带的非魔法物件受 3d8 雷鸣伤害。\n【地震术】：以动作敲击地面引起50尺半径强烈地震（次日黎明前限一次）。建筑物受50钝击伤害；地面生物 DC 20 敏捷豁免否则倒地，维持专注的生物 DC 20 体质豁免否则被打断。可打开30尺深10尺宽裂缝，上方生物须 DC 20 敏捷豁免否则落入，建筑物坍塌。",
+  "resources": [
+    { "id": "物品次数:雷霆巨棒", "name": "雷霆巨棒：地震术", "formula": 1, "recovery": "long" }
+  ],
+  "triggers": [
+    {
+      "id": "thunder-hit",
+      "label": "雷霆巨棒：额外雷鸣伤害",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "attack.weapon",
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "1d8",
+          "type": "雷鸣"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "thunderclap",
+      "name": "雷霆巨棒：雷霆霹雳",
+      "activation": "action",
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "cone",
+          "size": 30
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "str",
+              "dc": 15,
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "template": "XPHB:condition:倒地",
+                  "to": "target"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "区域内未被穿着或携带的非魔法物件受到 3d8 雷鸣伤害。"
+        }
+      ]
+    },
+    {
+      "id": "earthquake",
+      "name": "雷霆巨棒：地震术",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品次数:雷霆巨棒" }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "cylinder",
+          "radius": 50
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": 20,
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "template": "XPHB:condition:倒地",
+                  "to": "target"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "区域内建筑物受到50钝击伤害；维持专注的生物须通过 DC 20 体质豁免否则专注被打断；可在地面打开30尺深10尺宽裂缝，裂缝上方生物须 DC 20 敏捷豁免否则坠落，建筑物坍塌落入。"
+        }
+      ]
+    }
+  ]
+}

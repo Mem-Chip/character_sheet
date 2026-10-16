@@ -1,0 +1,44 @@
+{
+  "name": "力场珠",
+  "automation": "partial",
+  "text": "以魔法动作投出至多60尺。引发10尺半径球状爆炸，范围内的生物进行DC 15敏捷豁免，失败受5d4力场伤害并被困在持续1分钟的隐形力场球中。成功者被推出范围。力场球阻挡攻击和效应，被困生物可以推动力场球移动（半速）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "投掷力场珠",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品:力场珠" }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": {
+          "shape": "sphere",
+          "radius": 10
+        }
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": 15,
+          "onFail": [
+            { "kind": "damage", "dice": "5d4", "type": "力场" },
+            {
+              "kind": "applyEffect",
+              "inline": {
+                "name": "力场球困禁",
+                "duration": { "minutes": 1 },
+                "text": "被困在隐形力场球中。攻击或其他效应无法穿透力场球。可以用一个操作动作推动力场障壁移动半速。"
+              }
+            }
+          ],
+          "onSuccess": [
+            { "kind": "note", "text": "豁免成功，沿着远离球心方向被推出范围" }
+          ]
+        }
+      ]
+    }
+  ]
+}

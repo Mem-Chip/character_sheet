@@ -1,0 +1,52 @@
+{
+  "name": "夸力许装置",
+  "automation": "partial",
+  "text": "隔间内的生物可以采取一个操作动作来移动夸力许装置的两个拉杆向上或向下。装置数据：大型物件，AC 20，HP 200，行走与游泳速度30尺（若腿部未展开则为0尺），免疫毒素和心灵伤害。拉杆控制具体详见表格。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "夸力许装置：操作拉杆",
+      "activation": "action",
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "选择拉杆操作",
+          "options": [
+            {
+              "label": "拉杆5上：钳爪攻击",
+              "do": [
+                {
+                  "kind": "attack",
+                  "bonus": 8,
+                  "attack": { "melee": true, "reach": true, "damageType": "bludgeoning" },
+                  "onHit": [
+                    { "kind": "damage", "dice": "2d6", "type": "bludgeoning" }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "拉杆5下：钳爪擒抱",
+              "do": [
+                {
+                  "kind": "attack",
+                  "bonus": 8,
+                  "attack": { "melee": true, "reach": true },
+                  "onHit": [
+                    { "kind": "applyEffect", "template": "XPHB:condition:受擒", "state": { "escapeDc": 15 } }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "其他拉杆（展开/收缩/百叶窗/移动/转向/照明/浮潜/舱门）",
+              "do": [
+                { "kind": "note", "text": "移动至多两个拉杆。详见夸力许装置拉杆规则手动处理对应载具效果。" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

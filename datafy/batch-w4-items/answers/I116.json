@@ -1,0 +1,47 @@
+{
+  "name": "无尽水瓶",
+  "automation": "partial",
+  "text": "以一个魔法动作拔出瓶塞并说出命令语（溅射产生1加仑水，喷泉产生5加仑水，井喷产生30加仑水并喷射水柱）。水将在下一回合开始时停止涌出。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "无尽水瓶",
+      "activation": "action",
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "选择命令语",
+          "options": [
+            {
+              "label": "溅射（产生 1 加仑水）",
+              "do": [
+                { "kind": "note", "text": "瓶中涌出 1 加仑淡水或咸水。" }
+              ]
+            },
+            {
+              "label": "喷泉（产生 5 加仑水）",
+              "do": [
+                { "kind": "note", "text": "瓶中涌出 5 加仑淡水或咸水。" }
+              ]
+            },
+            {
+              "label": "井喷（30 尺线状水柱）",
+              "do": [
+                {
+                  "kind": "save",
+                  "ability": "str",
+                  "dc": 13,
+                  "onFail": [
+                    { "kind": "damage", "dice": "1d4", "type": "bludgeoning" },
+                    { "kind": "applyEffect", "to": "target", "template": "XPHB:condition:倒地" }
+                  ]
+                },
+                { "kind": "note", "text": "若瞄准不超过 200 磅且未被着装携带的物件，该物件将被水柱打翻。" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "name": "光辉头盔",
+  "automation": "partial",
+  "text": "头盔镶嵌钻石、红宝石、火欧泊与欧泊，各有不同效果；有红宝石时具火焰抗性；法术豁免DC 18。受到法术火伤时可能引爆。宝石数量及部分被动需手动管理。",
+  "actions": [
+    {
+      "id": "flame",
+      "name": "火欧泊烈焰",
+      "activation": "action",
+      "root": [
+        { "kind": "note", "text": "令武器包裹烈焰，命中时额外造成 1d6 火焰伤害。附赠动作熄灭。" }
+      ]
+    },
+    {
+      "id": "daylight",
+      "name": "施展昼明术",
+      "activation": "action",
+      "root": [
+        { "kind": "note", "text": "消耗一颗欧泊并摧毁，施展昼明术。" }
+      ]
+    },
+    {
+      "id": "fireball",
+      "name": "施展火球术",
+      "activation": "action",
+      "targeting": {
+        "type": "area",
+        "range": 150,
+        "area": { "shape": "sphere", "radius": 20 }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": 18,
+              "onFail": [
+                { "kind": "damage", "id": "fb", "dice": "8d6", "type": "fire" }
+              ],
+              "onSuccess": [
+                { "kind": "damage", "ref": "fb", "scale": 0.5 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prismatic_spray",
+      "name": "施展虹光喷射",
+      "activation": "action",
+      "root": [
+        { "kind": "note", "text": "消耗一颗钻石并摧毁，施展虹光喷射（DC 18 敏捷豁免）。" }
+      ]
+    },
+    {
+      "id": "wall_of_fire",
+      "name": "施展火墙术",
+      "activation": "action",
+      "root": [
+        { "kind": "note", "text": "消耗一颗红宝石并摧毁，施展火墙术（DC 18 敏捷豁免）。" }
+      ]
+    }
+  ]
+}

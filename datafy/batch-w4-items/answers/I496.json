@@ -1,0 +1,138 @@
+{
+  "name": "恐惧魔杖",
+  "automation": "partial",
+  "text": "持握魔杖时，你可以消耗充能施展命令术（DC 15，只能走开或趴下，消耗1充能）或恐惧术（DC 15，60尺锥状，消耗3充能）。",
+  "actions": [
+    {
+      "id": "command",
+      "name": "恐惧魔杖：命令术",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:恐惧魔杖", "n": 1 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": 15,
+          "onFail": [
+            {
+              "kind": "choose",
+              "prompt": "选择命令术指令（走开或趴下）",
+              "options": [
+                {
+                  "label": "趴下（陷入倒地并结束回合）",
+                  "do": [
+                    { "kind": "applyEffect", "to": "target", "template": "命令术：趴下" }
+                  ]
+                },
+                {
+                  "label": "走开（以最快方式远离施法者）",
+                  "do": [
+                    { "kind": "applyEffect", "to": "target", "template": "命令术：走开" }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fear",
+      "name": "恐惧魔杖：恐惧术",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:恐惧魔杖", "n": 3 }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "cone",
+          "size": 60
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": 15,
+              "onFail": [
+                { "kind": "applyEffect", "template": "恐惧魔杖：恐惧术", "to": "target" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "命令术：趴下": {
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "implies": [
+        "XPHB:condition:倒地"
+      ],
+      "text": "命令术：目标陷入倒地状态并结束其回合。"
+    },
+    "命令术：走开": {
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "text": "命令术：目标在其回合内以最快最有效方式远离施法者。"
+    },
+    "恐惧魔杖：恐惧术": {
+      "implies": [
+        "XPHB:condition:恐慌"
+      ],
+      "text": "陷入恐慌，丢弃所有持握物；在回合内必须执行疾走动作远离施法者；若回合结束时施法者不在视线中，可进行感知豁免对抗 DC 15，成功则解除效应。",
+      "triggers": [
+        {
+          "id": "save-no-los",
+          "label": "恐惧术：视线外感知豁免",
+          "on": "turnEnded",
+          "role": "actor",
+          "when": "ask('施法者此时不在该生物视线中吗？')",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": 15,
+              "onSuccess": [
+                {
+                  "kind": "removeEffect",
+                  "match": {
+                    "name": "恐惧魔杖：恐惧术"
+                  },
+                  "from": "self"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

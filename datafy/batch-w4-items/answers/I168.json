@@ -1,0 +1,103 @@
+{
+  "name": "光彩夺目宝石",
+  "text": "具有50发充能。持握时可用魔法动作使用三个命令语之一：发出30尺光照（不消耗充能）；消耗1充能对60尺内生物发光束，DC 15体质豁免失败目盲1分钟（每回合结束可重复豁免）；消耗5充能对30尺锥状区域释放强光，区域内生物同样判定目盲。充能耗尽后变为价值50gp的非魔法宝石。",
+  "actions": [
+    {
+      "id": "light",
+      "name": "第一命令语：发光",
+      "activation": "action",
+      "root": [
+        {
+          "kind": "note",
+          "text": "宝石发出亮光，提供 30 尺明亮光照与额外 30 尺微光光照。附赠动作再次说出命令语或使用其他能力时终止。"
+        }
+      ]
+    },
+    {
+      "id": "beam",
+      "name": "第二命令语：耀眼光束",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "物品充能:光彩夺目宝石",
+          "n": 1
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": 15,
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "XPHB:condition:目盲",
+              "duration": {
+                "minutes": 1,
+                "saveEnds": {
+                  "ability": "con",
+                  "dc": 15,
+                  "at": "turnEnd"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cone",
+      "name": "第三命令语：刺眼锥光",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "物品充能:光彩夺目宝石",
+          "n": 5
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "cone",
+          "length": 30
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": 15,
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "XPHB:condition:目盲",
+                  "duration": {
+                    "minutes": 1,
+                    "saveEnds": {
+                      "ability": "con",
+                      "dc": 15,
+                      "at": "turnEnd"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

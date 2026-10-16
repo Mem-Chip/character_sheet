@@ -1,0 +1,56 @@
+{
+  "name": "基础毒药",
+  "automation": "partial",
+  "text": "以一个附赠动作将一小瓶基础毒药涂抹在一把武器或至多三枚弹药上。持续1分钟或直到造成额外伤害。当生物受到涂毒武器或弹药造成的穿刺或挥砍伤害时，受到额外1d4点毒素伤害。若涂抹在弹药上需手动记录三发次数限制。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "涂抹基础毒药",
+      "activation": "bonus",
+      "cost": [
+        { "resource": "物品:基础毒药" }
+      ],
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "基础毒药"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "基础毒药": {
+      "duration": {
+        "minutes": 1
+      },
+      "triggers": [
+        {
+          "id": "poison-hit",
+          "label": "基础毒药：附加毒素伤害",
+          "on": "attackHit",
+          "role": "actor",
+          "window": "before",
+          "when": "attack.weapon && (attack.damageType == '穿刺' || attack.damageType == '挥砍')",
+          "do": [
+            {
+              "kind": "addDamage",
+              "dice": "1d4",
+              "type": "毒素"
+            },
+            {
+              "kind": "removeEffect",
+              "from": "self",
+              "match": {
+                "name": "基础毒药"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

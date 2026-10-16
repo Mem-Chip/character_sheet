@@ -1,0 +1,71 @@
+{
+  "name": "复生权杖",
+  "automation": "partial",
+  "text": "此权杖具有 5 充能。持握权杖期间，你可以从中施展医疗术（消耗 1 充能）或复生术（消耗 5 充能）。权杖在每日黎明时重获 1 已消耗的充能。当权杖充能耗尽时，投掷 1d20。若结果为 1，则权杖消失。",
+  "actions": [
+    {
+      "id": "heal",
+      "name": "复生权杖：医疗术",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:复生权杖", "n": 1 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "heal",
+          "amount": 70,
+          "to": "target"
+        },
+        {
+          "kind": "removeEffect",
+          "match": {
+            "key": "XPHB:condition:目盲",
+            "name": "目盲"
+          },
+          "from": "target"
+        },
+        {
+          "kind": "removeEffect",
+          "match": {
+            "key": "XPHB:condition:耳聋",
+            "name": "耳聋"
+          },
+          "from": "target"
+        },
+        {
+          "kind": "removeEffect",
+          "match": {
+            "key": "XPHB:condition:中毒",
+            "name": "中毒"
+          },
+          "from": "target"
+        }
+      ]
+    },
+    {
+      "id": "resurrection",
+      "name": "复生权杖：复生术",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:复生权杖", "n": 5 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 5
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "施展复生术：触碰一个死去不超过一个世纪的生物，使其复活（生命值回满，受复活惩罚）。"
+        }
+      ]
+    }
+  ]
+}

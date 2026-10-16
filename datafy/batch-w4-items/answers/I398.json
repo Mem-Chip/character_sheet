@@ -1,0 +1,49 @@
+{
+  "name": "纠缠绳",
+  "automation": "partial",
+  "text": "以动作命令绳索缠住 20 尺内可见的一名生物，目标须通过 DC 15 敏捷豁免否则陷入束缚。被束缚者可以动作进行 DC 15 运动或特技检定逃脱；持用者可用附赠动作释放并召回绳索。绳索生命值与逃脱判定需手动处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "缠绕目标",
+      "activation": "action",
+      "tags": [
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 20,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": 15,
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "纠缠绳束缚",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "纠缠绳束缚": {
+      "duration": {
+        "manual": true
+      },
+      "tags": [
+        "magical"
+      ],
+      "implies": [
+        "XPHB:condition:束缚"
+      ],
+      "text": "陷入束缚状态。可以用动作进行 DC 15 力量（运动）或敏捷（特技）检定以挣脱。"
+    }
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "name": "念珠项链",
+  "automation": "partial",
+  "text": "需同调。佩戴期间，可以附赠动作从中施展念珠所容纳的法术（DC使用自身法术豁免DC）。每颗魔法念珠施法后直至次日黎明前无法再次使用。所含念珠类型由DM决定或随机掷骰确定。",
+  "resources": [
+    { "id": "物品次数:念珠项链:祝福术", "name": "祝福之珠", "formula": 1, "recovery": "long" },
+    { "id": "物品次数:念珠项链:疗伤术", "name": "疗愈之珠", "formula": 1, "recovery": "long" },
+    { "id": "物品次数:念珠项链:高等复原术", "name": "恩赐之珠", "formula": 1, "recovery": "long" },
+    { "id": "物品次数:念珠项链:闪耀斩", "name": "打击之珠", "formula": 1, "recovery": "long" },
+    { "id": "物品次数:念珠项链:信仰守卫", "name": "召唤之珠", "formula": 1, "recovery": "long" },
+    { "id": "物品次数:念珠项链:御风而行", "name": "风行之珠", "formula": 1, "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "bless",
+      "name": "念珠：祝福术",
+      "activation": "bonus",
+      "cost": [{ "resource": "物品次数:念珠项链:祝福术" }],
+      "concentration": { "minutes": 1 },
+      "targeting": { "type": "creature", "count": 3, "range": 30 },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "inline": {
+            "name": "祝福术",
+            "duration": { "minutes": 1 },
+            "rollMods": [
+              {
+                "on": { "kind": ["attack", "save"] },
+                "who": "bearer",
+                "op": "addDice",
+                "value": "1d4",
+                "label": "祝福术：+1d4"
+              }
+            ]
+          },
+          "to": "target"
+        }
+      ]
+    },
+    {
+      "id": "cure-wounds",
+      "name": "念珠：二环疗伤术",
+      "activation": "bonus",
+      "cost": [{ "resource": "物品次数:念珠项链:疗伤术" }],
+      "targeting": { "type": "creature", "count": 1, "range": "touch" },
+      "root": [
+        {
+          "kind": "heal",
+          "amount": "4d8 + self.spell.mod"
+        }
+      ]
+    },
+    {
+      "id": "greater-restoration",
+      "name": "念珠：高等复原术",
+      "activation": "bonus",
+      "cost": [{ "resource": "物品次数:念珠项链:高等复原术" }],
+      "targeting": { "type": "creature", "count": 1, "range": "touch" },
+      "root": [
+        {
+          "kind": "note",
+          "text": "高等复原术：减轻一级力竭，或终止目标身上的魅惑、石化、诅咒、属性减值或生命值上限降低效应。"
+        }
+      ]
+    },
+    {
+      "id": "branding-smite",
+      "name": "念珠：闪耀斩",
+      "activation": "bonus",
+      "cost": [{ "resource": "物品次数:念珠项链:闪耀斩" }],
+      "concentration": { "minutes": 1 },
+      "root": [
+        {
+          "kind": "note",
+          "text": "闪耀斩：专注至多1分钟。下一次武器攻击命中造成额外2d6光耀伤害，目标散发微光且无法隐形。"
+        }
+      ]
+    },
+    {
+      "id": "guardian-of-faith",
+      "name": "念珠：信仰守卫",
+      "activation": "bonus",
+      "cost": [{ "resource": "物品次数:念珠项链:信仰守卫" }],
+      "targeting": { "type": "point", "range": 30 },
+      "root": [
+        {
+          "kind": "note",
+          "text": "信仰守卫：在30尺内指定空间召唤大型光辉守卫，持续8小时。敌对生物首次进入其10尺内需进行敏捷豁免（DC self.spell.dc），失败受20光耀伤害，成功半数。造成共计60伤害后守卫消失。"
+        }
+      ]
+    },
+    {
+      "id": "wind-walk",
+      "name": "念珠：御风而行",
+      "activation": "bonus",
+      "cost": [{ "resource": "物品次数:念珠项链:御风而行" }],
+      "targeting": { "type": "creature", "count": 10, "range": 30 },
+      "root": [
+        {
+          "kind": "note",
+          "text": "御风而行：将自身和至多10个自愿生物转化为气态飞行云雾形态，持续至多8小时，飞行速度300尺。"
+        }
+      ]
+    }
+  ]
+}

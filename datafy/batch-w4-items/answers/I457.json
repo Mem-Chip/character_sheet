@@ -1,0 +1,170 @@
+{
+  "name": "治愈法杖",
+  "text": "持握法杖期间，消耗充能施展法术（使用你自己的施法属性调整值）：疗伤术（每环阶消耗1充能，最高4环）、次等复原术（消耗2充能）、群体疗伤术（消耗5充能）。",
+  "actions": [
+    {
+      "id": "cure-wounds-1",
+      "name": "治愈法杖：疗伤术（1环）",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:治愈法杖", "n": 1 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "heal",
+          "amount": "2d8 + self.spell.mod"
+        }
+      ]
+    },
+    {
+      "id": "cure-wounds-2",
+      "name": "治愈法杖：疗伤术（2环）",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:治愈法杖", "n": 2 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "heal",
+          "amount": "4d8 + self.spell.mod"
+        }
+      ]
+    },
+    {
+      "id": "cure-wounds-3",
+      "name": "治愈法杖：疗伤术（3环）",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:治愈法杖", "n": 3 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "heal",
+          "amount": "6d8 + self.spell.mod"
+        }
+      ]
+    },
+    {
+      "id": "cure-wounds-4",
+      "name": "治愈法杖：疗伤术（4环）",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:治愈法杖", "n": 4 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "heal",
+          "amount": "8d8 + self.spell.mod"
+        }
+      ]
+    },
+    {
+      "id": "lesser-restoration",
+      "name": "治愈法杖：次等复原术",
+      "activation": "bonus",
+      "cost": [
+        { "resource": "物品充能:治愈法杖", "n": 2 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "次等复原术：选择终止的状态",
+          "options": [
+            {
+              "label": "解除目盲",
+              "when": "target.has('目盲')",
+              "do": [
+                {
+                  "kind": "removeEffect",
+                  "match": { "key": "XPHB:condition:目盲", "name": "目盲" },
+                  "from": "target"
+                }
+              ]
+            },
+            {
+              "label": "解除耳聋",
+              "when": "target.has('耳聋')",
+              "do": [
+                {
+                  "kind": "removeEffect",
+                  "match": { "key": "XPHB:condition:耳聋", "name": "耳聋" },
+                  "from": "target"
+                }
+              ]
+            },
+            {
+              "label": "解除麻痹",
+              "when": "target.has('麻痹')",
+              "do": [
+                {
+                  "kind": "removeEffect",
+                  "match": { "key": "XPHB:condition:麻痹", "name": "麻痹" },
+                  "from": "target"
+                }
+              ]
+            },
+            {
+              "label": "解除中毒",
+              "when": "target.has('中毒')",
+              "do": [
+                {
+                  "kind": "removeEffect",
+                  "match": { "key": "XPHB:condition:中毒", "name": "中毒" },
+                  "from": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mass-cure-wounds",
+      "name": "治愈法杖：群体疗伤术",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:治愈法杖", "n": 5 }
+      ],
+      "targeting": {
+        "type": "area",
+        "count": 6,
+        "range": 60,
+        "area": {
+          "shape": "sphere",
+          "radius": 30
+        }
+      },
+      "root": [
+        {
+          "kind": "heal",
+          "amount": "5d8 + self.spell.mod"
+        }
+      ]
+    }
+  ]
+}

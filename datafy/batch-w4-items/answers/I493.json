@@ -1,0 +1,96 @@
+{
+  "name": "定身魔杖",
+  "text": "持握魔杖期间，消耗充能施展法术（豁免DC 17）：定身类人（2充能）、定身怪物（5充能）。",
+  "actions": [
+    {
+      "id": "hold-person",
+      "name": "定身魔杖：定身类人",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:定身魔杖", "n": 2 }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "target.type == '类人生物' && canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": 17,
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "定身类人",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hold-monster",
+      "name": "定身魔杖：定身怪物",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:定身魔杖", "n": 5 }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 90,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": 17,
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "定身怪物",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "定身类人": {
+      "tags": ["magical", "spell"],
+      "implies": ["XPHB:condition:麻痹"],
+      "duration": {
+        "minutes": 1,
+        "saveEnds": {
+          "ability": "wis",
+          "dc": 17,
+          "at": "turnEnd"
+        }
+      },
+      "text": "目标陷入麻痹状态，其在每回合结束时可以重新进行感知豁免（DC 17），豁免成功则终止该效应。"
+    },
+    "定身怪物": {
+      "tags": ["magical", "spell"],
+      "implies": ["XPHB:condition:麻痹"],
+      "duration": {
+        "minutes": 1,
+        "saveEnds": {
+          "ability": "wis",
+          "dc": 17,
+          "at": "turnEnd"
+        }
+      },
+      "text": "目标陷入麻痹状态，其在每回合结束时可以重新进行感知豁免（DC 17），豁免成功则终止该效应。"
+    }
+  }
+}

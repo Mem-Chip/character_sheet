@@ -1,0 +1,265 @@
+{
+  "name": "威力法杖",
+  "automation": "partial",
+  "text": "长棍攻击伤害+2，AC、豁免、法术攻击+2（人物卡已处理）。具有20充能，每日黎明重获2d8+4充能，充能耗尽时掷d20出1失去法术功能，出20恢复1d8+2充能。\n【复仇打击】：以动作折断法杖，造成以自身为源点的30尺光环爆炸。自身50%概率传送避开，否则受到 16×剩余充能数 点力场伤害；区域内其他生物进行 DC 17 敏捷豁免，失败受到 4×剩余充能数 点力场伤害，成功减半。\n【法术】：持握期间消耗充能施展以下法术（使用自身法术DC）：\n- 魔法飞弹（1充能）\n- 衰弱射线（1充能）\n- 浮空术（2充能）\n- 寒冰锥（5充能）\n- 火球术（五环版本，5充能）\n- 定身怪物（5充能）\n- 闪电束（五环版本，5充能）\n- 力场墙（5充能）\n- 法术无效结界（6充能）",
+  "actions": [
+    {
+      "id": "retributive-strike",
+      "name": "威力法杖：复仇打击",
+      "activation": "action",
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "sphere",
+          "radius": 30
+        }
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "折断法杖摧毁之，产生30尺爆炸。你有50%概率被传送到随机存在位面避开；若未避开，你受到 16×剩余充能数 点力场伤害。区域内其他生物进行 DC 17 敏捷豁免，失败受 4×剩余充能数 点力场伤害，成功减半。"
+        }
+      ]
+    },
+    {
+      "id": "fireball-5",
+      "name": "威力法杖：火球术（五环）",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:威力法杖", "n": 5 }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 150,
+        "area": {
+          "shape": "sphere",
+          "radius": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "fb",
+                  "dice": "10d6",
+                  "type": "火焰"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "fb",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lightning-bolt-5",
+      "name": "威力法杖：闪电束（五环）",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:威力法杖", "n": 5 }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "line",
+          "length": 100,
+          "width": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "lb",
+                  "dice": "10d6",
+                  "type": "闪电"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "lb",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cone-of-cold",
+      "name": "威力法杖：寒冰锥",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:威力法杖", "n": 5 }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "cone",
+          "length": 60
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "coc",
+                  "dice": "8d8",
+                  "type": "寒冷"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "coc",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "magic-missile",
+      "name": "威力法杖：魔法飞弹",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:威力法杖", "n": 1 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 3,
+        "range": 120,
+        "repeat": true
+      },
+      "root": [
+        {
+          "kind": "damage",
+          "dice": "1d4 + 1",
+          "type": "力场"
+        }
+      ]
+    },
+    {
+      "id": "hold-monster",
+      "name": "威力法杖：定身怪物",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:威力法杖", "n": 5 }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 90
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "XPHB:condition:麻痹"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wall-of-force",
+      "name": "威力法杖：力场墙",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:威力法杖", "n": 5 }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "point",
+        "range": 120
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "在 120 尺内指定一点创造隐形力场墙（至多10块连续10×10尺墙面，或直径至多20尺半球/球体），免疫所有伤害并阻隔任何物体与法术穿过。"
+        }
+      ]
+    },
+    {
+      "id": "other-spells",
+      "name": "威力法杖：施展其他法术",
+      "activation": "action",
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "选择施展的法术",
+          "options": [
+            {
+              "label": "衰弱射线（1充能）",
+              "do": [
+                { "kind": "resource", "id": "物品充能:威力法杖", "delta": -1 },
+                { "kind": "note", "text": "发动远程法术攻击（60尺）。命中后目标进行体质豁免，失败在持续期间力量武器攻击只能造成一半伤害。" }
+              ]
+            },
+            {
+              "label": "浮空术（2充能）",
+              "do": [
+                { "kind": "resource", "id": "物品充能:威力法杖", "delta": -2 },
+                { "kind": "note", "text": "使60尺内一个生物或物件垂直升空至多20尺，专注至多10分钟。不情愿的生物可进行体质豁免（DC self.spell.dc）抵抗。" }
+              ]
+            },
+            {
+              "label": "法术无效结界（6充能）",
+              "do": [
+                { "kind": "resource", "id": "物品充能:威力法杖", "delta": -6 },
+                { "kind": "note", "text": "以你为源点创造10尺半径隐形屏障，专注至多1分钟。阻挡任何从外部施展的 5 环或更低环阶法术及其效应。" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

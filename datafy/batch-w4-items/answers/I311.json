@@ -1,0 +1,57 @@
+{
+  "name": "成长药水",
+  "automation": "partial",
+  "text": "饮下这瓶药水后获得法术变巨/缩小术中的“变巨”效应，持续 10 分钟（无需专注）。体型增大一级，力量检定与力量豁免具有优势；使用变巨的武器或徒手打击命中时额外造成 1d4 伤害。体型改变需手动处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "饮用成长药水",
+      "activation": "bonus",
+      "cost": [
+        { "resource": "物品:成长药水" }
+      ],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "成长药水",
+          "to": "self"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "成长药水": {
+      "duration": { "minutes": 10 },
+      "tags": [ "magical" ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": [ "check", "save" ],
+            "ability": "str"
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "成长药水：力量检定与豁免优势"
+        }
+      ],
+      "triggers": [
+        {
+          "id": "enlarge-dmg",
+          "label": "成长药水：额外武器伤害",
+          "on": "attackHit",
+          "role": "actor",
+          "window": "before",
+          "when": "attack.weapon || attack.unarmed",
+          "do": [
+            {
+              "kind": "addDamage",
+              "dice": "1d4",
+              "type": "attack.damageType"
+            }
+          ]
+        }
+      ],
+      "text": "体型增大一级；力量检定和力量豁免具有优势；使用变巨武器或徒手打击命中时额外造成 1d4 伤害。"
+    }
+  }
+}

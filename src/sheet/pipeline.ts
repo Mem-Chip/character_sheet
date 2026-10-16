@@ -158,6 +158,23 @@ export function createRules(): Pipeline {
       if (num(e.bonusSavingThrow)) ctx.addEffect({ kind: 'saveBonus', value: num(e.bonusSavingThrow), source: src });
       if (num(e.bonusSpellAttack)) ctx.addEffect({ kind: 'spellAtkBonus', value: num(e.bonusSpellAttack), source: src });
       if (num(e.bonusSpellSaveDc)) ctx.addEffect({ kind: 'spellDcBonus', bonus: num(e.bonusSpellSaveDc), source: src });
+      // 属性：固定成某值（巨人力量腰带、健康护符）/ 加值（艾恩石）；「自己选一项」的不管
+      for (const [k, v] of Object.entries(e.ability || {})) {
+        if (k === 'static') for (const [ab, n] of Object.entries(v as Record<string, number>)) ctx.addEffect({ kind: 'abilityStatic', ability: ab, value: num(n), source: src });
+        else if ((ABILS as readonly string[]).includes(k) && num(v)) ctx.addEffect({ kind: 'ability', set: { [k]: num(v) }, source: src });
+      }
+      // 抗性 / 免疫 / 状态免疫（带条件的写法是对象，不算）
+      for (const d of e.resist || []) if (typeof d === 'string') ctx.addEffect({ kind: 'resist', damage: d, source: src });
+      for (const d of e.immune || []) if (typeof d === 'string') ctx.addEffect({ kind: 'immune', damage: d, source: src });
+      for (const d of e.conditionImmune || []) if (typeof d === 'string') ctx.addEffect({ kind: 'conditionImmune', value: d, source: src });
+      // 速度：固定值 / 等于步行速度；「翻倍」是要启动的（速度之靴），不算
+      for (const [how, v] of Object.entries(e.modifySpeed || {})) {
+        for (const [mode, n] of Object.entries(v as Record<string, unknown>)) {
+          const m = mode === 'walk' ? 'walk' : mode;
+          if (how === 'static') ctx.addEffect(m === 'walk' ? { kind: 'speedMin', value: num(n), source: src } : { kind: 'moveSpeed', mode: m, value: num(n), source: src });
+          else if (how === 'equal') ctx.addEffect({ kind: 'moveSpeedEqualWalk', mode: m, source: src });
+        }
+      }
     }
     const base: Record<string, number> = { ...(c.abilities || {}) };
     const score: Record<string, number> = { ...base };
@@ -185,6 +202,8 @@ export function createRules(): Pipeline {
       return Math.max(20, ...caps);
     };
     for (const ab of ABILS) score[ab] = Math.min(score[ab] || 0, capFor());
+    // 物品把属性定成某值：比原来高才用，不受上限
+    for (const e of ctx.pluck('abilityStatic')) if (score[e.ability] !== undefined || (ABILS as readonly string[]).includes(e.ability)) score[e.ability] = Math.max(score[e.ability] || 0, e.value || 0);
     for (const ab of ABILS) {
       ctx.set('score:' + ab, score[ab] || 0, 'computed');
       ctx.set('base:' + ab, base[ab] || 0, 'input');
@@ -341,6 +360,7 @@ export function createRules(): Pipeline {
     ctx.set('initiative', mod('dex') + ctx.pluck('initiative').reduce((a, e) => a + resolveNum(e.value, ctx), 0), 'computed');
     let speed = res.race?.speed ?? 30;
     speed += ctx.sumEffects('speed');
+    speed = Math.max(speed, ...ctx.pluck('speedMin').map((e) => e.value || 0));
     ctx.set('speed', speed, 'computed');
     const dv = Math.max(res.race?.darkvision || 0, ...ctx.pluck('darkvision').map((e) => e.value), 0);
     ctx.set('darkvision', dv, 'computed');
@@ -349,6 +369,7 @@ export function createRules(): Pipeline {
     ctx.set('senses', senses, 'computed');
     const moves: Record<string, number> = {};
     for (const e of ctx.pluck('moveSpeed')) moves[e.mode] = Math.max(moves[e.mode] || 0, e.value || 0);
+    for (const e of ctx.pluck('moveSpeedEqualWalk')) moves[e.mode] = Math.max(moves[e.mode] || 0, speed);
     ctx.set('moveSpeeds', moves, 'computed');
 
     // ---- 临时生命值（与上限分开；per:'class' 乘声明它的那个职业的等级） ----
@@ -426,6 +447,8 @@ export function createRules(): Pipeline {
       for (const dm of list) if (dm) res2.add(dm);
     });
     ctx.set('resist', [...res2], 'computed');
+    const imm = [...new Set(ctx.pluck('immune').map((e) => e.damage).filter(Boolean))];
+    if (imm.length) ctx.set('immune', imm, 'computed');
     const langs = new Set<string>(c.languages || []);
     const tools = new Set<string>(c.tools || []);
     for (const e of ctx.pluck('language')) langs.add(e.value);

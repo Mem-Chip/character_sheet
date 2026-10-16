@@ -1,0 +1,47 @@
+{
+  "name": "活力药水",
+  "automation": "partial",
+  "text": "以附赠动作饮下药水，移除你具有的任何力竭等级并结束中毒状态。接下来的 24 小时内消耗生命值骰恢复生命值时直接取最大值（生命骰取最大值需短休时手动处理或由掷骰修正生效）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "饮用活力药水",
+      "activation": "bonus",
+      "cost": [
+        { "resource": "物品:活力药水" }
+      ],
+      "root": [
+        {
+          "kind": "removeEffect",
+          "match": { "key": "XPHB:condition:中毒" },
+          "from": "self"
+        },
+        {
+          "kind": "removeEffect",
+          "match": { "key": "XPHB:condition:力竭" },
+          "from": "self"
+        },
+        {
+          "kind": "applyEffect",
+          "template": "活力药水",
+          "to": "self"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "活力药水": {
+      "duration": { "hours": 24 },
+      "tags": [ "magical" ],
+      "text": "消耗生命值骰来恢复生命值时直接取用最大值。",
+      "rollMods": [
+        {
+          "on": { "kind": "heal" },
+          "who": "bearer",
+          "op": "maxDice",
+          "label": "活力药水：生命骰治疗最大值"
+        }
+      ]
+    }
+  }
+}

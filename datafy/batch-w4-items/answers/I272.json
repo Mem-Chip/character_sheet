@@ -1,0 +1,88 @@
+{
+  "name": "滑溜之油",
+  "automation": "partial",
+  "text": "一瓶油涂抹在中小体型生物身上需耗时 10 分钟（体型更大需多瓶），令其获得行动自如效应持续 8 小时。亦可以魔法动作泼洒于地面 10 尺方状区域，复现油腻术效应持续 8 小时。",
+  "actions": [
+    {
+      "id": "apply",
+      "name": "涂抹滑溜之油",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "物品:滑溜之油"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "行动自如",
+          "to": "target"
+        }
+      ]
+    },
+    {
+      "id": "splash",
+      "name": "泼洒滑溜之油",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "物品:滑溜之油"
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 10,
+        "area": {
+          "shape": "cube",
+          "size": 10
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "XPHB:condition:倒地"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "地面覆盖 10 尺方状区域油腻术效应，持续 8 小时。区域为困难地形，后续进入或在其内结束回合的生物须敏捷豁免对抗倒地。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "行动自如": {
+      "duration": {
+        "hours": 8
+      },
+      "statics": [
+        {
+          "kind": "conditionImmune",
+          "values": [
+            "麻痹",
+            "束缚"
+          ]
+        }
+      ],
+      "text": "持续 8 小时。移动不受困难地形影响，免疫麻痹与束缚状态，任何法术或魔法效应不能降低其速度，获得等同于速度的游泳速度，可花费 5 尺移动力挣脱受擒或非魔法束缚物。"
+    }
+  }
+}

@@ -248,7 +248,7 @@ export function viewFromSheet(env: SheetEnv, char: CharData, sheet: Json): Comba
     initiative: sheet.initiative,
     spell: sc.dc != null && spellAbility ? { dc: sc.dc, atk: sc.atk, mod: mod[spellAbility], ability: spellAbility } : null,
     resist: [...new Set((sheet.resist || []).map((x: string) => normType(x)))] as string[],
-    immune: [],
+    immune: [...new Set((sheet.immune || []).map((x: string) => normType(x)))] as string[],
     vuln: [],
     conditionImmune: sheet.conditionImmune || [],
     attacks,

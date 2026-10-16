@@ -1,0 +1,142 @@
+{
+  "name": "贤者法杖",
+  "automation": "partial",
+  "text": "法杖具有 50 充能，长棍攻击和伤害检定+2，法术攻击检定+2（人物卡已处理）。对抗法术豁免具有优势。\n【法术吸收】其他生物施放仅以你为目标的法术时，以反应吸收该法术，法杖获得等同于其环数的充能。若充能超过 50 则触发复仇打击。\n【复仇打击】以动作折断法杖，造成 30 尺光环爆炸。自身 50% 概率传送避开，否则受 16×充能力场伤害；其他生物 DC 17 敏捷豁免受 6×充能伤害（成功减半）。\n【施展法术】使用自身法术 DC 施展法术：秘法锁(0)、咒唤元素(7)、侦测魔法(0)、解除魔法(3)、变巨/缩小术(0)、火球术(7环,7)、炽焰法球(2)、冰风暴(4)、隐形术(2)、敲击术(2)、光亮术(0)、闪电束(7环,7)、法师之手(0)、穿墙术(5)、位面转移(7)、防护善恶(0)、心灵遥控(5)、火墙术(4)、蛛网术(2)。",
+  "actions": [
+    {
+      "id": "retributive-strike",
+      "name": "贤者法杖：复仇打击",
+      "activation": "action",
+      "root": [
+        {
+          "kind": "note",
+          "text": "折断法杖摧毁之，产生30尺范围爆炸。你有50%概率传送到随机存在位面避开；若未避开，你受到 16×当前充能数 的力场伤害。区域内其他生物进行 DC 17 敏捷豁免，失败受 6×当前充能数 力场伤害，成功减半。"
+        }
+      ]
+    },
+    {
+      "id": "absorb-spell",
+      "name": "贤者法杖：法术吸收",
+      "activation": "reaction",
+      "trigger": {
+        "on": "spellCast"
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "另一个生物施放仅以你为目标的法术时，吸收该法术取消其效应，法杖获得等同于该法术环数的充能。若导致充能超过50则法杖爆炸（如同触发复仇打击）。"
+        }
+      ]
+    },
+    {
+      "id": "fireball",
+      "name": "贤者法杖：火球术（7环）",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:贤者法杖", "n": 7 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "range": 150,
+        "area": { "shape": "sphere", "radius": 20 }
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "self.spell.dc",
+          "onFail": [
+            { "kind": "damage", "dice": "12d6", "type": "fire", "to": "target" }
+          ],
+          "onSuccess": [
+            { "kind": "damage", "dice": "12d6", "type": "fire", "to": "target", "scale": 0.5 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lightning-bolt",
+      "name": "贤者法杖：闪电束（7环）",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:贤者法杖", "n": 7 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "range": 100,
+        "area": { "shape": "line", "length": 100, "width": 5 }
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "self.spell.dc",
+          "onFail": [
+            { "kind": "damage", "dice": "12d6", "type": "lightning", "to": "target" }
+          ],
+          "onSuccess": [
+            { "kind": "damage", "dice": "12d6", "type": "lightning", "to": "target", "scale": 0.5 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ice-storm",
+      "name": "贤者法杖：冰风暴",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:贤者法杖", "n": 4 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "range": 300,
+        "area": { "shape": "cylinder", "radius": 20 }
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "self.spell.dc",
+          "onFail": [
+            { "kind": "damage", "dice": "2d8", "type": "bludgeoning", "to": "target" },
+            { "kind": "damage", "dice": "4d6", "type": "cold", "to": "target" }
+          ],
+          "onSuccess": [
+            { "kind": "damage", "dice": "2d8", "type": "bludgeoning", "to": "target", "scale": 0.5 },
+            { "kind": "damage", "dice": "4d6", "type": "cold", "to": "target", "scale": 0.5 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dispel-magic",
+      "name": "贤者法杖：解除魔法",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:贤者法杖", "n": 3 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 120
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "尝试解除目标身上的法术效果。"
+        }
+      ]
+    },
+    {
+      "id": "other-spells",
+      "name": "贤者法杖：施展其他法术",
+      "activation": "action",
+      "root": [
+        {
+          "kind": "note",
+          "text": "可施展：秘法锁(0)、咒唤元素(7)、侦测魔法(0)、变巨/缩小术(0)、炽焰法球(2)、隐形术(2)、敲击术(2)、光亮术(0)、法师之手(0)、穿墙术(5)、位面转移(7)、防护善恶(0)、心灵遥控(5)、火墙术(4)、蛛网术(2)。请扣除相应充能。"
+        }
+      ]
+    }
+  ]
+}

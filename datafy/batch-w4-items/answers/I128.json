@@ -1,0 +1,36 @@
+{
+  "name": "矮人飞锤",
+  "automation": "partial",
+  "text": "+3 武器加值与投掷属性已在人物卡处理。用此武器发动远程攻击命中时，造成 1d8 额外力场伤害；若目标为巨人，额外伤害提升为 2d8。攻击后武器立即飞回手中。",
+  "triggers": [
+    {
+      "id": "dwarven-thrower-hit",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.ranged && attack.weapon",
+      "do": [
+        {
+          "kind": "if",
+          "when": "target.type == '巨人' || target.type == 'giant'",
+          "then": [
+            {
+              "kind": "damage",
+              "dice": "2d8",
+              "type": "力场",
+              "to": "target"
+            }
+          ],
+          "else": [
+            {
+              "kind": "damage",
+              "dice": "1d8",
+              "type": "力场",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

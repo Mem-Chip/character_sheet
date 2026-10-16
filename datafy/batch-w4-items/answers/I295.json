@@ -1,0 +1,60 @@
+{
+  "name": "化兽为友药水",
+  "text": "以附赠动作饮用此药水，施展三环版本的化兽为友法术（豁免 DC 13，至多选择 30 尺内 3 只野兽）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "饮用化兽为友药水",
+      "activation": "bonus",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "resource": "物品:化兽为友药水"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 3,
+        "range": 30,
+        "filter": "target.type == '野兽'"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": 13,
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "化兽为友",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "化兽为友": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:魅惑"
+      ],
+      "duration": {
+        "hours": 24,
+        "endsOn": [
+          {
+            "event": "damageApplied",
+            "when": "event.target == self.id && event.total > 0 && (event.source == source.id || (event.source != null && combatant(event.source).isAllyOf(source)))"
+          }
+        ]
+      }
+    }
+  }
+}

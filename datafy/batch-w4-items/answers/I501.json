@@ -1,0 +1,177 @@
+{
+  "name": "奥喀斯之杖",
+  "automation": "partial",
+  "text": "+3 魔法硬头锤。命中额外造成 2d12 暗蚀伤害。AC+3（固定加值人物卡已处理）。非奥喀斯生物同调需 DC 17 体质豁免（成功受 10d6 暗蚀，失败死亡）。次日黎明前可魔法动作召唤 15 丧尸和 15 骷髅。消耗充能施法（DC 18）：活化死尸（1充能）、死者交谈（1充能）、枯萎术（2充能）、死亡法阵（3充能）、死亡一指（3充能）、律令死亡（4充能）。",
+  "resources": [
+    { "id": "物品次数:奥喀斯之杖:唤起不死生物", "name": "奥喀斯之杖：唤起不死生物", "formula": 1, "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "animate-undead",
+      "name": "奥喀斯之杖：唤起不死生物",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品次数:奥喀斯之杖:唤起不死生物" }
+      ],
+      "root": [
+        {
+          "kind": "note",
+          "text": "在 300 尺内未占据空间召唤 15 只丧尸和 15 具骷髅，服从命令，存在至被摧毁或次日黎明。直至次日黎明无法再次使用。"
+        }
+      ]
+    },
+    {
+      "id": "animate-dead",
+      "name": "奥喀斯之杖：活化死尸",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:奥喀斯之杖", "n": 1 }
+      ],
+      "root": [
+        {
+          "kind": "note",
+          "text": "施展活化死尸。"
+        }
+      ]
+    },
+    {
+      "id": "speak-with-dead",
+      "name": "奥喀斯之杖：死者交谈",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:奥喀斯之杖", "n": 1 }
+      ],
+      "root": [
+        {
+          "kind": "note",
+          "text": "施展死者交谈（向具尸体提出至多 5 个问题，持续 10 分钟）。"
+        }
+      ]
+    },
+    {
+      "id": "blight",
+      "name": "奥喀斯之杖：枯萎术",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:奥喀斯之杖", "n": 2 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": 18,
+          "onFail": [
+            { "kind": "damage", "id": "d", "dice": "8d8", "type": "暗蚀" }
+          ],
+          "onSuccess": [
+            { "kind": "damage", "ref": "d", "scale": 0.5 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "circle-of-death",
+      "name": "奥喀斯之杖：死亡法阵",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:奥喀斯之杖", "n": 3 }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 150,
+        "area": {
+          "shape": "sphere",
+          "radius": 60
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": 18,
+              "onFail": [
+                { "kind": "damage", "id": "d", "dice": "8d8", "type": "暗蚀" }
+              ],
+              "onSuccess": [
+                { "kind": "damage", "ref": "d", "scale": 0.5 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "finger-of-death",
+      "name": "奥喀斯之杖：死亡一指",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:奥喀斯之杖", "n": 3 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": 18,
+          "onFail": [
+            { "kind": "damage", "id": "d", "dice": "7d8 + 30", "type": "暗蚀" },
+            { "kind": "note", "text": "死亡一指：若目标类人生物被杀死，在施法者下一回合开始时将其唤起为一只受控丧尸。" }
+          ],
+          "onSuccess": [
+            { "kind": "damage", "ref": "d", "scale": 0.5 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "power-word-kill",
+      "name": "奥喀斯之杖：律令死亡",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:奥喀斯之杖", "n": 4 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "若目标生物当前生命值不超过 100，该生物立即死亡；否则无事发生。"
+        }
+      ]
+    }
+  ],
+  "triggers": [
+    {
+      "id": "necrotic-strike",
+      "label": "奥喀斯之杖：额外暗蚀伤害",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "attack.melee",
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "2d12",
+          "type": "暗蚀"
+        }
+      ]
+    }
+  ]
+}

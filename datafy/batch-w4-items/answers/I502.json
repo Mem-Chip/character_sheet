@@ -1,0 +1,48 @@
+{
+  "name": "麻痹魔杖",
+  "automation": "full",
+  "text": "持握魔杖时，你可以消耗1充能以魔法动作向60尺内可见生物射出一道光线。目标需通过DC 15体质豁免，否则陷入麻痹1分钟；在其每回合结束时可重复豁免。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "麻痹魔杖：麻痹射线",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:麻痹魔杖", "n": 1 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": 15,
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "麻痹魔杖：麻痹",
+              "duration": {
+                "minutes": 1,
+                "saveEnds": {
+                  "ability": "con",
+                  "dc": 15,
+                  "at": "turnEnd"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "麻痹魔杖：麻痹": {
+      "implies": [
+        "XPHB:condition:麻痹"
+      ]
+    }
+  }
+}

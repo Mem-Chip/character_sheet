@@ -1,0 +1,48 @@
+{
+  "name": "造风之扇",
+  "automation": "partial",
+  "text": "持握扇子时，可以动作施展造风术（豁免 DC 13，专注至多 1 分钟）。吹出 60 尺长、10 尺宽强风线，区域内生物力量豁免失败被推离 15 尺。次日黎明前随后每再次使用累积 20% 失效撕裂几率（需手动判定）。",
+  "actions": [
+    {
+      "id": "gust-of-wind",
+      "name": "造风之扇：造风术",
+      "activation": "action",
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "line",
+          "length": 60,
+          "width": 10
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "str",
+              "dc": 13,
+              "onFail": [
+                {
+                  "kind": "move",
+                  "mode": "push",
+                  "ft": 15
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "在次日黎明之前，随后每再次使用这把扇子都会累积 20% 的几率失效并撕裂成碎纸。"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,219 @@
+{
+  "name": "力场魔方",
+  "automation": "partial",
+  "text": "拥有10发充能，每日黎明恢复1d6发。你可以按下立方体的一面并消耗充能以施展对应的法术（豁免DC 17）：法师护甲（1充能）、护盾术（1充能）、李欧蒙小屋（3充能）、魔邓肯私人密室（4充能）、欧提路克弹力法球（4充能）、力场墙（5充能）。",
+  "actions": [
+    {
+      "id": "mage-armor",
+      "name": "力场魔方：法师护甲",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        { "resource": "物品充能:力场魔方", "n": 1 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "inline": {
+            "name": "法师护甲",
+            "duration": {
+              "hours": 8
+            },
+            "text": "未穿护甲的目标基础护甲等级变为 13 + 敏捷调整值。"
+          }
+        }
+      ]
+    },
+    {
+      "id": "shield",
+      "name": "力场魔方：护盾术",
+      "activation": "reaction",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        { "resource": "物品充能:力场魔方", "n": 1 }
+      ],
+      "trigger": {
+        "on": "attackHit",
+        "role": "target",
+        "window": "before"
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "duration": {
+            "until": {
+              "at": "turnStart",
+              "of": "bearer",
+              "nth": 1
+            }
+          },
+          "inline": {
+            "name": "护盾",
+            "statics": [
+              {
+                "kind": "ac",
+                "bonus": 5
+              }
+            ],
+            "triggers": [
+              {
+                "id": "mm",
+                "label": "护盾术：免疫魔法飞弹",
+                "on": "damageIncoming",
+                "role": "target",
+                "window": "before",
+                "when": "event.label == '魔法飞弹'",
+                "modify": [
+                  {
+                    "op": "cancel"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "tiny-hut",
+      "name": "力场魔方：李欧蒙小屋",
+      "activation": {
+        "minutes": 1
+      },
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        { "resource": "物品充能:力场魔方", "n": 3 }
+      ],
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "以自身为中心创造半径 9 尺力场半球巨蛋，持续 8 小时。巨蛋提供全遮蔽与舒适庇护所环境。"
+        }
+      ]
+    },
+    {
+      "id": "private-sanctum",
+      "name": "力场魔方：魔邓肯私人密室",
+      "activation": {
+        "minutes": 10
+      },
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        { "resource": "物品充能:力场魔方", "n": 4 }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "cube",
+          "size": 100
+        }
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "指定区域防范探知、传感器、心灵感应与传送，持续 24 小时。"
+        }
+      ]
+    },
+    {
+      "id": "resilient-sphere",
+      "name": "力场魔方：欧提路克弹力法球",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        { "resource": "物品充能:力场魔方", "n": 4 }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": 17,
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "inline": {
+                "name": "弹力法球",
+                "duration": {
+                  "minutes": 1
+                },
+                "text": "被闪耀的力场球封闭（专注至多1分钟）。任何物理障碍物、能量或法术效应均无法进出该法球。"
+              }
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "note",
+              "text": "豁免成功，未受影响"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wall-of-force",
+      "name": "力场魔方：力场墙",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        { "resource": "物品充能:力场魔方", "n": 5 }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "line",
+          "length": 100,
+          "width": 1
+        }
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "创造不可见的力场墙（专注至多10分钟），任何物理实体、攻击和法术均无法穿过。"
+        }
+      ]
+    }
+  ]
+}

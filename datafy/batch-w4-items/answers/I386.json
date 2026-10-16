@@ -1,0 +1,52 @@
+{
+  "name": "虹光法袍",
+  "automation": "partial",
+  "text": "具有3发充能。以一个魔法动作消耗1充能，令法袍散发耀眼色彩持续至你下个回合结束：发出30尺明亮光照与额外30尺微光光照；能看见你的生物对你发动的攻击检定具有劣势；30尺明亮光照内能看见你的生物须通过DC 15感知豁免否则陷入震慑直至效应结束（周围生物豁免与震慑需手动结算）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "虹光法袍：耀眼色彩",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:虹光法袍", "n": 1 }
+      ],
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "耀眼色彩",
+          "to": "self"
+        },
+        {
+          "kind": "note",
+          "text": "法袍散发耀眼色彩，持续至你下个回合结束。提供30尺明亮光照与30尺微光光照；能看见你的生物对你攻击检定具有劣势；处于30尺明亮光照内且能看见你的生物须进行DC 15感知豁免，失败陷入震慑直至效应终止。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "耀眼色彩": {
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "text": "能看见你的生物对你发动的攻击检定具有劣势。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "against",
+          "when": "canSee(attacker, self)",
+          "op": "disadv",
+          "label": "虹光法袍：攻击劣势"
+        }
+      ]
+    }
+  }
+}

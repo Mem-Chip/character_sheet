@@ -1,0 +1,37 @@
+{
+  "name": "淬毒匕首",
+  "automation": "partial",
+  "text": "以附赠动作为匕首覆毒（持续1分钟，命中生物后消失）。命中生物后目标须进行 DC 15 体质豁免，失败受 2d10 毒素伤害并陷入中毒 1 分钟。直至次日黎明前限用一次。+1 固定加值已在人物卡处理。",
+  "resources": [
+    { "id": "物品次数:淬毒匕首", "name": "淬毒匕首", "formula": 1, "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "淬毒匕首：覆毒",
+      "activation": "bonus",
+      "cost": [
+        { "resource": "物品次数:淬毒匕首" }
+      ],
+      "root": [
+        { "kind": "note", "text": "匕首覆上毒液，持续1分钟。用此武器命中生物后毒液消失，对目标结算 DC 15 体质豁免与毒素伤害。" }
+      ]
+    },
+    {
+      "id": "poison",
+      "name": "淬毒匕首：毒素爆发",
+      "activation": "none",
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": 15,
+          "onFail": [
+            { "kind": "damage", "dice": "2d10", "type": "毒素" },
+            { "kind": "applyEffect", "template": "XPHB:condition:中毒", "duration": { "minutes": 1 } }
+          ]
+        }
+      ]
+    }
+  ]
+}

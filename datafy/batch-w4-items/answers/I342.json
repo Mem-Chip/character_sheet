@@ -1,0 +1,95 @@
+{
+  "name": "夸尔羽符，鞭",
+  "automation": "partial",
+  "text": "以魔法动作将羽符扔向 10 尺内一点，化作一根漂浮的鞭子（持续 1 小时，陷入失能或死亡时提前消失）。以附赠动作可命令鞭子移动至多 20 尺并对 10 尺内生物发动近战法术攻击（攻击加值 +9，命中造成 1d6 + 5 力场伤害）。",
+  "resources": [
+    {
+      "id": "物品次数:夸尔羽符，鞭",
+      "name": "夸尔羽符，鞭",
+      "formula": 1,
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "挥出羽符：召唤浮空神鞭",
+      "activation": "action",
+      "tags": [
+        "magical"
+      ],
+      "cost": [
+        {
+          "resource": "物品次数:夸尔羽符，鞭"
+        }
+      ],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "漂浮神鞭",
+          "to": "self"
+        }
+      ]
+    },
+    {
+      "id": "strike",
+      "name": "浮空神鞭：攻击",
+      "activation": "bonus",
+      "tags": [
+        "magical"
+      ],
+      "requires": "self.hasEffect('漂浮神鞭')",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "attack",
+          "bonus": 9,
+          "attack": {
+            "melee": true,
+            "spell": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "1d6 + 5",
+              "type": "力场"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dismiss",
+      "name": "遣散浮空神鞭",
+      "activation": "action",
+      "tags": [
+        "magical"
+      ],
+      "requires": "self.hasEffect('漂浮神鞭')",
+      "root": [
+        {
+          "kind": "removeEffect",
+          "match": {
+            "name": "漂浮神鞭"
+          },
+          "from": "self"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "漂浮神鞭": {
+      "duration": {
+        "hours": 1
+      },
+      "tags": [
+        "magical"
+      ],
+      "text": "浮空神鞭持续存在。每回合可以附赠动作命令其移动并攻击（+9 命中，1d6+5 力场伤害）。"
+    }
+  }
+}

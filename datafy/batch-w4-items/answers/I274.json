@@ -1,0 +1,172 @@
+{
+  "name": "龙珠",
+  "automation": "partial",
+  "text": "同调期间可魔法动作窥视龙珠（DC 15 魅力豁免，成功掌控龙珠，失败被其魅惑且龙珠可随意对你施展 DC 18 暗示术）。掌控期间可以魔法动作呼唤40英里内色彩巨龙赶来（1小时一次）。消耗充能施法（豁免 DC 18）：侦测魔法（0充能）、昼明术（1充能）、防死结界（2充能）、探知术（3充能）、疗伤术（9环，4充能）。",
+  "actions": [
+    {
+      "id": "peer",
+      "name": "龙珠：窥视龙珠",
+      "activation": "action",
+      "root": [
+        {
+          "kind": "save",
+          "ability": "cha",
+          "dc": 15,
+          "onFail": [
+            {
+              "kind": "note",
+              "text": "你被龙珠魅惑直至同调中断，无法自行中断同调，龙珠可随意对你施展暗示术（豁免 DC 18）。"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "note",
+              "text": "你成功掌控龙珠直至同调中断。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "call-dragons",
+      "name": "龙珠：呼唤巨龙",
+      "activation": "action",
+      "root": [
+        {
+          "kind": "note",
+          "text": "发出心灵感应呼唤向所有方向延伸40英里。范围内的色彩龙将被迫以最直接路线尽快赶来（巨龙神祇不受影响）。一经使用，一小时内无法再次使用。"
+        }
+      ]
+    },
+    {
+      "id": "detect-magic",
+      "name": "龙珠：侦测魔法",
+      "activation": "action",
+      "concentration": {
+        "minutes": 10
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "施展侦测魔法（消耗 0 充能，持续专注至多 10 分钟）。"
+        }
+      ]
+    },
+    {
+      "id": "daylight",
+      "name": "龙珠：昼明术",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:龙珠", "n": 1 }
+      ],
+      "root": [
+        {
+          "kind": "note",
+          "text": "施展昼明术（在触碰的物件或空间创造60尺明亮光照及额外60尺微光，持续1小时）。"
+        }
+      ]
+    },
+    {
+      "id": "death-ward",
+      "name": "龙珠：防死结界",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:龙珠", "n": 2 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "防死结界"
+        }
+      ]
+    },
+    {
+      "id": "scrying",
+      "name": "龙珠：探知术",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:龙珠", "n": 3 }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": 18,
+          "onFail": [
+            {
+              "kind": "note",
+              "text": "在目标周围10尺内创造隐形无形眼球进行窥视。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cure-wounds-9",
+      "name": "龙珠：疗伤术（9环）",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:龙珠", "n": 4 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "heal",
+          "amount": "18d8 + self.spell.mod"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "防死结界": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "hours": 8
+      },
+      "triggers": [
+        {
+          "id": "ward",
+          "label": "防死结界：免死并降为 1 生命值",
+          "on": "reducedTo0",
+          "role": "target",
+          "window": "before",
+          "modify": [
+            {
+              "op": "setHp",
+              "value": 1
+            }
+          ],
+          "do": [
+            {
+              "kind": "removeEffect",
+              "match": {
+                "name": "防死结界"
+              },
+              "from": "self"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

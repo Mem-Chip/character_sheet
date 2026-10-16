@@ -1,0 +1,156 @@
+{
+  "name": "秽暗之书",
+  "automation": "partial",
+  "text": "非恶魔非亡灵生物调谐需进行 DC 17 魅力豁免，失败转变为幼虫魔。研读80小时后获得：属性值调整已在人物卡处理；免疫力竭状态；回忆邪恶学识的智力检定具有优势；以魔法动作诵读秽恶灵言（自身受 1d12 心灵伤害，周围 15 尺内每个非恶魔非亡灵生物受 3d6 心灵伤害）；施展法术（豁免 DC 18，每个法术次日黎明前限一次）：活化死尸、死亡法阵、支配怪物、死亡一指。",
+  "resources": [
+    { "id": "物品次数:秽暗之书:活化死尸", "name": "秽暗之书：活化死尸", "formula": 1, "recovery": "long" },
+    { "id": "物品次数:秽暗之书:死亡法阵", "name": "秽暗之书：死亡法阵", "formula": 1, "recovery": "long" },
+    { "id": "物品次数:秽暗之书:支配怪物", "name": "秽暗之书：支配怪物", "formula": 1, "recovery": "long" },
+    { "id": "物品次数:秽暗之书:死亡一指", "name": "秽暗之书：死亡一指", "formula": 1, "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "dark-speech",
+      "name": "秽暗之书：秽恶灵言",
+      "activation": "action",
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "emanation",
+          "radius": 15
+        }
+      },
+      "root": [
+        { "kind": "damage", "dice": "1d12", "type": "心灵", "to": "self" },
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            { "kind": "damage", "dice": "3d6", "type": "心灵" }
+          ]
+        },
+        { "kind": "note", "text": "恶魔与亡灵不受秽恶灵言的心灵伤害。" }
+      ]
+    },
+    {
+      "id": "animate-dead",
+      "name": "秽暗之书：活化死尸",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品次数:秽暗之书:活化死尸" }
+      ],
+      "root": [
+        { "kind": "note", "text": "施展活化死尸。直至次日黎明前无法再次施展。" }
+      ]
+    },
+    {
+      "id": "circle-of-death",
+      "name": "秽暗之书：死亡法阵",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品次数:秽暗之书:死亡法阵" }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 150,
+        "area": {
+          "shape": "sphere",
+          "radius": 60
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": 18,
+              "onFail": [
+                { "kind": "damage", "id": "d", "dice": "8d8", "type": "暗蚀" }
+              ],
+              "onSuccess": [
+                { "kind": "damage", "ref": "d", "scale": 0.5 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dominate-monster",
+      "name": "秽暗之书：支配怪物",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品次数:秽暗之书:支配怪物" }
+      ],
+      "concentration": {
+        "hours": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": 18,
+          "onFail": [
+            { "kind": "applyEffect", "to": "target", "template": "支配怪物" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "finger-of-death",
+      "name": "秽暗之书：死亡一指",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品次数:秽暗之书:死亡一指" }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": 18,
+          "onFail": [
+            { "kind": "damage", "id": "d", "dice": "7d8 + 30", "type": "暗蚀" },
+            { "kind": "note", "text": "死亡一指：若目标类人生物被杀死，在施法者下一回合开始时将其唤起为一只受控丧尸。" }
+          ],
+          "onSuccess": [
+            { "kind": "damage", "ref": "d", "scale": 0.5 }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "支配怪物": {
+      "tags": ["magical", "spell"],
+      "text": "目标陷入魅惑。施法者能与其进行心灵感应并下达命令（无需动作）。受到伤害时可重掷感知豁免。",
+      "implies": ["XPHB:condition:魅惑"]
+    }
+  },
+  "rollMods": [
+    {
+      "on": {
+        "kind": "check",
+        "ability": "int"
+      },
+      "who": "bearer",
+      "op": "adv",
+      "label": "秽暗之书：回忆邪恶学识智力检定优势"
+    }
+  ]
+}

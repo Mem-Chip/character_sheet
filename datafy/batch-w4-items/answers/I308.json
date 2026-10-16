@@ -1,0 +1,75 @@
+{
+  "name": "气化形体药水",
+  "automation": "partial",
+  "text": "饮下后获得法术气化形体的效应，持续 1 小时（无需专注）或以附赠动作提前结束。转化为云雾形体：拥有钝击/穿刺/挥砍抗性，免疫倒地，力量/敏捷/体质豁免具有优势；不能攻击、施法、言语或操作物件；仅有 10 尺悬浮飞行速度；穿过狭隙与占据已有生物空间需手动处理；生命值降至 0 时结束。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "饮用气化形体药水",
+      "activation": "bonus",
+      "cost": [
+        { "resource": "物品:气化形体药水" }
+      ],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "气化形体",
+          "to": "self"
+        }
+      ]
+    },
+    {
+      "id": "dismiss",
+      "name": "解除气化形体",
+      "activation": "bonus",
+      "root": [
+        {
+          "kind": "removeEffect",
+          "match": { "name": "气化形体" },
+          "from": "self"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "气化形体": {
+      "tags": ["magical"],
+      "duration": {
+        "hours": 1,
+        "endsOn": [
+          { "event": "reducedTo0" }
+        ]
+      },
+      "statics": [
+        {
+          "kind": "resist",
+          "values": ["钝击", "穿刺", "挥砍"]
+        },
+        {
+          "kind": "conditionImmune",
+          "values": ["倒地"]
+        },
+        {
+          "kind": "speedSet",
+          "value": 10,
+          "lock": true
+        }
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save",
+            "ability": ["str", "dex", "con"]
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "气化形体：力敏体豁免优势"
+        }
+      ],
+      "flags": {
+        "cannot": ["speak", "castSpells"]
+      },
+      "text": "拥有钝击、穿刺和挥砍伤害的抗性，对倒地状态免疫，进行力量、敏捷、体质豁免具有优势；飞行速度为 10 尺且能悬浮；不能讲话、操作物件、攻击或施法；可穿过狭隙与占据其他生物空间；生命值降至 0 或以附赠动作提前终止时结束。"
+    }
+  }
+}

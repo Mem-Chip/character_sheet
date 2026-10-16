@@ -1,0 +1,71 @@
+{
+  "name": "唤鱼三叉戟",
+  "automation": "partial",
+  "text": "消耗 1 充能对 60 尺内一只具有游泳速度的野兽施展支配野兽（感知豁免 DC 15）。目标豁免失败陷入魅惑并受支配，专注至多 1 分钟；每次受伤害时可重复 DC 15 豁免。",
+  "actions": [
+    {
+      "id": "dominate-beast",
+      "name": "唤鱼三叉戟：支配野兽",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:唤鱼三叉戟", "n": 1 }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "target.type == '野兽'"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": 15,
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "唤鱼三叉戟：支配野兽",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "唤鱼三叉戟：支配野兽": {
+      "implies": [
+        "XPHB:condition:魅惑"
+      ],
+      "triggers": [
+        {
+          "id": "damage-save",
+          "label": "支配野兽：受伤重复豁免",
+          "on": "damageTaken",
+          "role": "target",
+          "window": "after",
+          "when": "damage.amount > 0",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": 15,
+              "onSuccess": [
+                {
+                  "kind": "removeEffect",
+                  "from": "self",
+                  "match": {
+                    "name": "唤鱼三叉戟：支配野兽"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

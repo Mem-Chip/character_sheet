@@ -1,0 +1,256 @@
+{
+  "name": "丛林法杖",
+  "automation": "partial",
+  "text": "魔法长棍+2及持握时法术攻击检定+2已在人物卡处理。持握期间消耗充能施展法术（使用你自己的法术豁免DC）：化兽为友（1充能）、动物交谈（1充能）、树肤术（2充能）、动植物定位术（2充能）、行动无踪（2充能）、植物交谈（3充能）、启蒙术（5充能）、棘墙术（6充能）；可消耗1充能将法杖转变为健壮的树（树木型态）。",
+  "actions": [
+    {
+      "id": "animal-friendship",
+      "name": "丛林法杖：化兽为友",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:丛林法杖", "n": 1 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30,
+        "filter": "target.type == '野兽'"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "化兽为友",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "speak-with-animals",
+      "name": "丛林法杖：动物交谈",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:丛林法杖", "n": 1 }
+      ],
+      "root": [
+        {
+          "kind": "note",
+          "text": "获得理解野兽言语并能与野兽口头交流的能力，持续10分钟。"
+        }
+      ]
+    },
+    {
+      "id": "barkskin",
+      "name": "丛林法杖：树肤术",
+      "activation": "bonus",
+      "cost": [
+        { "resource": "物品充能:丛林法杖", "n": 2 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": "touch"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "树肤术",
+          "to": "target"
+        }
+      ]
+    },
+    {
+      "id": "locate-animals-or-plants",
+      "name": "丛林法杖：动植物定位术",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:丛林法杖", "n": 2 }
+      ],
+      "concentration": {
+        "hours": 1
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "在专注期间得知距离你5哩内最近的指定具体种类的野兽或植物的方向与距离。"
+        }
+      ]
+    },
+    {
+      "id": "pass-without-trace",
+      "name": "丛林法杖：行动无踪",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:丛林法杖", "n": 2 }
+      ],
+      "concentration": {
+        "hours": 1
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "行动无踪",
+          "to": "self"
+        }
+      ]
+    },
+    {
+      "id": "speak-with-plants",
+      "name": "丛林法杖：植物交谈",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:丛林法杖", "n": 3 }
+      ],
+      "root": [
+        {
+          "kind": "note",
+          "text": "与30尺内植物沟通交谈，持续10分钟；可使困难地形恢复正常移动速度。"
+        }
+      ]
+    },
+    {
+      "id": "awaken",
+      "name": "丛林法杖：启蒙术",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:丛林法杖", "n": 5 }
+      ],
+      "root": [
+        {
+          "kind": "note",
+          "text": "花费8小时触碰一只智力3或更低的大型或更小野兽或植物，赋予其30天魅惑、10点智力及说话能力。"
+        }
+      ]
+    },
+    {
+      "id": "wall-of-thorns",
+      "name": "丛林法杖：棘墙术",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:丛林法杖", "n": 6 }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "line",
+          "length": 60,
+          "width": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "d",
+                  "dice": "7d8",
+                  "type": "穿刺"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "d",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "棘墙阻挡视线并使移动力消耗变为4倍。生物进入或在其中结束回合须进行DC self.spell.dc敏捷豁免，失败受7d8挥砍伤害，成功半数。"
+        }
+      ]
+    },
+    {
+      "id": "tree-form",
+      "name": "丛林法杖：树木型态",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:丛林法杖", "n": 1 }
+      ],
+      "root": [
+        {
+          "kind": "note",
+          "text": "执行魔法动作将法杖插入地面转变为60尺高的健康树木。触碰树木执行魔法动作可变回法杖。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "化兽为友": {
+      "tags": ["magical", "spell"],
+      "implies": ["XPHB:condition:魅惑"],
+      "duration": {
+        "hours": 24,
+        "endsOn": [
+          {
+            "event": "damageApplied",
+            "when": "event.target == self.id && event.total > 0 && (event.source == source.id || (event.source != null && combatant(event.source).isAllyOf(source)))"
+          }
+        ]
+      }
+    },
+    "树肤术": {
+      "tags": ["magical", "spell"],
+      "duration": {
+        "hours": 1
+      },
+      "statics": [
+        {
+          "kind": "ac",
+          "bonus": "max(0, 17 - self.ac)"
+        }
+      ],
+      "text": "若目标护甲等级低于17，则其AC变为17。"
+    },
+    "行动无踪": {
+      "tags": ["magical", "spell"],
+      "duration": {
+        "hours": 1
+      },
+      "aura": {
+        "id": "passWithoutTrace",
+        "radius": 30,
+        "affects": "allies",
+        "includeSelf": true,
+        "grant": {
+          "rollMods": [
+            {
+              "on": {
+                "kind": "check",
+                "skill": "隐匿"
+              },
+              "who": "bearer",
+              "op": "add",
+              "value": 10,
+              "label": "行动无踪：隐匿+10"
+            }
+          ]
+        }
+      },
+      "text": "30尺光环内自身及盟友敏捷（隐匿）检定+10，且不留下任何踪迹。"
+    }
+  }
+}

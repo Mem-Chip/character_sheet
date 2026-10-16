@@ -1,0 +1,115 @@
+{
+  "name": "流星戒指",
+  "automation": "partial",
+  "text": "佩戴此戒指期间可随意施展舞光术或光亮术。具有6发充能：消耗1充能施展妖火（DC 15）；消耗2充能创造至多4个球状闪电（专注至多1分钟，DC 15敏豁，球体移动与碰撞需手动处理）；消耗1至3充能发射流星（每充能一粒，60尺内15尺立方区域，DC 15敏捷豁免，失败受5d4光耀伤害，成功减半）。",
+  "actions": [
+    {
+      "id": "dancing-lights",
+      "name": "流星戒指：舞光术",
+      "activation": "action",
+      "concentration": { "minutes": 1 },
+      "root": [
+        { "kind": "note", "text": "施展舞光术，在120尺内创造至多四个火炬大小的光源，专注至多1分钟。" }
+      ]
+    },
+    {
+      "id": "light",
+      "name": "流星戒指：光亮术",
+      "activation": "action",
+      "root": [
+        { "kind": "note", "text": "施展光亮术，使接触的一个物体发出20尺明亮光照和额外20尺微光光照，持续1小时。" }
+      ]
+    },
+    {
+      "id": "faerie-fire",
+      "name": "流星戒指：妖火",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:流星戒指", "n": 1 }
+      ],
+      "concentration": { "minutes": 1 },
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": { "shape": "cube", "size": 20 }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": 15,
+              "onFail": [
+                { "kind": "applyEffect", "to": "target", "template": "妖火" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ball-lightning",
+      "name": "流星戒指：球状闪电",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:流星戒指", "n": 2 }
+      ],
+      "concentration": { "minutes": 1 },
+      "root": [
+        {
+          "kind": "note",
+          "text": "创造至多4个3尺直径的闪电球体，出现于120尺内，专注至多1分钟。附赠动作可移动至多30尺。球体进入生物5尺内时放电消失：DC 15敏捷豁免，失败受闪电伤害（1球: 4d12; 2球: 5d4; 3球: 2d6; 4球: 2d4），成功减半。"
+        }
+      ]
+    },
+    {
+      "id": "shooting-stars",
+      "name": "流星戒指：流星（消耗1充能）",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:流星戒指", "n": 1 }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": { "shape": "cube", "size": 15 }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": 15,
+              "onFail": [
+                { "kind": "damage", "dice": "5d4", "type": "光耀" }
+              ],
+              "onSuccess": [
+                { "kind": "damage", "dice": "5d4", "type": "光耀", "scale": 0.5 }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "妖火": {
+      "text": "发出10尺微光；无法受益于隐形状态；能看见受术者的攻击者对其攻击检定具有优势。",
+      "rollMods": [
+        {
+          "on": { "kind": "attack" },
+          "who": "against",
+          "when": "canSee(attacker, self)",
+          "op": "adv",
+          "label": "妖火：攻击优势"
+        }
+      ]
+    }
+  }
+}

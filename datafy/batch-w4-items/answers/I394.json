@@ -1,0 +1,55 @@
+{
+  "name": "统御权杖",
+  "automation": "partial",
+  "text": "以动作展示权杖，令 120 尺内可见且指定的生物进行 DC 15 感知豁免，失败则陷入魅惑 8 小时并视你为领袖（次日黎明前限一次）。伤害目标或命令违反天性时终止。复杂服从与终止判定需手动处理。",
+  "resources": [
+    {
+      "id": "物品次数:统御权杖",
+      "name": "统御权杖",
+      "formula": 1,
+      "recovery": "long"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "下令服从",
+      "activation": "action",
+      "tags": [
+        "magical"
+      ],
+      "cost": [
+        { "resource": "物品次数:统御权杖" }
+      ],
+      "targeting": {
+        "type": "creature",
+        "range": 120,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": 15,
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "统御魅惑",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "统御魅惑": {
+      "duration": { "hours": 8 },
+      "tags": [ "magical" ],
+      "implies": [
+        "XPHB:condition:魅惑"
+      ],
+      "text": "视施法者为值得托付信赖的领袖。受到施法者或其盟友伤害、或被命令违反天性时终止。"
+    }
+  }
+}

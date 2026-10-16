@@ -1,0 +1,55 @@
+{
+  "name": "湮灭法球",
+  "automation": "partial",
+  "text": "直径 2 尺的黑色空洞球体，触碰到法球未被吞没的东西受 8d10 力场伤害。\n【控制法球】60 尺内以动作进行 DC 25 智力（奥秘）检定，成功则控制法球至下个回合开始，失败则法球向你直线移动 10 尺。\n【移动法球】控制期间以附赠动作移动法球（5×智力调整值尺，至少 5 尺）。法球进入生物空间时，该生物进行 DC 19 敏捷豁免，失败受 8d10 力场伤害（HP 降至 0 则毁灭并灰飞烟灭）。",
+  "actions": [
+    {
+      "id": "control",
+      "name": "控制法球",
+      "activation": "action",
+      "root": [
+        {
+          "kind": "check",
+          "ability": "int",
+          "skill": "arcana",
+          "dc": 25,
+          "onSuccess": [
+            { "kind": "note", "text": "成功控制法球直至你的下个回合开始；若已被他人控制，则其失去控制权。" }
+          ],
+          "onFail": [
+            { "kind": "note", "text": "检定失败，法球向你直线移动 10 尺。" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "move-sphere",
+      "name": "移动法球",
+      "activation": "bonus",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": 19,
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "8d10",
+              "type": "force",
+              "to": "target"
+            },
+            {
+              "kind": "note",
+              "text": "因受此伤害生命值降至 0 的生物将被毁灭，财物留在原地，尸体灰飞烟灭。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

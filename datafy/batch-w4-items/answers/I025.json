@@ -1,0 +1,36 @@
+{
+  "name": "魔豆之袋",
+  "automation": "partial",
+  "text": "装有3d4颗干燥豆子。如果把一颗或更多豆子倒出，会引发半径10尺球状爆炸，生物进行DC 15敏捷豁免，失败受5d4力场伤害，成功减半，豆子被摧毁。种入泥土浇水1分钟后产生随机效应（由DM查表）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "魔豆之袋：倒出豆子",
+      "activation": "action",
+      "targeting": {
+        "type": "area",
+        "area": {
+          "shape": "sphere",
+          "radius": 10
+        }
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": 15,
+          "onFail": [
+            { "kind": "damage", "dice": "5d4", "type": "力场", "id": "beanExplosion" }
+          ],
+          "onSuccess": [
+            { "kind": "damage", "ref": "beanExplosion", "scale": 0.5 }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "倒出的豆子被摧毁。若种入泥土并浇水，1分钟后的效应由DM查表处理。"
+        }
+      ]
+    }
+  ]
+}

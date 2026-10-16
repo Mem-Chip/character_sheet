@@ -1,0 +1,38 @@
+{
+  "name": "圣水",
+  "text": "执行攻击动作时，可将其中一次攻击替换为投掷一扁瓶圣水，选择 20 尺内可见的一名生物。目标必须通过敏捷豁免（DC 8 + 敏捷调整值 + 熟练加值），若目标为邪魔或不死生物，豁免失败承受 2d8 点光耀伤害。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "投掷圣水",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品:圣水" }
+      ],
+      "targeting": {
+        "type": "creature",
+        "range": 20
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "8 + self.mod.dex + self.pb",
+          "onFail": [
+            {
+              "kind": "if",
+              "when": "target.type == '邪魔' || target.type == '不死生物'",
+              "then": [
+                {
+                  "kind": "damage",
+                  "dice": "2d8",
+                  "type": "光耀"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

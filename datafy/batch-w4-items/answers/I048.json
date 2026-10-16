@@ -1,0 +1,75 @@
+{
+  "name": "黑刃",
+  "automation": "partial",
+  "text": "+3 巨剑。命中亡灵时自身受到 1d10 暗蚀伤害，亡灵恢复 1d10 生命值；若该暗蚀伤害使你降至 0，灵魂将被黑刃吞噬。持握时免疫魅惑和恐慌，具有 30 尺盲视。将非亡灵非构装生物降至 0 时吞噬其灵魂（只能被祈愿术复活），并获得等于该生物生命值上限的临时生命值。黑刃次日黎明前可施展一次加速术（无需专注，持续 1 分钟）。固定加值已在人物卡处理。",
+  "resources": [
+    { "id": "物品次数:黑刃:加速术", "name": "黑刃：加速术", "formula": 1, "recovery": "long" }
+  ],
+  "actions": [
+    {
+      "id": "haste",
+      "name": "黑刃：加速术",
+      "activation": "free",
+      "cost": [
+        { "resource": "物品次数:黑刃:加速术" }
+      ],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "加速",
+          "to": "self",
+          "duration": { "minutes": 1 }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "加速": {
+      "tags": ["magical", "spell"],
+      "text": "黑刃施展的加速术（无需专注）。速度翻倍；AC+2；敏捷豁免具有优势；每回合获得一个额外动作（仅用于发动一次攻击、或疾走、撤离、躲藏和操作动作）。法术终止时陷入失能且速度为 0 直至下一回合结束。",
+      "statics": [
+        { "kind": "speed", "bonus": "self.speed" },
+        { "kind": "ac", "bonus": 2 }
+      ],
+      "rollMods": [
+        {
+          "on": { "kind": "save", "ability": "dex" },
+          "who": "bearer",
+          "op": "adv",
+          "label": "加速术：敏捷豁免优势"
+        }
+      ],
+      "triggers": [
+        {
+          "id": "haste-action",
+          "label": "加速术：额外动作",
+          "on": "turnStarted",
+          "role": "actor",
+          "do": [
+            { "kind": "economy", "action": 1 }
+          ]
+        }
+      ],
+      "onEnd": [
+        {
+          "kind": "applyEffect",
+          "template": "加速倦意",
+          "to": "self",
+          "duration": {
+            "until": { "at": "turnEnd", "of": "bearer", "nth": 1 }
+          }
+        }
+      ]
+    },
+    "加速倦意": {
+      "tags": ["magical", "spell"],
+      "text": "法术终止时泛起倦意，陷入失能并且速度为 0，持续至下一回合结束。",
+      "implies": [
+        "XPHB:condition:失能"
+      ],
+      "statics": [
+        { "kind": "speedSet", "value": 0 }
+      ]
+    }
+  }
+}

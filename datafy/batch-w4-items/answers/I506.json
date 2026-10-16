@@ -1,0 +1,54 @@
+{
+  "name": "蛛网魔杖",
+  "automation": "partial",
+  "text": "持握魔杖时，你可以消耗1充能从中施展蛛网术（豁免 DC 13，专注至多1小时）。区域内生物敏捷豁免失败陷入束缚状态，可用动作进行 DC 13 力量（运动）检定挣脱。耗尽充能时若骰出1则魔杖化为飞灰摧毁。",
+  "actions": [
+    {
+      "id": "web",
+      "name": "蛛网魔杖：蛛网术",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:蛛网魔杖", "n": 1 }
+      ],
+      "concentration": {
+        "hours": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": {
+          "shape": "cube",
+          "size": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": 13,
+              "onFail": [
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "蛛网束缚"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "蛛网束缚": {
+      "implies": [
+        "XPHB:condition:束缚"
+      ],
+      "text": "陷入束缚状态。可用动作进行对抗 DC 13 的力量（运动）检定，成功则挣脱束缚。"
+    }
+  }
+}

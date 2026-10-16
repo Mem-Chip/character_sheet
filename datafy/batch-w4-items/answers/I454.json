@@ -1,0 +1,143 @@
+{
+  "name": "火焰法杖",
+  "automation": "partial",
+  "text": "持握法杖期间具有火焰伤害抗性（人物卡处理）。具有10充能，每日黎明重获1d6+4充能，充能耗尽时掷d20出1摧毁。\n持握期间可消耗充能施展以下法术（使用自身法术DC）：\n- 燃烧之手（1充能）\n- 火球术（3充能）\n- 火墙术（4充能）",
+  "actions": [
+    {
+      "id": "burning-hands",
+      "name": "火焰法杖：燃烧之手",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:火焰法杖", "n": 1 }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "cone",
+          "size": 15
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "bh",
+                  "dice": "3d6",
+                  "type": "火焰"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "bh",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fireball",
+      "name": "火焰法杖：火球术",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:火焰法杖", "n": 3 }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 150,
+        "area": {
+          "shape": "sphere",
+          "radius": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "fb",
+                  "dice": "8d6",
+                  "type": "火焰"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "fb",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wall-of-fire",
+      "name": "火焰法杖：火墙术",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:火焰法杖", "n": 4 }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "line",
+          "length": 60,
+          "width": 1
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "fire",
+                  "dice": "5d8",
+                  "type": "火焰"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "fire",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

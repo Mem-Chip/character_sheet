@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { combatantFromSheet, syncLiveToChar } from '../../src/bridge/from-sheet';
+import { combatantFromSheet, syncLiveToChar, viewFromSheet } from '../../src/bridge/from-sheet';
 import { RuleBook, Session, createEncounter, scriptedDice } from '../../src/combat';
 import type { CharData, SheetEnv } from '../../src/sheet';
 import { createNodeEnv } from '../../src/sheet/node-env';
@@ -31,6 +31,18 @@ describe.skipIf(!hasLocalData())('物品', () => {
     const ls0 = (base.attacks as Array<{ name: string; atk: number; dmgText: string }>).find((a) => a.name === '长剑')!;
     expect(ls.atk).toBe(ls0.atk + 1);
     expect(ls.dmgText).not.toBe(ls0.dmgText);
+  });
+
+  it('属性 / 抗性 / 免疫 / 速度：巨人力量腰带定力量、艾恩石加值、抗性戒指、辟毒护符、善泳戒指', async () => {
+    const c = fighter();
+    for (const name of ['山丘巨人力量腰带', '火焰抗性戒指', '辟毒护符']) c.equipment.push({ name, qty: 1, equipped: true, attuned: true });
+    c.equipment.push({ name: '善泳戒指', qty: 1, equipped: true });
+    const s = await env.compute(c);
+    expect(s['score:str']).toBe(21);
+    expect(s.resist).toContain('火焰');
+    expect(s.immune).toContain('毒素');
+    expect(s.moveSpeeds.swim).toBe(40);
+    expect(viewFromSheet(env, c, s).immune).toContain('毒素');
   });
 
   it('命名魔法武器接底材：「黑刃」= 巨剑 +3', async () => {

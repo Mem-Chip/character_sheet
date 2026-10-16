@@ -1,0 +1,154 @@
+{
+  "name": "影响动物戒指",
+  "automation": "partial",
+  "text": "戒指具有 3 充能，每日黎明重获 1d3 充能。着装期间可消耗 1 充能施展化兽为友、恐惧术（只影响野兽，专注至多 1 分钟）或动物交谈之一（豁免 DC 13）。动物交谈的交流效果需手动处理。",
+  "actions": [
+    {
+      "id": "animal-friendship",
+      "name": "施展化兽为友",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "resource": "物品充能:影响动物戒指",
+          "n": 1
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30,
+        "filter": "target.type == '野兽'"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": 13,
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "化兽为友",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fear",
+      "name": "施展恐惧术（仅野兽）",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "resource": "物品充能:影响动物戒指",
+          "n": 1
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "cone",
+          "size": 30
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "if",
+              "when": "target.type == '野兽'",
+              "then": [
+                {
+                  "kind": "save",
+                  "ability": "wis",
+                  "dc": 13,
+                  "onFail": [
+                    {
+                      "kind": "applyEffect",
+                      "template": "恐惧术",
+                      "to": "target"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "speak-with-animals",
+      "name": "施展动物交谈",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "resource": "物品充能:影响动物戒指",
+          "n": 1
+        }
+      ],
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "动物交谈",
+          "to": "self"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "化兽为友": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:魅惑"
+      ],
+      "duration": {
+        "hours": 24
+      },
+      "text": "处于魅惑状态，持续 24 小时或直到你或同伴伤害它。"
+    },
+    "恐惧术": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:恐慌"
+      ],
+      "text": "陷入恐慌，在回合内必须疾走远离；回合结束不在视线内时可再次进行感知豁免（DC 13）。"
+    },
+    "动物交谈": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "minutes": 10
+      },
+      "text": "获得与野兽理解与言语交流的能力，持续 10 分钟。"
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "name": "颤栗乐笙",
+  "automation": "partial",
+  "text": "以一个动作消耗 1 充能演奏，周边 30 尺范围内每个你选择的生物进行 DC 15 感知豁免，失败陷入恐慌状态 1 分钟。目标在其每个回合结束时可重复豁免。成功者 24 小时内免疫该乐笙效应（24 小时免疫需手动记录）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "颤栗乐笙：着迷曲调",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:颤栗乐笙", "n": 1 }
+      ],
+      "targeting": {
+        "type": "creature",
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": 15,
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "颤栗乐笙：恐慌",
+              "duration": {
+                "minutes": 1,
+                "saveEnds": {
+                  "ability": "wis",
+                  "dc": 15,
+                  "at": "turnEnd"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "颤栗乐笙：恐慌": {
+      "implies": [
+        "XPHB:condition:恐慌"
+      ],
+      "text": "陷入恐慌状态，回合结束时可重复 DC 15 感知豁免以结束此效应。"
+    }
+  }
+}

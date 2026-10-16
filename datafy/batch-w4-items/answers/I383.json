@@ -1,0 +1,47 @@
+{
+  "name": "劲敌硬币",
+  "automation": "partial",
+  "text": "使用一个魔法动作抛掷硬币并消耗 1 发充能。掷一枚任意骰子决定硬币朝向：正面（偶数）令 60 尺内可见生物进行 DC 13 感知豁免，失败受 2d4 心灵伤害并在其下一回合结束前进行的下一次攻击检定具有劣势，成功受半伤；背面（奇数）自身受到 1d4 心灵伤害。每日黎明重获充能。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "抛掷劲敌硬币",
+      "activation": "action",
+      "cost": [
+        { "resource": "物品充能:劲敌硬币" }
+      ],
+      "targeting": { "type": "creature", "count": 1, "range": 60 },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "抛掷硬币结果（偶数正面，奇数背面）",
+          "options": [
+            {
+              "label": "正面（偶数）：目标 DC 13 感知豁免",
+              "do": [
+                {
+                  "kind": "save",
+                  "ability": "wis",
+                  "dc": 13,
+                  "onFail": [
+                    { "kind": "damage", "id": "rc", "dice": "2d4", "type": "心灵" },
+                    { "kind": "note", "text": "目标在其下一回合结束前进行的下一次攻击检定具有劣势" }
+                  ],
+                  "onSuccess": [
+                    { "kind": "damage", "ref": "rc", "scale": 0.5 }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "背面（奇数）：自身受到 1d4 心灵伤害",
+              "do": [
+                { "kind": "damage", "dice": "1d4", "type": "心灵", "to": "self" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
