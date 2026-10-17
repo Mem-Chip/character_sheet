@@ -159,6 +159,18 @@ export type Modify =
    * 值在窗口里就掷（同步），失败了才真的 cancel —— 法术反制这类「先豁免再决定」用它。
    */
   | { op: 'cancelUnlessSave'; ability: Ability; dc: ExprSrc; against?: 'self' | 'attacker'; refundSlot?: boolean }
+  /**
+   * 泛化版：**引擎在窗口里先掷一次豁免**，按结果应用一组修改（`onFail` / `onSuccess`）。
+   * 「先让施法者过豁免，失败了才改这道法术」这类规则（篡改法术、反制变体）用它；
+   * 子修改里的 op 只认能写进 CastPlan 的那几个（cancel / setDc / setAttackBonus / setDamageType）。
+   */
+  | { op: 'unlessSave'; ability: Ability; dc: ExprSrc; against?: 'self' | 'attacker'; onFail?: Modify[]; onSuccess?: Modify[] }
+  /** 改这次施法的豁免 DC（绝对覆盖；写 `self.spell.dc - 3` 这种表达式也行） */
+  | { op: 'setDc'; value: ExprSrc }
+  /** 改这次施法的攻击加值（绝对覆盖） */
+  | { op: 'setAttackBonus'; value: ExprSrc }
+  /** 改这次施法的伤害类型（物理或元素，写站点的中文名） */
+  | { op: 'setDamageType'; value: string }
   /** 把这次豁免 / 检定 / 攻击改成成功或命中（传奇抗性、现世传说） */
   | { op: 'succeed' }
   /** 反射闪避：「豁免成功只受一半伤害」的效果 —— 成功改为不受伤害，失败改为只受一半（别的伤害不管） */

@@ -33,7 +33,7 @@ const NODE_KINDS = new Set([
   'resource', 'economy', 'choose', 'if', 'forEach', 'repeat', 'move', 'note', 'number', 'modify', 'zone', 'summon',
 ]);
 const ROLL_OPS = new Set(['adv', 'disadv', 'noAdv', 'add', 'addDice', 'autoFail', 'autoSucceed', 'critRange', 'autoCritOnHit', 'minD20', 'minDie', 'targetAdd', 'maxDice']);
-const MODIFY_OPS = new Set(['reroll', 'addToRoll', 'reduceDamage', 'halveDamage', 'doubleDamage', 'setHp', 'cancel', 'evasion', 'succeed', 'redirect', 'absorb', 'clearAdv', 'cancelUnlessSave']);
+const MODIFY_OPS = new Set(['reroll', 'addToRoll', 'reduceDamage', 'halveDamage', 'doubleDamage', 'setHp', 'cancel', 'evasion', 'succeed', 'redirect', 'absorb', 'clearAdv', 'cancelUnlessSave', 'unlessSave', 'setDc', 'setAttackBonus', 'setDamageType']);
 const STATIC_KINDS = new Set(['ac', 'speed', 'speedSet', 'spellDc', 'resist', 'resistAll', 'immune', 'vuln', 'conditionImmune']);
 
 const NUM = T.num;
@@ -228,7 +228,8 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
     }
     nodes(t.do, `${at}.do`);
     for (const m of t.modify ?? []) {
-      if (m.op === 'cancelUnlessSave') expr(m.dc, 'trigger', NUM, `${at}.modify`);
+      if (m.op === 'cancelUnlessSave' || m.op === 'unlessSave') expr(m.dc, 'trigger', NUM, `${at}.modify`);
+      if (m.op === 'setDc' || m.op === 'setAttackBonus') expr(m.value, 'trigger', NUM, `${at}.modify`);
       if (!MODIFY_OPS.has(m.op)) out.push(`${where(at)}：未知修改「${m.op}」`);
       if ('value' in m) expr(m.value, 'trigger', m.op === 'addToRoll' || m.op === 'reduceDamage' ? DICE : NUM, `${at}.modify`);
     }
@@ -291,3 +292,4 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
   (e.auras ?? []).forEach((a) => aura(a, `灵光「${a.id}」`));
   for (const [name, tpl] of Object.entries(e.effects ?? {})) template(tpl, `效应「${name}」`);
 }
+

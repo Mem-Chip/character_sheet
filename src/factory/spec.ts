@@ -241,6 +241,13 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
       \`{ kind: 'grantAction', from: 'XPHB:spell:<法术>#cast', cost: [], activation: 'free', until: 'turnEnd' }\` ——
       授予的那个法术动作不再花动作经济，也不扣法术位；复制时会自动把「相对模板名」换成绝对键、\`slot.level\` 按基础环阶定下来；
     - 注意它只换**动作**，不改「引擎内部行为」（借机攻击、能不能用反应、专注）—— 那些用 \`flags\`（\`cannot\` / \`blocks\` / \`forbidTarget\`）。
+27. **改正在施展的那道法术**（只能在 \`spellCast\` 的 before 窗口里用）：窗口的 \`modify\` 是**同步求值**的，
+    所以「先掷豁免、失败了才改」要写成**引擎替你掷**的 op，而不是先 \`do\` 里掷再改（\`do\` 的执行时机不保证在结算之前）：
+    - \`{ op: 'unlessSave', ability: 'wis', dc: 13, onFail: [...], onSuccess: [...] }\` —— 引擎在窗口里先让**施法者**掷豁免，
+      按结果应用子修改（\`against: 'self'\` 改成让施法者自己掷）；
+    - 子修改认这几个：\`setDc\`（改这次施法的豁免 DC）、\`setAttackBonus\`（改攻击加值）、\`setDamageType\`（改伤害类型，写中文名）、\`cancel\`（打断，可带 \`refundSlot\`）；
+    - 简写：\`{ op: 'cancelUnlessSave', ability: 'con', dc: 'self.spell.dc', refundSlot: true }\` = 豁免失败就打断（法术反制就这么写）；
+    - 无条件改的话用 \`modifyCast\` 节点（同样只在窗口里生效）。
 
 ## 6. 引擎怎么执行（容易想错的地方）
 

@@ -3,7 +3,7 @@ import { d20Test } from './d20';
 import { triggeredActionsOf, triggersOf } from './collect';
 import { activeTemplates, effectiveView } from './effects';
 import { actionCosts, canPay, describeCost, executeAction, payCosts, runNodes, triggeredActionUsable, type ExecCtx } from './exec';
-import type { DamagePacket } from './damage';
+import { normType, type DamagePacket } from './damage';
 import type { CastPlan } from './castplan';
 import { makeEnv, nameOf, type ScopeData } from './scope';
 import type { Tx } from './tx';
@@ -337,11 +337,31 @@ export function economyAvailable(tx: Tx, id: Id, kind: 'action' | 'bonus' | 'rea
  * `cancelUnlessSave` 由**引擎**先替那个生物掷一次豁免，失败了才发 cancel ——
  * 「先豁免、失败了才打断」这类规则靠它（窗口里 `do` 的执行时机不一定在结算之前）。
  */
-function applyModify(tx: Tx, spec: WindowSpec, c: TriggerCand, m: Modify): void {
+function applyModify(tx: Tx, spec: WindowSpec, c: TriggerCand, m: Modify, depth = 0): void {
   if (!spec.modify) return;
-  if (m.op !== 'cancelUnlessSave') { spec.modify(m, c); return; }
+  // 写计划书的几个 op：直接改 CastPlan，窗口关掉之后结算照它走
+  if (m.op === 'setDc' || m.op === 'setAttackBonus' || m.op === 'setDamageType') {
+    const plan = tx.windowPlan;
+    if (!plan) {
+      tx.emit('note', { text: `${c.label}：这里没有正在施展的法术可改` }, spec.cause);
+      return;
+    }
+    const env = makeEnv(tx, { self: c.owner, target: spec.scope.attacker ?? spec.actor });
+    if (m.op === 'setDc') { const v = runInt(m.value, env); if (!(v instanceof Unknown)) plan.dc = v; }
+    else if (m.op === 'setAttackBonus') { const v = runInt(m.value, env); if (!(v instanceof Unknown)) plan.attackBonus = v; }
+    else plan.damageType = normType(m.value);
+    plan.notes.push(`${c.label}：${m.op === 'setDamageType' ? `伤害类型改为${normType(m.value)}` : m.op === 'setDc' ? '改写了豁免 DC' : '改写了攻击加值'}`);
+    return;
+  }
+  // 需要先掷豁免的两种 op
+  const isSaveOp = m.op === 'cancelUnlessSave' || m.op === 'unlessSave';
+  if (!isSaveOp) { spec.modify(m, c); return; }
+  if (depth > 1) return;   // 不嵌套太深
   const who = m.against === 'self' ? c.owner : (spec.scope.attacker ?? spec.actor);
-  if (!who || !tx.state.combatants[who]) { spec.modify({ op: 'cancel', refundSlot: m.refundSlot }, c); return; }
+  if (!who || !tx.state.combatants[who]) {
+    if (m.op === 'cancelUnlessSave') spec.modify({ op: 'cancel', refundSlot: m.refundSlot }, c);
+    return;
+  }
   const tv = effectiveView(tx, who);
   const env = makeEnv(tx, { self: c.owner, target: who });
   const dcRaw = runInt(m.dc, env);
@@ -351,9 +371,19 @@ function applyModify(tx: Tx, spec: WindowSpec, c: TriggerCand, m: Modify): void 
     label: `${c.label}：${ABIL_CN[m.ability]}豁免`, cause: spec.cause,
   });
   tx.emit(r.outcome === 'success' ? 'saveSucceeded' : 'saveFailed', { actor: c.owner, target: who, ability: m.ability, dc, label: c.label }, r.seq);
-  if (r.outcome === 'success') {
-    tx.emit('note', { text: `${nameOf(tx, who)} 豁免成功，「${c.label}」没能打断它` }, r.seq);
+  if (m.op === 'cancelUnlessSave') {
+    if (r.outcome === 'success') {
+      tx.emit('note', { text: `${nameOf(tx, who)} 豁免成功，「${c.label}」没能打断它` }, r.seq);
+      return;
+    }
+    spec.modify({ op: 'cancel', refundSlot: m.refundSlot !== false }, c);
     return;
   }
-  spec.modify({ op: 'cancel', refundSlot: m.refundSlot !== false }, c);
+  // unlessSave：按结果应用子修改
+  const branch = r.outcome === 'success' ? m.onSuccess : m.onFail;
+  if (!branch?.length) {
+    if (r.outcome === 'success') tx.emit('note', { text: `${nameOf(tx, who)} 豁免成功` }, r.seq);
+    return;
+  }
+  for (const sub of branch) applyModify(tx, spec, c, sub, depth + 1);
 }
