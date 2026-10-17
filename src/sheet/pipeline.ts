@@ -636,7 +636,16 @@ export function createRules(): Pipeline {
     const notes: Json[] = [];
     for (const e of ctx.pluck('note')) {
       const text = String(e.text ?? '').trim();
-      if (text) notes.push({ name: String(e.source || '备注'), level: 0, entries: [text], _note: true, _cls: '备注' });
+      if (!text) continue;
+      // 这条备注若属于某个已经在列表里的特性（名字一样），就并进它的正文 —— 否则会在特性面板里
+      // 出现一条「同名但只有一句话」的重复特性（术士的先天术法 / 魔力泉涌就踩过这个）
+      const owner = list.find((f) => f.name === String(e.source ?? "") && !f._note);
+      if (owner) {
+        owner.entries = [...(owner.entries ?? []), `备注：${text}`];
+        owner._noted = true;
+        continue;
+      }
+      notes.push({ name: String(e.source || '备注'), level: 0, entries: [text], _note: true, _cls: '备注' });
     }
     list.sort((a, b) => (a.level || 0) - (b.level || 0) || String(a._cls || '').localeCompare(String(b._cls || '')));
     ctx.set('features', [...list, ...notes], 'computed');

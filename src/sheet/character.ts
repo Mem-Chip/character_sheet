@@ -162,6 +162,28 @@ export async function resolveCharacter(env: SheetEnv, char: CharData): Promise<J
   res.racesLoaded = true;
 
   if (char.race) res.race = (d.races.race || []).find((r: Json) => r.name === char.race && Source.is2024(r)) || null;
+  // 自建种族：5etools 里没有这个名字时，到本卡 / 战役 / 资料库的家规里按名字找一条
+  // （SheetBuild 的「自定义种族」会往本卡的 homerules 里写这么一条，名字就是种族名）
+  if (char.race && !res.race) {
+    const pool = [
+      ...((char.homerules || []) as Json[]),
+      ...(env.homelib?.camp?.(char) || []),
+      ...(env.homelib?.user?.(char) || []),
+    ];
+    const hr = pool.find((h) => String(h?.name ?? '') === char.race);
+    if (hr) {
+      res.race = {
+        name: char.race,
+        source: 'HR',
+        _hr: hr.id,
+        entries: (hr.entries as Json[]) ?? (hr.text ? [String(hr.text)] : []),
+      };
+    } else {
+      // 连家规里都没有：至少把名字显示出来（以前这里 race 是 undefined，卡面一片空白）
+      res.race = { name: char.race, source: 'HR', entries: [], _bare: true };
+      res.warnings.push(`「${char.race}」不是内置种族，也没有对应的家规条目（特性要自己在家规里写）`);
+    }
+  }
   if (char.background) res.background = (d.backgrounds.background || []).find((b: Json) => b.name === char.background && Source.is2024(b)) || null;
   for (const f of featNames(char)) {
     const e = (d.feats.feat || []).find((x: Json) => x.name === f && Source.is2024(x));

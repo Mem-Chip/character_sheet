@@ -1,5 +1,5 @@
 /** 人物卡「建卡」：改角色的建卡决定（种族、背景、职业、属性、专长、装备…） */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ABILS, ABIL_CN, CLASS_SLUG_BY_NAME, SKILLS, STANDARD_ARRAY, Source, backgroundBonusFrom, backgroundOriginFeat, featNames,
   pointBuyCost, pruneCharByLevel, subclassCandidates, subclassLabel, type CharData, type Json,
@@ -9,6 +9,7 @@ import { Term } from '../components/Term';
 import { StartingEquipmentDialog } from '../components/StartingEquipmentDialog';
 import type { Engine } from '../lib/engine';
 import { actions } from '../lib/store';
+import { libraryNow } from '../lib/library';
 
 interface Props { engine: Engine; id: string; char: CharData; sheet: Record<string, Json> }
 
@@ -48,9 +49,31 @@ function Basics({ engine, id, char }: Props) {
         </div>
         <div className="row">
           <Field label={<>种族{char.race ? <> · <Term kind="race" name={char.race}>词条</Term></> : null}</>}>
-            <select value={char.race || ''} onChange={(e) => upd(id, (c) => { c.race = e.target.value; c.size = 'M'; })}>
+            <select value={char.race || ''} onChange={(e) => {
+              const v = e.target.value;
+              if (v === '__new') {
+                const name = window.prompt('自建种族的名字（特性 / 加值在「数据」页的家规里写）')?.trim();
+                if (!name) return;
+                upd(id, (c) => {
+                  // 自建种族 = 本卡家规里的一条（引擎按名字找它，见 resolveCharacter）
+                  const list = (c.homerules || []) as Json[];
+                  if (!list.some((h) => h.name === name)) list.push({ id: 'race-' + Math.random().toString(36).slice(2, 8), name, text: '' });
+                  c.homerules = list;
+                  c.race = name;
+                  c.size = 'M';
+                });
+                return;
+              }
+              upd(id, (c) => { c.race = v; c.size = 'M'; });
+            }}>
               <option value="">—</option>
               {env.store.races2024.map((r) => <option key={r.name} value={r.name}>{Source.labelOf(r)}</option>)}
+              {((char.homerules || []) as Json[]).filter((h) => h.name && !h.covers && !env.store.races2024.some((r) => r.name === h.name))
+                .map((h) => <option key={String(h.id)} value={String(h.name)}>{String(h.name)}（自建）</option>)}
+              {/* 资料库里的种族（自建）：名字就是卡上存的种族名 */}
+              {libraryNow().filter((it) => it.kind === 'race' && !env.store.races2024.some((r) => r.name === it.name))
+                .map((it) => <option key={it.id} value={it.name}>{it.name}（资料库）</option>)}
+              <option value="__new">＋ 自定义种族…</option>
             </select>
           </Field>
           {sizes.length > 1 && (
@@ -383,14 +406,76 @@ function LangsTools({ engine, id, char }: Props) {
   );
 }
 
-export function SheetBuild(p: Props) {
+/** 荒野形态：选「已知形态」（上限来自职业等级表）和「当前形态」 —— 以前只有战斗里能选，卡上没有入口 */
+function WildShapePanel({ engine, id, char }: Props) {
+  const env = engine.env;
+  const lim = env.wildShape.limits(char);
+  const [, bump] = useState(0);
+  const [q, setQ] = useState("");
+  useEffect(() => {
+    if (!lim || env.store.data.bestiaryXmm) return;
+    void env.store.ensure("bestiaryXmm").then(() => bump((x) => x + 1));
+  }, [lim?.level]);
+  if (!lim) return null;
+  const forms = env.wildShape.forms(char);
+  const known = env.wildShape.known(char);
+  const cur = env.wildShape.current(char);
+  const setKnown = (list: string[]) => upd(id, (c) => { c.wildShapeKnown = list; });
+  const toggle = (name: string) => {
+    if (known.includes(name)) setKnown(known.filter((x) => x !== name));
+    else if (known.length < lim.known) setKnown([...known, name]);
+  };
+  const setCur = (name: string) => upd(id, (c) => {
+    if (!name) { c.wildShape = null; return; }
+    const f = forms.list.find((x: Json) => x.name === name) ?? forms.excluded.find((x: Json) => x.name === name);
+    c.wildShape = { name, hpNow: f?.hp ?? null };
+  });
+  const filter = q.trim();
+  const rows: Json[] = [...forms.list, ...forms.excluded].filter((f: Json) => !filter || String(f.name).includes(filter));
   return (
+    <Panel title="荒野形态" aside={<span className="tiny faint">{lim.known} 个已知形态 · 挑战等级 ≤ {lim.cr}{lim.fly ? " · 可飞" : " · 这级不能飞"} · 每次休整 {lim.uses || "—"} 次</span>}>
+      <div className="row" style={{ gap: 8, alignItems: "center" }}>
+        <Field label="当前形态">
+          <select value={String(char.wildShape?.name ?? "")} onChange={(e) => setCur(e.target.value)}>
+            <option value="">本体</option>
+            {known.map((n) => <option key={n} value={n}>{n}</option>)}
+          </select>
+        </Field>
+        {cur ? <span className="tiny">HP {cur.hpNow ?? cur.hp} ｜ AC {cur.ac} ｜ {String(cur.size)} 体型{cur.flying ? " ｜ 能飞" : ""}</span> : <span className="tiny faint">没变形</span>}
+      </div>
+      <div className="row" style={{ marginTop: 6, gap: 6 }}>
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="搜索野兽（中文名）" style={{ flex: 1 }} />
+        <span className="tiny faint">{known.length}/{lim.known}</span>
+      </div>
+      {!forms.loaded ? <div className="tiny faint" style={{ marginTop: 4 }}>正在读怪物图鉴…</div> : (
+        <div style={{ maxHeight: 220, overflow: "auto", marginTop: 4 }}>
+          {rows.map((f: Json) => {
+            const on = known.includes(String(f.name));
+            const blocked = !lim.fly && f.flying;
+            return (
+              <label key={String(f.name)} className="row tiny" style={{ gap: 6, opacity: blocked ? 0.45 : 1 }}>
+                <input type="checkbox" checked={on} disabled={blocked || (!on && known.length >= lim.known)} onChange={() => toggle(String(f.name))} />
+                <span>{String(f.name)}</span>
+                <span className="faint">CR {String(f.cr)} · HP {String(f.hp)} · AC {String(f.ac)}{f.flying ? " · 飞" : ""}</span>
+                {blocked ? <span className="warnline tiny">这级不能飞</span> : null}
+              </label>
+            );
+          })}
+          {!rows.length ? <div className="tiny faint">没有符合条件的野兽。</div> : null}
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+export function SheetBuild(p: Props) {  return (
     <div className="sheet-grid" style={{ gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)' }}>
       <div className="stack">
         <Basics key={p.id + "/" + (p.char.background || "")} {...p} />
         <Abilities {...p} />
         <Classes {...p} />
         <Feats {...p} />
+        <WildShapePanel {...p} />
       </div>
       <div className="stack">
         <Skills {...p} />
@@ -400,3 +485,5 @@ export function SheetBuild(p: Props) {
     </div>
   );
 }
+
+

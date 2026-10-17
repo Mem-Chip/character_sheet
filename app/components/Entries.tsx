@@ -130,8 +130,16 @@ function Entry({ e }: { e: Json }): ReactNode {
     case 'inset': case 'insetReadaloud': case 'quote':
       return <div className="inset">{e.name && <h4>{e.name}</h4>}<Entries entries={e.entries || []} /></div>;
     case 'refClassFeature': case 'refSubclassFeature': case 'refOptionalfeature': {
-      const nm = String(e.classFeature || e.subclassFeature || e.optionalfeature || '').split('|')[0];
-      return <p className="ref">· {nm}</p>;
+      // `名|职业|来源|等级`：做成词条，鼠标停上去能看原文（以前只有一行死文字，没法知道是什么）
+      const raw = String(e.classFeature || e.subclassFeature || e.optionalfeature || '');
+      const [nm, cls, , lv] = raw.split('|');
+      if (!nm) return null;
+      const kind = e.type === 'refOptionalfeature' ? 'optfeature' : e.type === 'refSubclassFeature' ? 'subclassFeature' : 'classFeature';
+      return (
+        <p className="ref">
+          · <Term kind={kind} name={nm} {...(cls ? { cls } : {})} {...(Number(lv) ? { level: Number(lv) } : {})}>{nm}</Term>
+        </p>
+      );
     }
     case 'abilityDc':
       return <p><b>{e.name} 豁免 DC</b> = 8 + 熟练加值 + {(e.attributes || []).join('/')} 调整值</p>;
