@@ -2071,6 +2071,68 @@
      ]
     }
    ]
+  },
+  "XPHB:spell:电爪": {
+   "name": "电爪",
+   "automation": "full",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "电爪",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": "touch"
+     },
+     "root": [
+      {
+       "kind": "attack",
+       "attack": {
+        "melee": true,
+        "ranged": false,
+        "spell": true,
+        "damageType": "闪电"
+       },
+       "onHit": [
+        {
+         "kind": "damage",
+         "dice": "(1 + floor((self.level + 1) / 6))d8",
+         "type": "闪电"
+        },
+        {
+         "kind": "applyEffect",
+         "template": "电爪：不能借机攻击",
+         "duration": {
+          "until": {
+           "at": "turnStart",
+           "of": "bearer",
+           "nth": 1
+          }
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "电爪：不能借机攻击": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "flags": {
+      "cannot": [
+       "opportunityAttack"
+      ]
+     }
+    }
+   }
   }
  }
 }

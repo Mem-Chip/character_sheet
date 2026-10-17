@@ -38,7 +38,7 @@ export const CONDITIONS = ['目盲', '魅惑', '耳聋', '力竭', '恐慌', '�
  */
 export function effectLabel(name: string): { cond: string | null; text: string; from: string | null } {
   const m = /^(.+)：(.+)$/.exec(name);
-  if (m && CONDITIONS.includes(m[2])) return { cond: m[2], text: m[2], from: m[1] };
+  if (m) return { cond: CONDITIONS.includes(m[2]) ? m[2] : null, text: m[2], from: m[1] };
   if (CONDITIONS.includes(name)) return { cond: name, text: name, from: null };
   return { cond: null, text: name, from: null };
 }

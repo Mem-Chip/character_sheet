@@ -158,4 +158,33 @@ describe.skipIf(!hasLocalData())('真实角色卡进战斗', () => {
     expect(r.mods.map((m: { label: string }) => m.label)).toContain('守护灵光');
     expect(r.total).toBe(10 + s.view('f').save.wis + 3);
   });
+
+  it('战士 5：战斗中花生命骰回血、短休回短休资源，并把生命骰消耗写回角色卡', async () => {
+    const char = fixture('fighter5-plate');
+    const { s, dice, sheets } = await encounter([{ id: 'f', char }], []);
+    const maxHp = s.view('f').hpMax;
+    done(s.dispatch({ type: 'damage', id: 'f', amount: 20, damageType: '挥砍' }));
+    expect(s.state.combatants.f.live.hp).toBe(maxHp - 20);
+
+    // 花掉 1 次动作如潮（短休恢复）
+    const surgeId = Object.keys(s.view('f').resources)[0];
+    done(s.dispatch({ type: 'setUsage', id: 'f', resource: surgeId, used: 1 }));
+    expect(s.state.combatants.f.live.resourcesUsed[surgeId]).toBe(1);
+
+    // 花 1 颗 d10 生命骰回血：掷出 6 + 体质调整值
+    const conMod = s.view('f').mod.con;
+    dice.push(6);
+    done(s.dispatch({ type: 'spendHitDie', id: 'f', faces: 10 }));
+    expect(s.state.combatants.f.live.hp).toBe(maxHp - 20 + Math.max(1, 6 + conMod));
+    expect(s.state.combatants.f.live.hitDiceUsed?.[10]).toBe(1);
+
+    // 短休：动作如潮恢复，生命骰消耗保持不变
+    done(s.dispatch({ type: 'rest', ids: ['f'], kind: 'short' }));
+    expect(s.state.combatants.f.live.resourcesUsed[surgeId] ?? 0).toBe(0);
+    expect(s.state.combatants.f.live.hitDiceUsed?.[10]).toBe(1);
+
+    syncLiveToChar(char, sheets.f, s.state.combatants.f);
+    expect(char.hitDiceSpent?.[10]).toBe(1);
+    expect(char.hp.current).toBe(maxHp - 20 + Math.max(1, 6 + conMod));
+  });
 });

@@ -41,10 +41,28 @@ export const canLookup = (kind: string) => kind in TABLES || kind === 'classFeat
 
 /** 规则条目键 → 术语：`XPHB:spell:名`、`XPHB:action:名`、`XPHB:condition:名`、职业特性 `XPHB:职业:名:等级`、其余 `XPHB:名` */
 export function termOfKey(key: string): TermRef | null {
+  if (!key) return null;
   const p = key.split('#')[0].split(':');
   if (p.length === 4) return { kind: 'classFeature', cls: p[1], name: p[2], level: Number(p[3]) || undefined };
-  if (p.length === 3 && ['spell', 'action', 'condition'].includes(p[1])) return { kind: p[1], name: p[2] };
-  if (p.length === 2 && p[0] !== 'HR') return { kind: 'auto', name: p[1] };
+  if (p.length === 3 && ['spell', 'action', 'condition', 'item'].includes(p[1])) return { kind: p[1], name: p[2] };
+  if (p.length === 3 && p[1] === 'mastery') return { kind: 'itemMastery', name: p[2] };
+  if (p.length === 2 && !['HR', 'inline', 'weapon', 'summon'].includes(p[0])) return { kind: 'auto', name: p[1] };
+  return null;
+}
+
+/** 身上挂载的效应 → 指向来源法术 / 特性 / 状态的术语引用（供悬浮窗查看原文） */
+export function termOfEffect(e: { key?: string; name?: string; origin?: { ref?: string; kind?: string } }): TermRef | null {
+  if (e.key === 'concentration') {
+    return (e.origin?.ref ? termOfKey(e.origin.ref) : null) ?? (e.name ? { kind: 'spell', name: e.name } : null);
+  }
+  const byKey = termOfKey(String(e.key ?? ''));
+  if (byKey) return byKey;
+  if (e.origin?.ref) {
+    const byOrigin = termOfKey(e.origin.ref);
+    if (byOrigin) return byOrigin;
+  }
+  const m = e.name ? /^(.+)：(.+)$/.exec(e.name) : null;
+  if (m) return { kind: e.origin?.kind === 'spell' ? 'spell' : 'auto', name: m[1] };
   return null;
 }
 /** 不知道类别时按这个顺序找 */

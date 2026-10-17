@@ -41,6 +41,8 @@ export interface CombatUi {
   formPick: FormPick | null;
   /** 手动给某个参与者加召唤物 / 伙伴 */
   summonFor: string | null;
+  /** 日志回放：查看第几笔事务之后的状态（0 = 起点，null = 实时） */
+  replay: number | null;
   /** 本地遭遇的指令框掷骰（战役遭遇的在 remote.chat） */
   chat: ChatRoll[];
   toast: { text: string; tone: 'danger' | 'ok' } | null;
@@ -133,7 +135,7 @@ interface RemoteState {
   dice?: Record<string, DiceMode>; hidden?: string[]; map?: MapState; chat?: ChatRoll[]; actingAs?: string | null; dicePhys?: DicePhysics; diceColors?: Record<string, string>; diceOpen?: boolean; reveal?: Record<string, boolean>;
 }
 
-let ui: CombatUi = { session: null, version: 0, links: {}, dice: {}, selected: null, targets: [], aim: null, formPick: null, summonFor: null, chat: [], toast: null, remote: null };
+let ui: CombatUi = { session: null, version: 0, links: {}, dice: {}, selected: null, targets: [], aim: null, formPick: null, summonFor: null, replay: null, chat: [], toast: null, remote: null };
 let engineRef: Engine | null = null;
 let stream: EventSource | null = null;
 const listeners = new Set<() => void>();
@@ -147,13 +149,13 @@ function set(next: Partial<CombatUi>, persistNow = true): void {
 }
 
 /* ───── 战斗 → 人物卡：自动写回 ─────
- * 关联了人物卡的参与者，记账字段（生命值、临时生命值、法术位、资源、死亡豁免）一变就写回卡上。
+ * 关联了人物卡的参与者，记账字段（生命值、临时生命值、法术位、资源、生命骰、死亡豁免）一变就写回卡上。
  * 只在这台电脑「管」这张卡时写：本地遭遇都写；战役遭遇里写自己的卡，或绑定给 DM 管控的卡。
  * 第一次看到某个参与者时只记下现状、不写 —— 打开一场旧遭遇不应该把卡上的血量改回去。 */
 const lastLive = new Map<string, string>();
 let autoTimer: ReturnType<typeof setTimeout> | undefined;
-const liveKey = (c: { live: { hp: number; tempHp: number; deathSaves: unknown; resourcesUsed: unknown; slotsUsed: unknown } }) =>
-  JSON.stringify([c.live.hp, c.live.tempHp, c.live.deathSaves, c.live.resourcesUsed, c.live.slotsUsed]);
+const liveKey = (c: { live: { hp: number; tempHp: number; deathSaves: unknown; resourcesUsed: unknown; slotsUsed: unknown; hitDiceUsed?: unknown } }) =>
+  JSON.stringify([c.live.hp, c.live.tempHp, c.live.deathSaves, c.live.resourcesUsed, c.live.slotsUsed, c.live.hitDiceUsed ?? {}]);
 
 function scheduleAutoWrite(): void {
   clearTimeout(autoTimer);
@@ -161,7 +163,7 @@ function scheduleAutoWrite(): void {
 }
 function autoWrite(): void {
   const s = ui.session;
-  if (!s || !engineRef || s.pending) return;
+  if (!s || !engineRef || s.pending || ui.replay !== null) return;
   const r = ui.remote;
   for (const [id, cardId] of Object.entries(ui.links)) {
     const c = s.state.combatants[id];
@@ -443,6 +445,7 @@ export const combat = {
   },
 
   dispatch(cmd: Command): DispatchResult {
+    if (ui.replay !== null) ui = { ...ui, replay: null };
     if (ui.remote) return act({ op: 'dispatch', cmd });
     const s = ui.session!;
     const turnBefore = `${s.state.round}:${s.state.turnIndex}`;
@@ -462,13 +465,21 @@ export const combat = {
     set({});
   },
   undo(n = 1): void {
+    if (ui.replay !== null) ui = { ...ui, replay: null };
     if (ui.remote) { act({ op: 'undo', n }); return; }
     ui.session!.undo(n);
     after({ status: 'done', events: [] });
   },
   override(txIndex: number, patch: OverridePatch): DispatchResult {
+    if (ui.replay !== null) ui = { ...ui, replay: null };
     if (ui.remote) return act({ op: 'override', txIndex, patch });
     return after(ui.session!.override(txIndex, patch));
+  },
+  /** 日志回放：跳到第 n 笔事务之后的状态（0 = 起点，null = 退出回放） */
+  setReplay(n: number | null): void {
+    const s = ui.session;
+    const next = n === null || !s ? null : Math.max(0, Math.min(s.transactions.length, Math.floor(n)));
+    set({ replay: next, aim: null }, false);
   },
   /** 战役资料改了：这场遭遇换成现在的本团房规，整场重算（DM） */
   refreshRules(): void {
@@ -476,7 +487,7 @@ export const combat = {
   },
   reset(engine: Engine): void {
     if (ui.remote) { act({ op: 'reset' }); return; }
-    set({ session: new Session(createEncounter('enc'), ctxFor(engine)), links: {}, selected: null, targets: [], formPick: null, summonFor: null });
+    set({ session: new Session(createEncounter('enc'), ctxFor(engine)), links: {}, selected: null, targets: [], formPick: null, summonFor: null, replay: null });
   },
   select(id: string | null): void {
     set({ selected: id }, true);
@@ -676,4 +687,64 @@ function legacyDice(d: Record<string, DiceMode> | undefined): Record<string, Dic
   const out = { ...(d ?? {}) };
   if (out['*'] === 'engine' && Object.keys(out).length === 1) delete out['*'];
   return out;
+}
+
+/** 回放第 n 笔事务后的地图棋子位置（按事务记录里的 positions 快照与 moved 事件还原） */
+export function replayedTokens(fullSession: Session, replayedSession: Session, n: number, liveTokens: Record<string, { x: number; y: number }>): Record<string, { x: number; y: number }> {
+  const txs = fullSession.transactions;
+  const k = Math.max(0, Math.min(txs.length, Math.floor(n)));
+  if (k >= txs.length) return liveTokens;
+  const tokens: Record<string, { x: number; y: number }> = {};
+  // 每个棋子已知的最早位置（兜底：防止第 1 笔事务前就已经摆在地图上的棋子在回放到开头时丢失位置）
+  for (const [id, p] of Object.entries(liveTokens)) tokens[id] = { x: p.x, y: p.y };
+  for (let i = txs.length - 1; i >= 0; i--) {
+    const pos = txs[i].input.positions;
+    if (pos) for (const [id, p] of Object.entries(pos)) tokens[id] = { x: p.x, y: p.y };
+    for (const ev of [...txs[i].events].reverse()) {
+      if (ev.type === 'moved') {
+        const p = ev.payload as { id: string; from?: { x: number; y: number } };
+        if (p.from) tokens[p.id] = { x: p.from.x, y: p.from.y };
+      }
+    }
+  }
+  // 从起点正向推进到第 k 笔事务结束
+  for (let i = 0; i < k; i++) {
+    const t = txs[i];
+    if (t.input.positions) {
+      for (const [id, p] of Object.entries(t.input.positions)) tokens[id] = { x: p.x, y: p.y };
+    }
+    if (t.input.cmd.type === 'move' && t.input.cmd.path?.length) {
+      const last = t.input.cmd.path[t.input.cmd.path.length - 1];
+      tokens[t.input.cmd.id] = { x: last.x, y: last.y };
+    }
+    for (const ev of t.events) {
+      if (ev.type === 'moved') {
+        const p = ev.payload as { id: string; to: { x: number; y: number } };
+        tokens[p.id] = { x: p.to.x, y: p.to.y };
+      }
+    }
+  }
+  // 如果第 k 笔事务本身记了开始前的 positions（且没有在事务前被自由拖动覆盖），用它校准还没在场的人
+  const out: Record<string, { x: number; y: number }> = {};
+  for (const [id, p] of Object.entries(tokens)) {
+    if (replayedSession.state.combatants[id]) out[id] = p;
+  }
+  return out;
+}
+
+/** 当前界面要展示的会话与地图（回放模式下返回第 replay 笔事务之后的快照） */
+export function replayedView(u: CombatUi): { s: Session | null; remote: Remote | null } {
+  if (!u.session || u.replay === null) return { s: u.session, remote: u.remote };
+  const s = u.session.replayTo(u.replay);
+  const remote = u.remote
+    ? {
+        ...u.remote,
+        map: {
+          ...u.remote.map,
+          tokens: replayedTokens(u.session, s, u.replay, u.remote.map.tokens),
+          trail: null,
+        },
+      }
+    : null;
+  return { s, remote };
 }

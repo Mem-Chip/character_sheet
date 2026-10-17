@@ -9,7 +9,7 @@ import {
 } from '../../../src/combat';
 import { Clip, NumInput, Panel, Pips, Stat, Tag, sgn } from '../../components/ui';
 import { Term } from '../../components/Term';
-import { termOfKey, termOfResource, type TermRef } from '../../lib/terms';
+import { termOfEffect, termOfKey, termOfResource, type TermRef } from '../../lib/terms';
 import { combat, type CombatUi } from '../../lib/combat';
 import { getApp } from '../../lib/store';
 import type { Engine } from '../../lib/engine';
@@ -192,8 +192,9 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
           {effects.length > 0 && (
             <div className="row">
               {effects.map((e) => {
-                const t = termOfKey(String(e.key ?? ''));
-                return <Tag key={e.id}>{e.key === 'concentration' ? `专注：${e.name}` : t ? <Term {...t}>{e.name}</Term> : e.name}</Tag>;
+                const t = termOfEffect(e);
+                const txt = e.key === 'concentration' ? `专注：${e.name}` : e.name;
+                return <Tag key={e.id}>{t ? <Term {...t}>{txt}</Term> : txt}</Tag>;
               })}
             </div>
           )}
@@ -304,16 +305,20 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
 
       <Panel title="效应与状态" flush>
         {effects.length === 0 && <div className="empty" style={{ padding: '8px 12px' }}>没有效应。</div>}
-        {effects.map((e) => (
-          <div key={e.id} className="effrow">
-            <span className={'nm' + (e.suppressed ? ' faint' : '')}>{e.key === 'concentration' ? `专注：${e.name}` : (() => { const t = termOfKey(String(e.key ?? '')); const label = e.form ? `${e.name}（${e.form.name}）` : e.name; return t ? <Term {...t}>{label}</Term> : label; })()}</span>
-            <span className="tiny faint">{[e.source && e.source !== id ? `来自 ${name(e.source)}` : '', durText(e.duration, e), e.suppressed ? '被压制' : ''].filter(Boolean).join(' · ')}</span>
-            <span style={{ flex: 1 }} />
-            {e.key === 'concentration'
-              ? <button className="btn ghost sm" onClick={() => combat.dispatch({ type: 'endConcentration', id })}>终止专注</button>
-              : <button className="btn ghost sm" onClick={() => combat.dispatch({ type: 'removeEffect', id: e.id })} title="移除效应">移除</button>}
-          </div>
-        ))}
+        {effects.map((e) => {
+          const t = termOfEffect(e);
+          const label = e.key === 'concentration' ? `专注：${e.name}` : e.form ? `${e.name}（${e.form.name}）` : e.name;
+          return (
+            <div key={e.id} className="effrow">
+              <span className={'nm' + (e.suppressed ? ' faint' : '')}>{t ? <Term {...t}>{label}</Term> : label}</span>
+              <span className="tiny faint">{[e.source && e.source !== id ? `来自 ${name(e.source)}` : '', durText(e.duration, e), e.suppressed ? '被压制' : ''].filter(Boolean).join(' · ')}</span>
+              <span style={{ flex: 1 }} />
+              {e.key === 'concentration'
+                ? <button className="btn ghost sm" onClick={() => combat.dispatch({ type: 'endConcentration', id })}>终止专注</button>
+                : <button className="btn ghost sm" onClick={() => combat.dispatch({ type: 'removeEffect', id: e.id })} title="移除效应">移除</button>}
+            </div>
+          );
+        })}
         <div className="effrow">
           <select value={cond} onChange={(e) => setCond(e.target.value)} aria-label="状态">
             <option value="">施加状态…</option>
@@ -382,10 +387,43 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
           ))}
         </Panel>
       )}
-      {(Object.keys(v.resources).length > 0 || Object.keys(v.slots).length > 0) && (
-        <Panel title="资源" aside={<span className="tiny">点方格手动改（记进日志）</span>} flush>
+      {(Object.keys(v.resources).length > 0 || Object.keys(v.slots).length > 0 || Object.keys(v.hitDice ?? {}).length > 0 || c.kind === 'pc') && (
+        <Panel
+          title="资源与休息"
+          aside={<>
+            {combat.canControl(id) && (
+              <>
+                <button className="btn sm" onClick={() => combat.dispatch({ type: 'rest', kind: 'short', ids: [id] })} title="恢复短休资源与契约法术位；可在下方花生命骰回血">短休</button>
+                <button className="btn sm" onClick={() => combat.dispatch({ type: 'rest', kind: 'long', ids: [id] })} title="回满生命值、法术位、资源与生命骰，力竭减 1">长休</button>
+              </>
+            )}
+            <span className="tiny">点方格手动改（记进日志）</span>
+          </>}
+          flush
+        >
           <table className="rows">
             <tbody>
+              {Object.entries(v.hitDice ?? c.base.hitDice ?? {}).filter(([, n]) => n > 0).map(([faces, n]) => {
+                const f = Number(faces);
+                const used = c.live.hitDiceUsed?.[f] ?? 0;
+                const left = Math.max(0, n - used);
+                return (
+                  <tr key={'hd' + f}>
+                    <td>
+                      d{f} 生命骰
+                      {combat.canControl(id) && (
+                        <button
+                          className="btn sm" style={{ marginLeft: 8 }}
+                          disabled={left <= 0 || c.live.dead}
+                          onClick={() => combat.dispatch({ type: 'spendHitDie', id, faces: f })}
+                          title={`花 1 颗 d${f} 生命骰，掷 1d${f} + 体质调整值（${sgn(v.mod.con)}）回血`}
+                        >花 1 颗回血</button>
+                      )}
+                    </td>
+                    <td className="r"><Usage max={n} used={used} onChange={(u) => combat.dispatch({ type: 'setUsage', id, hitDie: f, used: u })} /></td>
+                  </tr>
+                );
+              })}
               {Object.entries(v.slots).filter(([, n]) => n > 0).map(([L, n]) => (
                 <tr key={'s' + L}>
                   <td>{L} 环法术位</td>

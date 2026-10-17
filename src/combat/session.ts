@@ -178,11 +178,32 @@ function handle(tx: Tx, cmd: Command): void {
     case 'setUsage': {
       if (!tx.state.combatants[cmd.id]) throw new Rejected(`没有参与者 ${cmd.id}`);
       const v = effectiveView(tx, cmd.id);
-      const max = cmd.slot !== undefined ? v.slots[cmd.slot] ?? 0 : cmd.resource ? v.resources[cmd.resource] ?? 0 : 0;
+      const max = cmd.slot !== undefined ? v.slots[cmd.slot] ?? 0
+        : cmd.hitDie !== undefined ? v.hitDice?.[cmd.hitDie] ?? 0
+        : cmd.resource ? v.resources[cmd.resource] ?? 0 : 0;
       const used = Math.max(0, Math.min(max, cmd.used));
-      const seq = tx.emit('manualOverride', { what: 'usage', id: cmd.id, resource: cmd.resource ?? null, slot: cmd.slot ?? null, used });
+      const seq = tx.emit('manualOverride', { what: 'usage', id: cmd.id, resource: cmd.resource ?? null, slot: cmd.slot ?? null, hitDie: cmd.hitDie ?? null, used });
       if (cmd.slot !== undefined) tx.emit('slotUsed', { id: cmd.id, level: cmd.slot, used }, seq);
+      else if (cmd.hitDie !== undefined) tx.emit('hitDieUsed', { id: cmd.id, faces: cmd.hitDie, used }, seq);
       else if (cmd.resource) tx.emit('resourceUsed', { id: cmd.id, resource: cmd.resource, used }, seq);
+      return;
+    }
+    case 'spendHitDie': {
+      const c = tx.state.combatants[cmd.id];
+      if (!c) throw new Rejected(`没有参与者 ${cmd.id}`);
+      if (c.live.dead) throw new Rejected('已经死亡，不能花生命骰');
+      const v = effectiveView(tx, cmd.id);
+      const max = v.hitDice?.[cmd.faces] ?? c.base.hitDice?.[cmd.faces] ?? 0;
+      const used = c.live.hitDiceUsed?.[cmd.faces] ?? 0;
+      const count = Math.max(1, Math.round(cmd.count ?? 1));
+      if (max - used < count) throw new Rejected(`d${cmd.faces} 生命骰只剩 ${Math.max(0, max - used)} 颗`);
+      const [rolls] = tx.roll([{ faces: cmd.faces, count }], c.controller, `生命骰 ${count}d${cmd.faces}`);
+      const conMod = v.mod.con;
+      const total = rolls.reduce((sum, r) => sum + Math.max(1, r + conMod), 0);
+      const seq = tx.emit('hitDieUsed', { id: cmd.id, faces: cmd.faces, used: used + count });
+      const modText = conMod ? (conMod > 0 ? ` + ${conMod * count}` : ` − ${-conMod * count}`) : '';
+      tx.emit('note', { text: `${c.name} 花 ${count}d${cmd.faces} 生命骰：[${rolls.join(', ')}]${modText} = ${total}`, owner: cmd.id }, seq);
+      applyHeal(tx, cmd.id, total, `生命骰 ${count}d${cmd.faces}`, seq);
       return;
     }
     case 'setEconomy': {
@@ -335,6 +356,14 @@ export class Session {
     const s = new Session(save.base, ctx);
     s.rebuild(save.inputs);
     if (save.pending && !s.pending) s.run(save.pending);
+    return s;
+  }
+
+  /** 回放：从起点只重跑前 n 笔事务（0 <= n <= transactions.length），返回那一刻的只读会话快照 */
+  replayTo(n: number): Session {
+    const k = Math.max(0, Math.min(this.txs.length, Math.floor(n)));
+    const s = new Session(this.base, this.ctx);
+    s.rebuild(this.txs.slice(0, k).map((t) => structuredClone(t.input)));
     return s;
   }
 

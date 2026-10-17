@@ -78,6 +78,39 @@ describe('借机攻击', () => {
     done(s.dispatch({ type: 'startCombat', order: ['g', 'f'] }));
     done(s.dispatch({ type: 'move', id: 'g', ft: 5, path: path([0, 0], [1, 0]) }));
   });
+
+  it('电爪命中后：目标直到自己下回合开始不能借机攻击', () => {
+    const { s, dice } = setupM([wizard({ sources: ['XPHB:spell:电爪'] }), fighter()], { w: [0, 0], f: [1, 0] });
+    done(s.dispatch({ type: 'startCombat', order: ['w', 'f'] }));
+    dice.push(15, 5); // 命中战士，造成闪电伤害并贴上「电爪：不能借机攻击」
+    done(s.dispatch({ type: 'useAction', actor: 'w', action: 'XPHB:spell:电爪#cast', targets: ['f'] }));
+    expect(Object.values(s.state.effects).filter((e) => e.bearer === 'f').map((e) => e.name)).toContain('电爪：不能借机攻击');
+    // 法师离开战士触及范围：战士不能借机攻击，直接完成移动
+    done(s.dispatch({ type: 'move', id: 'w', ft: 10, path: path([0, 0], [0, 1], [0, 2]) }));
+    expect(last(s, 'moved').to).toEqual({ x: 0, y: 2 });
+  });
+});
+
+describe('日志回放 replayTo', () => {
+  it('重放到任意历史事务步，还原当时的生命值和回合状态', () => {
+    const { s, dice } = setupM([fighter(), goblin('g', {}, 30)], { f: [0, 0], g: [1, 0] });
+    done(s.dispatch({ type: 'startCombat', order: ['f', 'g'] }));
+    const nStart = s.transactions.length;
+    dice.push(15, 6);
+    done(s.dispatch({ type: 'useAction', actor: 'f', action: 'weapon:ls', targets: ['g'] })); // 6+3=9 伤害
+    const nHit = s.transactions.length;
+    done(s.dispatch({ type: 'nextTurn' }));
+    expect(hp(s, 'g')).toBe(21);
+    expect(s.state.order[s.state.turnIndex]).toBe('g');
+
+    const atStart = s.replayTo(nStart);
+    expect(hp(atStart, 'g')).toBe(30);
+    expect(atStart.state.order[atStart.state.turnIndex]).toBe('f');
+
+    const afterHit = s.replayTo(nHit);
+    expect(hp(afterHit, 'g')).toBe(21);
+    expect(afterHit.state.order[afterHit.state.turnIndex]).toBe('f');
+  });
 });
 
 describe('推离 / 拉近', () => {

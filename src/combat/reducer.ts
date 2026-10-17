@@ -115,6 +115,9 @@ export function applyEvent(s: EncounterState, ev: GameEvent): void {
     case 'slotUsed':
       c(p.id).live.slotsUsed[p.level as number] = p.used as number;
       break;
+    case 'hitDieUsed':
+      (c(p.id).live.hitDiceUsed ??= {})[p.faces as number] = p.used as number;
+      break;
     case 'heroicInspirationChanged':
       c(p.id).live.heroicInspiration = p.value as boolean;
       break;
@@ -150,6 +153,6 @@ export function applyEvent(s: EncounterState, ev: GameEvent): void {
 export const STATE_EVENTS = new Set([
   'combatantAdded', 'combatantRemoved', 'baseRefreshed', 'combatStarted', 'turnChanged', 'combatEnded', 'initiativeSet',
   'economyReset', 'economyChanged', 'onceUsed', 'hpChanged', 'deathSavesChanged', 'stableChanged', 'deadChanged',
-  'resourceUsed', 'slotUsed', 'heroicInspirationChanged', 'effectApplied', 'effectEnded', 'effectUpdated',
+  'resourceUsed', 'slotUsed', 'hitDieUsed', 'heroicInspirationChanged', 'effectApplied', 'effectEnded', 'effectUpdated',
   'answersRemembered', 'settingsChanged',
 ]);
