@@ -241,6 +241,8 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
       \`{ kind: 'grantAction', from: 'XPHB:spell:<法术>#cast', cost: [], activation: 'free', until: 'turnEnd' }\` ——
       授予的那个法术动作不再花动作经济，也不扣法术位；复制时会自动把「相对模板名」换成绝对键、\`slot.level\` 按基础环阶定下来；
     - 注意它只换**动作**，不改「引擎内部行为」（借机攻击、能不能用反应、专注）—— 那些用 \`flags\`（\`cannot\` / \`blocks\` / \`forbidTarget\`）。
+28. **无视抗性 / 无视免疫**：\`damage\` 节点加 \`ignoreResist: true\` / \`ignoreImmunity: true\`（\`addDamage\` 也有）——
+    这一笔伤害就不减半、也不被免疫挡掉（原文有「无视抗性」的伤害写这个，不要靠假伤害类型绕）。
 27. **改正在施展的那道法术**（只能在 \`spellCast\` 的 before 窗口里用）：窗口的 \`modify\` 是**同步求值**的，
     所以「先掷豁免、失败了才改」要写成**引擎替你掷**的 op，而不是先 \`do\` 里掷再改（\`do\` 的执行时机不保证在结算之前）：
     - \`{ op: 'unlessSave', ability: 'wis', dc: 13, onFail: [...], onSuccess: [...] }\` —— 引擎在窗口里先让**施法者**掷豁免，
@@ -324,3 +326,4 @@ ${grants}
 
 `;
 }
+

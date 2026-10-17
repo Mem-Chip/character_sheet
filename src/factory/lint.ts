@@ -40,7 +40,7 @@ const NODE_KEYS: Record<string, readonly string[]> = {
   save: ['ability', 'dc', 'to', 'onFail', 'onSuccess'],
   check: ['ability', 'skill', 'dc', 'onFail', 'onSuccess'],
   damage: ['dice', 'type', 'id', 'ref', 'scale', 'to'],
-  addDamage: ['dice', 'type'],
+  addDamage: ['dice', 'type', 'ignoreResist', 'ignoreImmunity'],
   modify: ['modify'],
   heal: ['amount', 'to'],
   tempHp: ['amount', 'to'],

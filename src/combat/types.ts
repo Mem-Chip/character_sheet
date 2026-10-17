@@ -274,8 +274,14 @@ export type Node =
   /** ability 写成数组 = 由目标选择（引擎替目标选加值高的那个，例如擒抱：力量或敏捷）；to: 'attacker' = 迫使攻击者豁免（庇护术、不破威仪） */
   | { kind: 'save'; to?: NodeTarget; ability: Ability | Ability[]; dc: ExprSrc; onFail?: Node[]; onSuccess?: Node[] }
   | { kind: 'check'; ability: Ability; skill?: string; dc: ExprSrc; onFail?: Node[]; onSuccess?: Node[] }
-  | { kind: 'damage'; dice?: ExprSrc; type?: string; id?: string; ref?: string; scale?: number; to?: NodeTarget }
-  | { kind: 'addDamage'; dice: ExprSrc; type: string }
+  | {
+      kind: 'damage'; dice?: ExprSrc; type?: string; id?: string; ref?: string; scale?: number; to?: NodeTarget;
+      /** 这次伤害无视目标的抗性（不减半；易伤也不翻倍） */
+      ignoreResist?: boolean;
+      /** 这次伤害无视目标的免疫 */
+      ignoreImmunity?: boolean;
+    }
+  | { kind: 'addDamage'; dice: ExprSrc; type: string; ignoreResist?: boolean; ignoreImmunity?: boolean }
   | { kind: 'heal'; amount: ExprSrc; to?: NodeTarget }
   | { kind: 'tempHp'; amount: ExprSrc; to?: NodeTarget }
   | {
@@ -690,3 +696,4 @@ export interface Decision {
 export type OverridePatch =
   | { roll: number; outcome?: 'hit' | 'miss' | 'crit' | 'success' | 'fail'; total?: number; reason?: string }
   | { damage: number; amounts: Record<string, number>; reason?: string };
+

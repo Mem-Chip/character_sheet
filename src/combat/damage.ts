@@ -38,6 +38,9 @@ export interface DamagePacket {
   save?: { ability: string; success: boolean; half: boolean };
   /** 伤害骰全部取最大值（超限导能） */
   max?: boolean;
+  /** 这次伤害无视抗性 / 免疫（damage 节点的 ignoreResist / ignoreImmunity） */
+  ignoreResist?: boolean;
+  ignoreImmunity?: boolean;
   reduce: Array<{ value: number; types?: string[] }>;
   /** 替承受者吸收伤害的人（投射守御用 tempHp 吸收，溢出仍归原目标；护卫灵光用 hp 吸收全部） */
   absorbers?: Array<{ id: Id; from: 'tempHp' | 'hp'; label: string }>;
@@ -186,10 +189,12 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
     if (p.double) v *= 2;
     if (p.halve) v = Math.floor(v / 2);
     for (const r of p.reduce) if (!r.types || r.types.includes(type)) v = Math.max(0, v - r.value);
-    if (tv.immune.includes(type)) { v = 0; notes.push(`免疫${type}`); }
+    const noImmune = p.ignoreImmunity;
+    const noResist = p.ignoreResist;
+    if (!noImmune && tv.immune.includes(type)) { v = 0; notes.push(`免疫${type}`); }
     else {
-      if (tv.resist.includes(type) || tv.resist.includes('*')) { v = Math.floor(v / 2); notes.push(`抗性：${type}减半`); }
-      if (tv.vuln.includes(type)) { v *= 2; notes.push(`易伤：${type}加倍`); }
+      if (!noResist && (tv.resist.includes(type) || tv.resist.includes('*'))) { v = Math.floor(v / 2); notes.push(`抗性：${type}减半`); }
+      if (!noResist && tv.vuln.includes(type)) { v *= 2; notes.push(`易伤：${type}加倍`); }
     }
     final[type] = v;
   }

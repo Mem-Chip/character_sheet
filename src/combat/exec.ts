@@ -184,6 +184,8 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
     case 'addDamage': {
       if (!ctx.packet) throw new Error('addDamage 只能用在命中窗口里（偷袭、至圣斩这类）');
       ctx.packet.components.push({ dice: dice(tx, ctx, n.dice, ctx.actionName), type: typeOf(tx, ctx, n.type), from: ctx.actionName });
+      if (n.ignoreResist) ctx.packet.ignoreResist = true;
+      if (n.ignoreImmunity) ctx.packet.ignoreImmunity = true;
       tx.emit('damageAdded', { owner: ctx.self, label: ctx.actionName, dice: dice(tx, ctx, n.dice, ctx.actionName).toString() }, ctx.cause);
       return;
     }
@@ -869,10 +871,14 @@ function runDamageNodes(tx: Tx, nodes: Array<Extract<Node, { kind: 'damage' }>>,
     const to = n.to ?? 'target';
     for (const id of recipients(tx, ctx, to)) byRecipient.set(id, [...(byRecipient.get(id) ?? []), ...comps]);
   }
+  const ignoreResist = nodes.some((n) => n.ignoreResist);
+  const ignoreImmunity = nodes.some((n) => n.ignoreImmunity);
   for (const [id, comps] of byRecipient) {
     applyDamagePacket(tx, {
       source: ctx.self, target: id, components: comps.map((c) => ({ ...c })), crit: false, label: ctx.actionName,
       scale, reduce: [], save: ctx.save, max: maxDmg() || undefined,
+      ...(ignoreResist ? { ignoreResist: true } : {}),
+      ...(ignoreImmunity ? { ignoreImmunity: true } : {}),
     }, ctx.cause);
   }
 }
