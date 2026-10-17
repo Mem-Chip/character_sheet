@@ -10,7 +10,7 @@
 import { useSyncExternalStore } from 'react';
 import { RULE_FILES } from '../../src/bridge/rule-files';
 import { RuleBook, encounterLayers } from '../../src/combat';
-import { coveredKeysOf, homeRulesFor, houseRulesFor, namesOf, ruleKeyOf, sourcesOfItem, type LibraryItem, type ResPart, type ShareState, type ShareView } from '../../src/library';
+import { coveredKeysOf, homeRulesFor, houseRulesFor, namesOf, ruleKeyOf, sourcesOfItem, usesOwnLibrary, type LibraryItem, type ResPart, type ShareState, type ShareView } from '../../src/library';
 import type { CampaignData, CharData, HomeRuleEntry } from '../../src/sheet';
 import { api } from './api';
 import type { Engine } from './engine';
@@ -176,8 +176,11 @@ export function campaignData(h: Hub | null): CampaignData | null {
 /** 让规则环境按卡上的 _campaign 找战役资料；我自己的库永远对自己的卡生效 */
 export function installLibrary(engine: Engine): void {
   engine.env.campaignOf = (char: CharData) => campaignData(hubNow((char as { _campaign?: string })._campaign));
-  // 卡面第 3 层：我的资料库（不在战役里也生效）
-  engine.env.homelib.user = () => homeRulesFor(libraryNow());
+  // 卡面第 3 层：我的资料库 —— **只对没绑战役的卡生效**。
+  // 绑了战役的卡一律按这个战役挂载的内容算（DM 的资源管理器说了算），否则会出现两个问题：
+  //   ① 玩家能绕过 DM 在自己卡上用没挂进本团的内容；
+  //   ② 同一张卡，玩家自己打开是加了私货的、DM / 别人打开又不是 —— 看到的数不一样。
+  engine.env.homelib.user = (char) => (usesOwnLibrary(char as { _campaign?: string }) ? homeRulesFor(libraryNow()) : []);
   // 我库里带的来源书只用来**装数据文件**，不算「启用的书」（否则导入一条就放开整本书）
   engine.env.userSources = () => [...new Set(libraryNow().flatMap(sourcesOfItem))];
   // 我库里的条目只放行它们自己（不在战役里也能选中）

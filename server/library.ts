@@ -75,8 +75,16 @@ export function createLibrary(d: Deps) {
   /** 开遭遇时抄进遭遇的战斗部分 */
   const campaignRules = (campaignId: string): HouseRule[] => houseRulesFor(effectiveItems(campaignId));
 
-  /** 某个账户自己的库的战斗部分（参战者各自的卡用） */
-  const rulesOfOwner = (ownerId: number): HouseRule[] => itemsOf(ownerId).flatMap(houseRulesOf);
+  /** 某个账户在这个战役里**挂上并且开着**的内容的战斗部分（参战者各自的卡用） */
+  const rulesOfOwner = (ownerId: number, campaignId?: string): HouseRule[] => {
+    // 传了战役就必须只算**这个战役挂着的**：没挂进来的私货不该在战役战斗里生效
+    // （和卡面同一条规矩 —— 否则玩家能绕过 DM 用自己库里的东西，别人看到的还不一样）
+    if (!campaignId) return itemsOf(ownerId).flatMap(houseRulesOf);
+    const mine = attachedOf(campaignId)
+      .filter((s) => s.ownerId === ownerId && (s.state === 'auto' || s.state === 'on'))
+      .map((s) => s.item);
+    return mine.flatMap(houseRulesOf);
+  };
 
   /** 成员退团 / 被请出：把这个人在这个战役里挂的东西摘掉（内容还在他自己的库里） */
   const detachAll = (campaignId: string, ownerId: number): void => {

@@ -124,7 +124,10 @@ export interface LibraryItem {
 - 在 [src/sheet/abilities.ts](src/sheet/abilities.ts):418 的 layers 里插 `{ scope: 'user', rules: env.homelib.user(char) }`。
 - `SheetEnv.homelib` 加 `user?: (char) => HomeRuleEntry[]`（[src/sheet/env.ts](src/sheet/env.ts):28）。
 - **本团** = 这个战役挂着的、并且 DM 开着（`on` / `auto`）的条目。
-- **我的库** = 我自己的全部条目（不管挂没挂）。**DM 的开关管的是「对别人生效」，管不到你自己的卡**——这样你看到的卡和服务器跑的战斗不会打架（见 3.2）。
+- **我的库** = 我自己的全部条目（不管挂没挂）。但**只有没绑战役的卡**才吃这一层（`usesOwnLibrary`）：
+  绑了战役的卡一律只看这个战役挂载的内容（DM 的资源管理器说了算）。
+  ~~以前是「我的库对自己的卡永远生效」，那样玩家能绕过 DM 用自己库里的私货，而且同一张卡玩家自己看（加了私货）和 DM / 别人看算出来的不一样（2026-10 修）。~~
+  卡绑着战役时，我共享出去并 DM 开着的内容仍然生效（走「本团」那层，`campaignData`）。
 - 书白名单 `Source.extra` 是全局可变的一个 Set（[src/sheet/env.ts](src/sheet/env.ts)），现在**只由战役启用的书**填。
   ~~以前是「战役启用的书 ∪ 我的库条目带的来源书」，那样导入一条 EFA 的种族就把战俑、龙纹家族全带出来了（2026-10 修掉）。~~
   现在分两格：`Source.extra` = 启用的书；**`Source.covered` = 资料库覆盖到的单个条目键**（`EFA:科拉瓦` 这种），

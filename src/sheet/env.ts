@@ -114,11 +114,13 @@ export class SheetEnv {
     const camp = [...new Set((c?.sources ?? []).map((s) => String(s).toUpperCase()))];
     Source.extra.clear();
     for (const s of camp) Source.extra.add(s);
-    // 资料库覆盖到的单个条目：能选，但不解锁同书的其它内容
+    // 资料库覆盖到的单个条目：能选，但不解锁同书的其它内容。
+    // 绑了战役的卡（c 非空）只用**这个战役**挂载的那些，不用看卡的人自己库里的 —— 否则换个浏览器看到的选项都不一样
     Source.covered.clear();
-    for (const k of [...(c?.covered ?? []), ...this.userCovered()]) if (k) Source.covered.add(String(k));
+    for (const k of [...(c?.covered ?? []), ...(c ? [] : this.userCovered())]) if (k) Source.covered.add(String(k));
     Source.names.clear();
-    for (const [k, v] of Object.entries({ ...this.userNames(), ...(c?.names ?? {}) })) if (k && v) Source.names.set(String(k), String(v));
+    const names = { ...(c ? {} : this.userNames()), ...(c?.names ?? {}) };
+    for (const [k, v] of Object.entries(names)) if (k && v) Source.names.set(String(k), String(v));
     this.campRules = c?.homerules ?? [];
     // 数据文件还是要装：战役启用的书 + 我库里条目所在的书（只装数据，不放行）
     const books = [...new Set([...camp, ...this.userSources().map((s) => String(s).toUpperCase())])];

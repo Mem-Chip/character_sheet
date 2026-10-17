@@ -35,7 +35,7 @@ export interface Deps {
   /** 战役资料里的战斗部分（开遭遇时抄进遭遇） */
   campaignRules?: (campaignId: string) => HouseRule[];
   /** 某个账户自己的资料库的战斗部分（参战者带卡进场时叠成一层） */
-  ownerRules?: (ownerId: number) => HouseRule[];
+  ownerRules?: (ownerId: number, campaignId?: string) => HouseRule[];
 }
 
 export interface Stroke { id: string; by: number; color: string; width: number; pts: number[] }
@@ -190,7 +190,7 @@ export function createEncounters(d: Deps) {
     if (!d.ownerRules) return;
     const ownerId = Number(d.one('SELECT owner_id FROM cards WHERE id = ?', cardId)?.owner_id ?? 0);
     if (!ownerId || e.ownerRules.some((o) => o.ownerId === ownerId)) return;
-    const rs = d.ownerRules(ownerId);
+    const rs = d.ownerRules(ownerId, e.campaignId);
     if (!rs.length) return;
     const name = String(d.one('SELECT name FROM users WHERE id = ?', ownerId)?.name ?? '玩家');
     const before = e.ownerRules;

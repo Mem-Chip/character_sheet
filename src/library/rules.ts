@@ -105,6 +105,15 @@ export function sourcesOfItem(item: LibraryItem): string[] {
 }
 
 /**
+ * 这张卡用不用**查看者自己**资料库那一层？
+ * 绑了战役的卡一律只用这个战役挂载的内容（DM 的资源管理器说了算）——
+ * 否则玩家能绕过 DM 用自己库里的私货，而且同一张卡玩家自己看和 DM 看算出来的不一样。
+ */
+export function usesOwnLibrary(char: { _campaign?: string } | null | undefined): boolean {
+  return !char?._campaign;
+}
+
+/**
  * 这条内容覆盖 / 提供的**单个条目键**（不含 `HR:` 家规键和 `core.` 参数）。
  * 只放行这些条目，**不**放行它们所在的书 —— 否则导入一条 EFA 的种族会把战俑、龙纹家族一起放出来。
  */

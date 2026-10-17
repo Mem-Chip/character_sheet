@@ -1,6 +1,7 @@
 // 资料库覆盖单个条目：只放行那一条（不把整本书放出来），选择面板显示覆盖后的名字
 import { beforeAll, afterEach, describe, expect, it } from 'vitest';
 import { Source, type Json, type SheetEnv } from '../../src/sheet';
+import { usesOwnLibrary } from '../../src/library';
 import { createNodeEnv } from '../../src/sheet/node-env';
 import { hasLocalData } from '../../src/sheet/node-provider';
 
@@ -36,7 +37,24 @@ describe.skipIf(!hasLocalData())('资料库覆盖条目', () => {
     expect(races()).toContain('战俑');
   });
 
-  it('显示名按 part 自己的名字优先（一条内容带多个 part 时不会全叫一个名字）', async () => {
+  it('绑了战役：只看战役挂载的覆盖，不看查看者自己的库', async () => {
+    env.userCovered = () => ['EFA:战俑'];
+    env.userNames = () => ({ 'EFA:战俑': '机关人' });
+    // 战役挂的是科拉瓦，查看者自己库里是战俑 —— 只有战役那份生效（否则 DM 和别人打开这张卡看到的选项都不一样）
+    await env.useCampaign({ sources: [], homerules: [], covered: ['EFA:科拉瓦'], names: { 'EFA:科拉瓦': '半精灵' } });
+    expect(races()).toContain('科拉瓦');
+    expect(races(), '查看者自己的覆盖不该生效').not.toContain('战俑');
+    expect(env.store.labelOfName('战俑')).toBe('战俑');
+    expect(env.store.labelOfName('科拉瓦')).toBe('半精灵');
+  });
+
+  it('没绑战役（c 为 null）：才用查看者自己的库', async () => {
+    env.userCovered = () => ['EFA:科拉瓦'];
+    await env.useCampaign(null);
+    expect(races()).toContain('科拉瓦');
+  });
+
+  it('显示名按条目自己的名字（一条内容覆盖两条时不会全叫一个名字）', async () => {
     await env.useCampaign({
       sources: [],
       homerules: [],
@@ -64,5 +82,11 @@ describe('Source 的覆盖集合', () => {
     expect(Source.isCore2024({ source: 'EFA', name: '科拉瓦' })).toBe(true);
     expect(Source.isCore2024({ source: 'EFA', name: '战俑' })).toBe(false);
     Source.covered.clear();
+  });
+
+  it('绑了战役的卡不用查看者自己的库（usesOwnLibrary）', () => {
+    expect(usesOwnLibrary({})).toBe(true);
+    expect(usesOwnLibrary(null)).toBe(true);
+    expect(usesOwnLibrary({ _campaign: 'c-1' })).toBe(false);
   });
 });
