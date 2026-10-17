@@ -360,15 +360,22 @@ export const isUnknown = (v: unknown): v is Unknown => v instanceof Unknown;
  * kind = damage / heal；on.spell = 只管法术的；when 里能用 slot、target。
  */
 export function maxDiceFor(tx: Tx, roller: Id, kind: 'damage' | 'heal', scope: { target?: Id; slot?: number; spell?: boolean; attack?: AttackInfo }): boolean {
-  if (!tx.state.combatants[roller]) return false;
-  const cands = rollModsOf(tx, roller)
-    .filter((d) => d.item.who === 'bearer' && d.item.op === 'maxDice' && [d.item.on.kind].flat().includes(kind)
-      && (d.item.on.spell === undefined || d.item.on.spell === !!scope.spell)
-      && (!d.item.on.attack || filterMatches({ ...d.item.on, kind: 'attack' }, { kind: 'attack', attack: scope.attack })))
-    .map((d) => ({
-      d,
-      scope: { self: roller, source: d.source, target: scope.target, slot: scope.slot, attack: scope.attack, effect: d.effect },
-    }));
-  if (!cands.length) return false;
-  return evaluateMods(tx, cands, roller, kind === 'heal' ? '治疗骰' : '伤害骰').active.length > 0;
+  /** 某个人的身上有没有「把这次骰子取最大」的修正 */
+  const maxedBy = (who: Id): boolean => {
+    if (!tx.state.combatants[who]) return false;
+    const cands = rollModsOf(tx, who)
+      .filter((d) => d.item.who === 'bearer' && d.item.op === 'maxDice' && [d.item.on.kind].flat().includes(kind)
+        && (d.item.on.spell === undefined || d.item.on.spell === !!scope.spell)
+        && (!d.item.on.attack || filterMatches({ ...d.item.on, kind: 'attack' }, { kind: 'attack', attack: scope.attack })))
+      .map((d) => ({
+        d,
+        scope: { self: who, source: d.source, target: scope.target, slot: scope.slot, attack: scope.attack, effect: d.effect },
+      }));
+    if (!cands.length) return false;
+    return evaluateMods(tx, cands, who, kind === 'heal' ? '治疗骰' : '伤害骰').active.length > 0;
+  };
+  // 治疗骰还要看**被治疗的人**：2024 里「你受到治疗时恢复最大值」是承受者身上的能力（永生者赠礼这类）
+  if (maxedBy(roller)) return true;
+  if (kind === 'heal' && scope.target && scope.target !== roller && tx.state.combatants[scope.target]) return maxedBy(scope.target);
+  return false;
 }
