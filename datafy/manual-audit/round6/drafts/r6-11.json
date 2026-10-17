@@ -1,0 +1,340 @@
+{
+ "version": 1,
+ "note": "第六轮 r6-11（8 条）。粉碎者：推离改成引擎真的推棋子（有地图才动，体型差仍靠提问），强化重击用效应给「以该生物为目标的攻击带优势」并加了造成伤害的前提。精灵：妖精血统的豁免优势保留提问确认（引擎读不到豁免是为了什么），免法术位施法仍要人处理。耐性：高速恢复从「只留提示」改成选生命值骰面后当场掷骰回血，扣生命骰仍手动。坚韧狂暴：用「已用次数」等级效应记账，DC 自动 10+5×次数、短休/长休后清零，体质豁免由引擎掷、成功 setHp 为等级两倍（原来是问人「豁免成功了吗」）。报偿：反应加 aim: 'actor'，修掉原来「反应动作默认打窗口承受者」导致反击打自己的问题。神之勇者：治疗骰照旧（池上限 4 是 data/abilities-2024.json 的静态数据，条目里的同名池会被跳过、改不了）。饥渴魔刃：引擎没有「按武器限定攻击动作次数」的接口，保持手动。饮命者：伤害类型改用 vars 传、生命值骰回血改成选骰面后掷骰（骰值 + 体质调整值，负调整值时最小 1 要人看一眼）。",
+ "entries": {
+  "XPHB:粉碎者": {
+   "name": "粉碎者",
+   "automation": "partial",
+   "text": "【推离】每回合一次，以造成钝击伤害的攻击命中一个生物后，只要它不比你大超过一级，就可以把它推开 5 尺。已自动化：命中并造成钝击伤害后会问要不要推，方向由引擎沿两者连线算 —— 有地图时真的移动棋子（碰到别的棋子停下，被推进区域会触发区域），没有地图时只提示人在地图上拖。要人确认的一件事：体型差靠提问（引擎没有体型比较，self.size 只是一串文字，比如「中型」）。【强化重击】已自动化：重击命中并造成钝击伤害后，目标身上挂「粉碎者：强化重击」，任何以它为目标的攻击检定（包括你自己的下一次）都自动带优势，直到你的下个回合开始。",
+   "triggers": [
+    {
+     "id": "shove",
+     "label": "粉碎者：推离",
+     "on": "attackHit",
+     "role": "actor",
+     "optional": true,
+     "limit": "oncePerTurn",
+     "when": "attack.damageType == '钝击' && damage.amount > 0 && ask('目标的体型是否不比你大超过一级？（超巨型/巨型/大型/中型/小型/微型）')",
+     "do": [
+      {
+       "kind": "move",
+       "mode": "push",
+       "ft": 5
+      }
+     ]
+    },
+    {
+     "id": "crush",
+     "label": "粉碎者：强化重击",
+     "on": "attackHit",
+     "role": "actor",
+     "when": "roll.crit && attack.damageType == '钝击' && damage.amount > 0",
+     "do": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "粉碎者：强化重击"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "粉碎者：强化重击": {
+     "name": "粉碎者：强化重击",
+     "text": "以该生物为目标的攻击检定具有优势（直到粉碎者的下个回合开始）",
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "source",
+       "nth": 1
+      }
+     },
+     "rollMods": [
+      {
+       "on": {
+        "kind": "attack"
+       },
+       "who": "against",
+       "op": "adv",
+       "label": "粉碎者：强化重击"
+      }
+     ]
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:耐性": {
+   "name": "耐性",
+   "automation": "partial",
+   "text": "【悍不畏死】已自动化：死亡豁免检定自动带优势。【高速恢复】附赠动作消耗一枚生命值骰，恢复等于骰值的生命值。已自动化「掷骰 + 回血」这一半：用附赠动作时会问这次消耗的生命值骰是几面（骰面随职业变，引擎读不到），选完当场掷骰并把结果加到生命值上。要人处理的是那颗生命值骰：引擎没有生命值骰池（战斗里的池打完这一场就重置，不适合记生命骰），界面也没有扣它的地方 —— 请自己记着这次消耗了一枚，长休后生命骰回满。",
+   "actions": [
+    {
+     "id": "recover",
+     "name": "耐性：高速恢复",
+     "activation": "bonus",
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "耐性：这次消耗的生命值骰是几面？",
+       "var": "die",
+       "options": [
+        {
+         "label": "d6",
+         "value": "1d6"
+        },
+        {
+         "label": "d8",
+         "value": "1d8"
+        },
+        {
+         "label": "d10",
+         "value": "1d10"
+        },
+        {
+         "label": "d12",
+         "value": "1d12"
+        }
+       ]
+      },
+      {
+       "kind": "heal",
+       "to": "self",
+       "amount": "vars.die"
+      },
+      {
+       "kind": "note",
+       "text": "耐性：引擎没有生命值骰池，这次消耗请自己记账（长休后生命骰回满）"
+      }
+     ]
+    }
+   ],
+   "rollMods": [
+    {
+     "on": {
+      "kind": "deathSave"
+     },
+     "who": "bearer",
+     "op": "adv",
+     "label": "耐性：悍不畏死"
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:野蛮人:报偿:10": {
+   "name": "报偿",
+   "automation": "partial",
+   "text": "受到伤害后，如果伤害来源在你 5 尺内，可以用反应对它发动一次近战攻击（用武器或徒手打击）。已自动化：反应挂在受伤之后，目标自动确定为伤害你的那个生物（aim: 'actor'），不用自己选；徒手打击那一支连攻击检定和伤害（1 + 力量调整值，狂暴伤害加值照常生效）都由引擎结算。要人处理：用武器反击 —— 引擎没法从数据里调出武器行，请选「近战武器攻击（手动）」，再在武器行手动发起这次近战攻击（反应已经在这里付过了，别再付）。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "报偿",
+     "activation": "reaction",
+     "trigger": {
+      "on": "damageTaken",
+      "role": "target",
+      "window": "after",
+      "aim": "actor",
+      "when": "damage.amount > 0 && attacker != null && attacker.id != self.id && within(self, attacker, 5)"
+     },
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": "reach"
+     },
+     "tags": [
+      "weapon"
+     ],
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "报偿：用什么反击？",
+       "options": [
+        {
+         "label": "徒手打击",
+         "do": [
+          {
+           "kind": "attack",
+           "bonus": "self.pb + self.mod.str",
+           "attack": {
+            "melee": true,
+            "unarmed": true,
+            "ability": "str",
+            "damageType": "钝击",
+            "item": "徒手打击"
+           },
+           "onHit": [
+            {
+             "kind": "damage",
+             "dice": "1 + self.mod.str",
+             "type": "钝击"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "近战武器攻击（手动）",
+         "do": [
+          {
+           "kind": "note",
+           "text": "报偿：请用武器对伤害你的那个生物发动一次近战攻击（反应已在这里付过，在武器行手动发起，不要再付反应）"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:野蛮人:神之勇者:3": {
+   "name": "神之勇者",
+   "automation": "partial",
+   "text": "附赠动作消耗治疗池里任意枚 d12 恢复自身生命值：引擎会问用几枚、掷骰、把总和加上去并扣池，长休由人物卡的治疗池恢复。要人处理：治疗池的上限（6 级 5 枚、12 级 6 枚、17 级 7 枚）—— 人物卡上这个池是静态层写死的 4（data/abilities-2024.json 里 formula 就是 4，条目里再声明同名池会被战斗跳过），引擎没法按等级改。到了这些等级请自己记着多出来的骰子（或者去改那条能力的次数池数据）。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "神之勇者：治疗",
+     "activation": "bonus",
+     "requires": "self.resource('healing-pool') > 0",
+     "root": [
+      {
+       "kind": "number",
+       "prompt": "用几枚治疗骰？",
+       "var": "n",
+       "min": 1,
+       "max": "self.resource('healing-pool')"
+      },
+      {
+       "kind": "heal",
+       "to": "self",
+       "amount": "(vars.n)d12"
+      },
+      {
+       "kind": "resource",
+       "id": "healing-pool",
+       "delta": "-vars.n"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:饥渴魔刃": {
+   "name": "饥渴魔刃",
+   "automation": "manual",
+   "text": "在自己的回合执行攻击动作时，用契约武器可以攻击两次而非一次。引擎这边没有可写的东西：战斗里的攻击次数来自人物卡特性清单里的「额外攻击」，引擎没有「攻击动作的攻击次数 +1」这种接口（唯一能加次数的写法是每回合开始时白给一次攻击次数，那会变成不用攻击动作也能打，不合原文），也做不到「只对契约武器生效」。手动处理：用契约武器执行攻击动作时打两次 —— 如果这一动只给了你一次攻击，请自己补第二次；换成非契约武器、远程武器或别的动作时不要用第二次。（静态层那边这条祈唤授予了「额外攻击」专长，如果卡上没有变成两次攻击，那是静态层/桥接的问题，不在本条目的动态数据里。）",
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:饮命者": {
+   "name": "饮命者",
+   "automation": "partial",
+   "text": "已自动化：每回合一次，用契约武器命中生物时可选额外造成 1d6 黯蚀 / 心灵 / 光耀伤害（伤害类型当场选，触发是可选的 —— 非契约武器的命中不要选它）。同一触发里还能选「消耗一颗生命值骰回血」：选骰面后引擎掷骰，把骰值和体质调整值分别加上去（分成两笔治疗，是因为引擎不能在骰子文本后面接一个变量调整值）。要人处理：那颗生命值骰自己记账（引擎没有生命值骰池，长休后回满）；体质调整值为负时，原文「最小 1 点生命值」要人看一眼。",
+   "triggers": [
+    {
+     "id": "drain",
+     "label": "饮命者：额外伤害与生命值骰",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "limit": "oncePerTurn",
+     "when": "attack.weapon",
+     "do": [
+      {
+       "kind": "choose",
+       "prompt": "饮命者：额外伤害的类型",
+       "var": "elem",
+       "options": [
+        {
+         "label": "黯蚀",
+         "value": "黯蚀"
+        },
+        {
+         "label": "心灵",
+         "value": "心灵"
+        },
+        {
+         "label": "光耀",
+         "value": "光耀"
+        }
+       ]
+      },
+      {
+       "kind": "addDamage",
+       "dice": "1d6",
+       "type": "vars.elem"
+      },
+      {
+       "kind": "choose",
+       "prompt": "饮命者：要投掷并消耗一颗生命值骰回血吗？（骰面随职业）",
+       "var": "die",
+       "options": [
+        {
+         "label": "不消耗生命值骰",
+         "value": "0"
+        },
+        {
+         "label": "d6",
+         "value": "1d6"
+        },
+        {
+         "label": "d8",
+         "value": "1d8"
+        },
+        {
+         "label": "d10",
+         "value": "1d10"
+        },
+        {
+         "label": "d12",
+         "value": "1d12"
+        }
+       ]
+      },
+      {
+       "kind": "if",
+       "when": "vars.die != '0'",
+       "then": [
+        {
+         "kind": "heal",
+         "to": "self",
+         "amount": "vars.die"
+        },
+        {
+         "kind": "heal",
+         "to": "self",
+         "amount": "self.mod.con"
+        },
+        {
+         "kind": "note",
+         "text": "饮命者：这次消耗的生命值骰请自己记账（引擎没有生命值骰池，长休后回满）；体质调整值为负、掷骰结果加完低于 1 时按 1 点恢复"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  }
+ }
+}

@@ -1,0 +1,506 @@
+{
+ "version": 1,
+ "note": "r6-06（反应里改结算 / 免伤 / 物品消耗 / 推拉 / 次数）：① 炼狱叱喝补上 aim: 'actor'（原来缺了这个，反应动作会打自己而不是伤害来源 —— 引擎缺省把窗口承受者当目标），并把 60 尺可见写进 trigger.when；② 原力法阵用 damageIncoming + evasion 把「豁免成功只受半数的法术 / 魔法效应，成功则完全免伤」做出来（evasion 自带 p.save.half 判定，再用 when 里的 damage.saved 挡掉「失败减半」那一半，正好是原文语义）；③ 灼热金属补上「后续每回合附赠动作再烧一次」的 burn 动作（环阶骰存进载体效应 state.dmg，再在动作里读出来），并把「没丢下物件才有劣势」改成询问；④ 擒抱藤补一个「放开受擒者（无需动作）」、把藤蔓攻击改成重新开启专注（同一时间只擒抱一名 = 再打一次就放开旧的，新受擒随专注结束），藤蔓位置 / 朝藤蔓拉近 / 升环多擒抱一名写进 text；⑤ 橡棍术用 removeEffect + applyEffect 保证再次施展不叠（原来两份效应会把施法属性加值算两遍），伤害骰改 d8/d10/d12/2d6 与改成力场伤害引擎改不了，保持手动；⑥ 猎人印记补「为寻找标记目标而做的察觉 / 求生优势」与「目标降到 0 后用附赠动作转移标记」；⑦ 巫咒盔甲的 d6 条件判断引擎掷不了，保持询问；⑧ 昏迷与 rules-2024.json 里那份完全一致（已经很完整），原样保留。",
+ "entries": {
+  "XGE:魔契师:巫咒盔甲:10": {
+   "name": "巫咒盔甲",
+   "automation": "partial",
+   "text": "被你咒剑诅咒的目标以一次攻击检定命中你时，你可以立刻用反应投一次 d6：骰出 4 或更高，这次攻击改为失手（不论其骰值是多少）。自动部分：引擎只在攻击者身上带「咒剑诅咒」时才会问你用不用，用掉反应后把这次攻击改成未命中。手动部分：引擎没法在「条件」里掷 d6，请自己掷一颗 d6，然后在确认框里回答结果是否 ≥ 4。",
+   "triggers": [
+    {
+     "id": "armor-of-hexes",
+     "label": "巫咒盔甲：受咒目标命中时掷 d6 改为失手",
+     "on": "attackHit",
+     "role": "target",
+     "window": "before",
+     "optional": true,
+     "cost": [
+      {
+       "economy": "reaction"
+      }
+     ],
+     "when": "attacker.hasEffect('咒剑诅咒') && ask('巫咒盔甲：掷一次 d6，结果是否为 4 或更高？')",
+     "modify": [
+      {
+       "op": "cancel"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:condition:昏迷": {
+   "name": "昏迷",
+   "text": "你陷入失能与倒地状态，掉落手持物；此状态结束时倒地不会随之结束。速度为 0。以你为目标的攻击检定具有优势。力量与敏捷豁免自动失败。5 尺内命中你的攻击即重击。你无法感知周遭。",
+   "effects": {
+    "昏迷": {
+     "tags": [
+      "condition"
+     ],
+     "implies": [
+      "XPHB:condition:失能"
+     ],
+     "statics": [
+      {
+       "kind": "speedSet",
+       "value": 0,
+       "lock": true
+      }
+     ],
+     "rollMods": [
+      {
+       "on": {
+        "kind": "save",
+        "ability": [
+         "str",
+         "dex"
+        ]
+       },
+       "who": "bearer",
+       "op": "autoFail",
+       "label": "昏迷：力量/敏捷豁免自动失败"
+      },
+      {
+       "on": {
+        "kind": "attack"
+       },
+       "who": "against",
+       "op": "adv",
+       "label": "目标昏迷"
+      },
+      {
+       "on": {
+        "kind": "attack"
+       },
+       "who": "against",
+       "when": "dist(attacker, self) <= 5",
+       "op": "autoCritOnHit",
+       "label": "昏迷：5 尺内命中即重击"
+      }
+     ],
+     "onApply": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "XPHB:condition:倒地",
+       "duration": {
+        "manual": true
+       }
+      },
+      {
+       "kind": "note",
+       "text": "手上持握的东西全数掉落"
+      }
+     ],
+     "flags": {
+      "cannot": [
+       "perceive"
+      ]
+     }
+    }
+   }
+  },
+  "XPHB:spell:擒抱藤": {
+   "name": "擒抱藤",
+   "automation": "partial",
+   "text": "附赠动作，专注至多 1 分钟。藤蔓从 60 尺内你指定的未占据空间破土而出（位置请自己在地图上标一个标记，引擎不记藤蔓本身）。对一个距藤蔓 30 尺内的生物进行一次近战法术攻击：命中受到 4d8 点钝击伤害，并被朝藤蔓方向拉近 30 尺；体型不超过巨型则同时陷入受擒（逃脱 DC 等同于你的法术豁免 DC）。之后每个回合可以用附赠动作「擒抱藤：藤蔓攻击」再打一次。手动部分：① 引擎把距离算成「你到目标」而不是「藤蔓到目标」，藤蔓放得远时要自己判断够不够得到；② 拉近的方向是朝你而不是朝藤蔓（有地图时会真的移动棋子）；③ 升环施法「每高一环多擒抱一名生物」引擎记不住，请自己盯住受擒的目标数量。「同一时间只能擒抱一名生物」已自动：再打中一名新目标时，旧的那个会被放开（引擎用重新开启专注来实现，所以每次藤蔓攻击都会让法术的剩余时长重新计 1 分钟）。受擒可用「擒抱藤：放开受擒的生物」随时解除（无需动作）。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "擒抱藤",
+     "activation": "bonus",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 4
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 60
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "藤蔓出现在 60 尺内你指定的未占据空间（请在地图上放一个标记；之后按「距藤蔓 30 尺」自己判断目标够不够得到）。"
+      },
+      {
+       "kind": "attack",
+       "attack": {
+        "melee": true,
+        "spell": true
+       },
+       "onHit": [
+        {
+         "kind": "damage",
+         "dice": "4d8",
+         "type": "钝击"
+        },
+        {
+         "kind": "move",
+         "mode": "pull",
+         "ft": 30
+        },
+        {
+         "kind": "if",
+         "when": "target.size != '超巨型'",
+         "then": [
+          {
+           "kind": "applyEffect",
+           "template": "擒抱藤：受擒",
+           "to": "target"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "strike",
+     "name": "擒抱藤：藤蔓攻击",
+     "activation": "bonus",
+     "requires": "self.concentrating",
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 60
+     },
+     "root": [
+      {
+       "kind": "attack",
+       "attack": {
+        "melee": true,
+        "spell": true
+       },
+       "onHit": [
+        {
+         "kind": "damage",
+         "dice": "4d8",
+         "type": "钝击"
+        },
+        {
+         "kind": "move",
+         "mode": "pull",
+         "ft": 30
+        },
+        {
+         "kind": "if",
+         "when": "target.size != '超巨型'",
+         "then": [
+          {
+           "kind": "applyEffect",
+           "template": "擒抱藤：受擒",
+           "to": "target"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "release",
+     "name": "擒抱藤：放开受擒的生物",
+     "activation": "free",
+     "requires": "self.concentrating",
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "filter": "target.hasEffect('擒抱藤：受擒')"
+     },
+     "root": [
+      {
+       "kind": "removeEffect",
+       "match": {
+        "name": "擒抱藤：受擒"
+       },
+       "from": "target"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "擒抱藤：受擒": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "implies": [
+      "XPHB:condition:受擒"
+     ],
+     "text": "被藤蔓擒抱，陷入受擒状态；逃脱 DC 等同于施法者的法术豁免 DC。施法者可以随时放开（无需动作），法术结束或施法者专注结束时也会放开。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:橡棍术": {
+   "name": "橡棍术",
+   "automation": "partial",
+   "text": "附赠动作，持续 1 分钟（不专注）。自动部分：用灌注了自然之力的短棒或长棍进行近战攻击时，攻击检定与伤害掷骰改用你的施法属性调整值代替力量调整值（引擎问一句「是不是那件武器」，答是就把力量调整值换成施法属性调整值）。手动部分（引擎改不了武器的伤害骰与伤害类型）：① 该武器的伤害骰变为 d8，5 级 d10、11 级 d12、17 级 2d6；② 造成伤害时可以选择改为力场伤害或维持原类型；③ 丢掉该武器时法术终止（再次施展会自动结束上一次，不会叠加）。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "橡棍术",
+     "activation": "bonus",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "targeting": {
+      "type": "self"
+     },
+     "root": [
+      {
+       "kind": "removeEffect",
+       "match": {
+        "name": "橡棍术"
+       },
+       "from": "self"
+      },
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "橡棍术"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "橡棍术": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "duration": {
+      "minutes": 1
+     },
+     "rollMods": [
+      {
+       "on": {
+        "kind": "attack",
+        "attack": {
+         "melee": true,
+         "weapon": true
+        }
+       },
+       "who": "bearer",
+       "when": "attack.ability == 'str' && ask('这次近战攻击用的是灌注橡棍术的短棒或长棍吗？')",
+       "op": "add",
+       "value": "self.spell.mod - self.mod.str",
+       "label": "橡棍术：用施法属性攻击"
+      },
+      {
+       "on": {
+        "kind": "damage",
+        "attack": {
+         "melee": true,
+         "weapon": true
+        }
+       },
+       "who": "bearer",
+       "when": "attack.ability == 'str' && ask('这次近战伤害用的是灌注橡棍术的短棒或长棍吗？')",
+       "op": "add",
+       "value": "self.spell.mod - self.mod.str",
+       "label": "橡棍术：用施法属性伤害"
+      }
+     ],
+     "text": "用灌注的短棒或长棍进行近战攻击：攻击检定与伤害掷骰用施法属性代替力量。伤害骰应为 d8（5 级 d10、11 级 d12、17 级 2d6）、可以改成力场伤害 —— 这两项请手动处理；丢掉武器时法术终止。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:炼狱叱喝": {
+   "name": "炼狱叱喝",
+   "automation": "full",
+   "text": "反应（60 尺内你可见的生物对你造成伤害时用）。伤害你的那个生物被绿焰席卷，必须进行一次敏捷豁免：失败受到 2d10 点火焰伤害（升环施法每高一环 +1d10），成功只受一半。引擎挂在你「受到伤害」的窗口上（aim: 'actor'），打的就是造成伤害的那个生物；60 尺与「能看见」没有地图时会问你一句，不合适就别选它。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "炼狱叱喝",
+     "activation": "reaction",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "trigger": {
+      "on": "damageTaken",
+      "role": "target",
+      "window": "after",
+      "aim": "actor",
+      "when": "dist(self, attacker) <= 60 && canSee(self, attacker)"
+     },
+     "cost": [
+      {
+       "slot": {
+        "min": 1
+       }
+      }
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 60
+     },
+     "root": [
+      {
+       "kind": "save",
+       "ability": "dex",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "id": "fire",
+         "dice": "(1 + slot.level)d10",
+         "type": "火焰"
+        }
+       ],
+       "onSuccess": [
+        {
+         "kind": "damage",
+         "ref": "fire",
+         "scale": 0.5
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:猎人印记": {
+   "name": "猎人印记",
+   "automation": "partial",
+   "text": "附赠动作，专注至多 1 小时，指定 90 尺内一个你能看见的生物。法术持续期间：① 你以任何攻击命中该目标时额外造成 1d6 点力场伤害（已自动）；② 你为寻找它而进行的感知（察觉或求生）检定具有优势（会问你一句这次检定是不是为了找它）。目标生命值降到 0 后，你可以用附赠动作「猎人印记：转移标记」把标记移到 90 尺内另一个你能看见的生物身上（引擎靠重新开启专注来换标记，所以转移后剩余时长按 1 小时重新算；目标是否真的降到 0 引擎不拦，请自己看）。手动部分：升环施法的时长（3~4 环 8 小时、5 环以上 24 小时）要自己延长专注；游侠 20 级的「伤害骰改 d10」也要手动改。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "猎人印记",
+     "activation": "bonus",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 1
+       }
+      }
+     ],
+     "concentration": {
+      "hours": 1
+     },
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 90
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "猎人印记",
+       "state": {
+        "mark": "target"
+       }
+      }
+     ]
+    },
+    {
+     "id": "transfer",
+     "name": "猎人印记：转移标记",
+     "activation": "bonus",
+     "requires": "self.hasEffect('猎人印记')",
+     "concentration": {
+      "hours": 1
+     },
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 90
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "猎人印记",
+       "state": {
+        "mark": "target"
+       }
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "猎人印记": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "rollMods": [
+      {
+       "on": {
+        "kind": "check",
+        "skill": [
+         "察觉",
+         "求生"
+        ]
+       },
+       "who": "bearer",
+       "when": "ask('这次察觉 / 求生检定是为了寻找被猎人印记标记的生物吗？')",
+       "op": "adv",
+       "label": "猎人印记：寻找标记目标的检定优势"
+      }
+     ],
+     "triggers": [
+      {
+       "id": "dmg",
+       "label": "猎人印记：命中标记目标 +1d6 力场",
+       "on": "attackHit",
+       "role": "actor",
+       "window": "before",
+       "when": "target.id == effect.state.mark",
+       "do": [
+        {
+         "kind": "addDamage",
+         "dice": "1d6",
+         "type": "力场"
+        }
+       ]
+      }
+     ],
+     "text": "被标记的生物：你以任何攻击命中它时额外造成 1d6 点力场伤害；你为寻找它而做的察觉 / 求生检定具有优势。目标降到 0 后可用附赠动作转移标记。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  }
+ }
+}

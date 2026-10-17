@@ -64,4 +64,53 @@ describe('效应的生命周期', () => {
     expect(effectNames(s, 't')).not.toContain('束缚');
     expect(hasConc(s, 'c'), '效应没了，专注也该跟着结束').toBe(false);
   });
+
+  it('endsOn: damageTaken 真的会因为「受到伤害」而结束（damageTaken 以前只开窗口、不发事件）', () => {
+    const dice = scriptedDice();
+    const TEST2 = {
+      note: 'T2',
+      entries: {
+        'T:尖刺护盾': {
+          name: '尖刺护盾',
+          actions: [{
+            id: 'cast', name: '尖刺护盾', activation: 'action', tags: ['spell', 'magical'], cost: [{ slot: { min: 1 } }],
+            targeting: { type: 'self' },
+            root: [{
+              kind: 'applyEffect',
+              inline: { name: '尖刺护盾', effects: [{ statics: [{ kind: 'ac', bonus: 2 }] }] },
+              to: 'self',
+              duration: { endsOn: [{ event: 'damageTaken' }] },
+            }],
+          }],
+        },
+        'T:箭': {
+          name: '箭',
+          actions: [{
+            id: 'cast', name: '箭', activation: 'action', tags: ['spell', 'magical'], cost: [{ slot: { min: 1 } }],
+            targeting: { type: 'creature', count: 1, range: 60 },
+            root: [{ kind: 'damage', dice: '5', type: '穿刺' }],
+          }],
+        },
+      },
+    } as unknown as RuleFile;
+    const s = new Session(createEncounter('d'), { rules: new RuleBook([rulesJson as unknown as RuleFile, TEST2] as RuleFile[]), diceFor: () => dice });
+    const add = (id: string, view: Record<string, unknown>) => done(s.dispatch({
+      type: 'addCombatant',
+      combatant: makeCombatant({ id, kind: 'pc', view: makeView({ name: id, hpMax: 30, ac: 12, ...view }) }),
+    }));
+    add('a', { level: 5, score: { wis: 16 }, pb: 3, spell: { dc: 13, atk: 5, mod: 3, ability: 'wis' }, slots: { 1: 4 }, sources: ['T:尖刺护盾', 'T:箭'] });
+    add('b', {});
+    done(s.dispatch({ type: 'startCombat', order: ['a', 'b'] }));
+    done(s.dispatch({ type: 'useAction', actor: 'a', action: 'T:尖刺护盾#cast', targets: [] }));
+    expect(effectNames(s, 'a')).toContain('尖刺护盾');
+    // 转到下一轮再打自己（一个回合只有一个动作）
+    for (let i = 0; i < 8; i++) {
+      let r = s.dispatch({ type: 'nextTurn' });
+      while (r.status === 'pending') r = s.decide([r.decision.options?.[0]?.id ?? '']);
+      if (i > 0 && s.state.order[s.state.turnIndex] === 'a') break;
+    }
+    dice.push(5);
+    done(s.dispatch({ type: 'useAction', actor: 'a', action: 'T:箭#cast', targets: ['a'], slotLevel: 1 }));
+    expect(effectNames(s, 'a'), '受到伤害后效应该结束').not.toContain('尖刺护盾');
+  });
 });

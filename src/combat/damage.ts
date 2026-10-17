@@ -304,6 +304,9 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
 
   // ⑧ 受到伤害之后
   if (total > 0) {
+    // 注意：damageTaken 既是窗口也要**发一个事件** —— 效应的 `endsOn: [{ event: 'damageTaken' }]`
+    // 是靠 checkEndsOn 匹配事件的，只开窗口的话「受到伤害后结束」永远不触发（数据里有很多这种写法）
+    tx.emit('damageTaken', { id: p.target, from: p.source ?? null, amount: total, type: p.components[0]?.type ?? '', crit: !!p.crit, tempAbsorbed, downed, killed }, seq);
     fireWindow(tx, {
       event: 'damageTaken', window: 'after', actor: p.source ?? undefined, target: p.target,
       scope: { attack: p.attack, damage: { type: p.components[0]?.type ?? '', amount: total, crit: p.crit } },

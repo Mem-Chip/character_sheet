@@ -387,7 +387,7 @@
   "AU:穿梭弹": {
    "name": "穿梭弹",
    "automation": "partial",
-   "text": "替换一次远程武器攻击，消耗一次奥术射击使用次数（短休恢复）：无需攻击检定，向前方射出长 30 尺、宽 1 尺穿透固体障碍的线状区域，线状区域内的每名生物须进行敏捷豁免，失败受到武器伤害加两枚奥术射击骰的穿刺伤害，成功受半伤。武器基础伤害可按所用武器调整。",
+   "text": "替换一次远程武器攻击（每回合一次，须用具有弹药属性的武器），消耗一次奥术射击使用次数（短休恢复）：不用攻击检定，以你为源点射出 1 尺宽、30 尺长的线状区域（可以穿过固体障碍，所以无视掩护），区域内每名生物做敏捷豁免（DC = 8 + 熟练加值 + 智力调整值），失败受到「这次攻击命中时的伤害 + 两枚奥术射击骰」的穿刺伤害，成功受半伤。已自动化：在地图上选线状范围、逐目标掷敏捷豁免、伤害与半伤（两枚奥术射击骰按战士等级 3/10/15/18 级为 2d6/2d8/2d10/2d12，已写进骰子表达式）。要人处理：引擎读不到你手上那把武器的伤害骰，这里按「1d8 + 敏捷调整值」（长弓）写死 —— 用短弓 / 手弩（1d6）、重弩（1d10）、投掷武器（力量加值）或其他武器时，结算后手动把伤害改对。「每回合一次」引擎不记账，由你记得本回合是否已经用过奥术射击。",
    "actions": [
     {
      "id": "use",
@@ -1151,59 +1151,58 @@
   "AU:法师:直觉魅惑:10": {
    "name": "直觉魅惑",
    "automation": "partial",
-   "text": "30 尺内可见生物以攻击命中你时，可用反应迫使其进行对抗法术豁免 DC 的感知豁免。豁免失败时该攻击改为未命中你，且若攻击范围内有其他生物，改为以你选定的生物作为目标（沿用同次检定）。长休恢复 1 次；消耗法术位施展惑控法术可恢复使用机会。豁免失败后的攻击未命中与转向结算由人手动处理。",
-   "actions": [
+   "text": "当一个位于你 30 尺内且你能看见的生物以攻击检定命中你时，你可以用一个反应，迫使攻击者进行一次对抗你法术豁免 DC 的感知豁免。已自动化：命中窗口里会问你要不要用（要付一个反应）；答用就自动掷感知豁免 —— 失败时这次攻击直接改为未命中你，并弹出「这次攻击改打谁」的选择（选「放弃攻击（落空）」= 没有别的生物可打）；改打别人时沿用同一次攻击检定、按新目标的 AC 重新判定，命中就由那个生物受伤。要人判断的一处：引擎列出的候选是场上所有活着的生物，不判断这次攻击的射程 —— 请只选确实在那次攻击射程内的生物（通常就是攻击者旁边的那几个）。次数：完成一次长休前只能用一次（人物卡上的「直觉魅惑」池）；你也可以消耗一个法术位施展一道惑控学派法术来恢复使用机会 —— 引擎看到你花法术位施法会问一句「是不是惑控学派」，答是就恢复。",
+   "triggers": [
     {
-     "id": "use",
-     "name": "直觉魅惑",
-     "activation": "reaction",
-     "trigger": {
-      "on": "attackHit",
-      "role": "target",
-      "window": "before",
-      "when": "attacker != null && within(self, attacker, 30) && canSee(self, attacker)"
-     },
+     "id": "charm",
+     "label": "直觉魅惑（反应：让这次攻击落空 / 改打别人）",
+     "on": "attackHit",
+     "role": "target",
+     "window": "before",
+     "optional": true,
      "cost": [
+      {
+       "economy": "reaction"
+      },
       {
        "resource": "instinctive-charm"
       }
      ],
-     "targeting": {
-      "type": "creature",
-      "count": 1,
-      "range": 30,
-      "filter": "target.id != self.id"
-     },
-     "root": [
+     "when": "within(self, attacker, 30) && canSee(self, attacker)",
+     "do": [
       {
        "kind": "save",
        "ability": "wis",
        "dc": "self.spell.dc",
+       "to": "attacker",
        "onFail": [
         {
-         "kind": "note",
-         "text": "直觉魅惑：攻击者感知豁免失败！该攻击改为未命中你。若其攻击范围内有其他生物，改为以你选择的一个生物为目标并沿用同一次攻击检定（需手动结算）。"
+         "kind": "modify",
+         "modify": [
+          {
+           "op": "redirect",
+           "to": "choose"
+          }
+         ]
         }
        ],
        "onSuccess": [
         {
          "kind": "note",
-         "text": "直觉魅惑：攻击者感知豁免成功，攻击照常结算。"
+         "text": "直觉魅惑：攻击者的感知豁免成功，这次攻击照常命中你。"
         }
        ]
       }
      ]
-    }
-   ],
-   "triggers": [
+    },
     {
      "id": "regain-on-enchantment",
-     "label": "直觉魅惑：施展惑控法术恢复使用机会",
+     "label": "直觉魅惑：消耗法术位施展惑控法术恢复使用机会",
      "on": "spellCast",
      "role": "actor",
      "window": "after",
      "optional": true,
-     "when": "self.resource('instinctive-charm') == 0 && ask('刚才是消耗法术位施展了一道惑控法术吗？')",
+     "when": "event.slotLevel > 0 && self.resource('instinctive-charm') < 1 && ask('刚才那道法术是惑控学派的吗？（消耗了法术位，恢复直觉魅惑）')",
      "do": [
       {
        "kind": "resource",
@@ -3046,7 +3045,7 @@
   "AU:战士:奥术射击:3": {
    "name": "奥术射击",
    "automation": "partial",
-   "text": "每回合一次，使用具备弹药属性的武器进行远程攻击时可赋予奥术射击选项。可用次数等于智力调整值（至少 1 次），短休或长休恢复。奥术射击骰 3 级 1d6，10 级 1d8，15 级 1d10，18 级 1d12；DC = 8 + 熟练加值 + 智力调整值。具体射击选项见各子条目。",
+   "text": "每回合一次，当你使用具备弹药属性的武器发动远程攻击时，可以给这次攻击赋予一种奥术射击选项（命中并造成伤害时决定用不用；不涉及攻击检定的选项除外）。可用次数 = 智力调整值（至少 1 次），短休或长休恢复 —— 这个次数池在人物卡上（「奥术射击」），各个选项都是独立的子条目，用一次就扣一次。奥术射击骰 3 级 1d6、10 级 1d8、15 级 1d10、18 级 1d12（升级写法已经写进各个子条目的骰子表达式）；需要豁免的选项 DC = 8 + 熟练加值 + 智力调整值。要人留意：「每回合一次」引擎不记账，本回合已经用过奥术射击后请不要再点第二次。",
    "tags": [
     "ai",
     "未审"
@@ -6554,28 +6553,38 @@
   },
   "FRHoF:法师:守御之歌:10": {
    "name": "守御之歌",
-   "automation": "partial",
-   "text": "在你的剑歌激活期间，当你受到伤害时，你可以执行反应以消耗一枚法术位，并将该伤害降低等同于该法术位环阶 5 倍的数值。法术位消耗与对应减伤请手动结算。",
-   "triggers": [
+   "automation": "full",
+   "text": "剑歌激活期间当你受到伤害时，可以用反应消耗一枚法术位，把这次伤害降低该法术位环阶的 5 倍。引擎会问用几环、扣掉对应的法术位并直接从这次伤害里减免（1 环 5 点 … 9 环 45 点）。",
+   "actions": [
     {
-     "id": "song-of-defense",
-     "label": "守御之歌：消耗法术位降低伤害",
-     "on": "damageIncoming",
-     "role": "target",
-     "window": "before",
-     "optional": true,
-     "when": "self.hasEffect('剑歌')",
+     "id": "use",
+     "name": "守御之歌",
+     "activation": "reaction",
+     "trigger": {
+      "on": "damageIncoming",
+      "role": "target",
+      "window": "before",
+      "when": "self.hasEffect('剑歌')"
+     },
      "cost": [
       {
-       "economy": "reaction"
+       "slot": {
+        "min": 1
+       }
       }
      ],
-     "do": [
+     "root": [
       {
-       "kind": "note",
-       "text": "守御之歌：消耗一枚法术位，并将本次受到的伤害降低等同于该法术位环阶 5 倍的数值。请手动扣除法术位并减免伤害。"
+       "kind": "modify",
+       "modify": [
+        {
+         "op": "reduceDamage",
+         "value": "5 * slot.level"
+        }
+       ]
       }
-     ]
+     ],
+     "text": "消耗一枚法术位，本次受到的伤害降低该法术位环阶的 5 倍（只能在剑歌激活期间使用）。"
     }
    ],
    "tags": [
@@ -7407,8 +7416,8 @@
   },
   "FRHoF:圣武士:元素叱喝:15": {
    "name": "元素叱喝",
-   "automation": "partial",
-   "text": "当你被一次攻击检定命中时，可用反应使该攻击对你造成的伤害减半，并迫使攻击者进行一次对抗你法术豁免DC的敏捷豁免。豁免失败攻击者受到2d10+魅力调整值的伤害（强酸、寒冷、火焰、闪电或雷鸣由你选择），成功受到一半伤害。因引擎目标为受击者，伤害减半自动生效，对攻击者的敏捷豁免与反击伤害需手动结算。长休恢复（次数等于魅力调整值，至少 1 次）。",
+   "automation": "full",
+   "text": "当你被一次攻击检定命中时，你可以使用反应：这次攻击对你造成的伤害减半（向下取整，已在命中窗口里真的减掉）；并且迫使攻击者进行一次对抗你法术豁免 DC 的敏捷豁免。已自动化：命中窗口里会问你要不要用；答用就扣一个反应与一次使用次数，攻击伤害随即减半，然后问你选哪种伤害类型（强酸 / 寒冷 / 火焰 / 闪电 / 雷鸣），并掷攻击者的敏捷豁免 —— 失败受到 2d10 + 你魅力调整值 的该类型伤害，成功只受一半。次数：等于你的魅力调整值（至少 1 次），长休后全部恢复（人物卡上的「元素叱喝」池）。",
    "triggers": [
     {
      "id": "elemental-rebuke",
@@ -7432,8 +7441,52 @@
      ],
      "do": [
       {
-       "kind": "note",
-       "text": "元素叱喝：迫使攻击者进行敏捷豁免（DC 为你的法术豁免 DC），失败受到 2d10+魅力调整值 点所选类型伤害（强酸/寒冷/火焰/闪电/雷鸣），成功受到一半伤害，请手动结算。"
+       "kind": "choose",
+       "prompt": "元素叱喝：这次反击造成哪种伤害？",
+       "var": "elem",
+       "options": [
+        {
+         "label": "强酸",
+         "value": "强酸"
+        },
+        {
+         "label": "寒冷",
+         "value": "寒冷"
+        },
+        {
+         "label": "火焰",
+         "value": "火焰"
+        },
+        {
+         "label": "闪电",
+         "value": "闪电"
+        },
+        {
+         "label": "雷鸣",
+         "value": "雷鸣"
+        }
+       ]
+      },
+      {
+       "kind": "save",
+       "ability": "dex",
+       "dc": "self.spell.dc",
+       "to": "attacker",
+       "onFail": [
+        {
+         "kind": "damage",
+         "dice": "2d10 + self.mod.cha",
+         "type": "vars.elem"
+        }
+       ],
+       "onSuccess": [
+        {
+         "kind": "damage",
+         "dice": "2d10 + self.mod.cha",
+         "type": "vars.elem",
+         "scale": 0.5
+        }
+       ]
       }
      ]
     }
@@ -7995,8 +8048,56 @@
   },
   "FRHoF:新锻臂铠": {
    "name": "新锻臂铠",
-   "automation": "manual",
-   "text": "【比肩而立】当5尺内未陷入失能状态的盟友将受到推离或拉近效应时，可以反应防止该盟友被推离或拉近。【警觉】当你执行预备动作时，在你的下个回合开始前对你进行的下次攻击检定具有劣势。位移防止反应与被攻击劣势由玩家手动处理。",
+   "automation": "partial",
+   "text": "【比肩而立】5 尺内未陷入失能的盟友将被推离或拉近时，你可以用反应阻止 —— 引擎没有「强制位移」的拦截窗口，这一段必须手动处理（别推那个盟友，并用反应记一下）。【警觉】你执行预备动作后，到你的下个回合开始前，对你进行的下次攻击检定具有劣势 —— 引擎认不出「预备」这个动作，所以在你执行预备动作时点一下「新锻臂铠：警觉」记录，之后引擎会自动给下次对你的攻击附加劣势，并在那次攻击结算后（或你的下个回合开始时）自动结束。",
+   "actions": [
+    {
+     "id": "ready-alert",
+     "name": "新锻臂铠：警觉",
+     "activation": "none",
+     "requires": "turn.isMine && !self.hasEffect('新锻臂铠：警觉')",
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "新锻臂铠：警觉"
+      }
+     ],
+     "text": "执行预备动作时使用：到你的下个回合开始前，对你进行的下次攻击检定具有劣势。"
+    }
+   ],
+   "effects": {
+    "新锻臂铠：警觉": {
+     "text": "到你的下个回合开始前，对你进行的下次攻击检定具有劣势。",
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "bearer",
+       "nth": 1
+      },
+      "endsOn": [
+       {
+        "event": "attackHit",
+        "when": "event.target == self.id"
+       },
+       {
+        "event": "attackMissed",
+        "when": "event.target == self.id"
+       }
+      ]
+     },
+     "rollMods": [
+      {
+       "on": {
+        "kind": "attack"
+       },
+       "who": "against",
+       "op": "disadv",
+       "label": "新锻臂铠：警觉"
+      }
+     ]
+    }
+   },
    "tags": [
     "ai",
     "未审"
@@ -9669,8 +9770,8 @@
   },
   "FRHoF:spell:反冲术": {
    "name": "反冲术",
-   "automation": "partial",
-   "text": "反应（当你受到伤害时）。令受到的该次伤害降低 4d6 + 你的施法属性调整值点。若伤害来源为 60 尺内一名生物，可迫使该生物进行一次体质豁免，失败受 4d6 力场伤害，成功仅受半伤。升环施法时，法术位每高一环减免伤害量与造成的力场伤害均增加 1d6（伤害减免需手动调整结算）。",
+   "automation": "full",
+   "text": "反应（当你受到伤害时，作为对该次伤害的回应）：令这次你受到的伤害降低 (环阶)d6 + 你的施法属性调整值（四环 4d6，每高一环 +1d6，已在伤害窗口里真的减掉）。若这次伤害来自一名位于 60 尺内的生物，你可以迫使该生物进行一次体质豁免（DC = 你的法术豁免 DC）：失败受到 (环阶)d6 力场伤害，成功只受一半。施法时若还有更高环的法术位可选，引擎会问用几环。要人留意的一处：引擎判断「伤害来源是否在 60 尺内」靠地图距离，没有地图时会问你一句；答否就只减伤、不反击。",
    "actions": [
     {
      "id": "use",
@@ -9699,28 +9800,46 @@
      },
      "root": [
       {
-       "kind": "save",
-       "ability": "con",
-       "dc": "self.spell.dc",
-       "onFail": [
+       "kind": "modify",
+       "modify": [
         {
-         "kind": "damage",
-         "id": "rebound_dmg",
-         "dice": "(slot.level)d6",
-         "type": "力场"
-        }
-       ],
-       "onSuccess": [
-        {
-         "kind": "damage",
-         "ref": "rebound_dmg",
-         "scale": 0.5
+         "op": "reduceDamage",
+         "value": "(slot.level)d6 + self.spell.mod"
         }
        ]
       },
       {
-       "kind": "note",
-       "text": "反冲术：本次受到的伤害降低 (slot.level)d6 + self.spell.mod 点。"
+       "kind": "if",
+       "when": "event.source != null && within(self, attacker, 60)",
+       "then": [
+        {
+         "kind": "save",
+         "ability": "con",
+         "dc": "self.spell.dc",
+         "to": "attacker",
+         "onFail": [
+          {
+           "kind": "damage",
+           "dice": "(slot.level)d6",
+           "type": "力场"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "dice": "(slot.level)d6",
+           "type": "力场",
+           "scale": 0.5
+          }
+         ]
+        }
+       ],
+       "else": [
+        {
+         "kind": "note",
+         "text": "反冲术：这次伤害没有生物来源，或来源不在 60 尺内 —— 只减免了这次伤害，不反弹。"
+        }
+       ]
       }
      ]
     }
@@ -12134,7 +12253,15 @@
   "TCE:德鲁伊:真菌感染:6": {
    "name": "真菌感染",
    "automation": "partial",
-   "text": "10尺内有小型或中型野兽或类人生物死亡时，可以用反应消耗一次使用次数将其活化为具有1点生命值的丧尸，持续1小时。丧尸的回合紧接在你之后，只能执行攻击动作并进行一次近战攻击。丧尸属性与行动由人工处理。使用次数等同于感知调整值（至少1次），长休恢复。",
+   "text": "你周围 10 尺内一个生物降到 0 生命值时，如果它是小型或中型的野兽或类人生物，你可以用反应（并消耗一次「真菌感染」次数）把它的尸体活化成丧尸：生命值 1 点、AC 8、速度 20 尺、猛击 +3 命中 1d8+1 钝击，毒素免疫、力竭和中毒状态免疫，先攻紧接在你的回合之后（引擎把召唤物排在你后面）。类型和体型按怪物数据判断；数据里认不出类型 / 体型的怪会问你一句。活化状态持续 1 小时，到点自动退场（引擎用一份 1 小时的「真菌感染」记录把丧尸链接住，时间流逝满 1 小时就一起消失）。丧尸降到 0 生命值时会问你要不要用「不死坚韧」（体质豁免 DC 5 + 所受伤害，光耀伤害或重击不适用），成功就改成 1 点生命值。次数上限等于你的感知调整值（至少 1 次），长休恢复。【要人处理】①原文说丧尸「唯一能执行的动作只有攻击动作并进行一次近战攻击」——引擎不知道这个限制，它的动作栏里也有疾走等通用动作，请只用攻击动作做一次猛击。②丧尸的黑暗视觉 60 尺没有写进战斗数据。③多只丧尸同时存在时，用来计时的那份「真菌感染」记录在界面上只有最新那份显示为生效、其余标「被压制」，但每只丧尸的 1 小时各自计时，不影响结算。",
+   "resources": [
+    {
+     "id": "fungal-infestation",
+     "name": "真菌感染",
+     "formula": "max(1, wis)",
+     "recovery": "long"
+    }
+   ],
    "triggers": [
     {
      "id": "infest",
@@ -12151,11 +12278,75 @@
        "resource": "fungal-infestation"
       }
      ],
-     "when": "within(self, target, 10) && ask('死者是小型或中型的野兽或类人生物吗？')",
+     "when": "within(self, target, 10) && ((target.type == '野兽' || target.type == '类人生物') && (target.size == '小型' || target.size == '中型') || ((target.type == '' || target.size == '') && ask('死者的类型 / 体型不在数据里：它是小型或中型的野兽或类人生物吗？')))",
      "do": [
       {
-       "kind": "note",
-       "text": "活化尸体为丧尸（生命值为1），持续1小时。丧尸紧接在你的回合后行动，只能进行一次近战攻击，数据与行动由人工处理。"
+       "kind": "applyEffect",
+       "to": "self",
+       "inline": {
+        "name": "真菌感染：丧尸",
+        "text": "被活化的一具丧尸（生命值 1）跟随召唤者，1 小时后崩解。",
+        "duration": {
+         "hours": 1
+        },
+        "onApply": [
+         {
+          "kind": "summon",
+          "name": "丧尸",
+          "size": "M",
+          "creatureType": "undead",
+          "ac": 8,
+          "hp": 1,
+          "speed": 20,
+          "pb": 2,
+          "attacksPerAction": 1,
+          "score": {
+           "str": 13,
+           "dex": 6,
+           "con": 16,
+           "int": 3,
+           "wis": 6,
+           "cha": 5
+          },
+          "immune": [
+           "毒素"
+          ],
+          "conditionImmune": [
+           "力竭",
+           "中毒"
+          ],
+          "attacks": [
+           {
+            "name": "猛击",
+            "bonus": 3,
+            "damage": "1d8 + 1",
+            "damageType": "钝击"
+           }
+          ],
+          "triggers": [
+           {
+            "id": "undead-fortitude",
+            "label": "丧尸：不死坚韧",
+            "on": "reducedTo0",
+            "role": "target",
+            "window": "before",
+            "optional": true,
+            "when": "damage.type != '光耀' && !damage.crit && ask('不死坚韧：让丧尸做一次体质豁免（DC 5 + 这次所受伤害）。豁免成功了吗？成功则改为 1 点生命值。')",
+            "modify": [
+             {
+              "op": "setHp",
+              "value": "1"
+             }
+            ]
+           }
+          ],
+          "notes": [
+           "丧尸：黑暗视觉 60 尺；免疫毒素伤害与力竭 / 中毒状态；会「不死坚韧」（降到 0 时体质豁免 DC 5 + 所受伤害，成功改为 1 点生命值，光耀伤害或重击不适用）。",
+           "它只会执行攻击动作做一次猛击——引擎的动作栏里还有疾走等通用动作，请只用攻击。"
+          ]
+         }
+        ]
+       }
       }
      ]
     }
@@ -12502,7 +12693,7 @@
   "TCE:符令责斥": {
    "name": "符令责斥",
    "automation": "partial",
-   "text": "当护身符佩戴者被 30 尺内你可见的攻击者命中时，你可以使用反应对该攻击者造成等同于熟练加值的心灵伤害，并将其推离佩戴者至多 10 尺。他人佩戴护符时的触发与推离方向需手动处理。",
+   "text": "当护身符的佩戴者被一个位于你 30 尺以内、你能看见的攻击者命中时，你可以用反应对该攻击者造成等同于你熟练加值的心灵伤害，并把它推离佩戴者至多 10 尺。已自动化：被命中的是护符佩戴者时给出这个反应选项，选中后伤害自动打向攻击者（不用再选目标）、并在地图上把攻击者沿直线推离 10 尺（推的是「远离你」的方向，佩戴者就是你时方向正确）。【要人处理】①护符交给盟友戴时引擎不知道现在戴在谁身上，被命中的人是你或你的盟友时都会问一句「这是佩戴者吗」。②佩戴者不是你时，推离方向应当「远离佩戴者」而不是远离你，方向不对请手动拖动。③10 尺只推一次，撞到别的棋子就停下。④「30 尺以内」「你能看见」没有地图时会问你。",
    "actions": [
     {
      "id": "use",
@@ -12511,16 +12702,14 @@
      "trigger": {
       "on": "attackHit",
       "role": "any",
-      "window": "after"
-     },
-     "targeting": {
-      "type": "creature",
-      "count": 1,
-      "range": 30
+      "window": "after",
+      "aim": "actor",
+      "when": "(target.id == self.id || target.isAllyOf(self)) && within(self, attacker, 30) && canSee(self, attacker) && ask('被命中的是佩戴你护身符的那位（你，或你交给的盟友）吗？')"
      },
      "root": [
       {
        "kind": "damage",
+       "to": "attacker",
        "dice": "self.pb",
        "type": "心灵"
       },
@@ -12528,6 +12717,10 @@
        "kind": "move",
        "mode": "push",
        "ft": 10
+      },
+      {
+       "kind": "note",
+       "text": "符令责斥：攻击者已被推离 10 尺（远离你）。如果佩戴者不是你，方向请手动校正。"
       }
      ]
     }
@@ -12976,7 +13169,7 @@
   "TCE:魔法力量护甲": {
    "name": "魔法力量护甲",
    "automation": "partial",
-   "text": "盔甲拥有 6 发充能，每日黎明恢复 1d6 发。进行力量检定或力量豁免时，可消耗 1 点充能将智力调整值加到投掷上。将被撞击倒地时，可以用一个反应消耗 1 点充能避免被撞击倒地（引擎无倒地拦截窗口，倒地与反应消耗充能由玩家手动处理）。",
+   "text": "盔甲有 6 发充能（人物卡资源池，长休恢复；原文是每天黎明恢复 1d6 发，引擎按长休回满，多回的点数请手动点掉）。进行力量检定或力量豁免、按掷出来的结果仍会失败时，会问你要不要花 1 发充能，把智力调整值加到这次投掷上。将被撞倒时的反应（花 1 发充能避免倒地）引擎没有拦截时机：请手动处理 —— 别加倒地状态，自己在资源上点掉 1 发。",
    "triggers": [
     {
      "id": "add-int-to-str",
@@ -12985,7 +13178,7 @@
      "role": "actor",
      "window": "before",
      "optional": true,
-     "when": "(roll.kind == 'check' || roll.kind == 'save') && roll.ability == 'str'",
+     "when": "(roll.kind == 'check' || roll.kind == 'save') && roll.ability == 'str' && roll.failing",
      "cost": [
       {
        "resource": "armorOfMagicalStrengthCharges"
@@ -14877,7 +15070,15 @@
   "TCE:术士:归复平衡:1": {
    "name": "归复平衡",
    "automation": "full",
-   "text": "60 尺内你可见的生物即将带着优势或劣势掷 d20 检定时，你可以用反应消耗一次归复平衡，使这次检定免受优势或劣势的影响：引擎把这次检定改回只掷一颗 d20（取第一颗骰子的点数，按无优势无劣势重算总值后再判定成败）。次数等于你的熟练加值，长休恢复。距离与「可见」有地图时按地图计算，没有地图时会问一句。",
+   "text": "60 尺内你可见的一个生物即将带着优势或劣势掷 d20 检定时，你可以用反应让这次检定不再受优势 / 劣势影响（改成只掷一颗 d20，用第一颗的结果）。已自动化：掷骰前会弹出可选项，选了就自动抹掉这次检定的优势与劣势、只保留第一颗 d20 重新判定。「60 尺内」「你能看见」在没有地图时会问你；这个选项对任何人的 d20 检定都会出现（只要它带优势或劣势），敌人的也算。次数上限等于你的熟练加值，长休恢复。",
+   "resources": [
+    {
+     "id": "restore-balance",
+     "name": "归复平衡",
+     "formula": "pb",
+     "recovery": "long"
+    }
+   ],
    "actions": [
     {
      "id": "use",
@@ -14887,7 +15088,7 @@
       "on": "d20Rolled",
       "role": "any",
       "window": "before",
-      "when": "(roll.adv || roll.disadv) && within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))"
+      "when": "(roll.adv || roll.disadv) && (roll.roller == self.id || (within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))))"
      },
      "cost": [
       {
@@ -14903,16 +15104,12 @@
          "which": "both"
         }
        ]
+      },
+      {
+       "kind": "note",
+       "text": "归复平衡：这次检定不再有优势 / 劣势，只按第一颗 d20 的结果判定。"
       }
      ]
-    }
-   ],
-   "resources": [
-    {
-     "id": "restore-balance",
-     "name": "归复平衡",
-     "formula": "pb",
-     "recovery": "long"
     }
    ],
    "tags": [
@@ -14959,7 +15156,7 @@
   "TCE:术士:律令之壁:6": {
    "name": "律令之壁",
    "automation": "partial",
-   "text": "以动作消耗 1-5 点术法点，为你自己或 30 尺内一个可见生物创造屏障，获得等量的 d8。被守护者受到伤害时消耗骰子，伤害减少掷出的合计。屏障持续到长休或你再次使用本特性。简化：每次触发消耗屏障里剩余的全部骰子并结束屏障（不能只用其中几颗）；你再次使用时，原来在别的生物身上的旧屏障请手动移除。",
+   "text": "以一个动作消耗 1~5 点术法点，为你自己或 30 尺内一个你能看见的生物造出屏障：屏障里有等量的 d8。被守护者每次受到伤害时，可以选择消耗其中几颗 d8、掷出并把合计从这次伤害里减掉（会弹一个数字框，上限就是屏障里剩下的颗数）；颗数消完屏障就结束。屏障持续到你完成长休，或你再次使用这个特性（在新的生物身上再造屏障时，旧的那个自动结束）。【要人处理】①「屏障还剩几颗」是靠把效应重新施加一次来记的，所以界面上会看到一份旧的「律令之壁」标着「被压制」——它不参与结算，吃完最后一颗或长休时会一起清掉。②一次伤害包带有多种伤害类型时，引擎会把减伤分别从每种类型里各扣一次（引擎的既有行为），混合伤害请自己核对结果。③被守护的是别人时，那个「消耗几颗」的弹窗给的是那个生物的控制器；如果那是 DM 的怪，请让 DM 代答。",
    "actions": [
     {
      "id": "use",
@@ -15006,37 +15203,90 @@
       "magical"
      ],
      "stackKey": "律令之壁",
-     "text": "屏障里有若干 d8；受到伤害时可以消耗骰子，伤害减少掷出的合计。持续到长休或施放者再次使用。",
+     "text": "屏障里有若干 d8；受到伤害时可以消耗任意几颗，把掷出的合计从伤害里减掉。持续到施加者长休或再次使用律令之壁。",
      "duration": {
       "manual": true,
       "endsOn": [
        {
         "event": "restCompleted",
         "when": "event.kind == 'long'"
+       },
+       {
+        "event": "effectApplied",
+        "when": "event.key == 'TCE:术士:律令之壁:6#律令之壁' && source != null && event.source == source.id && event.bearer != self.id"
        }
       ]
      },
      "triggers": [
       {
        "id": "ward",
-       "label": "律令之壁：消耗剩余的 d8 减伤",
+       "label": "律令之壁：消耗 d8 减伤",
        "on": "damageIncoming",
        "role": "target",
        "window": "before",
        "optional": true,
-       "modify": [
-        {
-         "op": "reduceDamage",
-         "value": "(effect.state.dice)d8"
-        }
-       ],
+       "when": "damage.amount > 0 && !self.hasEffect('律令之壁：已结算')",
        "do": [
         {
-         "kind": "removeEffect",
-         "from": "self",
-         "match": {
-          "name": "律令之壁"
-         }
+         "kind": "number",
+         "prompt": "律令之壁：这次伤害要消耗几颗 d8？（上限是屏障里剩下的颗数）",
+         "var": "n",
+         "min": 1,
+         "max": "effect.state.dice"
+        },
+        {
+         "kind": "if",
+         "when": "vars.n > 0",
+         "then": [
+          {
+           "kind": "modify",
+           "modify": [
+            {
+             "op": "reduceDamage",
+             "value": "(vars.n)d8"
+            }
+           ]
+          },
+          {
+           "kind": "applyEffect",
+           "to": "self",
+           "inline": {
+            "name": "律令之壁：已结算",
+            "text": "（这次伤害已经用过屏障，结算完就消失）",
+            "duration": {
+             "endsOn": [
+              {
+               "event": "damageApplied",
+               "when": "event.target == self.id"
+              }
+             ]
+            }
+           }
+          },
+          {
+           "kind": "if",
+           "when": "effect.state.dice - vars.n > 0",
+           "then": [
+            {
+             "kind": "applyEffect",
+             "to": "self",
+             "template": "律令之壁",
+             "state": {
+              "dice": "effect.state.dice - vars.n"
+             }
+            }
+           ],
+           "else": [
+            {
+             "kind": "removeEffect",
+             "from": "self",
+             "match": {
+              "name": "律令之壁"
+             }
+            }
+           ]
+          }
+         ]
         }
        ]
       }
@@ -15845,7 +16095,15 @@
   "TCE:野蛮人:感染之怒:10": {
    "name": "感染之怒",
    "automation": "partial",
-   "text": "狂暴时用天生武器命中敌人，可迫使其进行感知豁免（DC = 8 + 体质调整值 + 熟练加值）。豁免失败由你选择遭受以下效应之一：①受到 2d12 心灵伤害；②目标用反应对一个由你选择且你能看见的生物发动一次近战攻击（需手动结算）。长休恢复，次数等于熟练加值。",
+   "text": "你在狂暴中用天生武器命中一个敌人时（会问你这次命中的是不是天生武器），可以消耗一次「感染之怒」次数，迫使目标做一次感知豁免（DC = 8 + 你的体质调整值 + 熟练加值）。豁免失败时由你选择：①目标受到 2d12 心灵伤害（已自动化）；②目标用反应对一个由你选择、且你能看见的生物发动一次近战攻击。【要人处理】第 ② 项引擎不能让一个生物「代你」发动攻击：选这一项之后会给出提示，请手动让那个目标用反应打一次（发起攻击时选「作为反应」），并自己核对目标的选择合法（你选的、你能看见的）。次数上限等于你的熟练加值，长休恢复。",
+   "resources": [
+    {
+     "id": "infectious-fury",
+     "name": "感染之怒",
+     "formula": "pb",
+     "recovery": "long"
+    }
+   ],
    "triggers": [
     {
      "id": "infectious-fury",
@@ -15859,7 +16117,7 @@
        "resource": "infectious-fury"
       }
      ],
-     "when": "self.hasEffect('狂暴') && ask('本次命中是否使用了天生武器？')",
+     "when": "self.hasEffect('狂暴') && attack.melee && ask('这次命中的武器是天生武器（咬击 / 爪击 / 尾击之类）吗？')",
      "do": [
       {
        "kind": "save",
@@ -15881,11 +16139,11 @@
            ]
           },
           {
-           "label": "目标用反应发动一次近战攻击",
+           "label": "目标用反应对另一个生物发动一次近战攻击",
            "do": [
             {
              "kind": "note",
-             "text": "目标用反应对一个由你选择且你能看见的生物发动一次近战攻击，请手动让目标执行攻击结算。"
+             "text": "感染之怒：请让目标用它的反应，对你选择的一个你能看见的生物发动一次近战攻击（发起时选「作为反应」），并手动结算这次攻击。"
             }
            ]
           }
@@ -16003,22 +16261,131 @@
   "TCE:野蛮人:野兽之形:3": {
    "name": "野兽之形",
    "automation": "partial",
-   "text": "进入狂暴时选择长出啃咬、爪击或尾击天生武器。啃咬生命值低于一半时命中回血（每回合一次已写）；爪击在攻击动作中爪击后可追加一次爪击（一回合一次已写为 free 动作）；尾击在 10 尺内可见生物攻击命中你时可用反应掷 1d8 加 AC（已写为反应）。天生武器常规攻击请在武器行发起或手动投掷。",
+   "text": "进入狂暴时长出一种天生武器，直到狂暴结束：啃咬 1d8 穿刺、爪击 1d6 挥砍、尾击 1d8 穿刺（触及 10 尺），都被视为简易近战武器、用力量。三个攻击条目只点你本次狂暴选的那一个（引擎不会隐藏另外两个）；命中伤害已含力量调整值，狂暴伤害由「狂暴」效应自动加，不要重复写。爪击：用爪击进行攻击检定时自动多给 1 次攻击机会（每回合一次，会问你用不用）。啃咬：用啃咬命中且生命值低于一半时恢复熟练加值点生命（每回合一次，会问）。尾击：被 10 尺内你能看见的生物的攻击命中时，可以用反应把 d8 加到 AC 上 —— 引擎没有「掷一颗骰当作数值」的写法，用这条反应时请自己掷 d8，把点数填进弹窗。",
    "actions": [
     {
-     "id": "use",
+     "id": "bite",
+     "name": "野兽之形：啃咬",
+     "activation": "none",
+     "cost": [
+      {
+       "economy": "attack"
+      }
+     ],
+     "requires": "self.hasEffect('狂暴')",
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 5
+     },
+     "root": [
+      {
+       "kind": "attack",
+       "bonus": "self.pb + self.mod.str",
+       "attack": {
+        "melee": true,
+        "weapon": true,
+        "ability": "str",
+        "damageType": "穿刺",
+        "item": "野兽之形·啃咬"
+       },
+       "onHit": [
+        {
+         "kind": "damage",
+         "dice": "1d8 + self.mod.str",
+         "type": "穿刺"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "claw",
+     "name": "野兽之形：爪击",
+     "activation": "none",
+     "cost": [
+      {
+       "economy": "attack"
+      }
+     ],
+     "requires": "self.hasEffect('狂暴')",
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 5
+     },
+     "root": [
+      {
+       "kind": "attack",
+       "bonus": "self.pb + self.mod.str",
+       "attack": {
+        "melee": true,
+        "weapon": true,
+        "ability": "str",
+        "damageType": "挥砍",
+        "item": "野兽之形·爪击"
+       },
+       "onHit": [
+        {
+         "kind": "damage",
+         "dice": "1d6 + self.mod.str",
+         "type": "挥砍"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "tail",
+     "name": "野兽之形：尾击",
+     "activation": "none",
+     "cost": [
+      {
+       "economy": "attack"
+      }
+     ],
+     "requires": "self.hasEffect('狂暴')",
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 10
+     },
+     "root": [
+      {
+       "kind": "attack",
+       "bonus": "self.pb + self.mod.str",
+       "attack": {
+        "melee": true,
+        "weapon": true,
+        "ability": "str",
+        "damageType": "穿刺",
+        "reach": true,
+        "item": "野兽之形·尾击"
+       },
+       "onHit": [
+        {
+         "kind": "damage",
+         "dice": "1d8 + self.mod.str",
+         "type": "穿刺"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "tail-guard",
      "name": "野兽之形：尾击防御",
      "activation": "reaction",
      "trigger": {
       "on": "attackHit",
       "role": "target",
       "window": "before",
-      "when": "self.hasEffect('狂暴') && attacker != null && within(self, attacker, 10) && canSee(self, attacker) && ask('本次狂暴选择的是尾击吗？')"
+      "when": "self.hasEffect('狂暴') && attacker != null && within(self, attacker, 10) && canSee(self, attacker) && ask('本次狂暴你选的是野兽之形·尾击吗？')"
      },
      "root": [
       {
        "kind": "number",
-       "prompt": "野兽之形·尾击防御：请掷 1d8，输入投出的点数加到对抗这次攻击的 AC 上",
+       "prompt": "尾击防御：自己掷 1d8，把点数填进来（这次攻击的 AC 会加上它）",
        "var": "tailAc",
        "min": 1,
        "max": 8,
@@ -16033,36 +16400,6 @@
        }
       }
      ]
-    },
-    {
-     "id": "claw-extra",
-     "name": "野兽之形：追加爪击",
-     "activation": "free",
-     "requires": "turn.isMine && self.hasEffect('狂暴') && ask('你在本回合攻击动作中已进行过一次爪击吗？')",
-     "targeting": {
-      "type": "creature",
-      "count": 1,
-      "range": "reach"
-     },
-     "root": [
-      {
-       "kind": "attack",
-       "bonus": "self.pb + self.mod.str",
-       "attack": {
-        "melee": true,
-        "weapon": true,
-        "ability": "str",
-        "damageType": "挥砍"
-       },
-       "onHit": [
-        {
-         "kind": "damage",
-         "dice": "1d6 + self.mod.str + classTable('狂暴伤害')",
-         "type": "挥砍"
-        }
-       ]
-      }
-     ]
     }
    ],
    "triggers": [
@@ -16074,7 +16411,7 @@
      "window": "after",
      "limit": "oncePerTurn",
      "optional": true,
-     "when": "turn.isMine && self.hasEffect('狂暴') && self.hp < floor(self.hpMax / 2) && ask('本次命中的是野兽之形·啃咬吗？')",
+     "when": "self.hasEffect('狂暴') && attack.item == '野兽之形·啃咬' && self.hp * 2 < self.hpMax",
      "do": [
       {
        "kind": "heal",
@@ -16082,11 +16419,31 @@
        "to": "self"
       }
      ]
+    },
+    {
+     "id": "claw-extra",
+     "label": "野兽之形：追加爪击",
+     "on": "d20Rolled",
+     "role": "actor",
+     "window": "after",
+     "limit": "oncePerTurn",
+     "optional": true,
+     "when": "turn.isMine && self.hasEffect('狂暴') && roll.kind == 'attack' && attack.item == '野兽之形·爪击'",
+     "do": [
+      {
+       "kind": "economy",
+       "attacks": 1
+      },
+      {
+       "kind": "note",
+       "text": "追加爪击：本回合多 1 次攻击机会，作为这次攻击动作的一部分（只能用爪击）"
+      }
+     ]
     }
    ],
    "effects": {
     "尾击防御": {
-     "text": "对抗这次攻击的 AC 增加掷出的 1d8 点数，可能使这次攻击变为失手。",
+     "text": "对抗这次攻击的 AC 加上掷出的 1d8 点数，可能让这次攻击打失。",
      "statics": [
       {
        "kind": "ac",
@@ -16100,7 +16457,7 @@
         "event": "attackMissed"
        },
        {
-        "event": "damageTaken"
+        "event": "damageIncoming"
        }
       ]
      }
@@ -18751,11 +19108,11 @@
   },
   "TCE:spell:闪电牵引": {
    "name": "闪电牵引",
-   "automation": "partial",
-   "text": "15 尺内可见一生物进行力量豁免，失败则以直线被拉近至多 10 尺；拉近后若处于施法者周围 5 尺内，受到 (1 + floor((self.level + 1) / 6))d8 点闪电伤害（位置与伤害条件需手动核对）。",
+   "automation": "full",
+   "text": "15 尺内你可见的一个生物进行力量豁免（DC 等于你的法术豁免 DC），失败则被直线拉近至多 10 尺；之后如果它在你周围 5 尺内，受到 1d8 点闪电伤害（5 级 2d8、11 级 3d8、17 级 4d8）。豁免、拉近、伤害的条件判断都由引擎处理：有地图时直接移动棋子，没有地图时会问你距离。",
    "actions": [
     {
-     "id": "use",
+     "id": "cast",
      "name": "闪电牵引",
      "activation": "action",
      "tags": [
@@ -18765,7 +19122,8 @@
      "targeting": {
       "type": "creature",
       "count": 1,
-      "range": 15
+      "range": 15,
+      "filter": "canSee(self, target)"
      },
      "root": [
       {
@@ -18779,13 +19137,15 @@
          "ft": 10
         },
         {
-         "kind": "damage",
-         "dice": "(1 + floor((self.level + 1) / 6))d8",
-         "type": "闪电"
-        },
-        {
-         "kind": "note",
-         "text": "豁免失败者被直线拉近至多 10 尺；若此时处于施法者 5 尺范围内则受到上述闪电伤害，否则不受伤害。"
+         "kind": "if",
+         "when": "within(self, target, 5)",
+         "then": [
+          {
+           "kind": "damage",
+           "dice": "(1 + floor((self.level + 1) / 6))d8",
+           "type": "闪电"
+          }
+         ]
         }
        ]
       }
@@ -20438,11 +20798,11 @@
   "XGE:魔契师:巫咒盔甲:10": {
    "name": "巫咒盔甲",
    "automation": "partial",
-   "text": "若被你咒剑诅咒的目标以一次攻击检定击中了你，你可以立刻用你的反应投一次d6。如果骰出4或更高，则这次攻击改为失手。由玩家掷d6并在提示框中确认结果。",
+   "text": "被你咒剑诅咒的目标以一次攻击检定命中你时，你可以立刻用反应投一次 d6：骰出 4 或更高，这次攻击改为失手（不论其骰值是多少）。自动部分：引擎只在攻击者身上带「咒剑诅咒」时才会问你用不用，用掉反应后把这次攻击改成未命中。手动部分：引擎没法在「条件」里掷 d6，请自己掷一颗 d6，然后在确认框里回答结果是否 ≥ 4。",
    "triggers": [
     {
      "id": "armor-of-hexes",
-     "label": "巫咒盔甲：受咒目标攻击改为失手",
+     "label": "巫咒盔甲：受咒目标命中时掷 d6 改为失手",
      "on": "attackHit",
      "role": "target",
      "window": "before",
@@ -20452,7 +20812,7 @@
        "economy": "reaction"
       }
      ],
-     "when": "attacker.hasEffect('咒剑诅咒') && ask('巫咒盔甲：投 d6 结果是否为 4 或更高？')",
+     "when": "attacker.hasEffect('咒剑诅咒') && ask('巫咒盔甲：掷一次 d6，结果是否为 4 或更高？')",
      "modify": [
       {
        "op": "cancel"
@@ -21132,12 +21492,12 @@
   },
   "XGE:圣武士:护卫灵光:7": {
    "name": "护卫灵光",
-   "automation": "partial",
-   "text": "当你周围 10 尺（18 级扩展至 30 尺）内的一个生物受到伤害时，你可以用反应代替该生物承受此伤害。该伤害无法被任何方式减免，也不会传递任何附带效果。引擎取消被保护生物受到的伤害，圣武士承受的伤害需手动扣除。",
+   "automation": "full",
+   "text": "当你周围 10 尺（18 级起 30 尺）内的一个生物受到伤害时，你可以用反应代替它承受整包伤害：引擎按原目标的抗性 / 易伤算完之后，把这份伤害整个转给你，先扣你的临时生命值、扣完再扣生命值；你自己的抗性、免疫、减伤都不参与（原文「该伤害也无法被任何方式减免」），伤害可能附带的效果也不会跟着转到你身上。",
    "triggers": [
     {
      "id": "auraOfTheGuardian",
-     "label": "护卫灵光：替受伤害",
+     "label": "护卫灵光：代替受伤",
      "on": "damageIncoming",
      "role": "any",
      "window": "before",
@@ -21147,16 +21507,11 @@
        "economy": "reaction"
       }
      ],
-     "when": "!self.has('失能') && target.id != self.id && within(self, target, cond(self.levelOf('圣武士') >= 18, 30, 10))",
+     "when": "target.id != self.id && within(self, target, cond(self.levelOf('圣武士') >= 18, 30, 10))",
      "modify": [
       {
-       "op": "cancel"
-      }
-     ],
-     "do": [
-      {
-       "kind": "note",
-       "text": "护卫灵光：圣武士使用反应代替该生物承受本次伤害。该伤害无法被任何方式减免，请手动扣除圣武士相应生命值。"
+       "op": "absorb",
+       "from": "hp"
       }
      ]
     }
@@ -21809,168 +22164,70 @@
   "XGE:武僧:锋锐剑影:11": {
    "name": "锋锐剑影",
    "automation": "partial",
-   "text": "附赠动作消耗至多 3 点功力灌注所接触的剑圣武器（无法作用于已有命中与伤害加值的魔法武器），1 分钟内用其攻击检定与伤害掷骰获得等同于消耗功力的加值（+1/+2/+3）。再次使用会替换前次加值。",
+   "text": "附赠动作消耗至多 3 点气，灌注你接触的一件剑圣武器：1 分钟内用这件武器进行的攻击检定与伤害掷骰都获得等同于所耗气点数的加值。已自动化：选点数的弹窗（1 到 min(3, 你的功力)）、扣气、加攻击加值与伤害加值（点数是选出来的那个数，不再写死三档）、再次使用时新的加值顶掉旧的。【要人处理】「无法作用于一件已经提供攻击检定与伤害掷骰加值的魔法武器」引擎看不出来（+1 武器之类），请自己不要对这类武器使用；另外加值只作用在被灌注的那件武器上，所以每次武器攻击的检定与伤害都会问你一次「是不是被灌注的剑圣武器」，答否就不加。",
    "actions": [
     {
      "id": "use",
      "name": "锋锐剑影",
      "activation": "bonus",
+     "requires": "self.resource('功力') >= 1",
      "root": [
       {
-       "kind": "choose",
-       "prompt": "消耗多少点功力灌注剑圣武器？",
-       "options": [
-        {
-         "label": "消耗 1 点功力（+1 命中与伤害）",
-         "when": "self.resource('功力') >= 1",
-         "do": [
-          {
-           "kind": "resource",
-           "id": "功力",
-           "delta": -1
-          },
-          {
-           "kind": "applyEffect",
-           "to": "self",
-           "inline": {
-            "name": "锋锐剑影（+1）",
-            "stackKey": "sharpenTheBlade",
-            "duration": {
-             "minutes": 1
-            },
-            "rollMods": [
-             {
-              "on": {
-               "kind": "attack",
-               "attack": {
-                "weapon": true
-               }
-              },
-              "who": "bearer",
-              "when": "ask('这次攻击是否使用了被灌注的剑圣武器？')",
-              "op": "add",
-              "value": 1,
-              "label": "锋锐剑影：+1 攻击加值"
-             },
-             {
-              "on": {
-               "kind": "damage",
-               "attack": {
-                "weapon": true
-               }
-              },
-              "who": "bearer",
-              "when": "ask('这次攻击是否使用了被灌注的剑圣武器？')",
-              "op": "add",
-              "value": 1,
-              "label": "锋锐剑影：+1 伤害加值"
-             }
-            ]
-           }
-          }
-         ]
+       "kind": "number",
+       "prompt": "消耗多少点功力灌注剑圣武器？（1 到 min(3, 你的功力)）",
+       "var": "ki",
+       "min": 1,
+       "max": "min(3, self.resource('功力'))",
+       "default": "min(3, self.resource('功力'))"
+      },
+      {
+       "kind": "resource",
+       "id": "功力",
+       "delta": "-vars.ki"
+      },
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "name": "锋锐剑影",
+       "state": {
+        "n": "vars.ki"
+       },
+       "inline": {
+        "name": "锋锐剑影",
+        "text": "被灌注的剑圣武器：攻击检定与伤害掷骰 +等于所耗功力点数，1 分钟",
+        "stackKey": "sharpenTheBlade",
+        "duration": {
+         "minutes": 1
         },
-        {
-         "label": "消耗 2 点功力（+2 命中与伤害）",
-         "when": "self.resource('功力') >= 2",
-         "do": [
-          {
-           "kind": "resource",
-           "id": "功力",
-           "delta": -2
-          },
-          {
-           "kind": "applyEffect",
-           "to": "self",
-           "inline": {
-            "name": "锋锐剑影（+2）",
-            "stackKey": "sharpenTheBlade",
-            "duration": {
-             "minutes": 1
-            },
-            "rollMods": [
-             {
-              "on": {
-               "kind": "attack",
-               "attack": {
-                "weapon": true
-               }
-              },
-              "who": "bearer",
-              "when": "ask('这次攻击是否使用了被灌注的剑圣武器？')",
-              "op": "add",
-              "value": 2,
-              "label": "锋锐剑影：+2 攻击加值"
-             },
-             {
-              "on": {
-               "kind": "damage",
-               "attack": {
-                "weapon": true
-               }
-              },
-              "who": "bearer",
-              "when": "ask('这次攻击是否使用了被灌注的剑圣武器？')",
-              "op": "add",
-              "value": 2,
-              "label": "锋锐剑影：+2 伤害加值"
-             }
-            ]
+        "rollMods": [
+         {
+          "on": {
+           "kind": "attack",
+           "attack": {
+            "weapon": true
            }
-          }
-         ]
-        },
-        {
-         "label": "消耗 3 点功力（+3 命中与伤害）",
-         "when": "self.resource('功力') >= 3",
-         "do": [
-          {
-           "kind": "resource",
-           "id": "功力",
-           "delta": -3
           },
-          {
-           "kind": "applyEffect",
-           "to": "self",
-           "inline": {
-            "name": "锋锐剑影（+3）",
-            "stackKey": "sharpenTheBlade",
-            "duration": {
-             "minutes": 1
-            },
-            "rollMods": [
-             {
-              "on": {
-               "kind": "attack",
-               "attack": {
-                "weapon": true
-               }
-              },
-              "who": "bearer",
-              "when": "ask('这次攻击是否使用了被灌注的剑圣武器？')",
-              "op": "add",
-              "value": 3,
-              "label": "锋锐剑影：+3 攻击加值"
-             },
-             {
-              "on": {
-               "kind": "damage",
-               "attack": {
-                "weapon": true
-               }
-              },
-              "who": "bearer",
-              "when": "ask('这次攻击是否使用了被灌注的剑圣武器？')",
-              "op": "add",
-              "value": 3,
-              "label": "锋锐剑影：+3 伤害加值"
-             }
-            ]
+          "who": "bearer",
+          "when": "ask('这次攻击是否使用了被灌注的剑圣武器？')",
+          "op": "add",
+          "value": "effect.state.n",
+          "label": "锋锐剑影：攻击加值"
+         },
+         {
+          "on": {
+           "kind": "damage",
+           "attack": {
+            "weapon": true
            }
-          }
-         ]
-        }
-       ]
+          },
+          "who": "bearer",
+          "when": "ask('这次攻击是否使用了被灌注的剑圣武器？')",
+          "op": "add",
+          "value": "effect.state.n",
+          "label": "锋锐剑影：伤害加值"
+         }
+        ]
+       }
       }
      ]
     }
@@ -22014,7 +22271,7 @@
   "XGE:武僧:借力打力:6": {
    "name": "借力打力",
    "automation": "partial",
-   "text": "当一个生物对你发动的近战攻击失手时，你可以花费 1 点功力作此反应，让这次攻击击中在你周围 5 尺范围内由你选择的另一名可见生物（攻击者除外）。由人选择目标并手动结算该攻击对新目标的伤害。",
+   "text": "一个生物对你发动的近战攻击失手时，你可以花费 1 点气作反应，让这次攻击改为击中你周围 5 尺内由你选择的另一名你可见的生物（攻击者除外）。【已自动化】反应时机、1 点气的代价、只在「对你发动的近战攻击失手」时提示。【要人处理】两件事：一是「把这次攻击挪到另一名生物身上」引擎没有对应写法（改目标那套只对已经命中的攻击有效，攻击失手时窗口不接受修改）；二是这次攻击的伤害骰属于攻击者的武器，引擎这边读不到。所以弹窗只问你要不要用这次反应 —— 打谁由你自己定（攻击者除外、要在你 5 尺内、你看得见），然后把攻击者的武器伤害手动记到那名生物身上。",
    "actions": [
     {
      "id": "use",
@@ -22039,7 +22296,7 @@
      "root": [
       {
        "kind": "note",
-       "text": "借力打力：让这次攻击击中你在周围 5 尺范围内选择的另一名可见生物（攻击者除外），由人手动结算伤害"
+       "text": "借力打力：这次失手的近战攻击改为击中你在 5 尺内选择的另一名可见生物（攻击者除外）。请手动掷攻击者的武器伤害并结算到那名生物身上。"
       }
      ]
     }
@@ -22237,7 +22494,7 @@
   "XGE:武僧:人剑合一:6": {
    "name": "人剑合一",
    "automation": "partial",
-   "text": "剑气：剑圣武器攻击视为魔法攻击（人肉判断）。巧劲：每个你的回合一次，当你使用剑圣武器命中目标时，可消耗 1 点功力造成等同武艺骰的额外伤害。",
+   "text": "【巧劲】已自动化：每个你的回合一次，用剑圣武器命中时可以消耗 1 点功力，追加一枚武艺骰的额外伤害（伤害类型跟武器相同）。弹窗里会问这次攻击用的是不是剑圣武器。【剑气】要人处理：持用剑圣武器攻击对「非魔法攻击」有抗性 / 免疫的目标时，你的攻击视为魔法攻击 —— 引擎没有「这次攻击视为魔法」这个开关，遇到这类目标请自己按魔法攻击结算（不减伤 / 不免疫）。",
    "triggers": [
     {
      "id": "deftStrike",
@@ -23214,8 +23471,8 @@
   },
   "XGE:吟游诗人:额外攻击:6": {
    "name": "额外攻击",
-   "automation": "manual",
-   "text": "第6级起，你在自己回合内执行攻击动作时可以攻击两次而非一次。攻击次数由人手动处理（引擎不自动管理攻击动作的次数）。",
+   "automation": "full",
+   "text": "第 6 级起，你在自己回合内执行攻击动作时可以攻击两次而非一次。战斗里已经自动这样结算：人物卡按特性名「额外攻击」把每次攻击动作的攻击次数算成 2（攻击一次之后还剩 1 次机会），不需要额外的触发器，也没有要人手动补的部分。若以后这条特性改名，攻击次数才需要手动调整。",
    "tags": [
     "ai",
     "未审"
@@ -24392,8 +24649,8 @@
   },
   "XGE:游侠:恐惧伏击:3": {
    "name": "恐惧伏击",
-   "automation": "partial",
-   "text": "先攻检定加感知调整值、战斗首回合速度+10已自动化。在战斗首回合执行攻击动作时可额外发动一次武器攻击（由玩家手动进行），若该次攻击命中，可触发额外 1d8 武器同类型伤害。",
+   "automation": "full",
+   "text": "先攻检定加你的感知调整值；每场战斗你的第一个回合开始时，步行速度 +10 尺直到该回合结束，并且该回合你执行攻击动作时多做一次武器攻击（引擎把这个次数直接加进了攻击次数，用武器行攻击时会自己扣掉）。如果你在首回合的攻击动作里多打的那一次命中，额外造成 1d8 与该武器同类型的伤害（弹窗里问一次是不是那次额外攻击）。",
    "rollMods": [
     {
      "on": {
@@ -24401,24 +24658,24 @@
      },
      "who": "bearer",
      "op": "add",
-     "value": "max(0, self.mod.wis)",
+     "value": "self.mod.wis",
      "label": "恐惧伏击：先攻加感知调整值"
     }
    ],
    "triggers": [
     {
-     "id": "ambush-speed",
-     "label": "恐惧伏击：首回合速度增加",
+     "id": "ambush",
+     "label": "恐惧伏击：首回合速度 +10 与多一次武器攻击",
      "on": "turnStarted",
      "role": "actor",
      "window": "after",
-     "when": "round == 1 && turn.isMine",
+     "when": "round == 1",
      "do": [
       {
        "kind": "applyEffect",
        "to": "self",
        "inline": {
-        "name": "恐惧伏击：速度提升",
+        "name": "恐惧伏击：首回合提速",
         "duration": {
          "until": {
           "at": "turnEnd",
@@ -24433,17 +24690,22 @@
          }
         ]
        }
+      },
+      {
+       "kind": "economy",
+       "attacks": 1
       }
      ]
     },
     {
-     "id": "ambush-extra-damage",
-     "label": "恐惧伏击：额外攻击伤害（+1d8）",
+     "id": "ambushExtraDamage",
+     "label": "恐惧伏击：额外武器攻击的 1d8 伤害",
      "on": "attackHit",
      "role": "actor",
      "window": "before",
      "optional": true,
-     "when": "round == 1 && turn.isMine && attack.weapon && ask('这次命中是首回合攻击动作中恐惧伏击提供的额外武器攻击吗？')",
+     "limit": "oncePerTurn",
+     "when": "round == 1 && turn.isMine && attack.weapon && ask('这次命中是恐惧伏击在首回合多给的那次武器攻击吗？')",
      "do": [
       {
        "kind": "addDamage",
@@ -24619,7 +24881,7 @@
   "XGE:游侠:杀手反制:15": {
    "name": "杀手反制",
    "automation": "partial",
-   "text": "当你的狩猎开始特性目标迫使你进行一次豁免检定时，可以在进行豁免检定前立刻用反应对其进行一次武器攻击。若攻击命中，除攻击的正常效果外，本次豁免检定自动成功。武器攻击与豁免自动成功需由人手动处理。",
+   "text": "当你的狩猎开始特性目标迫使你进行一次豁免检定时，你可以在进行豁免检定前用反应对它进行一次武器攻击；一旦命中，除攻击的正常效果外，你这次豁免自动成功。【已自动化】时机与目标 —— 必须是你身上挂着「狩猎开始」、并且是别人迫使你豁免时才提示（弹窗里会问是不是你的狩猎开始目标干的）；反应代价；动作自动瞄准迫使你豁免的那个生物。【要人处理】武器攻击本身，以及「命中后本次豁免自动成功」：引擎在豁免掷骰前虽然有个窗口（saveForced），但它不接受改写结果，也没有替你掷武器攻击的写法。请自己掷这次攻击，命中就手动把这次豁免按成功结算（DM 可以改判这次豁免的结果）。",
    "actions": [
     {
      "id": "use",
@@ -24629,7 +24891,8 @@
       "on": "saveForced",
       "role": "target",
       "window": "after",
-      "when": "self.hasEffect('狩猎开始') && ask('该豁免是由你的狩猎开始目标迫使进行的吗？')"
+      "aim": "actor",
+      "when": "self.hasEffect('狩猎开始') && ask('这次豁免是你的狩猎开始目标迫使的吗？')"
      },
      "targeting": {
       "type": "creature",
@@ -24638,7 +24901,7 @@
      "root": [
       {
        "kind": "note",
-       "text": "杀手反制：立刻用反应对狩猎目标进行一次武器攻击。若命中，除正常结算伤害外，本次豁免自动成功（请手动判定命中并免除豁免惩罚）。"
+       "text": "杀手反制：立刻对迫使你豁免的那个生物进行一次武器攻击。若命中，除正常伤害外，你这次豁免自动成功（请手动把豁免结果改判为成功）。"
       }
      ]
     }
@@ -27698,7 +27961,7 @@
   "XGE:spell:烈焰箭矢": {
    "name": "烈焰箭矢",
    "automation": "partial",
-   "text": "接触一个装有弹药的箭袋，持续至多 1 小时（专注）。使用其中弹药进行的远程武器攻击命中时额外造成 1d6 火焰伤害。法术在取出 12 发弹药后结束（升环每高一环增加 2 发；弹药取用计数需手动处理）。",
+   "text": "接触一个装有箭矢或弹丸的箭袋，持续至多 1 小时（专注）。此后你自己用从箭袋取出的弹药进行远程武器攻击命中时，额外造成 1d6 点火焰伤害（这一条自动加）。要人处理的：①弹药计数（12 发，每高一环 +2 发）引擎不记，取完 12 发后请手动结束专注；②别人用这个箭袋的弹药攻击时不会自动加伤害，请手动补；③引擎分不清弹药和投掷类武器 —— 你用飞刀之类投掷武器打远程武器攻击时也会被加上这 1d6，遇到请手动扣掉；④每次攻击算用掉一发（命中与否都一样）。",
    "actions": [
     {
      "id": "use",
@@ -27733,8 +27996,8 @@
    "effects": {
     "烈焰箭矢": {
      "tags": [
-      "magical",
-      "spell"
+      "spell",
+      "magical"
      ],
      "triggers": [
       {
@@ -27753,7 +28016,7 @@
        ]
       }
      ],
-     "text": "远程武器攻击命中时额外造成 1d6 火焰伤害。在从箭袋取出 12 发弹药后终结（升环每高一环+2发）。"
+     "text": "用箭袋里的弹药进行远程武器攻击命中时额外造成 1d6 火焰伤害；取完 12 发弹药后法术结束（升环每高一环 +2 发）。"
     }
    },
    "tags": [
@@ -29788,7 +30051,7 @@
   "XGE:spell:吸收元素": {
    "name": "吸收元素",
    "automation": "partial",
-   "text": "受到强酸、寒冷、火焰、闪电或雷鸣伤害时以反应施放，该次伤害减半并获得该类型抗性直至你的下个回合开始。在你的下个回合中，你的近战攻击首次命中时额外造成 1d6（每升一环 +1d6）同类型伤害，随后法术终止（伤害类型、触发减半及升环额外骰需手动调整）。",
+   "text": "受到强酸、寒冷、火焰、闪电或雷鸣伤害时用反应施放：获得触发法术的那个伤害类型的抗性（这次伤害也随之减半），持续到你的下个回合开始；在你的下个回合中，近战攻击首次命中时额外造成 1d6 点同类型伤害（每高一环 +1d6），之后法术结束。要人处理的：一次伤害包里有多种伤害类型时只认第一种 —— 只有第一种属于那五种时才提供这个反应，抗性与额外伤害也都按第一种算。",
    "actions": [
     {
      "id": "use",
@@ -29809,7 +30072,7 @@
       "on": "damageIncoming",
       "role": "target",
       "window": "before",
-      "when": "damage.type == '强酸' || damage.type == '寒冷' || damage.type == '火焰' || damage.type == '闪电' || damage.type == '雷鸣'"
+      "when": "damage.amount > 0 && (damage.type == '强酸' || damage.type == '寒冷' || damage.type == '火焰' || damage.type == '闪电' || damage.type == '雷鸣')"
      },
      "targeting": {
       "type": "self"
@@ -29818,13 +30081,47 @@
       {
        "kind": "applyEffect",
        "to": "self",
-       "template": "吸收元素"
+       "template": "吸收元素·抗性",
+       "state": {
+        "type": "damage.type"
+       }
+      },
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "吸收元素·蓄能",
+       "state": {
+        "type": "damage.type",
+        "lvl": "slot.level"
+       }
       }
      ]
     }
    ],
    "effects": {
-    "吸收元素": {
+    "吸收元素·抗性": {
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "bearer",
+       "nth": 1
+      }
+     },
+     "statics": [
+      {
+       "kind": "resist",
+       "values": [
+        "effect.state.type"
+       ]
+      }
+     ],
+     "text": "获得触发法术的那个伤害类型的抗性，直到你的下个回合开始。"
+    },
+    "吸收元素·蓄能": {
      "tags": [
       "spell",
       "magical"
@@ -29836,18 +30133,6 @@
        "nth": 1
       }
      },
-     "statics": [
-      {
-       "kind": "resist",
-       "values": [
-        "强酸",
-        "寒冷",
-        "火焰",
-        "闪电",
-        "雷鸣"
-       ]
-      }
-     ],
      "triggers": [
       {
        "id": "absorb-hit",
@@ -29855,24 +30140,24 @@
        "on": "attackHit",
        "role": "actor",
        "window": "before",
-       "when": "attack.melee && turn.isMine",
+       "when": "turn.isMine && attack.melee",
        "do": [
         {
          "kind": "addDamage",
-         "dice": "1d6",
-         "type": "火焰"
+         "dice": "(effect.state.lvl)d6",
+         "type": "effect.state.type"
         },
         {
          "kind": "removeEffect",
          "match": {
-          "name": "吸收元素"
+          "name": "吸收元素·蓄能"
          },
          "from": "self"
         }
        ]
       }
      ],
-     "text": "获得对应元素伤害类型的抗性；下个回合近战攻击首次命中额外造成 1d6 点同类型伤害（每升一环 +1d6）并结束此效应。"
+     "text": "蓄着触发法术的那个伤害类型的能量：你的下个回合里近战攻击首次命中时额外造成 1d6（每高一环 +1d6）同类型伤害，然后法术结束。"
     }
    },
    "tags": [
