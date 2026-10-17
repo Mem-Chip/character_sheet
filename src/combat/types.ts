@@ -277,7 +277,7 @@ export type Node =
    * `until: 'turnEnd'` = 当前这回合结束时自动收回。
    */
   | {
-      kind: 'grantAction'; key?: string; from?: string; action?: Action; name?: string; text?: string;
+      kind: 'grantAction'; key?: string; from?: string; fromVar?: string; action?: Action; name?: string; text?: string;
       cost?: Cost[]; activation?: 'action' | 'bonus' | 'reaction' | 'free' | 'none'; targeting?: Targeting; until?: 'turnEnd';
     }
   /** 收回一条临时授予的条目 */
@@ -285,7 +285,16 @@ export type Node =
   | { kind: 'resource'; id: string; delta: ExprSrc }
   | { kind: 'economy'; action?: number; bonus?: number; reaction?: number; attacks?: number; move?: ExprSrc }
   /** var：把选中项的 value（没写就是 label）放进 `vars.<var>`，后面的节点可以用（伤害类型 `type: 'vars.elem'`） */
-  | { kind: 'choose'; prompt: string; options: Array<{ label: string; do?: Node[]; when?: ExprSrc; value?: string }>; count?: number; var?: string }
+  /**
+   * var：把选中项的 value（没写就是 label）放进 `vars.<var>`，后面的节点可以用（伤害类型 `type: 'vars.elem'`）。
+   * `pool`：选项不写死，**由引擎按这个池子现算**（现在支持 `ownSpells` = 参与者自己身上带施法动作的法术键，
+   * 战地施法者那种「从我的法术里挑一道」用它）；选项的 value 就是法术键，配合 `grantAction.fromVar` 施展。
+   */
+  | {
+      kind: 'choose'; prompt: string; options?: Array<{ label: string; do?: Node[]; when?: ExprSrc; value?: string }>;
+      pool?: { from: 'ownSpells' | 'ownCantrips'; maxLevel?: ExprSrc; minLevel?: ExprSrc };
+      count?: number; var?: string;
+    }
   /** 让人选一个数（圣疗用多少点），结果放进 `vars.<var>` 给后面的节点用 */
   | { kind: 'number'; prompt: string; var: string; min?: ExprSrc; max: ExprSrc; default?: ExprSrc }
   | { kind: 'if'; when: ExprSrc; then?: Node[]; else?: Node[] }

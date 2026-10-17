@@ -260,8 +260,11 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
       return;
     }
     case 'choose': {
+      // `pool`：选项由引擎按池子现算（战地施法者那种「从我的法术里挑一道」）—— 选项的 value 就是法术键
+      const fromPool = n.pool ? spellPoolOptions(tx, ctx, n.pool) : null;
+      const options: Array<{ label: string; do?: Node[]; when?: ExprSrc; value?: string }> = fromPool ?? n.options ?? [];
       // 带 when 的选项：条件明确不满足就不列出来（圣疗「移除中毒」要求目标中毒、能量池至少 5 点）
-      const open = n.options.map((o, i) => ({ o, i })).filter(({ o }) => {
+      const open = options.map((o, i) => ({ o, i })).filter(({ o }) => {
         if (o.when === undefined) return true;
         const v = runBool(o.when, env(tx, ctx));
         return v !== false;
@@ -277,7 +280,7 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
       });
       const list = (Array.isArray(picked) ? picked : [picked]).map(String).slice(0, n.count ?? 1);
       for (const i of list) {
-        const o = n.options[Number(i)] ?? n.options.find((x) => x.label === i || x.value === i);
+        const o = options[Number(i)] ?? options.find((x) => x.label === i || x.value === i);
         if (!o) continue;
         if (n.var) (ctx.vars ??= {})[n.var] = o.value ?? o.label;
         runNodes(tx, o.do, ctx);
@@ -377,11 +380,13 @@ function grantActionNode(tx: Tx, n: Extract<Node, { kind: 'grantAction' }>, ctx:
   let srcName: string | undefined;
   let srcKey: string | undefined;
   let srcActionId: string | undefined;
+  // fromVar：要复制的条目键来自前面 choose/number 存进 vars 的值（战地施法者那种「从我的法术里挑一道」）
+  const fromRef = n.fromVar ? String(ctx.vars?.[n.fromVar] ?? '') : n.from;
   try {
     if (n.action) {
       action = structuredClone(n.action);
-    } else if (n.from) {
-      const found = findAction(tx, ctx.self, n.from);
+    } else if (fromRef) {
+      const found = findAction(tx, ctx.self, fromRef);
       action = structuredClone(found.action);
       srcName = found.action.name;
       srcKey = found.key;
@@ -408,13 +413,35 @@ function grantActionNode(tx: Tx, n: Extract<Node, { kind: 'grantAction' }>, ctx:
   if (n.activation) action.activation = n.activation;
   // 改写射程 / 目标类型：「只对自己施放」这类免位施法要靠它，不然复制来的法术能放别人身上
   if (n.targeting) action.targeting = structuredClone(n.targeting);
-  const key = n.key ?? `grant:${n.from ?? action.id}`;
+  const key = n.key ?? `grant:${fromRef ?? action.id}`;
   const entry: Entry = {
     name: n.name ?? srcName ?? action.name,
     actions: [action],
     ...(n.text ? { text: n.text } : {}),
   };
   tx.emit('entryGranted', { id: ctx.self, key, entry, untilTurn: n.until === 'turnEnd' ? tx.turnKey() : null }, ctx.cause);
+}
+
+/**
+ * `choose.pool` 的选项现算：从参与者**自己身上带施法动作的法术**里挑。
+ * 战地施法者「用一道法术代替借机攻击」、各种「从你的已知法术里选一道」都用它；
+ * 选项的 value 是法术键（`XPHB:spell:火球术`），配合 `grantAction.fromVar` 施展。
+ */
+function spellPoolOptions(
+  tx: Tx, ctx: ExecCtx, pool: { from: 'ownSpells' | 'ownCantrips'; maxLevel?: ExprSrc; minLevel?: ExprSrc },
+): Array<{ label: string; value: string }> {
+  const max = pool.maxLevel !== undefined ? num(tx, ctx, pool.maxLevel, '法术最高环阶') : Infinity;
+  const min = pool.minLevel !== undefined ? num(tx, ctx, pool.minLevel, '法术最低环阶') : 0;
+  const out: Array<{ label: string; value: string }> = [];
+  for (const key of effectiveView(tx, ctx.self).sources ?? []) {
+    if (!key.includes(':spell:')) continue;
+    const entry = tx.rules.entry(key) ?? effectiveView(tx, ctx.self).entries?.[key];
+    if (!entry?.actions?.length || entry.automation === 'manual') continue;
+    const level = slotBaseOf(entry.actions, undefined) ?? 0;
+    if (pool.from === 'ownCantrips' ? level !== 0 : level < min || level > max) continue;
+    out.push({ label: entry.name ?? key.split(':spell:')[1] ?? key, value: key });
+  }
+  return out.sort((a, b) => a.label.localeCompare(b.label, 'zh'));
 }
 
 /** 来源动作的法术位基础环阶（`cost: [{slot:{min}}]` 的 min） */

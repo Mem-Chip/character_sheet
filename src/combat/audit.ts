@@ -120,7 +120,7 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
         tplRef(n.template, `${at}.template`);
         break;
       case 'grantAction':
-        if (!n.from && !n.action) out.push(`${where(at)}：grantAction 要么写 from（复制哪个条目的动作），要么写 action（直接写动作）`);
+        if (!n.from && !n.action && !n.fromVar) out.push(`${where(at)}：grantAction 要么写 from（复制哪个条目的动作），要么写 fromVar（用前面选项挑的那个键），要么写 action（直接写动作）`);
         if (n.cost && !Array.isArray(n.cost)) out.push(`${where(at)}：grantAction 的 cost 要么不写（沿用原动作），要么是一个代价数组（空数组 = 不花任何代价）`);
         break;
       case 'removeGrant':
@@ -133,7 +133,13 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
         expr(n.move, 'node', NUM, `${at}.move`);
         break;
       case 'choose':
-        n.options.forEach((o, i) => {
+        if (!n.options && !n.pool) out.push(`${where(at)}：choose 要么写 options（写死的选项），要么写 pool（引擎现算的池子）`);
+        if (n.pool && !['ownSpells', 'ownCantrips'].includes(n.pool.from)) out.push(`${where(at)}：choose 的 pool.from 只认 ownSpells / ownCantrips`);
+        if (n.pool) {
+          expr(n.pool.maxLevel, 'node', NUM, `${at}.pool.maxLevel`);
+          expr(n.pool.minLevel, 'node', NUM, `${at}.pool.minLevel`);
+        }
+        (n.options ?? []).forEach((o, i) => {
           expr(o.when, 'node', BOOL, `${at}.options[${i}].when`);
           nodes(o.do, `${at}.options[${i}]`);
         });

@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { RuleBook, Session, createEncounter, makeCombatant, makeView, scriptedDice, type RuleFile } from '../../src/combat';
 import { RULE_FILES } from '../../src/bridge/rule-files';
-import { FILES, done, evs } from './helpers';
+import { FILES, done, evs, pending } from './helpers';
 
 /** 一道 3 环、要法术位的法术 + 一个「免位施放」特性 + 一个「覆盖」特性 */
 const TEST = {
@@ -103,6 +103,75 @@ describe('临时动作（grantAction）', () => {
   });
 });
 
+describe('战地施法者：从自己带着的法术里挑一道，代替借机攻击', () => {
+  const SPELL = {
+    note: 'T2',
+    entries: {
+      'T2:spell:电': {
+        name: '电击',
+        actions: [{
+          id: 'cast', name: '电击', activation: 'action', tags: ['spell', 'magical'],
+          targeting: { type: 'creature', count: 1, range: 60 },
+          root: [{ kind: 'damage', dice: '1d8', type: '闪电', to: 'target' }],
+        }],
+      },
+      'T2:spell:冰': {
+        name: '冰锥',
+        actions: [{
+          id: 'cast', name: '冰锥', activation: 'action', tags: ['spell', 'magical'],
+          targeting: { type: 'creature', count: 1, range: 60 },
+          root: [{ kind: 'damage', dice: '1d6', type: '冷冻', to: 'target' }],
+        }],
+      },
+    },
+  } as unknown as RuleFile;
+
+  it('敌人走开 → 问「用法术代替借机攻击吗」→ 从自己的法术里挑 → 拿到一个免动作的施法', () => {
+    const dice = scriptedDice(); dice.push(...Array.from({ length: 30 }, () => 3));
+    const positions = { current: { w: { x: 0, y: 0, s: 1 }, g: { x: 1, y: 0, s: 1 } } as Record<string, { x: number; y: number; s: number }> };
+    const s = new Session(createEncounter('wc'), {
+      rules: new RuleBook([...FILES, SPELL] as RuleFile[]),
+      diceFor: () => dice,
+      positions: () => positions.current as never,
+    });
+    const add = (id: string, kind: 'pc' | 'monster', view: Record<string, unknown>) => done(s.dispatch({
+      type: 'addCombatant',
+      combatant: makeCombatant({ id, kind, ...(kind === 'monster' ? { side: 'enemy' } : {}), view: makeView({ name: id, hpMax: 30, ac: 12, ...view }) }),
+    }));
+    const atk = { id: 'atk-1', name: '爪', bonus: 5, damage: '1d6 + 2', damageType: '挥砍', melee: true, ranged: false, finesse: false, ability: 'str' };
+    add('w', 'pc', { sources: ['XPHB:战地施法者', 'T2:spell:电', 'T2:spell:冰'], attacks: [atk], spell: { dc: 13, atk: 5, mod: 3, ability: 'int' } });
+    add('g', 'monster', {});
+    done(s.dispatch({ type: 'startCombat', order: ['g', 'w'] }));
+    // g 走开：离开 w 的触及 → 时机能力列表里出现战地施法者 → 答「用」→ 从自己的法术里挑
+    let r = s.dispatch({ type: 'move', id: 'g', ft: 5, path: [{ x: 1, y: 0 }, { x: 3, y: 0 }] });
+    let sawWarcaster = false;
+    let sawSpellPick = false;
+    for (let i = 0; i < 8 && r.status === 'pending'; i++) {
+      const d = r.decision as unknown as { kind: string; prompt?: string; questions?: Array<{ id: string; prompt?: string }>; options?: Array<{ id: string; label: string }> };
+      if (d.kind === 'ask') {
+        if (/战地施法者/.test(JSON.stringify(d))) sawWarcaster = true;
+        r = s.decide(Object.fromEntries((d.questions ?? []).map((q) => [q.id, true])));
+        continue;
+      }
+      const opts = d.options ?? [];
+      const wc = opts.find((o) => String(o.label).includes('战地施法者'));
+      const sp = opts.find((o) => String(o.label).includes('电击'));
+      if (wc) { sawWarcaster = true; r = s.decide(String(wc.id)); continue; }
+      if (sp) { sawSpellPick = true; r = s.decide(String(sp.id)); continue; }
+      const none = opts.find((o) => String(o.label).includes('不') || o.id === '');
+      r = s.decide(String((none ?? opts[0])?.id ?? ''));
+    }
+    done(r);
+    expect(sawWarcaster, '时机能力列表里该有战地施法者').toBe(true);
+    expect(sawSpellPick, '该让我从自己带着的法术里挑（列表里有「电击」）').toBe(true);
+    // 授予的施法动作在动作栏里，而且不花动作
+    const granted = s.view('w').sources.filter((k) => k.startsWith('grant:'));
+    expect(granted.length, '应该有一个授予的施法动作').toBeGreaterThan(0);
+    done(s.dispatch({ type: 'useAction', actor: 'w', action: `${granted[0]}#cast`, targets: ['g'] }));
+    expect(s.state.combatants['g'].live.hp, '电击打出伤害').toBeLessThan(30);
+  });
+});
+
 describe('真实数据：免法术位施放（用 grantAction 复制法术动作）', () => {
   const scene2 = (sources: string[], extra: Record<string, unknown> = {}) => {
     const dice = scriptedDice(); dice.push(...Array.from({ length: 30 }, () => 3));
@@ -138,6 +207,8 @@ describe('真实数据：免法术位施放（用 grantAction 复制法术动作
     expect(eco().action).toBe(1);
   });
 });
+
+
 
 
 
