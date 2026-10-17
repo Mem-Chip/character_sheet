@@ -58,12 +58,11 @@
   - **接着做剩下的类别**：反应里改结算（20）、免伤（15）、物品消耗（12）、次数池（12）、改目标 / 替盟友挨打（9）、推拉（7）、骰子取最大（6）。
     逐条的 `key` / `gap` / `need` 在 `datafy/manual-audit/answers/*.json`。
   - 测试：`tests/combat/zone-data.test.ts`、`tests/combat/summon-data.test.ts`（真数据跑遭遇）。
-  - **剩下几个大类也做了一轮**（[round6/README.md](datafy/manual-audit/round6/README.md)）：92 条里合并 55 条（10 条升到 full）；
+  - **剩下几个大类也做了一轮**（[round6/README.md](datafy/manual-audit/round6/README.md)）：92 条**全部处理完**（55 条一次通过 + 35 条复核意见逐条修 + 2 条在手写文件里单独同步），10 条从 partial 升到 full；
     顺手修了「`damageTaken` 只开窗口不发事件」——效应的 `endsOn: [{ event: 'damageTaken' }]` 以前从来没生效过（数据里约 26 处）。
-  - **还缓着 25 条**：[round6/suspects.md](datafy/manual-audit/round6/suspects.md)（35 条里已修 10 条，剩下的每条都写了哪不对：`when` 少条件、DC 属性写错、把做不到的写成 manual 说明、静态层池子记不下次数）。
-  - 检查器已经补上：`reach` / `melee` / `ranged` / `finesse` 写数字会报（`src/combat/audit.ts` 的 `flagsOf`）。
-  - 数据侧的引擎知识（代理实测出来的，写数据时照着办）：`aura.grant.triggers` **不过** `auraGate`，灵光授予的触发器要自己写 `within(source, self, 半径)`；
-    `before` 窗口里重新施加同效果会重新收集候选（最多 5 轮），用「重新施加效应记剩余次数」要加短命标记，否则同一笔伤害算两次。
+  - 检查器已经补上：`reach` / `melee` / `ranged` / `finesse` 写数字会报、`attack != null` 会报（改用 `ask('这次伤害来自一次攻击吗？')`）。
+  - **还剩下的**：审查报告里还有 **约 433 条**没铺到（都在**别的**类别里：condition 63、timing 61、resource 56、other 49、reactModify 44、move 40、choice 29、item 26…），
+    另有 80 条属于「暂时不做」（视线 / 传送 / 三维 / 困难地形）。这 433 条里很多要新引擎概念（移出战场、改变体型、链式跳跃、阻挡弹道、生命骰池…），一次做不完，按类别一轮一轮来。
 - **灵光（aura）的两个引擎缺口**（第二轮复核实测出来的）：① aura 授予的触发器**不检查半径**（`src/combat/triggers.ts` 没走 auraGate）—— 至圣光轮 30 尺、迅捷灵光 10 尺，实测 60 尺 / 20 尺外照样生效；数据侧暂时可以补 `when: 'dist(source, self) <= N'` 兜。
   ② `aura.grant.statics` **根本没被读取**（`effectiveView` 只看 rollMods / triggers）—— 勇气灵光授予的「免疫恐慌」、净化灵光的毒素抗性是死数据（第五轮又实测了一次）。在哪：`src/combat/triggers.ts`、`src/combat/effects.ts`（要把 `aurasCovering` 挪出来或抽成独立模块才能给 `effectiveView` 用）。
 - **区域（zone）拿不到 `vars`**：`src/combat/space.ts` 传给区域的是 `vars: {}`，施法时 `choose` 选出来的东西（伤害类型等）在区域里丢了（哈达之欲的升环加骰永远落在强酸上）。在哪：`space.ts` 的 `runZone` / `Zone`（把创建时的 vars 存进 zone）。
