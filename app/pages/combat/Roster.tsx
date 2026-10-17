@@ -4,7 +4,7 @@ import type { Session } from '../../../src/combat';
 import { Panel, Tag } from '../../components/ui';
 import { combat, type CombatUi } from '../../lib/combat';
 import { woundOf } from './Initiative';
-import { rosterOrder } from './shared';
+import { avatarOf, rosterOrder } from './shared';
 
 export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: CombatUi; onAddPc: () => void; onAddMonster: () => void }) {
   const st = s.state;
@@ -32,6 +32,7 @@ export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: Comba
         const isTarget = ui.targets.includes(id);
         const secret = combat.isSecret(id);
         const hiddenNow = dmRemote && ui.remote!.hidden.includes(id);
+        const av = avatarOf(s, ui, id);
         return (
           <div
             key={id}
@@ -41,6 +42,7 @@ export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: Comba
           >
             <span className="init">{c.initiative ?? '—'}</span>
             <span className="nm">
+              {av && <img className="cbt-av" src={av} alt="" />}
               {c.name}
               {c.summoner && <span className="tiny faint" style={{ marginLeft: 4 }}>（{st.combatants[c.summoner]?.name ?? c.summoner}）</span>}
               <span className={'faction ' + (c.side === 'party' ? 'party' : c.side === 'enemy' ? 'enemy' : '')}>{c.side === 'party' ? '友' : c.side === 'enemy' ? '敌' : c.side}</span>

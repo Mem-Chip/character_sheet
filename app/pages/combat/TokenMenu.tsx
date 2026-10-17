@@ -6,9 +6,10 @@ import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } fr
 import type { Session } from '../../../src/combat';
 import { combat, type CombatUi } from '../../lib/combat';
 import type { Engine } from '../../lib/engine';
+import { getApp, actions } from '../../lib/store';
 import { termOfKey } from '../../lib/terms';
 import { Term } from '../../components/Term';
-import { effectLabel, type Namer } from './shared';
+import { avatarOf, cropAvatarFile, effectLabel, type Namer } from './shared';
 
 let open: { id: string; x: number; y: number } | null = null;
 const subs = new Set<() => void>();
@@ -27,6 +28,7 @@ const close = () => { if (open) { open = null; emit(); } };
 export function TokenMenu({ s, ui, engine, name }: { s: Session; ui: CombatUi; engine: Engine; name: Namer }) {
   const m = useSyncExternalStore((f) => { subs.add(f); return () => subs.delete(f); }, () => open);
   const el = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const [conds, setConds] = useState(false);
 
@@ -61,11 +63,49 @@ export function TokenMenu({ s, ui, engine, name }: { s: Session; ui: CombatUi; e
   const isCond = (e: (typeof effects)[number]) => conditions.some((k) => e.origin?.ref === k || effectLabel(e.name).cond === label(k));
   const act = (f: () => void) => () => { f(); close(); };
 
+  const curAvatar = avatarOf(s, ui, m.id);
+  const ctl = c.controller;
+  const curOwner = r ? r.owners[ctl] : undefined;
+  const linkedCardId = ui.links[m.id];
+  const linkedCard = linkedCardId ? getApp().cards[linkedCardId] : undefined;
+
   return (
     <div ref={el} className="panel menu-pop ctx-menu" style={{ left: pos?.x ?? m.x, top: pos?.y ?? m.y, visibility: pos ? 'visible' : 'hidden' }} onContextMenu={(e) => e.preventDefault()}>
       <div className="menu-head"><b className="serif">{name(m.id)}</b></div>
       <button onClick={act(() => combat.select(m.id))}>选中</button>
       <button onClick={act(() => combat.toggleTarget(m.id))}>{ui.targets.includes(m.id) ? '取消目标' : '设为目标'}</button>
+      {(dm || mine) && (
+        <>
+          <button onClick={() => fileRef.current?.click()}>{curAvatar ? '更换立绘…' : '上传立绘…'}</button>
+          <input
+            ref={fileRef} type="file" accept="image/*" hidden
+            onChange={async (e) => {
+              const f = e.target.files?.[0];
+              e.target.value = '';
+              if (!f) return;
+              const targetId = m.id;
+              close();
+              try {
+                const dataUrl = await cropAvatarFile(f);
+                combat.setAvatar(targetId, dataUrl);
+              } catch { combat.toast('无法读取该图片'); }
+            }}
+          />
+          {curAvatar && <button onClick={act(() => combat.setAvatar(m.id, null))}>清除立绘</button>}
+        </>
+      )}
+      {r && dm && c.kind === 'pc' && curOwner != null && (
+        <button onClick={act(() => {
+          combat.setOwner(ctl, null);
+          if (linkedCardId && getApp().cards[linkedCardId]) actions.update(linkedCardId, (ch) => { ch.dmControlled = true; });
+        })} title="将该角色绑定给 DM 控制，不用每次点 DM 代答">绑定 DM（常驻接管）</button>
+      )}
+      {r && dm && c.kind === 'pc' && curOwner == null && linkedCard?.owner && linkedCard.owner.id !== r.me && (
+        <button onClick={act(() => {
+          combat.setOwner(ctl, linkedCard.owner!.id);
+          actions.update(linkedCardId!, (ch) => { ch.dmControlled = false; });
+        })}>交还 {linkedCard.owner.name} 操控</button>
+      )}
       {dm && <button onClick={() => setConds(!conds)}>状态{effects.length ? `（${effects.length}）` : ''} {conds ? '▴' : '▾'}</button>}
       {dm && conds && (
         <div className="ctx-conds">
@@ -96,3 +136,4 @@ export function TokenMenu({ s, ui, engine, name }: { s: Session; ui: CombatUi; e
     </div>
   );
 }
+

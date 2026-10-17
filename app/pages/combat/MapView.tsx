@@ -18,7 +18,8 @@ import { ZoneDialog } from './ZoneDialog';
 import { cellHit, coveredCells, directional, snapHalf, snapLen, spellTpl, tplLabel, tplOrigin, tplPath, type Tpl } from '../../lib/area';
 import { PING_LIFE } from '../../lib/combat';
 import { tokenMenu } from './TokenMenu';
-import { effectLabel } from './shared';
+import { woundOf } from './Initiative';
+import { avatarOf, effectLabel } from './shared';
 import { NumInput } from '../../components/ui';
 import { combat, type CombatUi, type MapState, type Remote } from '../../lib/combat';
 import type { Namer } from './shared';
@@ -579,9 +580,14 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
             {drag?.kind === 'pen' && <polyline points={drag.pts.join(' ')} fill="none" stroke={color} strokeWidth={width} strokeLinecap="round" strokeLinejoin="round" />}
             {tokens.map(([id, t]) => {
               const c = st.combatants[id];
+              const v = s.view(id);
               const at = moving?.id === id ? moving.at : t;
-              const n = footprint(s.view(id).size);
+              const n = footprint(v.size);
               const r = (n * g) / 2;
+              const bodyR = r * 0.86;
+              const av = avatarOf(s, ui, id);
+              const wound = c.live.dead ? '死亡' : woundOf(c.live.hp, v.hpMax);
+              const woundCls = c.live.dead ? 'dead' : c.live.hp <= 0 ? 'down' : c.live.hp >= v.hpMax ? 'full' : c.live.hp * 2 <= v.hpMax ? 'bloodied' : 'hurt';
               const cls = ['token', c.side === 'party' ? 'party' : c.side === 'enemy' ? 'enemy' : 'other', id === ui.selected && 'sel', id === current && 'turn',
                 ui.targets.includes(id) && 'tgt', c.live.dead && 'dead', remote.hidden.includes(id) && 'hid', combat.canControl(id) && 'mine'].filter(Boolean).join(' ');
               return (
@@ -591,11 +597,22 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
                   onPointerDown={(e) => tokenDown(e, id)}
                   onContextMenu={(e) => tokenMenu(e, id, ui)}
                 >
-                  <title>{c.name}{effOf[id]?.length ? `：${effOf[id].join('、')}` : ''}</title>
-                  {id === ui.selected && <circle className="ring-sel" r={r * 0.86 + 5} />}
-                  {ui.targets.includes(id) && <circle className="ring-tgt" r={r * 0.86 + (id === ui.selected ? 10 : 5)} />}
-                  <circle className="body" r={r * 0.86} />
-                  <text dy="0.35em" fontSize={Math.max(10, r * 0.62)}>{c.name.slice(0, n > 1 ? 4 : 2)}</text>
+                  <title>{c.name}（{wound}）{effOf[id]?.length ? `：${effOf[id].join('、')}` : ''}</title>
+                  {id === ui.selected && <circle className="ring-sel" r={bodyR + 5} />}
+                  {ui.targets.includes(id) && <circle className="ring-tgt" r={bodyR + (id === ui.selected ? 10 : 5)} />}
+                  {av && (
+                    <>
+                      <clipPath id={`tok-clip-${id}`}><circle r={bodyR} /></clipPath>
+                      <image
+                        href={av} x={-bodyR} y={-bodyR} width={bodyR * 2} height={bodyR * 2}
+                        preserveAspectRatio="xMidYMid slice" clipPath={`url(#tok-clip-${id})`}
+                        style={{ pointerEvents: 'none' }}
+                      />
+                    </>
+                  )}
+                  <circle className="body" r={bodyR} style={av ? { fill: 'none' } : undefined} />
+                  {!av && <text dy="0.35em" fontSize={Math.max(10, r * 0.62)}>{c.name.slice(0, n > 1 ? 4 : 2)}</text>}
+                  <text className={'tok-hp ' + woundCls} y={bodyR + Math.max(10, r * 0.34)} fontSize={Math.max(9.5, r * 0.32)}>{wound}</text>
                   {effOf[id]?.length > 0 && (
                     <g className="eff-badge" transform={`translate(${r * 0.62} ${r * 0.62})`}>
                       <title>{effOf[id].join('、')}</title>

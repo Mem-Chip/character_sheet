@@ -144,6 +144,7 @@ function campaignJson(c: Row, u: User) {
       const ch = JSON.parse(String(r.data));
       return {
         id: r.id, ownerId: r.owner_id, ownerName: r.owner_name, name: ch.name || '未命名',
+        dmControlled: !!ch.dmControlled,
         summary: [ch.race, (ch.classes || []).filter((k: Row) => k.name).map((k: Row) => `${k.name} ${k.level}`).join(' / ')].filter(Boolean).join(' · '),
       };
     });

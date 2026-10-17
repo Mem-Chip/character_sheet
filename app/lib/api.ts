@@ -50,5 +50,5 @@ export interface Campaign {
   role: 'dm' | 'player';
   code?: string;
   members: Array<{ id: number; name: string; role: 'dm' | 'player' }>;
-  cards: Array<{ id: string; ownerId: number; ownerName: string; name: string; summary: string }>;
+  cards: Array<{ id: string; ownerId: number; ownerName: string; name: string; dmControlled?: boolean; summary: string }>;
 }

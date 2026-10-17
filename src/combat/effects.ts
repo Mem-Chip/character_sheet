@@ -105,9 +105,11 @@ const SKILL_ALIAS: Record<string, readonly [string, string, 'str' | 'dex' | 'con
   const m: Record<string, readonly [string, string, 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha']> = {};
   for (const d of SKILL_DEFS) {
     m[d[0]] = d;
+    m[d[0].replace(/-/g, ' ')] = d;
     m[d[1]] = d;
   }
   m['特技'] = ['acrobatics', '体操', 'dex'];
+  m['求生'] = ['survival', '生存', 'wis'];
   return m;
 })();
 
@@ -116,8 +118,11 @@ export function skillBonus(v: CombatantView, skill: string, fallbackAbility?: 's
   if (v.skill[skill] !== undefined) return v.skill[skill];
   const def = SKILL_ALIAS[skill];
   if (def) {
+    const spaceKey = def[0].replace(/-/g, ' ');
     if (v.skill[def[0]] !== undefined) return v.skill[def[0]];
+    if (v.skill[spaceKey] !== undefined) return v.skill[spaceKey];
     if (v.skill[def[1]] !== undefined) return v.skill[def[1]];
+    if (def[0] === 'survival' && v.skill['求生'] !== undefined) return v.skill['求生'];
     return v.mod[fallbackAbility ?? def[2]];
   }
   return fallbackAbility ? v.mod[fallbackAbility] : 0;

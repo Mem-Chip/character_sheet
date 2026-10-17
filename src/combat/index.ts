@@ -4,7 +4,7 @@ export { engineDice, physicalDice, scriptedDice, seededRng, diceSourceFor, defau
 export { Tx, NeedDecision, Rejected, gridSpatial, gridFeet, pathFeet, footprint, type Diagonal, type EngineCtx, type Positions, type Spatial, type TxInput } from './tx';
 export { Session, createEncounter, runTx, DEFAULT_SETTINGS, type DispatchResult, type SessionSave } from './session';
 export { makeView, makeCombatant, freshEconomy, freshLive, modOf, type ViewInit } from './view';
-export { effectiveView, activeTemplates, hasCondition, findEffect, effectsOf, concentrationOf, CONC_KEY } from './effects';
+export { effectiveView, activeTemplates, hasCondition, findEffect, effectsOf, concentrationOf, skillBonus, CONC_KEY } from './effects';
 export { scopeDef, REF_SHAPE, type ScopeKind } from './scope';
 export { weaponAction, canPay, describeCost, actionCosts, maxTargets, effectiveAction } from './exec';
 export { normType } from './damage';

@@ -3,13 +3,13 @@
  * 只放每回合都用的东西；效应、手动调整、资源明细在「详情」抽屉里（完整的 Actor 面板）。
  */
 import { useMemo, useState } from 'react';
-import type { Json } from '../../../src/sheet';
-import type { Session } from '../../../src/combat';
+import { ABILS, ABIL_CN, SKILLS, type Json } from '../../../src/sheet';
+import { skillBonus, type Session } from '../../../src/combat';
 import { Term } from '../../components/Term';
 import { termOfKey, termOfResource } from '../../lib/terms';
 import { combat, type CombatUi } from '../../lib/combat';
 import { setResHidden, useHiddenRes } from '../../lib/hotres';
-import { Clip } from '../../components/ui';
+import { Clip, sgn } from '../../components/ui';
 import type { Engine } from '../../lib/engine';
 import { CostIcon, actionsFor, costKind, freeSlots, runAction, type ActItem, type Group } from './Actor';
 import { woundOf } from './Initiative';
@@ -69,6 +69,10 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
   /** 升环：点左边的法术位选一个环阶，下一个法术就按这一环放（放完回到默认的最低环）；换人就清掉 */
   const [castAt, setCastAt] = useState<{ id: string; L: number } | null>(null);
   const [asReaction, setAsReaction] = useState(false);
+  /** 快速掷骰面板（在详情/收起处切换）：怪物可选 6 围检定/豁免，玩家额外可选 18 项技能检定 */
+  const [quickRoll, setQuickRoll] = useState(false);
+  const [rollTab, setRollTab] = useState<'abil' | 'skill'>('abil');
+  const [rollDc, setRollDc] = useState('');
   const hiddenRes = useHiddenRes(id ?? '');
 
   const fold = <button className="btn ghost sm hot-fold" onClick={onToggle} title={collapsed ? '展开行动栏' : '收起行动栏'}>{collapsed ? '展开' : '收起'}</button>;
@@ -76,12 +80,15 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
   if (collapsed) {
     const c0 = id ? s.state.combatants[id] : null;
     const secret = !!id && combat.isSecret(id);
+    const canRoll = !!id && !secret && combat.canControl(id);
     return (
       <div className="hotbar folded">
         <div className="hot-fold-row">
           {c0 ? <><b className="serif">{c0.name}</b>{!secret && <span className="num">{c0.live.hp}/{s.view(id!).hpMax}</span>}</> : <span className="muted small">没选中人</span>}
           <span style={{ flex: 1 }} />
           {turnButton}
+          {canRoll && <button className="btn sm" onClick={() => { setQuickRoll(true); onToggle(); }} title="展开行动栏并进行快速掷骰">快速掷骰</button>}
+          {c0 && <button className="btn sm" onClick={onDetail} title="效应、手动调整、资源明细、检定">详情</button>}
           {fold}
         </div>
       </div>
@@ -159,6 +166,10 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
     if (it.slot && at != null) setCastAt(null);
   };
 
+  const parsedDc = rollDc.trim() !== '' && Number.isFinite(Number(rollDc)) ? Number(rollDc) : undefined;
+  const isPc = c.kind === 'pc';
+  const activeRollTab = isPc ? rollTab : 'abil';
+
   return (
     <div className="hotbar">
       <div className="hot-status">
@@ -227,7 +238,75 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
         {effTags}
       </div>
 
-      {ui.aim ? <div className="hot-actions"><AimBar ui={ui} name={name} /></div> : <div className="hot-actions">
+      {ui.aim ? <div className="hot-actions"><AimBar ui={ui} name={name} /></div> : quickRoll ? (
+        <div className="hot-actions">
+          <div className="hot-tabs">
+            <button className={activeRollTab === 'abil' ? 'on' : ''} onClick={() => setRollTab('abil')}>六围检定 / 豁免</button>
+            {isPc && <button className={activeRollTab === 'skill' ? 'on' : ''} onClick={() => setRollTab('skill')}>技能检定<small>{SKILLS.length}</small></button>}
+            <span style={{ flex: 1 }} />
+            <label className="row tiny faint" style={{ gap: 4, marginRight: 6 }}>
+              DC
+              <input
+                type="number" min={1} max={40} value={rollDc} placeholder="可选"
+                onChange={(e) => setRollDc(e.target.value)}
+                style={{ width: 52, height: 22, padding: '0 4px' }}
+              />
+            </label>
+            <button className="btn ghost sm" onClick={() => setQuickRoll(false)} style={{ marginBottom: 2 }}>返回动作</button>
+          </div>
+          {activeRollTab === 'abil' ? (
+            <div className="hot-grid hot-roll-panel">
+              <div className="hot-roll-row">
+                <span className="hot-roll-lbl">检定</span>
+                {ABILS.map((a) => (
+                  <button
+                    key={'chk-' + a} className="hot-act" disabled={!mine}
+                    onClick={() => combat.dispatch({ type: 'roll', roller: id, kind: 'check', ability: a, dc: parsedDc })}
+                    title={`${ABIL_CN[a]}检定（${sgn(v.mod[a])}）`}
+                  >
+                    <span>{ABIL_CN[a]}</span>
+                    <small>{sgn(v.mod[a])}</small>
+                  </button>
+                ))}
+              </div>
+              <div className="hot-roll-row">
+                <span className="hot-roll-lbl">豁免</span>
+                {ABILS.map((a) => {
+                  const prof = v.save[a] !== v.mod[a];
+                  return (
+                    <button
+                      key={'sav-' + a} className={'hot-act' + (prof ? ' open' : '')} disabled={!mine}
+                      onClick={() => combat.dispatch({ type: 'roll', roller: id, kind: 'save', ability: a, dc: parsedDc })}
+                      title={`${ABIL_CN[a]}豁免（${sgn(v.save[a])}）`}
+                    >
+                      <span>{ABIL_CN[a]}豁免</span>
+                      <small>{sgn(v.save[a])}</small>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="hot-grid">
+              {SKILLS.map(([en, cn, ab]) => {
+                const b = skillBonus(v, cn, ab);
+                const prof = b !== v.mod[ab];
+                return (
+                  <button
+                    key={en} className={'hot-act' + (prof ? ' open' : '')} disabled={!mine}
+                    onClick={() => combat.dispatch({ type: 'roll', roller: id, kind: 'check', ability: ab, skill: cn, dc: parsedDc })}
+                    title={`${cn}（${ABIL_CN[ab]}）检定：${sgn(b)}`}
+                  >
+                    <span>{cn}</span>
+                    <span className="faint tiny">{ABIL_CN[ab].slice(0, 1)}</span>
+                    <small>{sgn(b)}</small>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ) : <div className="hot-actions">
         <div className="hot-tabs">
           {tabs.map((t) => (
             <button key={t.k} className={t.k === cur?.k ? 'on' : ''} onClick={() => setTab(t.k)}>{t.label}<small>{t.list.length}</small></button>
@@ -261,9 +340,13 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
 
       <div className="hot-end">
         {turnButton}
-        <button className="btn sm" onClick={onDetail} title="效应、手动调整、资源明细、检定">详情</button>
+        <div className="row" style={{ gap: 4, flexWrap: 'nowrap' }}>
+          <button className={'btn sm' + (quickRoll ? ' on' : '')} style={{ flex: 1 }} disabled={!mine} onClick={() => setQuickRoll(!quickRoll)} title={isPc ? '快速选择六围检定、豁免或技能检定' : '快速选择六围检定或豁免'}>快速掷骰</button>
+          <button className="btn sm" style={{ flex: 1 }} onClick={onDetail} title="效应、手动调整、资源明细、检定">详情</button>
+        </div>
         {fold}
       </div>
     </div>
   );
 }
+

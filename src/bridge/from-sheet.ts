@@ -260,6 +260,7 @@ export function viewFromSheet(env: SheetEnv, char: CharData, sheet: Json): Comba
     slots,
     classTable: classTableRow(char),
     wearing,
+    ...(char.profile?.portrait ? { avatar: String(char.profile.portrait) } : {}),
   };
 }
 
