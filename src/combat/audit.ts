@@ -65,6 +65,16 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
     if (!ref) return;
     if (!book.resolveTemplate(ref, key)) out.push(`${where(at)}：效应模板「${ref}」不存在`);
   };
+  /** 攻击行的开关位是布尔：写数字会被静默当成真（`reach` 尤其危险 —— 真 = 10 尺触及） */
+  const flagsOf = (a: unknown, at: string) => {
+    if (!a || typeof a !== 'object') return;
+    for (const k of ['melee', 'ranged', 'reach', 'finesse']) {
+      const v = (a as Record<string, unknown>)[k];
+      if (v !== undefined && typeof v !== 'boolean') {
+        out.push(`${where(`${at}.${k}`)}：要写 true / false（${k === 'reach' ? '真 = 10 尺触及，不是几尺的意思' : '写数字会被当成真'}）`);
+      }
+    }
+  };
 
   const nodes = (list: Node[] | undefined, at: string) => {
     (list ?? []).forEach((n, i) => node(n, `${at}[${i}]`));
@@ -75,6 +85,7 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
       case 'attack':
         expr(n.bonus, 'node', NUM, `${at}.bonus`);
         expr(n.critRange, 'node', NUM, `${at}.critRange`);
+        flagsOf(n.attack, `${at}.attack`);
         nodes(n.onHit, `${at}.onHit`);
         nodes(n.onMiss, `${at}.onMiss`);
         break;
@@ -163,6 +174,7 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
         (n.attacks ?? []).forEach((a, i) => {
           expr(a.bonus, 'node', NUM, `${at}.attacks[${i}].bonus`);
           expr(a.damage, 'node', DICE, `${at}.attacks[${i}].damage`);
+          flagsOf(a, `${at}.attacks[${i}]`);
           (a.extra ?? []).forEach((x, j) => expr(x.dice, 'node', DICE, `${at}.attacks[${i}].extra[${j}].dice`));
         });
         (n.actions ?? []).forEach((a) => action(a, `${at}.actions[${a.id}]`));

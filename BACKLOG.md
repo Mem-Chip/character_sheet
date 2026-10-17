@@ -53,8 +53,9 @@
   - **区域 + 借机攻击 + 召唤已经做了三轮**（[round2](datafy/manual-audit/round2/README.md) 53 条、[round3](datafy/manual-audit/round3/README.md) 40 条、[round4](datafy/manual-audit/round4/README.md) 23 条）：
     每一轮的流程都是「子代理写 → 每个自检（结构 + 审计 + 小遭遇试算）→ 另派代理独立复核（拿 5etools 原文逐条比）→ 只合并复核通过的」。
     第三轮起复核挑出的问题数在收敛：38 → 34 → 5。
-  - **还剩 12 条要收拾**：[round4/suspects.md](datafy/manual-audit/round4/suspects.md) 里 5 条有具体证据（野火精魂×0 血不移除、咒唤林地卫士该可选 + `canSee` 现成、链之魔契的图鉴说法是错的、哨兵给的原因编的、灵感织衣的 `to: 'each'` 不合法），
-    外加 `fix4-01` 那 7 条（草稿在 `.oracle/drafts3/fix4-01.json`，连续两轮同一个代理不回报结果，需要单独复核）。
+  - **还剩 9 条要收拾**：[round4/suspects.md](datafy/manual-audit/round4/suspects.md) 里有全部证据（野火精魂 0 血不移除、咒唤林地卫士该可选 + `canSee` 现成、链之魔契的图鉴说法是错的、哨兵给的原因编的、灵感织衣的 `to: 'each'` 不合法、
+    尚武魔宠 / 契灵伙伴的 `reach: 5`（布尔位写成数字）+ 原法术的持续与强化没写、亡灵仆役与死灵魔典说的「静态层已经有了」是空指针）。
+    其中 `reach` / `melee` / `ranged` / `finesse` 写数字这类错**检查器已经会报了**（`src/combat/audit.ts` 的 `flagsOf`）。
   - 测试：`tests/combat/zone-data.test.ts`、`tests/combat/summon-data.test.ts`（真数据跑遭遇）。
   - 之后：审查报告里剩下的类别（重骰 / 加骰 / 改判定 38、反应里改结算 20、免伤 15、物品消耗 12、次数池 12、改目标 / 替盟友挨打 9、推拉 7、骰子取最大 6），逐条在 `datafy/manual-audit/answers/*.json`。
 - **灵光（aura）的两个引擎缺口**（第二轮复核实测出来的）：① aura 授予的触发器**不检查半径**（`src/combat/triggers.ts` 没走 auraGate）—— 至圣光轮 30 尺、迅捷灵光 10 尺，实测 60 尺 / 20 尺外照样生效；数据侧暂时可以补 `when: 'dist(source, self) <= N'` 兜。
