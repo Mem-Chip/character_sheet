@@ -7360,7 +7360,7 @@
   "FRHoF:圣武士:水巨灵之激流:3": {
    "name": "水巨灵之激流",
    "automation": "partial",
-   "text": "施展至圣斩后，可消耗 1 次引导神力触发。至圣斩目标及周围 10 尺光环内指定的每个生物须进行力量豁免（DC 等于你的法术豁免 DC），失败被直线推开 15 尺并陷入倒地状态。相关生物的豁免、推移与倒地状态需手动处理。",
+   "text": "巨灵贵族的元素斩选项之一：在你对目标施展至圣斩之后，消耗 1 次引导神力触发。至圣斩的目标进行一次对抗你法术豁免 DC 的力量豁免，失败被直线推开 15 尺并陷入倒地——这一段由引擎结算（有地图时直接推棋子，没有地图时提示你手动移动）。需要人处理的部分：源自你的 10 尺光环内你指定的其他生物也要各做一次同样的力量豁免，失败同样被推开并倒地；引擎在至圣斩的窗口里只知道至圣斩的目标，不会替你选光环里的其他生物，请手动为它们掷豁免、移动并施加倒地。",
    "triggers": [
     {
      "id": "marid-torrent",
@@ -7376,8 +7376,25 @@
      ],
      "do": [
       {
+       "kind": "save",
+       "ability": "str",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "move",
+         "mode": "push",
+         "ft": 15
+        },
+        {
+         "kind": "applyEffect",
+         "to": "target",
+         "template": "XPHB:condition:倒地"
+        }
+       ]
+      },
+      {
        "kind": "note",
-       "text": "水巨灵之激流：至圣斩目标与你 10 尺光环内指定的每个生物进行力量豁免（DC 等于你的法术豁免 DC），失败被直线推开 15 尺并陷入倒地状态（请手动结算）"
+       "text": "水巨灵之激流：除至圣斩的目标以外，源自你的 10 尺光环内你指定的每个生物也要各做一次力量豁免（DC 等于你的法术豁免 DC），失败被直线推开 15 尺并陷入倒地 —— 引擎不会替你选它们，请手动掷豁免并处理位移与倒地。"
       }
      ]
     }
@@ -7917,33 +7934,30 @@
   "FRHoF:术士:咒火冠冕:18": {
    "name": "咒火冠冕",
    "automation": "partial",
-   "text": "使用先天术法时可将其转换为咒火冠冕，持续1分钟。转换后长休前不能再次使用，可消耗5点术法点（无需动作）恢复使用次数。激活期间获得：60尺飞行速度并可悬浮；法术闪避（豁免成功不受伤害，失败伤害减半，失能时无效）；燃尽（每回合一次被攻击命中时，可消耗至多魅力调整值枚生命骰掷骰减免伤害）。燃尽、飞行和法术闪避需手动处理。",
+   "text": "用先天术法的同一次使用把它转换成咒火冠冕：先以附赠动作使用先天术法，再点「咒火冠冕」（不占动作，消耗咒火冠冕的次数），先天术法激活期间获得下列增益，先天术法结束时冠冕也跟着结束（引擎在每个回合开始 / 结束检查一次）；转换后直到长休前不能再次转换，可消耗 5 点术法点（无需动作）恢复次数。已自动化的部分：【燃尽】每回合一次，你被攻击命中时可以减伤 —— 引擎按「魅力调整值枚（至少 1 枚）d6」掷并直接从那次伤害里扣除（术士的生命骰是 d6；多职业时骰面可能不同，请自己改一下，消耗掉的生命骰在人物卡上手动扣）。【法术闪避】需要豁免减半的伤害到来时，引擎会问你要不要用：用了就豁免成功免伤、失败减半，你失能时不会提供这个选项；它只对法术 / 魔法效应有效，不是法术或魔法效应时请拒绝。做不到、要人处理的部分：60 尺飞行速度与悬浮 —— 引擎只记一个步行速度，请自己按飞行移动棋子。",
    "actions": [
     {
      "id": "use",
      "name": "咒火冠冕",
-     "activation": "bonus",
+     "activation": "none",
+     "requires": "self.hasEffect('先天术法') && !self.hasEffect('咒火冠冕')",
      "cost": [
       {
        "resource": "spellfire-crown"
-      },
-      {
-       "resource": "先天术法"
       }
      ],
      "root": [
       {
        "kind": "applyEffect",
-       "inline": {
-        "name": "咒火冠冕",
-        "duration": {
-         "minutes": 1
-        },
-        "text": "获得60尺悬浮飞行速度；法术闪避（受法术/魔法效应豁免减半时，成功免伤，失败减半）；燃尽（每回合一次被攻击命中时消耗至多魅力调整值枚生命骰减免等量伤害）。"
-       },
-       "to": "self"
+       "to": "self",
+       "template": "咒火冠冕"
+      },
+      {
+       "kind": "note",
+       "text": "咒火冠冕：先天术法激活期间你获得 60 尺飞行速度并可悬浮 —— 引擎不记飞行，请自己按飞行移动棋子。"
       }
-     ]
+     ],
+     "text": "把这次先天术法转换成咒火冠冕（不占动作，消耗 1 次咒火冠冕）。"
     },
     {
      "id": "restore",
@@ -7961,9 +7975,68 @@
        "id": "spellfire-crown",
        "delta": 1
       }
-     ]
+     ],
+     "text": "消耗 5 点术法点，恢复咒火冠冕的使用次数（无需动作）。"
     }
    ],
+   "effects": {
+    "咒火冠冕": {
+     "text": "先天术法激活期间的额外增益：60 尺飞行并可悬浮（请手动移动）；法术闪避；燃尽。先天术法结束时（引擎在每个回合开始 / 结束检查一次）随之结束。",
+     "duration": {
+      "minutes": 1
+     },
+     "triggers": [
+      {
+       "id": "crown-follows-innate",
+       "label": "咒火冠冕：随先天术法结束",
+       "on": [
+        "turnStarted",
+        "turnEnded"
+       ],
+       "role": "any",
+       "when": "!self.hasEffect('先天术法')",
+       "do": [
+        {
+         "kind": "removeEffect",
+         "from": "self",
+         "match": {
+          "name": "咒火冠冕"
+         }
+        }
+       ]
+      },
+      {
+       "id": "spellfire-evasion",
+       "label": "咒火冠冕：法术闪避",
+       "on": "damageIncoming",
+       "role": "target",
+       "window": "before",
+       "optional": true,
+       "when": "ask('这次伤害来自一次攻击检定命中吗？') && !self.has('失能')",
+       "modify": [
+        {
+         "op": "evasion"
+        }
+       ]
+      },
+      {
+       "id": "spellfire-ember",
+       "label": "咒火冠冕：燃尽",
+       "on": "damageIncoming",
+       "role": "target",
+       "window": "before",
+       "optional": true,
+       "limit": "oncePerTurn",
+       "modify": [
+        {
+         "op": "reduceDamage",
+         "value": "(max(1, mod.cha))d6"
+        }
+       ]
+      }
+     ]
+    }
+   },
    "tags": [
     "ai",
     "未审"
@@ -11916,12 +11989,13 @@
   "TCE:德鲁伊:一体共生:2": {
    "name": "一体共生",
    "automation": "partial",
-   "text": "以一个动作消耗一次荒野形态使用次数，立刻获得等同于德鲁伊等级4倍的临时生命值，并进入一体共生状态，持续10分钟（失去全部临时生命值或再次使用荒野形态时提前结束）。状态激活期间：近战武器攻击命中造成额外1d6点黯蚀伤害；孢子环绕造成伤害时可多掷一枚伤害骰（需手动处理或在孢子环绕中多投）。",
+   "text": "以一个动作消耗一次荒野形态使用次数，立刻获得等同于德鲁伊等级 4 倍的临时生命值，并进入「一体共生」状态，持续 10 分钟。已自动化：状态期间你的近战武器攻击命中时自动加 1d6 黯蚀伤害；失去全部临时生命值（临时生命值降到 0）或再次使用荒野形态时，状态与这项加伤一起结束。【要人处理】①「当你的孢子环绕造成伤害时，可以再骰一枚伤害骰并加入伤害」这一条引擎做不到：孢子环绕是豁免伤害、不是攻击，引擎没有「给别的条目造成的伤害补骰」的钩子。那一次孢子环绕的伤害掷完后，请用「事后裁定」把多掷的那一枚补进伤害总量。②结束条件是按「受到伤害结算时临时生命值被吃光」判定的；如果是 DM 在详情抽屉里手改临时生命值 / 手动移除，请自己把「一体共生」效应删掉。③临时生命值取较高者：如果你身上本来就有更高的临时生命值，这次不会顶掉它，「失去全部临时生命值」也以那个更高的数为准（只是计数高一些，规则结果一致）。",
    "actions": [
     {
      "id": "use",
      "name": "一体共生",
      "activation": "action",
+     "text": "消耗一次荒野形态使用次数唤醒孢子（不变成野兽形态）。",
      "cost": [
       {
        "resource": "wildshape-uses"
@@ -11936,17 +12010,31 @@
       {
        "kind": "applyEffect",
        "to": "self",
-       "template": "一体共生",
-       "duration": {
-        "minutes": 10
-       }
+       "template": "一体共生"
+      },
+      {
+       "kind": "note",
+       "text": "一体共生：获得临时生命值并进入状态 10 分钟。若你本来就有更高的临时生命值，这次不会顶掉它；失去全部临时生命值或再次使用荒野形态时状态结束。"
       }
      ]
     }
    ],
    "effects": {
     "一体共生": {
-     "text": "一体共生激活中：近战武器攻击命中造成额外1d6点黯蚀伤害；孢子环绕造成伤害时多掷一枚伤害骰。失去所有临时生命值或再次使用荒野形态时提前结束。",
+     "text": "一体共生激活中：近战武器攻击命中时额外造成 1d6 黯蚀伤害。失去全部临时生命值或再次使用荒野形态时提前结束。孢子环绕的多一枚伤害骰仍需人工补。",
+     "duration": {
+      "minutes": 10,
+      "endsOn": [
+       {
+        "event": "damageApplied",
+        "when": "event.target == self.id && self.tempHp > 0 && event.tempAbsorbed >= self.tempHp"
+       },
+       {
+        "event": "effectApplied",
+        "when": "event.bearer == self.id && event.key == 'XPHB:德鲁伊:荒野形态:2#荒野形态'"
+       }
+      ]
+     },
      "triggers": [
       {
        "id": "extra-damage",
@@ -14504,7 +14592,7 @@
        "role": "any",
        "window": "after",
        "optional": true,
-       "when": "attacker != null && attacker.id == self.id && attack != null && damage.amount > 0",
+       "when": "attacker != null && attacker.id == self.id && ask('这次伤害来自一次攻击吗？') && damage.amount > 0",
        "do": [
         {
          "kind": "save",
@@ -23344,7 +23432,7 @@
        "on": "damageIncoming",
        "role": "actor",
        "window": "before",
-       "when": "target.id != source.id && attack != null",
+       "when": "target.id != source.id && ask('这次伤害来自一次攻击吗？')",
        "modify": [
         {
          "op": "halveDamage"
@@ -25584,11 +25672,19 @@
   "XGE:战士:守护战技:7": {
    "name": "守护战技",
    "automation": "partial",
-   "text": "持用近战武器或盾牌时，当你或5尺内可见生物被攻击命中时，可以消耗一次使用次数以反应投掷1d8加入其AC。若因此使AC超过攻击检定结果则攻击未命中；若依然命中，则该生物对本次攻击伤害具有抗性（由引擎自动将本次伤害减半）。使用次数等同于体质调整值（至少1次），长休恢复。",
+   "text": "只要你持用着一把近战武器或一面盾牌，当你或你周围 5 尺内你可见的生物被一次攻击命中时，你能以一个反应消耗一次使用次数（上限 = 你的体质调整值，至少 1 次，长休恢复全部），掷 1d8 加进被攻击者的 AC：如果加上后 AC 超过攻击检定的总值，这次攻击改为未命中；如果仍然命中，被攻击目标对本次攻击的伤害具有抗性（伤害减半）。【已自动化】次数池与反应代价、以及两个结果各自的效果 —— 弹窗里会给出两条互斥的选项，请先自己掷 1d8，按结果选其中一条：「改为未命中」会把这次命中作废（不进伤害），「仍然命中」会把本次伤害减半。【要人处理】1d8 加进 AC 这一步 —— 引擎没有「把一次掷骰加进 AC」的写法（AC 加值只能是定值），所以每条攻击都要你自己掷这 1d8 并挑选项。另外两处小事：目标本来就对该伤害类型有抗性时，减半会被连减两次，请手动补回一半；「持用近战武器或盾牌」引擎看不出来，弹窗里会问你一次。",
+   "resources": [
+    {
+     "id": "warding-maneuver",
+     "name": "守护战技",
+     "formula": "max(1, con)",
+     "recovery": "long"
+    }
+   ],
    "triggers": [
     {
-     "id": "ward",
-     "label": "守护战技：掷1d8加AC或减半伤害",
+     "id": "wardingManeuverMiss",
+     "label": "守护战技：1d8 加 AC 后改为未命中",
      "on": "attackHit",
      "role": "any",
      "window": "before",
@@ -25601,7 +25697,29 @@
        "resource": "warding-maneuver"
       }
      ],
-     "when": "(target.id == self.id || (within(self, target, 5) && canSee(self, target))) && ask('持用近战武器或盾牌吗？')",
+     "when": "(target.id == self.id || (within(self, target, 5) && canSee(self, target))) && (self.wearing('S') || ask('持用近战武器吗？'))",
+     "modify": [
+      {
+       "op": "cancel"
+      }
+     ]
+    },
+    {
+     "id": "wardingManeuverHalve",
+     "label": "守护战技：1d8 后仍然命中则伤害减半",
+     "on": "attackHit",
+     "role": "any",
+     "window": "before",
+     "optional": true,
+     "cost": [
+      {
+       "economy": "reaction"
+      },
+      {
+       "resource": "warding-maneuver"
+      }
+     ],
+     "when": "(target.id == self.id || (within(self, target, 5) && canSee(self, target))) && (self.wearing('S') || ask('持用近战武器吗？'))",
      "modify": [
       {
        "op": "halveDamage"
@@ -25610,7 +25728,7 @@
      "do": [
       {
        "kind": "note",
-       "text": "掷 1d8 加入目标 AC。若加上后目标 AC 超过攻击检定结果，本次攻击未命中（请手动撤销伤害）；若依然命中，本次伤害已被自动减半。"
+       "text": "守护战技：本次攻击的伤害已按抗性减半。若目标本来就对这类伤害有抗性，这里会被连减两次，请手动补回一半。"
       }
      ]
     }

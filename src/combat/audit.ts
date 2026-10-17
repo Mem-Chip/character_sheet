@@ -201,6 +201,10 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
     for (const ev of [t.on].flat()) if (!WINDOW_EVENTS.has(ev)) out.push(`${where(at)}：触发器挂在「${ev}」上，但引擎不会为它打开窗口`);
     if (t.deferTo && !WINDOW_EVENTS.has(t.deferTo)) out.push(`${where(at)}：deferTo「${t.deferTo}」不是窗口事件`);
     expr(t.when, 'trigger', BOOL, `${at}.when`);
+    // `attack != null` 是个坑：没有攻击上下文（DM 手动扣血、法术豁免伤害）时读 attack 会抛错，整笔伤害被打回来
+    if (typeof t.when === 'string' && /attack\s*[!=]=\s*null/.test(t.when)) {
+      out.push(`${where(at)}：别用 \`attack != null\` 判断「是不是攻击」——没有攻击上下文时会抛错；改用 ask('这次伤害来自一次攻击吗？')`);
+    }
     nodes(t.do, `${at}.do`);
     for (const m of t.modify ?? []) {
       if (!MODIFY_OPS.has(m.op)) out.push(`${where(at)}：未知修改「${m.op}」`);
