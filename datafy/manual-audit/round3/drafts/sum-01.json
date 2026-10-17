@@ -1,0 +1,451 @@
+{
+  "version": 1,
+  "note": "sum-01：召唤 / 伙伴 / 魔宠（用上 summon 节点）",
+  "entries": {
+    "AU:spell:战斗魔宠": {
+      "name": "战斗魔宠",
+      "automation": "partial",
+      "text": "在 10 尺内一处未占据空间召唤一只战斗魔宠，持续 1 小时（不专注）：先选生物类型（天族 / 妖精 / 邪魔），再选形态（蛮勇 / 掠空 / 潜猎）。数据卡：AC 蛮勇 13+环阶、掠空与潜猎 11+环阶；HP 蛮勇 30、其余 20，每比二环高一环 +5；速度 40 尺（掠空另有飞行 30 尺可悬浮，三种都会游泳 30 尺）；多重攻击次数 = 环阶的一半（向下取整）；撕裂用你的法术攻击加值命中，造成 1d8+3+环阶 力场伤害；免疫魅惑与恐慌；是你和盟友的盟友。已写：魔宠入场、AC / HP / 攻击随升环、再次施展替换掉旧的那只（同时只能有一只）。要人处理：① 原文说魔宠有自己的先攻，引擎让召唤物紧跟你的先攻行动；② 若你已有寻获魔宠的魔宠，本法术改为强化它（数据替换成战斗魔宠数据块、给等同于战斗魔宠生命值的临时生命值、临时生命值耗尽就提前结束、结束后恢复原状）——引擎不能改写已有召唤物的数值，这种情况请手动处理，否则引擎会把旧魔宠换成新的一只；③ 飞掠（掠空）、潜步（潜猎）、内在禀赋（环阶一半加到魔宠的属性与豁免检定）不自动；④ 1 小时到、或你死亡时，请手动移除魔宠。",
+      "actions": [
+        {
+          "id": "cast",
+          "name": "战斗魔宠",
+          "activation": "action",
+          "tags": ["spell", "magical"],
+          "cost": [{ "slot": { "min": 2 } }],
+          "targeting": { "type": "point", "range": 10 },
+          "root": [
+            {
+              "kind": "choose",
+              "prompt": "选择战斗魔宠的生物类型",
+              "options": [
+                {
+                  "label": "天族",
+                  "do": [
+                    {
+                      "kind": "choose",
+                      "var": "form",
+                      "prompt": "选择战斗魔宠的形态（蛮勇 / 掠空 / 潜猎）",
+                      "options": [{ "label": "蛮勇" }, { "label": "掠空" }, { "label": "潜猎" }]
+                    },
+                    {
+                      "kind": "summon",
+                      "name": "战斗魔宠（天族）",
+                      "size": "M",
+                      "creatureType": "celestial",
+                      "ac": "cond(vars.form == '蛮勇', 13, 11) + slot.level",
+                      "hp": "cond(vars.form == '蛮勇', 30, 20) + 5 * (slot.level - 2)",
+                      "speed": 40,
+                      "score": { "str": 16, "dex": 16, "con": 12, "int": 8, "wis": 13, "cha": 10 },
+                      "conditionImmune": ["魅惑", "恐慌"],
+                      "attacksPerAction": "floor(slot.level / 2)",
+                      "attacks": [{ "name": "撕裂", "damage": "1d8 + 3 + slot.level", "damageType": "力场", "melee": true }],
+                      "notes": [
+                        "形态：蛮勇（无特殊移动特性）／掠空（飞行 30 尺、可悬浮、飞掠）／潜猎（潜步）。飞掠与潜步引擎不自动，请手动。",
+                        "内在禀赋：把法术环阶的一半（向下取整）加到魔宠的属性检定与豁免检定上（不自动）。",
+                        "三种形态都会游泳 30 尺；魔宠理解你说的话；它的熟练加值等于你的熟练加值。"
+                      ],
+                      "link": false
+                    }
+                  ]
+                },
+                {
+                  "label": "妖精",
+                  "do": [
+                    {
+                      "kind": "choose",
+                      "var": "form",
+                      "prompt": "选择战斗魔宠的形态（蛮勇 / 掠空 / 潜猎）",
+                      "options": [{ "label": "蛮勇" }, { "label": "掠空" }, { "label": "潜猎" }]
+                    },
+                    {
+                      "kind": "summon",
+                      "name": "战斗魔宠（妖精）",
+                      "size": "M",
+                      "creatureType": "fey",
+                      "ac": "cond(vars.form == '蛮勇', 13, 11) + slot.level",
+                      "hp": "cond(vars.form == '蛮勇', 30, 20) + 5 * (slot.level - 2)",
+                      "speed": 40,
+                      "score": { "str": 16, "dex": 16, "con": 12, "int": 8, "wis": 13, "cha": 10 },
+                      "conditionImmune": ["魅惑", "恐慌"],
+                      "attacksPerAction": "floor(slot.level / 2)",
+                      "attacks": [{ "name": "撕裂", "damage": "1d8 + 3 + slot.level", "damageType": "力场", "melee": true }],
+                      "notes": [
+                        "形态：蛮勇（无特殊移动特性）／掠空（飞行 30 尺、可悬浮、飞掠）／潜猎（潜步）。飞掠与潜步引擎不自动，请手动。",
+                        "内在禀赋：把法术环阶的一半（向下取整）加到魔宠的属性检定与豁免检定上（不自动）。",
+                        "三种形态都会游泳 30 尺；魔宠理解你说的话；它的熟练加值等于你的熟练加值。"
+                      ],
+                      "link": false
+                    }
+                  ]
+                },
+                {
+                  "label": "邪魔",
+                  "do": [
+                    {
+                      "kind": "choose",
+                      "var": "form",
+                      "prompt": "选择战斗魔宠的形态（蛮勇 / 掠空 / 潜猎）",
+                      "options": [{ "label": "蛮勇" }, { "label": "掠空" }, { "label": "潜猎" }]
+                    },
+                    {
+                      "kind": "summon",
+                      "name": "战斗魔宠（邪魔）",
+                      "size": "M",
+                      "creatureType": "fiend",
+                      "ac": "cond(vars.form == '蛮勇', 13, 11) + slot.level",
+                      "hp": "cond(vars.form == '蛮勇', 30, 20) + 5 * (slot.level - 2)",
+                      "speed": 40,
+                      "score": { "str": 16, "dex": 16, "con": 12, "int": 8, "wis": 13, "cha": 10 },
+                      "conditionImmune": ["魅惑", "恐慌"],
+                      "attacksPerAction": "floor(slot.level / 2)",
+                      "attacks": [{ "name": "撕裂", "damage": "1d8 + 3 + slot.level", "damageType": "力场", "melee": true }],
+                      "notes": [
+                        "形态：蛮勇（无特殊移动特性）／掠空（飞行 30 尺、可悬浮、飞掠）／潜猎（潜步）。飞掠与潜步引擎不自动，请手动。",
+                        "内在禀赋：把法术环阶的一半（向下取整）加到魔宠的属性检定与豁免检定上（不自动）。",
+                        "三种形态都会游泳 30 尺；魔宠理解你说的话；它的熟练加值等于你的熟练加值。"
+                      ],
+                      "link": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "AU:spell:植物召唤术": {
+      "name": "植物召唤术",
+      "automation": "partial",
+      "text": "在 90 尺内一处你可见的未占据空间召来一个活化植物的灵魄（大型植物，是你与盟友的盟友），专注至多 1 小时，从真菌 / 巨树 / 藤蔓中选一种。数据卡：AC 巨树 13+环阶、真菌与藤蔓 11+环阶；HP 50，每比五环高一环 +10；速度 40 尺（藤蔓另有攀爬 40 尺）；多重攻击次数 = 环阶的一半（向下取整）；巨树与藤蔓猛击 1d10+3+环阶 钝击（触及 5 尺）；真菌孢子喷发 1d4+环阶 毒素（触及 5 尺或射程 30 尺），命中的目标中毒至其下个回合结束，若目标已经中毒则改为额外受 3d4 毒素伤害；它理解你说的话，熟练加值等于你的熟练加值。已写：灵魄入场、随专注结束而消失、数据卡与多重攻击（它用你的先攻、在你回合结束后立即行动，引擎正是这样安排的，生命值降到 0 也会自动退场）。要人处理：① 孢子喷发的中毒与「已中毒则额外 3d4」不自动；② 易伤（巨树火焰、真菌与藤蔓挥砍）、攻城怪物（巨树对物件与建筑双倍伤害）、迅捷脱身（藤蔓附赠动作疾走或撤离）召唤节点表达不了；③「遵从你的口头指令（无需动作），你不发令它就执行回避并远离危险」要你照做；④ 攀爬速度引擎只有单一速度。",
+      "actions": [
+        {
+          "id": "cast",
+          "name": "植物召唤术",
+          "activation": "action",
+          "tags": ["spell", "magical"],
+          "cost": [{ "slot": { "min": 5 } }],
+          "concentration": { "hours": 1 },
+          "targeting": { "type": "point", "range": 90 },
+          "root": [
+            {
+              "kind": "choose",
+              "prompt": "选择植物灵魄的种类",
+              "options": [
+                {
+                  "label": "真菌（孢子喷发：1d4+环阶 毒素，触及 5 尺或射程 30 尺）",
+                  "do": [
+                    {
+                      "kind": "summon",
+                      "name": "真菌植物灵魄",
+                      "size": "L",
+                      "type": "植物",
+                      "ac": "11 + slot.level",
+                      "hp": "50 + 10 * (slot.level - 5)",
+                      "speed": 40,
+                      "score": { "str": 17, "dex": 13, "con": 14, "int": 10, "wis": 13, "cha": 10 },
+                      "attacksPerAction": "floor(slot.level / 2)",
+                      "attacks": [{ "name": "孢子喷发", "damage": "1d4 + slot.level", "damageType": "毒素", "melee": true, "ranged": true, "range": 30 }],
+                      "notes": [
+                        "孢子喷发：命中后目标陷入中毒，直至其下个回合结束；若目标已经中毒，改为额外受到 3d4 毒素伤害（引擎不自动施加中毒，也不做这个分支，请手动）。",
+                        "易伤：挥砍 —— 召唤节点不支持易伤，请在灵魄身上手动记。",
+                        "多重攻击：发动次数等于法术环阶一半（向下取整）的孢子喷发，已写。"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "巨树（猛击：1d10+3+环阶 钝击，触及 5 尺）",
+                  "do": [
+                    {
+                      "kind": "summon",
+                      "name": "巨树植物灵魄",
+                      "size": "L",
+                      "type": "植物",
+                      "ac": "13 + slot.level",
+                      "hp": "50 + 10 * (slot.level - 5)",
+                      "speed": 40,
+                      "score": { "str": 17, "dex": 13, "con": 14, "int": 10, "wis": 13, "cha": 10 },
+                      "attacksPerAction": "floor(slot.level / 2)",
+                      "attacks": [{ "name": "猛击", "damage": "1d10 + 3 + slot.level", "damageType": "钝击", "melee": true }],
+                      "notes": [
+                        "易伤：火焰 —— 召唤节点不支持易伤，请在灵魄身上手动记。",
+                        "攻城怪物：对物件和建筑造成双倍伤害（手动）。",
+                        "多重攻击：发动次数等于法术环阶一半（向下取整），已写。"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "藤蔓（猛击：1d10+3+环阶 钝击，攀爬 40 尺）",
+                  "do": [
+                    {
+                      "kind": "summon",
+                      "name": "藤蔓植物灵魄",
+                      "size": "L",
+                      "type": "植物",
+                      "ac": "11 + slot.level",
+                      "hp": "50 + 10 * (slot.level - 5)",
+                      "speed": 40,
+                      "score": { "str": 17, "dex": 13, "con": 14, "int": 10, "wis": 13, "cha": 10 },
+                      "attacksPerAction": "floor(slot.level / 2)",
+                      "attacks": [{ "name": "猛击", "damage": "1d10 + 3 + slot.level", "damageType": "钝击", "melee": true }],
+                      "notes": [
+                        "易伤：挥砍 —— 召唤节点不支持易伤，请在灵魄身上手动记。",
+                        "迅捷脱身（附赠动作）：执行疾走或撤离动作（手动）。",
+                        "攀爬 40 尺：引擎只有单一速度，攀爬请手动。"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "AU:spell:负能量洪流": {
+      "name": "负能量洪流",
+      "automation": "partial",
+      "text": "向 60 尺内一个你可见的生物射出负能量。目标不是亡灵：体质豁免，失败受 3d10+25 黯蚀伤害（法术位每比五环高一环，伤害 +1d10），成功则伤害减半。被这次伤害杀死的类人生物，会在你的下一回合开始时变成一只受你语言指令控制的丧尸，持续 24 小时（之后依自己的本性行动）——引擎认不出「死于这次伤害」、也不会在下一回合开始时凭空放进一个新生物，这一步请手动处理。目标若是亡灵：改为获得 3d10 临时生命值。",
+      "actions": [
+        {
+          "id": "cast",
+          "name": "负能量洪流",
+          "activation": "action",
+          "tags": ["spell", "magical"],
+          "cost": [{ "slot": { "min": 5 } }],
+          "targeting": { "type": "creature", "count": 1, "range": 60, "filter": "canSee(self, target)" },
+          "root": [
+            {
+              "kind": "if",
+              "when": "target.type == '不死生物'",
+              "then": [{ "kind": "tempHp", "amount": "3d10", "to": "target" }],
+              "else": [
+                {
+                  "kind": "save",
+                  "ability": "con",
+                  "dc": "self.spell.dc",
+                  "onFail": [
+                    { "kind": "damage", "id": "flood", "dice": "(slot.level - 2)d10 + 25", "type": "黯蚀" },
+                    { "kind": "note", "text": "若这次伤害杀死了一个类人生物：在你的下一回合开始时，它变成一只受你语言指令控制的丧尸，持续 24 小时（手动处理）。" }
+                  ],
+                  "onSuccess": [
+                    { "kind": "damage", "ref": "flood", "scale": 0.5 },
+                    { "kind": "note", "text": "若这次伤害杀死了一个类人生物：在你的下一回合开始时，它变成一只受你语言指令控制的丧尸，持续 24 小时（手动处理）。" }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "AU:元素魔宠": {
+      "name": "元素魔宠",
+      "automation": "partial",
+      "text": "【元素赋能】你施展寻获魔宠时选一种伤害类型（强酸 / 寒冷 / 火焰 / 闪电 / 雷鸣），魔宠获得该类型抗性，直到你再次施展寻获魔宠。抗性要落在魔宠身上，而魔宠是别的条目召唤出来的生物，引擎改不了它的数值 —— 请把所选抗性手动写在魔宠身上。【能量脉冲】以附赠动作命令 120 尺内的魔宠用反应释放一次元素爆发：源自魔宠的 5 尺光环内每名生物做敏捷豁免（DC 用你人物卡上的法术豁免 DC，也就是 8 + 施法属性调整值 + 熟练；若你寻获魔宠用的是另一个施法属性，请手动改），失败受 2d4 所选类型伤害，体型中型或更小的还要陷入倒地 —— 这一段已写（伤害类型每次使用时问你一次，请选与赋能时相同的那种）。做不到的部分：引擎不知道你魔宠的位置，也不知道哪些生物在它 5 尺光环里 —— 用之前会问你「魔宠是否在你 120 尺内」，选目标时每个目标会问一次「是否位于魔宠 5 尺光环内」；魔宠消耗的反应请手动划掉。",
+      "actions": [
+        {
+          "id": "pulse",
+          "name": "元素魔宠：能量脉冲",
+          "activation": "bonus",
+          "tags": ["magical"],
+          "requires": "turn.isMine && ask('你的魔宠是否在你 120 尺内？')",
+          "targeting": { "type": "creature", "filter": "ask('该生物是否位于你魔宠的 5 尺光环内？')" },
+          "root": [
+            {
+              "kind": "choose",
+              "var": "elem",
+              "prompt": "选择魔宠被赋予的伤害类型（应与施展寻获魔宠时选的相同）",
+              "options": [{ "label": "强酸" }, { "label": "寒冷" }, { "label": "火焰" }, { "label": "闪电" }, { "label": "雷鸣" }]
+            },
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": "self.spell.dc",
+              "onFail": [
+                { "kind": "damage", "dice": "2d4", "type": "vars.elem" },
+                {
+                  "kind": "if",
+                  "when": "target.size == '微型' || target.size == '小型' || target.size == '中型'",
+                  "then": [{ "kind": "applyEffect", "to": "target", "template": "XPHB:condition:倒地" }]
+                }
+              ],
+              "onSuccess": []
+            },
+            { "kind": "note", "text": "魔宠以反应释放这次爆发：请手动划掉魔宠的反应。" }
+          ]
+        }
+      ]
+    },
+    "AU:尚武魔宠": {
+      "name": "尚武魔宠",
+      "automation": "partial",
+      "text": "【战斗魔宠】你始终准备着战斗魔宠法术（属于静态层，此处不重复）；这里写的是每日一次无需法术位施展（消耗资源「战斗魔宠」，长休恢复，按法术基础环阶 2 环的数据结算）。要用更高的法术位施展，请走「战斗魔宠」那个法术条目。【拦截攻击】一名位于你魔宠 5 尺内的生物被攻击命中时，你的魔宠可以用反应让该生物对抗那次攻击的 AC 加上你的熟练加值，这可能使那次攻击改为失手 —— 已写：只有当「命中数 + 你的熟练加值」正好能把它压到 AC 以下时才会问你用不用，用则直接改判为未命中（如果加了熟练仍然命中，规则上这个反应没有意义，也就不问）。要人处理：① 引擎扣的是你自己的反应，请在魔宠身上手动划掉反应（你自己的反应照常可用）；②「被攻击者是否位于魔宠 5 尺内」会问你；③ 魔宠本身要按「战斗魔宠」法术的数据结算（自己先攻那一条同样做不到，见该条目）。",
+      "actions": [
+        {
+          "id": "cast",
+          "name": "尚武魔宠：无需法术位施展战斗魔宠",
+          "activation": "action",
+          "tags": ["spell", "magical"],
+          "cost": [{ "resource": "battle-familiar" }],
+          "targeting": { "type": "point", "range": 10 },
+          "root": [
+            {
+              "kind": "choose",
+              "prompt": "选择战斗魔宠的生物类型",
+              "options": [
+                {
+                  "label": "天族",
+                  "do": [
+                    {
+                      "kind": "choose",
+                      "var": "form",
+                      "prompt": "选择战斗魔宠的形态（蛮勇 / 掠空 / 潜猎）",
+                      "options": [{ "label": "蛮勇" }, { "label": "掠空" }, { "label": "潜猎" }]
+                    },
+                    {
+                      "kind": "summon",
+                      "name": "战斗魔宠（天族）",
+                      "size": "M",
+                      "creatureType": "celestial",
+                      "ac": "cond(vars.form == '蛮勇', 13, 11) + 2",
+                      "hp": "cond(vars.form == '蛮勇', 30, 20)",
+                      "speed": 40,
+                      "score": { "str": 16, "dex": 16, "con": 12, "int": 8, "wis": 13, "cha": 10 },
+                      "conditionImmune": ["魅惑", "恐慌"],
+                      "attacksPerAction": 1,
+                      "attacks": [{ "name": "撕裂", "damage": "1d8 + 5", "damageType": "力场", "melee": true }],
+                      "notes": [
+                        "按法术基础环阶（2 环）的数据：蛮勇 AC 15、HP 30；掠空与潜猎 AC 13、HP 20。",
+                        "形态：蛮勇（无特殊移动特性）／掠空（飞行 30 尺、可悬浮、飞掠）／潜猎（潜步）。飞掠与潜步引擎不自动，请手动。",
+                        "内在禀赋：把环阶的一半（此用法是 1）加到魔宠的属性检定与豁免检定上（不自动）。"
+                      ],
+                      "link": false
+                    }
+                  ]
+                },
+                {
+                  "label": "妖精",
+                  "do": [
+                    {
+                      "kind": "choose",
+                      "var": "form",
+                      "prompt": "选择战斗魔宠的形态（蛮勇 / 掠空 / 潜猎）",
+                      "options": [{ "label": "蛮勇" }, { "label": "掠空" }, { "label": "潜猎" }]
+                    },
+                    {
+                      "kind": "summon",
+                      "name": "战斗魔宠（妖精）",
+                      "size": "M",
+                      "creatureType": "fey",
+                      "ac": "cond(vars.form == '蛮勇', 13, 11) + 2",
+                      "hp": "cond(vars.form == '蛮勇', 30, 20)",
+                      "speed": 40,
+                      "score": { "str": 16, "dex": 16, "con": 12, "int": 8, "wis": 13, "cha": 10 },
+                      "conditionImmune": ["魅惑", "恐慌"],
+                      "attacksPerAction": 1,
+                      "attacks": [{ "name": "撕裂", "damage": "1d8 + 5", "damageType": "力场", "melee": true }],
+                      "notes": [
+                        "按法术基础环阶（2 环）的数据：蛮勇 AC 15、HP 30；掠空与潜猎 AC 13、HP 20。",
+                        "形态：蛮勇（无特殊移动特性）／掠空（飞行 30 尺、可悬浮、飞掠）／潜猎（潜步）。飞掠与潜步引擎不自动，请手动。",
+                        "内在禀赋：把环阶的一半（此用法是 1）加到魔宠的属性检定与豁免检定上（不自动）。"
+                      ],
+                      "link": false
+                    }
+                  ]
+                },
+                {
+                  "label": "邪魔",
+                  "do": [
+                    {
+                      "kind": "choose",
+                      "var": "form",
+                      "prompt": "选择战斗魔宠的形态（蛮勇 / 掠空 / 潜猎）",
+                      "options": [{ "label": "蛮勇" }, { "label": "掠空" }, { "label": "潜猎" }]
+                    },
+                    {
+                      "kind": "summon",
+                      "name": "战斗魔宠（邪魔）",
+                      "size": "M",
+                      "creatureType": "fiend",
+                      "ac": "cond(vars.form == '蛮勇', 13, 11) + 2",
+                      "hp": "cond(vars.form == '蛮勇', 30, 20)",
+                      "speed": 40,
+                      "score": { "str": 16, "dex": 16, "con": 12, "int": 8, "wis": 13, "cha": 10 },
+                      "conditionImmune": ["魅惑", "恐慌"],
+                      "attacksPerAction": 1,
+                      "attacks": [{ "name": "撕裂", "damage": "1d8 + 5", "damageType": "力场", "melee": true }],
+                      "notes": [
+                        "按法术基础环阶（2 环）的数据：蛮勇 AC 15、HP 30；掠空与潜猎 AC 13、HP 20。",
+                        "形态：蛮勇（无特殊移动特性）／掠空（飞行 30 尺、可悬浮、飞掠）／潜猎（潜步）。飞掠与潜步引擎不自动，请手动。",
+                        "内在禀赋：把环阶的一半（此用法是 1）加到魔宠的属性检定与豁免检定上（不自动）。"
+                      ],
+                      "link": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "intercept",
+          "name": "尚武魔宠：拦截攻击",
+          "activation": "reaction",
+          "tags": ["magical"],
+          "trigger": {
+            "on": "attackHit",
+            "role": "any",
+            "window": "before",
+            "when": "!roll.crit && attacker.id != self.id && (target.id == self.id || self.isAllyOf(target)) && roll.total >= target.ac && roll.total < target.ac + self.pb && ask('被攻击的生物是否位于你魔宠 5 尺内？')"
+          },
+          "root": [{ "kind": "modify", "modify": [{ "op": "cancel" }] }]
+        }
+      ]
+    },
+    "AU:异界魔宠": {
+      "name": "异界魔宠",
+      "automation": "manual",
+      "text": "【异界赋能】你施展寻获魔宠时可以赋予魔宠异界威能，持续到你再次施展寻获魔宠。赋能期间魔宠获得：【能量抗性】你选暗蚀 / 毒素 / 心灵 / 光耀 / 雷鸣之一，魔宠对所选类型具有抗性；【相位行走】魔宠可以穿过其他生物和物件，如同穿过困难地形，若它在其回合结束时还待在一个物件里，就被转移到最后身处的未占据空间。这两项都作用在魔宠身上，而魔宠是别的条目召唤出来的生物：引擎既不能改写它的抗性，也没有困难地形 / 物件 / 空间推挤的概念，所以整条不自动化 —— 请把所选抗性手动写在魔宠身上，相位行走由你在移动时判断、必要时手动把棋子拖到最后身处的空位。"
+    },
+    "AU:慰疗魔宠": {
+      "name": "慰疗魔宠",
+      "automation": "manual",
+      "text": "【治愈信标】只要你的魔宠位于你 120 尺内，正能量便充斥源自魔宠的 5 尺光环；每当一名盟友在这个光环里掷骰决定一名生物恢复的生命值数量时，那名盟友可以把骰出的 1 和 2 都当作 3。不自动化的原因：光环的源点是魔宠（别的条目召唤出来的生物），引擎的灵光只能挂在持有者自己身上；而且引擎只对伤害骰支持「骰值下限」（minDie），治疗骰不支持。请以魔宠为中心量 5 尺，并在光环里的盟友掷治疗骰时手动把 1、2 当作 3。"
+    },
+    "AU:法师:亡灵仆役:6": {
+      "name": "亡灵仆役",
+      "automation": "partial",
+      "text": "【活化死尸】你始终准备着活化死尸（属于静态层，此处不重复）；这里写每日一次无需法术位的施展（消耗资源「亡灵仆役」，长休恢复）。开始施展这道法术时，你可以把它调整成有效环阶提升一环 —— 这次施展请手动结算：活化死尸的召唤数据（骷髅 / 丧尸的产生与控制）不在资料库里。【凋零打击】位于你 60 尺内、由你操控的亡灵用攻击检定命中一名生物时，它额外造成等同于你智力调整值的黯蚀伤害（至少 1 点）—— 已写成自动触发器（每次都会结算，不用点）。引擎不知道「由你操控」：如果那只亡灵不是你操控的，请不要用它（把这一条触发器关掉，或手动忽略那条额外伤害）。【不死坚韧】你施展创造或召唤亡灵的死灵法术时，那只亡灵的生命值上限与当前生命值增加（你的智力调整值 + 法师等级的一半，向下取整）—— 这会改写别的法术召唤出来的生物数值，引擎做不到，请手动加在召唤物身上。",
+      "actions": [
+        {
+          "id": "free-animate-dead",
+          "name": "亡灵仆役：无需法术位施展活化死尸",
+          "activation": "action",
+          "tags": ["spell", "magical"],
+          "cost": [{ "resource": "undead-thralls" }],
+          "root": [
+            {
+              "kind": "note",
+              "text": "无需法术位施展活化死尸（开始施展时可把它的有效环阶提升一环）。活化死尸的召唤数据不在资料库里：请按该法术手动结算，并手动放出骷髅 / 丧尸。"
+            }
+          ]
+        }
+      ],
+      "triggers": [
+        {
+          "id": "withering-strike",
+          "label": "亡灵仆役：凋零打击（额外黯蚀伤害）",
+          "on": "attackHit",
+          "role": "any",
+          "window": "before",
+          "when": "attacker.id != self.id && attacker.type == '不死生物' && self.isAllyOf(attacker) && dist(self, attacker) <= 60",
+          "do": [{ "kind": "addDamage", "dice": "max(1, self.mod.int)", "type": "黯蚀" }]
+        }
+      ]
+    }
+  }
+}

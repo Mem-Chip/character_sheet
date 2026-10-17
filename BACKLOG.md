@@ -32,18 +32,60 @@
   在哪：`app/pages/combat/Log.tsx`；重放用 `Session` 的事务列表（`src/combat/session.ts`），棋子位置在遭遇的 meta 里（`server/encounters.ts`）。
 - **冰刃**：攻击 + 爆开的范围伤害（要范围预览）。在哪：`data/dyn/spells.json`、`app/lib/area.ts`。
 - **状态细节**：魅惑者对你的社交检定有优势；擒抱者移动时拖着被擒的人；恐慌时地图上禁止靠近恐惧源。
-  在哪：`data/rules-2024.json`（状态）、`src/combat/space.ts`（移动）。
+  在哪：`data/rules-2024.json`（状态）、`src/combat/space.ts`（移动）。（审查报告里「状态语义」这一类 18 条）
+- **跨轮记住选择 / 数据**：比如「第一次用时选元素，之后每轮沿用」，现在只能每轮重新问一次。先看看 `effect.state` / `vars` 够不够用。
+  在哪：`src/combat/types.ts`（`applyEffect` 的 `state`）、`src/combat/exec.ts`、`src/combat/effects.ts`。
 
 ## 中的
 
-- **批量 AI 数据化**：战役「资料」里从启用的书勾一批条目，排队跑单条的 AI 循环，失败的列出来、可以重试；结果进本团内容（或全服）。
-  在哪：`app/lib/ai.ts`（`jobForKey`、`hubItemForKey`）、`src/factory/ai.ts`、`app/pages/CampaignHub.tsx`。
+- **批量 AI 数据化**：从启用的书里勾一批条目，排队跑单条的 AI 循环，失败的列出来、可以重试；结果进账户资料库（或某个战役）。
+  在哪：`app/lib/ai.ts`（`partsJobForKey`、`checkParts`）、`src/factory/ai.ts`、`app/pages/CampaignHub.tsx`（战役页「资料」）。
 - **临时武器和武器附魔**（神圣武器、魔石术、幽影刃，改用施法属性攻击）：物品栏有了，规则还没接。
   在哪：`src/bridge/from-sheet.ts`（攻击行）、相关法术的动态数据。
 - **复杂代价**：一次同时花法术位和术法点（超魔）、两种代价二选一。在哪：`src/combat/types.ts`（Cost）、`src/combat/tx.ts`（能不能付、怎么付）。
 - **物件当目标**（门、箱子，有 AC 和生命值）。在哪：`makeView`（`src/combat/view.ts`）、目标选择。
-- **旧数据重写**：新接口写好之后，外包重写用得上它们的旧数据（反冲术、炼狱叱喝、黯冰狱铠、反射闪避、极效治疗、元素同调、庇护术、投射守御、法术反制…，约 58 条，
-  见 `datafy/manual-audit/report.md`），以及地图区域类法术。外包流程见 `datafy/README.md`。
+- **困难地形 / 移动力扣除**：地图和区域都不知道哪格是困难地形，走进去不扣额外移动力（审查报告里 23 条卡在这）。
+  在哪：`src/combat/space.ts`（走格子的代价）、`server/encounters.ts` 的 map（底图上标困难地形）、`app/pages/combat/MapView.tsx`。
+- **打断施法 / 让正在施展的法术失效**（法术反制这类，审查报告 6 条）：先确认 `modify.cancel`（带 `refundSlot`）够不够 ——
+  它现在主要用于伤害包；施法窗口只有 after、没有 before，得先加一个施法前的拦截窗口。
+  在哪：`src/combat/audit.ts`（窗口表）、`src/combat/exec.ts`（施法流程）、`src/factory/spec.ts`（补说明书）。
+- **按手动审查报告重新数据化**：`datafy/manual-audit/` 那次审查（830 条：21 条当年就能写、50 条本来就不用自动化、760 条卡在接口上）已经过时 —— 之后引擎补了 `summon`、`zone`、`leftReach`、反应里的 `modify`、`evasion` / `halveDamage` / `cancel`、`redirect` / `absorb`、`maxDice` 等，那批里约 250 条现在能写了。
+  - **这一大类已经收口**（[round2](datafy/manual-audit/round2/README.md) 53 条、[round3](datafy/manual-audit/round3/README.md) 40 条、[round4](datafy/manual-audit/round4/README.md) 26 + 9 条，共 **128 条**）：
+    流程是「子代理写 → 每个自检（结构 + 审计 + 小遭遇试算）→ 另派代理独立复核（拿 5etools 原文逐条比）→ 只合并复核通过的 → 剩下的带证据修完」。
+    复核挑出的问题数：38 → 34 → 5 → 4，说明在收敛。
+  - **下一个大类「重骰 / 加骰 / 改判定」也做了一轮**（[round5/README.md](datafy/manual-audit/round5/README.md)）：52 条里合并 34 条（7 条升到 full），
+    顺手修了两个引擎问题（「黯蚀 / 暗蚀」两种写法归一、`minD20` 也抬自然值）；还缓着 16 条（8 条有证据在 [round5/suspects.md](datafy/manual-audit/round5/suspects.md) + `r5-02` 整批 8 条没复核）。
+  - **接着做剩下的类别**：反应里改结算（20）、免伤（15）、物品消耗（12）、次数池（12）、改目标 / 替盟友挨打（9）、推拉（7）、骰子取最大（6）。
+    逐条的 `key` / `gap` / `need` 在 `datafy/manual-audit/answers/*.json`。
+  - 测试：`tests/combat/zone-data.test.ts`、`tests/combat/summon-data.test.ts`（真数据跑遭遇）。
+  - **剩下几个大类也做了一轮**（[round6/README.md](datafy/manual-audit/round6/README.md)）：92 条**全部处理完**（55 条一次通过 + 35 条复核意见逐条修 + 2 条在手写文件里单独同步），10 条从 partial 升到 full；
+    顺手修了「`damageTaken` 只开窗口不发事件」——效应的 `endsOn: [{ event: 'damageTaken' }]` 以前从来没生效过（数据里约 26 处）。
+  - 检查器已经补上：`reach` / `melee` / `ranged` / `finesse` 写数字会报、`attack != null` 会报（改用 `ask('这次伤害来自一次攻击吗？')`）。
+  - **还剩下的**：审查报告里还有 **约 433 条**没铺到（都在**别的**类别里：condition 63、timing 61、resource 56、other 49、reactModify 44、move 40、choice 29、item 26…），
+    另有 80 条属于「暂时不做」（视线 / 传送 / 三维 / 困难地形）。这 433 条里很多要新引擎概念（移出战场、改变体型、链式跳跃、阻挡弹道、生命骰池…），一次做不完，按类别一轮一轮来。
+- **灵光（aura）的两个引擎缺口**（第二轮复核实测出来的）：① aura 授予的触发器**不检查半径**（`src/combat/triggers.ts` 没走 auraGate）—— 至圣光轮 30 尺、迅捷灵光 10 尺，实测 60 尺 / 20 尺外照样生效；数据侧暂时可以补 `when: 'dist(source, self) <= N'` 兜。
+  ② `aura.grant.statics` **根本没被读取**（`effectiveView` 只看 rollMods / triggers）—— 勇气灵光授予的「免疫恐慌」、净化灵光的毒素抗性是死数据（第五轮又实测了一次）。在哪：`src/combat/triggers.ts`、`src/combat/effects.ts`（要把 `aurasCovering` 挪出来或抽成独立模块才能给 `effectiveView` 用）。
+- **区域（zone）拿不到 `vars`**：`src/combat/space.ts` 传给区域的是 `vars: {}`，施法时 `choose` 选出来的东西（伤害类型等）在区域里丢了（哈达之欲的升环加骰永远落在强酸上）。在哪：`space.ts` 的 `runZone` / `Zone`（把创建时的 vars 存进 zone）。
+- **触发窗口里正规地花反应**：`leftReach` 这类窗口里数据写 `cost: [{ economy: 'reaction' }]` 不扣反应（实测反应 0 也能用、还能反复花）；另外 `flags.cannot: ['provoke']` 的效应活到**回合结束**而不是「这次移动结束」，数据要配 `endsOn: moved` 才对（散兵战术踩过）。在哪：`src/combat/tx.ts`（payCosts / canPay）、`src/combat/effects.ts`（disengaged）、`triggers.ts`。
+- **移动已经放下的区域**：zone 只有创建 / 删除，没有「把区域挪到别处」，原文里的「区域移入生物空间」触发也没实现（月华之光、炽焰法球、自然庇护卡这条）。在哪：`src/combat/session.ts`（`createZone`）、`space.ts`、`app/pages/combat/MapView.tsx`（拖动）。
+- **检查器补两条**：① `target.size` 的字面量：数据写 `target.size == 'S'`（引擎里是「小型」，见 `src/sheet/constants.ts` 的 `SIZE_CN`）恒假，`npm run check:data` 不报；
+  ② `heal` / `tempHp` 的 `to` 不接受 `'each'`（只有 `applyEffect` 允许），现在写了也能跑（`exec.ts` 的 `recipients` 恰好认），lint / audit 查不出来（灵感织衣踩到）。在哪：`src/combat/audit.ts`、`src/factory/lint.ts`。
+- **第三轮复核又挖出的引擎语义缺口**（写召唤数据时踩到的）：
+  1. ✅ **已修**：独立存续的召唤物原来「按召唤者」互相顶替，第二次召唤任何独立召唤物都会误删前一只（坐骑 + 魔宠不能共存）。
+     现在按**组**顶替：缺省是这次动作（同一道法术再施展一次 = 换一只），跨条目同一效果的写 `group: 'steed'`（寻获坐骑 / 信实坐骑）。见 `tests/combat/summon-replace.test.ts`。
+  2. ✅ **已修**：`spellCast` 窗口原来拿不到目标（`target` 落在施法者身上）。现在 `target` = 被施法的那个、`attacker` = 施法者，
+     `event.targets` 是全部目标；`role: 'target'` 因此可用（「当有人对你施法时」写得出来了）。见 `tests/combat/window-scope.test.ts`。
+     注意：原来靠旧语义写 `when: 'target.side != self.side'` 的数据要改成 `attacker.side`（现有数据里没人这么写，只有测试里有）。
+  3. ❌ **待确认**：`modify.maxDice` 挂在掷骰者身上 —— 治疗骰的场景里施法者与承受者不是同一个，`maximize` 取不到那包骰子（永生者赠礼这类写不出来）。
+  4. ℹ️ **不是 bug，是约定**：`reducedTo0` 里 `self` = 挂这条能力的人、`target` = 倒下的那个（和别的窗口一致）；
+     数据写 `self.hp` 读到的是能力拥有者。已用 `tests/combat/window-scope.test.ts` 把语义钉住，写数据时照它来。
+  5. ✅ **已修**：区域里的 `applyEffect` 每个触发点挂一份 —— 现在**状态（condition）刷新而不是叠**（区域每回合触发、同一道法术再施加都只有一份）；
+     非状态的效应照旧可以共存（祝福术两份：取最近的，golden #12 就是这么设计的）。见 `tests/combat/effect-stack.test.ts`。
+  6. ✅ **已修**：条目顶层 `resources` 声明的池子不进战斗（`Entry` 类型里压根没这个字段，引擎也从不读）。
+     现在 `effectiveView` 会把条目声明的池子并进参与者的资源池（上限按 `formula` 在战斗作用域里求值），`cost: [{ resource }]` 可以花了。见 `tests/combat/entry-resources.test.ts`。
+  7. ✅ **复核那条是误报**：`leftReach` 这类窗口里数据写 `cost: [{ economy: 'reaction' }]` **是会扣的**（`fire()` 走 `payCosts`），扣完就不再触发。
+     已加 `tests/combat/window-cost.test.ts` 钉住；如果数据里没扣，多半是写成了 `activation: 'none'` 的动作而不是触发器。
+  在哪：`src/combat/exec.ts`（summon / applyEffect）、`src/combat/effects.ts`（`effectiveView` / 状态刷新）、`src/combat/damage.ts`（`maxDiceFor`）、`src/combat/types.ts`（`Entry.resources`、`summonGroup`）、`src/combat/triggers.ts`。
 - **自定义整个职业 / 自定义种族「建卡时能选到」**：账户资料库（[LIBRARY.md](LIBRARY.md)）现在支持特性、法术、物品、专长、可选特性、子职的数据化；整个职业（等级表、特性表、施法进度）和自定义种族要接静态层的职业表 / 种族候选，工程量大，先搁着。
   在哪：`src/sheet/`（`class-state.ts` 的职业表、`source.ts` 的候选过滤）、`app/lib/library.ts` 的 `pickable`。
 - **易伤（vulnerability）在卡面数据里表达不出来**：`mods` 里只有 `resist` 和 `immune`（`immune` 是这轮补的），
@@ -51,6 +93,6 @@
 
 ## 大块，暂时不做
 
-- **光照与视线**：躲藏、隐形、黑暗术、掩护（半掩护 / 四分之三掩护）的自动判断。要光照和障碍物。
-- **传送**：要在地图上点目的地（新的决定类型）。现在传送只在日志里提示，手动拖棋子。
-- **三维**：飞行、悬浮、攀爬、游泳速度，高度，坠落伤害。决定不做。
+- **光照与视线**：躲藏、隐形、黑暗术、掩护（半掩护 / 四分之三掩护）的自动判断。要光照和障碍物。（审查报告里 44 条卡在这）
+- **传送**：要在地图上点目的地（新的决定类型）。现在传送只在日志里提示，手动拖棋子。（审查报告里 41 条）
+- **三维**：飞行、悬浮、攀爬、游泳速度，高度，坠落伤害。决定不做。（审查报告里「飞行 / 悬浮 / 游泳 / 攀爬速度」34 条 +「三维高度」5 条）

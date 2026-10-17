@@ -142,10 +142,11 @@ const TEST: RuleFile = {
       }],
     },
     // 法术反制式：在施法前迫使施法者做体质豁免，失败则打断施法（缺省退回法术位）
+    // 注意：spellCast 窗口里 attacker 才是施法者，target 是被施法的那个（见 tests/combat/window-scope.test.ts）
     'T:spell:反制': {
       actions: [{
         id: 'cast', name: '反制', activation: 'reaction', tags: ['spell', 'magical'],
-        trigger: { on: 'spellCast', role: 'any', window: 'before', aim: 'actor', when: 'target.side != self.side' },
+        trigger: { on: 'spellCast', role: 'any', window: 'before', aim: 'actor', when: 'attacker.side != self.side' },
         cost: [{ slot: { min: 3 } }],
         root: [{
           kind: 'save', ability: 'con', dc: 'self.spell.dc',
@@ -157,7 +158,7 @@ const TEST: RuleFile = {
     'T:spell:强行反制': {
       actions: [{
         id: 'cast', name: '强行反制', activation: 'reaction', tags: ['spell', 'magical'],
-        trigger: { on: 'spellCast', role: 'any', window: 'before', aim: 'actor', when: 'target.side != self.side' },
+        trigger: { on: 'spellCast', role: 'any', window: 'before', aim: 'actor', when: 'attacker.side != self.side' },
         root: [{ kind: 'modify', modify: [{ op: 'cancel', refundSlot: false }] }],
       }],
     },

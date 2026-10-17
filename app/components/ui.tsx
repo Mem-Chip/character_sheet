@@ -57,9 +57,10 @@ export function Tag(p: { tone?: 'accent' | 'danger' | 'warn'; children: ReactNod
 }
 
 /** docked：不盖遮罩、不居中，贴在页面给它留的位置（地图布局里要做的决定用，不挡地图） */
-export function Dialog(p: { title: ReactNode; children: ReactNode; footer?: ReactNode; onClose?: () => void; docked?: boolean }) {
+/** docked：不盖遮罩、不居中，贴在页面给它留的位置（地图布局里要做的决定用，不挡地图）；size='wide' 加宽（设置面板、表单这种） */
+export function Dialog(p: { title: ReactNode; children: ReactNode; footer?: ReactNode; onClose?: () => void; docked?: boolean; size?: 'wide' }) {
   const box = (
-      <section className={'panel dialog' + (p.docked ? ' docked' : '')} role="dialog" aria-modal={!p.docked}>
+      <section className={'panel dialog' + (p.docked ? ' docked' : '') + (p.size === 'wide' ? ' wide' : '')} role="dialog" aria-modal={!p.docked}>
         <header>
           <h3>{p.title}</h3>
           {p.onClose && <div className="aside"><button className="btn ghost sm" onClick={p.onClose} aria-label="关闭">关闭</button></div>}

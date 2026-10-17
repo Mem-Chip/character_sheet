@@ -1,0 +1,414 @@
+{
+ "version": 1,
+ "note": "第六轮 r6-03（TCE 八条）：①一体共生 补上「失去全部临时生命值 / 再次使用荒野形态提前结束」的结束条件（引擎不发出 damageTaken 事件，endsOn 监听不到，改用 damageApplied + event.tempAbsorbed 判断），孢子环绕加骰引擎没有钩子 → 保持人工；②真菌感染 改成真的召唤一具 1 HP 的丧尸（reducedTo0 反应 + 次数池），用 1 小时的效应把丧尸链接起来到点自动退场，丧尸带不死坚韧询问与「只能攻击」的提示；③快手投掷 改成「消耗卓越骰 → 多出一次攻击 + 下一次远程武器命中把卓越骰计入伤害」，这样武器自身的命中与伤害是真的（旧数据只掷了卓越骰当伤害）；④归复平衡 用 clearAdv 真正抹掉优势 / 劣势（旧版只给了一句提示）；⑤律令之壁 用 number 节点让被守护者选消耗几颗 d8（旧版一律全消耗），剩余颗数写回效应 state（同一笔伤害里用一个「已结算」标记挡住窗口的第二轮重开，避免一包伤害吃两次屏障），再次施放时旧屏障自动结束；⑥星我觉醒 用附赠动作同时施加星我之臂 / 星我之容（跨条目引模板）+ 觉醒效应，星之连击改成「本回合一次的免费动作，+1 次攻击」（旧版挂回合开始、时机不对）；⑦符令责斥 改成 aim: 'actor'，伤害与推离都真正打向攻击者（旧版要人手选目标），佩戴者是盟友时会问一句；⑧感染之怒 补上「天生武器」与近战判定、次数池声明，第二选项（让目标用反应打一次）仍要人工结算。",
+ "entries": {
+  "TCE:德鲁伊:真菌感染:6": {
+   "name": "真菌感染",
+   "automation": "partial",
+   "text": "你周围 10 尺内一个生物降到 0 生命值时，如果它是小型或中型的野兽或类人生物，你可以用反应（并消耗一次「真菌感染」次数）把它的尸体活化成丧尸：生命值 1 点、AC 8、速度 20 尺、猛击 +3 命中 1d8+1 钝击，毒素免疫、力竭和中毒状态免疫，先攻紧接在你的回合之后（引擎把召唤物排在你后面）。类型和体型按怪物数据判断；数据里认不出类型 / 体型的怪会问你一句。活化状态持续 1 小时，到点自动退场（引擎用一份 1 小时的「真菌感染」记录把丧尸链接住，时间流逝满 1 小时就一起消失）。丧尸降到 0 生命值时会问你要不要用「不死坚韧」（体质豁免 DC 5 + 所受伤害，光耀伤害或重击不适用），成功就改成 1 点生命值。次数上限等于你的感知调整值（至少 1 次），长休恢复。【要人处理】①原文说丧尸「唯一能执行的动作只有攻击动作并进行一次近战攻击」——引擎不知道这个限制，它的动作栏里也有疾走等通用动作，请只用攻击动作做一次猛击。②丧尸的黑暗视觉 60 尺没有写进战斗数据。③多只丧尸同时存在时，用来计时的那份「真菌感染」记录在界面上只有最新那份显示为生效、其余标「被压制」，但每只丧尸的 1 小时各自计时，不影响结算。",
+   "resources": [
+    {
+     "id": "fungal-infestation",
+     "name": "真菌感染",
+     "formula": "max(1, wis)",
+     "recovery": "long"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "infest",
+     "label": "真菌感染：活化尸体",
+     "on": "reducedTo0",
+     "role": "any",
+     "window": "before",
+     "optional": true,
+     "cost": [
+      {
+       "economy": "reaction"
+      },
+      {
+       "resource": "fungal-infestation"
+      }
+     ],
+     "when": "within(self, target, 10) && ((target.type == '野兽' || target.type == '类人生物') && (target.size == '小型' || target.size == '中型') || ((target.type == '' || target.size == '') && ask('死者的类型 / 体型不在数据里：它是小型或中型的野兽或类人生物吗？')))",
+     "do": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "inline": {
+        "name": "真菌感染：丧尸",
+        "text": "被活化的一具丧尸（生命值 1）跟随召唤者，1 小时后崩解。",
+        "duration": {
+         "hours": 1
+        },
+        "onApply": [
+         {
+          "kind": "summon",
+          "name": "丧尸",
+          "size": "M",
+          "creatureType": "undead",
+          "ac": 8,
+          "hp": 1,
+          "speed": 20,
+          "pb": 2,
+          "attacksPerAction": 1,
+          "score": {
+           "str": 13,
+           "dex": 6,
+           "con": 16,
+           "int": 3,
+           "wis": 6,
+           "cha": 5
+          },
+          "immune": [
+           "毒素"
+          ],
+          "conditionImmune": [
+           "力竭",
+           "中毒"
+          ],
+          "attacks": [
+           {
+            "name": "猛击",
+            "bonus": 3,
+            "damage": "1d8 + 1",
+            "damageType": "钝击"
+           }
+          ],
+          "triggers": [
+           {
+            "id": "undead-fortitude",
+            "label": "丧尸：不死坚韧",
+            "on": "reducedTo0",
+            "role": "target",
+            "window": "before",
+            "optional": true,
+            "when": "damage.type != '光耀' && !damage.crit && ask('不死坚韧：让丧尸做一次体质豁免（DC 5 + 这次所受伤害）。豁免成功了吗？成功则改为 1 点生命值。')",
+            "modify": [
+             {
+              "op": "setHp",
+              "value": "1"
+             }
+            ]
+           }
+          ],
+          "notes": [
+           "丧尸：黑暗视觉 60 尺；免疫毒素伤害与力竭 / 中毒状态；会「不死坚韧」（降到 0 时体质豁免 DC 5 + 所受伤害，成功改为 1 点生命值，光耀伤害或重击不适用）。",
+           "它只会执行攻击动作做一次猛击——引擎的动作栏里还有疾走等通用动作，请只用攻击。"
+          ]
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "TCE:术士:归复平衡:1": {
+   "name": "归复平衡",
+   "automation": "full",
+   "text": "60 尺内你可见的一个生物即将带着优势或劣势掷 d20 检定时，你可以用反应让这次检定不再受优势 / 劣势影响（改成只掷一颗 d20，用第一颗的结果）。已自动化：掷骰前会弹出可选项，选了就自动抹掉这次检定的优势与劣势、只保留第一颗 d20 重新判定。「60 尺内」「你能看见」在没有地图时会问你；这个选项对任何人的 d20 检定都会出现（只要它带优势或劣势），敌人的也算。次数上限等于你的熟练加值，长休恢复。",
+   "resources": [
+    {
+     "id": "restore-balance",
+     "name": "归复平衡",
+     "formula": "pb",
+     "recovery": "long"
+    }
+   ],
+   "actions": [
+    {
+     "id": "use",
+     "name": "归复平衡",
+     "activation": "reaction",
+     "trigger": {
+      "on": "d20Rolled",
+      "role": "any",
+      "window": "before",
+      "when": "(roll.adv || roll.disadv) && (roll.roller == self.id || (within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))))"
+     },
+     "cost": [
+      {
+       "resource": "restore-balance"
+      }
+     ],
+     "root": [
+      {
+       "kind": "modify",
+       "modify": [
+        {
+         "op": "clearAdv",
+         "which": "both"
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "归复平衡：这次检定不再有优势 / 劣势，只按第一颗 d20 的结果判定。"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "TCE:术士:律令之壁:6": {
+   "name": "律令之壁",
+   "automation": "partial",
+   "text": "以一个动作消耗 1~5 点术法点，为你自己或 30 尺内一个你能看见的生物造出屏障：屏障里有等量的 d8。被守护者每次受到伤害时，可以选择消耗其中几颗 d8、掷出并把合计从这次伤害里减掉（会弹一个数字框，上限就是屏障里剩下的颗数）；颗数消完屏障就结束。屏障持续到你完成长休，或你再次使用这个特性（在新的生物身上再造屏障时，旧的那个自动结束）。【要人处理】①「屏障还剩几颗」是靠把效应重新施加一次来记的，所以界面上会看到一份旧的「律令之壁」标着「被压制」——它不参与结算，吃完最后一颗或长休时会一起清掉。②一次伤害包带有多种伤害类型时，引擎会把减伤分别从每种类型里各扣一次（引擎的既有行为），混合伤害请自己核对结果。③被守护的是别人时，那个「消耗几颗」的弹窗给的是那个生物的控制器；如果那是 DM 的怪，请让 DM 代答。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "律令之壁",
+     "activation": "action",
+     "tags": [
+      "magical"
+     ],
+     "requires": "self.resource('sorcery_points') > 0",
+     "text": "目标选自己即为环绕自己。",
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 30,
+      "filter": "canSee(self, target) || target.id == self.id"
+     },
+     "root": [
+      {
+       "kind": "number",
+       "prompt": "律令之壁：消耗几点术法点（获得等量 d8）？",
+       "var": "n",
+       "min": 1,
+       "max": "min(5, self.resource('sorcery_points'))"
+      },
+      {
+       "kind": "resource",
+       "id": "sorcery_points",
+       "delta": "-vars.n"
+      },
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "律令之壁",
+       "state": {
+        "dice": "vars.n"
+       }
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "律令之壁": {
+     "tags": [
+      "magical"
+     ],
+     "stackKey": "律令之壁",
+     "text": "屏障里有若干 d8；受到伤害时可以消耗任意几颗，把掷出的合计从伤害里减掉。持续到施加者长休或再次使用律令之壁。",
+     "duration": {
+      "manual": true,
+      "endsOn": [
+       {
+        "event": "restCompleted",
+        "when": "event.kind == 'long'"
+       },
+       {
+        "event": "effectApplied",
+        "when": "event.key == 'TCE:术士:律令之壁:6#律令之壁' && source != null && event.source == source.id && event.bearer != self.id"
+       }
+      ]
+     },
+     "triggers": [
+      {
+       "id": "ward",
+       "label": "律令之壁：消耗 d8 减伤",
+       "on": "damageIncoming",
+       "role": "target",
+       "window": "before",
+       "optional": true,
+       "when": "damage.amount > 0 && !self.hasEffect('律令之壁：已结算')",
+       "do": [
+        {
+         "kind": "number",
+         "prompt": "律令之壁：这次伤害要消耗几颗 d8？（上限是屏障里剩下的颗数）",
+         "var": "n",
+         "min": 1,
+         "max": "effect.state.dice"
+        },
+        {
+         "kind": "if",
+         "when": "vars.n > 0",
+         "then": [
+          {
+           "kind": "modify",
+           "modify": [
+            {
+             "op": "reduceDamage",
+             "value": "(vars.n)d8"
+            }
+           ]
+          },
+          {
+           "kind": "applyEffect",
+           "to": "self",
+           "inline": {
+            "name": "律令之壁：已结算",
+            "text": "（这次伤害已经用过屏障，结算完就消失）",
+            "duration": {
+             "endsOn": [
+              {
+               "event": "damageApplied",
+               "when": "event.target == self.id"
+              }
+             ]
+            }
+           }
+          },
+          {
+           "kind": "if",
+           "when": "effect.state.dice - vars.n > 0",
+           "then": [
+            {
+             "kind": "applyEffect",
+             "to": "self",
+             "template": "律令之壁",
+             "state": {
+              "dice": "effect.state.dice - vars.n"
+             }
+            }
+           ],
+           "else": [
+            {
+             "kind": "removeEffect",
+             "from": "self",
+             "match": {
+              "name": "律令之壁"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "TCE:符令责斥": {
+   "name": "符令责斥",
+   "automation": "partial",
+   "text": "当护身符的佩戴者被一个位于你 30 尺以内、你能看见的攻击者命中时，你可以用反应对该攻击者造成等同于你熟练加值的心灵伤害，并把它推离佩戴者至多 10 尺。已自动化：被命中的是护符佩戴者时给出这个反应选项，选中后伤害自动打向攻击者（不用再选目标）、并在地图上把攻击者沿直线推离 10 尺（推的是「远离你」的方向，佩戴者就是你时方向正确）。【要人处理】①护符交给盟友戴时引擎不知道现在戴在谁身上，被命中的人是你或你的盟友时都会问一句「这是佩戴者吗」。②佩戴者不是你时，推离方向应当「远离佩戴者」而不是远离你，方向不对请手动拖动。③10 尺只推一次，撞到别的棋子就停下。④「30 尺以内」「你能看见」没有地图时会问你。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "符令责斥",
+     "activation": "reaction",
+     "trigger": {
+      "on": "attackHit",
+      "role": "any",
+      "window": "after",
+      "aim": "actor",
+      "when": "(target.id == self.id || target.isAllyOf(self)) && within(self, attacker, 30) && canSee(self, attacker) && ask('被命中的是佩戴你护身符的那位（你，或你交给的盟友）吗？')"
+     },
+     "root": [
+      {
+       "kind": "damage",
+       "to": "attacker",
+       "dice": "self.pb",
+       "type": "心灵"
+      },
+      {
+       "kind": "move",
+       "mode": "push",
+       "ft": 10
+      },
+      {
+       "kind": "note",
+       "text": "符令责斥：攻击者已被推离 10 尺（远离你）。如果佩戴者不是你，方向请手动校正。"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "TCE:野蛮人:感染之怒:10": {
+   "name": "感染之怒",
+   "automation": "partial",
+   "text": "你在狂暴中用天生武器命中一个敌人时（会问你这次命中的是不是天生武器），可以消耗一次「感染之怒」次数，迫使目标做一次感知豁免（DC = 8 + 你的体质调整值 + 熟练加值）。豁免失败时由你选择：①目标受到 2d12 心灵伤害（已自动化）；②目标用反应对一个由你选择、且你能看见的生物发动一次近战攻击。【要人处理】第 ② 项引擎不能让一个生物「代你」发动攻击：选这一项之后会给出提示，请手动让那个目标用反应打一次（发起攻击时选「作为反应」），并自己核对目标的选择合法（你选的、你能看见的）。次数上限等于你的熟练加值，长休恢复。",
+   "resources": [
+    {
+     "id": "infectious-fury",
+     "name": "感染之怒",
+     "formula": "pb",
+     "recovery": "long"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "infectious-fury",
+     "label": "感染之怒：诅咒目标",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "after",
+     "optional": true,
+     "cost": [
+      {
+       "resource": "infectious-fury"
+      }
+     ],
+     "when": "self.hasEffect('狂暴') && attack.melee && ask('这次命中的武器是天生武器（咬击 / 爪击 / 尾击之类）吗？')",
+     "do": [
+      {
+       "kind": "save",
+       "ability": "wis",
+       "dc": "8 + self.mod.con + self.pb",
+       "onFail": [
+        {
+         "kind": "choose",
+         "prompt": "感染之怒：选择豁免失败的效应",
+         "options": [
+          {
+           "label": "受到 2d12 心灵伤害",
+           "do": [
+            {
+             "kind": "damage",
+             "dice": "2d12",
+             "type": "心灵"
+            }
+           ]
+          },
+          {
+           "label": "目标用反应对另一个生物发动一次近战攻击",
+           "do": [
+            {
+             "kind": "note",
+             "text": "感染之怒：请让目标用它的反应，对你选择的一个你能看见的生物发动一次近战攻击（发起时选「作为反应」），并手动结算这次攻击。"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  }
+ }
+}

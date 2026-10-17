@@ -60,8 +60,8 @@ const WINDOWS: Array<[string, string, string, string, string]> = [
   ['reducedTo0', 'before', '来源 / 承受者', 'damage', 'setHp（「改为降到 1」这类）'],
   ['turnStarted / turnEnded', 'after', '回合的主人（触发器里 target 也是他）', '—', '—'],
   ['leftReach', 'after', '走开的人 / 被离开触及范围的人', '—（借机攻击引擎自己会问，不用写）', '—'],
-  ['spellCast', 'before', '施法者', 'event.spell、event.key', 'cancel（打断施法，缺省退回法术位；要消耗法术位写 refundSlot: false）'],
-  ['spellCast', 'after', '施法者', 'event.spell、event.key', '—'],
+  ['spellCast', 'before', '施法者（role: \'target\' 是被施法的那个）', 'event.spell、event.key、event.targets；attacker = 施法者，target = 被施法的那个', 'cancel（打断施法，缺省退回法术位；要消耗法术位写 refundSlot: false）'],
+  ['spellCast', 'after', '施法者（role: \'target\' 是被施法的那个）', 'event.spell、event.key、event.targets；attacker = 施法者，target = 被施法的那个', '—'],
   ['initiativeRolled', 'after', '掷先攻的人', '—', '—'],
   ['restCompleted', 'after', '休息的人', 'event.kind（short / long）', '—'],
 ];
@@ -225,6 +225,10 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
 21. **打断施法**（法术反制）：挂在 \`spellCast\` before 窗口（\`role: 'any'\`、\`aim: 'actor'\`），在豁免失败分支里写 \`{ kind: 'modify', modify: [{ op: 'cancel' }] }\`（2024 版不消耗对方体内的法术位，缺省 \`refundSlot: true\`）。
 22. **抹掉优势 / 劣势**：常驻「攻击检定不会对你有优势」（飘忽不定、序列意识）在 \`rollMods\` 里写 \`op: 'noAdv'\`；触发时消掉本次掷骰的优势 / 劣势（归复平衡、醉汉机运）在 \`d20Rolled\` before 写 \`modify: [{ op: 'clearAdv', which: 'both' | 'adv' | 'disadv' }]\`。
 23. **召唤生物**（野兽召唤术、原初伴侣、寻获魔宠、荒野伙伴）：用 \`{ kind: 'summon', name: '…', size: 'S' | 'M' | 'L', creatureType: '…', ac: '11 + slot.level', hp: '30 + 5 * (slot.level - 2)', speed: 30, attacksPerAction: 'floor(slot.level / 2)', attacks: [{ name: '…', damage: '1d8 + 4 + slot.level', damageType: '穿刺' }] }\`。有多种形态（陆生 / 空生 / 水生）的套在 \`choose\` 节点里。专注法术召唤出的生物默认随专注结束退场；非专注或独立存续的写 \`link: false\`。
+    独立存续（\`link: false\`）的召唤物**按组顶替**：同一道法术再施展一次会换掉旧的（缺省按这次动作分组），不同来源（坐骑 + 魔宠）各留各的；同一效果被拆成两个条目时（寻获坐骑 / 圣武士的「信实坐骑」）在两条里写相同的 \`group: 'steed'\` 才会互相顶替。
+24. **目标挣脱 / 效应被移除之后法术是否结束**：引擎**不会**因为「效应被移除」就自动结束专注 —— 多目标法术里一个目标摆脱了，法术对别人还在（golden #4 定身类人就是这么设计的）。
+    原文说「成功则法术结束」的（诱捕打击这类），在 root 里显式写 \`{ kind: 'endConcentration' }\`：结束施法者自己的专注，链接的效应、区域、召唤物会一并退场。
+25. **灵光授予的静态修正**（\`aura.grant.statics\`：抗性、免疫、AC 加值…）会并进范围内生物的 view —— 不用再拿「受伤前减半」之类的写法绕。
 
 ## 6. 引擎怎么执行（容易想错的地方）
 

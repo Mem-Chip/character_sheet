@@ -1,0 +1,661 @@
+{
+ "version": 1,
+ "note": "重新数据化（zone）：用上 zone 机制",
+ "entries": {
+  "XGE:spell:创造篝火": {
+   "name": "创造篝火",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。在 60 尺内燃起一堆占满 5 尺立方的魔法篝火；施放时空间内的生物敏捷豁免，失败受 (1 + floor((self.level + 1) / 6))d8 火焰伤害。篝火留在地图上：生物在其回合中第一次进入、或在其中结束回合时同样进行该豁免（每回合限一次），随专注结束消失。点燃未着装可燃物需人工处理。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "创造篝火",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 60,
+      "area": {
+       "shape": "cube",
+       "size": 5
+      }
+     },
+     "root": [
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "dex",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "dice": "(1 + floor((self.level + 1) / 6))d8",
+           "type": "火焰"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "创造篝火：篝火可以点燃空间内未被穿戴或携带的可燃物体（引擎不处理物品燃烧，请人工判定）。"
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "dex",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "dice": "(1 + floor((self.level + 1) / 6))d8",
+           "type": "火焰"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:spell:土石喷发": {
+   "name": "土石喷发",
+   "automation": "partial",
+   "text": "120 尺内 20 尺立方区域喷发泥石流，区域内每个生物敏捷豁免，失败受 slot.level d12 钝击伤害，成功半伤（3 环 3d12，每高一环 +1d12）。该区域地面变为困难地形直到被清理（每 5 平方尺至少 1 分钟），困难地形与清理需人工处理。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "土石喷发",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 3
+       }
+      }
+     ],
+     "targeting": {
+      "type": "area",
+      "range": 120,
+      "area": {
+       "shape": "cube",
+       "size": 20
+      }
+     },
+     "root": [
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "dex",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "earth",
+           "dice": "(slot.level)d12",
+           "type": "钝击"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "earth",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "土石喷发：该区域的地面成为困难地形直到被清理（每 5 平方尺需人工清理至少 1 分钟）。引擎不处理地形，请人工结算。"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:spell:地颤": {
+   "name": "地颤",
+   "automation": "partial",
+   "text": "以你为中心 10 尺半径内引发地面颤动，区域内除你以外的生物敏捷豁免，失败受 slot.level d6 钝击伤害并倒地（1 环 1d6，每高一环 +1d6）。若地表为松软土壤或石头，被清理前成为困难地形——引擎不处理地形，需人工。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "地颤",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 1
+       }
+      }
+     ],
+     "targeting": {
+      "type": "area",
+      "range": 10,
+      "area": {
+       "shape": "sphere",
+       "radius": 10
+      }
+     },
+     "root": [
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "if",
+         "when": "target.id != self.id",
+         "then": [
+          {
+           "kind": "save",
+           "ability": "dex",
+           "dc": "self.spell.dc",
+           "onFail": [
+            {
+             "kind": "damage",
+             "dice": "(slot.level)d6",
+             "type": "钝击"
+            },
+            {
+             "kind": "applyEffect",
+             "to": "target",
+             "template": "XPHB:condition:倒地"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "地颤：若区域的地表为松软的土壤或石头，它在被清理之前成为困难地形（每 5 尺直径需要至少 1 分钟人工清理）。引擎不处理地形。"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:spell:烟火术": {
+   "name": "烟火术",
+   "automation": "manual",
+   "text": "选择 60 尺内你能看见的一处不超过 5 尺立方区域的非魔法火焰，熄灭它以制造焰火或浓烟。【烟火】目标周围 10 尺内的生物体质豁免，失败目盲直到你的下个回合结束。【浓烟】火焰散发浓重黑烟，充满 20 尺半径区域并造成重度遮蔽，持续 1 分钟或被强风吹散。重度遮蔽（视线与遮蔽）、熄灭火焰、以及「目标必须是一处非魔法火焰」引擎都处理不了：这条只有豁免与目盲能结算，其余请人工。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "烟火术：烟火",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 2
+       }
+      }
+     ],
+     "targeting": {
+      "type": "area",
+      "range": 60,
+      "area": {
+       "shape": "sphere",
+       "radius": 10
+      }
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "烟火术：需要先人工指定并熄灭一处不超过 5 尺立方的非魔法火焰（引擎不处理目标火焰与熄灭）。"
+      },
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "con",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "烟火目盲"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "smoke",
+     "name": "烟火术：浓烟",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 2
+       }
+      }
+     ],
+     "targeting": {
+      "type": "area",
+      "range": 60,
+      "area": {
+       "shape": "sphere",
+       "radius": 20
+      }
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "烟火术：目标火焰散发出浓重黑烟，蔓延充满 20 尺半径区域（可绕过角落）并处于重度遮蔽状态，持续 1 分钟，若一股强风吹向它则提前消散。引擎不处理重度遮蔽，请人工判定（可以在图上放一个手动区域做记号）。"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "烟火目盲": {
+     "tags": [
+      "magical",
+      "spell",
+      "debuff"
+     ],
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "source",
+       "nth": 1
+      }
+     },
+     "implies": [
+      "XPHB:condition:目盲"
+     ],
+     "text": "被目标火焰爆炸的炫目彩光晃到，陷入目盲，持续直至施法者的下个回合结束。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:spell:拂晓": {
+   "name": "拂晓",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。在 60 尺内指定一点升起 30 尺半径、40 尺高的阳光光柱并留在地图上：出现时处于其中的生物体质豁免，失败受 4d10 光耀伤害，成功半伤；在光柱中结束回合的生物也须再次进行该豁免（每回合限一次）。随专注结束消失。光柱的阳光性质、40 尺高度与「附赠动作把光柱移动 60 尺」（引擎不移动区域）需人工处理。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "拂晓",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 5
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 60,
+      "area": {
+       "shape": "cylinder",
+       "radius": 30
+      }
+     },
+     "root": [
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "con",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "dawnDmg",
+           "dice": "4d10",
+           "type": "光耀"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "dawnDmg",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "拂晓：这道光芒被视为阳光，光柱高 40 尺（引擎不处理光照与高度，请人工判定）。你可以在自己回合用附赠动作把光柱移动 60 尺——引擎不会移动已放下的区域，请删掉旧区域重新放置。"
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "con",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "dawnZoneDmg",
+           "dice": "4d10",
+           "type": "光耀"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "dawnZoneDmg",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:spell:光墙术": {
+   "name": "光墙术",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 120 尺内升起至多长 60 尺、高 10 尺、厚 5 尺的光墙，出现时区域内生物体质豁免，失败受 (slot.level - 1)d8 光耀伤害并目盲（每回合结束可重豁免），成功半伤。墙留在地图上：生物进入或在墙内结束回合时同样进行该豁免（每回合限一次），随专注结束消失。后续可用动作从墙上发射光辉射线（远程法术攻击，命中 (slot.level - 1)d8 光耀）；墙体阻挡视线、发光、每次发射缩短 10 尺需人工处理。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "光墙术",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 5
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 10
+     },
+     "targeting": {
+      "type": "area",
+      "range": 120,
+      "area": {
+       "shape": "line",
+       "length": 60,
+       "width": 5
+      }
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "光墙术：墙阻挡视觉线并发出 120 尺明亮照明与额外 120 尺微光（引擎不处理视线与光照，请人工判定）。"
+      },
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "con",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "wallDmg",
+           "dice": "(slot.level - 1)d8",
+           "type": "光耀"
+          },
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "光墙术：目盲"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "wallDmg",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "damage",
+         "dice": "4d8",
+         "type": "光耀"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "ray",
+     "name": "光墙术：光辉射线",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 60
+     },
+     "root": [
+      {
+       "kind": "attack",
+       "bonus": "self.spell.atk",
+       "attack": {
+        "ranged": true,
+        "spell": true,
+        "damageType": "光耀"
+       },
+       "onHit": [
+        {
+         "kind": "damage",
+         "dice": "4d8",
+         "type": "光耀"
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "无论击中或失手，光墙长度都减少 10 尺；降至 0 尺时法术结束（墙体缩短需人工处理）。这次射线按 5 环基础伤害 4d8 结算，若光墙是升环施放的，请人工补上每高一环的 1d8。"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "光墙术：目盲": {
+     "tags": [
+      "magical",
+      "spell",
+      "debuff"
+     ],
+     "duration": {
+      "minutes": 10,
+      "saveEnds": {
+       "ability": "con",
+       "dc": "source.spell.dc",
+       "at": "turnEnd"
+      }
+     },
+     "implies": [
+      "XPHB:condition:目盲"
+     ],
+     "text": "被光墙的耀光目盲。在其每个回合结束时可以重新进行体质豁免，成功则结束目盲。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:spell:治愈之魂": {
+   "name": "治愈之魂",
+   "automation": "partial",
+   "text": "附赠动作施放，专注至多 1 分钟。在 60 尺内一处 5 尺立方空间召唤自然精魂并留在地图上；你或你能看见的生物在回合里第一次进入该空间、或在其开始回合时，你可以让精魂为它恢复 (1 + slot.level)d6 点生命值（不能治疗构装体与不死生物，每回合限一次，随专注结束消失）。精魂至多治愈 1 + 施法属性调整值次（至少 2 次），次数与「用附赠动作把精魂移动 30 尺」需人工处理。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "治愈之魂",
+     "activation": "bonus",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 2
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 60,
+      "area": {
+       "shape": "cube",
+       "size": 5
+      }
+     },
+     "root": [
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "if",
+         "when": "target.type != '构装生物' && target.type != '不死生物' && ask('让精魂为它恢复生命值吗？（精魂至多治愈 1 + 施法属性调整值次，用尽后消失）')",
+         "then": [
+          {
+           "kind": "heal",
+           "amount": "(slot.level - 1)d6",
+           "to": "target"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "治愈之魂：精魂至多能进行 1 + 你的施法属性调整值次治愈（至少 2 次），用尽后消失；在你的回合中可以用附赠动作让它移动 30 尺。引擎不统计治愈次数、也不移动区域，请人工处理。"
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnStart"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "if",
+         "when": "target.type != '构装生物' && target.type != '不死生物' && ask('让精魂为它恢复生命值吗？（精魂至多治愈 1 + 施法属性调整值次，用尽后消失）')",
+         "then": [
+          {
+           "kind": "heal",
+           "amount": "(slot.level - 1)d6",
+           "to": "target"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  }
+ }
+}

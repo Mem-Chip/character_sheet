@@ -1,0 +1,377 @@
+{
+ "version": 1,
+ "note": "第六轮 r6-08：审查报告里剩下的几个大类（反应里改结算、次数池、推拉、目标绑定）挑出的 8 条。真正补上的有两条：① 复仇之魂 —— 审查说的「目标绑定」其实可以靠 仇敌誓言 效应里已经记下的 state.target 读到攻击者 id，于是 attackHit / attackMissed 两个 after 窗口 + aim: 'actor' 就能把「受誓言影响的生物发动攻击后以反应反击」跑起来（武器伤害仍按报偿那条的写法分自动 / 手动两支）；② 念力突刺的「任意方向水平移动」用 move 节点做出推离 / 拉近两支（引擎在地图上真的移棋子），其余方向留手动。次数池这一类里有三条卡在「引擎没有生成 / 恢复法术位的接口」（大德鲁伊的自然术使、荒野复苏的 1 环法术位、提夫林的免费施法）：不能凭空写法术位，仍是 partial / manual，只把能自动的部分（荒野形态次数的增减、自然术使转几次用 number 节点问）写进去；念力宗师补上了原文里漏掉的「消耗灵能骰重置施展」那条动作。辉煌防御的「失手后立刻武器反击」串不起来（引擎判完 AC 重新判定才知失手，那个时点没有能改结算的窗口，也无法把反击挂回圣武士），保持原样并在 text 里说清。",
+ "entries": {
+  "XPHB:吟游诗人:灵巧打击:3": {
+   "name": "灵巧打击",
+   "automation": "partial",
+   "text": "当你在一次动作、附赠动作或反应中消耗了诗人激励使用次数后，作为那个动作的一部分，你可以发动一次徒手打击 —— 不额外花动作 / 附赠动作 / 反应，所以写成「不占动作」的按钮。引擎读不到「刚刚消耗过诗人激励」（没有资源消耗的触发窗口），这一条只能人守：只在你确实刚花掉一次诗人激励的那个动作里点它，别凭空点。徒手打击的命中与伤害按「力量或敏捷取高」近似；舞蹈学院的诗人痛击允许改用「诗人激励骰 + 敏捷调整值」的钝击伤害，要那样打请照「诗人痛击」那条手动改伤害。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "灵巧打击",
+     "activation": "free",
+     "text": "只能在刚消耗了诗人激励使用次数的那个动作 / 附赠动作 / 反应里使用（由人判断）。",
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": "reach"
+     },
+     "tags": [
+      "weapon"
+     ],
+     "root": [
+      {
+       "kind": "attack",
+       "bonus": "self.pb + max(self.mod.str, self.mod.dex)",
+       "attack": {
+        "melee": true,
+        "unarmed": true,
+        "ability": "dex",
+        "damageType": "钝击",
+        "item": "徒手打击"
+       },
+       "onHit": [
+        {
+         "kind": "damage",
+         "dice": "1 + max(self.mod.str, self.mod.dex)",
+         "type": "钝击"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:圣武士:复仇之魂:15": {
+   "name": "复仇之魂",
+   "automation": "partial",
+   "text": "受你仇敌誓言影响的生物发动一次攻击之后（命中与否都算），只要它在你武器的触及内，你就可以用反应对它发动一次近战攻击。触发与目标绑定都自动化：每次攻击结算后引擎会看攻击者是不是你「仇敌誓言」效应里记下的那个生物（誓言 1 分钟内还在才算），是就问你用不用这个反应，并把反击的目标直接定成那个攻击者。两处是近似或手动：① 触及按 5 尺算，用长触及武器（10 尺）时引擎会挡下来，请自己确认后手动处理；② 反击用的武器引擎拿不到你装备的那把 —— 选「徒手打击」是自动结算的，要用武器请选「近战武器攻击（手动）」，反应已经在这里付过，在武器行发起即可。",
+   "actions": [
+    {
+     "id": "avenge",
+     "name": "复仇之魂",
+     "activation": "reaction",
+     "trigger": {
+      "on": [
+       "attackHit",
+       "attackMissed"
+      ],
+      "role": "any",
+      "window": "after",
+      "aim": "actor",
+      "when": "attacker.id == self.effect('仇敌誓言').state.target && dist(self, attacker) <= 5"
+     },
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": "reach"
+     },
+     "tags": [
+      "weapon"
+     ],
+     "text": "受你仇敌誓言影响的生物发动攻击后（命中与否都算），若它在你 5 尺内，用反应对它发动一次近战攻击。",
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "复仇之魂：用什么反击？",
+       "options": [
+        {
+         "label": "徒手打击（自动结算）",
+         "do": [
+          {
+           "kind": "attack",
+           "bonus": "self.pb + self.mod.str",
+           "attack": {
+            "melee": true,
+            "unarmed": true,
+            "ability": "str",
+            "damageType": "钝击",
+            "item": "徒手打击"
+           },
+           "onHit": [
+            {
+             "kind": "damage",
+             "dice": "1 + self.mod.str",
+             "type": "钝击"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "近战武器攻击（手动）",
+         "do": [
+          {
+           "kind": "note",
+           "text": "复仇之魂：请用武器对那个攻击者发动一次近战攻击（反应已在这里付掉，在武器行手动发起，不再付反应）"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:德鲁伊:大德鲁伊:20": {
+   "name": "大德鲁伊",
+   "automation": "partial",
+   "text": "自动的部分：不凋化形（投先攻时若没有荒野形态次数，自动补 1 次）与自然术使的次数扣除（问你要转化几次，从荒野形态次数里扣）。做不到的部分：引擎没有「生成法术位」的接口，转化出来的法术位请手动加上（环阶 = 2 × 转化次数，例如转化 2 次 = 4 环）；自然术使每次长休只能来一次，靠它自己的次数池管。青春永驻是叙事（衰老变慢），不处理。",
+   "triggers": [
+    {
+     "id": "evergreen",
+     "label": "大德鲁伊：不凋化形",
+     "on": "initiativeRolled",
+     "role": "actor",
+     "window": "after",
+     "when": "self.resource('wildshape-uses') <= 0",
+     "do": [
+      {
+       "kind": "resource",
+       "id": "wildshape-uses",
+       "delta": 1
+      },
+      {
+       "kind": "note",
+       "text": "不凋化形：投先攻时没有荒野形态次数，获得 1 次"
+      }
+     ]
+    }
+   ],
+   "actions": [
+    {
+     "id": "nature-magician",
+     "name": "自然术使",
+     "activation": "free",
+     "text": "无需任何动作：把未使用的荒野形态次数转化为一个法术位，每次 = 2 个环阶；转化后须长休才能再用。法术位需要手动加上。",
+     "cost": [
+      {
+       "resource": "nature-magician"
+      }
+     ],
+     "requires": "self.resource('wildshape-uses') > 0",
+     "root": [
+      {
+       "kind": "number",
+       "prompt": "转化几次未使用的荒野形态次数？（每次 = 2 个环阶）",
+       "var": "n",
+       "min": 1,
+       "max": "self.resource('wildshape-uses')",
+       "default": 1
+      },
+      {
+       "kind": "resource",
+       "id": "wildshape-uses",
+       "delta": "-vars.n"
+      },
+      {
+       "kind": "note",
+       "text": "自然术使：请手动加上一个法术位，环阶 = 2 × 这次转化的次数（1 次 = 2 环、2 次 = 4 环、3 次 = 6 环、4 次 = 8 环）。长休后才能再次使用这个特性。"
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:德鲁伊:荒野复苏:5": {
+   "name": "荒野复苏",
+   "automation": "partial",
+   "text": "两个用法里，扣次数的那一半自动：① 法术位换荒野形态次数 —— 每个你的回合一次，只在自己没有荒野形态次数时可用，引擎扣法术位、加一次荒野形态次数，本回合再用会挡下来；② 荒野形态次数换 1 环法术位 —— 引擎扣荒野形态次数并记下「长休前不能再这样」，但 1 环法术位本身请手动加上（引擎没有生成法术位的接口）。",
+   "actions": [
+    {
+     "id": "slot-to-wildshape",
+     "name": "荒野复苏：法术位换荒野形态次数",
+     "activation": "free",
+     "requires": "turn.isMine && self.resource('wildshape-uses') <= 0 && !self.hasEffect('荒野复苏：本回合已用')",
+     "cost": [
+      {
+       "slot": {
+        "min": 1
+       }
+      }
+     ],
+     "root": [
+      {
+       "kind": "resource",
+       "id": "wildshape-uses",
+       "delta": 1
+      },
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "荒野复苏：本回合已用"
+      }
+     ]
+    },
+    {
+     "id": "wildshape-to-slot",
+     "name": "荒野复苏：荒野形态次数换 1 环法术位",
+     "activation": "free",
+     "requires": "self.resource('wildshape-uses') > 0",
+     "cost": [
+      {
+       "resource": "wildshape-uses"
+      },
+      {
+       "resource": "wild-resurgence-slot"
+      }
+     ],
+     "root": [
+      {
+       "kind": "note",
+       "text": "荒野复苏：获得一个 1 环法术位（请手动加到法术位上），完成一次长休前不能再次这样做。"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "荒野复苏：本回合已用": {
+     "text": "本回合已经用法术位换过荒野形态次数。",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      }
+     }
+    }
+   }
+  },
+  "XPHB:战士:念力宗师:18": {
+   "name": "念力宗师",
+   "automation": "partial",
+   "text": "自动的部分：念力宗师这条资源（1 次 / 长休）在施展心灵遥控时扣掉，附赠动作的那次武器攻击只在维持专注时提供，另补上原文里原先漏掉的「消耗一枚灵能骰（无需动作）重置此法术的施展」（花一个灵能骰，把念力宗师的次数拿回来）。做不到的部分：引擎不能在效果树里替你施放一道法术、也不能直接调用人物卡上的武器行 —— 心灵遥控的实际效果请照法术条目自己施放（无成分、无法术位、施法属性为智力），附赠动作那次打击请选一把武器在武器行手动发起。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "念力宗师：施展心灵遥控",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "resource": "tk-master"
+      }
+     ],
+     "concentration": {
+      "minutes": 10
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "心灵遥控：无需成分与法术位施展（施法属性为智力），效果请照心灵遥控的法术条目手动处理"
+      }
+     ]
+    },
+    {
+     "id": "attack",
+     "name": "念力宗师：附赠攻击",
+     "activation": "bonus",
+     "tags": [
+      "weapon"
+     ],
+     "requires": "turn.isMine && self.concentrating && ask('你正在对心灵遥控维持专注吗？')",
+     "root": [
+      {
+       "kind": "note",
+       "text": "用一把武器发动一次攻击（附赠动作），由人选择武器并结算"
+      }
+     ]
+    },
+    {
+     "id": "reset",
+     "name": "念力宗师：消耗灵能骰重置",
+     "activation": "free",
+     "requires": "self.resource('tk-master') < 1 && self.resource('灵能力量') > 0",
+     "cost": [
+      {
+       "resource": "灵能力量"
+      }
+     ],
+     "root": [
+      {
+       "kind": "resource",
+       "id": "tk-master",
+       "delta": 1
+      },
+      {
+       "kind": "note",
+       "text": "念力宗师：消耗一枚灵能骰，重置心灵遥控的施展（本特性的次数恢复）"
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:战士:念力突刺:7": {
+   "name": "念力突刺",
+   "automation": "partial",
+   "text": "用灵能打击对目标造成伤害后，可迫使目标做一次力量豁免（DC = 8 + 智力调整值 + 熟练）；失败则你选一项：令其倒地（自动）、水平推开 10 尺或拉近 10 尺（引擎在地图上沿你与目标的连线真的移动棋子，碰到别的棋子会停下）、或者往别的方向水平移动 10 尺（引擎只支持沿连线的推 / 拉，「任意方向」里的其余方向请手动拖棋子）。两次要人确认：是否刚用了灵能打击（引擎读不到灵能骰的消耗），以及那一次移动的方向是否被引擎的八方向近似对得上。",
+   "triggers": [
+    {
+     "id": "thrust",
+     "label": "念力突刺",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "after",
+     "when": "attack.weapon && ask('这次命中是否刚用了灵能打击（消耗了灵能骰）？')",
+     "do": [
+      {
+       "kind": "save",
+       "ability": "str",
+       "dc": "8 + self.mod.int + self.pb",
+       "onFail": [
+        {
+         "kind": "choose",
+         "prompt": "念力突刺的效果",
+         "options": [
+          {
+           "label": "令其倒地",
+           "do": [
+            {
+             "kind": "applyEffect",
+             "to": "target",
+             "template": "XPHB:condition:倒地"
+            }
+           ]
+          },
+          {
+           "label": "水平推开 10 尺（沿连线，引擎移动棋子）",
+           "do": [
+            {
+             "kind": "move",
+             "mode": "push",
+             "ft": 10
+            }
+           ]
+          },
+          {
+           "label": "水平拉近 10 尺（沿连线，引擎移动棋子）",
+           "do": [
+            {
+             "kind": "move",
+             "mode": "pull",
+             "ft": 10
+            }
+           ]
+          },
+          {
+           "label": "其他方向水平移动 10 尺（手动拖棋子）",
+           "do": [
+            {
+             "kind": "note",
+             "text": "念力突刺：在任意其他方向把目标水平移动最多 10 尺，请手动拖棋子"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

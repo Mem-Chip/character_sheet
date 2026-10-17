@@ -1,0 +1,1408 @@
+{
+ "version": 1,
+ "note": "重新数据化（zone）：用上 zone 机制",
+ "entries": {
+  "XGE:spell:碧水法球": {
+   "name": "碧水法球",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。在 90 尺内创造半径 5 尺的水球：出现时位于水球空间内的生物做力量豁免（巨型及以上体型自动成功，已按体型跳过），失败陷入束缚并被水淹没；生物进入水球时同样须做这次豁免。被束缚者在自己每个回合结束时重复豁免，成功即摆脱法术对自己的效果。水球的容纳上限（4 个中型或 1 个大型）、把豁免成功者排出到水球周围、水球离地不超过 10 尺、以及法术结束时水球落地熄灭 30 尺内非魔法火焰并让被束缚者倒地出现，都要人处理；大型及以下可以主动在豁免中失败也由人决定。水球留在地图上，随专注消失。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "碧水法球",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 4
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 90,
+      "area": {
+       "shape": "sphere",
+       "radius": 5
+      }
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "碧水法球"
+      },
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "if",
+         "when": "target.size != '巨型' && target.size != '超巨型'",
+         "then": [
+          {
+           "kind": "save",
+           "ability": "str",
+           "dc": "self.spell.dc",
+           "onFail": [
+            {
+             "kind": "applyEffect",
+             "to": "target",
+             "template": "碧水法球：束缚",
+             "duration": {
+              "saveEnds": {
+               "ability": "str",
+               "dc": "self.spell.dc",
+               "at": "turnEnd"
+              },
+              "max": {
+               "minutes": 1
+              }
+             }
+            }
+           ]
+          }
+         ],
+         "else": [
+          {
+           "kind": "note",
+           "text": "碧水法球：目标体型为巨型或更大，力量豁免自动成功。"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter"
+       ],
+       "affects": "all",
+       "oncePerTurn": false,
+       "do": [
+        {
+         "kind": "if",
+         "when": "target.size != '巨型' && target.size != '超巨型'",
+         "then": [
+          {
+           "kind": "save",
+           "ability": "str",
+           "dc": "self.spell.dc",
+           "onFail": [
+            {
+             "kind": "applyEffect",
+             "to": "target",
+             "template": "碧水法球：束缚",
+             "duration": {
+              "saveEnds": {
+               "ability": "str",
+               "dc": "self.spell.dc",
+               "at": "turnEnd"
+              },
+              "max": {
+               "minutes": 1
+              }
+             }
+            }
+           ]
+          }
+         ],
+         "else": [
+          {
+           "kind": "note",
+           "text": "碧水法球：目标体型为巨型或更大，力量豁免自动成功。"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "水球至多容纳 4 个中型（或更小）或 1 个大型生物，超出上限时随机排出一个已被束缚者（倒地）出现在水球周围 5 尺内；豁免成功的生物应被排出到水球周围最近的未被占据空间；这些、以及水球离地高度、法术结束时熄灭 30 尺内所有非魔法火焰、被束缚者在落点周围倒地出现，都请人工处理。"
+      }
+     ]
+    },
+    {
+     "id": "moveSphere",
+     "name": "碧水法球：移动撞击",
+     "activation": "action",
+     "requires": "self.hasEffect('碧水法球（激活）')",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "targeting": {
+      "type": "area",
+      "range": 30,
+      "area": {
+       "shape": "sphere",
+       "radius": 5
+      }
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "把水球沿直线移动至多 30 尺：引擎不会移动区域，请删掉地图上的旧区域后在新位置放一个同样的 5 尺半径区域（束缚中的生物随水球一起移动请人工拖动棋子）。"
+      },
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "if",
+         "when": "target.size != '巨型' && target.size != '超巨型'",
+         "then": [
+          {
+           "kind": "save",
+           "ability": "str",
+           "dc": "self.spell.dc",
+           "onFail": [
+            {
+             "kind": "applyEffect",
+             "to": "target",
+             "template": "碧水法球：束缚",
+             "duration": {
+              "saveEnds": {
+               "ability": "str",
+               "dc": "self.spell.dc",
+               "at": "turnEnd"
+              },
+              "max": {
+               "minutes": 1
+              }
+             }
+            }
+           ]
+          }
+         ],
+         "else": [
+          {
+           "kind": "note",
+           "text": "碧水法球：目标体型为巨型或更大，力量豁免自动成功。"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "text": "用水球撞击生物：选中被撞到的生物（它们做力量豁免，失败被水球束缚）。移动水球本身与「被束缚者随水球一起移动」请人工在地图上处理。"
+    }
+   ],
+   "effects": {
+    "碧水法球": {
+     "name": "碧水法球（激活）",
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "text": "维持半径 5 尺的水球。可以用一个动作把它沿直线移动至多 30 尺并撞击生物迫使其做力量豁免。"
+    },
+    "碧水法球：束缚": {
+     "tags": [
+      "magical",
+      "spell",
+      "debuff"
+     ],
+     "implies": [
+      "XPHB:condition:束缚"
+     ],
+     "duration": {
+      "saveEnds": {
+       "ability": "str",
+       "dc": "self.spell.dc",
+       "at": "turnEnd"
+      },
+      "max": {
+       "minutes": 1
+      }
+     },
+     "text": "被水球束缚并被水淹没。在其每个回合结束时可重复力量豁免（DC 等于施法者的法术豁免 DC），成功则摆脱。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:spell:自然之怒": {
+   "name": "自然之怒",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。120 尺内一点为中心 60 尺立方区域里的树木、岩石和草丛被活化（区域留在地图上，随专注消失）。草丛与灌木使区域内的地面对你的敌人是困难地形——地形引擎不处理，请人工按半速移动，区域会在敌人进入时提醒一次。树木挥击（你每个回合开始时，区域内树木 10 尺内的每个敌人敏捷豁免，失败受 4d6 挥砍）与根藤缠绕（你每个回合结束时，区域内站于地面上的一个你选择的生物力量豁免，失败被束缚直到法术结束、可用动作做力量（运动）检定对抗你的法术 DC 挣脱）都是自动时机，引擎不能在「你的回合」对区域里的别人逐个结算，请在你的回合开始 / 结束时点对应按钮、选中目标结算。附赠动作投石（远程法术攻击 3d8 钝击，命中再力量豁免否则倒地）已按原文写全。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "自然之怒",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 5
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 120,
+      "area": {
+       "shape": "cube",
+       "size": 60
+      }
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "自然之怒"
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter"
+       ],
+       "affects": "enemies",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "note",
+         "text": "自然之怒：这片活化草木对你（施法者）的敌人而言是困难地形（引擎不处理地形，请人工按半速移动）。"
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "草丛与灌木覆盖的地面对你的敌人是困难地形。树木与岩石的具体位置由人判断：在你的回合开始时用「自然之怒：树木挥击」、在你的回合结束时用「自然之怒：根藤缠绕」选中范围内的生物结算。"
+      }
+     ]
+    },
+    {
+     "id": "treeStrike",
+     "name": "自然之怒：树木挥击",
+     "activation": "free",
+     "requires": "self.hasEffect('自然之怒（激活）')",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "targeting": {
+      "type": "creature",
+      "range": 120
+     },
+     "root": [
+      {
+       "kind": "save",
+       "ability": "dex",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "dice": "4d6",
+         "type": "挥砍"
+        }
+       ]
+      }
+     ],
+     "text": "在你的每个回合开始时结算：选中区域内树木 10 尺内的每个敌人（树木位置由人判断），它们做敏捷豁免，失败受 4d6 挥砍伤害。"
+    },
+    {
+     "id": "rootGrasp",
+     "name": "自然之怒：根藤缠绕",
+     "activation": "free",
+     "requires": "self.hasEffect('自然之怒（激活）')",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 120
+     },
+     "root": [
+      {
+       "kind": "save",
+       "ability": "str",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "applyEffect",
+         "to": "target",
+         "template": "自然之怒：束缚",
+         "duration": {
+          "minutes": 1
+         }
+        }
+       ]
+      }
+     ],
+     "text": "在你的每个回合结束时结算：选中区域内站于地面上的一个生物（是否站在地面上由人判断），力量豁免失败被束缚直到法术结束。被束缚的生物可以用它的动作做力量（运动）检定对抗你的法术 DC，成功则结束这个效果——这一步请手动移除效应。"
+    },
+    {
+     "id": "throwRock",
+     "name": "自然之怒：投石",
+     "activation": "bonus",
+     "requires": "self.hasEffect('自然之怒（激活）') && turn.isMine",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 120,
+      "filter": "canSee(self, target)"
+     },
+     "root": [
+      {
+       "kind": "attack",
+       "attack": {
+        "ranged": true,
+        "spell": true,
+        "damageType": "钝击"
+       },
+       "onHit": [
+        {
+         "kind": "damage",
+         "dice": "3d8",
+         "type": "钝击"
+        },
+        {
+         "kind": "save",
+         "ability": "str",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "XPHB:condition:倒地"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "text": "在你的回合中以一个附赠动作，把区域内的一块松动岩石掷向同样在区域里的一个你可见的生物。命中造成 3d8 非魔法钝击伤害，目标再做力量豁免，失败倒地。"
+    }
+   ],
+   "effects": {
+    "自然之怒": {
+     "name": "自然之怒（激活）",
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "text": "维持 60 尺立方的活化精魂区域。在你的回合开始时树木挥击、结束时根藤缠绕；还可以用附赠动作投石。"
+    },
+    "自然之怒：束缚": {
+     "tags": [
+      "magical",
+      "spell",
+      "debuff"
+     ],
+     "implies": [
+      "XPHB:condition:束缚"
+     ],
+     "duration": {
+      "minutes": 1
+     },
+     "text": "被根茎和藤蔓束缚，直到法术结束。可用动作做力量（运动）检定对抗施法者的法术 DC 挣脱（检定与移除请手动处理）。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:spell:致病辐射": {
+   "name": "致病辐射",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。120 尺内一点为中心扩散 30 尺半径的绿色微光，光芒绕过拐角，区域留在地图上、随专注消失。一个生物在某一回合内第一次进入区域、或在其中开始回合时，必须做体质豁免，失败受 4d10 光耀伤害、承受 1 级力竭，并散发 5 尺半径的绿光（同一生物每回合只结算一次；按原文，法术出现时已经在里面的生物不立刻豁免，等它进入或开始回合）。绿光让生物无法从隐形中获益、以及光芒绕过拐角的判定，引擎不处理，请人工判定；力竭与绿光按 10 分钟到期，法术提前结束时请手动移除残留的力竭。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "致病辐射",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 4
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 10
+     },
+     "targeting": {
+      "type": "area",
+      "range": 120,
+      "area": {
+       "shape": "sphere",
+       "radius": 30
+      }
+     },
+     "root": [
+      {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnStart"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "con",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "dice": "4d10",
+           "type": "光耀"
+          },
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "XPHB:condition:力竭",
+           "duration": {
+            "minutes": 10
+           }
+          },
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "致病辐射：绿光"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "光芒绕过拐角；散发绿光的生物无法从隐形中获益（视线与隐形引擎不处理，请人工判定）。力竭与绿光会在 10 分钟后自动到期 —— 如果法术提前结束，请手动移除残存的力竭。"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "致病辐射：绿光": {
+     "tags": [
+      "magical",
+      "spell",
+      "debuff"
+     ],
+     "duration": {
+      "minutes": 10
+     },
+     "text": "散发 5 尺半径的绿色微光；这个光线让生物无法从隐形中获益（引擎不处理隐形，请人工判定）。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:spell:风暴法球": {
+   "name": "风暴法球",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。150 尺内一点为中心出现半径 20 尺的强风球体：出现时位于其中的生物做力量豁免，失败受 (slot.level - 2)d6 钝击伤害；在球体内结束回合的生物也要做这次力量豁免（区域留在地图上、随专注消失，同一生物每回合最多结算一次）。升环时所有伤害各 +1d6。球体内部的空间是困难地形，球体周围 30 尺内的生物为聆听所做的感知（察觉）检定具有劣势 —— 地形、光照与这类范围外的检定引擎不处理，请人工判定。持续期间你可以在每个你的回合中用附赠动作令球心射出闪电：60 尺内远程法术攻击（若攻击目标在球体内，这次攻击检定具有优势，引擎会问你），命中受 4d6（升环每环 +1d6）闪电伤害。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "风暴法球",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 4
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 150,
+      "area": {
+       "shape": "sphere",
+       "radius": 20
+      }
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "风暴法球",
+       "state": {
+        "lightning": "(slot.level)d6"
+       }
+      },
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "str",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "dice": "(slot.level - 2)d6",
+           "type": "钝击"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "str",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "dice": "(slot.level - 2)d6",
+           "type": "钝击"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "球体内部的空间是困难地形；球体周围 30 尺内的生物为聆听所做的感知（察觉）检定具有劣势 —— 这两条引擎不处理（地形与范围外的检定），请人工判定。"
+      }
+     ]
+    },
+    {
+     "id": "lightning",
+     "name": "风暴法球：闪电射击",
+     "activation": "bonus",
+     "requires": "self.hasEffect('风暴法球（激活）')",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 60
+     },
+     "root": [
+      {
+       "kind": "attack",
+       "attack": {
+        "ranged": true,
+        "spell": true,
+        "damageType": "闪电"
+       },
+       "onHit": [
+        {
+         "kind": "damage",
+         "dice": "self.effect('风暴法球（激活）').state.lightning",
+         "type": "闪电"
+        }
+       ]
+      }
+     ],
+     "text": "直到法术结束前，每个你的回合中可以用一个附赠动作令球心射出一发闪电，攻击距球心不超过 60 尺的一个生物：远程法术攻击，命中造成闪电伤害（升环每环 +1d6）。目标在球体内时这次攻击检定具有优势。"
+    }
+   ],
+   "effects": {
+    "风暴法球": {
+     "name": "风暴法球（激活）",
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "rollMods": [
+      {
+       "on": {
+        "kind": "attack",
+        "attack": {
+         "ranged": true,
+         "spell": true
+        }
+       },
+       "who": "bearer",
+       "when": "ask('风暴法球：这次攻击的目标在球体内吗？（在球体内则攻击检定具有优势）')",
+       "op": "adv",
+       "label": "风暴法球：目标在球体内，攻击检定具有优势"
+      }
+     ],
+     "text": "维持半径 20 尺的强风球体。每个你的回合可以用附赠动作从球心射出闪电（60 尺内远程法术攻击），目标在球体内时攻击检定具有优势。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:spell:龙卷尘暴": {
+   "name": "龙卷尘暴",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。60 尺内一处未被占据的 5 尺立方出现尘卷风，区域留在地图上、随专注消失。任何在尘卷风周围 5 尺范围内结束其回合的生物做力量豁免：失败受 (slot.level - 1)d8 钝击伤害并被推离 10 尺，成功只受一半且不被推离。地图上的区域只覆盖尘卷风本身那一格，「周围 5 尺」（相邻格）里结束回合的生物请用「龙卷尘暴：回合结束伤害」手动结算。附赠动作可以让尘卷风移动至多 30 尺（引擎不能移动区域：请在地图上删掉旧区域、在新位置重放，见「龙卷尘暴：移动尘卷风」）；移动时卷起沙土形成的 10 尺半径残骸云（重度遮蔽）与它的持续到下一回合开始，引擎不处理，请人工判定。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "龙卷尘暴",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 2
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 60,
+      "area": {
+       "shape": "cube",
+       "size": 5
+      }
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "龙卷尘暴",
+       "state": {
+        "die": "(slot.level - 1)d8"
+       }
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "str",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "dd",
+           "dice": "(slot.level - 1)d8",
+           "type": "钝击"
+          },
+          {
+           "kind": "move",
+           "mode": "push",
+           "ft": 10
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "dd",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "尘卷风周围 5 尺（相邻格）里结束回合的生物也要做这次豁免，请用「龙卷尘暴：回合结束伤害」结算；卷起沙土形成的 10 尺半径残骸云（重度遮蔽）与它持续到你下个回合开始，请人工判定。"
+      }
+     ]
+    },
+    {
+     "id": "endTurnSave",
+     "name": "龙卷尘暴：回合结束伤害",
+     "activation": "free",
+     "requires": "self.hasEffect('龙卷尘暴（激活）')",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 5,
+      "filter": "target.id != self.id"
+     },
+     "root": [
+      {
+       "kind": "save",
+       "ability": "str",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "id": "dd",
+         "dice": "self.effect('龙卷尘暴（激活）').state.die",
+         "type": "钝击"
+        },
+        {
+         "kind": "move",
+         "mode": "push",
+         "ft": 10
+        }
+       ],
+       "onSuccess": [
+        {
+         "kind": "damage",
+         "ref": "dd",
+         "scale": 0.5
+        }
+       ]
+      }
+     ],
+     "text": "给在尘卷风周围 5 尺范围内（但不在区域格子里，或者区域没跟着移动）结束回合的生物手动结算：力量豁免，失败受伤害并被推离 10 尺，成功只受一半。"
+    },
+    {
+     "id": "moveDevil",
+     "name": "龙卷尘暴：移动尘卷风",
+     "activation": "bonus",
+     "requires": "self.hasEffect('龙卷尘暴（激活）')",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "targeting": {
+      "type": "area",
+      "range": 30,
+      "area": {
+       "shape": "cube",
+       "size": 5
+      }
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "把尘卷风移动到 30 尺内的新位置：引擎不会移动区域，请删掉地图上的旧区域后在新位置放一个同样的 5 尺区域。若移动经过沙土、尘土、松软土壤或小砂砾，还要在它周围加上 10 尺半径的重度遮蔽（残骸云，持续到下一回合开始），请人工判定。"
+      }
+     ],
+     "text": "以一个附赠动作让尘卷风向任意方向移动至多 30 尺（区域需要在地图上手动挪动）。"
+    }
+   ],
+   "effects": {
+    "龙卷尘暴": {
+     "name": "龙卷尘暴（激活）",
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "text": "维持 5 尺立方的尘卷风。在它周围 5 尺内结束回合的生物做力量豁免；可以用附赠动作把它移动至多 30 尺。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:武僧:焰阳爆:11": {
+   "name": "焰阳爆",
+   "automation": "partial",
+   "text": "以一个动作在 150 尺内你选择的一点创造出光球并瞬间引爆：以该点为中心半径 20 尺内的所有生物立即做体质豁免（DC = 8 + 熟练加值 + 感知调整值），失败受 2d6 光耀伤害。你可以花费气提高威力，每消耗 1 点气伤害上升 2d6，至多消耗 3 点（引擎会问你用几点）。若生物处于不透光的掩护下则不需要进行这次豁免 —— 掩护与视线引擎不处理，请人工判断（必要时把那个生物的豁免手动作废）。爆炸是瞬时的，不留下区域。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "焰阳爆",
+     "activation": "action",
+     "targeting": {
+      "type": "area",
+      "range": 150,
+      "area": {
+       "shape": "sphere",
+       "radius": 20
+      }
+     },
+     "tags": [
+      "magical"
+     ],
+     "root": [
+      {
+       "kind": "number",
+       "prompt": "焰阳爆：消耗多少点功力来提高威力？（至多消耗 3 点，每点增加 2d6 光耀伤害）",
+       "var": "ki",
+       "min": 0,
+       "max": "min(3, self.resource('功力'))",
+       "default": 0
+      },
+      {
+       "kind": "if",
+       "when": "vars.ki > 0",
+       "then": [
+        {
+         "kind": "resource",
+         "id": "功力",
+         "delta": "-vars.ki"
+        }
+       ]
+      },
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "con",
+         "dc": "8 + self.pb + self.mod.wis",
+         "onFail": [
+          {
+           "kind": "damage",
+           "dice": "(2 + 2 * vars.ki)d6",
+           "type": "光耀"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "处于不透光掩护下的生物不需要为此进行豁免 —— 掩护与视线引擎不处理，请人工判断。"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:云雾术": {
+   "name": "云雾术",
+   "automation": "partial",
+   "text": "专注至多 1 小时。以 120 尺内一点为中心创造半径 20 尺的球状浓雾，区域被重度遮蔽，留在地图上、随专注消失（使用的法术位每比 1 环高 1 环，半径增加 20 尺 —— 选范围时请手动选大些）。重度遮蔽（视线、攻击与察觉的判断）和被强风吹散引擎不处理，请人工判定；被吹散时法术提前结束，请手动删掉地图上的区域。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "云雾术",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 1
+       }
+      }
+     ],
+     "concentration": {
+      "hours": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 120,
+      "area": {
+       "shape": "sphere",
+       "radius": 20
+      }
+     },
+     "root": [
+      {
+       "kind": "zone",
+       "on": [
+        "enter"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "note",
+         "text": "云雾术：这片浓雾被重度遮蔽（引擎不处理遮蔽与视线，请人工判定攻击、察觉与选目标）。"
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "浓雾持续至法术结束或被强风（比如造风术创造的风）吹散：被吹散时请手动删掉地图上的区域。升环施法时半径每比 1 环高 1 环 +20 尺。"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:冰风暴": {
+   "name": "冰风暴",
+   "automation": "partial",
+   "text": "300 尺内一点为中心、半径 20 尺高 40 尺的柱状区域内冰雹砸落（瞬时）：区域内每个生物做敏捷豁免，失败受 (slot.level - 2)d10 钝击伤害和 4d6 寒冷伤害，成功只受一半（使用的法术位每比 4 环高 1 环，钝击伤害 +1d10）。冰雹让区域内的地面变为困难地形，直至你的下一回合结束 —— 困难地形引擎不处理（请人工按半速移动），地图上会留下一个持续 1 轮的区域作标记；柱状区域高 40 尺也请人工判断。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "冰风暴",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 4
+       }
+      }
+     ],
+     "targeting": {
+      "type": "area",
+      "range": 300,
+      "area": {
+       "shape": "cylinder",
+       "radius": 20
+      }
+     },
+     "root": [
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "dex",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "bludg",
+           "dice": "(slot.level - 2)d10",
+           "type": "钝击"
+          },
+          {
+           "kind": "damage",
+           "id": "cold",
+           "dice": "4d6",
+           "type": "寒冷"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "bludg",
+           "scale": 0.5
+          },
+          {
+           "kind": "damage",
+           "ref": "cold",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "rounds": 1,
+       "do": [
+        {
+         "kind": "note",
+         "text": "冰风暴：这片地面被冰雹覆盖，是困难地形，直至施法者的下一回合结束（引擎不处理地形，请人工按半速移动）。"
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "柱状区域高 40 尺；区域内地面变为困难地形直至你的下一回合结束 —— 地形引擎不处理，这个区域只是轮内的标记，时间到了会自动消失。"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:匕首之云": {
+   "name": "匕首之云",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。以 60 尺内一点为中心的 5 尺立方区域内咒唤出旋转的匕首：区域内的每名生物受 (2 * slot.level)d4 挥砍伤害（升环每比 2 环高 1 环 +2d4）。一名生物进入该立方、在其中结束其回合、或立方移动到它占据的空间时，同样受此伤害；同一名生物每回合只会受到一次（区域留在地图上、随专注消失）。后续回合中的「以一个魔法动作把立方传送至多 30 尺」引擎不能移动区域，请在地图上手动处理（「匕首之云：移动立方」）；立方移到某个生物占据的空间那一下，请用「匕首之云：移入伤害」结算。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "匕首之云",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 2
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 60,
+      "area": {
+       "shape": "cube",
+       "size": 5
+      }
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "匕首之云",
+       "state": {
+        "die": "(2 * slot.level)d4"
+       }
+      },
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "damage",
+         "dice": "(2 * slot.level)d4",
+         "type": "挥砍"
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "damage",
+         "dice": "(2 * slot.level)d4",
+         "type": "挥砍"
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "立方移动到某个生物占据的空间时，它也受一次伤害（用「匕首之云：移入伤害」结算，同一名生物一回合只受一次）。"
+      }
+     ]
+    },
+    {
+     "id": "moveCloud",
+     "name": "匕首之云：移动立方",
+     "activation": "action",
+     "requires": "self.hasEffect('匕首之云（激活）')",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "targeting": {
+      "type": "area",
+      "range": 30,
+      "area": {
+       "shape": "cube",
+       "size": 5
+      }
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "把 5 尺立方传送至多 30 尺：引擎不会移动区域，请删掉地图上的旧区域后在新位置放一个同样的 5 尺区域；如果立方移到了某个生物占据的空间，请用「匕首之云：移入伤害」结算它这一回合的伤害。"
+      }
+     ],
+     "text": "在你的后续回合中，以一个魔法动作把立方传送到 30 尺内（区域要在地图上手动挪动）。"
+    },
+    {
+     "id": "moveHit",
+     "name": "匕首之云：移入伤害",
+     "activation": "free",
+     "requires": "self.hasEffect('匕首之云（激活）')",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 30,
+      "filter": "canSee(self, target)"
+     },
+     "root": [
+      {
+       "kind": "damage",
+       "dice": "self.effect('匕首之云（激活）').state.die",
+       "type": "挥砍"
+      }
+     ],
+     "text": "立方移动到某个生物占据的空间时结算这次伤害（同一名生物一回合只受一次，区域没跟着走时也用它手动补算）。"
+    }
+   ],
+   "effects": {
+    "匕首之云": {
+     "name": "匕首之云（激活）",
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "text": "维持 5 尺立方的旋转匕首。进入、在其中结束回合或被立方移入空间的生物每回合受到一次挥砍伤害。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:咒唤元素": {
+   "name": "咒唤元素",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 60 尺内一处未占据空间咒唤出大型虚幻精魂，施放时选定元素类别、决定伤害类型（气/闪电、土/雷鸣、火/火焰、水/寒冷），精魂占 10 尺立方（地图上的区域就是它）。每当一个你能看见的生物进入精魂的空间、或在精魂 5 尺内开始其回合时，如果精魂没有束缚着生物，你可以迫使它做敏捷豁免（引擎每次都会先问你；「精魂正束缚着另一个生物」请人工判断）：失败受 (slot.level + 3)d8 对应类型伤害并陷入束缚直到法术结束；被束缚的生物在自己每个回合开始时重复这次豁免，失败再受 (slot.level - 1)d8 伤害，成功则摆脱。升环时伤害各 +1d8。「在精魂 5 尺内但不在精魂空间里开始回合」的生物区域覆盖不到，请用「咒唤元素：元素攫抓」手动结算；束缚按 10 分钟到期近似处理，法术提前结束时请手动移除。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "咒唤元素",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 5
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 10
+     },
+     "targeting": {
+      "type": "area",
+      "range": 60,
+      "area": {
+       "shape": "cube",
+       "size": 10
+      }
+     },
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "选择精魂的元素类别（决定它造成的伤害类型）",
+       "var": "elem",
+       "options": [
+        {
+         "label": "气元素（闪电）",
+         "value": "闪电"
+        },
+        {
+         "label": "土元素（雷鸣）",
+         "value": "雷鸣"
+        },
+        {
+         "label": "火元素（火焰）",
+         "value": "火焰"
+        },
+        {
+         "label": "水元素（寒冷）",
+         "value": "寒冷"
+        }
+       ]
+      },
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "咒唤元素",
+       "state": {
+        "type": "vars.elem",
+        "big": "(slot.level + 3)d8",
+        "small": "(slot.level - 1)d8"
+       }
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnStart"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "if",
+         "when": "ask('咒唤元素：精魂还没有束缚着生物，要迫使这个生物进行敏捷豁免吗？')",
+         "then": [
+          {
+           "kind": "save",
+           "ability": "dex",
+           "dc": "self.spell.dc",
+           "onFail": [
+            {
+             "kind": "damage",
+             "dice": "self.effect('咒唤元素（激活）').state.big",
+             "type": "self.effect('咒唤元素（激活）').state.type"
+            },
+            {
+             "kind": "applyEffect",
+             "to": "target",
+             "template": "元素束缚",
+             "state": {
+              "type": "self.effect('咒唤元素（激活）').state.type",
+              "small": "self.effect('咒唤元素（激活）').state.small"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "精魂占 10 尺立方，地图上的区域就是它的空间；在精魂 5 尺内、但不在精魂空间里开始回合的生物请用「咒唤元素：元素攫抓」手动结算。精魂已经在束缚另一个生物时不能再束缚新目标，请人工判断。"
+      }
+     ]
+    },
+    {
+     "id": "use",
+     "name": "咒唤元素：元素攫抓",
+     "activation": "free",
+     "requires": "self.hasEffect('咒唤元素（激活）')",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 60,
+      "filter": "canSee(self, target)"
+     },
+     "root": [
+      {
+       "kind": "save",
+       "ability": "dex",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "dice": "self.effect('咒唤元素（激活）').state.big",
+         "type": "self.effect('咒唤元素（激活）').state.type"
+        },
+        {
+         "kind": "applyEffect",
+         "to": "target",
+         "template": "元素束缚",
+         "state": {
+          "type": "self.effect('咒唤元素（激活）').state.type",
+          "small": "self.effect('咒唤元素（激活）').state.small"
+         }
+        }
+       ]
+      }
+     ],
+     "text": "在精魂 5 尺内（精魂空间之外）进入或开始回合的生物、以及区域没覆盖到的场合，用它手动结算：敏捷豁免失败受伤害并陷入束缚。"
+    }
+   ],
+   "effects": {
+    "咒唤元素": {
+     "name": "咒唤元素（激活）",
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "text": "维持大型虚幻精魂；伤害类型由施放时选定的元素类别决定（见效应状态）。生物进入精魂空间或在 5 尺内开始回合时，你可以迫使该生物做敏捷豁免，失败受伤害并陷入束缚。"
+    },
+    "元素束缚": {
+     "tags": [
+      "magical",
+      "spell",
+      "debuff"
+     ],
+     "implies": [
+      "XPHB:condition:束缚"
+     ],
+     "duration": {
+      "minutes": 10
+     },
+     "triggers": [
+      {
+       "id": "repeat",
+       "label": "元素束缚：回合开始重复豁免",
+       "on": "turnStarted",
+       "role": "actor",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "dex",
+         "dc": "source.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "dice": "effect.state.small",
+           "type": "effect.state.type"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "removeEffect",
+           "from": "self",
+           "match": {
+            "name": "元素束缚"
+           }
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "text": "被精魂束缚直到法术结束。在你的每个回合开始时重复这次敏捷豁免：失败受精魂类型的伤害，成功则不再被精魂束缚。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  }
+ }
+}

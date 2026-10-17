@@ -1,0 +1,166 @@
+{
+ "version": 1,
+ "note": "批次 r6-12（4 条）：骑乘战斗把「侧跃躲闪」（damageIncoming 的 evasion，只管「豁免成功只受一半」的伤害）与「我身作盾」（attackHit 防守段的 redirect: self，改打骑手后按骑手 AC 重判）补上；引擎没有「骑乘关系」，哪只生物是坐骑、谁在骑着都用 ask() 确认，仍是 partial。斗转星移把攻击者的感知豁免与心灵反击补上：减半在 attackHit 上做（这样只有攻击命中才会问，法术的豁免伤害不会来凑热闹），反击要读 damage.amount，只能发生在 damageIncoming，所以用一个带 attacker id 的临时效应「斗转星移：反击」把两个窗口串起来（临时效应在 damageApplied 时自动消失，两种反应时机设置都能用）。剩下的「实际承受的伤害」在抗性 / 代受时会有偏差，写在 text 里交给人。玄奥秘法与魔法学徒还是 manual：引擎没有把法术的施法代价改写成「扣某个资源池 / 免法术位」的机制，法术条目按法术位扣费，无法在本条目替换 —— text 写清楚手动时怎么做。",
+ "entries": {
+  "XPHB:骑乘战斗": {
+   "name": "骑乘战斗",
+   "automation": "partial",
+   "text": "【骑乘突击】骑乘期间，你对位于坐骑 5 尺内、体型比坐骑至少小一级、且未被骑乘的生物进行攻击检定具有优势（引擎每次攻击前问一句是否满足这几个位置条件，答「是」才给优势）。【侧跃躲闪】坐骑为「豁免成功只受一半伤害」的效应做敏捷豁免时，成功则不受伤害、失败只受一半 —— 引擎在伤害结算前把这条列成可选项，选中就套上去（只对带豁免的减半伤害生效，别的情形选了也没用）；「受到伤害的是不是你正骑着的坐骑」「你和坐骑都没失能」用问题确认。【我身作盾】命中坐骑的攻击可以强制改打你（按你的 AC 重新判定，可能因此变成未命中），同样是一个可选项。引擎不认识「骑乘关系」，所以每一条里「是不是你的坐骑」都要人确认；我身作盾在每个盟友被命中时都会列进可选清单，请只在被命中的确实是你的坐骑时才选。",
+   "rollMods": [
+    {
+     "on": {
+      "kind": "attack"
+     },
+     "who": "bearer",
+     "when": "ask('你正在骑乘，且目标位于坐骑 5 尺内、体型比坐骑至少小一级、未被骑乘吗？')",
+     "op": "adv",
+     "label": "骑乘战斗：骑乘突击"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "leap-aside",
+     "label": "骑乘战斗：侧跃躲闪（坐骑敏捷豁免）",
+     "on": "damageIncoming",
+     "role": "ally",
+     "window": "before",
+     "optional": true,
+     "when": "damage.save == 'dex' && !self.has('失能') && !target.has('失能') && ask('这次敏捷豁免伤害打在你正骑着的坐骑身上吗？')",
+     "modify": [
+      {
+       "op": "evasion"
+      }
+     ]
+    },
+    {
+     "id": "shield-mount",
+     "label": "骑乘战斗：我身作盾（改打自己）",
+     "on": "attackHit",
+     "role": "ally",
+     "window": "before",
+     "optional": true,
+     "when": "!self.has('失能') && ask('被命中的是你的坐骑、而且你正骑乘着它（你没失能）吗？')",
+     "modify": [
+      {
+       "op": "redirect",
+       "to": "self"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:魔契师:斗转星移:10": {
+   "name": "斗转星移",
+   "automation": "partial",
+   "text": "反应（长休前一次，次数记在资源池「斗转星移」）：一个你能看见的敌人的攻击检定命中你后，那次攻击的伤害减半，然后迫使攻击者做一次感知豁免（DC = 你的法术豁免 DC），失败则受到等同于你本次实际承受伤害的心灵伤害。引擎在你被命中时问要不要用，选「用」之后伤害减半，并在伤害掷出后自动完成攻击者的豁免与反击（心灵伤害 = 掷出的伤害 ÷ 2）。反应在命中那一刻问、不等伤害掷出：只有那时才分得出「这是一次攻击命中」——挂到伤害窗口的话，法术的豁免伤害也会来问。日志里「获得 / 结束『斗转星移：反击』」那两行是串起这两步用的临时标记，不用管。要人处理的：①若你对这次伤害还有抗性 / 免疫 / 其他减伤，或伤害被别人代受，实际承受的更少，请手动把攻击者受到的心灵伤害改小；②魅惑免疫在人物卡数据里只是一条说明，战斗里不会自动拦下魅惑状态。反应被用掉后，可以消耗一个契约魔法法术位（无需动作）重置使用权。",
+   "triggers": [
+    {
+     "id": "bewilder",
+     "label": "斗转星移：伤害减半并反击攻击者",
+     "on": "attackHit",
+     "role": "target",
+     "window": "before",
+     "optional": true,
+     "when": "attacker.isEnemyOf(self) && canSee(self, attacker)",
+     "cost": [
+      {
+       "economy": "reaction"
+      },
+      {
+       "resource": "beguiling-defenses"
+      }
+     ],
+     "modify": [
+      {
+       "op": "halveDamage"
+      }
+     ],
+     "do": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "斗转星移：反击",
+       "state": {
+        "atk": "attacker"
+       }
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "斗转星移：反击": {
+     "name": "斗转星移：反击",
+     "text": "这次攻击的伤害结算时，迫使攻击者做一次感知豁免（DC = 你的法术豁免 DC），失败则受到等同于你本次承受伤害的心灵伤害。",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      },
+      "endsOn": [
+       {
+        "event": "damageApplied"
+       }
+      ]
+     },
+     "triggers": [
+      {
+       "id": "rebuke",
+       "label": "斗转星移：攻击者的感知豁免与心灵反击",
+       "on": "damageIncoming",
+       "role": "target",
+       "window": "before",
+       "when": "damage.amount > 0 && attacker.id == effect.state.atk",
+       "do": [
+        {
+         "kind": "save",
+         "to": "attacker",
+         "ability": "wis",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "dice": "floor(damage.amount / 2)",
+           "type": "心灵"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "actions": [
+    {
+     "id": "use",
+     "name": "斗转星移：消耗契约魔法法术位重置",
+     "activation": "free",
+     "requires": "self.resource('beguiling-defenses') < 1",
+     "cost": [
+      {
+       "slot": {
+        "min": 1,
+        "max": 5
+       }
+      }
+     ],
+     "root": [
+      {
+       "kind": "resource",
+       "id": "beguiling-defenses",
+       "delta": 1
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  }
+ }
+}

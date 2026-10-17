@@ -1,0 +1,729 @@
+{
+ "version": 1,
+ "note": "重新数据化（zone）：用上 zone 机制",
+ "entries": {
+  "AU:spell:埋骨墓地": {
+   "name": "埋骨墓地",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。在 120 尺内由至多四个相互连接的 10 尺方格组成骸骨之手区域，对敌人视为困难地形。骸骨之手出现时，区域内的每个敌人进行力量豁免，失败受 (1 + slot.level)d6 黯蚀伤害，且在其所有伤害掷骰中受 1d6 减值直至其下一回合结束。敌人进入区域或在区域内结束回合时同样须进行该豁免（每回合限一次）。区域会留在地图上、随专注结束消失；困难地形与多方格拼合需人工处理。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "埋骨墓地",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 5
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 120,
+      "area": {
+       "shape": "cube",
+       "size": 20
+      }
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "埋骨墓地：这片方格对你的敌人而言是困难地形（引擎不处理地形，请人工按半速移动结算）。"
+      },
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "str",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "dice": "(1 + slot.level)d6",
+           "type": "黯蚀"
+          },
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "埋骨墓地"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnEnd"
+       ],
+       "affects": "enemies",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "str",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "dice": "(1 + slot.level)d6",
+           "type": "黯蚀"
+          },
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "埋骨墓地"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "埋骨墓地": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 1
+      }
+     },
+     "rollMods": [
+      {
+       "on": {
+        "kind": "damage"
+       },
+       "who": "bearer",
+       "op": "addDice",
+       "value": "-1d6",
+       "label": "埋骨墓地：伤害掷骰受 1d6 减值"
+      }
+     ],
+     "text": "在所有伤害掷骰中受 1d6 减值，持续至其下一回合结束。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "AU:spell:魂灵提灯": {
+   "name": "魂灵提灯",
+   "automation": "partial",
+   "text": "持续 10 分钟。上方悬浮一盏幽灵般的黑色提灯，散发 60 尺微光光照。敌人在光照内死亡时飞入提灯一枚灵魂碎片（容量上限为施法属性调整值，法术结束时消散）。可用附赠动作消耗一枚灵魂碎片对 60 尺内可见目标产生效应：【汲取生命】体质豁免，失败受 4d8 + 施法属性调整值暗蚀伤害，成功减半；【修复亡灵】亡灵目标恢复 4d8 + 施法属性调整值生命值；【护佑盟友】其他生物对其攻击检定劣势至你下回合开始。引擎没有「光照范围内死亡」这个时机（死亡不开窗口），灵魂碎片的收集与计数需手动处理。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "魂灵提灯",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 5
+       }
+      }
+     ],
+     "targeting": {
+      "type": "self"
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "魂灵提灯"
+      }
+     ]
+    },
+    {
+     "id": "lantern-power",
+     "name": "魂灵提灯：释放碎片",
+     "activation": "bonus",
+     "requires": "self.hasEffect('魂灵提灯')",
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 60
+     },
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "选择消耗一枚灵魂碎片产生的效应",
+       "options": [
+        {
+         "label": "汲取生命",
+         "do": [
+          {
+           "kind": "save",
+           "ability": "con",
+           "dc": "self.spell.dc",
+           "onFail": [
+            {
+             "kind": "damage",
+             "dice": "4d8 + self.spell.mod",
+             "type": "暗蚀"
+            }
+           ],
+           "onSuccess": [
+            {
+             "kind": "damage",
+             "dice": "4d8 + self.spell.mod",
+             "type": "暗蚀",
+             "scale": 0.5
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "修复亡灵",
+         "do": [
+          {
+           "kind": "heal",
+           "amount": "4d8 + self.spell.mod",
+           "to": "target"
+          }
+         ]
+        },
+        {
+         "label": "护佑盟友",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "魂灵护佑"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "消耗 1 枚灵魂碎片（提灯容量上限等于施法属性调整值）。"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "魂灵提灯": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "duration": {
+      "minutes": 10
+     },
+     "text": "散发半径 60 尺微光光照。敌人在光照内死亡时一枚灵魂碎片飞入提灯（上限为施法属性调整值）。可以附赠动作消耗一枚灵魂碎片释放效应。"
+    },
+    "魂灵护佑": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "source",
+       "nth": 1
+      }
+     },
+     "rollMods": [
+      {
+       "on": {
+        "kind": "attack"
+       },
+       "who": "against",
+       "op": "disadv",
+       "label": "魂灵护佑：被攻击检定劣势"
+      }
+     ],
+     "text": "其他生物对其进行的攻击检定具有劣势，直至施法者的下一回合开始。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "FRHoF:spell:咒火风暴": {
+   "name": "咒火风暴",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。以 60 尺内一点为中心咒唤半径 20 尺、高 20 尺柱状明亮咒火光柱。出现时位于其中的生物进行体质豁免，失败受 4d10 光耀伤害（每升一环 +1d10），成功减半。生物进入区域或在其中结束回合同样须进行豁免（每回合限一次）。此外，区域内生物施法时须通过体质豁免，否则法术消散、动作浪费（法术位不消耗）——引擎没法在区域里挂施法时机，这条请人工判定。施法时指定不受影响的生物、明亮光照与结阵施法也需人工处理。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "咒火风暴",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 4
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 60,
+      "area": {
+       "shape": "cylinder",
+       "radius": 20
+      }
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "咒火风暴：柱状区域视为明亮光照；区域内生物施法时须通过一次体质豁免，失败则法术消散、动作浪费且法术位不消耗（引擎无法在区域里挂施法时机，请人工判定）；施法时你可以指定哪些生物不受影响。结阵施法（半径与持续时间按辅施法者数量扩大、无需专注）需人工处理。"
+      },
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "con",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "dmg",
+           "dice": "(slot.level)d10",
+           "type": "光耀"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "dmg",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "con",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "dmg",
+           "dice": "(slot.level)d10",
+           "type": "光耀"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "dmg",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "FRHoF:spell:噪鸣护盾": {
+   "name": "噪鸣护盾",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。获得雷鸣伤害抗性，且对你发动的远程攻击检定具有劣势。源自你的半径 10 尺光环内，每当生物进入光环或在其中结束回合时，该生物须进行体质豁免，失败受 3d6 雷鸣伤害（每升一环 +1d6）且陷入耳聋直至你的下回合开始，成功受半伤（每名生物每回合限一次）。光环是画在地图上的区域：它不会跟着你走，也不会「移入」生物空间（这两条请人工处理）；施法时指定不受影响的生物同样需人工处理。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "噪鸣护盾",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 3
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 10
+     },
+     "targeting": {
+      "type": "area",
+      "range": "self",
+      "area": {
+       "shape": "emanation",
+       "radius": 10
+      }
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "噪鸣护盾"
+      },
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "con",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "dmg",
+           "dice": "(slot.level)d6",
+           "type": "雷鸣"
+          },
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "噪鸣护盾：耳聋"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "dmg",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "if",
+         "when": "target.id != self.id",
+         "then": [
+          {
+           "kind": "save",
+           "ability": "con",
+           "dc": "self.spell.dc",
+           "onFail": [
+            {
+             "kind": "damage",
+             "id": "dmg",
+             "dice": "(slot.level)d6",
+             "type": "雷鸣"
+            },
+            {
+             "kind": "applyEffect",
+             "to": "target",
+             "template": "噪鸣护盾：耳聋"
+            }
+           ],
+           "onSuccess": [
+            {
+             "kind": "damage",
+             "ref": "dmg",
+             "scale": 0.5
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "噪鸣护盾": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "statics": [
+      {
+       "kind": "resist",
+       "values": [
+        "雷鸣"
+       ]
+      }
+     ],
+     "rollMods": [
+      {
+       "on": {
+        "kind": "attack",
+        "attack": {
+         "ranged": true
+        }
+       },
+       "who": "against",
+       "op": "disadv",
+       "label": "噪鸣护盾：对你发动的远程攻击检定具有劣势"
+      }
+     ],
+     "text": "获得对雷鸣伤害的抗性，且对你发动的远程攻击检定均具有劣势。"
+    },
+    "噪鸣护盾：耳聋": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "implies": [
+      "XPHB:condition:耳聋"
+     ],
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "source",
+       "nth": 1
+      }
+     },
+     "text": "陷入耳聋状态，持续至施法者的下一回合开始。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "TCE:德鲁伊:扩散孢子:10": {
+   "name": "扩散孢子",
+   "automation": "partial",
+   "text": "处于一体共生状态下，可以用附赠动作将真菌孢子投向至多 30 尺远，在地图上留下一片 10 尺立方的孢子区域，持续 1 分钟（10 轮）。生物移动进入该区域或在该处开始回合时，须进行对抗你法术豁免 DC 的体质豁免，失败受到孢子环绕的伤害（每名生物每回合至多一次）。只要孢子存在，你就不能使用孢子环绕的反应能力。提前消失（再次使用、附赠动作取消、一体共生结束）需要在界面上手动删掉区域。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "扩散孢子",
+     "activation": "bonus",
+     "requires": "self.hasEffect('一体共生')",
+     "tags": [
+      "magical"
+     ],
+     "targeting": {
+      "type": "area",
+      "range": 30,
+      "area": {
+       "shape": "cube",
+       "size": 10
+      }
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "扩散孢子",
+       "duration": {
+        "minutes": 1,
+        "endsOn": [
+         {
+          "event": "effectEnded",
+          "when": "event.bearer == self.id && event.name == '一体共生'"
+         }
+        ]
+       }
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnStart"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "rounds": 10,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "con",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "dice": "cond(self.levelOf('德鲁伊') >= 14, 1d10, cond(self.levelOf('德鲁伊') >= 10, 1d8, cond(self.levelOf('德鲁伊') >= 6, 1d6, 1d4)))",
+           "type": "黯蚀"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "扩散孢子：这片孢子在 10 轮后自动消失；再次使用此特性、用附赠动作取消（「取消扩散孢子」）或一体共生结束时，请手动删掉地图上的这个区域。孢子存在期间你不能使用孢子环绕的反应能力。"
+      }
+     ]
+    },
+    {
+     "id": "dismiss",
+     "name": "取消扩散孢子",
+     "activation": "bonus",
+     "requires": "self.hasEffect('扩散孢子')",
+     "root": [
+      {
+       "kind": "removeEffect",
+       "from": "self",
+       "match": {
+        "name": "扩散孢子"
+       }
+      },
+      {
+       "kind": "note",
+       "text": "取消扩散孢子：请手动删掉地图上的孢子区域。"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "扩散孢子": {
+     "tags": [
+      "magical"
+     ],
+     "text": "扩散孢子处于激活状态。只要孢子存在，就无法使用孢子环绕的反应能力。可使用附赠动作取消。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "TCE:术士:时械矩阵:18": {
+   "name": "时械矩阵",
+   "automation": "partial",
+   "text": "以动作召唤精魂覆盖以你为中心30尺立方，同时产生三种效应：治愈（合计至多100生命值，随意分配给范围内任意数量生物）、修复（范围内损坏的物件立刻修复）、破法（范围内任意生物或物件承受的六环或以下法术结束）。每次长休可免费使用一次；也可消耗7点术法点恢复使用权。治愈的总量不超过100由使用者自行控制；修复和破法手动处理。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "时械矩阵",
+     "activation": "action",
+     "tags": [
+      "magical"
+     ],
+     "cost": [
+      {
+       "resource": "clockwork-cavalcade"
+      }
+     ],
+     "targeting": {
+      "type": "area",
+      "range": "self",
+      "area": {
+       "shape": "cube",
+       "size": 30
+      }
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "时械矩阵：治愈合计至多 100 生命值，随意分配给范围内的生物（下面逐个生物填写，合计不要超过 100）"
+      },
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "number",
+         "prompt": "时械矩阵：这个生物恢复多少生命值？（所有生物合计至多 100，0 表示不治疗）",
+         "var": "n",
+         "min": 0,
+         "max": "min(100, target.hpMax - target.hp)"
+        },
+        {
+         "kind": "heal",
+         "amount": "vars.n"
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "时械矩阵：修复范围内损坏的物件；范围内你选择的生物或物件承受的六环或以下法术结束（手动处理）"
+      }
+     ]
+    },
+    {
+     "id": "restore",
+     "name": "时械矩阵：恢复使用权（7术法点）",
+     "activation": "free",
+     "cost": [
+      {
+       "resource": "sorcery_points",
+       "n": 7
+      }
+     ],
+     "requires": "self.resource('clockwork-cavalcade') < 1",
+     "root": [
+      {
+       "kind": "resource",
+       "id": "clockwork-cavalcade",
+       "delta": 1
+      }
+     ]
+    }
+   ],
+   "resources": [
+    {
+     "id": "clockwork-cavalcade",
+     "name": "时械矩阵",
+     "formula": 1,
+     "recovery": "long"
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "TCE:野蛮人:狂野浪潮:3": {
+   "name": "狂野浪潮",
+   "automation": "manual",
+   "text": "进入狂暴时，投掷 1d8 决定狂野魔法效应（豁免 DC = 8 + 熟练加值 + 体质调整值）。表中包含传送、精魂爆炸、武器变质为力场投掷武器、被击中时力场反击、自身与盟友 AC+1、15 尺敌方困难地形、附赠动作目盲射线等。引擎没有「掷表并按结果分支」的机制，效应也涉及空间网格传送、地形改变与武器属性的动态改写，整条由人手动掷表并结算对应效果。",
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  }
+ }
+}

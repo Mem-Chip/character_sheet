@@ -88,6 +88,7 @@ export interface CombatantInit {
   initiative?: number | null;
   summoner?: string;
   linkEffect?: string;
+  summonGroup?: string;
 }
 
 export function makeCombatant(init: CombatantInit): Combatant {
@@ -106,5 +107,6 @@ export function makeCombatant(init: CombatantInit): Combatant {
     initiative: init.initiative ?? null,
     ...(init.summoner ? { summoner: init.summoner } : {}),
     ...(init.linkEffect ? { linkEffect: init.linkEffect } : {}),
+    ...(init.summonGroup ? { summonGroup: init.summonGroup } : {}),
   };
 }

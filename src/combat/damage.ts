@@ -56,6 +56,9 @@ export interface DamageResult {
 
 /** 伤害类型规范名：站点 2024 译名为准（「斩击」是旧译 → 挥砍） */
 const TYPE_ALIAS: Record<string, string> = {
+// 站点和引擎两边对「黯蚀」的写法不一样（5etools 写「暗蚀」、官方译名「黯蚀」）：
+// 两种都收进同一个类型，否则数据里写「黯蚀」的伤害匹配不上「暗蚀」的抗性
+  黯蚀: '暗蚀',
   斩击: '挥砍', B: '钝击', P: '穿刺', S: '挥砍', A: '强酸', C: '寒冷', F: '火焰', O: '力场', N: '暗蚀', R: '光耀',
   Y: '心灵', T: '毒素', L: '闪电', I: '雷鸣', E: '力场',
   bludgeoning: '钝击', piercing: '穿刺', slashing: '挥砍', acid: '强酸', cold: '寒冷', fire: '火焰', force: '力场',
@@ -301,6 +304,9 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
 
   // ⑧ 受到伤害之后
   if (total > 0) {
+    // 注意：damageTaken 既是窗口也要**发一个事件** —— 效应的 `endsOn: [{ event: 'damageTaken' }]`
+    // 是靠 checkEndsOn 匹配事件的，只开窗口的话「受到伤害后结束」永远不触发（数据里有很多这种写法）
+    tx.emit('damageTaken', { id: p.target, from: p.source ?? null, amount: total, type: p.components[0]?.type ?? '', crit: !!p.crit, tempAbsorbed, downed, killed }, seq);
     fireWindow(tx, {
       event: 'damageTaken', window: 'after', actor: p.source ?? undefined, target: p.target,
       scope: { attack: p.attack, damage: { type: p.components[0]?.type ?? '', amount: total, crit: p.crit } },
@@ -360,15 +366,22 @@ export const isUnknown = (v: unknown): v is Unknown => v instanceof Unknown;
  * kind = damage / heal；on.spell = 只管法术的；when 里能用 slot、target。
  */
 export function maxDiceFor(tx: Tx, roller: Id, kind: 'damage' | 'heal', scope: { target?: Id; slot?: number; spell?: boolean; attack?: AttackInfo }): boolean {
-  if (!tx.state.combatants[roller]) return false;
-  const cands = rollModsOf(tx, roller)
-    .filter((d) => d.item.who === 'bearer' && d.item.op === 'maxDice' && [d.item.on.kind].flat().includes(kind)
-      && (d.item.on.spell === undefined || d.item.on.spell === !!scope.spell)
-      && (!d.item.on.attack || filterMatches({ ...d.item.on, kind: 'attack' }, { kind: 'attack', attack: scope.attack })))
-    .map((d) => ({
-      d,
-      scope: { self: roller, source: d.source, target: scope.target, slot: scope.slot, attack: scope.attack, effect: d.effect },
-    }));
-  if (!cands.length) return false;
-  return evaluateMods(tx, cands, roller, kind === 'heal' ? '治疗骰' : '伤害骰').active.length > 0;
+  /** 某个人的身上有没有「把这次骰子取最大」的修正 */
+  const maxedBy = (who: Id): boolean => {
+    if (!tx.state.combatants[who]) return false;
+    const cands = rollModsOf(tx, who)
+      .filter((d) => d.item.who === 'bearer' && d.item.op === 'maxDice' && [d.item.on.kind].flat().includes(kind)
+        && (d.item.on.spell === undefined || d.item.on.spell === !!scope.spell)
+        && (!d.item.on.attack || filterMatches({ ...d.item.on, kind: 'attack' }, { kind: 'attack', attack: scope.attack })))
+      .map((d) => ({
+        d,
+        scope: { self: who, source: d.source, target: scope.target, slot: scope.slot, attack: scope.attack, effect: d.effect },
+      }));
+    if (!cands.length) return false;
+    return evaluateMods(tx, cands, who, kind === 'heal' ? '治疗骰' : '伤害骰').active.length > 0;
+  };
+  // 治疗骰还要看**被治疗的人**：2024 里「你受到治疗时恢复最大值」是承受者身上的能力（永生者赠礼这类）
+  if (maxedBy(roller)) return true;
+  if (kind === 'heal' && scope.target && scope.target !== roller && tx.state.combatants[scope.target]) return maxedBy(scope.target);
+  return false;
 }

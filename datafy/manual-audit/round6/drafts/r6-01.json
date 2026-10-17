@@ -1,0 +1,308 @@
+{
+ "version": 1,
+ "note": "第六轮 r6-01（审查报告「反应里改结算 / 免伤 / 物品消耗 / 次数池」大类）：反冲术改成 damageIncoming before 的反应动作 —— root 里 modify reduceDamage 真的把这次伤害降 (slot.level)d6 + 施法属性调整值，再加一道 60 尺内才反击的 CON 豁免；元素叱喝把减伤 + 对攻击者的 DEX 豁免 + 2d10+魅力 的所选类型伤害全部写实（choose 记 vars.elem），只留次数池在静态层；直觉魅惑用 attackHit before 的触发器掷感知豁免，失败时 modify redirect choose 让攻击改打别人或落空（自动按新目标 AC 重判），恢复次数改用 event.slotLevel 判断是否花了法术位；预言专家给「优势/劣势」写成 d20Rolled before 的 reroll keep higher/lower（和幸运同一近似），并在会改变结果时才问；变化宗师加一个「消耗七环法术位、石头不崩解」的动作，物品崩解与诅咒/疫病解除仍手动；奥术射击是纯父特性（次数池在静态层、逻辑在子条目）、精通秘法战斗风格要在疾风连击里把两次打击换成施法、穿梭弹要读手上武器的伤害骰 —— 这三条引擎做不到，保持原样 / 手动（穿梭弹的 text 已写清哪部分要人改）。",
+ "entries": {
+  "AU:战士:奥术射击:3": {
+   "name": "奥术射击",
+   "automation": "partial",
+   "text": "每回合一次，当你使用具备弹药属性的武器发动远程攻击时，可以给这次攻击赋予一种奥术射击选项（命中并造成伤害时决定用不用；不涉及攻击检定的选项除外）。可用次数 = 智力调整值（至少 1 次），短休或长休恢复 —— 这个次数池在人物卡上（「奥术射击」），各个选项都是独立的子条目，用一次就扣一次。奥术射击骰 3 级 1d6、10 级 1d8、15 级 1d10、18 级 1d12（升级写法已经写进各个子条目的骰子表达式）；需要豁免的选项 DC = 8 + 熟练加值 + 智力调整值。要人留意：「每回合一次」引擎不记账，本回合已经用过奥术射击后请不要再点第二次。",
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "AU:法师:直觉魅惑:10": {
+   "name": "直觉魅惑",
+   "automation": "partial",
+   "text": "当一个位于你 30 尺内且你能看见的生物以攻击检定命中你时，你可以用一个反应，迫使攻击者进行一次对抗你法术豁免 DC 的感知豁免。已自动化：命中窗口里会问你要不要用（要付一个反应）；答用就自动掷感知豁免 —— 失败时这次攻击直接改为未命中你，并弹出「这次攻击改打谁」的选择（选「放弃攻击（落空）」= 没有别的生物可打）；改打别人时沿用同一次攻击检定、按新目标的 AC 重新判定，命中就由那个生物受伤。要人判断的一处：引擎列出的候选是场上所有活着的生物，不判断这次攻击的射程 —— 请只选确实在那次攻击射程内的生物（通常就是攻击者旁边的那几个）。次数：完成一次长休前只能用一次（人物卡上的「直觉魅惑」池）；你也可以消耗一个法术位施展一道惑控学派法术来恢复使用机会 —— 引擎看到你花法术位施法会问一句「是不是惑控学派」，答是就恢复。",
+   "triggers": [
+    {
+     "id": "charm",
+     "label": "直觉魅惑（反应：让这次攻击落空 / 改打别人）",
+     "on": "attackHit",
+     "role": "target",
+     "window": "before",
+     "optional": true,
+     "cost": [
+      {
+       "economy": "reaction"
+      },
+      {
+       "resource": "instinctive-charm"
+      }
+     ],
+     "when": "within(self, attacker, 30) && canSee(self, attacker)",
+     "do": [
+      {
+       "kind": "save",
+       "ability": "wis",
+       "dc": "self.spell.dc",
+       "to": "attacker",
+       "onFail": [
+        {
+         "kind": "modify",
+         "modify": [
+          {
+           "op": "redirect",
+           "to": "choose"
+          }
+         ]
+        }
+       ],
+       "onSuccess": [
+        {
+         "kind": "note",
+         "text": "直觉魅惑：攻击者的感知豁免成功，这次攻击照常命中你。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "regain-on-enchantment",
+     "label": "直觉魅惑：消耗法术位施展惑控法术恢复使用机会",
+     "on": "spellCast",
+     "role": "actor",
+     "window": "after",
+     "optional": true,
+     "when": "event.slotLevel > 0 && self.resource('instinctive-charm') < 1 && ask('刚才那道法术是惑控学派的吗？（消耗了法术位，恢复直觉魅惑）')",
+     "do": [
+      {
+       "kind": "resource",
+       "id": "instinctive-charm",
+       "delta": 1
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "AU:穿梭弹": {
+   "name": "穿梭弹",
+   "automation": "partial",
+   "text": "替换一次远程武器攻击（每回合一次，须用具有弹药属性的武器），消耗一次奥术射击使用次数（短休恢复）：不用攻击检定，以你为源点射出 1 尺宽、30 尺长的线状区域（可以穿过固体障碍，所以无视掩护），区域内每名生物做敏捷豁免（DC = 8 + 熟练加值 + 智力调整值），失败受到「这次攻击命中时的伤害 + 两枚奥术射击骰」的穿刺伤害，成功受半伤。已自动化：在地图上选线状范围、逐目标掷敏捷豁免、伤害与半伤（两枚奥术射击骰按战士等级 3/10/15/18 级为 2d6/2d8/2d10/2d12，已写进骰子表达式）。要人处理：引擎读不到你手上那把武器的伤害骰，这里按「1d8 + 敏捷调整值」（长弓）写死 —— 用短弓 / 手弩（1d6）、重弩（1d10）、投掷武器（力量加值）或其他武器时，结算后手动把伤害改对。「每回合一次」引擎不记账，由你记得本回合是否已经用过奥术射击。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "穿梭弹",
+     "activation": "none",
+     "requires": "turn.isMine",
+     "cost": [
+      {
+       "economy": "attack"
+      },
+      {
+       "resource": "arcaneShot"
+      }
+     ],
+     "targeting": {
+      "type": "area",
+      "area": {
+       "shape": "line",
+       "length": 30,
+       "width": 1
+      }
+     },
+     "root": [
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "dex",
+         "dc": "8 + self.pb + self.mod.int",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "dmg",
+           "dice": "1d8 + self.mod.dex + cond(self.levelOf('战士') >= 18, 2d12, cond(self.levelOf('战士') >= 15, 2d10, cond(self.levelOf('战士') >= 10, 2d8, 2d6)))",
+           "type": "穿刺"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "dmg",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "FRHoF:spell:反冲术": {
+   "name": "反冲术",
+   "automation": "full",
+   "text": "反应（当你受到伤害时，作为对该次伤害的回应）：令这次你受到的伤害降低 (环阶)d6 + 你的施法属性调整值（四环 4d6，每高一环 +1d6，已在伤害窗口里真的减掉）。若这次伤害来自一名位于 60 尺内的生物，你可以迫使该生物进行一次体质豁免（DC = 你的法术豁免 DC）：失败受到 (环阶)d6 力场伤害，成功只受一半。施法时若还有更高环的法术位可选，引擎会问用几环。要人留意的一处：引擎判断「伤害来源是否在 60 尺内」靠地图距离，没有地图时会问你一句；答否就只减伤、不反击。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "反冲术",
+     "activation": "reaction",
+     "trigger": {
+      "on": "damageIncoming",
+      "role": "target",
+      "window": "before"
+     },
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 4
+       }
+      }
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 60
+     },
+     "root": [
+      {
+       "kind": "modify",
+       "modify": [
+        {
+         "op": "reduceDamage",
+         "value": "(slot.level)d6 + self.spell.mod"
+        }
+       ]
+      },
+      {
+       "kind": "if",
+       "when": "event.source != null && within(self, attacker, 60)",
+       "then": [
+        {
+         "kind": "save",
+         "ability": "con",
+         "dc": "self.spell.dc",
+         "to": "attacker",
+         "onFail": [
+          {
+           "kind": "damage",
+           "dice": "(slot.level)d6",
+           "type": "力场"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "dice": "(slot.level)d6",
+           "type": "力场",
+           "scale": 0.5
+          }
+         ]
+        }
+       ],
+       "else": [
+        {
+         "kind": "note",
+         "text": "反冲术：这次伤害没有生物来源，或来源不在 60 尺内 —— 只减免了这次伤害，不反弹。"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "FRHoF:圣武士:元素叱喝:15": {
+   "name": "元素叱喝",
+   "automation": "full",
+   "text": "当你被一次攻击检定命中时，你可以使用反应：这次攻击对你造成的伤害减半（向下取整，已在命中窗口里真的减掉）；并且迫使攻击者进行一次对抗你法术豁免 DC 的敏捷豁免。已自动化：命中窗口里会问你要不要用；答用就扣一个反应与一次使用次数，攻击伤害随即减半，然后问你选哪种伤害类型（强酸 / 寒冷 / 火焰 / 闪电 / 雷鸣），并掷攻击者的敏捷豁免 —— 失败受到 2d10 + 你魅力调整值 的该类型伤害，成功只受一半。次数：等于你的魅力调整值（至少 1 次），长休后全部恢复（人物卡上的「元素叱喝」池）。",
+   "triggers": [
+    {
+     "id": "elemental-rebuke",
+     "label": "元素叱喝：伤害减半并反击",
+     "on": "attackHit",
+     "role": "target",
+     "window": "before",
+     "optional": true,
+     "cost": [
+      {
+       "economy": "reaction"
+      },
+      {
+       "resource": "elemental-rebuke"
+      }
+     ],
+     "modify": [
+      {
+       "op": "halveDamage"
+      }
+     ],
+     "do": [
+      {
+       "kind": "choose",
+       "prompt": "元素叱喝：这次反击造成哪种伤害？",
+       "var": "elem",
+       "options": [
+        {
+         "label": "强酸",
+         "value": "强酸"
+        },
+        {
+         "label": "寒冷",
+         "value": "寒冷"
+        },
+        {
+         "label": "火焰",
+         "value": "火焰"
+        },
+        {
+         "label": "闪电",
+         "value": "闪电"
+        },
+        {
+         "label": "雷鸣",
+         "value": "雷鸣"
+        }
+       ]
+      },
+      {
+       "kind": "save",
+       "ability": "dex",
+       "dc": "self.spell.dc",
+       "to": "attacker",
+       "onFail": [
+        {
+         "kind": "damage",
+         "dice": "2d10 + self.mod.cha",
+         "type": "vars.elem"
+        }
+       ],
+       "onSuccess": [
+        {
+         "kind": "damage",
+         "dice": "2d10 + self.mod.cha",
+         "type": "vars.elem",
+         "scale": 0.5
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  }
+ }
+}

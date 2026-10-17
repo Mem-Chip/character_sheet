@@ -1,0 +1,419 @@
+{
+ "version": 1,
+ "note": "r6-04：反应里改结算 / 免伤 / 物品消耗 / 次数池 / 推拉 这几类。改的点：野兽之形补上三种天生武器攻击、爪击追加改成可限制的触发器、去掉重复计入的狂暴伤害；魔法力量护甲只在掷完会失败时问；吸收元素带上触发的伤害类型（抗性 + 同类型额外伤害、按环阶加骰）；烈焰箭矢 / 马友夫微流星 / 魔石术 写清引擎不记的弹药 / 流星 / 石头数量与他人代为攻击；舞风术补上另两种效应；额外攻击改由人物卡静态层结算（实测剑舞诗人 6 级 attacksPerAction = 2）。",
+ "entries": {
+  "TCE:野蛮人:野兽之形:3": {
+   "name": "野兽之形",
+   "automation": "partial",
+   "text": "进入狂暴时长出一种天生武器，直到狂暴结束：啃咬 1d8 穿刺、爪击 1d6 挥砍、尾击 1d8 穿刺（触及 10 尺），都被视为简易近战武器、用力量。三个攻击条目只点你本次狂暴选的那一个（引擎不会隐藏另外两个）；命中伤害已含力量调整值，狂暴伤害由「狂暴」效应自动加，不要重复写。爪击：用爪击进行攻击检定时自动多给 1 次攻击机会（每回合一次，会问你用不用）。啃咬：用啃咬命中且生命值低于一半时恢复熟练加值点生命（每回合一次，会问）。尾击：被 10 尺内你能看见的生物的攻击命中时，可以用反应把 d8 加到 AC 上 —— 引擎没有「掷一颗骰当作数值」的写法，用这条反应时请自己掷 d8，把点数填进弹窗。",
+   "actions": [
+    {
+     "id": "bite",
+     "name": "野兽之形：啃咬",
+     "activation": "none",
+     "cost": [
+      {
+       "economy": "attack"
+      }
+     ],
+     "requires": "self.hasEffect('狂暴')",
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 5
+     },
+     "root": [
+      {
+       "kind": "attack",
+       "bonus": "self.pb + self.mod.str",
+       "attack": {
+        "melee": true,
+        "weapon": true,
+        "ability": "str",
+        "damageType": "穿刺",
+        "item": "野兽之形·啃咬"
+       },
+       "onHit": [
+        {
+         "kind": "damage",
+         "dice": "1d8 + self.mod.str",
+         "type": "穿刺"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "claw",
+     "name": "野兽之形：爪击",
+     "activation": "none",
+     "cost": [
+      {
+       "economy": "attack"
+      }
+     ],
+     "requires": "self.hasEffect('狂暴')",
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 5
+     },
+     "root": [
+      {
+       "kind": "attack",
+       "bonus": "self.pb + self.mod.str",
+       "attack": {
+        "melee": true,
+        "weapon": true,
+        "ability": "str",
+        "damageType": "挥砍",
+        "item": "野兽之形·爪击"
+       },
+       "onHit": [
+        {
+         "kind": "damage",
+         "dice": "1d6 + self.mod.str",
+         "type": "挥砍"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "tail",
+     "name": "野兽之形：尾击",
+     "activation": "none",
+     "cost": [
+      {
+       "economy": "attack"
+      }
+     ],
+     "requires": "self.hasEffect('狂暴')",
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 10
+     },
+     "root": [
+      {
+       "kind": "attack",
+       "bonus": "self.pb + self.mod.str",
+       "attack": {
+        "melee": true,
+        "weapon": true,
+        "ability": "str",
+        "damageType": "穿刺",
+        "reach": true,
+        "item": "野兽之形·尾击"
+       },
+       "onHit": [
+        {
+         "kind": "damage",
+         "dice": "1d8 + self.mod.str",
+         "type": "穿刺"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "tail-guard",
+     "name": "野兽之形：尾击防御",
+     "activation": "reaction",
+     "trigger": {
+      "on": "attackHit",
+      "role": "target",
+      "window": "before",
+      "when": "self.hasEffect('狂暴') && attacker != null && within(self, attacker, 10) && canSee(self, attacker) && ask('本次狂暴你选的是野兽之形·尾击吗？')"
+     },
+     "root": [
+      {
+       "kind": "number",
+       "prompt": "尾击防御：自己掷 1d8，把点数填进来（这次攻击的 AC 会加上它）",
+       "var": "tailAc",
+       "min": 1,
+       "max": 8,
+       "default": 4
+      },
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "尾击防御",
+       "state": {
+        "bonus": "vars.tailAc"
+       }
+      }
+     ]
+    }
+   ],
+   "triggers": [
+    {
+     "id": "bite-heal",
+     "label": "野兽之形：啃咬回血",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "after",
+     "limit": "oncePerTurn",
+     "optional": true,
+     "when": "self.hasEffect('狂暴') && attack.item == '野兽之形·啃咬' && self.hp * 2 < self.hpMax",
+     "do": [
+      {
+       "kind": "heal",
+       "amount": "self.pb",
+       "to": "self"
+      }
+     ]
+    },
+    {
+     "id": "claw-extra",
+     "label": "野兽之形：追加爪击",
+     "on": "d20Rolled",
+     "role": "actor",
+     "window": "after",
+     "limit": "oncePerTurn",
+     "optional": true,
+     "when": "turn.isMine && self.hasEffect('狂暴') && roll.kind == 'attack' && attack.item == '野兽之形·爪击'",
+     "do": [
+      {
+       "kind": "economy",
+       "attacks": 1
+      },
+      {
+       "kind": "note",
+       "text": "追加爪击：本回合多 1 次攻击机会，作为这次攻击动作的一部分（只能用爪击）"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "尾击防御": {
+     "text": "对抗这次攻击的 AC 加上掷出的 1d8 点数，可能让这次攻击打失。",
+     "statics": [
+      {
+       "kind": "ac",
+       "bonus": "effect.state.bonus"
+      }
+     ],
+     "duration": {
+      "rounds": 1,
+      "endsOn": [
+       {
+        "event": "attackMissed"
+       },
+       {
+        "event": "damageIncoming"
+       }
+      ]
+     }
+    }
+   }
+  },
+  "TCE:魔法力量护甲": {
+   "name": "魔法力量护甲",
+   "automation": "partial",
+   "text": "盔甲有 6 发充能（人物卡资源池，长休恢复；原文是每天黎明恢复 1d6 发，引擎按长休回满，多回的点数请手动点掉）。进行力量检定或力量豁免、按掷出来的结果仍会失败时，会问你要不要花 1 发充能，把智力调整值加到这次投掷上。将被撞倒时的反应（花 1 发充能避免倒地）引擎没有拦截时机：请手动处理 —— 别加倒地状态，自己在资源上点掉 1 发。",
+   "triggers": [
+    {
+     "id": "add-int-to-str",
+     "label": "魔法力量护甲：加智力调整值",
+     "on": "d20Rolled",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "when": "(roll.kind == 'check' || roll.kind == 'save') && roll.ability == 'str' && roll.failing",
+     "cost": [
+      {
+       "resource": "armorOfMagicalStrengthCharges"
+      }
+     ],
+     "modify": [
+      {
+       "op": "addToRoll",
+       "value": "self.mod.int"
+      }
+     ]
+    }
+   ]
+  },
+  "XGE:spell:吸收元素": {
+   "name": "吸收元素",
+   "automation": "partial",
+   "text": "受到强酸、寒冷、火焰、闪电或雷鸣伤害时用反应施放：获得触发法术的那个伤害类型的抗性（这次伤害也随之减半），持续到你的下个回合开始；在你的下个回合中，近战攻击首次命中时额外造成 1d6 点同类型伤害（每高一环 +1d6），之后法术结束。要人处理的：一次伤害包里有多种伤害类型时只认第一种 —— 只有第一种属于那五种时才提供这个反应，抗性与额外伤害也都按第一种算。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "吸收元素",
+     "activation": "reaction",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 1
+       }
+      }
+     ],
+     "trigger": {
+      "on": "damageIncoming",
+      "role": "target",
+      "window": "before",
+      "when": "damage.amount > 0 && (damage.type == '强酸' || damage.type == '寒冷' || damage.type == '火焰' || damage.type == '闪电' || damage.type == '雷鸣')"
+     },
+     "targeting": {
+      "type": "self"
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "吸收元素·抗性",
+       "state": {
+        "type": "damage.type"
+       }
+      },
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "吸收元素·蓄能",
+       "state": {
+        "type": "damage.type",
+        "lvl": "slot.level"
+       }
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "吸收元素·抗性": {
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "bearer",
+       "nth": 1
+      }
+     },
+     "statics": [
+      {
+       "kind": "resist",
+       "values": [
+        "effect.state.type"
+       ]
+      }
+     ],
+     "text": "获得触发法术的那个伤害类型的抗性，直到你的下个回合开始。"
+    },
+    "吸收元素·蓄能": {
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 1
+      }
+     },
+     "triggers": [
+      {
+       "id": "absorb-hit",
+       "label": "吸收元素：释放能量",
+       "on": "attackHit",
+       "role": "actor",
+       "window": "before",
+       "when": "turn.isMine && attack.melee",
+       "do": [
+        {
+         "kind": "addDamage",
+         "dice": "(effect.state.lvl)d6",
+         "type": "effect.state.type"
+        },
+        {
+         "kind": "removeEffect",
+         "match": {
+          "name": "吸收元素·蓄能"
+         },
+         "from": "self"
+        }
+       ]
+      }
+     ],
+     "text": "蓄着触发法术的那个伤害类型的能量：你的下个回合里近战攻击首次命中时额外造成 1d6（每高一环 +1d6）同类型伤害，然后法术结束。"
+    }
+   }
+  },
+  "XGE:spell:烈焰箭矢": {
+   "name": "烈焰箭矢",
+   "automation": "partial",
+   "text": "接触一个装有箭矢或弹丸的箭袋，持续至多 1 小时（专注）。此后你自己用从箭袋取出的弹药进行远程武器攻击命中时，额外造成 1d6 点火焰伤害（这一条自动加）。要人处理的：①弹药计数（12 发，每高一环 +2 发）引擎不记，取完 12 发后请手动结束专注；②别人用这个箭袋的弹药攻击时不会自动加伤害，请手动补；③引擎分不清弹药和投掷类武器 —— 你用飞刀之类投掷武器打远程武器攻击时也会被加上这 1d6，遇到请手动扣掉；④每次攻击算用掉一发（命中与否都一样）。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "烈焰箭矢",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 3
+       }
+      }
+     ],
+     "concentration": {
+      "hours": 1
+     },
+     "targeting": {
+      "type": "self"
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "烈焰箭矢"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "烈焰箭矢": {
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "triggers": [
+      {
+       "id": "fireDmg",
+       "label": "烈焰箭矢：额外火焰伤害",
+       "on": "attackHit",
+       "role": "actor",
+       "window": "before",
+       "when": "attack.weapon && attack.ranged",
+       "do": [
+        {
+         "kind": "addDamage",
+         "dice": "1d6",
+         "type": "火焰"
+        }
+       ]
+      }
+     ],
+     "text": "用箭袋里的弹药进行远程武器攻击命中时额外造成 1d6 火焰伤害；取完 12 发弹药后法术结束（升环每高一环 +2 发）。"
+    }
+   }
+  },
+  "XGE:吟游诗人:额外攻击:6": {
+   "name": "额外攻击",
+   "automation": "full",
+   "text": "第 6 级起，你在自己回合内执行攻击动作时可以攻击两次而非一次。战斗里已经自动这样结算：人物卡按特性名「额外攻击」把每次攻击动作的攻击次数算成 2（攻击一次之后还剩 1 次机会），不需要额外的触发器，也没有要人手动补的部分。若以后这条特性改名，攻击次数才需要手动调整。"
+  }
+ }
+}

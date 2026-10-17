@@ -267,6 +267,9 @@ export function d20Test(tx: Tx, req: RollRequest): RollResult {
     mods, assumptions, seq: 0,
   };
   const recompute = () => {
+    // minD20（可靠才能这类「掷出 9 或以下视为 10」）：自然值也要抬上去，
+    // 否则自然 1 仍会按「失手 / 死亡豁免两次失败」结算（判定看的是 natural）
+    if (minD20 > 0 && result.natural < minD20) result.natural = minD20;
     result.kept = Math.max(result.natural, minD20);
     result.total = result.kept + result.bonus + result.flat + result.extra.reduce((a, x) => a + x.total, 0);
   };

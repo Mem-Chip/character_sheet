@@ -45,8 +45,7 @@ const NODE_KEYS: Record<string, readonly string[]> = {
   heal: ['amount', 'to'],
   tempHp: ['amount', 'to'],
   applyEffect: ['template', 'inline', 'name', 'to', 'duration', 'link', 'potency', 'state'],
-  removeEffect: ['match', 'from'],
-  extendEffect: ['template'],
+  removeEffect: ['match', 'from'],  extendEffect: ['template'], endConcentration: [],
   resource: ['id', 'delta'],
   economy: ['action', 'bonus', 'reaction', 'attacks', 'move'],
   choose: ['prompt', 'var', 'options', 'count'],
@@ -56,7 +55,7 @@ const NODE_KEYS: Record<string, readonly string[]> = {
   repeat: ['n', 'do'],
   move: ['mode', 'ft'],
   zone: ['on', 'affects', 'oncePerTurn', 'rounds', 'do'],
-  summon: ['name', 'count', 'size', 'type', 'creatureType', 'ac', 'hp', 'speed', 'pb', 'score', 'attacksPerAction', 'attacks', 'actions', 'triggers', 'rollMods', 'resist', 'immune', 'conditionImmune', 'notes', 'link'],
+  summon: ['name', 'count', 'size', 'type', 'creatureType', 'ac', 'hp', 'speed', 'pb', 'score', 'attacksPerAction', 'attacks', 'actions', 'triggers', 'rollMods', 'resist', 'immune', 'conditionImmune', 'notes', 'link', 'group'],
   note: ['text'],
 };
 

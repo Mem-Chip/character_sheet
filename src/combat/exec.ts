@@ -1,7 +1,7 @@
 import { ABIL_CN, Dice, Unknown, run, runBool, runDice, runInt, type ExprSrc, type Question, type Value } from '../expr';
 import { applyDamagePacket, applyHeal, grantTempHp, maxDiceFor, normType, rollComponent, type DamageComponent, type DamagePacket } from './damage';
 import { controllerOf, d20Test, rollValue } from './d20';
-import { activeTemplates, applyEffect, effectiveView, effectsOf, endEffect, skillBonus, startConcentration } from './effects';
+import { activeTemplates, applyEffect, effectiveView, effectsOf, endConcentration, endEffect, skillBonus, startConcentration } from './effects';
 import { makeEnv, nameOf, type ScopeData } from './scope';
 import { entryOf } from './collect';
 import { placeSummon, shove } from './space';
@@ -216,6 +216,11 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
       }
       return;
     }
+    case 'endConcentration': {
+      // 「目标挣脱 → 法术结束」：数据里显式写，别指望移除效应自动触发（多目标法术里一个目标摆脱不代表整个法术结束）
+      endConcentration(tx, ctx.self, `「${ctx.actionName}」结束`, ctx.cause);
+      return;
+    }
     case 'extendEffect': {
       const r = tx.rules.resolveTemplate(n.template, ctx.entryKey);
       const e = effectsOf(tx, ctx.self).find((x) => x.key === (r?.key ?? n.template) || x.name === n.template);
@@ -360,9 +365,12 @@ function runSummon(tx: Tx, n: Extract<Node, { kind: 'summon' }>, ctx: ExecCtx): 
   const sv = effectiveView(tx, ctx.self);
   const count = n.count !== undefined ? Math.max(1, num(tx, ctx, n.count, '召唤数量')) : 1;
   const linkEffect = n.link !== false ? (ctx.concentrationId ?? ctx.effectId) : undefined;
+  // 独立存续的召唤物按「组」顶替：缺省同一动作一组（同一道法术再施展一次 = 换一只），
+  // 不同来源（坐骑 + 魔宠）互不影响；同一效果拆成多个条目时在数据里写相同的 group。
+  const group = n.group ?? `${ctx.entryKey}#${ctx.actionName}`;
   if (!linkEffect) {
     for (const c of Object.values(tx.state.combatants)) {
-      if (c.summoner === ctx.self && !c.linkEffect) tx.emit('combatantRemoved', { id: c.id }, ctx.cause);
+      if (c.summoner === ctx.self && !c.linkEffect && c.summonGroup === group) tx.emit('combatantRemoved', { id: c.id }, ctx.cause);
     }
   }
   const rawType = n.type ?? n.creatureType;
@@ -452,6 +460,7 @@ function runSummon(tx: Tx, n: Extract<Node, { kind: 'summon' }>, ctx: ExecCtx): 
       initiative: summoner.initiative,
       summoner: ctx.self,
       linkEffect,
+      ...(linkEffect ? {} : { summonGroup: group }),
     });
     const seq = tx.emit('combatantAdded', { combatant: cb }, ctx.cause);
     placeSummon(tx, ctx.self, id, view.size, seq);
@@ -972,10 +981,13 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
   if (quick) endEffect(tx, quick.id, `用在了「${action.name}」上（附赠动作施放）`, seq);
   if (slot !== undefined && inCombat(tx) && isSpell) tx.emit('economyChanged', { id: actor, patch: { slotSpellCast: true } }, seq);
   if (isSpell) {
-    const evScope = { actor, spell: action.name, key: entryKey, slotLevel: slot ?? 0 };
+    // 窗口里能读到这次施法的目标（role: 'target' 就是「被打的那个」；范围法术读 event.targets）
+    const castTargets = o.targets.slice();
+    const evScope = { actor, spell: action.name, key: entryKey, slotLevel: slot ?? 0, targets: castTargets };
+    const castTarget = castTargets.length === 1 ? castTargets[0] : undefined;
     let countered: { by: string; refundSlot: boolean } | null = null;
     fireWindow(tx, {
-      event: 'spellCast', window: 'before', actor,
+      event: 'spellCast', window: 'before', actor, target: castTarget,
       scope: { slot, event: evScope },
       cause: seq,
       modify: (m, by) => {
@@ -995,8 +1007,8 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
       tx.emit('actionDone', { actor, action: action.name }, seq);
       return;
     }
-    const cast = tx.emit('spellCast', { actor, spell: action.name, key: entryKey, slotLevel: slot ?? null }, seq);
-    fireWindow(tx, { event: 'spellCast', window: 'after', actor, scope: { slot, event: evScope }, cause: cast });
+    const cast = tx.emit('spellCast', { actor, spell: action.name, key: entryKey, slotLevel: slot ?? null, targets: castTargets }, seq);
+    fireWindow(tx, { event: 'spellCast', window: 'after', actor, target: castTarget, scope: { slot, event: evScope }, cause: cast });
   }
 
   let concentrationId: EffectId | undefined;

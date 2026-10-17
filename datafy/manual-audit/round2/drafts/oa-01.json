@@ -1,0 +1,198 @@
+{
+ "version": 1,
+ "note": "重新数据化（oa）：用上 oa 机制",
+ "entries": {
+  "FRHoF:翠绿闲庭新羽": {
+   "name": "翠绿闲庭新羽",
+   "automation": "partial",
+   "text": "【动物交谈】始终准备动物交谈，可用任意法术位施展，作为仪式施展时持续 8 小时——准备法术与仪式时长属于静态层，请手动处理。【双人轮打】执行协助动作时，可作为这个动作的一部分与 5 尺内一名未失能的自愿盟友交换位置，这次移动不引发借机攻击。点下面的动作来标记这次交换：引擎不会交换两个棋子的位置，请在地图上手动对调（对调期间双方都免除借机攻击，谁移动一次谁的这个效果就结束）。",
+   "actions": [
+    {
+     "id": "swap",
+     "name": "双人轮打（协助动作的一部分）",
+     "activation": "none",
+     "requires": "turn.isMine && ask('你正在执行协助动作，且 5 尺内有一名自愿的、未失能的盟友吗？')",
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 5,
+      "filter": "target.id != self.id && !target.has('失能')"
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "双人轮打：免借机"
+      },
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "双人轮打：免借机"
+      },
+      {
+       "kind": "note",
+       "text": "双人轮打：你与所选盟友交换位置——请在地图上把两个棋子对调（引擎不做位置交换）。这次移动不引发借机攻击。"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "双人轮打：免借机": {
+     "text": "双人轮打：这次与盟友交换位置的移动不会引发借机攻击（移动一次后消失，或到发起者回合结束）。",
+     "flags": {
+      "cannot": [
+       "provoke"
+      ]
+     },
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "source",
+       "nth": 0
+      },
+      "endsOn": [
+       {
+        "event": "moved",
+        "when": "event.id == self.id"
+       }
+      ]
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:吟游诗人:灵感织衣:3": {
+   "name": "灵感织衣",
+   "automation": "partial",
+   "text": "附赠动作消耗一次诗人激励：选择你周围 60 尺内至多等同于你魅力调整值（至少 1 个）个你可见且能看见你的生物，每个获得临时生命值（3 级 5 点，5 级 8 点，10 级 11 点，15 级 14 点）。临时生命值自动加上；获得临时生命值的生物可以立刻用其反应移动至多等同于其速度的距离，这次移动不引发借机攻击——引擎给每个目标挂一个「免借机」标记，移动一次即消失（或到你的回合结束），反应与移动本身请手动执行。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "灵感织衣",
+     "activation": "bonus",
+     "cost": [
+      {
+       "resource": "诗人激励"
+      }
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": "max(1, mod.cha)",
+      "range": 60,
+      "filter": "canSee(self, target) && canSee(target, self)"
+     },
+     "root": [
+      {
+       "kind": "tempHp",
+       "amount": "cond(self.levelOf('吟游诗人') >= 15, 14, cond(self.levelOf('吟游诗人') >= 10, 11, cond(self.levelOf('吟游诗人') >= 5, 8, 5)))",
+       "to": "target"
+      },
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "灵感织衣：免借机"
+      },
+      {
+       "kind": "note",
+       "text": "获得临时生命值的生物可以用其反应移动至多等同于其速度的距离（请手动移动棋子）；这次移动不引发借机攻击。"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "灵感织衣：免借机": {
+     "text": "灵感织衣：这次用反应做出的移动不会引发借机攻击（移动一次后消失，或到吟游诗人回合结束）。",
+     "flags": {
+      "cannot": [
+       "provoke"
+      ]
+     },
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "source",
+       "nth": 0
+      },
+      "endsOn": [
+       {
+        "event": "moved",
+        "when": "event.id == self.id"
+       }
+      ]
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:战士:警戒守卫:18": {
+   "name": "警戒守卫",
+   "text": "战斗中你在每个其他生物的回合里可以额外做一次特殊反应，这个反应只能用于发动借机攻击，且同一回合里不能既用特殊反应又用你原本的反应。引擎的一次反应就是一个反应槽（有人离开你的触及范围时引擎会自己问要不要借机攻击），没有「只在别人的回合生效、且只能用于借机攻击」的额外反应槽，也表达不了「两者同回合不能并用」——这条只能由玩家与 DM 手动记账；加了额外的反应槽会让这个角色凭空多出一次能用在别处的反应，所以这里不写自动化。",
+   "automation": "manual",
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:术士:暴风魔法:1": {
+   "name": "暴风魔法",
+   "automation": "partial",
+   "text": "在你的回合中施展 1 环或更高环阶法术的前后，用附赠动作飞行至多 10 尺，这次移动不引发借机攻击。自动的部分：附赠动作、+10 尺移动力，以及「你这个回合的下一次移动免除借机攻击」（移动一次即失效，或到本回合结束）。是否真的施展了 1 环及以上法术、以及飞行本身（越过障碍 / 悬空）请人工判断。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "暴风魔法",
+     "activation": "bonus",
+     "requires": "turn.isMine && ask('你在本回合中施展（或即将施展）1 环或更高环阶的法术吗？')",
+     "root": [
+      {
+       "kind": "economy",
+       "move": 10
+      },
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "暴风魔法：御风"
+      },
+      {
+       "kind": "note",
+       "text": "暴风魔法：飞行至多 10 尺（引擎给 10 尺移动力，飞行请人工判断）；这次移动不引发借机攻击。"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "暴风魔法：御风": {
+     "text": "暴风魔法：你的这次移动不会引发借机攻击（移动一次后消失，或到本回合结束）。",
+     "flags": {
+      "cannot": [
+       "provoke"
+      ]
+     },
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      },
+      "endsOn": [
+       {
+        "event": "moved",
+        "when": "event.id == self.id"
+       }
+      ]
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  }
+ }
+}

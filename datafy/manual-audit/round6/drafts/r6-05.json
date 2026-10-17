@@ -1,0 +1,290 @@
+{
+ "version": 1,
+ "note": "第六轮 r6-05（XGE 八条）：护卫灵光改用 absorb(from: hp) — 整包伤害转给圣武士、不再走 cancel；守护战技补上条目自己的次数池声明（warding-maneuver，max(1, con)，长休），1d8 加 AC 拆成「改为未命中 / 伤害减半」两个互斥选项（引擎没有把掷骰加进 AC 的写法，保持 partial）；锋锐剑影改成 number 节点选功力点数、把点数记进效应 state，三条重复的加值分支合一；恐惧伏击把首回合多出来的一次武器攻击用 economy.attacks 真的给出去，先攻加值改回 self.mod.wis（原来 max(0, …) 会吃掉负调整值）；人剑合一 / 借力打力 / 杀手反制 / 精魂之盾 引擎做不到的部分保持 partial 并把要人处理的地方写清楚（视为魔法攻击、改打别人要重掷伤害、攻击命中后豁免自动成功、14 级反噬的等量力场伤害）。",
+ "entries": {
+  "XGE:圣武士:护卫灵光:7": {
+   "name": "护卫灵光",
+   "automation": "full",
+   "text": "当你周围 10 尺（18 级起 30 尺）内的一个生物受到伤害时，你可以用反应代替它承受整包伤害：引擎按原目标的抗性 / 易伤算完之后，把这份伤害整个转给你，先扣你的临时生命值、扣完再扣生命值；你自己的抗性、免疫、减伤都不参与（原文「该伤害也无法被任何方式减免」），伤害可能附带的效果也不会跟着转到你身上。",
+   "triggers": [
+    {
+     "id": "auraOfTheGuardian",
+     "label": "护卫灵光：代替受伤",
+     "on": "damageIncoming",
+     "role": "any",
+     "window": "before",
+     "optional": true,
+     "cost": [
+      {
+       "economy": "reaction"
+      }
+     ],
+     "when": "target.id != self.id && within(self, target, cond(self.levelOf('圣武士') >= 18, 30, 10))",
+     "modify": [
+      {
+       "op": "absorb",
+       "from": "hp"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:武僧:人剑合一:6": {
+   "name": "人剑合一",
+   "automation": "partial",
+   "text": "【巧劲】已自动化：每个你的回合一次，用剑圣武器命中时可以消耗 1 点功力，追加一枚武艺骰的额外伤害（伤害类型跟武器相同）。弹窗里会问这次攻击用的是不是剑圣武器。【剑气】要人处理：持用剑圣武器攻击对「非魔法攻击」有抗性 / 免疫的目标时，你的攻击视为魔法攻击 —— 引擎没有「这次攻击视为魔法」这个开关，遇到这类目标请自己按魔法攻击结算（不减伤 / 不免疫）。",
+   "triggers": [
+    {
+     "id": "deftStrike",
+     "label": "人剑合一：巧劲",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "limit": "oncePerTurn",
+     "when": "turn.isMine && attack.weapon && ask('这次攻击是否使用的是剑圣武器？')",
+     "cost": [
+      {
+       "resource": "功力"
+      }
+     ],
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "classTable('武艺')",
+       "type": "attack.damageType"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:武僧:借力打力:6": {
+   "name": "借力打力",
+   "automation": "partial",
+   "text": "一个生物对你发动的近战攻击失手时，你可以花费 1 点气作反应，让这次攻击改为击中你周围 5 尺内由你选择的另一名你可见的生物（攻击者除外）。【已自动化】反应时机、1 点气的代价、只在「对你发动的近战攻击失手」时提示。【要人处理】两件事：一是「把这次攻击挪到另一名生物身上」引擎没有对应写法（改目标那套只对已经命中的攻击有效，攻击失手时窗口不接受修改）；二是这次攻击的伤害骰属于攻击者的武器，引擎这边读不到。所以弹窗只问你要不要用这次反应 —— 打谁由你自己定（攻击者除外、要在你 5 尺内、你看得见），然后把攻击者的武器伤害手动记到那名生物身上。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "借力打力",
+     "activation": "reaction",
+     "trigger": {
+      "on": "attackMissed",
+      "role": "target",
+      "window": "after",
+      "when": "attack.melee"
+     },
+     "cost": [
+      {
+       "resource": "功力"
+      }
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 5
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "借力打力：这次失手的近战攻击改为击中你在 5 尺内选择的另一名可见生物（攻击者除外）。请手动掷攻击者的武器伤害并结算到那名生物身上。"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:武僧:锋锐剑影:11": {
+   "name": "锋锐剑影",
+   "automation": "partial",
+   "text": "附赠动作消耗至多 3 点气，灌注你接触的一件剑圣武器：1 分钟内用这件武器进行的攻击检定与伤害掷骰都获得等同于所耗气点数的加值。已自动化：选点数的弹窗（1 到 min(3, 你的功力)）、扣气、加攻击加值与伤害加值（点数是选出来的那个数，不再写死三档）、再次使用时新的加值顶掉旧的。【要人处理】「无法作用于一件已经提供攻击检定与伤害掷骰加值的魔法武器」引擎看不出来（+1 武器之类），请自己不要对这类武器使用；另外加值只作用在被灌注的那件武器上，所以每次武器攻击的检定与伤害都会问你一次「是不是被灌注的剑圣武器」，答否就不加。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "锋锐剑影",
+     "activation": "bonus",
+     "requires": "self.resource('功力') >= 1",
+     "root": [
+      {
+       "kind": "number",
+       "prompt": "消耗多少点功力灌注剑圣武器？（1 到 min(3, 你的功力)）",
+       "var": "ki",
+       "min": 1,
+       "max": "min(3, self.resource('功力'))",
+       "default": "min(3, self.resource('功力'))"
+      },
+      {
+       "kind": "resource",
+       "id": "功力",
+       "delta": "-vars.ki"
+      },
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "name": "锋锐剑影",
+       "state": {
+        "n": "vars.ki"
+       },
+       "inline": {
+        "name": "锋锐剑影",
+        "text": "被灌注的剑圣武器：攻击检定与伤害掷骰 +等于所耗功力点数，1 分钟",
+        "stackKey": "sharpenTheBlade",
+        "duration": {
+         "minutes": 1
+        },
+        "rollMods": [
+         {
+          "on": {
+           "kind": "attack",
+           "attack": {
+            "weapon": true
+           }
+          },
+          "who": "bearer",
+          "when": "ask('这次攻击是否使用了被灌注的剑圣武器？')",
+          "op": "add",
+          "value": "effect.state.n",
+          "label": "锋锐剑影：攻击加值"
+         },
+         {
+          "on": {
+           "kind": "damage",
+           "attack": {
+            "weapon": true
+           }
+          },
+          "who": "bearer",
+          "when": "ask('这次攻击是否使用了被灌注的剑圣武器？')",
+          "op": "add",
+          "value": "effect.state.n",
+          "label": "锋锐剑影：伤害加值"
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:游侠:恐惧伏击:3": {
+   "name": "恐惧伏击",
+   "automation": "full",
+   "text": "先攻检定加你的感知调整值；每场战斗你的第一个回合开始时，步行速度 +10 尺直到该回合结束，并且该回合你执行攻击动作时多做一次武器攻击（引擎把这个次数直接加进了攻击次数，用武器行攻击时会自己扣掉）。如果你在首回合的攻击动作里多打的那一次命中，额外造成 1d8 与该武器同类型的伤害（弹窗里问一次是不是那次额外攻击）。",
+   "rollMods": [
+    {
+     "on": {
+      "kind": "initiative"
+     },
+     "who": "bearer",
+     "op": "add",
+     "value": "self.mod.wis",
+     "label": "恐惧伏击：先攻加感知调整值"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "ambush",
+     "label": "恐惧伏击：首回合速度 +10 与多一次武器攻击",
+     "on": "turnStarted",
+     "role": "actor",
+     "window": "after",
+     "when": "round == 1",
+     "do": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "inline": {
+        "name": "恐惧伏击：首回合提速",
+        "duration": {
+         "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 0
+         }
+        },
+        "statics": [
+         {
+          "kind": "speed",
+          "bonus": 10
+         }
+        ]
+       }
+      },
+      {
+       "kind": "economy",
+       "attacks": 1
+      }
+     ]
+    },
+    {
+     "id": "ambushExtraDamage",
+     "label": "恐惧伏击：额外武器攻击的 1d8 伤害",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "limit": "oncePerTurn",
+     "when": "round == 1 && turn.isMine && attack.weapon && ask('这次命中是恐惧伏击在首回合多给的那次武器攻击吗？')",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "1d8",
+       "type": "attack.damageType"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:游侠:杀手反制:15": {
+   "name": "杀手反制",
+   "automation": "partial",
+   "text": "当你的狩猎开始特性目标迫使你进行一次豁免检定时，你可以在进行豁免检定前用反应对它进行一次武器攻击；一旦命中，除攻击的正常效果外，你这次豁免自动成功。【已自动化】时机与目标 —— 必须是你身上挂着「狩猎开始」、并且是别人迫使你豁免时才提示（弹窗里会问是不是你的狩猎开始目标干的）；反应代价；动作自动瞄准迫使你豁免的那个生物。【要人处理】武器攻击本身，以及「命中后本次豁免自动成功」：引擎在豁免掷骰前虽然有个窗口（saveForced），但它不接受改写结果，也没有替你掷武器攻击的写法。请自己掷这次攻击，命中就手动把这次豁免按成功结算（DM 可以改判这次豁免的结果）。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "杀手反制",
+     "activation": "reaction",
+     "trigger": {
+      "on": "saveForced",
+      "role": "target",
+      "window": "after",
+      "aim": "actor",
+      "when": "self.hasEffect('狩猎开始') && ask('这次豁免是你的狩猎开始目标迫使的吗？')"
+     },
+     "targeting": {
+      "type": "creature",
+      "count": 1
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "杀手反制：立刻对迫使你豁免的那个生物进行一次武器攻击。若命中，除正常伤害外，你这次豁免自动成功（请手动把豁免结果改判为成功）。"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  }
+ }
+}

@@ -1,0 +1,955 @@
+{
+ "version": 1,
+ "note": "r5-04（第五轮「重骰 / 加骰 / 改判定」第 4 批，8 条 XPHB 法术）。① 希望信标：补上原文漏掉的一条——受到的所有治疗取最大值（rollMods op: maxDice，on: heal；治疗骰的取最大现在也看被治疗者，所以挂在承受者身上就对），升到 full。② 神导术：施法时用 choose 从 18 项技能里选一项，把中英文两个技能名记进效应 state；掷骰时用 roll.skill 与 state 比对加 1d4，不再每次弹窗问「是不是这个技能」，升到 full（角色卡的技能键是英文、怪物的技能键是中文，两种都匹配）。③ 疫病术：补上「施法时选一项属性、目标中毒期间该属性的豁免具有劣势」（choose + effect.state + rollMod disadv），保留 partial——三次成功 / 失败计数与「结束中毒的效应要先通过体质豁免」没有接口，text 写清手动。④ 脆弱诅咒：效应从施法者身上改挂到被诅咒的目标身上（这样劣势才落在目标的检定上）：rollMod disadv 到所选属性的属性检定，attackHit（role: target）在 attacker == 施法者时加 1d6 黯蚀；升环专注时长与降到 0 后换目标仍手动，保持 partial。⑤ 塔莎狂笑术：给「受到伤害时」的重复豁免加 damage.amount > 0（0 伤害不算受伤），text 写清「起立」的实际行为与优势要弹窗确认；受伤害豁免缺来源标签（引擎做不到），保持 partial。⑥ 净化灵光：状态豁免优势的判定补上 `roll.sub == null`——死亡豁免与专注检定不再弹窗问（它们不属于「抵抗 / 结束这些状态」，原文也没给优势）；「豁免所抵抗的状态」这个标签引擎仍没有，继续 partial 并保留弹窗确认。⑦ 粉碎音波 / 术法爆发：引擎仍缺「按目标特征给豁免劣势」与「爆炸骰」，保持原样与 partial，text 已写明要人处理的部分。",
+ "entries": {
+  "XPHB:spell:塔莎狂笑术": {
+   "name": "塔莎狂笑术",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。目标感知豁免失败则陷入倒地和失能，且无法凭自己结束倒地状态（在界面上点「起立」不会真的起来，只会白扣一半移动力，请留意）。目标在其每回合结束时、以及受到伤害时各可再做一次感知豁免，成功即结束法术。因受到伤害而做的这次豁免具有优势——引擎分不清这次豁免是不是因受伤而来，掷骰时会弹窗确认，答「是」才加优势。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "塔莎狂笑术",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 1
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "creature",
+      "count": "slot.level",
+      "range": 30,
+      "filter": "target.id != self.id && canSee(self, target)"
+     },
+     "root": [
+      {
+       "kind": "save",
+       "ability": "wis",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "applyEffect",
+         "template": "塔莎狂笑术",
+         "state": {
+          "dc": "self.spell.dc"
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "塔莎狂笑术": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "implies": [
+      "XPHB:condition:倒地",
+      "XPHB:condition:失能"
+     ],
+     "duration": {
+      "saveEnds": {
+       "ability": "wis",
+       "at": "turnEnd"
+      }
+     },
+     "rollMods": [
+      {
+       "on": {
+        "kind": "save",
+        "ability": "wis"
+       },
+       "who": "bearer",
+       "when": "ask('这是因受到伤害而进行的豁免吗？')",
+       "op": "adv",
+       "label": "塔莎狂笑术：受伤害豁免具有优势"
+      }
+     ],
+     "triggers": [
+      {
+       "id": "dmg-save",
+       "label": "塔莎狂笑术：受伤害豁免",
+       "on": "damageTaken",
+       "role": "target",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "wis",
+         "dc": "effect.state.dc",
+         "onSuccess": [
+          {
+           "kind": "removeEffect",
+           "from": "self",
+           "match": {
+            "name": "塔莎狂笑术"
+           }
+          }
+         ]
+        }
+       ],
+       "when": "damage.amount > 0"
+      }
+     ],
+     "text": "陷入倒地和失能状态，无法凭自己结束倒地。每回合结束或受到伤害时可再次进行感知豁免（因伤害所致有优势），成功则法术终止。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:希望信标": {
+   "name": "希望信标",
+   "automation": "full",
+   "text": "专注至多 1 分钟。选择施法距离内任意数量的生物：这些生物在持续时间内进行的感知豁免和死亡豁免检定具有优势，且获得的所有治疗（不论来自法术、药水还是能力）恢复的生命值都取最大值。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "希望信标",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 3
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "creature",
+      "range": 30
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "template": "希望信标",
+       "to": "target"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "希望信标": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "duration": {
+      "minutes": 1
+     },
+     "rollMods": [
+      {
+       "on": {
+        "kind": "save",
+        "ability": "wis"
+       },
+       "who": "bearer",
+       "op": "adv",
+       "label": "希望信标：感知豁免优势"
+      },
+      {
+       "on": {
+        "kind": "deathSave"
+       },
+       "who": "bearer",
+       "op": "adv",
+       "label": "希望信标：死亡豁免优势"
+      },
+      {
+       "on": {
+        "kind": "heal"
+       },
+       "who": "bearer",
+       "op": "maxDice",
+       "label": "希望信标：治疗取最大值"
+      }
+     ],
+     "text": "感知豁免和死亡豁免检定具有优势；受到的任何治疗都取最大值。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:术法爆发": {
+   "name": "术法爆发",
+   "automation": "partial",
+   "text": "远程法术攻击，命中造成 1d8（随等级成长）自选类型伤害（强酸、寒冷、火焰、闪电、毒素、心灵、雷鸣）。若掷出 8 可追加 d8 伤害（最多等同于施法属性调整值个额外 d8 伤害骰，需手动处理）。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "术法爆发",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 120
+     },
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "选择伤害类型",
+       "options": [
+        {
+         "label": "强酸",
+         "do": [
+          {
+           "kind": "attack",
+           "attack": {
+            "ranged": true,
+            "spell": true
+           },
+           "onHit": [
+            {
+             "kind": "damage",
+             "dice": "(1 + floor((self.level + 1) / 6))d8",
+             "type": "强酸"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "寒冷",
+         "do": [
+          {
+           "kind": "attack",
+           "attack": {
+            "ranged": true,
+            "spell": true
+           },
+           "onHit": [
+            {
+             "kind": "damage",
+             "dice": "(1 + floor((self.level + 1) / 6))d8",
+             "type": "寒冷"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "火焰",
+         "do": [
+          {
+           "kind": "attack",
+           "attack": {
+            "ranged": true,
+            "spell": true
+           },
+           "onHit": [
+            {
+             "kind": "damage",
+             "dice": "(1 + floor((self.level + 1) / 6))d8",
+             "type": "火焰"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "闪电",
+         "do": [
+          {
+           "kind": "attack",
+           "attack": {
+            "ranged": true,
+            "spell": true
+           },
+           "onHit": [
+            {
+             "kind": "damage",
+             "dice": "(1 + floor((self.level + 1) / 6))d8",
+             "type": "闪电"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "毒素",
+         "do": [
+          {
+           "kind": "attack",
+           "attack": {
+            "ranged": true,
+            "spell": true
+           },
+           "onHit": [
+            {
+             "kind": "damage",
+             "dice": "(1 + floor((self.level + 1) / 6))d8",
+             "type": "毒素"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "心灵",
+         "do": [
+          {
+           "kind": "attack",
+           "attack": {
+            "ranged": true,
+            "spell": true
+           },
+           "onHit": [
+            {
+             "kind": "damage",
+             "dice": "(1 + floor((self.level + 1) / 6))d8",
+             "type": "心灵"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "雷鸣",
+         "do": [
+          {
+           "kind": "attack",
+           "attack": {
+            "ranged": true,
+            "spell": true
+           },
+           "onHit": [
+            {
+             "kind": "damage",
+             "dice": "(1 + floor((self.level + 1) / 6))d8",
+             "type": "雷鸣"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:疫病术": {
+   "name": "疫病术",
+   "automation": "partial",
+   "text": "触碰一名生物，它进行体质豁免：失败受到 11d8 黯蚀伤害并陷入中毒。施法时选一项属性，目标在中毒期间进行该属性的豁免检定时具有劣势（已自动）。目标在其每回合结束时的重复体质豁免要累计三次成功 / 三次失败（三次成功结束效应，三次失败则效应持续 7 日），以及中毒目标受到「结束中毒」的效应时必须通过体质豁免否则中毒不结束——这两项引擎没有计数器、也没有拦截「结束中毒」的接口，请手动记录与判定。效应结束（或持续 7 日后）请在目标身上手动移除「疫病」。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "疫病术",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 5
+       }
+      }
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": "touch"
+     },
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "疫病术：选择一项属性（中毒期间该属性的豁免检定具有劣势）",
+       "var": "abil",
+       "options": [
+        {
+         "label": "力量",
+         "value": "str"
+        },
+        {
+         "label": "敏捷",
+         "value": "dex"
+        },
+        {
+         "label": "体质",
+         "value": "con"
+        },
+        {
+         "label": "智力",
+         "value": "int"
+        },
+        {
+         "label": "感知",
+         "value": "wis"
+        },
+        {
+         "label": "魅力",
+         "value": "cha"
+        }
+       ]
+      },
+      {
+       "kind": "save",
+       "ability": "con",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "dice": "11d8",
+         "type": "黯蚀"
+        },
+        {
+         "kind": "applyEffect",
+         "template": "疫病",
+         "to": "target",
+         "state": {
+          "abil": "vars.abil"
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "疫病": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "implies": [
+      "XPHB:condition:中毒"
+     ],
+     "rollMods": [
+      {
+       "on": {
+        "kind": "save"
+       },
+       "who": "bearer",
+       "when": "roll.ability == effect.state.abil",
+       "op": "disadv",
+       "label": "疫病术：所选属性豁免劣势"
+      }
+     ],
+     "text": "陷入中毒状态；进行所选属性的豁免检定时具有劣势。每回合结束时的重复体质豁免要累计三次成功 / 失败（手动记录）。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:神导术": {
+   "name": "神导术",
+   "automation": "full",
+   "text": "专注至多 1 分钟。触碰一名自愿生物并选择一项技能：法术结束前，受术生物使用该技能进行的任何属性检定都加上 1d4。施法时在技能列表里选一项；之后掷骰时按技能名匹配（角色卡的技能是英文键、怪物的技能是中文名，两个都记进了效应里），不问人。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "神导术",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": "touch"
+     },
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "神导术：选择一项技能",
+       "options": [
+        {
+         "label": "运动",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'athletics'",
+            "cn": "'运动'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "体操",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'acrobatics'",
+            "cn": "'体操'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "巧手",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'sleight of hand'",
+            "cn": "'巧手'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "隐匿",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'stealth'",
+            "cn": "'隐匿'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "奥秘",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'arcana'",
+            "cn": "'奥秘'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "历史",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'history'",
+            "cn": "'历史'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "调查",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'investigation'",
+            "cn": "'调查'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "自然",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'nature'",
+            "cn": "'自然'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "宗教",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'religion'",
+            "cn": "'宗教'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "驯兽",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'animal handling'",
+            "cn": "'驯兽'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "洞悉",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'insight'",
+            "cn": "'洞悉'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "医药",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'medicine'",
+            "cn": "'医药'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "察觉",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'perception'",
+            "cn": "'察觉'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "求生",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'survival'",
+            "cn": "'求生'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "欺瞒",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'deception'",
+            "cn": "'欺瞒'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "威吓",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'intimidation'",
+            "cn": "'威吓'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "表演",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'performance'",
+            "cn": "'表演'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "游说",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'persuasion'",
+            "cn": "'游说'"
+           }
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "神导术": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "rollMods": [
+      {
+       "on": {
+        "kind": "check"
+       },
+       "who": "bearer",
+       "when": "roll.skill != null && (roll.skill == effect.state.skill || roll.skill == effect.state.cn)",
+       "op": "addDice",
+       "value": "1d4",
+       "label": "神导术：所选技能检定 +1d4"
+      }
+     ],
+     "text": "使用所选技能进行的属性检定 +1d4。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:粉碎音波": {
+   "name": "粉碎音波",
+   "automation": "partial",
+   "text": "以该点为中心半径 10 尺球状区域内的所有生物进行体质豁免，失败受到 3d8（每升一环 +1d8）雷鸣伤害，成功受到半数伤害。构装生物进行该豁免具有劣势以及未被携带的非魔法物件受损需手动处理。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "粉碎音波",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 2
+       }
+      }
+     ],
+     "targeting": {
+      "type": "area",
+      "range": 60,
+      "area": {
+       "shape": "sphere",
+       "radius": 10
+      }
+     },
+     "root": [
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "con",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "shatter",
+           "dice": "(1 + slot.level)d8",
+           "type": "雷鸣"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "shatter",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:脆弱诅咒": {
+   "name": "脆弱诅咒",
+   "automation": "partial",
+   "text": "以附赠动作诅咒 90 尺内一名你能看见的生物，专注至多 1 小时。施法时选一项属性：目标在持续时间内进行该属性的属性检定时具有劣势（已自动）。你对命中该目标的任意攻击额外造成 1d6 黯蚀伤害（已自动）。升环施法把专注延长到 4 / 8 / 24 小时，以及「目标生命值降至 0 后你可以用附赠动作用同一个诅咒换一个目标」引擎做不了，请手动：专注时长按 1 小时记；换目标时先在旧目标身上移除「脆弱诅咒」，再对新目标重新施放一次（会重新扣一个法术位，请在资源里手动退回来）。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "脆弱诅咒",
+     "activation": "bonus",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 1
+       }
+      }
+     ],
+     "concentration": {
+      "hours": 1
+     },
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 90,
+      "filter": "canSee(self, target)"
+     },
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "脆弱诅咒：选择一项属性（该属性的属性检定具有劣势）",
+       "var": "abil",
+       "options": [
+        {
+         "label": "力量",
+         "value": "str"
+        },
+        {
+         "label": "敏捷",
+         "value": "dex"
+        },
+        {
+         "label": "体质",
+         "value": "con"
+        },
+        {
+         "label": "智力",
+         "value": "int"
+        },
+        {
+         "label": "感知",
+         "value": "wis"
+        },
+        {
+         "label": "魅力",
+         "value": "cha"
+        }
+       ]
+      },
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "脆弱诅咒",
+       "state": {
+        "caster": "self.id",
+        "abil": "vars.abil"
+       }
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "脆弱诅咒": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "rollMods": [
+      {
+       "on": {
+        "kind": "check"
+       },
+       "who": "bearer",
+       "when": "roll.ability == effect.state.abil",
+       "op": "disadv",
+       "label": "脆弱诅咒：所选属性检定劣势"
+      }
+     ],
+     "triggers": [
+      {
+       "id": "dmg",
+       "label": "脆弱诅咒：额外伤害",
+       "on": "attackHit",
+       "role": "target",
+       "window": "before",
+       "when": "attacker.id == effect.state.caster",
+       "do": [
+        {
+         "kind": "addDamage",
+         "dice": "1d6",
+         "type": "黯蚀"
+        }
+       ]
+      }
+     ],
+     "text": "所选属性的属性检定具有劣势；施法者命中你时额外造成 1d6 黯蚀伤害。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  }
+ }
+}

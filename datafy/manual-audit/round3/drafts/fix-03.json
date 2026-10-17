@@ -1,0 +1,993 @@
+{
+ "version": 1,
+ "note": "fix-03：按 datafy/manual-audit/round2/suspects.md 的「缓一轮」证据修 7 条（区域时机 / oncePerTurn / vars / 完全位于区域内 / 写死骰）",
+ "entries": {
+  "XPHB:spell:咒唤林地卫士": {
+   "name": "咒唤林地卫士",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。你身周 10 尺光环由自然精魂缭绕。光环出现时处在光环里的生物进行感知豁免，失败受 (1 + slot.level)d8 力场伤害（即 4 环 5d8，每高一环 +1d8），成功半数。生物进入光环或在其中结束回合时同样须进行该豁免（每名生物每回合限一次）。此外，持续时间内你可以附赠动作执行撤离动作（引擎的撤离效果已经会挡住借机攻击）。原文里「一名你可见的生物」与「你都可以迫使」这两层限制引擎不替你把关：看不见的生物也会被结算进去，不该打的那次请人工忽略。光环按原文应当始终以你为中心，但引擎的区域钉在施放时的格子上、界面也不能移动它（只能删掉重画，重画出来的区域带不了本法术的豁免与升环）：你移动之后，光环「移入某生物空间」的那一次请手动点「自然精魂冲击」，按你当前的站位补结算。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "咒唤林地卫士",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 4
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 10
+     },
+     "targeting": {
+      "type": "area",
+      "range": "self",
+      "area": {
+       "shape": "emanation",
+       "radius": 10
+      }
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "template": "咒唤林地卫士",
+       "to": "self"
+      },
+      {
+       "kind": "note",
+       "text": "咒唤林地卫士：光环在地图上钉在施放时的格子上 —— 引擎和界面都不能移动区域，重画出来的区域也没有本法术的豁免与升环。你移动之后，请按你当前的站位用「自然精魂冲击」手动补齐光环该生效的生物。"
+      },
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "wis",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "dmg",
+           "dice": "(1 + slot.level)d8",
+           "type": "力场"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "dmg",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "wis",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "dmg",
+           "dice": "(1 + slot.level)d8",
+           "type": "力场"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "dmg",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "use",
+     "name": "咒唤林地卫士：撤离",
+     "activation": "bonus",
+     "requires": "self.hasEffect('咒唤林地卫士') && turn.isMine",
+     "root": [
+      {
+       "kind": "applyEffect",
+       "template": "XPHB:action:撤离#撤离",
+       "to": "self"
+      }
+     ]
+    },
+    {
+     "id": "strike",
+     "name": "咒唤林地卫士：自然精魂冲击",
+     "activation": "free",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "requires": "self.hasEffect('咒唤林地卫士')",
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 10
+     },
+     "root": [
+      {
+       "kind": "save",
+       "ability": "wis",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "id": "dmg",
+         "dice": "5d8",
+         "type": "力场"
+        }
+       ],
+       "onSuccess": [
+        {
+         "kind": "damage",
+         "ref": "dmg",
+         "scale": 0.5
+        }
+       ]
+      }
+     ],
+     "text": "光环移入一个你可见生物的空间时，用这个动作补一次冲击（引擎看不到光环自身在移动，这一时机要你手动点）。这个动作不在施法过程中执行，伤害固定写成 4 环的 5d8；用更高环位施放时请手动加骰（每高一环 +1d8）。"
+    }
+   ],
+   "effects": {
+    "咒唤林地卫士": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "text": "10 尺自然精魂光环：光环内的生物进入或在其中结束回合时受冲击（每回合限一次）；持续时间内可以附赠动作撤离。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:哈达之欲": {
+   "name": "哈达之欲",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。以 150 尺内一点为中心创造半径 20 尺球状黑暗区域：区域会画在地图上、随专注结束消失。区域内的黑暗（魔法光照也照不亮）、困难地形、30 尺内可闻的耳语噪声与「完全处于区域内」的判定引擎都不处理，请人工裁定。在区域内开始其回合的生物受 2d6 寒冷伤害；在区域内结束其回合的生物进行一次敏捷豁免，失败受 2d6 强酸伤害（原文没有成功减半，引擎也不减半）。完全进入区域内的生物陷入目盲：进入时引擎自动挂上，离开或不再完全位于区域内请手动移除那条效应。升环施法时每高一环、由你选择的那一种伤害 +1d6（施放时会问你选哪一种）。引擎的区域在一个区域里分不出「开始回合」和「结束回合」两种时机，所以这条法术在地图上会放三个重叠的区域（进入时挂目盲 / 开始回合结算寒冷 / 结束回合结算强酸）—— 名字相同是正常的，专注结束时它们会一起消失。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "哈达之欲",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 3
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 150,
+      "area": {
+       "shape": "sphere",
+       "radius": 20
+      }
+     },
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "哈达之欲：升环的额外伤害（每比三环高一环 1d6）加在寒冷还是强酸上？（没升环时两个都是 2d6，随便选）",
+       "var": "elem",
+       "options": [
+        {
+         "label": "寒冷",
+         "value": "cold"
+        },
+        {
+         "label": "强酸",
+         "value": "acid"
+        }
+       ]
+      },
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "哈达之欲",
+       "state": {
+        "elem": "vars.elem"
+       }
+      },
+      {
+       "kind": "note",
+       "text": "哈达之欲：这个球状区域是困难地形，任何光照（含魔法光照）都照不亮它，还发散着 30 尺内可闻的不谐耳语与啜嚼噪音 —— 引擎不处理地形、光照与声音，请人工裁定。"
+      },
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "applyEffect",
+         "to": "target",
+         "template": "哈达之欲：目盲"
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter"
+       ],
+       "affects": "all",
+       "oncePerTurn": false,
+       "do": [
+        {
+         "kind": "applyEffect",
+         "to": "target",
+         "template": "哈达之欲：目盲"
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "turnStart"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "damage",
+         "dice": "2d6 + cond(self.effect('哈达之欲（激活）').state.elem == 'cold', (slot.level - 3)d6, 0)",
+         "type": "寒冷"
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "dex",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "dice": "2d6 + cond(self.effect('哈达之欲（激活）').state.elem == 'acid', (slot.level - 3)d6, 0)",
+           "type": "强酸"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "哈达之欲：目盲": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "implies": [
+      "XPHB:condition:目盲"
+     ],
+     "text": "完全处于哈达之欲的黑暗区域内：陷入目盲状态。引擎只在进入区域时自动挂上，判断不了「已经离开」：离开（或不再完全位于区域内）之后请在它的详情抽屉里手动移除；区域随专注结束时这条效应会一起结束。"
+    },
+    "哈达之欲": {
+     "name": "哈达之欲（激活）",
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "text": "哈达之欲在场：记着施放时升环的额外骰加在寒冷还是强酸上（每比三环高一环 +1d6）。区域是困难地形、任何光照都照不亮、30 尺内可闻耳语 —— 引擎不处理，请人工裁定。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:操控水体": {
+   "name": "操控水体",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。控制 300 尺内边长至多 100 尺立方区域中的水体，从上涨 / 分水 / 转向 / 漩涡中选择其一生效（施放时问你选哪一个），在你的后续回合可以用动作重复同一效应或改用另一效应（用「操控水体：切换效应」）。漩涡：水中位于漩涡 25 尺内的生物会被拉向中心 10 尺（引擎把它拉向你，中心不在你身上时请手动把棋子移到中心方向 10 尺处）；一回合内第一次进入漩涡或在漩涡内结束回合的生物进行力量豁免，失败受 2d8 钝击伤害，成功半数。区域画的是整个 100 尺立方水区，而原文的豁免只在中央那个漩涡（25 尺）里：引擎认不出「漩涡」这个子区域，所以每次区域触发都会问一句「这个生物在漩涡里、而且这回合还没结算过吗」（问的是施法者这一方），答否就不结算。水位上涨、波浪推载具、地形改变与「以动作游泳离开漩涡、通过力量（运动）检定」都要人工结算；区域钉在格子上，漩涡中心变化请手动处理。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "操控水体",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 4
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 10
+     },
+     "targeting": {
+      "type": "area",
+      "range": 300,
+      "area": {
+       "shape": "cube",
+       "size": 100
+      }
+     },
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "操控水体：选择生效的效应",
+       "options": [
+        {
+         "label": "上涨",
+         "do": [
+          {
+           "kind": "note",
+           "text": "操控水体（上涨）：水位上涨 20 尺；若指定的是大水体的一部分，改为一片 20 尺高的波浪，波浪中的巨型或更小载具被带到区域另一边、且有 25% 几率倾覆。这些由人工结算；波浪在你下一回合开始时再次翻打。"
+          }
+         ]
+        },
+        {
+         "label": "分水",
+         "do": [
+          {
+           "kind": "note",
+           "text": "操控水体（分水）：区域内的水体分开形成一条沟壑，两侧是水墙，持续至法术结束或你改用别的效应；效应终止后水流会在下一轮里逐渐把沟壑填满。由人工处理。"
+          }
+         ]
+        },
+        {
+         "label": "转向",
+         "do": [
+          {
+           "kind": "note",
+           "text": "操控水体（转向）：区域内的流水按你指定的方向流动（可以绕过障碍、沿墙向上），流出区域后恢复按地形流动。由人工处理。"
+          }
+         ]
+        },
+        {
+         "label": "漩涡",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "self",
+           "template": "操控水体：漩涡"
+          },
+          {
+           "kind": "note",
+           "text": "操控水体（漩涡）：漩涡在区域中央形成（底部宽 5 尺、顶部至多宽 50 尺、高 25 尺）。用「操控水体：漩涡拉拽」把 25 尺内的生物拉向中心；它在一回合内第一次进入漩涡或在漩涡内结束回合时，引擎会替它掷力量豁免（每回合限一次）。地图上的区域不会自己动，漩涡中心变化请手动挪动。"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": false,
+       "do": [
+        {
+         "kind": "if",
+         "when": "self.hasEffect('操控水体：漩涡')",
+         "then": [
+          {
+           "kind": "if",
+           "when": "ask('操控水体：这个生物在漩涡（区域中央 25 尺）内吗？而且这一回合还没有被这个漩涡结算过吗？（两个都满足才答是；区域画的是整个 100 尺水立方）')",
+           "then": [
+            {
+             "kind": "save",
+             "ability": "str",
+             "dc": "self.spell.dc",
+             "onFail": [
+              {
+               "kind": "damage",
+               "id": "vortex",
+               "dice": "2d8",
+               "type": "钝击"
+              }
+             ],
+             "onSuccess": [
+              {
+               "kind": "damage",
+               "ref": "vortex",
+               "scale": 0.5
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "switch",
+     "name": "操控水体：切换效应",
+     "activation": "action",
+     "requires": "self.hasEffect('操控水体：漩涡') || ask('操控水体：法术还在持续吗？（在的话用动作重复或改用别的效应）')",
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "操控水体：这一轮生效的效应",
+       "options": [
+        {
+         "label": "上涨",
+         "do": [
+          {
+           "kind": "removeEffect",
+           "from": "self",
+           "match": {
+            "name": "操控水体：漩涡"
+           }
+          },
+          {
+           "kind": "note",
+           "text": "操控水体（上涨）：水位上涨 20 尺 / 制造 20 尺高的波浪，由人工结算。"
+          }
+         ]
+        },
+        {
+         "label": "分水",
+         "do": [
+          {
+           "kind": "removeEffect",
+           "from": "self",
+           "match": {
+            "name": "操控水体：漩涡"
+           }
+          },
+          {
+           "kind": "note",
+           "text": "操控水体（分水）：形成沟壑与水墙，由人工处理。"
+          }
+         ]
+        },
+        {
+         "label": "转向",
+         "do": [
+          {
+           "kind": "removeEffect",
+           "from": "self",
+           "match": {
+            "name": "操控水体：漩涡"
+           }
+          },
+          {
+           "kind": "note",
+           "text": "操控水体（转向）：让区域内的水按指定方向流动，由人工处理。"
+          }
+         ]
+        },
+        {
+         "label": "漩涡",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "self",
+           "template": "操控水体：漩涡"
+          },
+          {
+           "kind": "note",
+           "text": "操控水体（漩涡）：漩涡生效，区域内的生物进入或结束回合时引擎会替它掷力量豁免。"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "vortex-pull",
+     "name": "操控水体：漩涡拉拽",
+     "activation": "free",
+     "requires": "self.hasEffect('操控水体：漩涡') && turn.isMine",
+     "targeting": {
+      "type": "creature",
+      "range": 25,
+      "filter": "ask('操控水体：这个生物在水中、且位于漩涡 25 尺内吗？')"
+     },
+     "root": [
+      {
+       "kind": "move",
+       "mode": "pull",
+       "ft": 10
+      },
+      {
+       "kind": "note",
+       "text": "操控水体：漩涡把目标向中心拉动 10 尺（引擎把它拉向你；若漩涡中心不在你身上，请手动把棋子移到中心方向 10 尺处）。"
+      }
+     ]
+    },
+    {
+     "id": "escape",
+     "name": "操控水体：游出漩涡",
+     "activation": "free",
+     "requires": "self.hasEffect('操控水体：漩涡')",
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "filter": "ask('操控水体：这个生物要用一个动作游泳离开漩涡吗？')"
+     },
+     "root": [
+      {
+       "kind": "if",
+       "when": "ask('操控水体：它通过对抗你法术豁免 DC 的力量（运动）检定了吗？')",
+       "then": [
+        {
+         "kind": "removeEffect",
+         "from": "target",
+         "match": {
+          "name": "操控水体：漩涡"
+         }
+        },
+        {
+         "kind": "note",
+         "text": "操控水体：它挣脱了漩涡 —— 请手动把它从漩涡里挪出去。"
+        }
+       ],
+       "else": [
+        {
+         "kind": "note",
+         "text": "操控水体：检定失败，它的动作浪费了，仍留在漩涡里。"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "操控水体：漩涡": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "text": "漩涡生效中：区域内一回合内第一次进入或在其中结束回合的生物须进行力量豁免，失败受 2d8 钝击伤害、成功半数；25 尺内的生物被拉向中心 10 尺。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:沉默术": {
+   "name": "沉默术",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 120 尺内指定一点创造半径 20 尺球状静音区域：区域内产生不了任何声音，外界的声音也传不进来（引擎不处理声音，请人工裁定）。完全位于区域内的生物与物件免疫雷鸣伤害，完全位于区域内的生物陷入耳聋状态，区域内也无法施展包含言语成分的法术（引擎不拦施法，请人工拒绝）。施放时已在区域内的、以及之后进入区域的生物，引擎会自动挂上「沉默术」效应（随专注结束一起消失）；但引擎判断不了「完全位于」与「已经离开」，边缘擦到一点的和离开区域的都请按实际手动增删这条效应。区域随专注结束时效应一起结束。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "沉默术",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 2
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 10
+     },
+     "targeting": {
+      "type": "area",
+      "range": 120,
+      "area": {
+       "shape": "sphere",
+       "radius": 20
+      }
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "沉默术：区域内无法施展包含言语成分的法术 —— 引擎不会拦下这类施法，请人工拒绝。"
+      },
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "applyEffect",
+         "to": "target",
+         "template": "沉默术"
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter"
+       ],
+       "affects": "all",
+       "oncePerTurn": false,
+       "do": [
+        {
+         "kind": "applyEffect",
+         "to": "target",
+         "template": "沉默术"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "沉默术": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "implies": [
+      "XPHB:condition:耳聋"
+     ],
+     "statics": [
+      {
+       "kind": "immune",
+       "values": [
+        "雷鸣"
+       ]
+      }
+     ],
+     "flags": {
+      "cannot": [
+       "speak"
+      ]
+     },
+     "text": "完全位于沉默术的静音区域内：陷入耳聋状态、免疫雷鸣伤害、无法施展包含言语成分的法术。引擎只在生物进入区域时自动挂上这条效应，判断不了「完全位于」与「已经离开」：边缘只擦到一点的、以及离开（或不再完全位于）区域的，请在它的详情抽屉里手动增删；区域随专注结束时这条效应会一起结束。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:炽焰法球": {
+   "name": "炽焰法球",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。在 60 尺内地面上的一处未被占据的空间创造一颗直径 5 尺的炽焰法球（所以施法瞬间不会有生物被它打中）。任何生物在火球周围 5 尺内结束其回合时必须进行敏捷豁免，失败受 (slot.level)d6 火焰伤害（2 环 2d6，每高一环 +1d6），成功减半；法球被移入某名生物所占据的空间时，该生物也做同样的豁免，法球在该回合内停止移动。你可以用附赠动作把法球沿地面移动 30 尺：引擎不会移动区域、界面也只能删掉重画（重画出来的区域带不了本法术的豁免与升环），请在棋盘上标记法球的新位置；「被移入空间」与「在法球 5 尺内（相邻格）结束回合」这两次豁免用「炽焰法球：法球豁免」结算。法球散发 20 尺明亮光照与额外 20 尺微光、被它触碰的未着装或携带的可燃物件会开始燃烧：这两条请人工记录。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "炽焰法球",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 2
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 60,
+      "area": {
+       "shape": "sphere",
+       "radius": 5
+      }
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "炽焰法球",
+       "state": {
+        "die": "(slot.level)d6"
+       }
+      },
+      {
+       "kind": "note",
+       "text": "炽焰法球：法球散发 20 尺明亮光照与额外 20 尺微光；被它触碰的未被着装或携带的可燃物件会开始燃烧 —— 这两条引擎不处理，请人工记录。区域只覆盖法球自己占的那一格，法球被移动之后请在棋盘上标记它的新位置。"
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "dex",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "orb",
+           "dice": "(slot.level)d6",
+           "type": "火焰"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "orb",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "move",
+     "name": "炽焰法球：移动法球",
+     "activation": "bonus",
+     "requires": "turn.isMine && self.hasEffect('炽焰法球（激活）')",
+     "text": "用附赠动作把法球沿地面移动至多 30 尺（可以越过不高于 5 尺的障碍、不宽过 10 尺的陷坑）。引擎不会移动区域、界面也只能删掉重画（重画出来的区域带不了本法术的豁免与升环）：请在棋盘上标记法球的新位置。若把法球移入某名生物所占据的空间，法球在该回合内停止移动，并用「炽焰法球：法球豁免」给它结算那次敏捷豁免。",
+     "root": [
+      {
+       "kind": "note",
+       "text": "炽焰法球：请把法球沿地面移动至多 30 尺 —— 地图上的区域钉在施放时的格子上，引擎和界面都不能移动它（删掉重画也没有本法术的豁免与升环），请在棋盘上标记法球的新位置。移入某个生物占据的空间时，用「炽焰法球：法球豁免」结算它那次豁免，然后法球本回合停止移动。"
+      }
+     ]
+    },
+    {
+     "id": "save",
+     "name": "炽焰法球：法球豁免",
+     "activation": "free",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "requires": "self.hasEffect('炽焰法球（激活）')",
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "filter": "ask('炽焰法球：这个生物是被法球移入了它占据的空间，或者在法球周围 5 尺内结束其回合（但不在区域格子里）吗？')"
+     },
+     "root": [
+      {
+       "kind": "save",
+       "ability": "dex",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "id": "orb",
+         "dice": "self.effect('炽焰法球（激活）').state.die",
+         "type": "火焰"
+        }
+       ],
+       "onSuccess": [
+        {
+         "kind": "damage",
+         "ref": "orb",
+         "scale": 0.5
+        }
+       ]
+      }
+     ],
+     "text": "手动给两种情况的生物结算法球的敏捷豁免：① 你把法球移入了它占据的空间（用「炽焰法球：移动法球」声明那次移动）；② 它在法球周围 5 尺内结束其回合，但不在区域格子里（区域只覆盖法球自己那一格）。豁免失败受法球伤害、成功减半，伤害骰按施放时记录的环阶算。"
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ],
+   "effects": {
+    "炽焰法球": {
+     "name": "炽焰法球（激活）",
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "text": "炽焰法球在场：记着施放时环阶的伤害骰（2 环 2d6，每高一环 +1d6）。在法球周围 5 尺内结束回合的生物、以及被法球移入空间的生物做敏捷豁免。地图上的区域只覆盖法球那一格；移动法球请人工标记位置。"
+    }
+   }
+  },
+  "XPHB:spell:纠缠术": {
+   "name": "纠缠术",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。20 尺方状区域内除施法者外的生物必须进行力量豁免，失败陷入束缚状态直到法术结束（只在施法当时结算一次，效应随专注结束一起消失）。被束缚生物可用动作进行力量（运动）检定对抗法术 DC 挣脱：这条引擎不自动化，挣脱成功后请在它的详情抽屉里手动移除效应。区域造成的困难地形需人工处理。原文没有再进入区域时重新豁免这一条，所以这条法术不在地图上留会自己生效的区域。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "纠缠术",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 1
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 90,
+      "area": {
+       "shape": "cube",
+       "size": 20
+      }
+     },
+     "root": [
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "if",
+         "when": "target.id != self.id",
+         "then": [
+          {
+           "kind": "save",
+           "ability": "str",
+           "dc": "self.spell.dc",
+           "onFail": [
+            {
+             "kind": "applyEffect",
+             "to": "target",
+             "template": "纠缠"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "被植物覆盖的区域是困难地形（引擎不处理困难地形，需人工处理）"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "纠缠": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "implies": [
+      "XPHB:condition:束缚"
+     ],
+     "text": "陷入束缚状态直到法术结束。可用动作进行力量（运动）检定对抗法术 DC，成功则摆脱藤蔓不再被束缚（这个动作需人工处理）。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:荆棘丛生": {
+   "name": "荆棘丛生",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 150 尺内指定一点创造 20 尺半径的伪装棘刺区域（困难地形）。生物进入该区域或在其中移动时每移动 5 尺受到 2d4 穿刺伤害：引擎在进入（含被推进来）时自动结算一次，同一回合里进出几次就结算几次；同一回合在区域内继续走的每 5 尺需人工补算（用「荆棘丛生：移动伤害」）。区域经过伪装，须用搜索动作通过感知（察觉或求生）检定才能发现，这条需人工处理。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "荆棘丛生",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 2
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 10
+     },
+     "targeting": {
+      "type": "area",
+      "range": 150,
+      "area": {
+       "shape": "sphere",
+       "radius": 20
+      }
+     },
+     "root": [
+      {
+       "kind": "zone",
+       "on": [
+        "enter"
+       ],
+       "affects": "all",
+       "oncePerTurn": false,
+       "do": [
+        {
+         "kind": "damage",
+         "dice": "2d4",
+         "type": "穿刺"
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "区域是困难地形；生物在区域内每移动 5 尺就要受到 2d4 穿刺伤害（引擎只在进入时结算一次，同一回合内的后续移动需人工补算）；棘刺经过伪装，需搜索动作通过感知（察觉或求生）检定对抗法术 DC 才能提前发现"
+      }
+     ]
+    },
+    {
+     "id": "use",
+     "name": "荆棘丛生：移动伤害",
+     "activation": "none",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 150
+     },
+     "root": [
+      {
+       "kind": "damage",
+       "dice": "2d4",
+       "type": "穿刺"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  }
+ }
+}

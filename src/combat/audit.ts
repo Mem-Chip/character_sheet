@@ -29,7 +29,7 @@ export const EMITTED_EVENTS = new Set([
 ]);
 
 const NODE_KINDS = new Set([
-  'attack', 'save', 'check', 'damage', 'addDamage', 'heal', 'tempHp', 'applyEffect', 'removeEffect', 'extendEffect',
+  'attack', 'save', 'check', 'damage', 'addDamage', 'heal', 'tempHp', 'applyEffect', 'removeEffect', 'extendEffect', 'endConcentration',
   'resource', 'economy', 'choose', 'if', 'forEach', 'repeat', 'move', 'note', 'number', 'modify', 'zone', 'summon',
 ]);
 const ROLL_OPS = new Set(['adv', 'disadv', 'noAdv', 'add', 'addDice', 'autoFail', 'autoSucceed', 'critRange', 'autoCritOnHit', 'minD20', 'minDie', 'targetAdd', 'maxDice']);
@@ -65,6 +65,16 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
     if (!ref) return;
     if (!book.resolveTemplate(ref, key)) out.push(`${where(at)}：效应模板「${ref}」不存在`);
   };
+  /** 攻击行的开关位是布尔：写数字会被静默当成真（`reach` 尤其危险 —— 真 = 10 尺触及） */
+  const flagsOf = (a: unknown, at: string) => {
+    if (!a || typeof a !== 'object') return;
+    for (const k of ['melee', 'ranged', 'reach', 'finesse']) {
+      const v = (a as Record<string, unknown>)[k];
+      if (v !== undefined && typeof v !== 'boolean') {
+        out.push(`${where(`${at}.${k}`)}：要写 true / false（${k === 'reach' ? '真 = 10 尺触及，不是几尺的意思' : '写数字会被当成真'}）`);
+      }
+    }
+  };
 
   const nodes = (list: Node[] | undefined, at: string) => {
     (list ?? []).forEach((n, i) => node(n, `${at}[${i}]`));
@@ -75,6 +85,7 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
       case 'attack':
         expr(n.bonus, 'node', NUM, `${at}.bonus`);
         expr(n.critRange, 'node', NUM, `${at}.critRange`);
+        flagsOf(n.attack, `${at}.attack`);
         nodes(n.onHit, `${at}.onHit`);
         nodes(n.onMiss, `${at}.onMiss`);
         break;
@@ -163,6 +174,7 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
         (n.attacks ?? []).forEach((a, i) => {
           expr(a.bonus, 'node', NUM, `${at}.attacks[${i}].bonus`);
           expr(a.damage, 'node', DICE, `${at}.attacks[${i}].damage`);
+          flagsOf(a, `${at}.attacks[${i}]`);
           (a.extra ?? []).forEach((x, j) => expr(x.dice, 'node', DICE, `${at}.attacks[${i}].extra[${j}].dice`));
         });
         (n.actions ?? []).forEach((a) => action(a, `${at}.actions[${a.id}]`));
@@ -189,6 +201,10 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
     for (const ev of [t.on].flat()) if (!WINDOW_EVENTS.has(ev)) out.push(`${where(at)}：触发器挂在「${ev}」上，但引擎不会为它打开窗口`);
     if (t.deferTo && !WINDOW_EVENTS.has(t.deferTo)) out.push(`${where(at)}：deferTo「${t.deferTo}」不是窗口事件`);
     expr(t.when, 'trigger', BOOL, `${at}.when`);
+    // `attack != null` 是个坑：没有攻击上下文（DM 手动扣血、法术豁免伤害）时读 attack 会抛错，整笔伤害被打回来
+    if (typeof t.when === 'string' && /attack\s*[!=]=\s*null/.test(t.when)) {
+      out.push(`${where(at)}：别用 \`attack != null\` 判断「是不是攻击」——没有攻击上下文时会抛错；改用 ask('这次伤害来自一次攻击吗？')`);
+    }
     nodes(t.do, `${at}.do`);
     for (const m of t.modify ?? []) {
       if (!MODIFY_OPS.has(m.op)) out.push(`${where(at)}：未知修改「${m.op}」`);

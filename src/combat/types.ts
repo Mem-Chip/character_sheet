@@ -267,6 +267,8 @@ export type Node =
     }
   | { kind: 'removeEffect'; match: { key?: string; name?: string; tag?: string }; from?: NodeTarget }
   | { kind: 'extendEffect'; template: string }
+  /** 结束施法者自己的专注（「目标挣脱 → 法术结束」这类；一个目标摆脱就结束的写法，不要靠移除效应自动触发） */
+  | { kind: 'endConcentration' }
   | { kind: 'resource'; id: string; delta: ExprSrc }
   | { kind: 'economy'; action?: number; bonus?: number; reaction?: number; attacks?: number; move?: ExprSrc }
   /** var：把选中项的 value（没写就是 label）放进 `vars.<var>`，后面的节点可以用（伤害类型 `type: 'vars.elem'`） */
@@ -288,7 +290,8 @@ export type Node =
     }
   /**
    * 召唤一个参战生物（召唤术、原初伴侣、魔宠）：与召唤者同控制者、同阵营，先攻紧贴在召唤者后面；
-   * link != false 时随本次动作的专注 / 效应结束而消失。
+   * link != false 时随本次动作的专注 / 效应结束而消失；
+   * link == false（独立存续）时按 `group` 顶替：同组的新召唤会顶掉旧的，缺省是本次动作（同一道法术再施展一次 = 换一只）。
    */
   | {
       kind: 'summon'; name: string; size?: string; type?: string; creatureType?: string;
@@ -298,14 +301,14 @@ export type Node =
       attacksPerAction?: ExprSrc; attacks?: SummonAttackSpec[];
       actions?: Action[]; triggers?: Trigger[]; rollMods?: RollMod[];
       notes?: Array<{ group: string; name: string; text: string } | string>;
-      count?: ExprSrc; link?: boolean;
+      count?: ExprSrc; link?: boolean; group?: string;
     }
   | { kind: 'note'; text: string }
   /** 在窗口里改正在结算的东西（反应动作的 root、触发器的 do 里用）：值在当前作用域里求（能用 slot.level），带骰子的当场掷 */
   | { kind: 'modify'; modify: Modify[] };
 
-/** attacker = 窗口的发起者（攻击者、伤害来源） */
-export type NodeTarget = 'target' | 'self' | 'attacker';
+/** attacker = 窗口的发起者（攻击者、伤害来源）；each = 这次动作选中的每一个目标（多目标治疗 / 临时生命值） */
+export type NodeTarget = 'target' | 'self' | 'attacker' | 'each';
 
 export type ZoneWhen = 'enter' | 'turnStart' | 'turnEnd';
 
@@ -348,6 +351,11 @@ export interface Entry {
   rollMods?: RollMod[];
   auras?: Aura[];
   effects?: Record<string, EffectTemplate>;
+  /**
+   * 条目自己声明的次数池（和人物卡那边的写法一样）：带上这条能力的人进战斗时并进他的资源池，
+   * `cost: [{ resource: '<id>' }]` 才能花。上限 `formula` 用战斗里的作用域求值（`pb`、`level` 之类）。
+   */
+  resources?: Array<{ id: string; name?: string; formula: ExprSrc; recovery: 'short' | 'long' }>;
   automation?: 'full' | 'partial' | 'manual';
   tags?: string[];
 }
@@ -451,6 +459,12 @@ export interface Combatant {
   summoner?: Id;
   /** 链接的效应（专注法术之类）：该效应结束时本召唤物随之消失 */
   linkEffect?: EffectId;
+  /**
+   * 独立存续（link: false）的召唤物属于哪一组：**同组的新召唤会顶掉旧的**，不同组各留各的。
+   * 缺省是召唤它的那个动作（`条目键#动作名`），所以「同一道法术再施展一次 = 换一只」；
+   * 同一效果拆成两个条目时（寻获坐骑 / 信实坐骑）在数据里写相同的 `group`。
+   */
+  summonGroup?: string;
 }
 
 export interface ActiveEffect {
