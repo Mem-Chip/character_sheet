@@ -356,6 +356,16 @@ function Spells({ engine, id, char, sheet }: Props) {
       {/* 法师专属：常驻「法术书」列表 */}
       {isWizard && (
         <div style={{ marginTop: 12, padding: '10px 10px 8px', background: 'var(--panel-2)', borderRadius: 'var(--r)', border: '1px solid var(--line)' }}>
+          {/* 名额与抄写追踪：升级免费名额 = 6 + 2×(等级-1)；抄写不限名额，但要花时间和钱 */}
+          {sc.spellbookMax ? (
+            <div className="small muted" style={{ marginBottom: 6 }}>
+              法术书 {curBook.spells.length} / {sc.spellbookMax} 道（升级时免费学的名额）
+              {sc.spellbookMax - curBook.spells.length > 0
+                ? <span style={{ color: 'var(--warn, #c60)' }}> · 还有 {sc.spellbookMax - curBook.spells.length} 道没填</span>
+                : <span> · 免费名额已满，再往书里加法术就是抄写</span>}
+              {' · '}抄写：每环 2 小时 + 50 gp（不限名额）
+            </div>
+          ) : null}
           {/* 法术书切换与管理条 */}
           <div className="row spread" style={{ alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
             <div className="row" style={{ alignItems: 'center', gap: 6 }}>

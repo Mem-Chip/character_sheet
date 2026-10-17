@@ -262,7 +262,8 @@ function registerDefaultKinds(book: AbilityBook): void {
   reg('darkvision', (ctx, m) => { ctx.addEffect({ kind: 'darkvision', value: m.value ?? 60, source: m.note }); });
   reg('saveProf', (ctx, m) => { for (const a of m.values || []) ctx.addEffect({ kind: 'saveProf', ability: a, source: m.note }); });
   reg('skillBonus', (ctx, m) => { ctx.addEffect({ kind: 'skillBonus', skill: m.skill, value: m.bonus, source: m.note }); });
-  reg('note', () => {});
+  // 只作展示的备注：数据里写了一堆 `{ kind: 'note', note: '…' }`，以前这里是空实现，卡上一句都看不到
+  reg('note', (ctx, m, _a, s) => { if (m.note) ctx.addEffect({ kind: 'note', text: String(m.note), source: s?.displayName || s?.name || '备注' }); });
   reg('armorProf', (ctx, m) => { for (const a of m.values || []) ctx.addEffect({ kind: 'armorProf', value: a, source: m.note }); });
   reg('weaponProf', (ctx, m) => { for (const w of m.values || []) ctx.addEffect({ kind: 'weaponProf', value: w, source: m.note }); });
   reg('sense', (ctx, m) => { ctx.addEffect({ kind: 'sense', sense: m.sense, value: m.value ?? 0, source: m.note }); });

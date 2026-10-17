@@ -156,7 +156,7 @@ export function pruneCharByLevel(env: SheetEnv, char: CharData): void {
 /** 名称 → 实体。子职不足 3 级会被摘掉（记进 subclassArchive，升回 3 级自动恢复） */
 export async function resolveCharacter(env: SheetEnv, char: CharData): Promise<Json> {
   const d = env.store.data;
-  const res: Json = { classes: [], feats: [], race: null, background: null, warnings: [] };
+  const res: Json = { classes: [], feats: [], race: null, background: null, warnings: [], subclassSpells: [] };
   if (!d.races) return res;
   res._authored = { languages: {}, tools: {}, skills: {} };
   res.racesLoaded = true;
@@ -245,6 +245,24 @@ export async function resolveCharacter(env: SheetEnv, char: CharData): Promise<J
       }
       if (!picked && sameName.length) res.warnings.push(`子职「${spec.subclass}」在 2024 数据里找不到（也没有 2014→2024 的重定向信息）`);
       subclass = picked || null;
+      // 子职给的法术（誓约法术 / 宗主法术 / 领域法术…）：2024 数据写在 additionalSpells 的 prepared 里，
+      // 键是「从几级起」。这些法术**始终准备**，不占准备上限、也不进法术书。
+      if (subclass) {
+        for (const grp of (subclass.additionalSpells || []) as Json[]) {
+          const label = String(grp?.name || '子职法术');
+          for (const [from, list] of Object.entries({ ...(grp?.prepared || {}), ...(grp?.known || {}) })) {
+            const at = Number(from);
+            if (!Number.isFinite(at) || at > lvl) continue;
+            for (const raw of (Array.isArray(list) ? list : [list])) {
+              const nm = String(raw).split('|')[0].split('#')[0];
+              if (nm) res.subclassSpells.push({ name: nm, from: `${spec.subclass}：${label}`, level: at });
+            }
+          }
+          if (grp?.expanded && !grp?.prepared) {
+            res.warnings.push(`子职「${spec.subclass}」的法术列表是 2014 的 expanded 写法，暂不自动加进「始终准备」`);
+          }
+        }
+      }
       const subSrc = subclass?.source;
       subFeatures = (cdata.subclassFeature || []).filter((f: Json) => f.className === cls.name
         && f.subclassShortName === (subclass?.shortName || spec.subclass)

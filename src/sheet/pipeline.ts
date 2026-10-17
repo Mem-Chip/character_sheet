@@ -462,6 +462,13 @@ export function createRules(): Pipeline {
     for (const e of ctx.pluck('tool')) tools.add(e.value);
     for (const t of res.toolsFixed || []) tools.add(t);
     for (const g of res.languagesGranted || []) langs.add(g.name);
+    // 背景 / 种族给的是「选一种赌具 / 选一门语言」这种选择：玩家选完存在 decisions 里
+    // （键是 `tool:<key>` / `lang:<key>`），得真的并进熟练项 —— 不然卡上「工具」永远是空的
+    for (const [k, v] of Object.entries(c.decisions ?? {})) {
+      const pick = k.startsWith('tool:') ? tools : k.startsWith('lang:') ? langs : null;
+      if (!pick) continue;
+      for (const x of Array.isArray(v) ? v : [v]) if (typeof x === 'string' && x) pick.add(x);
+    }
     ctx.set('languages', [...langs], 'computed');
     ctx.set('tools', [...tools], 'computed');
     ctx.set('toolsFixed', res.toolsFixed || [], 'computed');
@@ -604,7 +611,9 @@ export function createRules(): Pipeline {
     const wizK = (res.classes || []).find((k: Json) => k.cls.name === '法师');
     sc.spellbookMax = wizK ? 6 + (wizK.level - 1) * 2 : null;
     sc.casterLevels = casterLevels;
-    sc.granted = (ctx.out.grantedSpells || []).filter((g: Json) => g && g.name);
+    // 「始终准备」的法术 = 能力授予的（专长 / 种族）+ 子职给的（誓约法术、宗主法术…）
+    const grantedAll: Json[] = [...(ctx.out.grantedSpells || []), ...(res.subclassSpells || [])].filter((g: Json) => g && g.name);
+    sc.granted = [...new Map(grantedAll.map((g) => [String(g.name), g])).values()];
     ctx.set('spell', sc, 'computed');
   }, { name: 'core:spellcasting' });
 
@@ -623,8 +632,14 @@ export function createRules(): Pipeline {
       for (const f of k.subFeatures || []) if (active(f)) list.push({ ...f, _cls: k.cls.name, _sub: true });
     }
     for (const f of res.race?.entries || []) list.push({ name: f.name || '种族特质', level: 0, entries: f.entries ? [f] : [f], _origin: 'race' });
+    // 能力数据里的「备注」（`kind: 'note'`）：只作展示的一段文字，排在特性列表最后（不跟职业特性抢位置）
+    const notes: Json[] = [];
+    for (const e of ctx.pluck('note')) {
+      const text = String(e.text ?? '').trim();
+      if (text) notes.push({ name: String(e.source || '备注'), level: 0, entries: [text], _note: true });
+    }
     list.sort((a, b) => (a.level || 0) - (b.level || 0) || String(a._cls || '').localeCompare(String(b._cls || '')));
-    ctx.set('features', list, 'computed');
+    ctx.set('features', [...list, ...notes], 'computed');
     ctx.set('origins', buildOrigins(ctx.char, res), 'computed');
   }, { name: 'core:features' });
 
