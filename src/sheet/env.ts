@@ -16,6 +16,10 @@ import { DataStore, type DataProvider, type Json } from './store';
 export interface CampaignData {
   sources: string[];
   homerules: HomeRuleEntry[];
+  /** 这个战役里挂着的资料库条目覆盖到的**单个条目键**（只放行这些条目，不放行整本书） */
+  covered?: string[];
+  /** 条目键 → 覆盖后的显示名（选择面板显示它，值仍是原名） */
+  names?: Record<string, string>;
 }
 
 export interface SheetEnvOptions {
@@ -60,8 +64,12 @@ export class SheetEnv {
    * 不在战役里 / 没挂 = 只有 2024 核心书 + 我自己资料库带的书。
    */
   campaignOf: (char: CharData) => CampaignData | null = () => null;
-  /** 我自己资料库里的条目带的来源书（不在战役里也要能选到那本书的内容）；界面挂进来 */
+  /** 我自己资料库里的条目带的来源书（只用来**装数据文件**，不算「启用的书」）；界面挂进来 */
   userSources: () => string[] = () => [];
+  /** 我自己资料库覆盖到的单个条目键（不在战役里也能选这些条目，但不解锁整本书）；界面挂进来 */
+  userCovered: () => string[] = () => [];
+  /** 我自己资料库覆盖后的显示名（条目键 → 名字）；界面挂进来 */
+  userNames: () => Record<string, string> = () => ({});
   private campRules: HomeRuleEntry[] = [];
   /** 计算前改角色的钩子（原项目 Plugins.applyCharHooks） */
   readonly charHooks: Array<(char: CharData) => void> = [];
@@ -99,15 +107,23 @@ export class SheetEnv {
     return bad;
   }
 
-  /** 切到某个战役的资料：启用的书（法术文件按需装）+ 本团家规。算卡、列选项之前调用 */
+  /** 切到某个战役的资料：启用的书（法术文件按需装）+ 本团家规 + 资料库单独放行的条目。算卡、列选项之前调用 */
   async useCampaign(c: CampaignData | null): Promise<void> {
-    // 启用的书 = 这个战役启用的 ∪ 我自己资料库条目带的（后者让不在战役里的卡也能选到扩展书内容）
-    const want = [...new Set([...(c?.sources ?? []), ...this.userSources()].map((s) => String(s).toUpperCase()))];
+    // 「启用的书」只有这个战役勾的那些 —— 资料库里挂的条目**不能**把整本书放出来
+    // （以前把条目带的书塞进 extra，导入一条 EFA 的种族就把整本 EFA 都放开了）
+    const camp = [...new Set((c?.sources ?? []).map((s) => String(s).toUpperCase()))];
     Source.extra.clear();
-    for (const s of want) Source.extra.add(s);
+    for (const s of camp) Source.extra.add(s);
+    // 资料库覆盖到的单个条目：能选，但不解锁同书的其它内容
+    Source.covered.clear();
+    for (const k of [...(c?.covered ?? []), ...this.userCovered()]) if (k) Source.covered.add(String(k));
+    Source.names.clear();
+    for (const [k, v] of Object.entries({ ...this.userNames(), ...(c?.names ?? {}) })) if (k && v) Source.names.set(String(k), String(v));
     this.campRules = c?.homerules ?? [];
-    if (want.length) {
-      const bad = await this.store.loadBookSpells(want);
+    // 数据文件还是要装：战役启用的书 + 我库里条目所在的书（只装数据，不放行）
+    const books = [...new Set([...camp, ...this.userSources().map((s) => String(s).toUpperCase())])];
+    if (books.length) {
+      const bad = await this.store.loadBookSpells(books);
       if (bad.length) this.log('没能装载这些书的法术：' + bad.join('、'), 1);
     }
   }

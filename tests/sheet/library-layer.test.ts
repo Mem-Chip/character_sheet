@@ -52,7 +52,7 @@ describe.skipIf(!hasLocalData())('我的资料库接进卡面', () => {
     expect(list[0].name).toBe('卡上的版本');
   });
 
-  it('我库里的内容带的来源书放行：不在战役里也能选到那本书的法术', async () => {
+  it('我库里覆盖的那一条法术能用（但不会因此放开整本书）', async () => {
     const xge: Json[] = ((await env.store.provider.load('/data/spells/spells-xge.json')) as Json).spell;
     const only = xge.filter((s) => !(s.reprintedAs || []).length).map((s) => s.name);
     const names = () => new Set(classSpells(env, '法师').map((s) => s.name));
@@ -60,8 +60,11 @@ describe.skipIf(!hasLocalData())('我的资料库接进卡面', () => {
     await env.useCampaign(null);
     expect(only.some((n) => names().has(n))).toBe(false);
 
+    // 只放行我库里那一条（法术文件名仍然要装，但书不算「启用」）
     env.userSources = () => ['XGE'];
+    env.userCovered = () => [`XGE:spell:${only[0]}`];
     await env.useCampaign(null);
-    expect(only.some((n) => names().has(n))).toBe(true);
+    expect(names(), '覆盖的那一条能选').toContain(only[0]);
+    expect(only.filter((n) => names().has(n)).length, '同书的其它法术不该跟着放出来').toBe(1);
   });
 });

@@ -44,7 +44,7 @@ export function SheetPage({ engine }: { engine: Engine }) {
   return (
     <div className="page sheet-page">
       <SheetHero
-        id={id} char={char} sheet={sheet}
+        engine={engine} id={id} char={char} sheet={sheet}
         tags={<>
           <Tag>{sheet.level || 0} 级</Tag>
           {pending > 0 && (

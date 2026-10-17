@@ -15,6 +15,35 @@ export const Source = {
    * 算一张卡之前按它所在的战役设置（SheetEnv.useCampaign）；不在战役里 = 空。
    */
   extra: new Set<string>(),
+  /**
+   * 资料库覆盖到的**单个条目**的键（`<来源>:<名字>`、`<来源>:spell:<名字>` 等）。
+   * 这些条目即使所在的书没启用也能选，但**不会**因此把整本书放出来
+   * （以前的写法是把条目带的书塞进 extra，结果导入一条 EFA 的种族就把战俑、龙纹家族全带出来了）。
+   */
+  covered: new Set<string>(),
+  /** 覆盖后的显示名（条目键 → 名字）：选择面板显示它，但**值仍然是原始名字**，键不变、规则照旧对得上 */
+  names: new Map<string, string>(),
+  /** 这个条目可能对应的几种键（种族 / 专长是 `来源:名字`，法术物品多一段） */
+  keysOf(ent: Ent | null | undefined): string[] {
+    if (!ent) return [];
+    const s = String(ent.source || '').toUpperCase();
+    const n = String(ent.name || '');
+    if (!s || !n) return [];
+    return [`${s}:${n}`, `${s}:spell:${n}`, `${s}:item:${n}`, `${s}:怪物:${n}`];
+  },
+  /** 这个条目是不是资料库覆盖过的 */
+  isCovered(ent: Ent | null | undefined): boolean {
+    return this.keysOf(ent).some((k) => this.covered.has(k));
+  },
+  /** 显示名：资料库覆盖过就用覆盖后的名字，否则用原名 */
+  labelOf(ent: Ent | null | undefined): string {
+    if (!ent) return '';
+    for (const k of this.keysOf(ent)) {
+      const n = this.names.get(k);
+      if (n) return n;
+    }
+    return String(ent.name || '');
+  },
   /** 来源是不是战役启用的书 */
   isExtra(ent: Ent | null | undefined): boolean {
     return !!ent && this.extra.size > 0 && this.extra.has(String(ent.source || '').toUpperCase()) && !this.isReprinted(ent);
@@ -24,19 +53,19 @@ export const Source = {
   isReprinted(ent: Ent | null | undefined): boolean {
     return !!(ent && Array.isArray(ent.reprintedAs) && ent.reprintedAs.length);
   },
-  /** 2024 规则内容：来源白名单 ∧ 没有重印标记（EFA = 2024 奇械师） */
+  /** 2024 规则内容：来源白名单 ∧ 没有重印标记（EFA = 2024 奇械师）；资料库单独放行的条目也算 */
   is2024(ent: Ent | null | undefined): boolean {
     if (!ent) return false;
     if (this.isReprinted(ent)) return false;
     const s = String(ent.source || '').toUpperCase();
     if (this.OFFICIAL_2024.has(s)) return true;
-    return s === 'EFA' || this.isExtra(ent);
+    return s === 'EFA' || this.isExtra(ent) || this.isCovered(ent);
   },
-  /** 只认 2024 三本核心书（大小写不敏感：背景数据里的来源是小写） */
+  /** 只认 2024 三本核心书（大小写不敏感：背景数据里的来源是小写）；资料库单独放行的条目也算 */
   isCore2024(ent: Ent | null | undefined): boolean {
     if (!ent) return false;
     if (this.isReprinted(ent)) return false;
-    return this.OFFICIAL_2024.has(String(ent.source || '').toUpperCase()) || this.isExtra(ent);
+    return this.OFFICIAL_2024.has(String(ent.source || '').toUpperCase()) || this.isExtra(ent) || this.isCovered(ent);
   },
   isClass2024(c: Ent | null | undefined): boolean { return this.is2024(c); },
   /** 子职是不是按 2024 规则写的那一版：看条目自带的 edition === 'one'，再对齐 classSource */

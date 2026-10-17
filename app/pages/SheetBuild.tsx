@@ -1,7 +1,7 @@
 /** 人物卡「建卡」：改角色的建卡决定（种族、背景、职业、属性、专长、装备…） */
 import { useMemo, useState } from 'react';
 import {
-  ABILS, ABIL_CN, CLASS_SLUG_BY_NAME, SKILLS, STANDARD_ARRAY, backgroundBonusFrom, backgroundOriginFeat, featNames,
+  ABILS, ABIL_CN, CLASS_SLUG_BY_NAME, SKILLS, STANDARD_ARRAY, Source, backgroundBonusFrom, backgroundOriginFeat, featNames,
   pointBuyCost, pruneCharByLevel, subclassCandidates, subclassLabel, type CharData, type Json,
 } from '../../src/sheet';
 import { Field, NumInput, Panel, Tag, sgn } from '../components/ui';
@@ -50,7 +50,7 @@ function Basics({ engine, id, char }: Props) {
           <Field label={<>种族{char.race ? <> · <Term kind="race" name={char.race}>词条</Term></> : null}</>}>
             <select value={char.race || ''} onChange={(e) => upd(id, (c) => { c.race = e.target.value; c.size = 'M'; })}>
               <option value="">—</option>
-              {env.store.races2024.map((r) => <option key={r.name} value={r.name}>{r.name}</option>)}
+              {env.store.races2024.map((r) => <option key={r.name} value={r.name}>{Source.labelOf(r)}</option>)}
             </select>
           </Field>
           {sizes.length > 1 && (
@@ -63,7 +63,7 @@ function Basics({ engine, id, char }: Props) {
           <Field label={<>背景{char.background ? <> · <Term kind="background" name={char.background}>词条</Term></> : null}</>}>
             <select value={char.background || ''} onChange={(e) => upd(id, (c) => { c.background = e.target.value; c.backgroundBonus = null; })}>
               <option value="">—</option>
-              {env.store.backgrounds2024.map((b) => <option key={b.name} value={b.name}>{b.name}</option>)}
+              {env.store.backgrounds2024.map((b) => <option key={b.name} value={b.name}>{Source.labelOf(b)}</option>)}
             </select>
           </Field>
         </div>

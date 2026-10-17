@@ -10,7 +10,7 @@
 import { useSyncExternalStore } from 'react';
 import { RULE_FILES } from '../../src/bridge/rule-files';
 import { RuleBook, encounterLayers } from '../../src/combat';
-import { homeRulesFor, houseRulesFor, ruleKeyOf, sourcesOfItem, type LibraryItem, type ResPart, type ShareState, type ShareView } from '../../src/library';
+import { coveredKeysOf, homeRulesFor, houseRulesFor, namesOf, ruleKeyOf, sourcesOfItem, type LibraryItem, type ResPart, type ShareState, type ShareView } from '../../src/library';
 import type { CampaignData, CharData, HomeRuleEntry } from '../../src/sheet';
 import { api } from './api';
 import type { Engine } from './engine';
@@ -161,7 +161,14 @@ export function campaignsOf(itemId: string, cids: string[]): string[] {
 
 export function campaignData(h: Hub | null): CampaignData | null {
   if (!h) return null;
-  return { sources: h.sources, homerules: homeRulesFor(effectiveItems(h)) };
+  const items = effectiveItems(h);
+  return {
+    sources: h.sources,
+    homerules: homeRulesFor(items),
+    // 挂着的条目**只放行自己**（不放行整本书）：导入一条 EFA 的种族不该把整本 EFA 都带出来
+    covered: [...new Set(items.flatMap(coveredKeysOf))],
+    names: namesOf(items),
+  };
 }
 
 /* ───────────── 接到规则环境上 ───────────── */
@@ -171,8 +178,11 @@ export function installLibrary(engine: Engine): void {
   engine.env.campaignOf = (char: CharData) => campaignData(hubNow((char as { _campaign?: string })._campaign));
   // 卡面第 3 层：我的资料库（不在战役里也生效）
   engine.env.homelib.user = () => homeRulesFor(libraryNow());
-  // 我库里带的来源书也放行，否则不在战役里时选不中（比如从 XGE 搜来的法术）
+  // 我库里带的来源书只用来**装数据文件**，不算「启用的书」（否则导入一条就放开整本书）
   engine.env.userSources = () => [...new Set(libraryNow().flatMap(sourcesOfItem))];
+  // 我库里的条目只放行它们自己（不在战役里也能选中）
+  engine.env.userCovered = () => [...new Set(libraryNow().flatMap(coveredKeysOf))];
+  engine.env.userNames = () => namesOf(libraryNow());
 }
 
 /**

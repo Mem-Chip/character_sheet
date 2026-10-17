@@ -125,8 +125,11 @@ export interface LibraryItem {
 - `SheetEnv.homelib` 加 `user?: (char) => HomeRuleEntry[]`（[src/sheet/env.ts](src/sheet/env.ts):28）。
 - **本团** = 这个战役挂着的、并且 DM 开着（`on` / `auto`）的条目。
 - **我的库** = 我自己的全部条目（不管挂没挂）。**DM 的开关管的是「对别人生效」，管不到你自己的卡**——这样你看到的卡和服务器跑的战斗不会打架（见 3.2）。
-- 书白名单 `Source.extra` 是全局可变的一个 Set（[src/sheet/env.ts](src/sheet/env.ts):88），现在被战役独占；
-  改成**战役启用的书 ∪ 我的库条目带的来源书**，否则卡不在战役里时，从 XGE 搜来的内容选不中。
+- 书白名单 `Source.extra` 是全局可变的一个 Set（[src/sheet/env.ts](src/sheet/env.ts)），现在**只由战役启用的书**填。
+  ~~以前是「战役启用的书 ∪ 我的库条目带的来源书」，那样导入一条 EFA 的种族就把战俑、龙纹家族全带出来了（2026-10 修掉）。~~
+  现在分两格：`Source.extra` = 启用的书；**`Source.covered` = 资料库覆盖到的单个条目键**（`EFA:科拉瓦` 这种），
+  只放行那一条，不放行整本书；`Source.names` 是覆盖后的显示名（选择面板显示它，**值仍然是原始名字** —— 键不变，规则照旧对得上）。
+  条目所在的书仍然会去**装数据文件**（`userSources` → `loadBookSpells`），但只装不放行。
 
 ### 3.2 战斗（动态层）
 

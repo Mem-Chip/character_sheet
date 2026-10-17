@@ -49,6 +49,8 @@ export function spellSourcesReady(env: SheetEnv): boolean { return !!env.store.d
 
 /** 法术是否在某职业的法术列表里（spells/sources.json 是权威，条目自带的 class 兜底） */
 export function spellInClassList(env: SheetEnv, spell: Json, className: string): boolean {
+  // 资料库单独覆盖过这一条：就让它能选（书没启用也算 —— 是玩家自己导进来的）
+  if (Source.isCovered(spell)) return true;
   const d = env.store.data;
   const has = (list: Json[] | undefined) => (list || []).some((c) => (typeof c === 'string' ? c : c?.name) === className);
   if (has(d.spellsSources?.XPHB?.[spell.name]?.class)) return true;

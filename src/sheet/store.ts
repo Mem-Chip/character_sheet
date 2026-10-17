@@ -101,10 +101,15 @@ export class DataStore {
     return bad;
   }
 
-  /** 能选的法术：2024 玩家手册 + 战役启用的书（被 2024 重印的不算） */
+  /** 能选的法术：2024 玩家手册 + 战役启用的书 + 资料库单独覆盖的那几条（被 2024 重印的不算） */
   get spellsAll(): Json[] {
     const out: Json[] = [...(this.data.spellsXphb?.spell || [])];
-    for (const [src, list] of this.bookSpells) if (Source.extra.has(src)) for (const s of list) if (!Source.isReprinted(s)) out.push(s);
+    for (const [src, list] of this.bookSpells) {
+      for (const s of list) {
+        if (Source.isReprinted(s)) continue;
+        if (Source.extra.has(src) || Source.isCovered(s)) out.push(s);
+      }
+    }
     return out;
   }
 
@@ -120,6 +125,19 @@ export class DataStore {
   get racesAll(): Json[] { return this.data.races?.race || []; }
   get backgroundsAll(): Json[] { return this.data.backgrounds?.background || []; }
   get featsAll(): Json[] { return this.data.feats?.feat || []; }
+  /**
+   * 按名字存的东西（种族 / 背景 / 专长）的显示名：资料库里覆盖过就显示覆盖后的名字。
+   * 值（char.race 等）仍然是原始名字 —— 键不变，规则和对数据的引用都照旧对得上。
+   */
+  labelOfName(name: string): string {
+    if (!name) return name;
+    const lists: Array<Json[] | undefined> = [this.data.races?.race, this.data.backgrounds?.background, this.data.feats?.feat];
+    for (const list of lists) {
+      const hit = (list || []).find((x: Json) => x.name === name);
+      if (hit) return Source.labelOf(hit);
+    }
+    return name;
+  }
   get weapons2024(): Json[] {
     return (this.data.itemsBase?.baseitem || []).filter((x: Json) => x.weapon && (Source.OFFICIAL_2024.has(x.source) || x.edition === 'one'));
   }

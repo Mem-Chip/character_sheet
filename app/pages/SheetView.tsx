@@ -80,7 +80,7 @@ function SavesSkills({ sheet }: Props) {
  * 人物卡顶上那一条：左边立绘、名字、种族职业、等级和待决定；右边一排关键数值（AC 突出，生命值带加减）。
  * 卡面、升级、建卡、数据四页共用。
  */
-export function SheetHero({ id, char, sheet, tags, tools }: Omit<Props, 'engine'> & { tags?: React.ReactNode; tools?: React.ReactNode }) {
+export function SheetHero({ engine, id, char, sheet, tags, tools }: Omit<Props, 'engine'> & { engine: Engine; tags?: React.ReactNode; tools?: React.ReactNode }) {
   const [amt, setAmt] = useState('');
   const max = sheet.hpMax ?? 0;
   const cur = char.hp?.current ?? max;
@@ -117,8 +117,8 @@ export function SheetHero({ id, char, sheet, tags, tools }: Omit<Props, 'engine'
           <h1>{char.name || '未命名'}</h1>
           <div className="sub">
             {[
-              char.race ? <Term key="race" kind="race" name={char.race}>{char.race}</Term> : null,
-              char.background ? <Term key="bg" kind="background" name={char.background}>{char.background}</Term> : null,
+              char.race ? <Term key="race" kind="race" name={char.race}>{engine.env.store.labelOfName(char.race)}</Term> : null,
+              char.background ? <Term key="bg" kind="background" name={char.background}>{engine.env.store.labelOfName(char.background)}</Term> : null,
               classes || null,
             ].filter(Boolean).map((node, idx) => <span key={idx}>{idx > 0 && ' · '}{node}</span>)}
             {!char.race && !char.background && !classes && '还没选种族、背景、职业'}

@@ -103,3 +103,34 @@ export function sourcesOfItem(item: LibraryItem): string[] {
   }
   return [...out];
 }
+
+/**
+ * 这条内容覆盖 / 提供的**单个条目键**（不含 `HR:` 家规键和 `core.` 参数）。
+ * 只放行这些条目，**不**放行它们所在的书 —— 否则导入一条 EFA 的种族会把战俑、龙纹家族一起放出来。
+ */
+export function coveredKeysOf(item: LibraryItem): string[] {
+  const out = new Set<string>();
+  for (const p of item.parts ?? []) {
+    const key = String(p.key ?? '');
+    if (!key || key.startsWith('HR:') || key.startsWith('core.')) continue;
+    out.add(key);
+  }
+  return [...out];
+}
+
+/**
+ * 覆盖后的显示名（条目键 → 名字）。条目的名字优先用 part 自己的名字，没写才用内容的名字 ——
+ * 一条内容可能带好几个 part（整个子职的特性），不能都叫同一个名字。
+ */
+export function namesOf(items: LibraryItem[]): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const item of items) {
+    for (const p of item.parts ?? []) {
+      const key = String(p.key ?? '');
+      if (!key || key.startsWith('HR:') || key.startsWith('core.')) continue;
+      const name = String(p.name ?? item.name ?? '').trim();
+      if (name) out[key] = name;
+    }
+  }
+  return out;
+}
