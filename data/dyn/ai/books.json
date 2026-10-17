@@ -2889,16 +2889,15 @@
   "AU:预言专家": {
    "name": "预言专家",
    "automation": "partial",
-   "text": "【额外法术】始终准备的法术表属于人物卡静态层（已经给好，这里不重复）。【先见干预】60 尺内你可见的生物（包括你自己）进行一次 D20 检定时，你可以用反应让那次掷骰获得优势或劣势（由你选择），长休前 1 次；用环阶施放一道预言学派法术可以重获次数。引擎没有「在掷骰窗口里补一个优势 / 劣势」的写法，这里用「再掷一颗 d20、优势取高 / 劣势取低」近似：原本没有优势也没有劣势时，它与优势完全同分布；原本已经有劣势再给优势时，算的是三颗取最高，和「优势与劣势抵消」那种算法略有出入，遇到这种情况请人看一眼。为了不每次掷骰都问人：优势只在你或盟友的检定将要失败时提供，劣势只在别人的检定将要成功时提供（带 DC 的检定只在将要失败时才提供、没有 DC 的检定（先攻、DM 裁定的检定）总是提供，其余时候改了也不会改变结果），两个选项一次只能选一个，次数用完之后选项自动消失。反应动作由引擎照常扣。【重获次数】引擎读不到法术的学派，只读得到这一下有没有花法术位，所以花法术位施法之后会问一句「是预言学派吗」，答是就把次数还回来。",
+   "text": "【额外法术】静态层已经在人物卡上准备好那几个法术，这里不写。【先见干预】当一名位于你 60 尺内、你能看见的生物进行 D20 检定时，你可以用一个反应让那次掷骰获得优势或劣势。已自动化：只在会改变结果时才问（自己或盟友将要失败 → 给优势；敌人正要成功 → 给劣势），答用就扣掉一个反应与这次使用次数，并当场多掷一颗 d20 取高 / 取低（这就是引擎实现优势 / 劣势的方式，和「幸运」一样）。要人留意的两处：一是目标原本就带着劣势时再给优势，引擎按「多掷一颗取高」近似，不是两者抵销；二是既不是盟友也不是敌人的第三方掷骰时引擎不会问；如果你要在别的组合上用（比如给敌人的成功掷骰再加优势、给没有 DC 的检定用），请自己在详情抽屉里改结果。【次数】完成一次长休前只能用一次（人物卡上的「先见干预」池）；当你消耗法术位施展一道预言学派法术时恢复 —— 引擎看到你花法术位施法会问一句「是不是预言学派」，答是就恢复。",
    "triggers": [
     {
-     "id": "glimpse-adv",
-     "label": "先见干预：令这次检定获得优势",
+     "id": "adv",
+     "label": "预言专家：先见干预（给这次掷骰优势）",
      "on": "d20Rolled",
      "role": "any",
      "window": "before",
      "optional": true,
-     "when": "(roll.vs == null || roll.failing) && !roll.adv && (combatant(roll.roller).id == self.id || combatant(roll.roller).isAllyOf(self)) && (combatant(roll.roller).id == self.id || (within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))))",
      "cost": [
       {
        "economy": "reaction"
@@ -2907,6 +2906,7 @@
        "resource": "glimpse-intervention"
       }
      ],
+     "when": "(roll.vs == null || roll.failing) && !roll.adv && (roll.roller == self.id || (self.isAllyOf(combatant(roll.roller)) && within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))))",
      "modify": [
       {
        "op": "reroll",
@@ -2916,13 +2916,12 @@
      ]
     },
     {
-     "id": "glimpse-disadv",
-     "label": "先见干预：令这次检定获得劣势",
+     "id": "disadv",
+     "label": "预言专家：先见干预（给这次掷骰劣势）",
      "on": "d20Rolled",
      "role": "any",
      "window": "before",
      "optional": true,
-     "when": "!roll.failing && !roll.disadv && combatant(roll.roller).id != self.id && !combatant(roll.roller).isAllyOf(self) && within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))",
      "cost": [
       {
        "economy": "reaction"
@@ -2931,6 +2930,7 @@
        "resource": "glimpse-intervention"
       }
      ],
+     "when": "(roll.vs == null || !roll.failing) && !roll.failing && !roll.disadv && self.isEnemyOf(combatant(roll.roller)) && within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))",
      "modify": [
       {
        "op": "reroll",
@@ -2941,22 +2941,17 @@
     },
     {
      "id": "regain-intervention",
-     "label": "先见干预：施展预言学派法术重获次数",
+     "label": "预言专家：消耗法术位施展预言法术，恢复先见干预",
      "on": "spellCast",
      "role": "actor",
      "window": "after",
-     "when": "event.slotLevel > 0 && ask('刚才这道法术是预言学派的吗？（用环阶法术位施放预言学派法术可以重获一次先见干预）')",
+     "optional": true,
+     "when": "event.slotLevel > 0 && self.resource('glimpse-intervention') < 1 && ask('刚才那道法术是预言学派的吗？（消耗了法术位，恢复先见干预）')",
      "do": [
       {
-       "kind": "if",
-       "when": "self.resource('glimpse-intervention') < 1",
-       "then": [
-        {
-         "kind": "resource",
-         "id": "glimpse-intervention",
-         "delta": 1
-        }
-       ]
+       "kind": "resource",
+       "id": "glimpse-intervention",
+       "delta": 1
       }
      ]
     }
@@ -6595,11 +6590,11 @@
   "FRHoF:贵族信念": {
    "name": "贵族信念",
    "automation": "partial",
-   "text": "以附赠动作选择至多三名 60 尺内能看见你的生物，结束其倒地状态并增强信念 1 分钟（免疫魅惑与恐慌，对抗附身、魅惑或恐慌的新豁免具有优势）。目标起立需消耗其反应；陷入失能状态时提前结束。",
+   "text": "【执旗者】以附赠动作使用一次（用掉执旗者的次数，之后到长休前都不能再用），选择至多三名 60 尺内能看见你的、速度不为 0 的生物。被选中的生物立刻结束倒地状态（引擎会把倒地从它们身上移除；「以自己的反应起立」这一步引擎不会替它们扣反应，请手动扣）。同时它们增强信念 1 分钟：无法获得魅惑与恐慌状态，且若已被附身、魅惑或恐慌，对抗这些效应的新豁免具有优势（引擎在目标处于魅惑 / 恐慌、或身上有名为「附身」的效应时提供优势，并问一句这次豁免是不是对抗这类效应）。你陷入失能时提前结束。附身不是引擎认识的状态，需要人手动记录与处理。",
    "actions": [
     {
      "id": "use",
-     "name": "执旗者",
+     "name": "贵族信念：执旗者",
      "activation": "bonus",
      "cost": [
       {
@@ -6609,7 +6604,8 @@
      "targeting": {
       "type": "creature",
       "count": 3,
-      "range": 60
+      "range": 60,
+      "filter": "target.id != self.id && canSee(target, self)"
      },
      "root": [
       {
@@ -6620,7 +6616,7 @@
          "kind": "removeEffect",
          "from": "target",
          "match": {
-          "name": "倒地"
+          "key": "XPHB:condition:倒地"
          }
         },
         {
@@ -6629,14 +6625,30 @@
          "template": "执旗者"
         }
        ]
+      },
+      {
+       "kind": "note",
+       "text": "贵族信念：被选中的生物以它们自己的反应起立 —— 反应请手动从它们身上扣掉。"
       }
-     ]
+     ],
+     "text": "选择至多三名 60 尺内能看见你的生物，各自用自己的反应起立并结束倒地，然后增强信念 1 分钟。"
     }
    ],
    "effects": {
     "执旗者": {
+     "text": "信念增强：无法被附身，也无法获得魅惑与恐慌状态；若已被附身、魅惑或恐慌，对抗这些效应的新豁免具有优势。持续 1 分钟或施加者陷入失能时提前结束。",
      "duration": {
-      "minutes": 1
+      "minutes": 1,
+      "endsOn": [
+       {
+        "event": "effectApplied",
+        "when": "source != null && event.bearer == source.id && source.has('失能')"
+       },
+       {
+        "event": "died",
+        "when": "source != null && source.dead"
+       }
+      ]
      },
      "statics": [
       {
@@ -6653,9 +6665,9 @@
         "kind": "save"
        },
        "who": "bearer",
-       "when": "ask('这次豁免是对抗附身、魅惑或恐慌效应吗？')",
+       "when": "(self.has('魅惑') || self.has('恐慌') || self.hasEffect('附身')) && ask('这次豁免是对抗附身、魅惑或恐慌的效应吗？')",
        "op": "adv",
-       "label": "执旗者：对抗附身/魅惑/恐慌"
+       "label": "执旗者：对抗附身 / 魅惑 / 恐慌的豁免"
       }
      ]
     }
@@ -14577,7 +14589,7 @@
   "TCE:圣武士:辉煌防御:15": {
    "name": "辉煌防御",
    "automation": "partial",
-   "text": "你或周围 10 尺内你可见的其他生物被攻击命中时，可用反应使其获得等同于你魅力调整值（至少 +1）的 AC 加值，可能使该次攻击失手。若因此失手且攻击者在你武器触及范围内，你可以对其进行一次武器攻击（属于该反应的一部分，需手动发起）。",
+   "text": "当你或你周围 10 尺内你可见的其他生物被一次攻击检定命中时，你可以用反应（消耗 1 次辉煌防御，次数等于魅力调整值、至少 1 次，长休恢复）使被击中的生物获得等同于你魅力调整值（至少 +1）的 AC 加值。加值由引擎加上并立刻按新 AC 重新判定这次攻击，因此该次攻击可能变成失手；这次攻击结算后加值消失。需要人处理的部分：若这次攻击因此失手、且攻击者在你的武器触及范围内，你可以对那个攻击者进行一次武器攻击（属于本反应的一部分）—— 引擎不会自动发起这次武器攻击，请在武器行手动攻击一次。",
    "actions": [
     {
      "id": "use",
@@ -14587,7 +14599,7 @@
       "on": "attackHit",
       "role": "any",
       "window": "before",
-      "when": "target.id == self.id || (target.isAllyOf(self) && within(self, target, 10) && canSee(self, target))"
+      "when": "attacker.id != self.id && (target.id == self.id || (target.isAllyOf(self) && within(self, target, 10) && canSee(self, target)))"
      },
      "cost": [
       {
@@ -14602,14 +14614,15 @@
       },
       {
        "kind": "note",
-       "text": "辉煌防御：若这次攻击因此失手，且攻击者在你的武器触及范围内，你可以用武器对其进行一次攻击（视为本反应的一部分，请手动发起）"
+       "text": "辉煌防御：若这次攻击因此失手，且攻击者在你的武器触及范围内，你可以对那个攻击者进行一次武器攻击（作为本反应的一部分）—— 引擎不会自动发起，请在武器行手动攻击。"
       }
-     ]
+     ],
+     "text": "你或 10 尺内你可见的生物被攻击命中时，给它加上等同于你魅力调整值（至少 +1）的 AC，可能让这次攻击失手。"
     }
    ],
    "effects": {
     "辉煌防御": {
-     "text": "对这次攻击获得 AC 加值：施放者的魅力调整值（至少 +1）。这次攻击结算后消失。",
+     "text": "对这次攻击获得 AC 加值：施加者的魅力调整值（至少 +1）。这次攻击结算后消失。",
      "statics": [
       {
        "kind": "ac",
@@ -14620,10 +14633,12 @@
       "rounds": 1,
       "endsOn": [
        {
-        "event": "attackMissed"
+        "event": "attackMissed",
+        "when": "event.target == self.id"
        },
        {
-        "event": "damageTaken"
+        "event": "damageTaken",
+        "when": "event.target == self.id"
        }
       ]
      }
@@ -17804,25 +17819,27 @@
   "TCE:云雾符文": {
    "name": "云雾符文",
    "automation": "partial",
-   "text": "铭刻此符文时，进行的敏捷（巧手）与魅力（欺瞒）检定具有优势。此外，当你或 30 尺内可见生物被攻击命中时，可以反应激活此符文，将该次攻击的目标转移给 30 尺内除攻击者外的另一生物（攻击转移判定需手动处理）。",
+   "text": "穿着或携带着铭刻此符文的物品时：敏捷（巧手）与魅力（欺瞒）检定具有优势（已自动化）。当你或你周围 30 尺内你可见的生物被一次攻击检定命中时，你可以用反应激活此符文，把这次攻击的目标改成另一个距你 30 尺内、除攻击者以外的生物，使用同样的检定值 —— 引擎会让你从场上除攻击者和原目标以外的生物里挑一个，并按新目标的 AC 用原来的攻击检定重新判定（挑的时候请自己守规矩：新目标必须在距你 30 尺内，引擎不检查这一条）。一旦激活，直到完成一次短休或长休都不能再次激活（次数由资源池管）。",
    "rollMods": [
     {
      "on": {
       "kind": "check",
+      "ability": "dex",
       "skill": "巧手"
      },
      "who": "bearer",
      "op": "adv",
-     "label": "云雾符文：巧手优势"
+     "label": "云雾符文：敏捷（巧手）检定具有优势"
     },
     {
      "on": {
       "kind": "check",
+      "ability": "cha",
       "skill": "欺瞒"
      },
      "who": "bearer",
      "op": "adv",
-     "label": "云雾符文：欺瞒优势"
+     "label": "云雾符文：魅力（欺瞒）检定具有优势"
     }
    ],
    "actions": [
@@ -17830,29 +17847,33 @@
      "id": "use",
      "name": "云雾符文：欺诈转移",
      "activation": "reaction",
+     "trigger": {
+      "on": "attackHit",
+      "role": "any",
+      "window": "before",
+      "when": "attacker.id != self.id && (target.id == self.id || (canSee(self, target) && within(self, target, 30)))"
+     },
      "cost": [
       {
        "resource": "云雾符文"
       }
      ],
-     "trigger": {
-      "on": "attackHit",
-      "role": "any",
-      "window": "before",
-      "when": "canSee(self, target) && (target.id == self.id || within(self, target, 30))"
-     },
-     "targeting": {
-      "type": "creature",
-      "count": 1,
-      "range": 30,
-      "filter": "target.id != self.id"
-     },
      "root": [
       {
+       "kind": "modify",
+       "modify": [
+        {
+         "op": "redirect",
+         "to": "choose"
+        }
+       ]
+      },
+      {
        "kind": "note",
-       "text": "选择距你 30 尺内除攻击者以外的另一生物，该次攻击的目标改为那个生物，使用同样的检定值"
+       "text": "云雾符文：把这次攻击改到另一个距你 30 尺内、除攻击者以外的生物身上，沿用原来的攻击检定（引擎不检查新目标是否在 30 尺内，请自己挑对）。"
       }
-     ]
+     ],
+     "text": "你或 30 尺内你可见的生物被攻击命中时，用反应把这次攻击转移给另一个距你 30 尺内、除攻击者以外的生物。"
     }
    ],
    "tags": [
@@ -23123,10 +23144,10 @@
   "XGE:野蛮人:精魂之盾:6": {
    "name": "精魂之盾",
    "automation": "partial",
-   "text": "狂暴期间，当你 30 尺内你能看到的其他生物受到伤害时，可以用反应为其降低伤害（6级 2d6，10级 3d6，14级 4d6）。14级起（仇魂先祖），若该伤害来自一次攻击，攻击者受到等同于精魂之盾降低伤害等量的力场伤害，需人手动扣除。",
+   "text": "狂暴期间，你周围 30 尺内你能看到的其他生物受到伤害时，可以用反应为其降低 2d6 点伤害（10 级起 3d6，14 级起 4d6）。【已自动化】反应时机、狂暴条件、30 尺与可见的判断、以及按职业等级自动选 2d6 / 3d6 / 4d6 的减伤。",
    "triggers": [
     {
-     "id": "spirit-shield",
+     "id": "spiritShield",
      "label": "精魂之盾：降低伤害",
      "on": "damageIncoming",
      "role": "any",
@@ -23144,18 +23165,7 @@
        "value": "cond(self.levelOf('野蛮人') >= 14, 4d6, cond(self.levelOf('野蛮人') >= 10, 3d6, 2d6))"
       }
      ],
-     "do": [
-      {
-       "kind": "if",
-       "when": "self.levelOf('野蛮人') >= 14 && attack != null && attacker != null",
-       "then": [
-        {
-         "kind": "note",
-         "text": "仇魂先祖（14级）：攻击者受到等同于精魂之盾降低伤害等量的力场伤害，请手动扣除攻击者生命值。"
-        }
-       ]
-      }
-     ]
+     "do": []
     }
    ],
    "tags": [
