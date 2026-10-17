@@ -15,4 +15,8 @@ export {
   classStartingEquipment, backgroundStartingEquipment, getStartingEquipmentOptions, applyStartingEquipment,
   type StartingEquipmentPackage, type StartingEquipmentResult, type StartingItemSpec,
 } from './starting-equipment';
+export {
+  getSpellbooks, syncSpellbooks, createSpellbook, renameSpellbook, deleteSpellbook,
+  addSpellToBook, removeSpellFromBook, togglePrepareFromBook, type SpellbookItem,
+} from './spellbook';
 export { CAT_KIND, KIND_CN, SUPPORTED, hitWhere, loadSearchHits, parseIndex, resetSearchCache, searchHits, type SearchHit, type SearchOptions } from './search';

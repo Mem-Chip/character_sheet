@@ -4,11 +4,20 @@ import { ABILS, ABIL_CN, SCHOOL_CN, classSpells, type CharData, type Json } from
 import { Choices } from '../components/Choices';
 import { Term } from '../components/Term';
 import { SpellBrowser } from '../components/SpellBrowser';
+import { SpellPicker } from '../components/SpellPicker';
 import { Entries } from '../components/Entries';
 import { Clip, Panel, Pips, Tag, sgn } from '../components/ui';
 import type { Engine } from '../lib/engine';
 import { actions, stripDerived } from '../lib/store';
 import { termOfResource } from '../lib/terms';
+import {
+  getSpellbooks,
+  createSpellbook,
+  renameSpellbook,
+  deleteSpellbook,
+  removeSpellFromBook,
+  togglePrepareFromBook,
+} from '../../src/sheet/spellbook';
 
 const ABBR: Record<string, string> = { str: '力', dex: '敏', con: '体', int: '智', wis: '感', cha: '魅' };
 const RECOVERY_CN: Record<string, string> = { short: '短休', long: '长休', initiative: '先攻', none: '特殊', '?': '按规则' };
@@ -161,24 +170,89 @@ function Attacks({ sheet }: Props) {
 
 function Spells({ engine, id, char, sheet }: Props) {
   const sc = sheet.spell || {};
-  const [browse, setBrowse] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  // 法术书相关状态
+  const books = getSpellbooks(char);
+  const [activeBookId, setActiveBookId] = useState<string>(char.activeSpellbookId || books[0]?.id || 'main');
+  const [showNewBook, setShowNewBook] = useState(false);
+  const [newBookName, setNewBookName] = useState('');
+  const [cloneFromId, setCloneFromId] = useState<string>('blank');
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameText, setRenameText] = useState('');
+
   if (!sc.casters?.length && !(char.spells || []).length && !sc.granted?.length) return null;
+
   const all: Json[] = engine.env.store.spellsAll;
   const ent = (n: string) => all.find((s) => s.name === n);
+
+  // 判断是否拥有法师职业
+  const isWizard =
+    (char.classes || []).some((c: any) => c.name === '法师' || c.name === 'Wizard') ||
+    (sc.casters || []).some((c: any) => (typeof c === 'string' ? c : c.name) === '法师' || (typeof c === 'string' ? c : c.name) === 'Wizard');
+
+  // 当前激活的法术书
+  const curBook = books.find((b) => b.id === activeBookId) ?? books[0] ?? { id: 'main', name: '主法术书', spells: [] };
+
   // 按环阶排（戏法在前），同环按名字
   const order = (char.spells || []).map((s: Json, i: number) => ({ s, i, lv: ent(s.name)?.level ?? 1 }))
     .sort((a: Json, b: Json) => a.lv - b.lv || String(a.s.name).localeCompare(String(b.s.name), 'zh'));
   const slotsUsed = (lvl: number) => char.slots?.[lvl]?.used ?? 0;
   const setSlot = (lvl: number, used: number) => actions.update(id, (c) => { c.slots = { ...(c.slots || {}), [lvl]: { used } }; });
   const prepared = (char.spells || []).filter((s: Json) => s.prepared !== false && (ent(s.name)?.level ?? 1) > 0).length;
+
+  // 当前法术书收录的法术（按环阶、名字排序）
+  const bookSpellsOrder = [...curBook.spells]
+    .map((name) => ({ name, e: ent(name), lv: ent(name)?.level ?? 1 }))
+    .sort((a, b) => a.lv - b.lv || String(a.name).localeCompare(String(b.name), 'zh'));
+
+  // 创建新法术书
+  const handleCreateBook = () => {
+    if (!newBookName.trim()) return;
+    actions.update(id, (c) => {
+      const created = createSpellbook(c, newBookName.trim(), cloneFromId === 'blank' ? undefined : cloneFromId);
+      setActiveBookId(created.id);
+    });
+    setNewBookName('');
+    setShowNewBook(false);
+  };
+
+  // 重命名法术书
+  const handleRenameBook = (bId: string) => {
+    if (!renameText.trim()) return;
+    actions.update(id, (c) => {
+      renameSpellbook(c, bId, renameText.trim());
+    });
+    setRenamingId(null);
+  };
+
+  // 删除法术书
+  const handleDeleteBook = (bId: string) => {
+    if (books.length <= 1) return;
+    if (!window.confirm(`确定要删除法术书「${curBook.name}」吗？`)) return;
+    actions.update(id, (c) => {
+      deleteSpellbook(c, bId);
+      const remaining = getSpellbooks(c);
+      setActiveBookId(remaining[0]?.id || 'main');
+    });
+  };
+
   return (
     <Panel
       title="法术"
       aside={<>
         {sc.dc != null && <span>豁免 DC <b className="serif">{sc.dc}</b> · 攻击 <b className="serif">{sgn(sc.atk)}</b> · {ABIL_CN[sc.ability as keyof typeof ABIL_CN]}</span>}
-        {sc.casters?.length > 0 && <button className="btn sm primary" onClick={() => setBrowse(true)}>选法术…</button>}
+        {sc.casters?.length > 0 && (
+          <button
+            className={'btn sm' + (expanded ? ' on' : ' primary')}
+            onClick={() => setExpanded(!expanded)}
+          >
+            {expanded ? '收起法术库 ▴' : (isWizard ? '+ 抄录/添加 ▾' : '+ 添加法术 ▾')}
+          </button>
+        )}
       </>}
     >
+      {/* 法术位方格 */}
       {((sc.slots || []).some((v: number) => v) || sc.pact) && (
         <div className="slots">
           {(sc.slots || []).map((v: number, i: number) => v ? (
@@ -197,37 +271,272 @@ function Spells({ engine, id, char, sheet }: Props) {
           )}
         </div>
       )}
+
+      {/* 准备上限与戏法上限提示 */}
       {sc.casters?.length > 0 && (
         <div className="small muted" style={{ marginBottom: 6 }}>
           已准备 {prepared}{sc.preparedMax ? ` / ${sc.preparedMax}` : ''} · 戏法上限 {sc.cantripsKnown}
           {prepared > sc.preparedMax && sc.preparedMax > 0 && <span className="warnline"> · 超出 {prepared - sc.preparedMax} 道（只提醒）</span>}
         </div>
       )}
-      <table className="rows">
-        <tbody>
-          {order.map(({ s, i }: Json) => {
-            const e = ent(s.name);
-            return (
-              <tr key={s.name + i} className={s.prepared === false ? 'dim' : ''}>
-                <td className="serif"><Term kind="spell" name={s.name} /></td>
-                <td className="small muted">{e ? (e.level ? `${e.level} 环` : '戏法') + ' · ' + (SCHOOL_CN[e.school] ?? '') : ''}{sc.casters?.length > 1 && s.cls ? ` · ${s.cls}` : ''}</td>
-                <td className="r">
-                  {e?.level ? (
-                    <button className={'btn sm' + (s.prepared !== false ? ' on' : '')} onClick={() => actions.update(id, (c) => { c.spells[i].prepared = s.prepared === false; })}>
-                      {s.prepared !== false ? '已准备' : '未准备'}
-                    </button>
-                  ) : null}
-                  <button className="btn ghost sm" aria-label={`移除${s.name}`} onClick={() => actions.update(id, (c) => { c.spells.splice(i, 1); })}>移除</button>
-                </td>
-              </tr>
-            );
-          })}
-          {(sc.granted || []).map((g: Json) => (
-            <tr key={'g' + g.name}><td className="serif"><Term kind="spell" name={g.name} /></td><td className="small muted">额外法术 · {g.from}</td><td /></tr>
-          ))}
-        </tbody>
-      </table>
-      {browse && <SpellBrowser engine={engine} id={id} char={char} sheet={sheet} onClose={() => setBrowse(false)} />}
+
+      {/* 常驻列表 1：已准备法术与戏法 */}
+      <div style={{ marginBottom: isWizard ? 14 : 6 }}>
+        {isWizard && (
+          <div className="row spread" style={{ marginBottom: 4, alignItems: 'center' }}>
+            <span className="tiny faint" style={{ fontWeight: 600, letterSpacing: '0.05em' }}>⚡ 今日已准备法术与戏法</span>
+            <span className="tiny faint">{order.length} 道</span>
+          </div>
+        )}
+        <table className="rows">
+          <tbody>
+            {order.map(({ s, i }: Json) => {
+              const e = ent(s.name);
+              const isCantrip = (e?.level ?? 1) === 0;
+              const isRitual = !!e?.meta?.ritual;
+              const isConc = JSON.stringify(e?.duration || '').includes('concentration');
+              return (
+                <tr key={s.name + i} className={s.prepared === false ? 'dim' : ''}>
+                  <td className="serif">
+                    <Term kind="spell" name={s.name} />
+                    {isConc && <span style={{ marginLeft: 4 }}><Tag>专注</Tag></span>}
+                    {isRitual && <span style={{ marginLeft: 4 }}><Tag>仪式</Tag></span>}
+                  </td>
+                  <td className="small muted">
+                    {e ? (isCantrip ? '戏法' : `${e.level} 环`) + ' · ' + (SCHOOL_CN[e.school] ?? '') : ''}
+                    {sc.casters?.length > 1 && s.cls ? ` · ${s.cls}` : ''}
+                  </td>
+                  <td className="r">
+                    {isCantrip ? (
+                      <button className="btn ghost sm" aria-label={`移除${s.name}`} onClick={() => actions.update(id, (c) => { c.spells.splice(i, 1); })}>移除</button>
+                    ) : isWizard ? (
+                      <button
+                        className="btn sm on"
+                        title="从今日准备列表中卸下"
+                        onClick={() => actions.update(id, (c) => { togglePrepareFromBook(c, s.name); })}
+                      >
+                        已准备 ✓
+                      </button>
+                    ) : (
+                      <>
+                        <button className={'btn sm' + (s.prepared !== false ? ' on' : '')} onClick={() => actions.update(id, (c) => { c.spells[i].prepared = s.prepared === false; })}>
+                          {s.prepared !== false ? '已准备' : '未准备'}
+                        </button>
+                        <button className="btn ghost sm" aria-label={`移除${s.name}`} onClick={() => actions.update(id, (c) => { c.spells.splice(i, 1); })}>移除</button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+            {(sc.granted || []).map((g: Json) => (
+              <tr key={'g' + g.name}><td className="serif"><Term kind="spell" name={g.name} /></td><td className="small muted">额外法术 · {g.from}</td><td className="r tiny faint">常备</td></tr>
+            ))}
+            {order.length === 0 && !(sc.granted || []).length && (
+              <tr><td colSpan={3} className="empty" style={{ padding: '8px 0' }}>{isWizard ? '尚未准备任何法术。可从下方「法术书」中点击「准备」。' : '尚未添加任何法术。点击下方展开添加。'}</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* 法师专属：常驻「📖 法术书」列表 */}
+      {isWizard && (
+        <div style={{ marginTop: 12, padding: '10px 10px 8px', background: 'var(--panel-2)', borderRadius: 'var(--r)', border: '1px solid var(--line)' }}>
+          {/* 法术书切换与管理条 */}
+          <div className="row spread" style={{ alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
+            <div className="row" style={{ alignItems: 'center', gap: 6 }}>
+              <span className="serif" style={{ fontWeight: 600 }}>📖 法术书：</span>
+              <select
+                value={curBook.id}
+                onChange={(e) => {
+                  const targetId = e.target.value;
+                  setActiveBookId(targetId);
+                  actions.update(id, (c) => { c.activeSpellbookId = targetId; });
+                }}
+                style={{ padding: '2px 6px', fontSize: 13 }}
+              >
+                {books.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name} ({b.spells.length} 道)
+                  </option>
+                ))}
+              </select>
+
+              <button
+                type="button"
+                className="btn ghost sm"
+                onClick={() => {
+                  setRenamingId(curBook.id);
+                  setRenameText(curBook.name);
+                }}
+                title="重命名当前法术书"
+              >
+                改名
+              </button>
+
+              <button
+                type="button"
+                className="btn sm"
+                onClick={() => {
+                  setShowNewBook(!showNewBook);
+                  setNewBookName('');
+                  setCloneFromId('blank');
+                }}
+                title="新建一本法术书（如备用法术书、旅行手抄本等）"
+              >
+                + 新建法术书
+              </button>
+
+              {books.length > 1 && (
+                <button
+                  type="button"
+                  className="btn ghost sm"
+                  style={{ color: 'var(--warn)' }}
+                  onClick={() => handleDeleteBook(curBook.id)}
+                  title="删除当前法术书"
+                >
+                  删除
+                </button>
+              )}
+            </div>
+
+            <div className="tiny faint">
+              共收录 {curBook.spells.length} 道法术
+            </div>
+          </div>
+
+          {/* 重命名输入表单 */}
+          {renamingId && (
+            <div className="row" style={{ gap: 6, marginBottom: 8, padding: '6px 8px', background: 'var(--panel)', borderRadius: 'var(--r)', border: '1px solid var(--line)' }}>
+              <span className="small muted">书名：</span>
+              <input
+                style={{ flex: 1, padding: '2px 6px' }}
+                value={renameText}
+                autoFocus
+                onChange={(e) => setRenameText(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleRenameBook(renamingId)}
+              />
+              <button type="button" className="btn sm primary" onClick={() => handleRenameBook(renamingId)}>保存</button>
+              <button type="button" className="btn ghost sm" onClick={() => setRenamingId(null)}>取消</button>
+            </div>
+          )}
+
+          {/* 新建法术书表单 */}
+          {showNewBook && (
+            <div style={{ marginBottom: 8, padding: '8px 10px', background: 'var(--panel)', borderRadius: 'var(--r)', border: '1px solid var(--line)' }}>
+              <div className="small bold" style={{ marginBottom: 6 }}>新建法术书</div>
+              <div className="row" style={{ gap: 8, marginBottom: 6, alignItems: 'center' }}>
+                <span className="small muted">法术书名称：</span>
+                <input
+                  style={{ flex: 1, padding: '3px 8px' }}
+                  placeholder="如：备用手抄本、旅行法术书、古代魔典…"
+                  value={newBookName}
+                  autoFocus
+                  onChange={(e) => setNewBookName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleCreateBook()}
+                />
+              </div>
+              <div className="row spread" style={{ alignItems: 'center' }}>
+                <div className="row" style={{ gap: 6, alignItems: 'center' }}>
+                  <span className="small muted">法术来源：</span>
+                  <select
+                    value={cloneFromId}
+                    onChange={(e) => setCloneFromId(e.target.value)}
+                    style={{ padding: '2px 6px', fontSize: 12 }}
+                  >
+                    <option value="blank">空白法术书（0 道）</option>
+                    {books.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        完整备份自「{b.name}」({b.spells.length} 道)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="row" style={{ gap: 6 }}>
+                  <button type="button" className="btn sm primary" disabled={!newBookName.trim()} onClick={handleCreateBook}>创建</button>
+                  <button type="button" className="btn ghost sm" onClick={() => setShowNewBook(false)}>取消</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 法术书中记载的法术表格 */}
+          {bookSpellsOrder.length === 0 ? (
+            <div className="empty" style={{ padding: '12px 0' }}>
+              此法术书尚未抄录任何法术。展开下方「抄录新法术入书」开始添加。
+            </div>
+          ) : (
+            <table className="rows">
+              <tbody>
+                {bookSpellsOrder.map(({ name, e, lv }) => {
+                  const isPrep = (char.spells || []).some((s: Json) => s.name === name && s.prepared !== false);
+                  const isRitual = !!e?.meta?.ritual;
+                  const isConc = JSON.stringify(e?.duration || '').includes('concentration');
+                  return (
+                    <tr key={name} className={isPrep ? '' : 'dim'}>
+                      <td className="serif">
+                        <Term kind="spell" name={name} />
+                        {isConc && <span style={{ marginLeft: 4 }}><Tag>专注</Tag></span>}
+                        {isRitual && <span style={{ marginLeft: 4 }}><Tag tone="accent">仪式可用</Tag></span>}
+                      </td>
+                      <td className="small muted">
+                        {lv ? `${lv} 环` : '戏法'} · {e ? (SCHOOL_CN[e.school] ?? '') : ''}
+                      </td>
+                      <td className="r">
+                        <button
+                          type="button"
+                          className={'btn sm' + (isPrep ? ' on' : '')}
+                          onClick={() => actions.update(id, (c) => togglePrepareFromBook(c, name))}
+                        >
+                          {isPrep ? '已准备 ✓' : '准备'}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn ghost sm"
+                          aria-label={`从法术书中擦除${name}`}
+                          onClick={() => actions.update(id, (c) => removeSpellFromBook(c, curBook.id, name))}
+                        >
+                          擦除
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {/* 底部可展开的挑选/添加区域 */}
+      {expanded ? (
+        <SpellPicker
+          engine={engine}
+          id={id}
+          char={char}
+          sheet={sheet}
+          activeBookId={curBook?.id}
+          onClose={() => setExpanded(false)}
+        />
+      ) : (
+        <button
+          type="button"
+          className="btn ghost spread"
+          style={{
+            width: '100%',
+            marginTop: 10,
+            padding: '8px 12px',
+            border: '1px dashed var(--line)',
+            borderRadius: 'var(--r)',
+            justifyContent: 'center',
+            gap: 8,
+          }}
+          onClick={() => setExpanded(true)}
+        >
+          <span>{isWizard ? `+ 抄录新法术入「${curBook.name}」… ▾` : '+ 添加/准备法术… ▾'}</span>
+          <span className="tiny faint">支持中英文即时双语搜索、环阶学派筛选</span>
+        </button>
+      )}
     </Panel>
   );
 }
