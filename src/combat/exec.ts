@@ -229,6 +229,44 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
       tx.emit('entryRevoked', { id: ctx.self, key: n.key }, ctx.cause);
       return;
     }
+    case 'castFrom': {
+      // 直接借那道动作结算一次：代价默认清空（反应已经付过）、不打动作经济、落地后不留痕迹
+      const ref = n.fromVar ? String(ctx.vars?.[n.fromVar] ?? '') : n.from;
+      if (!ref) {
+        tx.emit('note', { text: `${ctx.actionName}：没有挑到要施展的法术`, owner: ctx.self }, ctx.cause);
+        return;
+      }
+      let found: { key: string; action: Action };
+      try {
+        found = findAction(tx, ctx.self, ref);
+      } catch (e) {
+        tx.emit('note', { text: `${ctx.actionName}：没法施展（${(e as Error).message}）`, owner: ctx.self }, ctx.cause);
+        return;
+      }
+      const cast: Action = {
+        ...structuredClone(found.action),
+        // 代价默认沿用那道动作自己的（战地施法者仍然要花法术位）；要免位就在数据里写 `cost: []`
+        ...(n.cost ? { cost: structuredClone(n.cost) } : {}),
+        activation: n.activation ?? 'free',
+      };
+      absolutizeTemplates(tx, cast, found.key);
+      // 免位施展：按来源法术的基础环阶把 `slot.level` 定下来（和 grantAction 一样）
+      if (!cast.cost?.some((k) => 'slot' in k)) {
+        const base = slotBaseOf(tx.rules.entry(found.key)?.actions, found.action.id);
+        if (base !== undefined) substituteSlotLevel(cast, base);
+      }
+      const to = n.to ?? (ctx.attacker ? 'attacker' : 'target');
+      const targets = to === 'self' ? [ctx.self]
+        : to === 'attacker' ? (ctx.attacker ? [ctx.attacker] : [])
+        : to === 'each' ? ctx.targets.slice()
+        : ctx.target ? [ctx.target] : ctx.targets.slice();
+      // 反应本身已经在触发器那边付过了：这里不要再按 reaction 结算一次
+      executeAction(tx, {
+        actor: ctx.self, actionKey: `${found.key}#${cast.id}`, action: cast, targets,
+        cause: ctx.cause, force: true,
+      });
+      return;
+    }
     case 'extendEffect': {
       const r = tx.rules.resolveTemplate(n.template, ctx.entryKey);
       const e = effectsOf(tx, ctx.self).find((x) => x.key === (r?.key ?? n.template) || x.name === n.template);
@@ -320,9 +358,16 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
     }
     case 'move': {
       const ft = num(tx, ctx, n.ft, '距离');
-      // 推离 / 拉近：有地图就真的动棋子；传送、或者不在地图上 → 提示人手动拖
+      // 推离 / 拉近：有地图就真的动棋子；传送提示人手动拖（界面看到这条会自动进入「选落点」模式）
       const done = n.mode !== 'teleport' && !!ctx.target && shove(tx, ctx.self, ctx.target, ft, n.mode, ctx.cause);
-      if (!done) tx.emit('note', { kind: 'move', text: `${ctx.actionName}：${n.mode === 'push' ? '推离' : n.mode === 'pull' ? '拉近' : '传送'} ${ft} 尺（请在地图上移动）`, target: ctx.target }, ctx.cause);
+      if (!done) {
+        const who = n.mode === 'teleport' ? (ctx.target ?? ctx.self) : ctx.target;
+        tx.emit('note', {
+          kind: n.mode === 'teleport' ? 'teleport' : 'move',
+          text: `${ctx.actionName}：${n.mode === 'push' ? '推离' : n.mode === 'pull' ? '拉近' : '传送'} ${ft} 尺（请在地图上移动）`,
+          target: ctx.target, id: who, maxFt: ft, owner: ctx.self,
+        }, ctx.cause);
+      }
       return;
     }
     case 'zone': {
@@ -428,7 +473,8 @@ function grantActionNode(tx: Tx, n: Extract<Node, { kind: 'grantAction' }>, ctx:
  * 选项的 value 是法术键（`XPHB:spell:火球术`），配合 `grantAction.fromVar` 施展。
  */
 function spellPoolOptions(
-  tx: Tx, ctx: ExecCtx, pool: { from: 'ownSpells' | 'ownCantrips'; maxLevel?: ExprSrc; minLevel?: ExprSrc },
+  tx: Tx, ctx: ExecCtx,
+  pool: { from: 'ownSpells' | 'ownCantrips'; maxLevel?: ExprSrc; minLevel?: ExprSrc; castTime?: 'action' | 'bonus' | 'reaction'; singleTarget?: boolean },
 ): Array<{ label: string; value: string }> {
   const max = pool.maxLevel !== undefined ? num(tx, ctx, pool.maxLevel, '法术最高环阶') : Infinity;
   const min = pool.minLevel !== undefined ? num(tx, ctx, pool.minLevel, '法术最低环阶') : 0;
@@ -437,8 +483,12 @@ function spellPoolOptions(
     if (!key.includes(':spell:')) continue;
     const entry = tx.rules.entry(key) ?? effectiveView(tx, ctx.self).entries?.[key];
     if (!entry?.actions?.length || entry.automation === 'manual') continue;
+    const act = entry.actions[0];
     const level = slotBaseOf(entry.actions, undefined) ?? 0;
     if (pool.from === 'ownCantrips' ? level !== 0 : level < min || level > max) continue;
+    // 「施法时间是动作」「只打一个生物」：战地施法者这类原文限制，能在池子这层筛掉就先筛掉
+    if (pool.castTime && act.activation !== pool.castTime) continue;
+    if (pool.singleTarget && !(act.targeting?.type === 'creature' && Number(act.targeting.count ?? 1) === 1)) continue;
     out.push({ label: entry.name ?? key.split(':spell:')[1] ?? key, value: key });
   }
   return out.sort((a, b) => a.label.localeCompare(b.label, 'zh'));

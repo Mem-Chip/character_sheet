@@ -288,12 +288,26 @@ export type Node =
   /**
    * var：把选中项的 value（没写就是 label）放进 `vars.<var>`，后面的节点可以用（伤害类型 `type: 'vars.elem'`）。
    * `pool`：选项不写死，**由引擎按这个池子现算**（现在支持 `ownSpells` = 参与者自己身上带施法动作的法术键，
-   * 战地施法者那种「从我的法术里挑一道」用它）；选项的 value 就是法术键，配合 `grantAction.fromVar` 施展。
+   * 战地施法者那种「从我的法术里挑一道」用它）；选项的 value 就是法术键，配合 `grantAction.fromVar` / `castFrom` 施展。
+   * `castTime` / `singleTarget`：把池子筛到「施法时间是某个动作」和「只打一个生物」的法术
+   * （战地施法者要求「施法时间为动作、且只把那个生物当唯一目标」）。
    */
   | {
       kind: 'choose'; prompt: string; options?: Array<{ label: string; do?: Node[]; when?: ExprSrc; value?: string }>;
-      pool?: { from: 'ownSpells' | 'ownCantrips'; maxLevel?: ExprSrc; minLevel?: ExprSrc };
+      pool?: {
+        from: 'ownSpells' | 'ownCantrips'; maxLevel?: ExprSrc; minLevel?: ExprSrc;
+        castTime?: 'action' | 'bonus' | 'reaction'; singleTarget?: boolean;
+      };
       count?: number; var?: string;
+    }
+  /**
+   * **直接施展**前面挑中的那个动作（`fromVar` / `from`），打完不留任何东西 ——
+   * 「用一道法术代替借机攻击」这类：反应已经付过了，这里只借那道法术的结算。
+   * `to`：这次只对谁生效（默认用当前目标 / 攻击者）。
+   */
+  | {
+      kind: 'castFrom'; fromVar?: string; from?: string; to?: 'target' | 'attacker' | 'self' | 'each';
+      cost?: Cost[]; activation?: 'action' | 'bonus' | 'reaction' | 'free' | 'none';
     }
   /** 让人选一个数（圣疗用多少点），结果放进 `vars.<var>` 给后面的节点用 */
   | { kind: 'number'; prompt: string; var: string; min?: ExprSrc; max: ExprSrc; default?: ExprSrc }

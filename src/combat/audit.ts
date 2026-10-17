@@ -29,7 +29,7 @@ export const EMITTED_EVENTS = new Set([
 ]);
 
 const NODE_KINDS = new Set([
-  'attack', 'save', 'check', 'damage', 'addDamage', 'heal', 'tempHp', 'applyEffect', 'removeEffect', 'extendEffect', 'endConcentration', 'grantAction', 'removeGrant',
+  'attack', 'save', 'check', 'damage', 'addDamage', 'heal', 'tempHp', 'applyEffect', 'removeEffect', 'extendEffect', 'endConcentration', 'grantAction', 'removeGrant', 'castFrom',
   'resource', 'economy', 'choose', 'if', 'forEach', 'repeat', 'move', 'note', 'number', 'modify', 'zone', 'summon',
 ]);
 const ROLL_OPS = new Set(['adv', 'disadv', 'noAdv', 'add', 'addDice', 'autoFail', 'autoSucceed', 'critRange', 'autoCritOnHit', 'minD20', 'minDie', 'targetAdd', 'maxDice']);
@@ -125,6 +125,9 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
         break;
       case 'removeGrant':
         if (!n.key) out.push(`${where(at)}：removeGrant 缺少 key`);
+        break;
+      case 'castFrom':
+        if (!n.from && !n.fromVar) out.push(`${where(at)}：castFrom 要写 from 或 fromVar（施展哪一条动作）`);
         break;
       case 'resource':
         expr(n.delta, 'node', NUM, `${at}.delta`);

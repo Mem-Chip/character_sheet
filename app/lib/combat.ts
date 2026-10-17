@@ -241,6 +241,15 @@ function toast(text: string, tone: 'danger' | 'ok' = 'danger'): void {
 function after(r: DispatchResult): DispatchResult {
   if (r.status === 'rejected') toast(r.reason);
   const s = ui.session!;
+  // 规则里说「传送 N 尺」的（`move` 节点的 teleport）：直接把地图切到「选落点」模式，拖那一下就是传送
+  if (r.status !== 'rejected' && r.status !== 'pending') {
+    for (const e of r.events) {
+      const p = e.payload as { kind?: string; id?: string; maxFt?: number };
+      if (e.type === 'note' && p.kind === 'teleport' && p.id) {
+        combat.startTeleport(p.id, typeof p.maxFt === 'number' ? p.maxFt : null);
+      }
+    }
+  }
   // 回合推进时，选中跟着当前行动者走
   const cur = s.state.round !== null ? s.state.order[s.state.turnIndex] : null;
   const selected = ui.selected && s.state.combatants[ui.selected] ? ui.selected : cur ?? Object.keys(s.state.combatants)[0] ?? null;

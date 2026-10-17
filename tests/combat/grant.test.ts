@@ -164,11 +164,10 @@ describe('战地施法者：从自己带着的法术里挑一道，代替借机�
     done(r);
     expect(sawWarcaster, '时机能力列表里该有战地施法者').toBe(true);
     expect(sawSpellPick, '该让我从自己带着的法术里挑（列表里有「电击」）').toBe(true);
-    // 授予的施法动作在动作栏里，而且不花动作
-    const granted = s.view('w').sources.filter((k) => k.startsWith('grant:'));
-    expect(granted.length, '应该有一个授予的施法动作').toBeGreaterThan(0);
-    done(s.dispatch({ type: 'useAction', actor: 'w', action: `${granted[0]}#cast`, targets: ['g'] }));
-    expect(s.state.combatants['g'].live.hp, '电击打出伤害').toBeLessThan(30);
+    // 选完**直接结算**：不留授予的动作，伤害已经打到 g 身上，反应花掉一次
+    expect(s.view('w').sources.filter((k) => k.startsWith('grant:')), '选完不该留临时动作').toEqual([]);
+    expect(s.state.combatants['g'].live.hp, '那道法术已经打在 g 身上了').toBeLessThan(30);
+    expect(s.state.combatants['w'].economy.reaction, '只花一次反应（不能变成 -1）').toBe(0);
   });
 });
 
@@ -207,6 +206,7 @@ describe('真实数据：免法术位施放（用 grantAction 复制法术动作
     expect(eco().action).toBe(1);
   });
 });
+
 
 
 
