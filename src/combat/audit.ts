@@ -29,7 +29,7 @@ export const EMITTED_EVENTS = new Set([
 ]);
 
 const NODE_KINDS = new Set([
-  'attack', 'save', 'check', 'damage', 'addDamage', 'heal', 'tempHp', 'applyEffect', 'removeEffect', 'extendEffect',
+  'attack', 'save', 'check', 'damage', 'addDamage', 'heal', 'tempHp', 'applyEffect', 'removeEffect', 'extendEffect', 'endConcentration',
   'resource', 'economy', 'choose', 'if', 'forEach', 'repeat', 'move', 'note', 'number', 'modify', 'zone', 'summon',
 ]);
 const ROLL_OPS = new Set(['adv', 'disadv', 'noAdv', 'add', 'addDice', 'autoFail', 'autoSucceed', 'critRange', 'autoCritOnHit', 'minD20', 'minDie', 'targetAdd', 'maxDice']);

@@ -1,10 +1,10 @@
-import { run, runBool, runInt, Unknown } from '../expr';
+import { run, runBool, runInt, Unknown, type Question } from '../expr';
 import { kill, normType } from './damage';
 import { runNodes } from './exec';
 import { zonesOfConcentration } from './space';
-import { makeEnv } from './scope';
+import { makeEnv, nameOf } from './scope';
 import type { Tx } from './tx';
-import type { ActiveEffect, CombatantView, Duration, EffectId, EffectTemplate, GameEvent, Id } from './types';
+import type { ActiveEffect, Aura, CombatantView, Duration, EffectId, EffectTemplate, Entry, GameEvent, Id, StaticMod } from './types';
 
 /**
  * ActiveEffect 的生命周期（COMBAT-DESIGN §3.3 / §3.4）：施加、叠加与压制、隐含状态、专注链接、结束。
@@ -199,6 +199,64 @@ export function mergeWildShape(base: CombatantView, form: CombatantView): Combat
 const viewCache = new WeakMap<Tx, Map<Id, { seq: number; view: CombatantView }>>();
 const computing = new Set<string>();
 
+/* ---- 条目 / 灵光：从 collect.ts 挪过来（effectiveView 要用灵光授予的静态修正） ---- */
+
+/** 条目的动态声明是否生效（`automation: 'manual'` = 这一条由人裁定，引擎不碰） */
+export const live = (e: Entry | undefined): e is Entry => !!e && e.automation !== 'manual';
+
+/** 某个参与者身上的条目：规则书里写好的优先，没有就用他自带的（怪物数据卡、自动生成的物品动作） */
+export function entryOf(tx: Tx, id: Id, key: string): Entry | undefined {
+  return tx.rules.entry(key) ?? effectiveView(tx, id).entries?.[key];
+}
+
+export interface AuraHit { aura: Aura; holder: Id; from: string }
+
+/** 所有「可能覆盖到 who」的灵光（阵营与自身规则已经过滤；距离留给 auraGate / effectiveView 判断） */
+export function aurasCovering(tx: Tx, who: Id): AuraHit[] {
+  const out: AuraHit[] = [];
+  const whoC = tx.state.combatants[who];
+  if (!whoC) return out;
+  for (const holder of Object.keys(tx.state.combatants)) {
+    const hc = tx.state.combatants[holder];
+    if (hc.live.dead) continue;
+    const list: Array<{ aura: Aura; from: string }> = [];
+    for (const k of effectiveView(tx, holder).sources) {
+      const e = entryOf(tx, holder, k);
+      if (live(e)) for (const a of e.auras ?? []) list.push({ aura: a, from: k });
+    }
+    for (const at of activeTemplates(tx, holder)) if (at.tpl.aura) list.push({ aura: at.tpl.aura, from: at.key });
+    for (const { aura, from } of list) {
+      if (holder === who && !aura.includeSelf) continue;
+      const ally = hc.side === whoC.side;
+      if (aura.affects === 'allies' && !ally) continue;
+      if (aura.affects === 'enemies' && ally) continue;
+      out.push({ aura, holder, from });
+    }
+  }
+  return out;
+}
+
+/** 灵光门槛：灵光主人满足 requires，且 who 在范围内（无地图 → 问，按回合记住） */
+export function auraGate(tx: Tx, gate: { aura: Aura; holder: Id }, who: Id): boolean | Unknown {
+  const { aura, holder } = gate;
+  if (aura.requires !== undefined) {
+    const r = runBool(aura.requires, makeEnv(tx, { self: holder }));
+    if (r === false) return false;
+    if (r instanceof Unknown) return r;
+  }
+  if (holder === who) return true;
+  const d = tx.spatial?.distance(holder, who);
+  if (typeof d === 'number') return d <= aura.radius;
+  const q: Question = {
+    id: `aura:${holder}:${aura.id}:${who}`,
+    text: `${nameOf(tx, who)} 在 ${nameOf(tx, holder)} 的灵光（${aura.radius} 尺）范围内吗？`,
+    subjects: [holder, who],
+    scope: 'turn',
+  };
+  const a = tx.answerOf(q.id);
+  return a !== undefined ? a : new Unknown([q]);
+}
+
 /**
  * 基础 view + 荒野形态变形覆盖 + 生效效应的 statics。
  * ⚠️ statics 里的表达式可能引用 `self.ac` 这种依赖 view 的东西 —— 计算期间再取 view 时返回基础（或变形后基础）view，避免无限递归。
@@ -228,18 +286,19 @@ export function effectiveView(tx: Tx, id: Id): CombatantView {
     let speedBonus = 0;
     let speedSet: number | null = null;
     let resistAll = false;
-    for (const at of activeTemplates(tx, id)) {
+    /** 把一批静态修正并进 v（效应模板和灵光共用同一套解释） */
+    const applyStatics = (list: StaticMod[] | undefined, source: Id | null, effect: ActiveEffect | undefined) => {
       const num = (e: string | number | boolean) => {
-        const r = runInt(e, makeEnv(tx, { self: id, source: at.effect.source, effect: at.effect }));
+        const r = runInt(e, makeEnv(tx, { self: id, source, effect }));
         return r instanceof Unknown ? 0 : r;
       };
       // 抗性 / 免疫 / 易伤的类型可以写表达式（`effect.state.type`：施加时选的伤害类型），其余是字面类型名
       const types = (vs: string[]) => vs.map((x) => {
         if (!/^[a-z]+\./.test(x)) return x;
-        const r = run(x, makeEnv(tx, { self: id, source: at.effect.source, effect: at.effect }));
+        const r = run(x, makeEnv(tx, { self: id, source, effect }));
         return r instanceof Unknown || r == null ? '' : normType(String(r));
       }).filter(Boolean);
-      for (const m of at.tpl.statics ?? []) {
+      for (const m of list ?? []) {
         switch (m.kind) {
           case 'ac': acBonus += num(m.bonus); break;
           case 'spellDc': dcBonus += num(m.bonus); break;
@@ -252,6 +311,17 @@ export function effectiveView(tx: Tx, id: Id): CombatantView {
           case 'conditionImmune': v.conditionImmune.push(...m.values); break;
         }
       }
+    };
+    for (const at of activeTemplates(tx, id)) applyStatics(at.tpl.statics, at.effect.source, at.effect);
+    // 灵光授予的静态修正（净化灵光的毒素抗性、勇气灵光的免疫恐慌）：以前只下发 rollMods / triggers，
+    // 静态修正是死数据。距离按「没有地图就当在范围内」保守处理（和 within 的猜测一致）
+    for (const g of aurasCovering(tx, id)) {
+      if (g.aura.requires !== undefined && runBool(g.aura.requires, makeEnv(tx, { self: g.holder })) === false) continue;
+      if (g.holder !== id) {
+        const d = tx.spatial?.distance(g.holder, id);
+        if (typeof d === 'number' && d > g.aura.radius) continue;
+      }
+      applyStatics(g.aura.grant.statics, g.holder, undefined);
     }
     v.ac += acBonus;
     if (v.spell && dcBonus) v.spell = { ...v.spell, dc: v.spell.dc + dcBonus };
@@ -405,6 +475,8 @@ export function endEffect(tx: Tx, id: EffectId, reason: string, cause: number | 
     }
     zonesOfConcentration(tx, id, seq);
   }
+  // 注意：反过来**不**自动结束专注 —— 多目标法术里一个目标摆脱了不代表整个法术结束
+  // （golden #4 定身类人就靠这个）。要让整道法术结束，数据里写 `{ kind: 'endConcentration' }`。
   // 随该效应（如召唤法术专注）存续的召唤物一并退场
   for (const c of Object.values(tx.state.combatants)) {
     if (c.linkEffect === id) {

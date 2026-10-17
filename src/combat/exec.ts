@@ -1,7 +1,7 @@
 import { ABIL_CN, Dice, Unknown, run, runBool, runDice, runInt, type ExprSrc, type Question, type Value } from '../expr';
 import { applyDamagePacket, applyHeal, grantTempHp, maxDiceFor, normType, rollComponent, type DamageComponent, type DamagePacket } from './damage';
 import { controllerOf, d20Test, rollValue } from './d20';
-import { activeTemplates, applyEffect, effectiveView, effectsOf, endEffect, skillBonus, startConcentration } from './effects';
+import { activeTemplates, applyEffect, effectiveView, effectsOf, endConcentration, endEffect, skillBonus, startConcentration } from './effects';
 import { makeEnv, nameOf, type ScopeData } from './scope';
 import { entryOf } from './collect';
 import { placeSummon, shove } from './space';
@@ -214,6 +214,11 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
           if (hit) endEffect(tx, e.id, `被「${ctx.actionName}」移除`, ctx.cause);
         }
       }
+      return;
+    }
+    case 'endConcentration': {
+      // 「目标挣脱 → 法术结束」：数据里显式写，别指望移除效应自动触发（多目标法术里一个目标摆脱不代表整个法术结束）
+      endConcentration(tx, ctx.self, `「${ctx.actionName}」结束`, ctx.cause);
       return;
     }
     case 'extendEffect': {

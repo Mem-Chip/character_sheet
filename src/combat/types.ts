@@ -267,6 +267,8 @@ export type Node =
     }
   | { kind: 'removeEffect'; match: { key?: string; name?: string; tag?: string }; from?: NodeTarget }
   | { kind: 'extendEffect'; template: string }
+  /** 结束施法者自己的专注（「目标挣脱 → 法术结束」这类；一个目标摆脱就结束的写法，不要靠移除效应自动触发） */
+  | { kind: 'endConcentration' }
   | { kind: 'resource'; id: string; delta: ExprSrc }
   | { kind: 'economy'; action?: number; bonus?: number; reaction?: number; attacks?: number; move?: ExprSrc }
   /** var：把选中项的 value（没写就是 label）放进 `vars.<var>`，后面的节点可以用（伤害类型 `type: 'vars.elem'`） */
