@@ -9,9 +9,12 @@ import aiFeatures from '../../data/dyn/ai/features.json';
 import aiSpells from '../../data/dyn/ai/spells.json';
 import aiBooks from '../../data/dyn/ai/books.json';
 import aiItems from '../../data/dyn/ai/items.json';
+import reviewedDyn from '../../data/dyn/reviewed.json';
 import type { RuleFile } from '../combat';
 
-export const RULE_FILES = [aiItems, aiBooks, aiFeatures, aiSpells, rules2024, spellsDyn, featuresDyn] as unknown as RuleFile[];
+export const RULE_FILES = [aiItems, aiBooks, aiFeatures, aiSpells, rules2024, spellsDyn, featuresDyn, reviewedDyn] as unknown as RuleFile[];
 
 /** 手写的（AI 数据化的例子从这里取） */
 export const GOLDEN_FILES = [rules2024, spellsDyn, featuresDyn] as unknown as RuleFile[];
+
+
