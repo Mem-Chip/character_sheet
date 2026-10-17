@@ -53,12 +53,14 @@
   - **这一大类已经收口**（[round2](datafy/manual-audit/round2/README.md) 53 条、[round3](datafy/manual-audit/round3/README.md) 40 条、[round4](datafy/manual-audit/round4/README.md) 26 + 9 条，共 **128 条**）：
     流程是「子代理写 → 每个自检（结构 + 审计 + 小遭遇试算）→ 另派代理独立复核（拿 5etools 原文逐条比）→ 只合并复核通过的 → 剩下的带证据修完」。
     复核挑出的问题数：38 → 34 → 5 → 4，说明在收敛。
-  - **下一步做下一个大类**：重骰 / 加骰 / 改判定（38 条）、反应里改结算（20）、免伤（15）、物品消耗（12）、次数池（12）、改目标 / 替盟友挨打（9）、推拉（7）、骰子取最大（6）。
-    逐条的 `key` / `gap` / `need` 在 `datafy/manual-audit/answers/*.json`；先做「重骰 / 加骰 / 改判定」最合适（`reroll` / `addToRoll` / `succeed` / `d20Rolled` 都现成，而且刚修好的 `spellCast` / `leftReach` 窗口语义正好用得上）。
+  - **下一个大类「重骰 / 加骰 / 改判定」也做了一轮**（[round5/README.md](datafy/manual-audit/round5/README.md)）：52 条里合并 34 条（7 条升到 full），
+    顺手修了两个引擎问题（「黯蚀 / 暗蚀」两种写法归一、`minD20` 也抬自然值）；还缓着 16 条（8 条有证据在 [round5/suspects.md](datafy/manual-audit/round5/suspects.md) + `r5-02` 整批 8 条没复核）。
+  - **接着做剩下的类别**：反应里改结算（20）、免伤（15）、物品消耗（12）、次数池（12）、改目标 / 替盟友挨打（9）、推拉（7）、骰子取最大（6）。
+    逐条的 `key` / `gap` / `need` 在 `datafy/manual-audit/answers/*.json`。
   - 测试：`tests/combat/zone-data.test.ts`、`tests/combat/summon-data.test.ts`（真数据跑遭遇）。
   - 检查器已经补上：`reach` / `melee` / `ranged` / `finesse` 写数字会报（`src/combat/audit.ts` 的 `flagsOf`）。
 - **灵光（aura）的两个引擎缺口**（第二轮复核实测出来的）：① aura 授予的触发器**不检查半径**（`src/combat/triggers.ts` 没走 auraGate）—— 至圣光轮 30 尺、迅捷灵光 10 尺，实测 60 尺 / 20 尺外照样生效；数据侧暂时可以补 `when: 'dist(source, self) <= N'` 兜。
-  ② `aura.grant.statics` **根本没被读取**（`effectiveView` 只看 rollMods / triggers）—— 勇气灵光授予的「免疫恐慌」是死数据，实测照样被恐慌。在哪：`src/combat/triggers.ts`、`src/combat/effects.ts`。
+  ② `aura.grant.statics` **根本没被读取**（`effectiveView` 只看 rollMods / triggers）—— 勇气灵光授予的「免疫恐慌」、净化灵光的毒素抗性是死数据（第五轮又实测了一次）。在哪：`src/combat/triggers.ts`、`src/combat/effects.ts`（要把 `aurasCovering` 挪出来或抽成独立模块才能给 `effectiveView` 用）。
 - **区域（zone）拿不到 `vars`**：`src/combat/space.ts` 传给区域的是 `vars: {}`，施法时 `choose` 选出来的东西（伤害类型等）在区域里丢了（哈达之欲的升环加骰永远落在强酸上）。在哪：`space.ts` 的 `runZone` / `Zone`（把创建时的 vars 存进 zone）。
 - **触发窗口里正规地花反应**：`leftReach` 这类窗口里数据写 `cost: [{ economy: 'reaction' }]` 不扣反应（实测反应 0 也能用、还能反复花）；另外 `flags.cannot: ['provoke']` 的效应活到**回合结束**而不是「这次移动结束」，数据要配 `endsOn: moved` 才对（散兵战术踩过）。在哪：`src/combat/tx.ts`（payCosts / canPay）、`src/combat/effects.ts`（disengaged）、`triggers.ts`。
 - **移动已经放下的区域**：zone 只有创建 / 删除，没有「把区域挪到别处」，原文里的「区域移入生物空间」触发也没实现（月华之光、炽焰法球、自然庇护卡这条）。在哪：`src/combat/session.ts`（`createZone`）、`space.ts`、`app/pages/combat/MapView.tsx`（拖动）。

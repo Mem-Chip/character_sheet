@@ -1,0 +1,332 @@
+{
+ "version": 1,
+ "note": "第五类：重骰 / 加骰 / 改判定（批次 r5-06，8 条）。把已有接口用上：序列意识（minD20 + against 的 noAdv）、归复平衡（d20Rolled before 的 clearAdv，顺手修掉 event.roller 读不到的 bug，改成 roll.roller）、飘忽不定（against 的 noAdv + 未失能）、极效治疗（heal 的 maxDice）、超限导能（damage+spell 的 maxDice，用一个本回合有效的开关；反噬离开手动）、诡术伏击（spellCast after 给目标挂「豁免劣势」，持续到你的回合结束，多目标法术留人工）。法术射手三项目前都靠视线 / 地形 / 施法距离，引擎没有对应机制，保持 manual。召现分身原本就对，不动。",
+ "entries": {
+  "XPHB:术士:序列意识:14": {
+   "name": "序列意识",
+   "automation": "full",
+   "text": "以一个附赠动作进入 1 分钟的序列意识：期间你进行的任何 d20 检定，d20 掷出 9 或以下都按 10 计；以你为目标的攻击检定无法具有优势（引擎会把这次攻击的优势抹掉，只掷一颗 d20）。每次长休一次；也可以消耗 5 点术法点（无需动作）重置使用权。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "序列意识",
+     "activation": "bonus",
+     "cost": [
+      {
+       "resource": "trance-of-order"
+      }
+     ],
+     "requires": "!self.hasEffect('序列意识')",
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "序列意识"
+      }
+     ]
+    },
+    {
+     "id": "restore",
+     "name": "序列意识：重置使用权（5 术法点）",
+     "activation": "free",
+     "cost": [
+      {
+       "resource": "sorcery_points",
+       "n": 5
+      }
+     ],
+     "requires": "self.resource('trance-of-order') < 1",
+     "root": [
+      {
+       "kind": "resource",
+       "id": "trance-of-order",
+       "delta": 1
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "序列意识": {
+     "name": "序列意识",
+     "text": "1 分钟内：d20 检定掷出 9 或以下视为 10；以你为目标的攻击检定无法具有优势。",
+     "duration": {
+      "minutes": 1
+     },
+     "rollMods": [
+      {
+       "on": {
+        "kind": "d20"
+       },
+       "who": "bearer",
+       "op": "minD20",
+       "value": 10,
+       "label": "序列意识：9 或以下视为 10"
+      },
+      {
+       "on": {
+        "kind": "attack"
+       },
+       "who": "against",
+       "op": "noAdv",
+       "label": "序列意识：对你的攻击不能有优势"
+      }
+     ]
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:术士:归复平衡:3": {
+   "name": "归复平衡",
+   "automation": "full",
+   "text": "当你 60 尺内一个你可见的生物即将带着优势或劣势掷 d20 时，用反应消耗一次归复平衡，使这次检定免受优势 / 劣势影响（引擎消掉这次的优势与劣势，改用第一颗 d20 结算）。次数等于你的魅力调整值（至少 1 次），长休恢复。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "归复平衡",
+     "activation": "reaction",
+     "trigger": {
+      "on": "d20Rolled",
+      "role": "any",
+      "window": "before",
+      "when": "(roll.adv || roll.disadv) && (roll.roller == self.id || (within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))))"
+     },
+     "cost": [
+      {
+       "resource": "restore-balance"
+      }
+     ],
+     "root": [
+      {
+       "kind": "modify",
+       "modify": [
+        {
+         "op": "clearAdv",
+         "which": "both"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:法师:超限导能:14": {
+   "name": "超限导能",
+   "automation": "partial",
+   "text": "在你要施展法术的那个回合里，施法前先用一个自由动作开启超限导能：本回合你用 1–5 环法术位施展、会造成伤害的法师法术，其伤害骰全部取最大值（引擎会在掷伤害时问一句是不是 1–5 环；开关到你的回合结束自动消失）。反噬要人处理：长休前第一次使用没有负面效应；之后每次使用，都在施法后立刻受到每环阶 2d12 黯蚀伤害，长休前每多用一次每环阶再加 1d12，无视抗性与免疫 —— 引擎记不住长休前用过几次，也没有「无视抗性」的伤害节点，这部分请 DM 手动结算。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "超限导能",
+     "activation": "free",
+     "requires": "!self.hasEffect('超限导能')",
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "超限导能"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "超限导能": {
+     "name": "超限导能",
+     "text": "本回合内：你用 1–5 环法术位施展的、造成伤害的法师法术，伤害骰取最大值；反噬另算。",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      }
+     },
+     "rollMods": [
+      {
+       "on": {
+        "kind": "damage",
+        "spell": true
+       },
+       "who": "bearer",
+       "op": "maxDice",
+       "when": "ask('这次施法用的是 1–5 环法术位吗？')",
+       "label": "超限导能：伤害骰取最大"
+      }
+     ]
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:法术射手": {
+   "name": "法术射手",
+   "automation": "manual",
+   "text": "三项增益都要人处理：①【绕过掩体】你为法术进行的攻击检定无视半身掩护与四分之三掩护 —— 引擎不结算掩护，掷攻击时请让 DM 直接按无掩护判；②【抵近施法】你用法术进行的攻击检定不会因为 5 尺内有敌人而具有劣势 —— 引擎本来就不施加这条劣势，只要没人手动加上即可；③【法术增距】施展一道施法距离至少 10 尺、且需要你进行攻击检定的法术时，其施法距离增加 60 尺 —— 引擎按法术数据里的距离判够不够得着，请手动按 +60 尺判断。",
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:游荡者:诡术伏击:9": {
+   "name": "诡术伏击",
+   "automation": "partial",
+   "text": "处于隐形状态期间你对一名生物施展法术时，它在那个回合中为对抗该法术而进行的豁免检定具有劣势。引擎在你施法的那一刻给这道法术的目标挂上「豁免具有劣势」，持续到你的回合结束（豁免就在这之后掷，能吃上）。要人处理的是：法术如有多个目标（如火球术），引擎拿不到「哪一个目标」，请手动给每个目标挂劣势；同一回合里如果它还要为别的来源做豁免，引擎也会算成劣势（原文只针对这道法术）。",
+   "triggers": [
+    {
+     "id": "ambush",
+     "label": "诡术伏击",
+     "on": "spellCast",
+     "role": "actor",
+     "window": "after",
+     "when": "self.has('隐形') && target.id != self.id",
+     "do": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "诡术伏击"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "诡术伏击": {
+     "name": "诡术伏击",
+     "text": "本回合内为对抗这道法术而进行的豁免检定具有劣势。",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "source",
+       "nth": 0
+      }
+     },
+     "rollMods": [
+      {
+       "on": {
+        "kind": "save"
+       },
+       "who": "bearer",
+       "op": "disadv",
+       "label": "诡术伏击：对抗该法术的豁免具有劣势"
+      }
+     ]
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:游荡者:飘忽不定:18": {
+   "name": "飘忽不定",
+   "automation": "full",
+   "text": "只要你并未失能，以你为目标的攻击检定无法具有优势（引擎会把这次攻击的优势抹掉，只掷一颗 d20；如果同时有劣势，劣势照常生效）。",
+   "rollMods": [
+    {
+     "on": {
+      "kind": "attack"
+     },
+     "who": "against",
+     "when": "!self.has('失能')",
+     "op": "noAdv",
+     "label": "飘忽不定：对你的攻击不能有优势"
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:牧师:召现分身:3": {
+   "name": "召现分身",
+   "text": "附赠动作：消耗一次引导神力，创造一个无实体的完美幻象，位于你 30 尺内一处可见的未占据空间。幻象持续 1 分钟，可无需动作解除，陷入失能时结束。幻象存在期间：可如同在幻象位置施法（须用你自己的感官）；你和幻象都在某生物 5 尺内、且该生物能看见幻象时，你对它的攻击具有优势；附赠动作可把幻象移动至多 30 尺，目的地须是你 120 尺内一处可见的未占据空间。",
+   "automation": "partial",
+   "actions": [
+    {
+     "id": "use",
+     "name": "召现分身",
+     "activation": "bonus",
+     "cost": [
+      {
+       "resource": "引导神力"
+      }
+     ],
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "幻象"
+      }
+     ]
+    },
+    {
+     "id": "move",
+     "name": "召现分身：移动幻象",
+     "activation": "bonus",
+     "requires": "self.hasEffect('幻象')",
+     "root": [
+      {
+       "kind": "note",
+       "text": "把幻象移动至多 30 尺，到你 120 尺内一处可见的未占据空间（位置由人处理）"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "幻象": {
+     "name": "幻象",
+     "text": "无实体、不占据空间的完美视觉幻象。可如同在幻象位置施法（须用你自己的感官，手动处理）。",
+     "duration": {
+      "minutes": 1,
+      "endsOn": [
+       {
+        "event": "effectApplied",
+        "when": "event.bearer == self.id && self.has('失能')"
+       }
+      ]
+     },
+     "rollMods": [
+      {
+       "on": {
+        "kind": "attack"
+       },
+       "who": "bearer",
+       "when": "ask('你和幻象是否都在攻击目标 5 尺内，且目标能看见幻象？')",
+       "op": "adv",
+       "label": "召现分身：干扰"
+      }
+     ]
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:牧师:极效治疗:17": {
+   "name": "极效治疗",
+   "automation": "partial",
+   "text": "当你需要用一道法术或引导神力掷一枚或多枚骰子来决定为一个生物恢复多少生命值时，你无需掷骰，直接为每颗骰子取最高值（如 2d6 直接取 12）。引擎按这条修正把你掷的治疗骰全部取最大；但它连「被治疗者身上」的取最大也算，所以别人治疗你、或你喝药水这类不该取最大的治疗也会被取最大 —— 遇到时请手动改回掷骰结果。",
+   "rollMods": [
+    {
+     "on": {
+      "kind": "heal"
+     },
+     "who": "bearer",
+     "op": "maxDice",
+     "label": "极效治疗：治疗骰取最大值"
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  }
+ }
+}

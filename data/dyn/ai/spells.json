@@ -2564,7 +2564,7 @@
   "XPHB:spell:脆弱诅咒": {
    "name": "脆弱诅咒",
    "automation": "partial",
-   "text": "命中受诅咒目标的攻击额外造成 1d6 暗蚀伤害；所选属性检定劣势、目标生命值降至 0 后转移诅咒及升环延长专注时间需手动处理。",
+   "text": "以附赠动作诅咒 90 尺内一名你能看见的生物，专注至多 1 小时。施法时选一项属性：目标在持续时间内进行该属性的属性检定时具有劣势（已自动）。你对命中该目标的任意攻击额外造成 1d6 黯蚀伤害（已自动）。升环施法把专注延长到 4 / 8 / 24 小时，以及「目标生命值降至 0 后你可以用附赠动作用同一个诅咒换一个目标」引擎做不了，请手动：专注时长按 1 小时记；换目标时先在旧目标身上移除「脆弱诅咒」，再对新目标重新施放一次（会重新扣一个法术位，请在资源里手动退回来）。",
    "actions": [
     {
      "id": "cast",
@@ -2592,11 +2592,43 @@
      },
      "root": [
       {
+       "kind": "choose",
+       "prompt": "脆弱诅咒：选择一项属性（该属性的属性检定具有劣势）",
+       "var": "abil",
+       "options": [
+        {
+         "label": "力量",
+         "value": "str"
+        },
+        {
+         "label": "敏捷",
+         "value": "dex"
+        },
+        {
+         "label": "体质",
+         "value": "con"
+        },
+        {
+         "label": "智力",
+         "value": "int"
+        },
+        {
+         "label": "感知",
+         "value": "wis"
+        },
+        {
+         "label": "魅力",
+         "value": "cha"
+        }
+       ]
+      },
+      {
        "kind": "applyEffect",
-       "to": "self",
+       "to": "target",
        "template": "脆弱诅咒",
        "state": {
-        "curse": "target"
+        "caster": "self.id",
+        "abil": "vars.abil"
        }
       }
      ]
@@ -2608,23 +2640,35 @@
       "magical",
       "spell"
      ],
+     "rollMods": [
+      {
+       "on": {
+        "kind": "check"
+       },
+       "who": "bearer",
+       "when": "roll.ability == effect.state.abil",
+       "op": "disadv",
+       "label": "脆弱诅咒：所选属性检定劣势"
+      }
+     ],
      "triggers": [
       {
        "id": "dmg",
-       "label": "脆弱诅咒",
+       "label": "脆弱诅咒：额外伤害",
        "on": "attackHit",
-       "role": "actor",
+       "role": "target",
        "window": "before",
-       "when": "target.id == effect.state.curse",
+       "when": "attacker.id == effect.state.caster",
        "do": [
         {
          "kind": "addDamage",
          "dice": "1d6",
-         "type": "暗蚀"
+         "type": "黯蚀"
         }
        ]
       }
-     ]
+     ],
+     "text": "所选属性的属性检定具有劣势；施法者命中你时额外造成 1d6 黯蚀伤害。"
     }
    },
    "tags": [
@@ -10578,7 +10622,7 @@
   "XPHB:spell:魅惑怪物": {
    "name": "魅惑怪物",
    "automation": "partial",
-   "text": "30 尺内生物进行感知豁免（若正在与其战斗则豁免具有优势，需手动处理）。失败陷入魅惑状态，持续至多 1 小时或受到伤害时提前结束。升环每高一环可多选一个目标。友好态度与知晓被魅惑需手动 RP 处理。",
+   "text": "30 尺内一名你可见的生物进行感知豁免；如果你或你的盟友正在与它战斗，它在这次豁免上具有优势（引擎会问一句，答是就给优势；实现上是在施法时给目标挂一个只活到这次豁免的短效应，日志里会看到它出现又消失）。失败则陷入魅惑状态，持续至多 1 小时，或在你或你的盟友对它造成伤害时提前结束（伤害来源是施法者本人或与施法者同阵营时引擎自动结束）。升环每比四环高一级可多指定一名生物。「对你态度友好」「法术结束时它知道曾被你魅惑」是叙事层面，需要人处理。",
    "actions": [
     {
      "id": "cast",
@@ -10598,9 +10642,15 @@
      "targeting": {
       "type": "creature",
       "count": "slot.level - 3",
-      "range": 30
+      "range": 30,
+      "filter": "canSee(self, target)"
      },
      "root": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "战斗豁免优势"
+      },
       {
        "kind": "save",
        "ability": "wis",
@@ -10617,6 +10667,35 @@
     }
    ],
    "effects": {
+    "战斗豁免优势": {
+     "name": "魅惑：战斗中豁免优势",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      },
+      "endsOn": [
+       {
+        "event": "d20Rolled",
+        "when": "event.roller == self.id && event.kind == 'save' && event.ability == 'wis'"
+       }
+      ]
+     },
+     "rollMods": [
+      {
+       "on": {
+        "kind": "save",
+        "ability": "wis"
+       },
+       "who": "bearer",
+       "when": "ask('它是否正在与施法者或施法者的盟友战斗？（是则这次豁免具有优势）')",
+       "op": "adv",
+       "label": "魅惑怪物：正在战斗，豁免具有优势"
+      }
+     ],
+     "text": "只活到这次感知豁免掷完：正在与施法者或其盟友战斗时，这次豁免具有优势（由人回答）。"
+    },
     "魅惑怪物": {
      "tags": [
       "magical",
@@ -10629,11 +10708,12 @@
       "hours": 1,
       "endsOn": [
        {
-        "event": "damageTaken"
+        "event": "damageApplied",
+        "when": "event.target == self.id && event.total > 0 && (event.source == source.id || (event.source != null && combatant(event.source).isAllyOf(source)))"
        }
       ]
      },
-     "text": "陷入魅惑状态，视施法者为友好同伴。受到伤害时此效应提前终止。"
+     "text": "陷入魅惑状态，视施法者为友好同伴（态度友好、结束时知道自己曾被魅惑都由人 RP 处理）。施法者本人或其盟友对它造成伤害时提前结束。"
     }
    },
    "tags": [
@@ -10644,7 +10724,7 @@
   "XPHB:spell:魅惑类人": {
    "name": "魅惑类人",
    "automation": "partial",
-   "text": "30 尺内类人生物进行感知豁免（若正在与其战斗则豁免具有优势，需手动处理）。失败陷入魅惑状态，持续至多 1 小时或受到伤害时提前结束。升环每高一环可多选一个目标。友好态度与知晓被魅惑需手动 RP 处理。",
+   "text": "30 尺内一名你可见的类人生物进行感知豁免；如果你或你的盟友正在与它战斗，它在这次豁免上具有优势（引擎会问一句，答是就给优势；实现上是在施法时给目标挂一个只活到这次豁免的短效应，日志里会看到它出现又消失）。失败则陷入魅惑状态，持续至多 1 小时，或在你或你的盟友对它造成伤害时提前结束（伤害来源是施法者本人或与施法者同阵营时引擎自动结束）。升环每比一环高一级可多指定一名生物。「对你态度友好」「法术结束时它知道曾被你魅惑」是叙事层面，需要人处理。",
    "actions": [
     {
      "id": "cast",
@@ -10665,9 +10745,14 @@
       "type": "creature",
       "count": "slot.level",
       "range": 30,
-      "filter": "target.type == '类人生物'"
+      "filter": "target.type == '类人生物' && canSee(self, target)"
      },
      "root": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "战斗豁免优势"
+      },
       {
        "kind": "save",
        "ability": "wis",
@@ -10684,6 +10769,35 @@
     }
    ],
    "effects": {
+    "战斗豁免优势": {
+     "name": "魅惑：战斗中豁免优势",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      },
+      "endsOn": [
+       {
+        "event": "d20Rolled",
+        "when": "event.roller == self.id && event.kind == 'save' && event.ability == 'wis'"
+       }
+      ]
+     },
+     "rollMods": [
+      {
+       "on": {
+        "kind": "save",
+        "ability": "wis"
+       },
+       "who": "bearer",
+       "when": "ask('它是否正在与施法者或施法者的盟友战斗？（是则这次豁免具有优势）')",
+       "op": "adv",
+       "label": "魅惑类人：正在战斗，豁免具有优势"
+      }
+     ],
+     "text": "只活到这次感知豁免掷完：正在与施法者或其盟友战斗时，这次豁免具有优势（由人回答）。"
+    },
     "魅惑类人": {
      "tags": [
       "magical",
@@ -10696,11 +10810,12 @@
       "hours": 1,
       "endsOn": [
        {
-        "event": "damageTaken"
+        "event": "damageApplied",
+        "when": "event.target == self.id && event.total > 0 && (event.source == source.id || (event.source != null && combatant(event.source).isAllyOf(source)))"
        }
       ]
      },
-     "text": "陷入魅惑状态，视施法者为友好同伴。受到伤害时此效应提前终止。"
+     "text": "陷入魅惑状态，视施法者为友好同伴（态度友好、结束时知道自己曾被魅惑都由人 RP 处理）。施法者本人或其盟友对它造成伤害时提前结束。"
     }
    },
    "tags": [
@@ -13821,8 +13936,8 @@
   },
   "XPHB:spell:神导术": {
    "name": "神导术",
-   "automation": "partial",
-   "text": "专注至多 1 分钟。触碰一名自愿生物并指定一项技能，受术生物在进行该技能的属性检定时具有 1d4 加值（检定时询问确认）。",
+   "automation": "full",
+   "text": "专注至多 1 分钟。触碰一名自愿生物并选择一项技能：法术结束前，受术生物使用该技能进行的任何属性检定都加上 1d4。施法时在技能列表里选一项；之后掷骰时按技能名匹配（角色卡的技能是英文键、怪物的技能是中文名，两个都记进了效应里），不问人。",
    "actions": [
     {
      "id": "cast",
@@ -13842,9 +13957,262 @@
      },
      "root": [
       {
-       "kind": "applyEffect",
-       "to": "target",
-       "template": "神导术"
+       "kind": "choose",
+       "prompt": "神导术：选择一项技能",
+       "options": [
+        {
+         "label": "运动",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'athletics'",
+            "cn": "'运动'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "体操",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'acrobatics'",
+            "cn": "'体操'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "巧手",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'sleight of hand'",
+            "cn": "'巧手'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "隐匿",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'stealth'",
+            "cn": "'隐匿'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "奥秘",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'arcana'",
+            "cn": "'奥秘'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "历史",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'history'",
+            "cn": "'历史'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "调查",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'investigation'",
+            "cn": "'调查'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "自然",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'nature'",
+            "cn": "'自然'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "宗教",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'religion'",
+            "cn": "'宗教'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "驯兽",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'animal handling'",
+            "cn": "'驯兽'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "洞悉",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'insight'",
+            "cn": "'洞悉'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "医药",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'medicine'",
+            "cn": "'医药'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "察觉",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'perception'",
+            "cn": "'察觉'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "求生",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'survival'",
+            "cn": "'求生'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "欺瞒",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'deception'",
+            "cn": "'欺瞒'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "威吓",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'intimidation'",
+            "cn": "'威吓'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "表演",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'performance'",
+            "cn": "'表演'"
+           }
+          }
+         ]
+        },
+        {
+         "label": "游说",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "神导术",
+           "state": {
+            "skill": "'persuasion'",
+            "cn": "'游说'"
+           }
+          }
+         ]
+        }
+       ]
       }
      ]
     }
@@ -13861,12 +14229,13 @@
         "kind": "check"
        },
        "who": "bearer",
-       "when": "roll.skill != null && ask('此检定使用了神导术指定的技能吗？')",
+       "when": "roll.skill != null && (roll.skill == effect.state.skill || roll.skill == effect.state.cn)",
        "op": "addDice",
        "value": "1d4",
-       "label": "神导术"
+       "label": "神导术：所选技能检定 +1d4"
       }
-     ]
+     ],
+     "text": "使用所选技能进行的属性检定 +1d4。"
     }
    },
    "tags": [
@@ -15759,7 +16128,7 @@
   "XPHB:spell:塔莎狂笑术": {
    "name": "塔莎狂笑术",
    "automation": "partial",
-   "text": "专注至多 1 分钟。目标感知豁免失败陷入倒地和失能，且无法结束倒地状态。每回合结束或受到伤害时可再次进行感知豁免（因伤害所致具有优势），成功则法术终止。无法起身由玩家注意。",
+   "text": "专注至多 1 分钟。目标感知豁免失败则陷入倒地和失能，且无法凭自己结束倒地状态（在界面上点「起立」不会真的起来，只会白扣一半移动力，请留意）。目标在其每回合结束时、以及受到伤害时各可再做一次感知豁免，成功即结束法术。因受到伤害而做的这次豁免具有优势——引擎分不清这次豁免是不是因受伤而来，掷骰时会弹窗确认，答「是」才加优势。",
    "actions": [
     {
      "id": "cast",
@@ -15852,10 +16221,11 @@
           }
          ]
         }
-       ]
+       ],
+       "when": "damage.amount > 0"
       }
      ],
-     "text": "陷入倒地和失能状态，无法结束自身的倒地状态。每回合结束或受到伤害时可再次进行感知豁免（因伤害所致具有优势），成功则法术终止。"
+     "text": "陷入倒地和失能状态，无法凭自己结束倒地。每回合结束或受到伤害时可再次进行感知豁免（因伤害所致有优势），成功则法术终止。"
     }
    },
    "tags": [
@@ -16556,8 +16926,8 @@
   },
   "XPHB:spell:希望信标": {
    "name": "希望信标",
-   "automation": "partial",
-   "text": "施法距离内任意数量的目标感知豁免和死亡豁免具有优势；获得的所有治疗生命值恢复量取最大值需手动处理。",
+   "automation": "full",
+   "text": "专注至多 1 分钟。选择施法距离内任意数量的生物：这些生物在持续时间内进行的感知豁免和死亡豁免检定具有优势，且获得的所有治疗（不论来自法术、药水还是能力）恢复的生命值都取最大值。",
    "actions": [
     {
      "id": "cast",
@@ -16616,9 +16986,17 @@
        "who": "bearer",
        "op": "adv",
        "label": "希望信标：死亡豁免优势"
+      },
+      {
+       "on": {
+        "kind": "heal"
+       },
+       "who": "bearer",
+       "op": "maxDice",
+       "label": "希望信标：治疗取最大值"
       }
      ],
-     "text": "感知豁免和死亡豁免检定具有优势；受到的所有治疗生命值恢复量取最大值（需手动处理）。"
+     "text": "感知豁免和死亡豁免检定具有优势；受到的任何治疗都取最大值。"
     }
    },
    "tags": [
@@ -18954,7 +19332,7 @@
   "XPHB:spell:疫病术": {
    "name": "疫病术",
    "automation": "partial",
-   "text": "以触碰传染魔法疫病。目标进行体质豁免，失败受 11d8 黯蚀伤害并陷入中毒状态，且施法时指定的属性豁免具有劣势。目标每回合结束时重复体质豁免，累计 3 次成功则法术终止；累计 3 次失败则效应持续 7 日。受到结束中毒的效应作用时须通过体质豁免否则中毒不结束（指定属性劣势、豁免次数累计与后续解毒判定需手动处理）。",
+   "text": "触碰一名生物，它进行体质豁免：失败受到 11d8 黯蚀伤害并陷入中毒。施法时选一项属性，目标在中毒期间进行该属性的豁免检定时具有劣势（已自动）。目标在其每回合结束时的重复体质豁免要累计三次成功 / 三次失败（三次成功结束效应，三次失败则效应持续 7 日），以及中毒目标受到「结束中毒」的效应时必须通过体质豁免否则中毒不结束——这两项引擎没有计数器、也没有拦截「结束中毒」的接口，请手动记录与判定。效应结束（或持续 7 日后）请在目标身上手动移除「疫病」。",
    "actions": [
     {
      "id": "cast",
@@ -18978,6 +19356,37 @@
      },
      "root": [
       {
+       "kind": "choose",
+       "prompt": "疫病术：选择一项属性（中毒期间该属性的豁免检定具有劣势）",
+       "var": "abil",
+       "options": [
+        {
+         "label": "力量",
+         "value": "str"
+        },
+        {
+         "label": "敏捷",
+         "value": "dex"
+        },
+        {
+         "label": "体质",
+         "value": "con"
+        },
+        {
+         "label": "智力",
+         "value": "int"
+        },
+        {
+         "label": "感知",
+         "value": "wis"
+        },
+        {
+         "label": "魅力",
+         "value": "cha"
+        }
+       ]
+      },
+      {
        "kind": "save",
        "ability": "con",
        "dc": "self.spell.dc",
@@ -18990,7 +19399,10 @@
         {
          "kind": "applyEffect",
          "template": "疫病",
-         "to": "target"
+         "to": "target",
+         "state": {
+          "abil": "vars.abil"
+         }
         }
        ]
       }
@@ -19006,7 +19418,18 @@
      "implies": [
       "XPHB:condition:中毒"
      ],
-     "text": "陷入中毒状态，施法时指定的一项属性豁免检定具有劣势。目标在每回合结束时重复体质豁免对抗法术 DC，累计 3 次成功则效应结束，累计 3 次失败则持续 7 日。受到结束中毒状态的效应时须通过体质豁免否则中毒不结束。"
+     "rollMods": [
+      {
+       "on": {
+        "kind": "save"
+       },
+       "who": "bearer",
+       "when": "roll.ability == effect.state.abil",
+       "op": "disadv",
+       "label": "疫病术：所选属性豁免劣势"
+      }
+     ],
+     "text": "陷入中毒状态；进行所选属性的豁免检定时具有劣势。每回合结束时的重复体质豁免要累计三次成功 / 失败（手动记录）。"
     }
    },
    "tags": [

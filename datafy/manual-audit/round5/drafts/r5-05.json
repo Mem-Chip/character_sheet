@@ -1,0 +1,301 @@
+{
+ "version": 1,
+ "note": "第五大类（重骰 / 加骰 / 改判定）第 5 批：8 条。能做进引擎的都写了：豁免优势用「施法时挂一个只活到这次豁免的短效应」（诱捕打击按目标体型、两个魅惑按是否在战斗）；魅惑的「受到伤害提前结束」原写法挂的 damageTaken 引擎根本不发这个事件，改成 damageApplied + 施法者/其盟友判断（实测：盟友打会结束、目标自己人打不结束）；诱捕打击豁免成功连同专注一起收掉；战地医师写成动作，生命骰点数用 number 节点手输、治疗量自动加熟练加值。做不到的（重掷伤害骰 / 治疗骰、多目标法术里指定一名加劣势、装填与 5 尺内远程劣势）保持 manual 或 partial，text 里写明要人处理哪一步。顺带修掉强弩专家「双持射击」重复加属性调整值（引擎的武器伤害本来就含调整值，实测会从 1d6+3 变成 1d6+6）。验证：check-draft 8/8 通过；.oracle/tmp-r505-probe.ts 与 tmp-r505-probe2.ts 跑了体型优势、魅惑伤害结束、升环多目标、升阶法术扣 2 术法点并掷劣势、战地医师治疗量、手弩伤害不重复加值。",
+ "entries": {
+  "XPHB:spell:魅惑怪物": {
+   "name": "魅惑怪物",
+   "automation": "partial",
+   "text": "30 尺内一名你可见的生物进行感知豁免；如果你或你的盟友正在与它战斗，它在这次豁免上具有优势（引擎会问一句，答是就给优势；实现上是在施法时给目标挂一个只活到这次豁免的短效应，日志里会看到它出现又消失）。失败则陷入魅惑状态，持续至多 1 小时，或在你或你的盟友对它造成伤害时提前结束（伤害来源是施法者本人或与施法者同阵营时引擎自动结束）。升环每比四环高一级可多指定一名生物。「对你态度友好」「法术结束时它知道曾被你魅惑」是叙事层面，需要人处理。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "魅惑怪物",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 4
+       }
+      }
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": "slot.level - 3",
+      "range": 30,
+      "filter": "canSee(self, target)"
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "战斗豁免优势"
+      },
+      {
+       "kind": "save",
+       "ability": "wis",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "applyEffect",
+         "to": "target",
+         "template": "魅惑怪物"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "战斗豁免优势": {
+     "name": "魅惑：战斗中豁免优势",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      },
+      "endsOn": [
+       {
+        "event": "d20Rolled",
+        "when": "event.roller == self.id && event.kind == 'save' && event.ability == 'wis'"
+       }
+      ]
+     },
+     "rollMods": [
+      {
+       "on": {
+        "kind": "save",
+        "ability": "wis"
+       },
+       "who": "bearer",
+       "when": "ask('它是否正在与施法者或施法者的盟友战斗？（是则这次豁免具有优势）')",
+       "op": "adv",
+       "label": "魅惑怪物：正在战斗，豁免具有优势"
+      }
+     ],
+     "text": "只活到这次感知豁免掷完：正在与施法者或其盟友战斗时，这次豁免具有优势（由人回答）。"
+    },
+    "魅惑怪物": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "implies": [
+      "XPHB:condition:魅惑"
+     ],
+     "duration": {
+      "hours": 1,
+      "endsOn": [
+       {
+        "event": "damageApplied",
+        "when": "event.target == self.id && event.total > 0 && (event.source == source.id || (event.source != null && combatant(event.source).isAllyOf(source)))"
+       }
+      ]
+     },
+     "text": "陷入魅惑状态，视施法者为友好同伴（态度友好、结束时知道自己曾被魅惑都由人 RP 处理）。施法者本人或其盟友对它造成伤害时提前结束。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:魅惑类人": {
+   "name": "魅惑类人",
+   "automation": "partial",
+   "text": "30 尺内一名你可见的类人生物进行感知豁免；如果你或你的盟友正在与它战斗，它在这次豁免上具有优势（引擎会问一句，答是就给优势；实现上是在施法时给目标挂一个只活到这次豁免的短效应，日志里会看到它出现又消失）。失败则陷入魅惑状态，持续至多 1 小时，或在你或你的盟友对它造成伤害时提前结束（伤害来源是施法者本人或与施法者同阵营时引擎自动结束）。升环每比一环高一级可多指定一名生物。「对你态度友好」「法术结束时它知道曾被你魅惑」是叙事层面，需要人处理。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "魅惑类人",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 1
+       }
+      }
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": "slot.level",
+      "range": 30,
+      "filter": "target.type == '类人生物' && canSee(self, target)"
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "战斗豁免优势"
+      },
+      {
+       "kind": "save",
+       "ability": "wis",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "applyEffect",
+         "to": "target",
+         "template": "魅惑类人"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "战斗豁免优势": {
+     "name": "魅惑：战斗中豁免优势",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      },
+      "endsOn": [
+       {
+        "event": "d20Rolled",
+        "when": "event.roller == self.id && event.kind == 'save' && event.ability == 'wis'"
+       }
+      ]
+     },
+     "rollMods": [
+      {
+       "on": {
+        "kind": "save",
+        "ability": "wis"
+       },
+       "who": "bearer",
+       "when": "ask('它是否正在与施法者或施法者的盟友战斗？（是则这次豁免具有优势）')",
+       "op": "adv",
+       "label": "魅惑类人：正在战斗，豁免具有优势"
+      }
+     ],
+     "text": "只活到这次感知豁免掷完：正在与施法者或其盟友战斗时，这次豁免具有优势（由人回答）。"
+    },
+    "魅惑类人": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "implies": [
+      "XPHB:condition:魅惑"
+     ],
+     "duration": {
+      "hours": 1,
+      "endsOn": [
+       {
+        "event": "damageApplied",
+        "when": "event.target == self.id && event.total > 0 && (event.source == source.id || (event.source != null && combatant(event.source).isAllyOf(source)))"
+       }
+      ]
+     },
+     "text": "陷入魅惑状态，视施法者为友好同伴（态度友好、结束时知道自己曾被魅惑都由人 RP 处理）。施法者本人或其盟友对它造成伤害时提前结束。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:凶蛮打手": {
+   "name": "凶蛮打手",
+   "automation": "manual",
+   "text": "每回合一次，当你用武器命中目标时，可以掷两次这把武器的伤害骰，并自选其中一次应用在目标上。引擎没有「重掷伤害骰」这个操作（窗口里的 reroll 只认 d20），所以不自动化：命中后请自己再掷一遍这次攻击的武器伤害骰，在「事后裁定」里把这次伤害改成你选的那一组；每回合一次也请自己记。",
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:升阶法术": {
+   "name": "升阶法术",
+   "automation": "partial",
+   "text": "超魔法：当你施展一道迫使生物进行豁免的法术时，消耗 2 术法点，使法术影响的某一名生物对这次豁免具有劣势。引擎只能自动处理「法术只有一个目标」的情形：施法时会问你要不要用（前提会一起列出来），用了就扣 2 术法点，目标紧接着的那次豁免掷两次取低（实现上是在它身上挂一个只活到这次豁免的短效应，日志里会看到它出现又消失）。多目标的法术（火球术这类）引擎没法在施法窗口里只挑其中一名生物：请自己扣 2 术法点、在目标掷豁免时用「事后裁定」改那次结果。同一道法术只能用一种超魔法（强效法术除外），这一点引擎不校验，请自己保证。",
+   "triggers": [
+    {
+     "id": "heighten",
+     "label": "升阶法术",
+     "on": "spellCast",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "cost": [
+      {
+       "resource": "sorcery_points",
+       "n": 2
+      }
+     ],
+     "when": "target.id != self.id && ask('这道法术是否迫使该生物进行豁免？')",
+     "do": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "升阶：豁免劣势"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "升阶：豁免劣势": {
+     "name": "升阶法术：这次豁免劣势",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      },
+      "endsOn": [
+       {
+        "event": "d20Rolled",
+        "when": "event.roller == self.id && event.kind == 'save'"
+       }
+      ]
+     },
+     "rollMods": [
+      {
+       "on": {
+        "kind": "save"
+       },
+       "who": "bearer",
+       "op": "disadv",
+       "label": "升阶法术"
+      }
+     ],
+     "text": "对这道法术的这次豁免具有劣势（掷完即散）。"
+    }
+   },
+   "tags": [
+    "metamagic",
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:强弩专家": {
+   "name": "强弩专家",
+   "automation": "manual",
+   "text": "三条增益里有两条引擎里没有对应的规则可挂，第三条引擎已经在伤害里算进去了，所以这条不自动化：【无视装填】引擎不模拟「装填」词条（弩可以照常连射，也不记弹药），这条不用额外处理。【抵近射击】引擎不模拟「远程攻击在敌人 5 尺内具有劣势」这条规则（距离与视线类规则由人判断），所以没有劣势要被取消；如果桌面上按那条规则罚了劣势，请自己手动处理。【双持射击】引擎的武器伤害始终含属性调整值 —— 它也没实现「轻型词条的追加攻击不加属性调整值」，追加攻击的伤害里本来就有调整值，这个专长要的「可以加」已经体现在里面了，不要再给它额外加一次。",
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:强效法术": {
+   "name": "强效法术",
+   "automation": "manual",
+   "text": "超魔法：当你为一个法术进行伤害掷骰时，可以消耗 1 术法点，重掷最多等同于你魅力调整值数量（至少一个）的伤害骰，且必须使用新的结果（可与其它超魔同用）。引擎没有重掷伤害骰的操作（窗口里的 reroll 只认 d20，伤害骰的修正只有取最大 / 最小骰面这类），所以不自动化：请自己扣 1 术法点，重掷那么多颗这次的伤害骰，在「事后裁定」里把这次伤害改成新结果。",
+   "tags": [
+    "metamagic",
+    "ai",
+    "未审"
+   ]
+  }
+ }
+}

@@ -1,0 +1,214 @@
+{
+ "version": 1,
+ "note": "第五类（重骰 / 加骰 / 改判定）第 3 批 8 条：按 5etools 原文重写，能自动的接上 clearAdv / reroll / 检定修正与窗口，做不到的留在 text 里",
+ "entries": {
+  "XGE:术士:强效治疗:6": {
+   "name": "强效治疗",
+   "automation": "partial",
+   "text": "当你或你 5 尺内的盟友为决定法术恢复多少生命值而掷骰时，只要你没失能，可以花 1 点术法点让它重骰其中任意数量枚骰子一次。引擎没有「重骰治疗骰」的口子（治疗骰一掷出来就结算了），所以自动化只到「花掉那 1 点术法点并留一条记录」：施法治疗骰掷完后，请手动重骰、把恢复量改成新结果。每回合一次、目标在你 5 尺内这两点由你和 DM 把关。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "强效治疗",
+     "activation": "free",
+     "requires": "!self.has('失能')",
+     "cost": [
+      {
+       "resource": "sorcery_points",
+       "n": 1
+      }
+     ],
+     "root": [
+      {
+       "kind": "note",
+       "text": "强效治疗：花 1 点术法点，让这次治疗的法术重掷任意数量枚恢复骰（每回合一次、施法者或 5 尺内的盟友）——请手动重骰并把恢复量改成新结果。"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:武僧:醉汉机运:11": {
+   "name": "醉汉机运",
+   "automation": "full",
+   "text": "属性检定、攻击检定或豁免检定有劣势时，可以花 2 点功力抵消这一劣势：在掷骰弹窗里选它，这次检定就按无劣势的单颗 d20 结算（用原本的第一颗骰）。",
+   "triggers": [
+    {
+     "id": "drunkards-luck",
+     "label": "醉汉机运：抵消劣势",
+     "on": "d20Rolled",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "when": "roll.disadv",
+     "cost": [
+      {
+       "resource": "功力",
+       "n": 2
+      }
+     ],
+     "modify": [
+      {
+       "op": "clearAdv",
+       "which": "disadv"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:精灵之准": {
+   "name": "精灵之准",
+   "automation": "full",
+   "text": "攻击检定具有优势、且这次攻击用的是敏捷 / 智力 / 感知 / 魅力时，可以重骰其中一颗 d20（等于掷三颗取最高）。引擎写成「重骰一颗并保留较高者」：重骰较低那颗时两种算法完全一样，所以结果与原规则等价（想追重击也可以选，不必等要失手）。法术攻击的数据里通常没写用哪个属性，这时会多问一句「用的是智力 / 感知 / 魅力吗」，答是才给。",
+   "triggers": [
+    {
+     "id": "elven-accuracy",
+     "label": "精灵之准：重骰一颗优势骰",
+     "on": "d20Rolled",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "when": "roll.kind == 'attack' && roll.adv && (attack.ability == 'dex' || attack.ability == 'int' || attack.ability == 'wis' || attack.ability == 'cha' || (attack.spell && ask('这次法术攻击用的是智力 / 感知 / 魅力吗？')))",
+     "modify": [
+      {
+       "op": "reroll",
+       "die": "d20",
+       "keep": "higher"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:action:协助": {
+   "name": "协助",
+   "tags": [
+    "basic"
+   ],
+   "automation": "partial",
+   "text": "执行协助动作时选一种：(1) 选一个盟友 —— 辅助它下一次属性检定（你得先选一项自己的技能 / 工具熟练；之后那一次检定上引擎会问「用的是协助时选定的那项技能 / 工具吗」，答是才给优势）；(2) 选你 5 尺内的一个敌人 —— 下一次由你的盟友对该敌人的攻击检定具有优势（第一个这样的攻击检定之后失效；有地图时选第二个分支会检查那个敌人在不在 5 尺内）。两种协助都会在你的下个回合开始时失效。「距离不远、你能口头 / 物理上协助」「DM 有最终解释权」引擎不判断，请自行把关。此外协助动作也可用于稳定伤势（照稳定伤势的规则处理）。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "协助",
+     "activation": "action",
+     "targeting": {
+      "type": "creature",
+      "count": 1
+     },
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "协助的方式（①选的是要帮的盟友，②选的是你 5 尺内要虚晃的敌人）",
+       "options": [
+        {
+         "label": "①辅助一次属性检定：选的是盟友",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "协助检定"
+          }
+         ]
+        },
+        {
+         "label": "②辅助一次攻击检定：选的是你 5 尺内的敌人",
+         "when": "within(self, target, 5)",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "协助攻击"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "协助检定": {
+     "text": "用协助者选定的那项技能 / 工具做的下一次属性检定具有优势（引擎每次会问「是不是这次」）；用掉或在协助者的下个回合开始时消失。",
+     "rollMods": [
+      {
+       "on": {
+        "kind": "check"
+       },
+       "who": "bearer",
+       "when": "ask('这次属性检定用的是协助时选定的那项技能 / 工具吗？')",
+       "op": "adv",
+       "label": "协助（辅助属性检定）"
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "source",
+       "nth": 1
+      },
+      "endsOn": [
+       {
+        "event": "d20Rolled",
+        "when": "event.kind == 'check' && event.roller == self.id && ask('这次属性检定用的是协助时选定的那项技能 / 工具吗？')"
+       }
+      ]
+     }
+    },
+    "协助攻击": {
+     "text": "下一名盟友对这名生物的攻击检定具有优势；在协助者的下个回合开始时消失。",
+     "rollMods": [
+      {
+       "on": {
+        "kind": "attack"
+       },
+       "who": "against",
+       "when": "source != null && attacker.isAllyOf(source)",
+       "op": "adv",
+       "label": "协助（辅助攻击检定）"
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "source",
+       "nth": 1
+      },
+      "endsOn": [
+       {
+        "event": "d20Rolled",
+        "when": "event.kind == 'attack' && event.target == self.id && source != null && combatant(event.roller).isAllyOf(source)"
+       }
+      ]
+     }
+    }
+   }
+  },
+  "XPHB:condition:魅惑": {
+   "name": "魅惑",
+   "text": "你无法攻击魅惑源，也无法将其作为伤害性能力或魔法效应的对象；魅惑源对你进行的任何有关社交的属性检定均具有优势。",
+   "automation": "partial",
+   "effects": {
+    "魅惑": {
+     "tags": [
+      "condition"
+     ],
+     "flags": {
+      "forbidTarget": "source"
+     },
+     "text": "不能选魅惑源当目标（选目标时引擎会拦下：攻击与需要选生物的动作都选不中它）。魅惑源对你做的、与社交有关（欺瞒 / 威吓 / 表演 / 游说）的属性检定具有优势 —— 引擎「对别人不利」的检定修正只对攻击检定收集，这一条要人手动给优势。"
+    }
+   }
+  }
+ }
+}
