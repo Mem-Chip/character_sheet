@@ -2890,39 +2890,63 @@
   "AU:预言专家": {
    "name": "预言专家",
    "automation": "partial",
-   "text": "准备法术属于人物卡静态层授予。【先见干预】60尺内可见生物进行D20检定时，可以反应令该生物本次掷骰获得优势或劣势。长休恢复1次；使用法术位施展预言法术亦可重获使用次数。优势或劣势需手动处理。",
-   "actions": [
+   "text": "【额外法术】始终准备的法术表属于人物卡静态层（已经给好，这里不重复）。【先见干预】60 尺内你可见的生物（包括你自己）进行一次 D20 检定时，你可以用反应让那次掷骰获得优势或劣势（由你选择），长休前 1 次；用环阶施放一道预言学派法术可以重获次数。引擎没有「在掷骰窗口里补一个优势 / 劣势」的写法，这里用「再掷一颗 d20、优势取高 / 劣势取低」近似：原本没有优势也没有劣势时，它与优势完全同分布；原本已经有劣势再给优势时，算的是三颗取最高，和「优势与劣势抵消」那种算法略有出入，遇到这种情况请人看一眼。为了不每次掷骰都问人：优势只在你或盟友的检定将要失败时提供，劣势只在别人的检定将要成功时提供（带 DC 的检定只在将要失败时才提供、没有 DC 的检定（先攻、DM 裁定的检定）总是提供，其余时候改了也不会改变结果），两个选项一次只能选一个，次数用完之后选项自动消失。反应动作由引擎照常扣。【重获次数】引擎读不到法术的学派，只读得到这一下有没有花法术位，所以花法术位施法之后会问一句「是预言学派吗」，答是就把次数还回来。",
+   "triggers": [
     {
-     "id": "use",
-     "name": "预言专家：先见干预",
-     "activation": "reaction",
-     "trigger": {
-      "on": "d20Rolled",
-      "role": "any",
-      "window": "before",
-      "when": "within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))"
-     },
+     "id": "glimpse-adv",
+     "label": "先见干预：令这次检定获得优势",
+     "on": "d20Rolled",
+     "role": "any",
+     "window": "before",
+     "optional": true,
+     "when": "(roll.vs == null || roll.failing) && !roll.adv && (combatant(roll.roller).id == self.id || combatant(roll.roller).isAllyOf(self)) && (combatant(roll.roller).id == self.id || (within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))))",
      "cost": [
+      {
+       "economy": "reaction"
+      },
       {
        "resource": "glimpse-intervention"
       }
      ],
-     "root": [
+     "modify": [
       {
-       "kind": "note",
-       "text": "先见干预：已消耗反应，请手动为本次 D20 检定赋予优势或劣势。"
+       "op": "reroll",
+       "die": "d20",
+       "keep": "higher"
       }
      ]
-    }
-   ],
-   "triggers": [
+    },
+    {
+     "id": "glimpse-disadv",
+     "label": "先见干预：令这次检定获得劣势",
+     "on": "d20Rolled",
+     "role": "any",
+     "window": "before",
+     "optional": true,
+     "when": "!roll.failing && !roll.disadv && combatant(roll.roller).id != self.id && !combatant(roll.roller).isAllyOf(self) && within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))",
+     "cost": [
+      {
+       "economy": "reaction"
+      },
+      {
+       "resource": "glimpse-intervention"
+      }
+     ],
+     "modify": [
+      {
+       "op": "reroll",
+       "die": "d20",
+       "keep": "lower"
+      }
+     ]
+    },
     {
      "id": "regain-intervention",
-     "label": "先见干预：施展预言法术重获次数",
+     "label": "先见干预：施展预言学派法术重获次数",
      "on": "spellCast",
      "role": "actor",
      "window": "after",
-     "when": "ask('刚才是使用法术位施展预言学派法术吗？')",
+     "when": "event.slotLevel > 0 && ask('刚才这道法术是预言学派的吗？（用环阶法术位施放预言学派法术可以重获一次先见干预）')",
      "do": [
       {
        "kind": "if",
@@ -19863,7 +19887,7 @@
   "XGE:弗莱格索斯之焰": {
    "name": "弗莱格索斯之焰",
    "automation": "partial",
-   "text": "施展法术投掷火焰伤害时可重骰骰值为1的伤害骰（必须接受新结果，手动处理）。施放造成火焰伤害的法术时，可以让火焰环绕自己至下个回合结束：发出30尺明亮光照与额外30尺微光，且任何在5尺内以近战攻击击中你的生物受到1d4点火焰伤害（反伤手动处理）。",
+   "text": "施放造成火焰伤害的法术时，可选让火焰环绕你直到你的下个回合结束：任何在 5 尺内用近战攻击命中你的生物受到 1d4 点火焰伤害 —— 这一条引擎会自动结算（没有地图时按「在 5 尺内」推测，不会弹窗），每次命中都结算。光照（30 尺明亮 + 额外 30 尺微光）引擎没有光照模型，请口头处理。另一条「为你法术的火焰伤害骰重骰骰值为 1 的骰子」引擎目前只在 d20 检定上重骰，不能逐颗重骰伤害骰：请手动重骰并接受新结果、再按新结果结算那一次伤害。",
    "triggers": [
     {
      "id": "wreath-of-flame",
@@ -19872,38 +19896,40 @@
      "role": "actor",
      "window": "after",
      "optional": true,
-     "when": "ask('刚施展的法术造成火焰伤害吗？')",
+     "when": "ask('刚施展的这道法术造成火焰伤害吗？')",
      "do": [
       {
        "kind": "applyEffect",
-       "template": "弗莱格索斯之焰：火环",
        "to": "self",
-       "duration": {
-        "until": {
-         "at": "turnEnd",
-         "of": "bearer",
-         "nth": 1
-        }
-       }
+       "template": "弗莱格索斯之焰：火环"
       }
      ]
     }
    ],
    "effects": {
     "弗莱格索斯之焰：火环": {
-     "text": "环绕火焰，在30尺内发出明亮光照，并在额外30尺内发出微光。当火焰存在时，任何在5尺内用近战攻击击中你的生物受到1d4点火焰伤害。",
+     "text": "火焰环绕你：30 尺明亮光照与额外 30 尺微光（引擎无光照，请口头处理）。火焰存在时，任何在 5 尺内用近战攻击命中你的生物受到 1d4 点火焰伤害（已自动化）。",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 1
+      }
+     },
      "triggers": [
       {
        "id": "retaliate",
-       "label": "火环反击",
+       "label": "火环：近战命中者受 1d4 火焰",
        "on": "attackHit",
        "role": "target",
        "window": "after",
        "when": "attack.melee && within(self, attacker, 5)",
        "do": [
         {
-         "kind": "note",
-         "text": "弗莱格索斯之焰：5尺内近战攻击命中你的生物受到 1d4 点火焰伤害。"
+         "kind": "damage",
+         "to": "attacker",
+         "dice": "1d4",
+         "type": "火焰"
         }
        ]
       }
@@ -20046,16 +20072,16 @@
   "XGE:慷慨吉运": {
    "name": "慷慨吉运",
    "automation": "partial",
-   "text": "30尺内可见盟友在攻击检定、技能检定或豁免检定的d20中掷出1时，可以反应使其重骰一次并接受新结果。使用后直到你下个回合结束前无法使用幸运种族特质（封禁需手动记录）。",
+   "text": "30 尺内你可见的盟友在攻击检定、属性检定或豁免检定的 d20 上掷出 1 时，你可以用反应让它重骰一次，盟友必须接受新结果 —— 这一条已自动化（代价是反应；没有地图时距离会问你、视线按「看得见」推测（不会自己拦下看不见的盟友））。引擎只看最终采用的那颗 d20：有优势 / 劣势时另一颗骰出 1 不会问（规则上那颗 1 也能重骰）。后半段「用过之后，直到你的下个回合结束前不能使用半身人的『幸运』特质」引擎不能真的封掉另一个特性：用完会挂一个可见的「幸运已封锁」提醒，到你的下个回合结束时自动消失，是否真的还在用幸运要靠人和 DM 把关。",
    "triggers": [
     {
      "id": "bountiful-luck",
-     "label": "慷慨吉运：令盟友重骰",
+     "label": "慷慨吉运：让盟友重骰",
      "on": "d20Rolled",
      "role": "any",
      "window": "before",
      "optional": true,
-     "when": "roll.natural == 1 && (roll.kind == 'attack' || roll.kind == 'save' || roll.kind == 'check') && roll.roller != self.id && within(self, combatant(roll.roller), 30) && canSee(self, combatant(roll.roller)) && combatant(roll.roller).side == self.side",
+     "when": "roll.natural == 1 && (roll.kind == 'attack' || roll.kind == 'save' || roll.kind == 'check') && combatant(roll.roller).isAllyOf(self) && within(self, combatant(roll.roller), 30) && canSee(self, combatant(roll.roller))",
      "cost": [
       {
        "economy": "reaction"
@@ -20067,9 +20093,28 @@
        "die": "d20",
        "keep": "new"
       }
+     ],
+     "do": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "慷慨吉运：幸运已封锁"
+      }
      ]
     }
    ],
+   "effects": {
+    "慷慨吉运：幸运已封锁": {
+     "text": "（提醒）到你的下个回合结束前，你不能使用半身人的「幸运」特质。引擎无法封掉另一个特性，请自行遵守。",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 1
+      }
+     }
+    }
+   },
    "tags": [
     "ai",
     "未审"
@@ -25244,8 +25289,32 @@
   },
   "XGE:战士:燕返:15": {
    "name": "燕返",
-   "text": "当你在自己回合中执行了攻击动作，且你在其中某次对抗某一目标的攻击检定中具有优势，你就可以放弃那次检定的那一优势，转而额外对那个目标发动一次攻击作为本次攻击动作的一部分。每回合你只能这么做一次。（引擎未实现在单次攻击中放弃优势置换额外攻击的流程，需手动处理）",
-   "automation": "manual",
+   "automation": "partial",
+   "text": "自己回合里，你对抗某个目标的攻击检定具有优势时可以放弃这项优势，换取对同一目标的一次额外攻击。用法：在这颗 d20 的弹窗里选「燕返」—— 这次检定改为无优势的单颗骰结算（引擎按**第一颗**骰判，弹窗里显示的是较高的那颗，结果对不上时以第一颗为准）（放弃那一优势），并且你的剩余攻击次数 +1，照常在动作栏再点一次武器攻击即可。每回合一次由引擎限制。引擎分不出「这一下是不是攻击动作给的攻击」、也不会限制额外那一次只能打同一个目标，这两点请自行遵守。",
+   "triggers": [
+    {
+     "id": "rapid-strike",
+     "label": "燕返：放弃优势换一次额外攻击",
+     "on": "d20Rolled",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "limit": "oncePerTurn",
+     "when": "roll.kind == 'attack' && roll.adv && turn.isMine",
+     "modify": [
+      {
+       "op": "clearAdv",
+       "which": "adv"
+      }
+     ],
+     "do": [
+      {
+       "kind": "economy",
+       "attacks": 1
+      }
+     ]
+    }
+   ],
    "tags": [
     "ai",
     "未审"
