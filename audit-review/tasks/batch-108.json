@@ -1,0 +1,678 @@
+{
+ "batch": "batch-108",
+ "count": 10,
+ "entries": [
+  {
+   "key": "XPHB:spell:秘法门",
+   "name": "秘法门",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 500 尺内指定一处未被占据的大型空间，并在身边 10 尺内指定另一处未被占据的大型空间，开启相连的单面圆形传送门。任何进入传送门的东西从另一门出现如同两门邻接。以附赠动作可改变传送门开门朝向（传送门位置与穿越需在地图上手动操作）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "秘法门",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 6
+        }
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": 500
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "秘法门：改变朝向",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating",
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:命令术",
+   "name": "命令术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "目标进行感知豁免，失败在其下一回合必须服从指定命令（过来、放下、走开、趴下、阻拦）。趴下附带倒地，阻拦限制动作和附赠动作；移动路径与提前结束回合需手动配合处理。升环每高一环可多选一个目标。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "命令术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": "slot.level",
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "命令术：趴下",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 1
+       }
+      }
+     },
+     {
+      "name": "命令术：阻拦",
+      "statics": [],
+      "flags": {
+       "blocks": [
+        "action",
+        "bonus"
+       ]
+      },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 1
+       }
+      }
+     },
+     {
+      "name": "命令术：过来",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 1
+       }
+      }
+     },
+     {
+      "name": "命令术：放下",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 1
+       }
+      }
+     },
+     {
+      "name": "命令术：走开",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少强制目标在下个回合执行预设动作（接近、丢弃手持物、远离、提前结束回合）的行为控制机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:魔邓肯之剑",
+   "name": "魔邓肯之剑",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "动作在 90 尺内创造悬浮的灵体剑刃（专注至多 1 分钟）并对该剑 5 尺内目标发动近战法术攻击，命中造成 4d12 + 施法属性调整值点力场伤害。后续回合可用附赠动作将剑移动至多 30 尺并重复攻击（剑的位置移动在地图上手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "魔邓肯之剑",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 7
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 90
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "attack",
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "魔邓肯之剑：移动并攻击",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 90
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating && self.hasEffect('魔邓肯之剑')",
+      "root": [
+       "attack"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "魔邓肯之剑",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:魔邓肯忠犬",
+   "name": "魔邓肯忠犬",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "创造幻影守护犬（持续 8 小时，相距超 300 尺终止）。守护犬拥有 30 尺真实视觉，有生物进入 30 尺且无口令时吠叫。施法者每回合开始时守护犬尝试啮咬 5 尺内一名敌人（通过「魔邓肯忠犬：啮咬」敏捷豁免对抗法术 DC，失败受 4d8 力场伤害）；后续回合可用动作令守护犬移动至多 30 尺。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "魔邓肯忠犬",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "bite",
+      "name": "魔邓肯忠犬：啮咬",
+      "activation": "none",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('魔邓肯忠犬')",
+      "root": [
+       "save"
+      ]
+     },
+     {
+      "id": "move",
+      "name": "魔邓肯忠犬：移动",
+      "activation": "action",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('魔邓肯忠犬')",
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "魔邓肯忠犬",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "hours": 8
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少带独立真视感知与回合开始自动索敌攻击的不可见忠犬实体及地图移动",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:魔化武器",
+   "name": "魔化武器",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "附赠动作触碰一件非魔法武器：它成为魔法武器，攻击检定与伤害掷骰 +1（3～5 环法术位 +2，6 环及以上 +3），持续 1 小时。已自动化：加值按施法环阶算好、挂在被触碰的持有者身上，用它攻击 / 造成伤害时问一句「是不是这把武器」再加；你再次施展本法术时，先前那份效应（包括施在别人武器上的）会自动结束。要人处理：引擎没有「武器 / 装备」这个对象，只能把加值挂在持有者身上，所以①「非魔法武器」这个前提请自己确认；②同一个人身上有两把武器时，靠每击的弹窗区分；③「成为魔法武器」用来穿透非魔法武器抗性这件事引擎不判，请 DM 手动认定。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "魔化武器",
+      "activation": "bonus",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "魔化武器",
+      "statics": [],
+      "flags": null,
+      "rollMods": 2,
+      "triggers": 0,
+      "duration": {
+       "hours": 1,
+       "endsOn": [
+        {
+         "event": "spellCast",
+         "when": "event.key == 'XPHB:spell:魔化武器' && event.actor == source.id"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少直接为武器装备对象赋予临时附魔加值（而非作用于角色导致每次攻击均需询问）的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:魔魂壶",
+   "name": "魔魂壶",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "施法时间 1 分钟。灵魂离开身体进入容器，肉体陷入昏迷失神。处于容器中时，可用动作投射灵魂尝试附身 100 尺内可见类人生物。目标必须进行魅力豁免，失败则灵魂被困在容器中（失能且无法移动），施法者控制其身体（生命值、力量、敏捷、体质、速度和感官替换为目标数据）。成功则 24 小时内免疫附身。宿主身体死亡、容器被毁或回归身体的判定需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "魔魂壶",
+      "activation": {
+       "minutes": 1
+      },
+      "cost": [
+       {
+        "slot": {
+         "min": 6
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "魔魂壶：附身",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 100,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "魔魂壶：出窍",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     },
+     {
+      "name": "魔魂壶：宿主受困",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:欧提路克冰封法球",
+   "name": "欧提路克冰封法球",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "300 尺内指定一点爆炸形成 60 尺半径球状区域。区域内生物进行体质豁免，失败受 10d6（每比 6 环高 1 环 +1d6）点寒冷伤害，成功半数。若击中水面冻结 30 尺方形坚冰持续 1 分钟并使游泳者束缚；亦可凝聚为冰球投掷或用投石索弹射（水面冻结与冰球暂存投掷需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "欧提路克冰封法球",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 6
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 300,
+       "area": {
+        "shape": "sphere",
+        "radius": 60
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "forEach",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:欧提路克弹力法球",
+   "name": "欧提路克弹力法球",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。30 尺内大型或更小的生物进行敏捷豁免，失败则被封在发光的弹力法球内（自愿生物自动被封入）。法球内生物免受一切伤害，任何实体或法术无法进出，且无法对球外造成伤害。被困者可用动作以半速滚动法球。实体进出阻隔、滚动移动与解离术摧毁需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "欧提路克弹力法球",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30,
+       "filter": "target.size != '巨型' && target.size != '超巨型'"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "if"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "弹力法球",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少完全阻隔一切内外物理穿行、法术投射与伤害免疫的力场球体屏障",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:祈愿术",
+   "name": "祈愿术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "manual",
+   "text": "动作施展。可模仿任意 8 环或更低环阶法术（无需满足前提条件或材料成分），或创造特定效应（创造至多 25000GP 物件、恢复至多 20 个生物生命值并解除高等复原术列举效应、赋予永久伤害抗性、法术免疫 8 小时、专长替换、强制重投上一轮掷骰、或由 DM 自由裁决的现实重塑愿望）。用于非模仿法术时施法者承受严重虚弱反噬（施法受暗蚀伤害、力量变为 3、33% 几率永远失去祈愿术）。极度开放多变，由玩家与 DM 人工裁决与执行。",
+   "data": {
+    "automation": "manual",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "祈愿术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 9
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:气化形体",
+   "name": "气化形体",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "触碰自愿生物转化为云雾（升环每高一环可多选一个目标）：拥有钝击/穿刺/挥砍抗性，免疫倒地，力量/敏捷/体质豁免具有优势；不能攻击、施法、言语或操作物件；仅有 10 尺悬浮飞行速度；穿过狭隙与占据已有生物空间需手动处理；生命值降至 0 或自愿用魔法动作终止时法术结束。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "气化形体",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": "slot.level - 2",
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "气化形体",
+      "statics": [
+       "resist",
+       "conditionImmune",
+       "speedSet"
+      ],
+      "flags": {
+       "cannot": [
+        "speak",
+        "castSpells"
+       ]
+      },
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": {
+       "hours": 1,
+       "endsOn": [
+        {
+         "event": "reducedTo0"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少穿过微小裂隙与同格重叠站位的气态移动特异规则",
+    "now": false
+   }
+  }
+ ]
+}

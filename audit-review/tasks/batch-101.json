@@ -1,0 +1,543 @@
+{
+ "batch": "batch-101",
+ "count": 10,
+ "entries": [
+  {
+   "key": "XPHB:spell:繁彩球",
+   "name": "繁彩球",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "选择强酸/寒冷/火焰/闪电/毒素/雷鸣发动远程法术攻击，命中造成 (2 + slot.level)d8 伤害；若伤害骰出现两枚或更多相同点数时的跳跃攻击（至多跳跃环阶次、30 尺内新目标）需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "繁彩球",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 90
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "choose",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少伤害掷骰检测点数相同并触发链式跳跃攻击新目标的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:反魔法场",
+   "name": "反魔法场",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "以自身为中心半径 10 尺的光环区域（专注至多 1 小时）。区域内无法施展法术、执行魔法动作或产生魔法效应，正在持续的法术被压制，魔法物品失效，无法传送与位面旅行（魔法压制与环境抑制需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "反魔法场",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 8
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "反魔法场",
+      "statics": [],
+      "flags": {
+       "cannot": [
+        "castSpells"
+       ]
+      },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:反转重力",
+   "name": "反转重力",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。以 100 尺内一点为中心创造半径 50 尺、高 100 尺的重力反转柱状区域。区域内未固定的生物和物件向上落去；生物可进行敏捷豁免抓住固定物件避免坠落。撞击固体受到坠落冲击，到达顶部悬浮；法术终止时向下坠落（撞击伤害与物理悬浮/下坠需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "反转重力",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 7
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 100,
+       "area": {
+        "shape": "cylinder",
+        "radius": 50
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "反转重力",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:防护法阵",
+   "name": "防护法阵",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "manual",
+   "text": "施法时间 1 分钟，无专注。指定地面上一点，创造 10 尺半径、20 尺高的柱状魔法能量，持续 slot.level - 2 小时；指定天界生物、元素生物、精类、邪魔、不死生物中的一种或多种。整条只能手动：被指定类型的生物不能以非魔法手段主动进入（引擎的区域不阻止移动）、用传送或位面旅行进入须先通过魅力豁免、对法阵内目标发动攻击检定具有劣势、法阵内目标不受其魅惑 / 恐慌 / 附身，以及可以选择反向施展阻止其离开 —— 这些都要按生物类型在桌上判定，区域本身只作为地图上的标记。",
+   "data": {
+    "automation": "manual",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "防护法阵",
+      "activation": {
+       "minutes": 1
+      },
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 10,
+       "area": {
+        "shape": "cylinder",
+        "radius": 10,
+        "size": 20
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少地图持续柱状法阵区域（阻止特定生物种类跨越边界及穿透传送）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:防护善恶",
+   "name": "防护善恶",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "自愿生物获得针对异怪、天界生物、元素生物、精类、邪魔、不死生物的防护：这些生物对目标的攻击检定具有劣势；目标不能被其附身、魅惑或恐慌（免疫需手动处理）；若已受其影响，后续豁免具有优势。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "防护善恶",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "防护善恶",
+      "statics": [],
+      "flags": null,
+      "rollMods": 2,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少针对特定生物类型来源的条件性状态免疫接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:防活物护罩",
+   "name": "防活物护罩",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 小时。以自身为源点形成 10 尺光环屏障，阻绝除亡灵与构装生物外的所有生物穿过或触及内部。法术与远程/触及攻击可穿过屏障；施法者移动迫使生物进入护罩会导致法术终止。物理穿行阻挡与移动触发法术终止需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "防活物护罩",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "防活物护罩",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少随角色移动的屏障光环物理阻隔移动以及主动挤压破除法术的判定",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:防死结界",
+   "name": "防死结界",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "持续 8 小时；目标生命值降至 0 时改为降至 1 并结束法术；直接致死而不造成伤害的效应使其失效并结束法术需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "防死结界",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "防死结界",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": {
+       "hours": 8
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少对不造成伤害的即死效应（如死亡一指、九环绝杀）进行拦截取消的触发窗口",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:放逐术",
+   "name": "放逐术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "魅力豁免失败被放逐至半位面并陷入失能状态；目标离开战场、返回战场或异怪/天族/元素/妖精/邪魔维持满 1 分钟后不返回需人手动处理移出/移入。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "放逐术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": "slot.level - 3",
+       "range": 30,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "放逐",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少将生物暂时移出战场（从先攻与地图隐藏）及专注结束/超时后返回战场的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:放逐斩",
+   "name": "放逐斩",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "使用近战武器或徒手打击命中后以附赠动作施展，额外造成 5d10 点力场伤害（专注至多 1 分钟）。若此次攻击将目标生命值削减至 50 点或更低，目标须进行魅力豁免，失败被放逐至半位面并陷入失能状态。50 生命值门槛判断与移出/重返战场需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "放逐斩",
+      "activation": "bonus",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": null,
+      "trigger": {
+       "on": "attackHit",
+       "role": "actor",
+       "window": "before",
+       "when": "attack.melee && (attack.weapon || attack.unarmed)"
+      },
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": "turn.isMine",
+      "root": [
+       "addDamage",
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "放逐斩：放逐",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少将目标移出战场机制以及攻击结算后基于目标当前HP门槛触发后续豁免判定",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:飞行术",
+   "name": "飞行术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "触碰自愿生物，专注至多 10 分钟。目标获得 60 尺飞行速度且可以悬浮。法术终止时若仍在空中则坠落。升环施法时每比 3 环高一环可额外指定一名生物。三维飞行与坠落需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "飞行术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": "slot.level - 2",
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "飞行术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少地图三维高度坐标管理、飞行移动模式及失速坠落判定",
+    "now": false
+   }
+  }
+ ]
+}

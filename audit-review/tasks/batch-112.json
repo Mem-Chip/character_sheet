@@ -1,0 +1,592 @@
+{
+ "batch": "batch-112",
+ "count": 10,
+ "entries": [
+  {
+   "key": "XPHB:spell:跳跃术",
+   "name": "跳跃术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "触碰自愿生物施加跳跃术（持续 1 分钟）。在法术结束前，承受者每回合一次可消耗 10 尺移动力跳跃至多 30 尺距离（具体跳跃与移动需在地图上手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "跳跃术",
+      "activation": "bonus",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": "slot.level",
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "跳跃术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少消耗10尺移动力执行30尺特殊跳跃位移的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:完全变形术",
+   "name": "完全变形术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "选择 30 尺内可见的一名生物或未被着装携带的非魔法物件。非自愿生物进行感知豁免，失败变形成 CR 不高于其等级/CR 的生物（获得等同新形态生命值的临时生命值，不能施法或说话）或物件；也可将物件变形成 CR 不高于 9 的生物。若维持满 1 小时专注则持续时间变为直至被解除（数据卡替换、临时生命值赋予与物件变形由人工处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "完全变形术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 9
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "完全变形术",
+      "statics": [],
+      "flags": {
+       "cannot": [
+        "castSpells",
+        "speak"
+       ]
+      },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:维生术",
+   "name": "维生术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "选择施法距离内一名生命值为 0 且未死亡的生物，使其变为伤势稳定（引擎目前需手动将目标标记为稳定；高等级施法距离增长需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "维生术",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 15,
+       "filter": "target.hp == 0 && !target.dead"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少将濒死（0 HP）生物直接赋予伤势稳定（stable）状态以停止死亡豁免的接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:巫术箭",
+   "name": "巫术箭",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "远程法术攻击，命中造成 2d12（升环每环+1d12）闪电伤害。持续时间内无论初次攻击是否命中，后续每回合可用附赠动作对目标造成 1d12 闪电伤害；超出 60 尺或全掩护时法术终止（距离及掩护中断需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "巫术箭",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "attack",
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "巫术箭：电弧伤害",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating",
+      "root": [
+       "damage"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "巫术箭",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "缺少专注持续期间因距离超出60尺或目标获得全掩护而自动断专注/终止法术的监听",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:嫌恶术/关怀术",
+   "name": "嫌恶术/关怀术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "耗时 1 小时施展（持续 10 日）。指定 60 尺内一个巨型或更小的生物或物件，并指定一种特定生物类型。当该类生物进入目标 120 尺内时须进行感知豁免：【嫌恶】豁免失败陷入恐慌状态，回合内必须远离目标；【关怀】豁免失败陷入魅惑状态，回合内必须接近目标至 5 尺内。生物在距目标 120 尺外结束回合时可重复感知豁免，成功则 1 分钟内不受影响。特定生物判定、靠近/远离移动与重复豁免需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "嫌恶术/关怀术",
+      "activation": {
+       "minutes": 60
+      },
+      "cost": [
+       {
+        "slot": {
+         "min": 8
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "嫌恶术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "manual": true
+      }
+     },
+     {
+      "name": "关怀术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "manual": true
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:橡棍术",
+   "name": "橡棍术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "附赠动作，持续 1 分钟（不专注）。自动部分：用灌注了自然之力的短棒或长棍进行近战攻击时，攻击检定与伤害掷骰改用你的施法属性调整值代替力量调整值（引擎问一句「是不是那件武器」，答是就把力量调整值换成施法属性调整值）。手动部分（引擎改不了武器的伤害骰与伤害类型）：① 该武器的伤害骰变为 d8，5 级 d10、11 级 d12、17 级 2d6；② 造成伤害时可以选择改为力场伤害或维持原类型；③ 丢掉该武器时法术终止（再次施展会自动结束上一次，不会叠加）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "橡棍术",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "removeEffect",
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "橡棍术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 2,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少修改所持武器基础伤害骰（按角色等级阶梯增长）并将伤害类型覆盖为力场伤害的装备修改机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:心灵尖刺",
+   "name": "心灵尖刺",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "向 120 尺内可见生物造成心灵伤害。目标进行感知豁免，失败受到 3d8（升环每环+1d8）心灵伤害，专注至多 1 小时内施法者时刻得知其位置且无法对施法者躲藏，对抗施法者时不能从隐形状态受益（位置与隐形无效需手动处理）；豁免成功受到半数伤害且不附加追踪效应。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "心灵尖刺",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 120
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "心灵尖刺",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "hours": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "缺少单向追踪目标地图精确位置、禁止对施法者躲藏以及单向无视目标隐形状态的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:心灵屏障",
+   "name": "心灵屏障",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "持续 24 小时。触碰一个自愿生物，使其免疫心灵伤害与魅惑状态。目标不会被感知情绪/阵营、阅读思想、魔法侦测位置、远程监视或心智控制（包含祈愿术等效应，信息防护与心智控制免疫需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "心灵屏障",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 8
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "心灵屏障",
+      "statics": [
+       "immune",
+       "conditionImmune"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "hours": 24
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:心灵遥控",
+   "name": "心灵遥控",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。施展该法术时以及后续回合中可用动作以思想移动或操纵 60 尺内不超过巨型的生物或巨型及更小的物件。对生物：目标进行力量豁免，失败则被朝任意方向移动至多 30 尺并在你的下个回合结束前陷入束缚（悬停空中）。对物件：未被携带的物件可直接移动至多 30 尺；被着装携带的物件持有者须力量豁免对抗 DC 否则被夺走移动；亦可进行精细操作。物件移动与操纵需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "心灵遥控",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "save"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "心灵遥控：操控生物",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating && self.hasEffect('心灵遥控')",
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "心灵遥控",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     },
+     {
+      "name": "念力束缚",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少每回合以动作对抗检定并三维移动目标生物/物件至多30尺并在空中悬停的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:信仰守卫",
+   "name": "信仰守卫",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "在 30 尺内召唤大型灵体守护者悬浮 8 小时。敌人在一回合内首次进入守护者 10 尺内或在其 10 尺内开始其回合时进行敏捷豁免，失败受 20 点光耀伤害，成功半数。累计造成 60 点伤害后守护者消失。守护者位置、触发时机与 60 点伤害计数需手动处理（可用「信仰守卫：守卫打击」动作结算）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "信仰守卫",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": 30
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "信仰守卫：守卫打击",
+      "activation": "free",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 40
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少地图悬浮守护实体（敌方首次进入10尺或在其中开始回合触发光耀伤害）及累计造成60点伤害后自动消散的伤害计数池",
+    "now": false
+   }
+  }
+ ]
+}

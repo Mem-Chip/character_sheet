@@ -1,14 +1,14 @@
 {
  "batch": "batch-009",
- "count": 20,
+ "count": 10,
  "entries": [
   {
-   "key": "FRHoF:散塔林会暴徒",
-   "name": "散塔林会暴徒",
-   "kind": "feature",
+   "key": "AU:法师:妙法化形:3",
+   "name": "妙法化形",
+   "kind": "classFeature",
    "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "【见缝插针】为借机攻击掷伤害骰时，可以掷两遍伤害骰、采用其中一个结果。引擎的 reroll 只能重掷 d20，窗口里没有重掷伤害骰的写法，这一半请手动：借机攻击命中后掷两遍伤害骰，取你要的那一份，把日志里那次伤害改掉。【家人至上】投掷先攻时若你具有英雄激励，可以消耗它令你与你的盟友的这次先攻检定具有优势。你自己的先攻优势已自动化：投先攻时会问一句「消耗一枚英雄激励吗」，答是就按优势掷（两颗 d20 取高）。两件事要人守：① 英雄激励不在战斗的资源池里（引擎读不到也扣不掉），用完请在人物卡上手动划掉；② 盟友的先攻优势做不到 —— 先攻修正只能挂在掷骰者自己身上，引擎没有「给别人先攻加优势」的写法，请在盟友的先攻检定上手动加优势。",
+   "text": "始终准备变身术（静态）。每日可无需法术位施展一次变身术，长休恢复。变身术期间依选项获得强化：【水栖适应】水下可以附赠动作疾走；【改变面容】魅力（欺瞒）检定具优势；【天生武器】天生武器伤害提升至 2d6，且维持专注的体质豁免具优势。水下附赠疾走与天生武器伤害由玩家手动处理。",
    "data": {
     "automation": "partial",
     "actions": [],
@@ -17,474 +17,175 @@
     "resources": []
    },
    "old_audit": {
-    "gap": "reactModify",
-    "need": "伤害骰缺少投掷两次取较高值的修正（reroll/keep higher on damage），且缺少先攻时消耗英雄激励赋予群体优势的接口",
+    "gap": "item",
+    "need": "状态效应缺少赋予临时天生武器/改变徒手打击伤害骰及环境条件性附赠动作（水下疾走）的机制",
     "now": false
    }
   },
   {
-   "key": "FRHoF:散塔林会战术",
-   "name": "散塔林会战术",
-   "kind": "feature",
+   "key": "AU:法师:强力变化:6",
+   "name": "强力变化",
+   "kind": "classFeature",
    "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "【反击】位于你5尺内的生物以近战攻击命中你后，你可以立即消耗反应对该生物发动一次借机攻击（攻击由玩家手动发起）。【万能佣兵】完成长休时选择一项已熟练的技能获得专精，持续至下次长休（属于人物卡技能层，手动调整）。",
+   "text": "当你使用法术位施展一道不进行攻击检定也不迫使进行豁免检定的变化法术（如飞行术、魔化武器）时，可消耗1次强力变化，令该法术的有效环阶提升一环。有效环阶提升效果由玩家手动结算。",
    "data": {
     "automation": "partial",
-    "actions": [],
-    "triggers": [
+    "actions": [
      {
-      "id": "riposte",
-      "label": "散塔林会战术：受击反击",
-      "on": "attackHit",
-      "role": "target",
-      "window": "after",
-      "when": "attack.melee && within(self, attacker, 5)",
+      "id": "use",
+      "name": "强力变化",
+      "activation": "free",
+      "cost": [
+       {
+        "resource": "强力变化"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "施法时缺少拦截并动态提升法术有效环阶（slot.level）的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:法师:强韧召唤:6",
+   "name": "强韧召唤",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "当你使用法术位施展一道咒法法术来召唤或创造一个生物时，该生物第一次出现时获得等同于你法师等级两倍的临时生命值；只要它还拥有这些临时生命值，就具有除力场、暗蚀、心灵、光耀之外所有伤害类型的抗性。引擎的「召唤」发生在你施展的那道法术的条目里，这条特性没法在它下场的瞬间插进去，所以做成一个不占动作的条目：召唤物上场后，用「强韧召唤：给召唤物临时生命值与抗性」点它一下，会自动给它 2 × 法师等级点临时生命值，并把带抗性的「强韧召唤」效应挂在它身上。抗性效应会在它受伤后已经没有临时生命值了的时候自动结束（引擎只能用「受伤后临时生命值 = 0」来近似「只要还拥有这些临时生命值」）。「这次是不是用了一次法术位」「是不是召唤 / 创造生物的咒法法术」引擎判断不了，请只在符合条件时用这一下。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "durable",
+      "name": "强韧召唤：给召唤物临时生命值与抗性",
+      "activation": "free",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "filter": "target.id != self.id && target.isAllyOf(self)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "tempHp",
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少召唤物入场时自动施加属性加成（临时生命值与抗性）的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:法师:收割亡灵:10",
+   "name": "收割亡灵",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "因受伤陷入浴血（生命值降到上限的一半或更低）但并没有被降到 0 生命值之后，你可以立即执行一个反应，把一名由你控制且你可见的亡灵降到 0 生命值，随后你立即恢复等同于你法师等级的生命值。反应与治疗已自动结算（用这个条目会花掉你的反应）；那只亡灵降到 0 请手动在它的卡上处理 —— 引擎没有「把别的生物的生命值设为 0」的写法。引擎也不认识「由你控制」：目标列表筛的是你的不死生物盟友、且你能看见的，请自己确认它就是由你操控的那一只。原文没有射程限制，这里也没有写射程。「刚陷入浴血那一刻」引擎不会自己触发，请在那一刻点这个条目；条件不满足时引擎会拒绝。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "收割亡灵：浴血时收割一只亡灵",
+      "activation": "free",
       "cost": [
        {
         "economy": "reaction"
        }
       ],
-      "modify": [],
-      "do": [
-       "note"
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "filter": "target.type == '不死生物' && target.id != self.id && target.isAllyOf(self) && canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hp > 0 && self.hp <= floor(self.hpMax / 2)",
+      "root": [
+       "note",
+       "heal"
       ]
      }
     ],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "timing",
-    "need": "缺少被近战攻击命中后使用反应自动调用近战武器对攻击者发动借机攻击的接口",
-    "now": false
-   }
-  },
-  {
-   "key": "FRHoF:生机勃发之恩惠",
-   "name": "生机勃发之恩惠",
-   "kind": "feature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "manual",
-   "text": "【超健康】你获得临时生命值时，这个数值 +5。【超恢复】你花一枚或更多生命骰恢复生命值时，可以把每颗骰子取最大值。这两条引擎都碰不到，保持手动：① 引擎没有「给临时生命值加数」的时机 —— 临时生命值由各个法术 / 特性的节点直接算出并立刻入账，动态层改不了别人给的那个数字，请在拿到临时生命值时手动 +5（例如给 15 点临时生命值改为 20）。② 花生命骰恢复生命值发生在人物卡「生命值记账」那一步（短休），不在战斗引擎里，掷生命骰时手动把每颗取最大值。",
-   "data": {
-    "automation": "manual",
-    "actions": [],
     "triggers": [],
     "effects": [],
     "resources": []
    },
    "old_audit": {
-    "gap": "reactModify",
-    "need": "缺少在获得临时生命值时自动拦截并增加固定数值（+5）的修改时机，以及生命骰恢复取最大值的修正",
+    "gap": "summon",
+    "need": "缺少对玩家所控制召唤物/仆役的归属判定，以及直接将其生命值置0/消灭的节点",
     "now": false
    }
   },
   {
-   "key": "FRHoF:圣武士:火巨灵之狂怒:3",
-   "name": "火巨灵之狂怒",
+   "key": "AU:法师:死灵魔典:3",
+   "name": "死灵魔典",
    "kind": "classFeature",
    "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "施展至圣斩后，可消耗 1 次引导神力触发。至圣斩目标额外受到 2d4 点火焰伤害，火焰并弹射至你 30 尺内可见的另一生物造成 2d4 点火焰伤害。目标结算需人手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [
-     {
-      "id": "efreeti-fury",
-      "label": "火巨灵之狂怒",
-      "on": "spellCast",
-      "role": "actor",
-      "window": "after",
-      "when": "event.spell == '至圣斩' || event.key == 'XPHB:spell:至圣斩' || event.key == 'XPHB:圣武士:圣武斩:2'",
-      "cost": [
-       {
-        "resource": "channel-divinity"
-       }
-      ],
-      "modify": [],
-      "do": [
-       "note"
-      ]
-     }
-    ],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "timing",
-    "need": "缺少施展至圣斩后的触发时机，以及在触发器中选取第二目标并造成弹射伤害的接口",
-    "now": false
-   }
-  },
-  {
-   "key": "FRHoF:圣武士:巨灵贵胄:20",
-   "name": "巨灵贵胄",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "以附赠动作获得增益持续 10 分钟（每次长休 1 次，也可消耗五环法术位重置）。获得 60 尺飞行速度且能悬浮（需手动处理）。当你或处于守护灵光范围内的盟友 D20 检定失败时，可用反应将其改为成功（通过检定结果 +100 近似）。",
+   "text": "【暗蚀抗性】静态层没有这条（`abilities-2024.json` 里没有 `AU:法师:死灵魔典:3` 这个键），请手动记在角色上：你获得「黯蚀」伤害的抗性。【亡灵魔宠】这项福利也没落地：`XPHB:spell:寻获魔宠` 的数据里没有骷髅 / 丧尸形态、也没法把通常形态的生物类型改成亡灵，请手动处理（或按 DM 裁定用骷髅 / 丧尸的数据替掉魔宠形态）。此外，你执行攻击动作时可以放弃其中一次攻击，转而让你的魔宠用它的反应发动一次攻击：已写成不占动作的条目（代价是一次攻击），魔宠的那次攻击请手动在它的卡上结算（引擎不能指挥别的生物花它的反应）。【亡灵生机】当你使用法术位施展一道死灵法术时，可以选择 60 尺范围内一名你可见的亡灵，让它恢复「所消耗法术位环阶 + 你的法师等级」点生命值。引擎在施法窗口里认不出「死灵法术」、也拿不到「你选的那只亡灵」，所以做成施法后用的免费条目：先选那只亡灵，再填刚用掉的环阶，治疗自动结算。",
    "data": {
     "automation": "partial",
     "actions": [
      {
-      "id": "use",
-      "name": "巨灵贵胄",
-      "activation": "bonus",
+      "id": "familiar-attack",
+      "name": "死灵魔典：魔宠攻击",
+      "activation": "none",
       "cost": [
        {
-        "resource": "scion-of-the-genie"
+        "economy": "attack"
        }
       ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "!self.hasEffect('巨灵贵胄')",
-      "root": [
-       "applyEffect"
-      ]
-     },
-     {
-      "id": "end",
-      "name": "结束巨灵贵胄",
-      "activation": "free",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.hasEffect('巨灵贵胄')",
-      "root": [
-       "removeEffect"
-      ]
-     },
-     {
-      "id": "reset",
-      "name": "巨灵贵胄：重置使用权（五环法术位）",
-      "activation": "free",
-      "cost": [
-       {
-        "slot": {
-         "min": 5,
-         "max": 5
-        }
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.resource('scion-of-the-genie') < 1",
-      "root": [
-       "resource"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "巨灵贵胄",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 1,
-      "duration": {
-       "minutes": 10
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "move",
-    "need": "缺少飞行与悬浮速度（fly & hover）的移动机制",
-    "now": false
-   }
-  },
-  {
-   "key": "FRHoF:圣武士:水巨灵之激流:3",
-   "name": "水巨灵之激流",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "巨灵贵族的元素斩选项之一：在你对目标施展至圣斩之后，消耗 1 次引导神力触发。至圣斩的目标进行一次对抗你法术豁免 DC 的力量豁免，失败被直线推开 15 尺并陷入倒地——这一段由引擎结算（有地图时直接推棋子，没有地图时提示你手动移动）。需要人处理的部分：源自你的 10 尺光环内你指定的其他生物也要各做一次同样的力量豁免，失败同样被推开并倒地；引擎在至圣斩的窗口里只知道至圣斩的目标，不会替你选光环里的其他生物，请手动为它们掷豁免、移动并施加倒地。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [
-     {
-      "id": "marid-torrent",
-      "label": "水巨灵之激流",
-      "on": "spellCast",
-      "role": "actor",
-      "window": "after",
-      "when": "event.spell == '至圣斩' || event.key == 'XPHB:spell:至圣斩' || event.key == 'XPHB:圣武士:圣武斩:2'",
-      "cost": [
-       {
-        "resource": "channel-divinity"
-       }
-      ],
-      "modify": [],
-      "do": [
-       "save",
-       "note"
-      ]
-     }
-    ],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "move",
-    "need": "缺少至圣斩触发后对周围10尺区域内指定生物进行群体豁免、直线击退15尺并击倒的结算机制",
-    "now": false
-   }
-  },
-  {
-   "key": "FRHoF:圣武士:土巨灵之碾压:3",
-   "name": "土巨灵之碾压",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "施展至圣斩后，可消耗 1 次引导神力触发。目标陷入受擒状态（逃脱 DC 等于你的法术豁免 DC），受擒期间处于束缚状态。对目标的受擒与束缚需人手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [
-     {
-      "id": "dao-crush",
-      "label": "土巨灵之碾压",
-      "on": "spellCast",
-      "role": "actor",
-      "window": "after",
-      "when": "event.spell == '至圣斩' || event.key == 'XPHB:spell:至圣斩' || event.key == 'XPHB:圣武士:圣武斩:2'",
-      "cost": [
-       {
-        "resource": "channel-divinity"
-       }
-      ],
-      "modify": [],
-      "do": [
-       "note"
-      ]
-     }
-    ],
-    "effects": [
-     {
-      "name": "土巨灵之碾压",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "condition",
-    "need": "缺少通过法术/能力直接对目标施加带自定义逃脱DC的受擒与束缚复合状态的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "FRHoF:圣武士:元素守御灵光:7",
-   "name": "元素守御灵光",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "选择强酸、寒冷、火焰、闪电或雷鸣之一，你和守护灵光（10 尺）内的盟友获得该伤害类型的抗性。在每个自己回合开始时可以自由切换抗性类型。18 级守护灵光增至 30 尺需手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "元素守御灵光：选择抗性",
-      "activation": "free",
-      "cost": [],
       "targeting": null,
       "trigger": null,
       "concentration": null,
       "requires": null,
       "root": [
-       "choose"
+       "note"
       ]
-     }
-    ],
-    "triggers": [
-     {
-      "id": "turn-start-switch",
-      "label": "元素守御灵光：切换抗性",
-      "on": "turnStarted",
-      "role": "actor",
-      "window": "after",
-      "when": "turn.isMine",
-      "cost": [],
-      "modify": [],
-      "do": [
-       "choose"
-      ]
-     }
-    ],
-    "effects": [
-     {
-      "name": "元素守御：强酸",
-      "statics": [
-       "resist"
-      ],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
      },
      {
-      "name": "元素守御：寒冷",
-      "statics": [
-       "resist"
-      ],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     },
-     {
-      "name": "元素守御：火焰",
-      "statics": [
-       "resist"
-      ],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     },
-     {
-      "name": "元素守御：闪电",
-      "statics": [
-       "resist"
-      ],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     },
-     {
-      "name": "元素守御：雷鸣",
-      "statics": [
-       "resist"
-      ],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "zone",
-    "need": "Aura 光环半径（radius）只支持固定数值不支持表达式（如根据圣武士等级在 18 级自动增至 30 尺）",
-    "now": false
-   }
-  },
-  {
-   "key": "FRHoF:术士:炽焰鼓舞:3",
-   "name": "炽焰鼓舞",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "在你的回合中作为魔法动作或附赠动作的一部分消耗至少1术法点时使用（每回合限一次）。你或30尺内可见的一名生物获得1d4+魅力调整值（14级起+术士等级）的临时生命值。是否满足触发条件及每回合一次限制由玩家自行遵守。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "炽焰鼓舞",
+      "id": "undead-vitality",
+      "name": "死灵魔典：亡灵生机（施法后补治疗）",
       "activation": "free",
       "cost": [],
       "targeting": {
        "type": "creature",
        "count": 1,
-       "range": 30,
-       "filter": "canSee(self, target) || target.id == self.id"
+       "range": 60,
+       "filter": "target.type == '不死生物' && canSee(self, target)"
       },
-      "trigger": null,
-      "concentration": null,
-      "requires": "turn.isMine",
-      "root": [
-       "tempHp"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "timing",
-    "need": "缺少消耗术法点（resourceExpended）时的触发时机以及与附赠/动作合并触发的判定",
-    "now": false
-   }
-  },
-  {
-   "key": "FRHoF:术士:辉耀之火:3",
-   "name": "辉耀之火",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "在你的回合中作为魔法动作或附赠动作的一部分消耗至少1术法点时使用（每回合限一次）。一名你可见的30尺内的生物受到1d4（14级起1d8）火焰或光耀伤害（由你选择）。是否满足触发条件及每回合一次限制由玩家自行遵守。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "辉耀之火",
-      "activation": "free",
-      "cost": [],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 30,
-       "filter": "canSee(self, target)"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "turn.isMine",
-      "root": [
-       "choose"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "timing",
-    "need": "缺少在回合中消耗术法点作为动作一部分时的触发时机",
-    "now": false
-   }
-  },
-  {
-   "key": "FRHoF:术士:汲纳法术:6",
-   "name": "汲纳法术",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "你始终准备法术法术反制。此外，当一个目标在对抗你所施展的法术反制的豁免中失败时，你重获1d4术法点。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "汲纳法术：重获术法点",
-      "activation": "none",
-      "cost": [],
-      "targeting": null,
       "trigger": null,
       "concentration": null,
       "requires": null,
       "root": [
        "number",
-       "resource"
+       "heal"
       ]
      }
     ],
@@ -493,222 +194,171 @@
     "resources": []
    },
    "old_audit": {
-    "gap": "timing",
-    "need": "缺少目标生物在你施展的特定法术（如法术反制）豁免失败时的触发时机（saveFailed 事件窗口）",
+    "gap": "summon",
+    "need": "缺少指挥魔宠消耗反应发动攻击的接口，以及施法触发时读取法术位环阶并选取次要目标治疗的机制",
     "now": false
    }
   },
   {
-   "key": "FRHoF:术士:咒火冠冕:18",
-   "name": "咒火冠冕",
+   "key": "AU:法师:死之尊主:14",
+   "name": "死之尊主",
    "kind": "classFeature",
    "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "用先天术法的同一次使用把它转换成咒火冠冕：先以附赠动作使用先天术法，再点「咒火冠冕」（不占动作，消耗咒火冠冕的次数），先天术法激活期间获得下列增益，先天术法结束时冠冕也跟着结束（引擎在每个回合开始 / 结束检查一次）；转换后直到长休前不能再次转换，可消耗 5 点术法点（无需动作）恢复次数。已自动化的部分：【燃尽】每回合一次，你被攻击命中时可以减伤 —— 引擎按「魅力调整值枚（至少 1 枚）d6」掷并直接从那次伤害里扣除（术士的生命骰是 d6；多职业时骰面可能不同，请自己改一下，消耗掉的生命骰在人物卡上手动扣）。【法术闪避】需要豁免减半的伤害到来时，引擎会问你要不要用：用了就豁免成功免伤、失败减半，你失能时不会提供这个选项；它只对法术 / 魔法效应有效，不是法术或魔法效应时请拒绝。做不到、要人处理的部分：60 尺飞行速度与悬浮 —— 引擎只记一个步行速度，请自己按飞行移动棋子。",
+   "text": "在持有法术书期间获得两个增益。【亡灵增幅】以一个附赠动作，指定 60 尺范围内任意数量由你使用死灵法术创造或召唤的亡灵，它们各自获得等同于你法师等级的临时生命值；用过一次到长休前不能再用的次数由资源「亡灵增幅」（长休恢复）限制。引擎不认识「由你的死灵法术创造」，目标列表筛的是你的不死生物盟友，选中几只由你在目标里点。【湮灭亡灵】当一名你可见的亡灵被降至 0 生命值时，你可以让它爆裂：掷「它未消耗生命值骰数量的一半（向上取整，至少 1）」颗 d6 并把结果相加，它 10 尺范围内的每个生物做一次敏捷豁免（DC 用你的法术豁免 DC），失败受等同于掷骰结果的暗蚀伤害并在其下个回合开始前无法执行反应，成功只受一半伤害。爆裂用条目「湮灭亡灵：爆裂」：引擎不能以某个生物为中心自动圈范围、也不能在「降到 0」那一刻自己触发条目，请自己选那只亡灵 10 尺内的生物（数量不限，半径靠地图判断）；未消耗生命值骰数引擎读不到，会问你。如果爆裂的是不受你控制的亡灵，你还要用一个反应和一个五环及以上的法术位 —— 引擎不会自动扣，请手动处理（反应扣一次、法术位扣一个）。",
    "data": {
     "automation": "partial",
     "actions": [
      {
-      "id": "use",
-      "name": "咒火冠冕",
-      "activation": "none",
+      "id": "empower",
+      "name": "亡灵增幅：给亡灵临时生命值",
+      "activation": "bonus",
       "cost": [
        {
-        "resource": "spellfire-crown"
+        "resource": "undead-empowerment"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "range": 60,
+       "filter": "target.type == '不死生物' && target.id != self.id && target.isAllyOf(self)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "tempHp"
+      ]
+     },
+     {
+      "id": "necrotic-burst",
+      "name": "湮灭亡灵：爆裂",
+      "activation": "free",
+      "cost": [],
+      "targeting": {
+       "type": "creature"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "number",
+       "save",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少追踪受控亡灵召唤物、在亡灵降为0时触发死亡自爆范围豁免与施加禁反应效果的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:法师:亡灵仆役:6",
+   "name": "亡灵仆役",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "【活化死尸】这条在静态层没有落地（`abilities-2024.json` 里只有资源池「亡灵仆役」、没有授予这道法术），请先把「活化死尸」手动加进法术书，再按下面的资源施展一次（长休恢复）。活化死尸的施法时间是 1 分钟（通常不在战斗里用），它召唤出来的骷髅 / 丧尸的数据不在资料库里，请按法术手动放出。【不死坚韧】你施展创造或召唤亡灵的死灵法术时，那只亡灵的生命值上限与当前生命值增加（你的智力调整值 + 法师等级的一半，向下取整）—— 引擎没有「改别的生物的生命值上限」的写法，请手动加在召唤物身上。【凋零打击】位于你 60 尺内由你操控的亡灵以攻击检定命中一名生物时，额外造成等同于你智力调整值的暗蚀伤害（至少 1 点）—— 已写成自动触发器（命中时自动加，不用点）。引擎不认识「由你操控」：只要是你的不死生物盟友、且在距你 60 尺内就会加；如果那只亡灵不是你操控的，请手动忽略这次额外伤害。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "free-animate-dead",
+      "name": "亡灵仆役：无需法术位施展活化死尸",
+      "activation": {
+       "minutes": 1
+      },
+      "cost": [
+       {
+        "resource": "undead-thralls"
        }
       ],
       "targeting": null,
       "trigger": null,
       "concentration": null,
-      "requires": "self.hasEffect('先天术法') && !self.hasEffect('咒火冠冕')",
+      "requires": null,
       "root": [
-       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [
+     {
+      "id": "withering-strike",
+      "label": "亡灵仆役：凋零打击（额外暗蚀伤害）",
+      "on": "attackHit",
+      "role": "any",
+      "window": "before",
+      "when": "attacker.id != self.id && attacker.type == '不死生物' && self.isAllyOf(attacker) && dist(self, attacker) <= 60",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "addDamage"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少召唤/创造亡灵仆役入场、动态增强其属性上限以及受控亡灵攻击命中时附加伤害的光环/触发机制",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:法师:王车易位:3",
+   "name": "王车易位",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以附赠动作传送至多 30 尺（6 级起 60 尺）到可见未占据空间；或选择该范围内愿意的中型或更小生物交换位置。使用次数等于智力调整值（至少 1 次），长休恢复。6 级起可消耗 3 环或更高法术位恢复一次使用次数。传送位置与生物交换需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "王车易位",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "benign-transposition"
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": "cond(self.levelOf('法师') >= 6, 60, 30)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
        "note"
       ]
      },
      {
-      "id": "restore",
-      "name": "咒火冠冕：恢复使用次数",
-      "activation": "none",
+      "id": "reset",
+      "name": "王车易位：消耗法术位恢复次数",
+      "activation": "free",
       "cost": [
        {
-        "resource": "sorcery_points",
-        "n": 5
+        "slot": {
+         "min": 3
+        }
        }
       ],
       "targeting": null,
       "trigger": null,
       "concentration": null,
-      "requires": null,
+      "requires": "self.levelOf('法师') >= 6 && self.resource('benign-transposition') < max(1, self.mod.int)",
       "root": [
        "resource"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "咒火冠冕",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 3,
-      "duration": {
-       "minutes": 1
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "move",
-    "need": "缺少飞行悬浮、法术豁免闪避（反射闪避机制）以及被攻击命中时消耗生命骰减伤的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "FRHoF:竖琴手协同",
-   "name": "竖琴手协同",
-   "kind": "feature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "妙语连珠：执行协助动作辅助盟友对敌人的攻击检定时，该敌人在你的下个回合开始前的下次豁免检定也具有劣势。意志激励：成功通过结束自身恐慌或麻痹状态的豁免检定时，可选 30 尺内可见的一名具有相同状态的盟友结束该状态（手动结算）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "协助（妙语连珠）",
-      "activation": "action",
-      "cost": [],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 30
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "applyEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "妙语连珠",
-      "statics": [],
-      "flags": null,
-      "rollMods": 1,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnStart",
-        "of": "source",
-        "nth": 1
-       },
-       "endsOn": [
-        {
-         "event": "d20Rolled",
-         "when": "event.kind == 'save' && event.roller == self.id"
-        }
-       ]
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "timing",
-    "need": "缺少执行协助动作时的触发时机，以及自身成功通过豁免结束状态时触发并为可见盟友解除相同状态的接口",
-    "now": false
-   }
-  },
-  {
-   "key": "FRHoF:新锻臂铠",
-   "name": "新锻臂铠",
-   "kind": "feature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "【比肩而立】5 尺内未陷入失能的盟友将被推离或拉近时，你可以用反应阻止 —— 引擎没有「强制位移」的拦截窗口，这一段必须手动处理（别推那个盟友，并用反应记一下）。【警觉】你执行预备动作后，到你的下个回合开始前，对你进行的下次攻击检定具有劣势 —— 引擎认不出「预备」这个动作，所以在你执行预备动作时点一下「新锻臂铠：警觉」记录，之后引擎会自动给下次对你的攻击附加劣势，并在那次攻击结算后（或你的下个回合开始时）自动结束。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "ready-alert",
-      "name": "新锻臂铠：警觉",
-      "activation": "none",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "turn.isMine && !self.hasEffect('新锻臂铠：警觉')",
-      "root": [
-       "applyEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "新锻臂铠：警觉",
-      "statics": [],
-      "flags": null,
-      "rollMods": 1,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnStart",
-        "of": "bearer",
-        "nth": 1
-       },
-       "endsOn": [
-        {
-         "event": "attackHit",
-         "when": "event.target == self.id"
-        },
-        {
-         "event": "attackMissed",
-         "when": "event.target == self.id"
-        }
-       ]
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "move",
-    "need": "缺少盟友即将受到强制位移（推离/拉近）时的反应拦截时机，以及执行预备动作时的触发挂钩",
-    "now": false
-   }
-  },
-  {
-   "key": "FRHoF:新晋龙巫教徒",
-   "name": "新晋龙巫教徒",
-   "kind": "feature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "【龙之舌】习得龙语（静态）。【龙之威】以魔法动作令30尺内可见生物进行DC 8+WIS+PB的感知豁免，失败陷入恐慌直到你的下个回合结束；豁免成功或效应结束24小时内免疫。【饮惧为励】令生物因你陷入恐慌且没有英雄激励时可获得激励，短休或长休恢复，由玩家手动记录。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "新晋龙巫教徒：龙之威",
-      "activation": "action",
-      "cost": [],
-      "targeting": {
-       "type": "creature",
-       "range": 30,
-       "filter": "canSee(self, target) && target.id != self.id"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "save"
       ]
      }
     ],
@@ -717,116 +367,72 @@
     "resources": []
    },
    "old_audit": {
-    "gap": "resource",
-    "need": "缺少使生物陷入恐慌时触发并获取英雄激励（Heroic Inspiration）的机制",
+    "gap": "move",
+    "need": "缺少在战棋地图上执行传送以及与自愿目标互换坐标位置的移动接口",
     "now": false
    }
   },
   {
-   "key": "FRHoF:旭日骄阳之恩惠",
-   "name": "旭日骄阳之恩惠",
-   "kind": "feature",
+   "key": "AU:法师:直觉魅惑:10",
+   "name": "直觉魅惑",
+   "kind": "classFeature",
    "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "以附赠动作开启30尺阳光光环，驱散重叠的黑暗术。激活期间未失能且未死亡时，每个你的回合开始时，你及光环内可见盟友获得10临时生命值。解除光环无需动作。阳光照亮与黑暗驱散由人工判定。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "旭日骄阳之恩惠：如日当空",
-      "activation": "bonus",
-      "cost": [],
-      "targeting": {
-       "type": "self"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "applyEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "如日当空",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "vision",
-    "need": "缺少阳光光照与驱散/消除重叠黑暗术法术效应的互动机制",
-    "now": false
-   }
-  },
-  {
-   "key": "FRHoF:妖精诡术",
-   "name": "妖精诡术",
-   "kind": "feature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "【妖精轻步】在你的回合执行撤离动作时，本回合剩余时间内困难地形不消耗额外移动力（棋盘移动由人工处理）。【惊惶打击】攻击检定命中时可消耗一次使用次数，迫使目标进行感知豁免（DC 8+PB+属性加值），失败则其所有豁免检定具有劣势，持续至你的下个回合结束。长休恢复PB次。",
+   "text": "当一个位于你 30 尺内且你能看见的生物以攻击检定命中你时，你可以用一个反应，迫使攻击者进行一次对抗你法术豁免 DC 的感知豁免。已自动化：命中窗口里会问你要不要用（要付一个反应）；答用就自动掷感知豁免 —— 失败时这次攻击直接改为未命中你，并弹出「这次攻击改打谁」的选择（选「放弃攻击（落空）」= 没有别的生物可打）；改打别人时沿用同一次攻击检定、按新目标的 AC 重新判定，命中就由那个生物受伤。要人判断的一处：引擎列出的候选是场上所有活着的生物，不判断这次攻击的射程 —— 请只选确实在那次攻击射程内的生物（通常就是攻击者旁边的那几个）。次数：完成一次长休前只能用一次（人物卡上的「直觉魅惑」池）；你也可以消耗一个法术位施展一道惑控学派法术来恢复使用机会 —— 引擎看到你花法术位施法会问一句「是不是惑控学派」，答是就恢复。",
    "data": {
     "automation": "partial",
     "actions": [],
     "triggers": [
      {
-      "id": "bewildering-strike",
-      "label": "惊惶打击",
+      "id": "charm",
+      "label": "直觉魅惑（反应：让这次攻击落空 / 改打别人）",
       "on": "attackHit",
-      "role": "actor",
+      "role": "target",
       "window": "before",
-      "when": null,
+      "when": "within(self, attacker, 30) && canSee(self, attacker)",
       "cost": [
        {
-        "resource": "bewildering-strike"
+        "economy": "reaction"
+       },
+       {
+        "resource": "instinctive-charm"
        }
       ],
       "modify": [],
       "do": [
        "save"
       ]
-     }
-    ],
-    "effects": [
+     },
      {
-      "name": "惊惶",
-      "statics": [],
-      "flags": null,
-      "rollMods": 1,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnEnd",
-        "of": "source",
-        "nth": 1
-       }
-      }
+      "id": "regain-on-enchantment",
+      "label": "直觉魅惑：消耗法术位施展惑控法术恢复使用机会",
+      "on": "spellCast",
+      "role": "actor",
+      "window": "after",
+      "when": "event.slotLevel > 0 && self.resource('instinctive-charm') < 1 && ask('刚才那道法术是惑控学派的吗？（消耗了法术位，恢复直觉魅惑）')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "resource"
+      ]
      }
     ],
+    "effects": [],
     "resources": []
    },
    "old_audit": {
-    "gap": "move",
-    "need": "缺少无视困难地形额外移动力消耗的移动修正机制，以及撤离动作触发挂钩",
+    "gap": "reactModify",
+    "need": "被攻击命中时缺少插入迫使豁免、并在失败时使攻击落空或重定向（转向新目标）的反应修改机制",
     "now": false
    }
   },
   {
-   "key": "FRHoF:夜宴狂欢之恩惠",
-   "name": "夜宴狂欢之恩惠",
+   "key": "AU:法术诡计",
+   "name": "法术诡计",
    "kind": "feature",
    "from": "data/dyn/ai/books.json",
    "automation": "manual",
-   "text": "【舞动灵感】你始终准备着法术奥图迷舞。你可以无需法术位地施展该法术一次，长休重获该能力；也可用合适环位施展。施展时无需法术成分且受到伤害不打断该法术专注。【放声歌唱】生物对抗你的奥图迷舞豁免失败而陷入魅惑状态时，无法施展需要言语成分的法术且哼唱小调。法术施展与附加限制由人工处理。",
+   "text": "覆身法术：使用法术位施展施法时间为 1 动作的法术后，能以附赠动作同时执行疾走和躲藏动作，次数等于专长提升属性的调整值（长休恢复）。隐秘施法：具有躲藏赋予的隐形状态且回合结束处于掩护后，施展带言语成分法术或法术攻击不终止隐形。使用次数、动作结算与隐形保持由玩家手动处理。",
    "data": {
     "automation": "manual",
     "actions": [],
@@ -835,181 +441,8 @@
     "resources": []
    },
    "old_audit": {
-    "gap": "condition",
-    "need": "缺少受到伤害免疫专注打断检定、以及魅惑状态附加禁止言语施法限制的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "FRHoF:熠熠生辉之恩惠",
-   "name": "熠熠生辉之恩惠",
-   "kind": "feature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "【永恒安眠】被你降至 0 生命值的生物无法变成亡灵 —— 这是叙事层的限制（复活 / 亡灵化法术要对它不生效），引擎不管，请手动排除。【磊落光明】造成光耀伤害的伤害掷骰可以把每颗骰子取最大值，长休恢复 1 次。写成：掷那一包光耀伤害之前先点一下「磊落光明」这个不占动作的按钮（引擎会从「磊落光明」池里扣掉这一次），之后你造成的这一包伤害骰全部取最大值，掷完自动结束。两处要人守：① 引擎分不出伤害类型，激活之后的第一包伤害不管是哪种类型都会取最大 —— 所以只在真的要掷光耀伤害时才点它，同一次伤害里混了别的类型也请人手动改回；② 它按「你造成伤害」来结束，你在这之前挨别人的伤害不影响它，但你自己先掷了别的类型的伤害就用掉了。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "open-light",
-      "name": "磊落光明：下一包伤害骰取最大",
-      "activation": "free",
-      "cost": [
-       {
-        "resource": "open-light"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "!self.hasEffect('磊落光明')",
-      "root": [
-       "applyEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "磊落光明",
-      "statics": [],
-      "flags": null,
-      "rollMods": 1,
-      "triggers": 0,
-      "duration": {
-       "endsOn": [
-        {
-         "event": "damageRolled",
-         "when": "event.source == self.id"
-        }
-       ]
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "reactModify",
-    "need": "缺少在造成特定伤害类型（光耀）时将所有伤害骰取最大值（maximizeDamageDice）的修正操作",
-    "now": false
-   }
-  },
-  {
-   "key": "FRHoF:吟游诗人:明月激励:3",
-   "name": "明月激励",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "赋予诗人激励时可获得隐形并传送至 30 尺内可见未占据空间，隐形持续至下回合开始或攻击/造成伤害/施法时终止。每回合一次用带有法术位的法术恢复生命值时，可消耗一枚诗人激励骰使恢复量增加激励骰出目，且目标速度提升 10 尺至下回合结束。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "明月激励：月隐启迪",
-      "activation": "bonus",
-      "cost": [
-       {
-        "resource": "诗人激励"
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 60,
-       "filter": "target.id != self.id"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "applyEffect",
-       "move"
-      ]
-     },
-     {
-      "id": "vitality",
-      "name": "明月激励：月辉活力",
-      "activation": "free",
-      "cost": [
-       {
-        "resource": "诗人激励"
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 60
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "heal",
-       "applyEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "诗人激励",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 1,
-      "duration": null
-     },
-     {
-      "name": "月隐启迪",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnStart",
-        "of": "bearer",
-        "nth": 1
-       },
-       "endsOn": [
-        {
-         "event": "attackHit",
-         "when": "event.actor == self.id"
-        },
-        {
-         "event": "attackMissed",
-         "when": "event.actor == self.id"
-        },
-        {
-         "event": "spellCast",
-         "when": "event.actor == self.id"
-        }
-       ]
-      }
-     },
-     {
-      "name": "月辉活力",
-      "statics": [
-       "speed"
-      ],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnEnd",
-        "of": "source",
-        "nth": 1
-       }
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "timing",
-    "need": "缺少在使用法术位施法恢复生命值时的触发时机（以消耗激励骰追加治疗与速度加值），且传送无法在地图上选点",
+    "gap": "vision",
+    "need": "缺少掩护状态判定，以及处于掩护时施法/攻击不解除躲藏隐形状态的规则机制",
     "now": false
    }
   }

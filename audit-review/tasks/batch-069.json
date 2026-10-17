@@ -1,0 +1,333 @@
+{
+ "batch": "batch-069",
+ "count": 10,
+ "entries": [
+  {
+   "key": "XPHB:游侠:永恒追猎:13",
+   "name": "永恒追猎",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "受到伤害不会打断你对猎人印记的专注。引擎没有「某个法术的专注免于受伤打断」的写法，受伤引起的专注检定需要人手动免除。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少受伤害豁免专注检定时针对特定法术（猎人印记）完全免除专注打断的免疫规则",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游侠:追猎如风:11",
+   "name": "追猎如风",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "恐惧打击心灵伤害从 1d6 变为 2d8 不在本条写（属于恐惧伏击的恐惧打击，需在该条目按等级处理）。额外效应二选一、由人确认所选：群慌已写（目标做法术豁免 DC 的感知豁免，失败恐慌至你的下一回合开始），但目标 10 尺内其他生物的豁免需人手动处理；瞬息打击（对原目标 5 尺内另一生物再攻击）需人手动选择新目标并攻击。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "dreadful-rider",
+      "label": "追猎如风：恐惧打击的额外效应",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.weapon && ask('这次命中是否使用了恐惧伏击的恐惧打击？')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "choose"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "攻击命中后缺少以目标为源点对周围多目标施加连锁豁免，以及对5尺内副目标追加武器攻击的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:元素掌控",
+   "name": "元素掌控",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "能量掌控：你施展的、所选伤害类型的法术无视该类型的抗性，引擎没有忽略抗性的效果，需人手动处理。伤害骰中的 1 视为 2 已写为法术伤害的最小骰值，靠 ask 确认该法术造成的是你选定的伤害类型。复选时每次选择的类型由人记录。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少法术伤害结算时无视目标特定元素伤害类型抗性（ignore resistance）的能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:远程法术",
+   "name": "远程法术",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "超魔法：施展射程至少为 5 尺的法术时，消耗 1 术法点将射程翻倍；施展射程为触碰的法术时，消耗 1 术法点将射程改为 30 尺。引擎不改写法术射程，由人处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "超魔法缺少在施法时动态将法术射程翻倍或将触碰射程改为30尺的射程修改机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:运动员",
+   "name": "运动员",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "鲤鱼打挺已写：处于倒地状态时，仅消耗 5 尺移动力即可站起（此时终止倒地）。攀爬速度（等同于你的速度）和跳跃（移动 5 尺后跳远或跳高）引擎无法表达，需要人手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "stand",
+      "name": "运动员：鲤鱼打挺",
+      "activation": "free",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.has('倒地') && self.speed >= 5",
+      "root": [
+       "economy",
+       "removeEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少攀爬速度（climbing speed）的静态属性支持以及助跑跳跃距离计算规则",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:战士:奥法打击:10",
+   "name": "奥法打击",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "用武器命中一个生物后，该生物直到你的下个回合结束前，在对抗你法术的下一次豁免中具有劣势。引擎每次豁免都会询问「是否针对你的法术」；用掉后需人手动移除该效应（否则到你的下个回合结束时自动消失）。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "arcane-strike",
+      "label": "奥法打击：施加豁免劣势",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.weapon",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "奥法打击",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "source",
+        "nth": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少在目标进行豁免检定并消耗该效应后自动移除效应（singleUse / endsOn saveForced）的单次消耗机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:战士:奥能冲锋:15",
+   "name": "奥能冲锋",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "使用动作如潮时，可以传送至多 30 尺至一个你能看到的未占据空间，可以在动作如潮的额外动作之前或之后进行。引擎只在本回合已用过动作如潮之后提供传送；动作如潮之前的传送需人手动处理，目的地的视线与空位由人判断。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "奥能冲锋：传送",
+      "activation": "free",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && self.hasEffect('动作如潮') && !self.hasEffect('奥能冲锋')",
+      "root": [
+       "move",
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "奥能冲锋",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少在激活动作如潮动作之前先行插入执行30尺传送的动作时机编排支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:战士:坚韧:15",
+   "name": "坚韧",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "每回合一次，使用战技时可以不消耗卓越骰，改为掷 1d8 作为结果。引擎无法替换战技的代价和骰子，需要人手动处理（不扣卓越骰，骰子改掷 1d8）。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "战技系统缺少每回合一次免卓越骰消耗并将卓越骰面固定替换为1d8的替代结算机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:战士:精通战争魔法:18",
+   "name": "精通战争魔法",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "在自己回合执行攻击动作时，可以把其中两次攻击替换为施展一道施法时间为动作、环阶为一环或二环的法师法术。引擎不能替换攻击次数，需人工处理：由人决定替换、选择法术并按法术结算。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "攻击动作中缺少将其中两次武器攻击替换为施展一道一环或二环法师法术的动作替换机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:战士:力场壁垒:15",
+   "name": "力场壁垒",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "掩护等级（半掩护还是四分之三掩护）原文没写，引擎只记录掩护状态与 1 分钟时长，掩护带来的 AC 与敏捷豁免加值需由人判断；消耗灵能骰重置使用权由人处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "力场壁垒",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "force-wall"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": "max(1, mod.int)",
+       "range": 30
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "力场壁垒",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1,
+       "endsOn": [
+        {
+         "event": "effectApplied",
+         "when": "event.bearer == self.id && self.has('失能')"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "缺少掩护（半掩护/四分之三掩护）带来的+2/+5 AC与敏捷豁免加值的底层自动结算",
+    "now": false
+   }
+  }
+ ]
+}

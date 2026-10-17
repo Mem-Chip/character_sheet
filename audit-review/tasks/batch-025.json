@@ -1,223 +1,45 @@
 {
  "batch": "batch-025",
- "count": 20,
+ "count": 10,
  "entries": [
   {
-   "key": "XPHB:歌利亚",
-   "name": "歌利亚",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
+   "key": "TCE:牧师:午夜飞步:6",
+   "name": "午夜飞步",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "巨人先祖：六种恩惠共用「巨人先祖」次数（等于熟练加值），实际只能使用你所选的那一种，请只选你有的。命中时的恩惠（火之燃烧、霜之刺骨、山之翻撞）在一次询问里选择；石之坚韧用反应减伤（1d12 + 体质调整值）。大型形态的体型变化、强力构筑的载重加成由人手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cloud-jaunt",
-      "name": "巨人先祖：云之远迹",
-      "activation": "bonus",
-      "cost": [
-       {
-        "resource": "巨人先祖"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "move"
-      ]
-     },
-     {
-      "id": "storm-thunder",
-      "name": "巨人先祖：岚之暴鸣",
-      "activation": "reaction",
-      "cost": [
-       {
-        "resource": "巨人先祖"
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 60,
-       "filter": "target.id != self.id"
-      },
-      "trigger": {
-       "on": "damageTaken",
-       "role": "target",
-       "when": "damage.amount > 0"
-      },
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "damage"
-      ]
-     },
-     {
-      "id": "large-form",
-      "name": "大型形态",
-      "activation": "bonus",
-      "cost": [
-       {
-        "resource": "大型形态"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.level >= 5 && !self.hasEffect('大型形态')",
-      "root": [
-       "applyEffect"
-      ]
-     },
-     {
-      "id": "large-form-end",
-      "name": "大型形态：结束",
-      "activation": "free",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.hasEffect('大型形态')",
-      "root": [
-       "removeEffect"
-      ]
-     }
-    ],
-    "triggers": [
-     {
-      "id": "giant-ancestry",
-      "label": "巨人先祖：命中时的恩惠",
-      "on": "attackHit",
-      "role": "actor",
-      "window": "after",
-      "when": "damage.amount > 0",
-      "cost": [
-       {
-        "resource": "巨人先祖"
-       }
-      ],
-      "modify": [],
-      "do": [
-       "choose"
-      ]
-     },
-     {
-      "id": "stone-endurance",
-      "label": "巨人先祖：石之坚韧",
-      "on": "damageIncoming",
-      "role": "target",
-      "window": "before",
-      "when": "damage.amount > 0",
-      "cost": [
-       {
-        "economy": "reaction"
-       },
-       {
-        "resource": "巨人先祖"
-       }
-      ],
-      "modify": [
-       "reduceDamage"
-      ],
-      "do": []
-     }
-    ],
-    "effects": [
-     {
-      "name": "霜之刺骨",
-      "statics": [
-       "speed"
-      ],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnStart",
-        "of": "source",
-        "nth": 1
-       }
-      }
-     },
-     {
-      "name": "大型形态",
-      "statics": [
-       "speed"
-      ],
-      "flags": null,
-      "rollMods": 1,
-      "triggers": 0,
-      "duration": {
-       "minutes": 10
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "other",
-    "need": "缺少动态修改生物体型大小（如变为大型生物并占据2x2格子）的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:共视感官",
-   "name": "共视感官",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "只追踪连接的开始与延续（附赠动作触碰自愿生物，持续到你下回合结束，可用附赠动作延长；需要两者在同一位面，由人判断）。以对方感官观察、60 尺内如同在对方位置施法，引擎无法判定，请手动处理。",
+   "text": "身处微光光照或黑暗中时，能以附赠动作获得等于自身步行速度的飞行速度，持续1分钟。可使用次数等同于熟练加值，长休恢复。引擎不追踪环境光照（通过询问确认）与飞行高度，飞行移动需由人手动处理。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "共视感官",
+      "name": "午夜飞步",
       "activation": "bonus",
-      "cost": [],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": "touch"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "turn.isMine && !self.hasEffect('共视感官')",
-      "root": [
-       "applyEffect"
-      ]
-     },
-     {
-      "id": "extend",
-      "name": "共视感官：延长连接",
-      "activation": "bonus",
-      "cost": [],
+      "cost": [
+       {
+        "resource": "午夜飞步"
+       }
+      ],
       "targeting": null,
       "trigger": null,
       "concentration": null,
-      "requires": "turn.isMine && self.hasEffect('共视感官')",
+      "requires": "ask('当前身处微光光照或黑暗中？')",
       "root": [
-       "extendEffect"
+       "applyEffect"
       ]
      }
     ],
     "triggers": [],
     "effects": [
      {
-      "name": "共视感官",
+      "name": "午夜飞步",
       "statics": [],
       "flags": null,
       "rollMods": 0,
       "triggers": 0,
       "duration": {
-       "until": {
-        "at": "turnEnd",
-        "of": "bearer",
-        "nth": 1
-       }
+       "minutes": 1
       }
      }
     ],
@@ -225,702 +47,79 @@
    },
    "old_audit": {
     "gap": "vision",
-    "need": "缺少以另一生物所在空间作为法术施法原点/视线起点的支持",
+    "need": "动态感知环境光照级别（微光或黑暗）并解锁飞行速度与三维移动",
     "now": false
    }
   },
   {
-   "key": "XPHB:观察力",
-   "name": "观察力",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
+   "key": "TCE:牧师:引导神力：和平抚慰:3",
+   "name": "引导神力：和平抚慰",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "快速搜索已写成附赠动作；搜索本身的感知检定（洞悉/医药/察觉/求生）需人手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "search",
-      "name": "快速搜索：搜索",
-      "activation": "bonus",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "turn.isMine",
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "timing",
-    "need": "缺少执行搜索（Search）动作时自动发起对应感知检定（洞悉/医药/察觉/求生）的流程支持",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:横扫攻击",
-   "name": "横扫攻击",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "近战武器或徒手打击命中后，可消耗一枚卓越骰，对处于你触及范围内且距初始目标不超过 5 尺的另一生物造成等同于卓越骰结果的伤害（与原攻击同类型）。该生物是否会被原攻击检定命中需人判断；伤害由人手动结算，引擎只扣除卓越骰。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [
-     {
-      "id": "cleave",
-      "label": "横扫攻击：消耗卓越骰",
-      "on": "attackHit",
-      "role": "actor",
-      "window": "after",
-      "when": "attack.melee && (attack.weapon || attack.unarmed)",
-      "cost": [
-       {
-        "resource": "卓越骰"
-       }
-      ],
-      "modify": [],
-      "do": [
-       "note"
-      ]
-     }
-    ],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "other",
-    "need": "缺少攻击命中后交互式选取邻近次要目标并用原攻击检定比对其次要目标AC造成伤害的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:换位诈术",
-   "name": "换位诈术",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "你的回合中，若你处于某个生物 5 尺范围内，可以消耗一枚卓越骰与至少 5 尺移动力与之互换位置（该生物须自愿且未处于失能状态）。引擎没有「对调两个棋子」的功能，位置互换请人工处理：由 DM 直接拖动两个棋子对调，或者只在日志里宣布对调 —— 注意战役遭遇里拖棋子走的就是一次「移动」，会扣移动力、还会弹出借机攻击（选「不攻击」即可），所以「这次移动不引发借机攻击」这句话在引擎里并不成立，请人工忽略那次借机攻击提示。另外「至少 5 尺移动力」引擎不检查（代价里的那 5 尺移动只是提醒），请自己扣掉。投掷被消耗的卓越骰并把结果填进弹窗：你或被换位者的 AC 获得等于该结果的加值，直到你的下个回合开始。",
+   "text": "以一个动作消耗一次引导神力：移动等同于你速度的距离，此移动不引发借机攻击。移动期间进入任意其他生物周围5尺范围内时，可为其恢复 2d6 + 感知调整值（最低1点）生命值，每个生物限一次。战棋移动路径与借机攻击豁免由人处理；移动距离与对所选目标的治疗已部分自动化。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "换位诈术",
-      "activation": "free",
+      "name": "引导神力：和平抚慰",
+      "activation": "action",
       "cost": [
        {
-        "resource": "卓越骰"
-       },
-       {
-        "economy": "move",
-        "n": 5
+        "resource": "引导神力"
        }
       ],
       "targeting": {
        "type": "creature",
-       "count": 1,
-       "range": 5,
-       "filter": "target.id != self.id && !target.has('失能')"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "turn.isMine",
-      "root": [
-       "note",
-       "number",
-       "choose"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "换位诈术",
-      "statics": [
-       "ac"
-      ],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnStart",
-        "of": "source",
-        "nth": 1
-       }
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "move",
-    "need": "缺少在地图上与5尺内自愿生物互换站位且不引发借机攻击的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:饥渴魔刃",
-   "name": "饥渴魔刃",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "manual",
-   "text": "在自己的回合执行攻击动作时，用契约武器可以攻击两次而非一次。引擎这边没有可写的东西：战斗里的攻击次数来自人物卡特性清单里的「额外攻击」，引擎没有「攻击动作的攻击次数 +1」这种接口（唯一能加次数的写法是每回合开始时白给一次攻击次数，那会变成不用攻击动作也能打，不合原文），也做不到「只对契约武器生效」。手动处理：用契约武器执行攻击动作时打两次 —— 如果这一动只给了你一次攻击，请自己补第二次；换成非契约武器、远程武器或别的动作时不要用第二次。（静态层那边这条祈唤授予了「额外攻击」专长，如果卡上没有变成两次攻击，那是静态层/桥接的问题，不在本条目的动态数据里。）",
-   "data": {
-    "automation": "manual",
-    "actions": [],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "item",
-    "need": "缺少将额外攻击次数限制于特定绑定武器（契约武器）的装备规则支持",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:谨慎法术",
-   "name": "谨慎法术",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "manual",
-   "text": "超魔法：施展强迫豁免的法术时，消耗 1 术法点，选择至多等同于魅力调整值数量（至少 1 个）的生物，它们自动通过该法术的豁免；若法术在豁免成功后仍造成半伤，这些生物不承受任何伤害。引擎不改写法术机制，由人处理。",
-   "data": {
-    "automation": "manual",
-    "actions": [],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "reactModify",
-    "need": "缺少在施展法术时选择特定受术者使其豁免自动成功且免除半数伤害的超魔法注入机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:精灵",
-   "name": "精灵",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "黑暗视觉、精灵血系的速度与戏法、敏锐感官、出神这些都是静态层的东西（人物卡已经算好；出神只在长休时有用）。已自动化：妖精血统 —— 每次豁免会问一句「这个豁免是为了避免或结束魅惑状态吗」，答是则该次豁免自动带优势。要人处理：精灵血系在 3 级 / 5 级习得的那道法术「可以不消耗法术位施展一次」——引擎没有「免法术位施法」，请照常施放（会扣一个法术位），然后在详情抽屉里把那个法术位的已用数改回去（**没有任何可用法术位时法术会被拒**，那种情况请手动结算那道法术的效果）、并扣掉 1 次资源「习得法术（无需法术位）」（长休自动回满）。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "condition",
-    "need": "缺少针对特定状态（魅惑）豁免的检定筛选能力，以及施法时将法术位消耗替换为种族固有使用次数的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:精妙法术",
-   "name": "精妙法术",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "manual",
-   "text": "超魔法：施展法术时，消耗 1 术法点使该法术不再具有言语、姿势和材料成分（会被消耗或有具体价值的材料成分除外）。引擎不改写施法成分，由人处理。",
-   "data": {
-    "automation": "manual",
-    "actions": [],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "other",
-    "need": "缺少在施法时移除言语、姿势与无消耗材料成分（实现静默施法与免疫反制）的超魔法修饰机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:警觉",
-   "name": "警觉",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "manual",
-   "text": "警觉：先攻熟练已在人物卡静态层（initiative 加值为熟练加值）。先攻互换（掷完先攻后可与同战斗中一名自愿盟友交换先攻；任一方失能则不可）需要交换先攻的节点，引擎目前没有，手动处理。",
-   "data": {
-    "automation": "manual",
-    "actions": [],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "other",
-    "need": "缺少在掷先攻后与未失能自愿盟友互换先攻顺序（swapInitiative）的节点或修改接口",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:酒馆斗殴者",
-   "name": "酒馆斗殴者",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "推离已自动化。强化徒手打击（改为 1d4+力量钝击伤害）与伤害骰重掷（重掷 1）引擎不能替换或重掷伤害骰，需人工处理。临时武器熟练为静态，人物卡已算。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [
-     {
-      "id": "push",
-      "label": "酒馆斗殴者：推离",
-      "on": "attackHit",
-      "role": "actor",
-      "window": "after",
-      "when": "attack.unarmed && turn.isMine",
-      "cost": [],
-      "modify": [],
-      "do": [
-       "move"
-      ]
-     }
-    ],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "reactModify",
-    "need": "缺少对伤害掷骰结果为1的骰子进行强制重投（reroll damage dice of 1）的能力",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:巨武器大师",
-   "name": "巨武器大师",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "重武器掌握：是否属于攻击动作、武器是否有重型词条由人确认（回合内才会提示）。砍伐者：重击或把生物降到 0 生命值后，给一次额外攻击（附赠动作），必须用同一把近战武器，由人保证。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "hew",
-      "name": "巨武器大师：砍伐者（附赠动作攻击）",
-      "activation": "bonus",
-      "cost": [],
-      "targeting": null,
-      "trigger": {
-       "on": "attackHit",
-       "role": "actor",
-       "window": "after",
-       "when": "attack.weapon && attack.melee && (roll.crit || target.hp <= 0 || target.dead)"
-      },
-      "concentration": null,
-      "requires": "turn.isMine",
-      "root": [
-       "economy",
-       "note"
-      ]
-     }
-    ],
-    "triggers": [
-     {
-      "id": "heavy-mastery",
-      "label": "巨武器大师：重武器掌握（额外伤害 = 熟练加值）",
-      "on": "attackHit",
-      "role": "actor",
-      "window": "before",
-      "when": "turn.isMine && attack.weapon && ask('这次攻击是攻击动作的一部分，且用的是有重型词条的武器吗？')",
-      "cost": [],
-      "modify": [],
-      "do": [
-       "addDamage"
-      ]
-     }
-    ],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "item",
-    "need": "缺少识别所持武器词条（重型 Heavy 属性）及直接触发附赠动作武器攻击的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:苦痛魔爆",
-   "name": "苦痛魔爆",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "魅力调整值加到所选魔契师戏法的伤害掷骰上。法术攻击命中时询问是否是所选戏法；需要豁免的戏法（不走攻击检定）引擎无法自动加伤害，请手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [
-     {
-      "id": "agonizing",
-      "label": "苦痛魔爆：伤害加魅力调整值",
-      "on": "attackHit",
-      "role": "actor",
-      "window": "before",
-      "when": "attack.spell && self.mod.cha > 0",
-      "cost": [],
-      "modify": [],
-      "do": [
-       "addDamage"
-      ]
-     }
-    ],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "reactModify",
-    "need": "缺少对豁免类非攻击法术/戏法伤害掷骰增加调整值（非攻击来源的伤害检定修正）的支持",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:链之魔契",
-   "name": "链之魔契",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "你习得法术「寻获魔宠」，并且能以魔法动作施展它、无需消耗法术位（授予法术由人物卡给；下面「链之魔契：免法术位施展寻获魔宠」就是不花法术位的那个施法动作 —— 别用「寻获魔宠」自己的施法动作，那个会扣一个法术位）。引擎的召唤只有一套默认魔宠数据，特殊形态由召唤时弹出的「选择形态」决定（选中怪物图鉴里的形态会顶替默认数据，不是另外多一只）。最后，你执行攻击动作时可以放弃自己动作攻击中的一次攻击，转而让魔宠用它的反应发动一次攻击：放弃攻击已经记进攻击次数（用下面「链之魔契：魔宠代为攻击」），魔宠那一次攻击由它自己的数据结算、用掉的反应请手动在魔宠身上划掉（另一种做法是用「链主赋能：迅捷打击」的附赠动作指挥）。同一时间只能有一只魔宠：本条目与「寻获魔宠」法术的召唤写在同一个召唤分组里（group 照抄那道法术的缺省分组 XPHB:spell:寻获魔宠#寻获魔宠，两边共用一组才会互相顶替），谁后施展谁顶替旧的那只。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "链之魔契：免法术位施展寻获魔宠",
-      "activation": "action",
-      "cost": [],
-      "targeting": {
-       "type": "point",
-       "range": 10
+       "filter": "target.id != self.id"
       },
       "trigger": null,
       "concentration": null,
       "requires": null,
       "root": [
-       "summon",
-       "note"
-      ]
-     },
-     {
-      "id": "use",
-      "name": "链之魔契：魔宠代为攻击",
-      "activation": "none",
-      "cost": [
-       {
-        "economy": "attack"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "turn.isMine",
-      "root": [
-       "note"
+       "economy",
+       "heal"
       ]
      }
     ],
     "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "summon",
-    "need": "缺少指挥魔宠消耗其反应发起攻击的随从协同行动机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:链主赋能",
-   "name": "链主赋能",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "你施展寻获魔宠时灌注魔力，给这只魔宠五项增益。已写：附赠动作指挥魔宠执行攻击动作（迅捷打击）、魔宠受到伤害时用反应给那次伤害抗性。没写的：40 尺飞行或游泳速度、造成钝击/穿刺/挥砍时改为光耀或暗蚀、魔宠强迫豁免时使用你的法术豁免 DC —— 这三项都要改写寻获魔宠召唤出来的那只魔宠的数据，引擎做不到，请手动处理（飞行/游泳把棋子按飞行拖动，伤害类型在日志里改，豁免 DC 用你自己的法术 DC 即 self.spell.dc）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "链主赋能：迅捷打击",
-      "activation": "bonus",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "turn.isMine",
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [
-     {
-      "id": "resist",
-      "label": "链主赋能：给魔宠抗性",
-      "on": "damageIncoming",
-      "role": "ally",
-      "window": "before",
-      "when": "ask('受到这次伤害的是你的魔宠吗？')",
-      "cost": [
-       {
-        "economy": "reaction"
-       }
-      ],
-      "modify": [
-       "halveDamage"
-      ],
-      "do": []
-     }
-    ],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "summon",
-    "need": "缺少对魔宠属性/速度/伤害类型以及使用主人DC进行动态强化的随从管理机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:灵动攻击",
-   "name": "灵动攻击",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "以攻击检定命中一个生物时，可以消耗一枚卓越骰：该骰加到这次攻击的伤害里（已自动）。同时指定一个能看见你或听到你声音的自愿生物，它可以用反应移动至多等于其速度一半的距离，这次移动不会引发你所攻击目标的借机攻击——引擎只能在这里提醒：该生物的移动与这次免借机攻击请人工处理（它是谁、移动到哪，引擎里说不清）。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [
-     {
-      "id": "maneuver",
-      "label": "灵动攻击",
-      "on": "attackHit",
-      "role": "actor",
-      "window": "before",
-      "when": null,
-      "cost": [
-       {
-        "resource": "卓越骰"
-       }
-      ],
-      "modify": [],
-      "do": [
-       "addDamage",
-       "note"
-      ]
-     }
-    ],
     "effects": [],
     "resources": []
    },
    "old_audit": {
     "gap": "move",
-    "need": "缺少令友方目标消耗反应进行移动且免疫特定敌人借机攻击的协同位移机制",
+    "need": "移动过程中经过盟友周围 5 尺时触发单次治疗（移动轨迹事件）",
     "now": false
    }
   },
   {
-   "key": "XPHB:灵巧步法",
-   "name": "灵巧步法",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "附赠动作：消耗卓越骰并执行撤离，AC 加值直到你的下个回合开始前。卓越骰的点数请玩家掷骰后填入。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "灵巧步法",
-      "activation": "bonus",
-      "cost": [
-       {
-        "resource": "卓越骰"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "turn.isMine",
-      "root": [
-       "applyEffect",
-       "number"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "灵巧步法",
-      "statics": [
-       "ac"
-      ],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnStart",
-        "of": "bearer",
-        "nth": 1
-       }
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "remember",
-    "need": "缺少在动作执行节点中直接掷骰并将结果存入变量（无需通过 number 弹窗手动填入）的能力",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:龙裔",
-   "name": "龙裔",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "龙族血统选定的伤害类型 / 伤害抗性、黑暗视觉由人物卡处理（抗性取决于所选龙种）；吐息武器每次使用时按你的龙种选择伤害类型。龙族飞翼的飞行速度引擎不追踪，手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "breath-cone",
-      "name": "吐息武器：15 尺锥形",
-      "activation": "none",
-      "cost": [
-       {
-        "economy": "attack"
-       },
-       {
-        "resource": "吐息武器"
-       }
-      ],
-      "targeting": {
-       "type": "area",
-       "range": "self",
-       "area": {
-        "shape": "cone",
-        "size": 15
-       }
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "turn.isMine",
-      "root": [
-       "choose"
-      ]
-     },
-     {
-      "id": "breath-line",
-      "name": "吐息武器：30 尺长 5 尺宽线形",
-      "activation": "none",
-      "cost": [
-       {
-        "economy": "attack"
-       },
-       {
-        "resource": "吐息武器"
-       }
-      ],
-      "targeting": {
-       "type": "area",
-       "range": "self",
-       "area": {
-        "shape": "line",
-        "length": 30,
-        "width": 5
-       }
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "turn.isMine",
-      "root": [
-       "choose"
-      ]
-     },
-     {
-      "id": "wings",
-      "name": "龙族飞翼",
-      "activation": "bonus",
-      "cost": [
-       {
-        "resource": "龙族飞翼"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.level >= 5 && !self.hasEffect('龙族飞翼')",
-      "root": [
-       "applyEffect"
-      ]
-     },
-     {
-      "id": "wings-end",
-      "name": "龙族飞翼：收起",
-      "activation": "free",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.hasEffect('龙族飞翼')",
-      "root": [
-       "removeEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "龙族飞翼",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "minutes": 10,
-       "endsOn": [
-        {
-         "event": "effectApplied",
-         "when": "event.bearer == self.id && self.has('失能')"
-        }
-       ]
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "move",
-    "need": "缺少动态赋予角色飞行速度（flySpeed）的效应与移动力支持",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:孪生法术",
-   "name": "孪生法术",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
+   "key": "TCE:牧师:增强联结:17",
+   "name": "增强联结",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
    "automation": "manual",
-   "text": "施展一道能因升环多增加一个目标的法术时，可消耗 1 术法点，把该法术的有效环阶提升一环（目标数随之增加）。超魔法改的是下一个施展的法术，引擎未改写施法机制，需人工：施法前由人扣 1 术法点（sorcery-points），并按高一环计算目标数、DC 与伤害。",
+   "text": "勇气联结和保护联结在两名联结生物相距不超过60尺时即可生效。当生物使用保护联结为他人承受伤害时，对该伤害具有抗性。保护联结已标记为手动处理，其生效距离与代受伤害的抗性结算由人在结算保护联结时手动处理；勇气联结的60尺范围已在其效果中按等级体现。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "替他人代受伤害时代受者获得伤害抗性及远距离代受判定",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:奇械学徒",
+   "name": "奇械学徒",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "所选奇械师戏法、一环法术、智力施法属性与工匠工具熟练及法器功能均属于人物卡静态层。每日可无需法术位施展一次所选的一环法术（资源「奇械学徒（免费施展一环法术）」，长休恢复），亦可用法术位施展。具体法术施展与法术位免除由玩家手动处理。",
    "data": {
     "automation": "manual",
     "actions": [],
@@ -930,17 +129,17 @@
    },
    "old_audit": {
     "gap": "resource",
-    "need": "缺少在施法时消耗术法点并将法术有效环阶提升一环（影响目标数/缩放）的超魔法前置修饰机制",
+    "need": "专长绑定动态自选法术并提供长休免费施展与后续法术位施展联动",
     "now": false
    }
   },
   {
-   "key": "XPHB:灭世魔刃",
-   "name": "灭世魔刃",
+   "key": "TCE:枪手",
+   "name": "枪手",
    "kind": "feature",
-   "from": "data/dyn/ai/features.json",
+   "from": "data/dyn/ai/books.json",
    "automation": "manual",
-   "text": "饥渴魔刃祈唤给你的额外攻击次数变为两次而非一次。这个次数写死在「饥渴魔刃」那条数据里（它本身就是手动条目：引擎没有「额外攻击次数」这种可改写的量），本条目改不了它，只能人工处理：执行攻击动作时，用契约武器攻击两次（而不是一次）。",
+   "text": "枪械熟练项属于人物卡静态层（建卡时选的熟练项），战斗数据里不用再写。引擎不结算枪械的 LD（装填）词条，忽略即可。「你在敌对生物 5 尺范围内发动远程攻击检定时不会因此具有劣势」是站位规则：引擎本身不会因为敌人在 5 尺内就给远程攻击加劣势，所以也不需要在战斗数据里取消；如果你在地图上手动给这类攻击加了劣势，请自己改回来。",
    "data": {
     "automation": "manual",
     "actions": [],
@@ -949,8 +148,305 @@
     "resources": []
    },
    "old_audit": {
-    "gap": "other",
-    "need": "缺少高阶祈唤跨条目改写/增加契约武器攻击次数（由2次变为3次）的机制",
+    "gap": "timing",
+    "need": "免除因 5 尺内有未失能敌对生物导致的远程攻击检定劣势",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:人工生命仆从",
+   "name": "人工生命仆从",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "注法造出的人工生命仆从（注法时用一颗价值至少 100gp 的宝石或水晶作它的心脏）：微型构装生物，AC 13，HP = 1 + 你的智力调整值 + 你的奇械师等级（生命骰数量同奇械师等级），速度 20 尺、飞行 30 尺，力量 4 / 敏捷 15 / 体质 12 / 智力 10 / 感知 10 / 魅力 7，力场打击（法术攻击，射程 30 尺，1d4 + 熟练加值 力场伤害），免疫毒素与力竭、中毒状态；它对你和同伴友善、服从你的命令，与你共用先攻并在你回合后立即行动。它可以自行移动和执行反应，但你只有用一个附赠动作命令它，它才会执行数据中的动作或其他动作（否则只能回避；你失能时它可以自行选择任何动作）——引擎让召唤物自己行动、管不了这条附赠动作，请用「人工生命仆从：命令行动」记录。反射闪避已经自动化；生命骰、对它施展修复术恢复 2d6、以及你或它死亡时它消失（只留心脏）都要人手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "人工生命仆从：唤出仆从",
+      "activation": "free",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "summon"
+      ]
+     },
+     {
+      "id": "command",
+      "name": "人工生命仆从：命令行动",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "随从生物模板、独立先攻排队及附赠动作命令行动",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:圣武士:尘世壁垒:20",
+   "name": "尘世壁垒",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以附赠动作获得 1 分钟增益，每次长休 1 次（可消耗 5 环法术位重置）。获得 120 尺真实视觉（手动处理）。对异怪、天界生物、元素、精类或邪魔的攻击检定具有优势。攻击命中并造成伤害时可迫使其进行魅力豁免，失败且不属于此位面时被放逐回原生位面，成功则 24 小时内免疫该放逐（放逐与免疫需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "尘世壁垒",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "mortalBulwark"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "!self.hasEffect('尘世壁垒')",
+      "root": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "end",
+      "name": "结束尘世壁垒",
+      "activation": "free",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('尘世壁垒')",
+      "root": [
+       "removeEffect"
+      ]
+     },
+     {
+      "id": "reset",
+      "name": "尘世壁垒：重置使用权（五环法术位）",
+      "activation": "free",
+      "cost": [
+       {
+        "slot": {
+         "min": 5,
+         "max": 5
+        }
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.resource('mortalBulwark') < 1",
+      "root": [
+       "resource"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "尘世壁垒",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 1,
+      "duration": {
+       "minutes": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "真实视觉自动穿透隐形/幻觉，以及按生物所属原生位面判定放逐与免疫",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:圣武士:鼓舞斩:3",
+   "name": "鼓舞斩",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以至圣斩造成伤害时，可立即用附赠动作消耗 1 次引导神力，为你自身或 30 尺内由你选择的生物分配合计 2d8 + 你的圣武士等级 点临时生命值。自动化默认加给自身，分配给他人需手动调整。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "引导神力：鼓舞斩",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "channel-divinity"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "ask('刚才是否以至圣斩造成了伤害？')",
+      "root": [
+       "tempHp",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [
+     {
+      "id": "inspire",
+      "label": "鼓舞斩：至圣斩后触发",
+      "on": "spellCast",
+      "role": "actor",
+      "window": "after",
+      "when": "event.key == 'XPHB:spell:至圣斩'",
+      "cost": [
+       {
+        "resource": "channel-divinity"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "tempHp",
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "将 2d8+等级点临时生命值自由分配给自身或 30 尺内任意自选生物（点数池自由拆分分配）",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:圣武士:辉煌防御:15",
+   "name": "辉煌防御",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "当你或你周围 10 尺内你可见的其他生物被一次攻击检定命中时，你可以用反应（消耗 1 次辉煌防御，次数等于魅力调整值、至少 1 次，长休恢复）使被击中的生物获得等同于你魅力调整值（至少 +1）的 AC 加值。加值由引擎加上并立刻按新 AC 重新判定这次攻击，因此该次攻击可能变成失手；这次攻击结算后加值消失。需要人处理的部分：若这次攻击因此失手、且攻击者在你的武器触及范围内，你可以对那个攻击者进行一次武器攻击（属于本反应的一部分）—— 引擎不会自动发起这次武器攻击，请在武器行手动攻击一次。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "辉煌防御",
+      "activation": "reaction",
+      "cost": [
+       {
+        "resource": "radiantDefense"
+       }
+      ],
+      "targeting": null,
+      "trigger": {
+       "on": "attackHit",
+       "role": "any",
+       "window": "before",
+       "when": "attacker.id != self.id && (target.id == self.id || (target.isAllyOf(self) && within(self, target, 10) && canSee(self, target)))"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "辉煌防御",
+      "statics": [
+       "ac"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "rounds": 1,
+       "endsOn": [
+        {
+         "event": "attackMissed",
+         "when": "event.target == self.id"
+        },
+        {
+         "event": "damageTaken",
+         "when": "event.target == self.id"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "反应使攻击失手后无缝追加对触及内攻击者的近战武器反击攻击",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:圣武士:警戒呵斥:15",
+   "name": "警戒呵斥",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "当你或你 30 尺内可见生物在智力、感知或魅力豁免上成功时，你可以用反应对迫使进行豁免检定的生物造成 2d8 + 魅力调整值点力场伤害（迫使豁免的生物需手动指定为目标结算）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "警戒呵斥",
+      "activation": "reaction",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": {
+       "on": "d20Rolled",
+       "role": "any",
+       "window": "after",
+       "when": "roll.kind == 'save' && (roll.ability == 'int' || roll.ability == 'wis' || roll.ability == 'cha') && !roll.failing && (roll.roller == self.id || (within(self, combatant(roll.roller), 30) && canSee(self, combatant(roll.roller))))"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "damage"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "source",
+    "need": "豁免成功后获取迫使进行豁免的施法者/攻击者（source）作为反击目标造成力场伤害",
     "now": false
    }
   }

@@ -1,464 +1,194 @@
 {
  "batch": "batch-044",
- "count": 20,
+ "count": 10,
  "entries": [
   {
-   "key": "XDMG:item:守护卷轴（巨人）",
-   "name": "守护卷轴（巨人）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
+   "key": "XGE:spell:元素灾厄",
+   "name": "元素灾厄",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "以一个动作阅读卷轴，在自身周围创造一个5尺的发散隐形屏障，持续5分钟。巨人生物无法进入屏障，也无法对屏障内的任何事物造成影响。屏障空间阻挡需手动裁决。",
+   "text": "选择90尺内一个可见生物并指定一种伤害类型（强酸、寒冷、火焰、闪电或雷鸣）。目标必须通过体质豁免，否则在持续时间内受其影响：失去对该伤害类型的抗性，且每回合首次受到该类型伤害时额外受2d6点伤害（升环：每高一环可多选一个30尺内的目标）。抗性剥夺与每回合首次额外伤害需手动处理。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "使用守护卷轴（巨人）",
+      "name": "元素灾厄",
       "activation": "action",
       "cost": [
        {
-        "resource": "物品:守护卷轴（巨人）"
+        "slot": {
+         "min": 4
+        }
        }
       ],
       "targeting": {
-       "type": "self"
+       "type": "creature",
+       "range": 90
       },
       "trigger": null,
-      "concentration": null,
+      "concentration": {
+       "minutes": 1
+      },
       "requires": null,
       "root": [
-       "applyEffect",
-       "note"
+       "save"
       ]
      }
     ],
     "triggers": [],
     "effects": [
      {
-      "name": "守护屏障（巨人）",
+      "name": "元素灾厄",
       "statics": [],
       "flags": null,
       "rollMods": 0,
       "triggers": 0,
-      "duration": {
-       "minutes": 5
-      }
+      "duration": null
      }
     ],
     "resources": []
    },
-   "old_audit": null
+   "old_audit": {
+    "gap": "choice",
+    "need": "缺少选定伤害类型并持久化存储（remember/choice）、剥夺目标固有抗性、以及在目标每回合首次承受该类型伤害时追加伤害的判定接口",
+    "now": false
+   }
   },
   {
-   "key": "XDMG:item:守护卷轴（类人生物）",
-   "name": "守护卷轴（类人生物）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
+   "key": "XGE:spell:召唤次级恶魔",
+   "name": "召唤次级恶魔",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "以一个动作阅读卷轴，在自身周围创造一个5尺的发散隐形屏障，持续5分钟。类人生物生物无法进入屏障，也无法对屏障内的任何事物造成影响。屏障空间阻挡需手动裁决。",
+   "text": "在 60 尺内召唤一群恶魔，专注至多 1 小时。掷 d6 决定出现哪一种：1-2 为 2 只挑战等级 1 或更低的恶魔，3-4 为 4 只挑战等级 1/2 或更低的恶魔，5-6 为 8 只挑战等级 1/4 或更低的恶魔；用六环或七环法术位施展时数量变为两倍，用八环或九环时变为三倍。恶魔的种类由 DM 决定（例如原魔或怯魔），由你选择施法距离内可见的未占据空间让它们出现。引擎做不了的部分：数量与挑战等级由掷骰决定（界面里先掷 d6 再选对应的一项）、恶魔的数据块要 DM 从图鉴取、恶魔对包括你在内的所有生物抱有敌意、它们整体掷一次先攻并自主追逐攻击最近的非恶魔生物 —— 这些都要人工处理，请把恶魔当作 DM 操控的敌对生物加进遭遇。作为施法的一部分，你可以用施法材料的血液在地上画一个法阵（大到能容纳你），法术持续期间被召唤的恶魔不能穿过或伤害法阵、也不能以法阵中的人为目标：法阵需人工在地图上画出并遵守。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "使用守护卷轴（类人生物）",
+      "name": "召唤次级恶魔",
       "activation": "action",
       "cost": [
        {
-        "resource": "物品:守护卷轴（类人生物）"
+        "slot": {
+         "min": 3
+        }
        }
       ],
       "targeting": {
-       "type": "self"
+       "type": "point",
+       "range": 60
       },
       "trigger": null,
-      "concentration": null,
+      "concentration": {
+       "hours": 1
+      },
       "requires": null,
       "root": [
-       "applyEffect",
+       "choose",
        "note"
       ]
      }
     ],
     "triggers": [],
-    "effects": [
-     {
-      "name": "守护屏障（类人生物）",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "minutes": 5
-      }
-     }
-    ],
+    "effects": [],
     "resources": []
    },
-   "old_audit": null
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少按掷骰随机召唤复数敌对恶魔入场、生成独立先攻与自动索敌攻击最近非恶魔生物的群体随从系统",
+    "now": false
+   }
   },
   {
-   "key": "XDMG:item:守护卷轴（泥怪）",
-   "name": "守护卷轴（泥怪）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
+   "key": "XGE:spell:治愈之魂",
+   "name": "治愈之魂",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "以一个动作阅读卷轴，在自身周围创造一个5尺的发散隐形屏障，持续5分钟。泥怪生物无法进入屏障，也无法对屏障内的任何事物造成影响。屏障空间阻挡需手动裁决。",
+   "text": "附赠动作施放，专注至多 1 分钟。在 60 尺内一处 5 尺立方空间召唤自然精魂并留在地图上；你或你能看见的生物在回合里第一次进入该空间、或在其开始回合时，你可以让精魂为它恢复 (1 + slot.level)d6 点生命值（不能治疗构装体与不死生物，每回合限一次，随专注结束消失）。精魂至多治愈 1 + 施法属性调整值次（至少 2 次），次数与「用附赠动作把精魂移动 30 尺」需人工处理。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "使用守护卷轴（泥怪）",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品:守护卷轴（泥怪）"
-       }
-      ],
-      "targeting": {
-       "type": "self"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "applyEffect",
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "守护屏障（泥怪）",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "minutes": 5
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:守护卷轴（邪魔）",
-   "name": "守护卷轴（邪魔）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "以一个动作阅读卷轴，在自身周围创造一个5尺的发散隐形屏障，持续5分钟。邪魔生物无法进入屏障，也无法对屏障内的任何事物造成影响。屏障空间阻挡需手动裁决。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "使用守护卷轴（邪魔）",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品:守护卷轴（邪魔）"
-       }
-      ],
-      "targeting": {
-       "type": "self"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "applyEffect",
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "守护屏障（邪魔）",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "minutes": 5
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:守护卷轴（妖精）",
-   "name": "守护卷轴（妖精）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "以一个动作阅读卷轴，在自身周围创造一个5尺的发散隐形屏障，持续5分钟。妖精生物无法进入屏障，也无法对屏障内的任何事物造成影响。屏障空间阻挡需手动裁决。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "使用守护卷轴（妖精）",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品:守护卷轴（妖精）"
-       }
-      ],
-      "targeting": {
-       "type": "self"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "applyEffect",
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "守护屏障（妖精）",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "minutes": 5
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:守护卷轴（野兽）",
-   "name": "守护卷轴（野兽）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "以一个动作阅读卷轴，在自身周围创造一个5尺的发散隐形屏障，持续5分钟。野兽生物无法进入屏障，也无法对屏障内的任何事物造成影响。屏障空间阻挡需手动裁决。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "使用守护卷轴（野兽）",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品:守护卷轴（野兽）"
-       }
-      ],
-      "targeting": {
-       "type": "self"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "applyEffect",
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "守护屏障（野兽）",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "minutes": 5
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:守护卷轴（异怪）",
-   "name": "守护卷轴（异怪）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "以一个动作阅读卷轴，在自身周围创造一个5尺的发散隐形屏障，持续5分钟。异怪生物无法进入屏障，也无法对屏障内的任何事物造成影响。屏障空间阻挡需手动裁决。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "使用守护卷轴（异怪）",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品:守护卷轴（异怪）"
-       }
-      ],
-      "targeting": {
-       "type": "self"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "applyEffect",
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "守护屏障（异怪）",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "minutes": 5
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:守护卷轴（元素生物）",
-   "name": "守护卷轴（元素生物）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "以一个动作阅读卷轴，在自身周围创造一个5尺的发散隐形屏障，持续5分钟。元素生物无法进入屏障，也无法对屏障内的任何事物造成影响。屏障空间阻挡需手动裁决。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "使用守护卷轴（元素生物）",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品:守护卷轴（元素生物）"
-       }
-      ],
-      "targeting": {
-       "type": "self"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "applyEffect",
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "守护屏障（元素生物）",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "minutes": 5
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:守护卷轴（植物）",
-   "name": "守护卷轴（植物）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "以一个动作阅读卷轴，在自身周围创造一个5尺的发散隐形屏障，持续5分钟。植物生物无法进入屏障，也无法对屏障内的任何事物造成影响。屏障空间阻挡需手动裁决。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "使用守护卷轴（植物）",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品:守护卷轴（植物）"
-       }
-      ],
-      "targeting": {
-       "type": "self"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "applyEffect",
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "守护屏障（植物）",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "minutes": 5
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:霜巨人之力药水",
-   "name": "霜巨人之力药水",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "饮用后 1 小时内力量属性值变为 23（若原本大于等于 23 则无效）。临时力量属性值改变需手动调整人物卡。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "饮用霜巨人之力药水",
+      "name": "治愈之魂",
       "activation": "bonus",
       "cost": [
        {
-        "resource": "物品:霜巨人之力药水"
+        "slot": {
+         "min": 2
+        }
        }
       ],
-      "targeting": null,
+      "targeting": {
+       "type": "area",
+       "range": 60,
+       "area": {
+        "shape": "cube",
+        "size": 5
+       }
+      },
       "trigger": null,
-      "concentration": null,
+      "concentration": {
+       "minutes": 1
+      },
       "requires": null,
       "root": [
-       "applyEffect",
+       "forEach",
+       "note",
+       "zone"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少可在战棋地图上位移的持续性治疗实体/区域（Zone）、进入/开始回合触发治疗以及消耗固定治疗次数后自动消失的计数机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:致病辐射",
+   "name": "致病辐射",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。120 尺内一点为中心扩散 30 尺半径的绿色微光，光芒绕过拐角，区域留在地图上、随专注消失。一个生物在某一回合内第一次进入区域、或在其中开始回合时，必须做体质豁免，失败受 4d10 光耀伤害、承受 1 级力竭，并散发 5 尺半径的绿光（同一生物每回合只结算一次；按原文，法术出现时已经在里面的生物不立刻豁免，等它进入或开始回合）。绿光让生物无法从隐形中获益、以及光芒绕过拐角的判定，引擎不处理，请人工判定；力竭与绿光按 10 分钟到期，法术提前结束时请手动移除残留的力竭。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "致病辐射",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "sphere",
+        "radius": 30
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "zone",
        "note"
       ]
      }
@@ -466,7 +196,78 @@
     "triggers": [],
     "effects": [
      {
-      "name": "霜巨人之力",
+      "name": "致病辐射：绿光",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 10
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少持续地图区域（Zone）对首次进入或开始回合生物触发豁免，以及在法术结束时统一清除该法术所赋予力竭状态的生命周期联动",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:众星冠冕",
+   "name": "众星冠冕",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "持续 1 小时。7 个星型光点环绕头顶。可以使用附赠动作消耗 1 个光点袭向 120 尺内一生物或物体，进行一次远程法术攻击，命中造成 4d12 光耀伤害。无论命中与否该光点均被消耗；消耗最后一枚光点时法术提前结束。留存 ≥4 枚光点时提供 30 尺明亮及额外 30 尺微光照明；留存 1~3 枚时提供 30 尺微光照明。升环施法：使用 8 环或更高法术位时，每高一环额外创造 2 枚光点。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "众星冠冕",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 7
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "mote-attack",
+      "name": "众星冠冕：射出光点",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 120
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('众星冠冕')",
+      "root": [
+       "attack",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "众星冠冕",
       "statics": [],
       "flags": null,
       "rollMods": 0,
@@ -481,332 +282,392 @@
    "old_audit": null
   },
   {
-   "key": "XDMG:item:水上行走戒指",
-   "name": "水上行走戒指",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
+   "key": "XGE:spell:转化岩石",
+   "name": "转化岩石",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "着装此戒指期间，你可以从中施展水上行走（动作），目标只能为自身。水上行走穿越液体表面等效果需手动处理。",
+   "text": "转化 120 尺内至多 40 尺立方区域内的非魔法岩石或泥土，持续永久。选择【化石为泥】（地表：移动每尺消耗4尺移动力，施法时、首次进入或回合结束力量豁免失败陷入泥浆束缚，动作可脱离；天花板：掉落泥浆，敏捷豁免失败受4d8钝击伤害，成功半伤）或【化泥为石】（泥中生物敏捷豁免成功安全移至表面，失败被软质岩石束缚，可用动作DC 20力量检定或攻击破坏岩石AC 15/HP 25脱离）。地形改变与站位需手动处理。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "水上行走戒指：施展水上行走",
+      "name": "转化岩石",
       "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "cube",
+        "size": 40
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     },
+     {
+      "id": "mudSave",
+      "name": "化石为泥：进入或回合结束豁免",
+      "activation": "none",
       "cost": [],
       "targeting": {
-       "type": "self"
+       "type": "creature",
+       "count": 1,
+       "range": 120
       },
       "trigger": null,
       "concentration": null,
       "requires": null,
       "root": [
-       "applyEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:水下呼吸药水",
-   "name": "水下呼吸药水",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "饮下这瓶药水后的 24 小时内，你可以在水下呼吸（水下呼吸效果需手动处理）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "饮用水下呼吸药水",
-      "activation": "bonus",
-      "cost": [
-       {
-        "resource": "物品:水下呼吸药水"
-       }
-      ],
-      "targeting": {
-       "type": "self"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "applyEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:搜敌魔杖",
-   "name": "搜敌魔杖",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "持握魔杖时，你可以以一个动作消耗1充能，在1分钟内得知60尺内最近的敌对生物方向。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "搜敌魔杖：搜敌",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:搜敌魔杖",
-        "n": 1
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:搜魔魔杖",
-   "name": "搜魔魔杖",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "持握魔杖时，你可以消耗1充能从中施展侦测魔法（专注至多10分钟，感知30尺内魔法并辨识学派）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "detect-magic",
-      "name": "搜魔魔杖：侦测魔法",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:搜魔魔杖",
-        "n": 1
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": {
-       "minutes": 10
-      },
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:速度之靴",
-   "name": "速度之靴",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "以附赠动作互击脚后跟激活，速度加倍，且任何生物对你发动借机攻击时都具有劣势。持续至多10分钟，再次互击脚后跟可提前终止。共计使用10分钟后需长休恢复。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "速度之靴：互击脚后跟",
-      "activation": "bonus",
-      "cost": [
-       {
-        "resource": "物品次数:速度之靴"
-       }
-      ],
-      "targeting": {
-       "type": "self"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "applyEffect"
+       "save"
       ]
      }
     ],
     "triggers": [],
     "effects": [
      {
-      "name": "速度之靴",
-      "statics": [
-       "speed"
-      ],
-      "flags": null,
-      "rollMods": 1,
-      "triggers": 0,
-      "duration": {
-       "minutes": 10
-      }
-     }
-    ],
-    "resources": [
-     {
-      "id": "物品次数:速度之靴",
-      "name": "速度之靴",
-      "formula": 1,
-      "recovery": "long"
-     }
-    ]
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:缩小药水",
-   "name": "缩小药水",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "饮下这瓶药水后获得法术变巨/缩小术中的“缩小”效应，持续 1d4 小时（无需专注）。体型缩小一级，力量检定与力量豁免具有劣势；使用缩小的武器或徒手打击命中时伤害减少 1d4（无法降至 1 以下，需手动调整）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "饮用缩小药水",
-      "activation": "bonus",
-      "cost": [
-       {
-        "resource": "物品:缩小药水"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "applyEffect",
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "缩小",
+      "name": "泥浆束缚",
       "statics": [],
       "flags": null,
-      "rollMods": 1,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     },
+     {
+      "name": "岩石束缚",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
       "triggers": 0,
       "duration": null
      }
     ],
     "resources": []
    },
-   "old_audit": null
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少永久修改地图三维地形（泥浆/岩石）、4比1超困难地形移动力消耗及生物进入/结束回合触发束缚判定的地形交互接口",
+    "now": false
+   }
   },
   {
-   "key": "XDMG:item:泰坦召唤卷轴（泰拉斯奎）",
-   "name": "泰坦召唤卷轴（泰拉斯奎）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
+   "key": "XGE:spell:自然之怒",
+   "name": "自然之怒",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "以魔法动作阅读此卷轴，泰拉斯奎显现在你 1 里内的地面或水里的未占据空间中。泰拉斯奎对其他所有生物态度敌对，在生命值降至 0 时消失。若空间不足以容纳它，召唤失败且卷轴被浪费。",
+   "text": "专注至多 1 分钟。120 尺内一点为中心 60 尺立方区域里的树木、岩石和草丛被活化（区域留在地图上，随专注消失）。草丛与灌木使区域内的地面对你的敌人是困难地形——地形引擎不处理，请人工按半速移动，区域会在敌人进入时提醒一次。树木挥击（你每个回合开始时，区域内树木 10 尺内的每个敌人敏捷豁免，失败受 4d6 挥砍）与根藤缠绕（你每个回合结束时，区域内站于地面上的一个你选择的生物力量豁免，失败被束缚直到法术结束、可用动作做力量（运动）检定对抗你的法术 DC 挣脱）都是自动时机，引擎不能在「你的回合」对区域里的别人逐个结算，请在你的回合开始 / 结束时点对应按钮、选中目标结算。附赠动作投石（远程法术攻击 3d8 钝击，命中再力量豁免否则倒地）已按原文写全。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "阅读卷轴",
+      "name": "自然之怒",
       "activation": "action",
       "cost": [
        {
-        "resource": "物品:泰坦召唤卷轴（泰拉斯奎）"
+        "slot": {
+         "min": 5
+        }
        }
       ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:探秘魔杖",
-   "name": "探秘魔杖",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "持握魔杖时，你可以执行魔法动作并消耗1充能，如果60尺内存在密门或陷阱，魔杖将跳动着指向离你最近的一个。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "探秘魔杖：探秘",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:探秘魔杖",
-        "n": 1
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "cube",
+        "size": 60
        }
-      ],
-      "targeting": null,
+      },
       "trigger": null,
-      "concentration": null,
+      "concentration": {
+       "minutes": 1
+      },
       "requires": null,
       "root": [
+       "applyEffect",
+       "zone",
        "note"
       ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:跳跃戒指",
-   "name": "跳跃戒指",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "着装此戒指期间，你可以从中施展跳跃术（附赠动作），只能以自身为目标。跳跃移动需手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
+     },
      {
-      "id": "use",
-      "name": "跳跃戒指：施展跳跃术",
+      "id": "treeStrike",
+      "name": "自然之怒：树木挥击",
+      "activation": "free",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "range": 120
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('自然之怒（激活）')",
+      "root": [
+       "save"
+      ]
+     },
+     {
+      "id": "rootGrasp",
+      "name": "自然之怒：根藤缠绕",
+      "activation": "free",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 120
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('自然之怒（激活）')",
+      "root": [
+       "save"
+      ]
+     },
+     {
+      "id": "throwRock",
+      "name": "自然之怒：投石",
       "activation": "bonus",
       "cost": [],
       "targeting": {
-       "type": "self"
+       "type": "creature",
+       "count": 1,
+       "range": 120,
+       "filter": "canSee(self, target)"
       },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('自然之怒（激活）') && turn.isMine",
+      "root": [
+       "attack"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "自然之怒",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     },
+     {
+      "name": "自然之怒：束缚",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少复合型大型地图持续区域（Zone）对敌方单向困难地形、回合开始/结束根据地形要素自动触发不同豁免与附赠动作区域攻击的综合控制系统",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:阿斯莫",
+   "name": "阿斯莫",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "天界抗性、黑暗视觉、光辉掌者（光亮术）是静态部分，由人物卡处理。天堂飞翼的飞行速度、内耀辉光的光照需要手动处理；内耀辉光的回合结束伤害请在自己的回合结束时用「内耀辉光（回合结束伤害）」触发。天界启示的额外伤害对攻击或法术造成的伤害都会询问，不是攻击 / 法术伤害（例如内耀辉光自己的伤害）时请拒绝。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "healing-hands",
+      "name": "治愈之手",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "治愈之手"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "heal"
+      ]
+     },
+     {
+      "id": "revelation-wings",
+      "name": "天界启示：天堂飞翼",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "天界启示"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.level >= 3",
+      "root": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "revelation-radiance",
+      "name": "天界启示：内耀辉光",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "天界启示"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.level >= 3",
+      "root": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "radiance-pulse",
+      "name": "天界启示：内耀辉光（回合结束伤害）",
+      "activation": "free",
+      "cost": [],
+      "targeting": {
+       "type": "area",
+       "range": "self",
+       "area": {
+        "shape": "emanation",
+        "radius": 10
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && self.hasEffect('内耀辉光')",
+      "root": [
+       "forEach"
+      ]
+     },
+     {
+      "id": "revelation-shroud",
+      "name": "天界启示：死灵环绕",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "天界启示"
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": "self",
+       "area": {
+        "shape": "emanation",
+        "radius": 10
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.level >= 3",
+      "root": [
+       "applyEffect",
+       "forEach"
+      ]
+     },
+     {
+      "id": "end-revelation",
+      "name": "天界启示：提前结束变身",
+      "activation": "free",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('天堂飞翼') || self.hasEffect('内耀辉光') || self.hasEffect('死灵环绕')",
+      "root": [
+       "removeEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "天堂飞翼",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": {
+       "minutes": 1
+      }
+     },
+     {
+      "name": "内耀辉光",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": {
+       "minutes": 1
+      }
+     },
+     {
+      "name": "死灵环绕",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": {
+       "minutes": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少变形形态下动态赋予飞行速度（flySpeed）的效应修正机制以及动态光照系统",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:矮人",
+   "name": "矮人",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "黑暗视觉、毒素抗性、生命值上限加 1 属于静态（人物卡）。石中精妙：附赠动作获得 60 尺震颤感知 10 分钟，次数等于熟练、长休全部恢复（资源「石中精妙」）。震颤感知本身引擎不处理，效果只记录文字；必须位于岩石表面或接触岩石才能使用，由人判断。中毒豁免优势只在由人确认为避免或结束中毒时生效。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "石中精妙：震颤感知",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "石中精妙"
+       }
+      ],
+      "targeting": null,
       "trigger": null,
       "concentration": null,
       "requires": null,
@@ -816,63 +677,98 @@
      }
     ],
     "triggers": [],
-    "effects": [],
+    "effects": [
+     {
+      "name": "震颤感知",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 10
+      }
+     }
+    ],
     "resources": []
    },
-   "old_audit": null
+   "old_audit": {
+    "gap": "vision",
+    "need": "缺少震颤感知（tremorsense）特殊感官支持以及检定筛选针对特定状态（避免/结束中毒）豁免的能力",
+    "now": false
+   }
   },
   {
-   "key": "XDMG:item:通灵板",
-   "name": "通灵板",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
+   "key": "XPHB:暗夜精魂之恩惠",
+   "name": "暗夜精魂之恩惠",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
    "automation": "partial",
-   "text": "触摸占卜板期间，你可以花费1分钟施展以下法术：卜筮术（消耗1充能）、通神术（消耗3充能）。每日黎明时重获1已消耗的充能。",
+   "text": "身处微光光照或黑暗期间才能用融身入影（使用时询问）；隐形在你执行动作、附赠动作或反应后立即结束（攻击检定后、或开始其他动作 / 附赠动作 / 反应时结束）。幽影化身的抗性是否生效取决于你是否身处微光光照或黑暗，由人判断：进入时用「幽影化身」启用，离开时用「结束幽影化身」去掉。",
    "data": {
     "automation": "partial",
     "actions": [
      {
-      "id": "augury",
-      "name": "通灵板：卜筮术",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:通灵板",
-        "n": 1
-       }
-      ],
+      "id": "use",
+      "name": "暗夜精魂之恩惠：融身入影",
+      "activation": "bonus",
+      "cost": [],
       "targeting": null,
       "trigger": null,
       "concentration": null,
-      "requires": null,
+      "requires": "!self.has('隐形') && ask('你身处微光光照或黑暗中吗？')",
       "root": [
-       "note"
+       "applyEffect"
       ]
      },
      {
-      "id": "commune",
-      "name": "通灵板：通神术",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:通灵板",
-        "n": 3
-       }
-      ],
+      "id": "shadow-form",
+      "name": "暗夜精魂之恩惠：幽影化身",
+      "activation": "free",
+      "cost": [],
       "targeting": null,
       "trigger": null,
       "concentration": null,
-      "requires": null,
+      "requires": "!self.hasEffect('幽影化身')",
       "root": [
-       "note"
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "shadow-form-end",
+      "name": "暗夜精魂之恩惠：结束幽影化身",
+      "activation": "free",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('幽影化身')",
+      "root": [
+       "removeEffect"
       ]
      }
     ],
     "triggers": [],
-    "effects": [],
+    "effects": [
+     {
+      "name": "幽影化身",
+      "statics": [
+       "resist"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "manual": true
+      }
+     }
+    ],
     "resources": []
    },
-   "old_audit": null
+   "old_audit": {
+    "gap": "timing",
+    "need": "给施加的隐形效应设置 duration: { endsOn: [{ event: 'actionUsed' }] } 即可在执行动作时自动结束",
+    "now": true
+   }
   }
  ]
 }

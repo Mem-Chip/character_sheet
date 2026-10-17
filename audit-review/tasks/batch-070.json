@@ -1,0 +1,492 @@
+{
+ "batch": "batch-070",
+ "count": 10,
+ "entries": [
+  {
+   "key": "XPHB:战士:料敌机先:7",
+   "name": "料敌机先",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "附赠动作查看 30 尺内可见生物的抗性、免疫与易伤：引擎没有揭示信息的节点，查看并告知使用者需要人手动处理。每次长休可用一次；可消耗 1 粒卓越骰（无需动作）重置使用权。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "料敌机先",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "料敌机先"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30,
+       "filter": "canSee(target, self)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "reset",
+      "name": "料敌机先：卓越骰重置",
+      "activation": "free",
+      "cost": [
+       {
+        "resource": "卓越骰"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.resource('料敌机先') == 0",
+      "root": [
+       "resource"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少查询并向玩家弹窗展示目标生物抗性、免疫与易伤等怪物数据信息的揭示节点（revealInfo）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:战士:灵力跃动:7",
+   "name": "灵力跃动",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "附赠动作：获得等同于两倍速度的飞行速度，直到本回合结束。用过后直到短休或长休前不能再用；也可以消耗一枚灵能骰（无需动作）再次使用。飞行本身引擎不追踪，只按「多出一份速度的移动力」计。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "灵力跃动",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "灵力跃动"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "applyEffect",
+       "economy",
+       "note"
+      ]
+     },
+     {
+      "id": "reuse",
+      "name": "灵力跃动（消耗灵能骰再次使用）",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "灵能力量"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "applyEffect",
+       "economy",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "灵力跃动",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少飞行速度与悬浮机制，且移动节点无法追踪三维空间位移与滞空",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:战士:念力控物:3",
+   "name": "念力控物",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "以魔法动作选中一个 30 尺内、你可见的其他生物，将其移动至多 30 尺到另一个对你可见的未占据空间。使用后直至短休或长休前不能再用（资源「念力控物」，1 次）；消耗一枚灵能骰（无需动作）可重置。未固定物件（至多大型）的移动，以及微型物件的给出与收回，引擎不处理，需人工。目标是否自愿也由人确认。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "念力控物",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "念力控物"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30,
+       "filter": "target.id != self.id && canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "move"
+      ]
+     },
+     {
+      "id": "reset",
+      "name": "念力控物（消耗灵能骰重置）",
+      "activation": "free",
+      "cost": [
+       {
+        "resource": "灵能力量"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.resource('念力控物') < 1",
+      "root": [
+       "resource"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少在地图上选择未占据空格执行精准传送位移以及对物件（非生物）进行移动的接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:战士:念力突刺:7",
+   "name": "念力突刺",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "用灵能打击对目标造成伤害后，可迫使目标做一次力量豁免（DC = 8 + 智力调整值 + 熟练）；失败则你选一项：令其倒地（自动）、水平推开 10 尺或拉近 10 尺（引擎在地图上沿你与目标的连线真的移动棋子，碰到别的棋子会停下）、或者往别的方向水平移动 10 尺（引擎只支持沿连线的推 / 拉，「任意方向」里的其余方向请手动拖棋子）。两次要人确认：是否刚用了灵能打击（引擎读不到灵能骰的消耗），以及那一次移动的方向是否被引擎的八方向近似对得上。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "thrust",
+      "label": "念力突刺",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.weapon && ask('这次命中是否刚用了灵能打击（消耗了灵能骰）？')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "save"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "move 节点缺少任意水平方向位移支持（仅有推离/拉近），且无法在地图上真正移动棋子",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:战士:念力宗师:18",
+   "name": "念力宗师",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "自动的部分：念力宗师这条资源（1 次 / 长休）在施展心灵遥控时扣掉，附赠动作的那次武器攻击只在维持专注时提供，另补上原文里原先漏掉的「消耗一枚灵能骰（无需动作）重置此法术的施展」（花一个灵能骰，把念力宗师的次数拿回来）。做不到的部分：引擎不能在效果树里替你施放一道法术、也不能直接调用人物卡上的武器行 —— 心灵遥控的实际效果请照法术条目自己施放（无成分、无法术位、施法属性为智力），附赠动作那次打击请选一把武器在武器行手动发起。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "念力宗师：施展心灵遥控",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "tk-master"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "attack",
+      "name": "念力宗师：附赠攻击",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && self.concentrating && ask('你正在对心灵遥控维持专注吗？')",
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "reset",
+      "name": "念力宗师：消耗灵能骰重置",
+      "activation": "free",
+      "cost": [
+       {
+        "resource": "灵能力量"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.resource('tk-master') < 1 && self.resource('灵能力量') > 0",
+      "root": [
+       "resource",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少在动作执行树中调用/施展法术（心灵遥控）以及直接调用已装备武器发动攻击的接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:战士:意念守护:10",
+   "name": "意念守护",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "心灵伤害抗性已在人物卡静态层。回合开始时若处于魅惑或恐慌状态，可消耗一枚灵能骰（无需动作）结束这些状态。此处只移除直接施加的魅惑、恐慌状态；由法术等其它效应造成的，需人工结束。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "warding",
+      "label": "意念守护：结束魅惑 / 恐慌",
+      "on": "turnStarted",
+      "role": "actor",
+      "window": "after",
+      "when": "self.has('魅惑') || self.has('恐慌')",
+      "cost": [
+       {
+        "resource": "灵能力量"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "removeEffect"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "removeEffect 缺少按通用状态（如魅惑/恐慌）直接解除相应效应（包括通过 implies 赋予该状态的法术效应）的能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:战士:勇战英豪:10",
+   "name": "勇战英豪",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "战斗中，回合开始时若没有英雄激励，可以获得一个。英雄激励的持有状态引擎读不到，由人确认后手动记录获得。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "inspire",
+      "label": "勇战英豪：获得英雄激励",
+      "on": "turnStarted",
+      "role": "actor",
+      "window": "after",
+      "when": "ask('你现在没有英雄激励吗？')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少英雄激励（Heroic Inspiration）状态的读取、检测与自动发放接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:战士:战术主宰:9",
+   "name": "战术主宰",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "用武器攻击且能使用该武器的精通时，可以把这次攻击的精通改为推离、削弱或缓速之一。引擎的精通只按武器自身的词条触发、不能替换，需要人手动处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少在攻击时动态替换或选择武器精通属性（Push/Sap/Slow）的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:战士:战术转进:5",
+   "name": "战术转进",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "每当你使用附赠动作进行回气时，你可以移动至多相当于你速度一半的距离，且这次移动不会引发借机攻击。引擎挂不上「使用了回气」这个时机，所以做成一个不占动作的按钮：用完附赠动作回气之后点「战术转进」，它会先问你「刚刚是不是用附赠动作进行了回气」（回答否就不生效），确认后引擎给出半速移动预算，并让接下来这一次移动不引发借机攻击（动过一次或你的回合结束就失效）。因为分几次拖动算好几次移动，请一次性把这段路程拖完，否则后面几次会照常引发借机攻击。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "战术转进",
+      "activation": "free",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && !self.hasEffect('战术转进') && ask('你刚刚用附赠动作进行了回气吗？')",
+      "root": [
+       "economy",
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "战术转进",
+      "statics": [],
+      "flags": {
+       "cannot": [
+        "provoke"
+       ]
+      },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       },
+       "endsOn": [
+        {
+         "event": "moved",
+         "when": "event.id == self.id"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少使用特定动作/特性（如回气）时的触发时机（actionUsed 事件窗口），以及移动免受借机攻击的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:战士:战争联结:3",
+   "name": "战争联结",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "联结仪式（1 小时，可在短休时进行）、联结武器不会被缴械由人处理；召唤只记录附赠动作（一次只能召唤一把，且联结武器需与你处于同一位面）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "战争联结：召唤联结武器",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少武器契约绑定、免疫缴械以及附赠动作将绑定武器传送装备至手中的物品管理机制",
+    "now": false
+   }
+  }
+ ]
+}

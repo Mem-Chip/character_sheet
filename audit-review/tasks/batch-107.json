@@ -1,0 +1,593 @@
+{
+ "batch": "batch-107",
+ "count": 10,
+ "entries": [
+  {
+   "key": "XPHB:spell:流星爆",
+   "name": "流星爆",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "在 1 英里（5280 尺）内指定至多 4 处不同地点，以每个点为中心 40 尺半径球状区域内的生物进行敏捷豁免。豁免失败受 20d6 点火焰伤害和 20d6 点钝击伤害，豁免成功受一半伤害。同时处于多个区域内的生物仅受一次影响。4 处落点位置选定、重叠排除及未着装可燃物件引燃需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "流星爆",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 9
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 5280,
+       "area": {
+        "shape": "sphere",
+        "radius": 40
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "forEach",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:龙息术",
+   "name": "龙息术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。触碰一名自愿生物，使其可用动作呼出 15 尺锥状龙息，区域内生物敏捷豁免失败受 3d6（升环每环+1d6）对应属性伤害，成功半数。施加给盟友时需由盟友使用，升环额外伤害需手动调整。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "龙息术",
+      "activation": "bonus",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "龙息术：喷吐",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "area",
+       "range": "self",
+       "area": {
+        "shape": "cone",
+        "size": 15
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "龙息术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "remember",
+    "need": "缺少将临时范围吐息动作赋予受术盟友并动态继承施法者环阶与关键DC的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:律令巩固",
+   "name": "律令巩固",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "增强 60 尺内你可见的至多六名生物的防御。赋予受术者共计 120 点临时生命值，由施法者在受术者中任意分配（具体分配数值需手动在界面调整）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "律令巩固",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 7
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 6,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:律令死亡",
+   "name": "律令死亡",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "强迫 60 尺内一名可见生物死亡。若目标生命值不超过 100 点，目标立即死亡；否则目标受到 12d12 点心灵伤害（直接死亡需由 DM/手动确认处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "律令死亡",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 9
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "if"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:律令医疗",
+   "name": "律令医疗",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "使 60 尺内一名可见生物恢复其所有生命值，并结束其身上的魅惑、恐慌、麻痹、中毒与震慑状态。若目标处于倒地状态，可用其反应立刻起身（反应起身需手动操作）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "律令医疗",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 9
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "heal",
+       "removeEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:魅惑怪物",
+   "name": "魅惑怪物",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "30 尺内一名你可见的生物进行感知豁免；如果你或你的盟友正在与它战斗，它在这次豁免上具有优势（引擎会问一句，答是就给优势；实现上是在施法时给目标挂一个只活到这次豁免的短效应，日志里会看到它出现又消失）。失败则陷入魅惑状态，持续至多 1 小时，或在你或你的盟友对它造成伤害时提前结束（伤害来源是施法者本人或与施法者同阵营时引擎自动结束）。升环每比四环高一级可多指定一名生物。「对你态度友好」「法术结束时它知道曾被你魅惑」是叙事层面，需要人处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "魅惑怪物",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": "slot.level - 3",
+       "range": 30,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "战斗豁免优势",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       },
+       "endsOn": [
+        {
+         "event": "d20Rolled",
+         "when": "event.roller == self.id && event.kind == 'save' && event.ability == 'wis'"
+        }
+       ]
+      }
+     },
+     {
+      "name": "魅惑怪物",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "hours": 1,
+       "endsOn": [
+        {
+         "event": "damageApplied",
+         "when": "event.target == self.id && event.total > 0 && (event.source == source.id || (event.source != null && combatant(event.source).isAllyOf(source)))"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少目标处于战斗状态时迫使豁免自动获得优势的战斗态判定机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:魅惑类人",
+   "name": "魅惑类人",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "30 尺内一名你可见的类人生物进行感知豁免；如果你或你的盟友正在与它战斗，它在这次豁免上具有优势（引擎会问一句，答是就给优势；实现上是在施法时给目标挂一个只活到这次豁免的短效应，日志里会看到它出现又消失）。失败则陷入魅惑状态，持续至多 1 小时，或在你或你的盟友对它造成伤害时提前结束（伤害来源是施法者本人或与施法者同阵营时引擎自动结束）。升环每比一环高一级可多指定一名生物。「对你态度友好」「法术结束时它知道曾被你魅惑」是叙事层面，需要人处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "魅惑类人",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": "slot.level",
+       "range": 30,
+       "filter": "target.type == '类人生物' && canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "战斗豁免优势",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       },
+       "endsOn": [
+        {
+         "event": "d20Rolled",
+         "when": "event.roller == self.id && event.kind == 'save' && event.ability == 'wis'"
+        }
+       ]
+      }
+     },
+     {
+      "name": "魅惑类人",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "hours": 1,
+       "endsOn": [
+        {
+         "event": "damageApplied",
+         "when": "event.target == self.id && event.total > 0 && (event.source == source.id || (event.source != null && combatant(event.source).isAllyOf(source)))"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少目标处于战斗状态时迫使豁免自动获得优势的战斗态判定机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:魅影之力",
+   "name": "魅影之力",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。60 尺内一名生物进行智力豁免，失败则受 10 尺立方内的魅影幻象影响并认定其为真实。目标可用研究动作进行智力（调查）检定对抗法术 DC，成功则法术终止。若魅影代表危险现象，施法者在自己的每回合可对处于魅影 5 尺内的目标造成 2d8 心灵伤害。调查检定与叙事互动需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "魅影之力",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "魅影之力：幻觉伤害",
+      "activation": "none",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating",
+      "root": [
+       "damage"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "魅影之力",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少幻象环境认知、受术者花费研究动作进行调查检定挣脱以及施法者每回合造成自选幻觉伤害的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:朦胧术",
+   "name": "朦胧术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。所有生物对施法者发动的攻击检定具有劣势。攻击者若依靠盲视或真实视觉观测则免疫该效应（需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "朦胧术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "朦胧术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "攻击检定修正（rollMods）缺少检测攻击者是否具备盲视（blindsight）或真实视觉（truesight）的条件谓词",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:迷宫术",
+   "name": "迷宫术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "将 60 尺内可见的一名生物放逐至半位面迷宫（专注至多 10 分钟），目标陷入失能。目标可用研究动作进行 DC 20 智力（调查）检定尝试逃脱，成功则法术终止并返回原位（移出战场、研究检定逃脱与返回原位需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "迷宫术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 8
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "迷宫放逐",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  }
+ ]
+}

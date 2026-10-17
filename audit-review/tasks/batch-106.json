@@ -1,0 +1,531 @@
+{
+ "batch": "batch-106",
+ "count": 10,
+ "entries": [
+  {
+   "key": "XPHB:spell:纠缠术",
+   "name": "纠缠术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。20 尺方状区域内除施法者外的生物必须进行力量豁免，失败陷入束缚状态直到法术结束（只在施法当时结算一次，效应随专注结束一起消失）。被束缚生物可用动作进行力量（运动）检定对抗法术 DC 挣脱：这条引擎不自动化，挣脱成功后请在它的详情抽屉里手动移除效应。区域造成的困难地形需人工处理。原文没有再进入区域时重新豁免这一条，所以这条法术不在地图上留会自己生效的区域。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "纠缠术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 90,
+       "area": {
+        "shape": "cube",
+        "size": 20
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "forEach",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "纠缠",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少地图持续植物缠绕区域（困难地形）及受束缚生物消耗动作进行运动检定挣脱的通用交互",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:巨虫术",
+   "name": "巨虫术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。以动作在 60 尺内召唤一只巨虫（蜈蚣 / 蜘蛛 / 黄蜂，施法时选择），数据按施展用的法术位环阶：AC 11 + 环阶，HP 30 + 每比四环高一环 10，速度 40 尺（蜈蚣有攀爬 40 尺、黄蜂有飞行 40 尺），力量 17 敏捷 13 体质 15 智力 4 感知 14 魅力 3，黑暗视觉 60 尺，能听懂你说的语言；多重攻击：每回合攻击 floor(环阶 / 2) 次；猛毒刺：近战法术攻击，1d6 + 3 + 环阶穿刺外加 1d4 毒素。它是你与盟友的盟友，共用你的先攻并在你的回合结束后立即行动，遵从口头指令。需人处理：①它在你回合结束后立即行动（引擎把召唤物排在你的回合之后，照此行动）；②你不发令时它执行回避并远离危险；③蛛网箭造成的速度归零、剧毒喷涌的中毒、蛛行攀爬（已写在特性里）；④法术结束时消失（专注结束引擎自动移除召唤物）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "巨虫术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少召唤独立巨虫灵魄实体入场并跟随施法者先攻行动的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:克敌先击",
+   "name": "克敌先击",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "使用武器发动一次攻击。攻击检定使用施法属性（self.spell.atk）。命中时武器伤害加值使用施法属性调整值（self.spell.mod），伤害类型可选择改为光耀伤害或维持武器原本类型（武器伤害由玩家手动结算）。5 级起额外造成的 1d6/2d6/3d6 光耀伤害由系统自动结算。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "克敌先击",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "attack"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少由法术触发武器攻击并替换其攻击/伤害属性调整值与伤害类型的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:恐惧术",
+   "name": "恐惧术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "30 尺锥状区域内的生物感知豁免失败陷入恐慌并丢弃其持握物。被恐慌生物在自己回合中必须执行疾走动作并寻找最安全路线远离施法者；若回合结束时施法者不在其视线内，可再进行感知豁免，成功则法术对该生物终止（丢弃物品、强制移动和视线判断需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "恐惧术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": "self",
+       "area": {
+        "shape": "cone",
+        "size": 30
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "恐惧术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "缺少强制丢弃手持物、必须疾走远离施法者以及回合结束检测施法者视线是否被阻断的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:困惑术",
+   "name": "困惑术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。90 尺内 10 尺球状区域生物进行感知豁免，失败陷入困惑（禁止反应和附赠动作，回合结束可做感知豁免尝试结束效应）。回合开始掷 1d10 决定行为以及升环增加半径需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "困惑术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 90,
+       "area": {
+        "shape": "sphere",
+        "radius": 10
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "困惑",
+      "statics": [],
+      "flags": {
+       "blocks": [
+        "reaction",
+        "bonus"
+       ]
+      },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1,
+       "saveEnds": {
+        "ability": "wis",
+        "at": "turnEnd"
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少在受术者回合开始掷随机骰（1d10）强制执行随机混乱行为表的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:力场监牢",
+   "name": "力场监牢",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 小时。在 100 尺内指定一处地点创造固定、隐形的立方力场监狱（至多 20 尺立方笼状或 10 尺立方盒状）。完全处于区域内的生物被困住；无法以非魔法手段离开；试图使用传送或跨位面旅行离开必须先通过魅力豁免，失败则无法离开并浪费法术；延伸至以太位面；无法被解除魔法解除（囚禁阻挡与空间交互需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "力场监牢",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 7
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 100,
+       "area": {
+        "shape": "cube",
+        "size": 20
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:力场墙",
+   "name": "力场墙",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "在 120 尺内指定一点创造隐形的力场墙（半径至多 10 尺半球/球，或 10 块 10×10 尺相连方板），持续 10 分钟（专注）。形成时穿过生物会被推向一侧；无法以物理方式穿过，阻断以太旅行，免疫所有伤害且无法被解除魔法解除（解离术可立即摧毁）。需在地图上由 DM 和玩家手动处理阻挡与地形。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "力场墙",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": 120
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少地图隐形不可摧毁力场墙体（阻隔物理穿行、视线与法术弹道，形成时推开生物）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:连锁闪电",
+   "name": "连锁闪电",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "放出一道闪电射向 150 尺内可见的首个目标，并跳向该目标 30 尺内至多 3 个（每比 6 环高 1 环多 1 个）其他目标。每个目标进行敏捷豁免，失败受到 10d8 闪电伤害，成功受到半数伤害（次要目标需在首个目标 30 尺内由玩家确认）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "连锁闪电",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 6
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": "slot.level - 2",
+       "range": 150,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:灵体卫士",
+   "name": "灵体卫士",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。施法者周围 15 尺光环内，指定生物不受影响，其余生物速度减半；生物进入光环、光环进入其空间或在其中结束回合时，须进行感知豁免，失败受到 (slot.level)d8 光耀或暗蚀伤害，成功半数（每回合限一次）。移动判定、速度减半与豁免时机需在战局上手动结算。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "灵体卫士",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "灵体卫士",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少随角色移动的伤害光环（敌方进入、光环移动覆盖或在其内结束回合触发豁免与移动力减半）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:灵体武器",
+   "name": "灵体武器",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "附赠动作在 60 尺内召唤灵体武器（专注至多 1 分钟）并对 5 尺内生物发动近战法术攻击，命中造成 1d8 + 施法属性调整值的力场伤害（升环每环 +1d8）。后续回合可用附赠动作移动武器至多 20 尺并重复攻击（武器移动在地图上手动处理；后续攻击若升环需手动调整伤害）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "灵体武器",
+      "activation": "bonus",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "attack",
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "灵体武器：移动并攻击",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating && self.hasEffect('灵体武器')",
+      "root": [
+       "attack"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "灵体武器",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少生成地图灵体武器标记并在后续回合以附赠动作移动并继承施法环阶重复攻击的机制",
+    "now": false
+   }
+  }
+ ]
+}

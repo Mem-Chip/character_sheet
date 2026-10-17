@@ -1,0 +1,645 @@
+{
+ "batch": "batch-098",
+ "count": 10,
+ "entries": [
+  {
+   "key": "XPHB:item:铁蒺藜",
+   "name": "铁蒺藜",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "以一个操作动作把一包铁蒺藜撒至地面并覆盖周围5尺内的一处5尺方形区域。任何生物每回合首次进入这片区域时必须通过一次DC 15的敏捷豁免，否则受到1点穿刺伤害，并且速度降至0直到其下一回合开始为止。重新收集需要花费10分钟（场地进入检定与减速效果需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "撒下铁蒺藜",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "area",
+       "range": 5,
+       "area": {
+        "shape": "cube",
+        "size": 5
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:item:医疗包",
+   "name": "医疗包",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "一个医疗包有十次使用次数。以一个操作动作，你可以花费一次使用次数用来稳定一名生命值为 0 的陷入昏迷的生物的伤势（无需进行感知（医药）检定）。使用次数与目标伤势稳定状态由人工手动记录。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "稳定伤势",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "range": 5
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:艾伐黑触手",
+   "name": "艾伐黑触手",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。使 20 尺方状区域地面变为困难地形。显现时区域内生物进行力量豁免，失败受 3d6 钝击伤害并陷入束缚状态直到法术结束；进入区域或在其中结束回合也须进行该豁免（引擎按区域自动结算，每回合限一次）。被束缚者用动作进行力量（运动）检定挣脱需人工处理；区域内的困难地形同样需人工处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "艾伐黑触手",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 90,
+       "area": {
+        "shape": "cube",
+        "size": 20
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "forEach",
+       "zone",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "黑触手束缚",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少地图持续区域实体（进入/结束回合触发豁免与困难地形判定）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:安定心神",
+   "name": "安定心神",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "60 尺内 20 尺半径球状区域内的类人生物需进行魅力豁免（生物可自愿失败），失败则受所选效应影响（专注至多 1 分钟）。镇定：免疫魅惑和恐慌状态（已有状态在持续时间内被压制）。冷漠：对指定敌对生物的态度转为冷漠，受到伤害或看到盟友受伤害时提前结束。压制已有状态、态度转变及目睹盟友受伤害提前结束需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "安定心神",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 60,
+       "area": {
+        "shape": "sphere",
+        "radius": 20
+       },
+       "filter": "target.type == '类人生物'"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "镇定",
+      "statics": [
+       "conditionImmune"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     },
+     {
+      "name": "冷漠",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "endsOn": [
+        {
+         "event": "damageTaken"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少暂时压制已有状态（法术结束后恢复）以及目睹盟友受伤害触发法术结束的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:暗示术",
+   "name": "暗示术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "30 尺内你能看见的一个生物进行感知豁免，失败在法术持续时间内陷入魅惑状态（专注至多 8 小时）。被魅惑生物尽其所能执行你描述的行动暗示（必须听起来可行且非自残自伤）。施法者或其盟友对其造成伤害时法术提前结束。暗示内容理解、行为执行及达成目标后法术终止需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "暗示术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 8
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "暗示术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "hours": 8,
+       "endsOn": [
+        {
+         "event": "damageApplied",
+         "when": "event.target == self.id && event.total > 0 && (event.source == source.id || (event.source != null && combatant(event.source).isAllyOf(source)))"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "长达8小时的复杂行动指令与叙事理解属于DM裁决范畴，无需战斗自动化",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:黯冰狱铠",
+   "name": "黯冰狱铠",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "施法获得 5×环阶 点临时生命值；具有临时生命值时受到近战攻击检定命中反弹等同于 5×环阶 的寒冷伤害（反弹伤害需手动处理）；临时生命值耗尽时法术结束。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "黯冰狱铠",
+      "activation": "bonus",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "tempHp",
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "黯冰狱铠",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": {
+       "hours": 1,
+       "endsOn": [
+        {
+         "event": "damageApplied",
+         "when": "self.tempHp <= 0"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "source",
+    "need": "伤害节点（damage node）缺少将伤害目标设为攻击者（attacker / source）的反弹机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:奥图迷舞",
+   "name": "奥图迷舞",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "指定 30 尺内可见的一名生物进行感知豁免。豁免成功时，目标在原地跳舞至其下个回合结束（消耗所有移动力）；豁免失败则在专注至多 1 分钟内陷入魅惑状态，必须在原地跳舞（移动力归零），敏捷豁免与攻击检定具有劣势，且受到攻击检定具有优势。目标在其每个自己回合可以动作重复豁免以终止法术（以动作重投豁免需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "奥图迷舞",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 6
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "奥图迷舞",
+      "statics": [
+       "speedSet"
+      ],
+      "flags": null,
+      "rollMods": 3,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     },
+     {
+      "name": "奥图迷舞（成功）",
+      "statics": [
+       "speedSet"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer"
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:匕首之云",
+   "name": "匕首之云",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。以 60 尺内一点为中心的 5 尺立方区域内咒唤出旋转的匕首：区域内的每名生物受 (2 * slot.level)d4 挥砍伤害（升环每比 2 环高 1 环 +2d4）。一名生物进入该立方、在其中结束其回合、或立方移动到它占据的空间时，同样受此伤害；同一名生物每回合只会受到一次（区域留在地图上、随专注消失）。后续回合中的「以一个魔法动作把立方传送至多 30 尺」引擎不能移动区域，请在地图上手动处理（「匕首之云：移动立方」）；立方移到某个生物占据的空间那一下，请用「匕首之云：移入伤害」结算。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "匕首之云",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 60,
+       "area": {
+        "shape": "cube",
+        "size": 5
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "forEach",
+       "zone",
+       "note"
+      ]
+     },
+     {
+      "id": "moveCloud",
+      "name": "匕首之云：移动立方",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "area",
+       "range": 30,
+       "area": {
+        "shape": "cube",
+        "size": 5
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('匕首之云（激活）')",
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "moveHit",
+      "name": "匕首之云：移入伤害",
+      "activation": "free",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('匕首之云（激活）')",
+      "root": [
+       "damage"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "匕首之云",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少地图持续区域实体（生物进入/结束回合或区域移动重叠时触发伤害）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:毕格比之手",
+   "name": "毕格比之手",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。在 120 尺内一处你可见的未占据空间创造一只大型魔法手掌：它是一个物件（不占空间），AC 20，生命值等于你的生命值上限。施放时可以用它施展一次下列效应之一，之后每个你的回合可以用附赠动作再用一次：金刚拳（近战法术攻击，5d8 力场，每高一环 +2d8）、飞击掌（力量豁免失败则推离 5 + 5×施法属性调整值尺）、擒拿掌（敏捷豁免失败则受擒，逃脱 DC = 你的法术豁免 DC；之后可用附赠动作挤压，4d6 + 施法属性调整值钝击，每高一环 +2d6）、护身掌（为你提供掩护）。施法环阶记在效应里，升环的伤害引擎按它算。要人处理的：①引擎把巨手记成你身上的一个效应，不是地图上的棋子：它自己在哪、生命值剩多少都要人工记（生命值降到 0 时请手动结束专注）；②目标必须在巨手周围 5 尺内 —— 引擎不知道巨手在哪，选目标时请人工确认；③护身掌的掩护（按掩护规则加 AC）与巨手所在空间对敌人视为困难地形；④飞击掌的推离方向引擎按「远离施法者」计算，巨手在别处时方向可能不对，请手动拖动纠正；⑤飞击掌后巨手要跟着目标一起移动（保持 5 尺内），引擎不会动它；⑥「挤压」的选项只检查「目标处于受擒」—— 如果是别的来源擒抱的，请自己别选；⑦施放的那一回合本来可以免费用一次，引擎没有「免费」写法，用「指挥巨手」会扣掉附赠动作 —— 用完在动作经济那条上点一下把附赠动作还回来。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "毕格比之手",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": 120
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "note"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "毕格比之手：指挥巨手",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 120
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('毕格比之手（巨手）')",
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "毕格比之手",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少带独立属性、生命值与多种附赠动作指令的召唤实体机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:庇护术",
+   "name": "庇护术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "受守护生物被指定为攻击或伤害性法术目标时，攻击者需进行感知豁免，失败则必须改选目标或失去该次攻击/法术（手动处理）；受保护生物发动攻击、施展法术或造成伤害时法术终止。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "庇护术",
+      "activation": "bonus",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "庇护术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1,
+       "endsOn": [
+        {
+         "event": "d20Rolled",
+         "when": "event.roller == self.id && event.kind == 'attack'"
+        },
+        {
+         "event": "spellCast",
+         "when": "event.actor == self.id"
+        },
+        {
+         "event": "damageApplied",
+         "when": "event.source == self.id"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少被指定为目标时迫使攻击者先进行豁免且失败时重选目标/取消攻击的拦截机制",
+    "now": false
+   }
+  }
+ ]
+}

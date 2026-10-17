@@ -1,120 +1,41 @@
 {
  "batch": "batch-042",
- "count": 20,
+ "count": 10,
  "entries": [
   {
-   "key": "XDMG:item:命令水元素水钵",
-   "name": "命令水元素水钵",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
+   "key": "XGE:spell:魔石术",
+   "name": "魔石术",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "当你位于水钵5尺内且其中盛满水时，可以一个魔法动作召唤一只水元素。水元素服从你的命令，并在你的回合之后立即行动，持续1小时，或直到其死亡或以附赠动作解消。直至次日黎明前无法再次使用。具体召唤生物需手动处理。",
+   "text": "附赠动作触碰 1~3 块小石块，1 分钟内它们可以当投掷武器用（原文没写「算魔法武器」）。你或别人可以把一块石头掷出（远程法术攻击：60 尺；原文只给徒手 60 尺，用投石索时按投石索射程要人判断），命中造成 1d6 + 你的施法属性调整值点钝击伤害。要人处理的：①石头的数量（1~3 块）引擎不记，你注入的那几块投完之后请手动移除「魔石术」效应；②别人投掷时，攻击检定和伤害都要加你的施法调整值（引擎按投掷者自己的算），请手动改；③再施放一次只是刷新这条效应，之前那几块石头上的魔法提前结束。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "命令水元素水钵：召唤水元素",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品次数:命令水元素水钵"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": [
-     {
-      "id": "物品次数:命令水元素水钵",
-      "name": "命令水元素水钵",
-      "formula": 1,
-      "recovery": "long"
-     }
-    ]
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:命令土元素石核",
-   "name": "命令土元素石核",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "以一个魔法动作接触地面召唤一只土元素（持续1小时、死亡或以附赠动作解消时消失），理解你的语言并在你之后立即行动。直至次日黎明前无法再次使用。召唤实体需手动在遭遇中添加。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "召唤土元素",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品次数:命令土元素石核"
-       }
-      ],
-      "targeting": {
-       "type": "point",
-       "range": 30
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     },
-     {
-      "id": "dismiss",
-      "name": "解消土元素",
+      "name": "魔石术",
       "activation": "bonus",
       "cost": [],
-      "targeting": null,
+      "targeting": {
+       "type": "self"
+      },
       "trigger": null,
       "concentration": null,
       "requires": null,
       "root": [
-       "note"
+       "applyEffect"
       ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": [
+     },
      {
-      "id": "物品次数:命令土元素石核",
-      "name": "命令土元素石核",
-      "formula": 1,
-      "recovery": "long"
-     }
-    ]
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:命令元素戒指（火）",
-   "name": "命令元素戒指（火）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "着装戒指期间，对元素攻击检定具有优势，元素对你的攻击具有劣势。可以一个魔法动作执行【元素强令】（60 尺内元素 DC 18 感知豁免，失败魅惑至你下回合开始并由你控制其下一回合）。懂火族语，火焰伤害免疫（人物卡处理）。消耗充能施展法术（豁免 DC 18）：燃烧之手（1充能）、火球术（2充能）、火墙术（3充能）、火焰风暴（4充能）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "dominate-elemental",
-      "name": "命令元素戒指（火）：元素强令",
-      "activation": "action",
-      "cost": [],
+      "id": "throw",
+      "name": "魔石术：投掷魔石",
+      "activation": "none",
+      "cost": [
+       {
+        "economy": "attack"
+       }
+      ],
       "targeting": {
        "type": "creature",
        "count": 1,
@@ -122,1027 +43,56 @@
       },
       "trigger": null,
       "concentration": null,
-      "requires": null,
+      "requires": "self.hasEffect('魔石术')",
       "root": [
-       "save"
-      ]
-     },
-     {
-      "id": "burning-hands",
-      "name": "命令元素戒指（火）：燃烧之手",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:命令元素戒指（火）",
-        "n": 1
-       }
-      ],
-      "targeting": {
-       "type": "area",
-       "area": {
-        "shape": "cone",
-        "length": 15
-       }
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "save"
-      ]
-     },
-     {
-      "id": "fireball",
-      "name": "命令元素戒指（火）：火球术",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:命令元素戒指（火）",
-        "n": 2
-       }
-      ],
-      "targeting": {
-       "type": "area",
-       "range": 150,
-       "area": {
-        "shape": "sphere",
-        "radius": 20
-       }
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "save"
-      ]
-     },
-     {
-      "id": "wall-of-fire",
-      "name": "命令元素戒指（火）：火墙术",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:命令元素戒指（火）",
-        "n": 3
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": {
-       "minutes": 1
-      },
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     },
-     {
-      "id": "fire-storm",
-      "name": "命令元素戒指（火）：火焰风暴",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:命令元素戒指（火）",
-        "n": 4
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
+       "attack"
       ]
      }
     ],
     "triggers": [],
     "effects": [
      {
-      "name": "元素强令",
+      "name": "魔石术",
       "statics": [],
       "flags": null,
       "rollMods": 0,
       "triggers": 0,
       "duration": {
-       "until": {
-        "at": "turnStart",
-        "of": "source",
-        "nth": 1
-       }
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:命令元素戒指（气）",
-   "name": "命令元素戒指（气）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "着装戒指期间，对元素攻击检定具有优势，元素对你的攻击具有劣势。可以一个魔法动作执行【元素强令】（60 尺内元素 DC 18 感知豁免，失败魅惑至你下回合开始并由你控制其下一回合）。懂气族语，闪电抗性，获得等同于步行速度的飞行速度并可悬浮（人物卡处理）。消耗充能施展法术（豁免 DC 18）：羽落术（0充能）、风墙术（1充能）、造风术（2充能）、连锁闪电（3充能）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "dominate-elemental",
-      "name": "命令元素戒指（气）：元素强令",
-      "activation": "action",
-      "cost": [],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 60
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "save"
-      ]
-     },
-     {
-      "id": "feather-fall",
-      "name": "命令元素戒指（气）：羽落术",
-      "activation": "reaction",
-      "cost": [],
-      "targeting": null,
-      "trigger": {
-       "on": "damageIncoming",
-       "role": "any"
-      },
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     },
-     {
-      "id": "wind-wall",
-      "name": "命令元素戒指（气）：风墙术",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:命令元素戒指（气）",
-        "n": 1
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": {
        "minutes": 1
-      },
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     },
-     {
-      "id": "gust-of-wind",
-      "name": "命令元素戒指（气）：造风术",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:命令元素戒指（气）",
-        "n": 2
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": {
-       "minutes": 1
-      },
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     },
-     {
-      "id": "chain-lightning",
-      "name": "命令元素戒指（气）：连锁闪电",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:命令元素戒指（气）",
-        "n": 3
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "元素强令",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnStart",
-        "of": "source",
-        "nth": 1
-       }
       }
      }
     ],
     "resources": []
    },
-   "old_audit": null
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少对地表/背包物品附魔、允许转交给他人使用并在他人攻击时借用施法者施法属性加值的物品传递机制",
+    "now": false
+   }
   },
   {
-   "key": "XDMG:item:命令元素戒指（水）",
-   "name": "命令元素戒指（水）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
+   "key": "XGE:spell:莫伊之影",
+   "name": "莫伊之影",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "着装戒指期间，对元素攻击检定具有优势，元素对你的攻击具有劣势。可以一个魔法动作执行【元素强令】（60 尺内元素 DC 18 感知豁免，失败魅惑至你下回合开始并由你控制其下一回合）。懂水族语，60 尺游泳速度且可水下呼吸（人物卡处理）。消耗充能施展法术（豁免 DC 18）：造水术/枯水术（1充能）、冰风暴（2充能）、水上行走（2充能）、冰墙术（3充能）、海啸术（5充能）。",
+   "text": "持续至多 1 分钟（专注）。暗影笼罩使你对其他人视为处于重度遮蔽，并降低周围 10 尺内的照明等级（明亮变微光、微光变黑暗）。期间获得光耀伤害抗性；当 10 尺内的生物用攻击命中你时，暗影对攻击者造成 2d8 点暗蚀伤害（重度遮蔽与反击伤害需手动处理）。",
    "data": {
     "automation": "partial",
     "actions": [
      {
-      "id": "dominate-elemental",
-      "name": "命令元素戒指（水）：元素强令",
-      "activation": "action",
-      "cost": [],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 60
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "save"
-      ]
-     },
-     {
-      "id": "create-or-destroy-water",
-      "name": "命令元素戒指（水）：造水术/枯水术",
+      "id": "use",
+      "name": "莫伊之影",
       "activation": "action",
       "cost": [
        {
-        "resource": "物品充能:命令元素戒指（水）",
-        "n": 1
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     },
-     {
-      "id": "ice-storm",
-      "name": "命令元素戒指（水）：冰风暴",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:命令元素戒指（水）",
-        "n": 2
+        "slot": {
+         "min": 4
+        }
        }
       ],
       "targeting": {
-       "type": "area",
-       "range": 300,
-       "area": {
-        "shape": "cylinder",
-        "radius": 20
-       }
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "save"
-      ]
-     },
-     {
-      "id": "water-walk",
-      "name": "命令元素戒指（水）：水上行走",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:命令元素戒指（水）",
-        "n": 2
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     },
-     {
-      "id": "wall-of-ice",
-      "name": "命令元素戒指（水）：冰墙术",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:命令元素戒指（水）",
-        "n": 3
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": {
-       "minutes": 10
-      },
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     },
-     {
-      "id": "tsunami",
-      "name": "命令元素戒指（水）：海啸术",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:命令元素戒指（水）",
-        "n": 5
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": {
-       "rounds": 6
-      },
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "元素强令",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnStart",
-        "of": "source",
-        "nth": 1
-       }
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:命令元素戒指（土）",
-   "name": "命令元素戒指（土）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "着装戒指期间，对元素攻击检定具有优势，元素对你的攻击具有劣势。可以一个魔法动作执行【元素强令】（60 尺内元素 DC 18 感知豁免，失败魅惑至你下回合开始并由你控制其下一回合）。懂土族语，强酸抗性，无视碎石/岩石/泥土造成的困难地形，可穿行固态土地或岩石（人物卡/地图处理）。消耗充能施展法术（豁免 DC 18）：塑石术（2充能）、石肤术（3充能）、石墙术（3充能）、地震术（5充能）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "dominate-elemental",
-      "name": "命令元素戒指（土）：元素强令",
-      "activation": "action",
-      "cost": [],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 60
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "save"
-      ]
-     },
-     {
-      "id": "stone-shape",
-      "name": "命令元素戒指（土）：塑石术",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:命令元素戒指（土）",
-        "n": 2
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     },
-     {
-      "id": "stoneskin",
-      "name": "命令元素戒指（土）：石肤术",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:命令元素戒指（土）",
-        "n": 3
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": {
-       "hours": 1
-      },
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     },
-     {
-      "id": "wall-of-stone",
-      "name": "命令元素戒指（土）：石墙术",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:命令元素戒指（土）",
-        "n": 3
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": {
-       "minutes": 10
-      },
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     },
-     {
-      "id": "earthquake",
-      "name": "命令元素戒指（土）：地震术",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:命令元素戒指（土）",
-        "n": 5
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": {
-       "minutes": 1
-      },
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "元素强令",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnStart",
-        "of": "source",
-        "nth": 1
-       }
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:魔豆之袋",
-   "name": "魔豆之袋",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "装有3d4颗干燥豆子。如果把一颗或更多豆子倒出，会引发半径10尺球状爆炸，生物进行DC 15敏捷豁免，失败受5d4力场伤害，成功减半，豆子被摧毁。种入泥土浇水1分钟后产生随机效应（由DM查表）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "魔豆之袋：倒出豆子",
-      "activation": "action",
-      "cost": [],
-      "targeting": {
-       "type": "area",
-       "area": {
-        "shape": "sphere",
-        "radius": 10
-       }
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "save",
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:魔术袋，灰色",
-   "name": "魔术袋，灰色",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "以一个动作取出布袋里的毛绒物件并扔出至多20尺，落地时掷 1d8 变成对应生物（在先攻后行动，次日黎明或生命降至0时消失，附赠动作指挥）；每天最多使用3次。召唤生物需手动在战斗中添加。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "魔术袋，灰色：抽出毛绒物件",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品次数:魔术袋，灰色"
-       }
-      ],
-      "targeting": {
-       "type": "point",
-       "range": 20
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": [
-     {
-      "id": "物品次数:魔术袋，灰色",
-      "name": "魔术袋，灰色",
-      "formula": 3,
-      "recovery": "long"
-     }
-    ]
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:魔术袋，铁锈色",
-   "name": "魔术袋，铁锈色",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "以一个动作取出布袋里的毛绒物件并扔出至多20尺，落地时掷 1d8 变成对应生物（在先攻后行动，次日黎明或生命降至0时消失，附赠动作指挥）；每天最多使用3次。召唤生物需手动在战斗中添加。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "魔术袋，铁锈色：抽出毛绒物件",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品次数:魔术袋，铁锈色"
-       }
-      ],
-      "targeting": {
-       "type": "point",
-       "range": 20
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": [
-     {
-      "id": "物品次数:魔术袋，铁锈色",
-      "name": "魔术袋，铁锈色",
-      "formula": 3,
-      "recovery": "long"
-     }
-    ]
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:魔术袋，棕褐色",
-   "name": "魔术袋，棕褐色",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "以一个动作取出布袋里的毛绒物件并扔出至多20尺，落地时掷 1d8 变成对应生物（在先攻后行动，次日黎明或生命降至0时消失，附赠动作指挥）；每天最多使用3次。召唤生物需手动在战斗中添加。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "魔术袋，棕褐色：抽出毛绒物件",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品次数:魔术袋，棕褐色"
-       }
-      ],
-      "targeting": {
-       "type": "point",
-       "range": 20
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": [
-     {
-      "id": "物品次数:魔术袋，棕褐色",
-      "name": "魔术袋，棕褐色",
-      "formula": 3,
-      "recovery": "long"
-     }
-    ]
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:魔咒法杖（1环）",
-   "name": "魔咒法杖（1环）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "具有6发充能。可消耗1充能施展制造时铭刻的1环法术（DC 13，攻击加值+5）。若消耗最后一发充能掷d20出1，法杖变为非魔法长棍（具体法术效果需手动处理）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "施展铭刻法术",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:魔咒法杖（1环）",
-        "n": 1
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:魔咒法杖（2环）",
-   "name": "魔咒法杖（2环）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "制造时铭刻一道2环法术。持握此法杖期间，消耗1充能施展该法术（豁免 DC 13，法术攻击加值 +5）。消耗最后1充能时掷 1d20，若为1则失去法术变为非魔法长棍。具体铭刻法术由玩家确定并手动执行。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "魔咒法杖（2环）：施展法术",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:魔咒法杖（2环）",
-        "n": 1
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:魔咒法杖（3环）",
-   "name": "魔咒法杖（3环）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "制造时铭刻一道3环法术。持握此法杖期间，消耗1充能施展该法术（豁免 DC 15，法术攻击加值 +7）。消耗最后1充能时掷 1d20，若为1则失去法术变为非魔法长棍。具体铭刻法术由玩家确定并手动执行。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "魔咒法杖（3环）：施展法术",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:魔咒法杖（3环）",
-        "n": 1
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:魔咒法杖（4环）",
-   "name": "魔咒法杖（4环）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "持握此法杖期间，你可以消耗 1 充能以施展铭刻的 4 环法术（豁免 DC 15，攻击加值+7）。若你消耗了法杖最后一充能，则掷 1d20，若结果为 1，法杖失去其词条并变为一把非魔法长棍。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "魔咒法杖（4环）：施展法术",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:魔咒法杖（4环）",
-        "n": 1
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:魔咒法杖（5环）",
-   "name": "魔咒法杖（5环）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "持握此法杖期间，你可以消耗 1 充能以施展铭刻的 5 环法术（豁免 DC 17，攻击加值+9）。若你消耗了法杖最后一充能，则掷 1d20，若结果为 1，法杖失去其词条并变为一把非魔法长棍。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "魔咒法杖（5环）：施展法术",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:魔咒法杖（5环）",
-        "n": 1
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:魔咒法杖（6环）",
-   "name": "魔咒法杖（6环）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "持握此法杖期间，你可以消耗 1 充能以施展铭刻的 6 环法术（豁免 DC 17，攻击加值+9）。若你消耗了法杖最后一充能，则掷 1d20，若结果为 1，法杖失去其词条并变为一把非魔法长棍。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "魔咒法杖（6环）：施展法术",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:魔咒法杖（6环）",
-        "n": 1
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:魔咒法杖（7环）",
-   "name": "魔咒法杖（7环）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "持握此法杖期间，你可以消耗 1 充能以施展铭刻的 7 环法术（豁免 DC 18，攻击加值+10）。若你消耗了法杖最后一充能，则掷 1d20，若结果为 1，法杖失去其词条并变为一把非魔法长棍。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "魔咒法杖（7环）：施展法术",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:魔咒法杖（7环）",
-        "n": 1
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:魔咒法杖（8环）",
-   "name": "魔咒法杖（8环）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "持握此法杖期间，你可以消耗 1 充能以施展铭刻的 8 环法术（豁免 DC 18，攻击加值+10）。若你消耗了法杖最后一充能，则掷一次 1d20，若结果为 1，法杖失去其词条并变为一把非魔法长棍。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "魔咒法杖（8环）：施展法术",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:魔咒法杖（8环）",
-        "n": 1
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:魔咒法杖（戏法）",
-   "name": "魔咒法杖（戏法）",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "具有6发充能。可消耗1充能施展制造时铭刻的戏法（DC 13，攻击加值+5）。若消耗最后一发充能掷d20出1，法杖变为非魔法长棍（具体法术效果需手动处理）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "施展铭刻戏法",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:魔咒法杖（戏法）",
-        "n": 1
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:念珠项链",
-   "name": "念珠项链",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "需同调。佩戴期间，可以附赠动作从中施展念珠所容纳的法术（DC使用自身法术豁免DC）。每颗魔法念珠施法后直至次日黎明前无法再次使用。所含念珠类型由DM决定或随机掷骰确定。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "bless",
-      "name": "念珠：祝福术",
-      "activation": "bonus",
-      "cost": [
-       {
-        "resource": "物品次数:念珠项链:祝福术"
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 3,
-       "range": 30
+       "type": "self"
       },
       "trigger": null,
       "concentration": {
@@ -1152,80 +102,135 @@
       "root": [
        "applyEffect"
       ]
-     },
+     }
+    ],
+    "triggers": [],
+    "effects": [
      {
-      "id": "cure-wounds",
-      "name": "念珠：二环疗伤术",
-      "activation": "bonus",
+      "name": "莫伊之影",
+      "statics": [
+       "resist"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "source",
+    "need": "缺少将伤害或效果直接指向攻击者/伤害来源（NodeTarget 缺少 'attacker'/'source'）的反噬机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:磐石赋权",
+   "name": "磐石赋权",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "岩石颗粒布满躯体，持续至多 10 分钟（专注）。获得非魔法钝击、穿刺和挥砍伤害抗性；在泥土岩石困难地形移动无额外消耗；可以穿过固态泥石移动（不可在其中结束回合，否则被排出、法术终止且陷入震慑直至下回合结束）；你可以用动作创造一阵以你为中心 15 尺半径的地表地震，地表其他生物须通过敏捷豁免否则被击倒倒地（穿墙移动与地震可通过次要动作触发）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "磐石赋权",
+      "activation": "action",
       "cost": [
        {
-        "resource": "物品次数:念珠项链:疗伤术"
+        "slot": {
+         "min": 6
+        }
        }
       ],
       "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": "touch"
+       "type": "self"
       },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "heal"
-      ]
-     },
-     {
-      "id": "greater-restoration",
-      "name": "念珠：高等复原术",
-      "activation": "bonus",
-      "cost": [
-       {
-        "resource": "物品次数:念珠项链:高等复原术"
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": "touch"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     },
-     {
-      "id": "branding-smite",
-      "name": "念珠：闪耀斩",
-      "activation": "bonus",
-      "cost": [
-       {
-        "resource": "物品次数:念珠项链:闪耀斩"
-       }
-      ],
-      "targeting": null,
       "trigger": null,
       "concentration": {
-       "minutes": 1
+       "minutes": 10
       },
       "requires": null,
       "root": [
-       "note"
+       "applyEffect"
       ]
      },
      {
-      "id": "guardian-of-faith",
-      "name": "念珠：信仰守卫",
-      "activation": "bonus",
+      "id": "earthquake",
+      "name": "磐石赋权：小型地震",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "area",
+       "range": "self",
+       "area": {
+        "shape": "emanation",
+        "radius": 15
+       },
+       "filter": "target.id != self.id"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "磐石赋权",
+      "statics": [
+       "resist"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     },
+     {
+      "name": "磐石赋权：倒地",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XGE:spell:圈套术",
+   "name": "圈套术",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "耗时 1 分钟在触及地面创造一个 5 尺半径的隐形魔法陷阱（法术持续 8 小时，不专注）。小型 / 中型 / 大型生物移动进入时触发陷阱：陷阱留在地图上，生物进入时敏捷豁免，失败被魔法性地倒吊在半空中并被束缚（在其每个回合结束时可重复敏捷豁免，成功则结束束缚）。陷阱的隐蔽（智力（调查）检定才能发现）、「其他触及生物可用智力（奥秘）检定解除」与「无生物被它束缚时法术结束」引擎处理不了，需人工。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "圈套术",
+      "activation": {
+       "minutes": 1
+      },
       "cost": [
        {
-        "resource": "物品次数:念珠项链:信仰守卫"
+        "slot": {
+         "min": 1
+        }
        }
       ],
       "targeting": {
        "type": "point",
-       "range": 30
+       "range": "touch"
       },
       "trigger": null,
       "concentration": null,
@@ -1235,21 +240,144 @@
       ]
      },
      {
-      "id": "wind-walk",
-      "name": "念珠：御风而行",
-      "activation": "bonus",
+      "id": "trigger-snare",
+      "name": "圈套术：陷阱触发",
+      "activation": "none",
+      "cost": [],
+      "targeting": {
+       "type": "area",
+       "range": 5,
+       "area": {
+        "shape": "sphere",
+        "radius": 5
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "forEach",
+       "zone",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "圈套倒吊",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "hours": 8,
+       "saveEnds": {
+        "ability": "dex",
+        "dc": "source.spell.dc",
+        "at": "turnEnd"
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少在地图上布置隐形陷阱区域（Zone）并在生物踩入时自动触发豁免束缚的判定系统",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:群体变形术",
+   "name": "群体变形术",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 1 小时。转变 120 尺内至多 10 个可见生物。非自愿目标须进行感知豁免对抗变形（变形生物豁免自动成功）。每个目标转变为你选择的野兽形态（CR ≤ 目标 CR 或等级的一半）；游戏数据被野兽取代，获得等同于新形态生命值的临时生命值（失去时变回原形）；不能说话或施法；装备融入新形态（野兽数据替换与临时生命值需手动结算）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "群体变形术",
+      "activation": "action",
       "cost": [
        {
-        "resource": "物品次数:念珠项链:御风而行"
+        "slot": {
+         "min": 9
+        }
        }
       ],
       "targeting": {
        "type": "creature",
        "count": 10,
-       "range": 30
+       "range": 120
       },
       "trigger": null,
-      "concentration": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "群体变形术",
+      "statics": [],
+      "flags": {
+       "cannot": [
+        "castSpells",
+        "speak"
+       ]
+      },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XGE:spell:沙墙术",
+   "name": "沙墙术",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "在 90 尺内地表召唤沙墙（长至多 30 尺、高至多 10 尺、厚至多 10 尺），持续至多 10 分钟（专注）。阻挡视线；处于墙体内的生物陷入目盲，且在其中每移动 1 尺需消耗 3 尺移动力（墙体占据空间、视线阻挡与移动力消耗需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "沙墙术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 90,
+       "area": {
+        "shape": "line",
+        "length": 30,
+        "width": 10
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
       "requires": null,
       "root": [
        "note"
@@ -1258,46 +386,260 @@
     ],
     "triggers": [],
     "effects": [],
-    "resources": [
-     {
-      "id": "物品次数:念珠项链:祝福术",
-      "name": "祝福之珠",
-      "formula": 1,
-      "recovery": "long"
-     },
-     {
-      "id": "物品次数:念珠项链:疗伤术",
-      "name": "疗愈之珠",
-      "formula": 1,
-      "recovery": "long"
-     },
-     {
-      "id": "物品次数:念珠项链:高等复原术",
-      "name": "恩赐之珠",
-      "formula": 1,
-      "recovery": "long"
-     },
-     {
-      "id": "物品次数:念珠项链:闪耀斩",
-      "name": "打击之珠",
-      "formula": 1,
-      "recovery": "long"
-     },
-     {
-      "id": "物品次数:念珠项链:信仰守卫",
-      "name": "召唤之珠",
-      "formula": 1,
-      "recovery": "long"
-     },
-     {
-      "id": "物品次数:念珠项链:御风而行",
-      "name": "风行之珠",
-      "formula": 1,
-      "recovery": "long"
-     }
-    ]
+    "resources": []
    },
-   "old_audit": null
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少实体地图墙体（Zone）阻挡视线、使墙内生物目盲以及对穿过墙体施加3比1移动力消耗的复杂地形控制",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:神圣武器",
+   "name": "神圣武器",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以附赠动作触碰一把武器为其注入神圣力量，持续至多 1 小时（专注）。武器发散 30 尺明亮+30 尺微光照明，且武器攻击命中时额外造成 2d8 光耀伤害，非魔法武器暂时转变为魔法武器。法术期间可以附赠动作解散法术，使武器周围 30 尺内所选可见生物进行体质豁免，失败受 4d8 光耀伤害且陷入目盲 1 分钟（回合结束可重复豁免以解除），成功受半伤且不目盲（武器解散与目标豁免可通过次要动作触发）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "神圣武器",
+      "activation": "bonus",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "burst",
+      "name": "神圣武器：光耀爆发",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "area",
+       "range": "self",
+       "area": {
+        "shape": "emanation",
+        "radius": 30
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "forEach",
+       "removeEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "神圣武器",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": null
+     },
+     {
+      "name": "神圣武器：目盲",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1,
+       "saveEnds": {
+        "ability": "con",
+        "dc": "self.spell.dc",
+        "at": "turnEnd"
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少对实体武器进行附魔赋予魔法属性/发光、并将法术解散爆发的源头绑定到该武器所在位置的接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:生命转换",
+   "name": "生命转换",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "自身受到 4d8 暗蚀伤害（升环每高一环+1d8，此伤害无法被以任何方式减少），同时 30 尺内一名可见生物恢复等于自身所承受暗蚀伤害两倍的生命值（不可减伤与双倍恢复数值需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "生命转换",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "damage",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "healByDamage",
+    "need": "缺少读取施法者实际承受的暗蚀伤害数值、并按其两倍数值为目标生物进行治疗的伤害联动回复机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:守护之风",
+   "name": "守护之风",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。以自身为中心 10 尺半径的强风留在地图上：进入或在其中结束回合的生物耳聋，除你之外该区域是困难地形，未受保护的火焰被吹熄，可被强风吹散的毒气与雾气被隔开。原文里这个区域随你移动、始终以你为中心，但引擎的区域放下后就固定在地图的格子上、不会跟着你走：你每移动一次，请删掉旧区域、在新位置重画一个（覆盖你周围 10 尺）—— DM 手画的区域不会自动施加本条目的耳聋，重画后谁在风里请人工记着。远程武器攻击进入或离开风区时具有劣势——引擎判断不了「攻击线穿过区域」，需人工。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "守护之风",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": "self",
+       "area": {
+        "shape": "emanation",
+        "radius": 10
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "forEach",
+       "note",
+       "zone"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "守护之风：耳聋",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少随身移动的动态区域/灵光对穿入/穿出区域的远程弹道附加检定劣势及将区域地面设为困难地形的判定",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:水墙术",
+   "name": "水墙术",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "在 60 尺内你能看到的地表一点召唤由水构成的墙，专注至多 10 分钟：可以是一道至多 30 尺长、10 尺高、1 尺厚的直墙，或一个至多 20 尺直径、20 尺高、1 尺厚的环形墙。引擎的画范围只有直线：放直墙用「水墙术」，放环形墙请在图上用「形状」工具自己画一个直径 20 尺的圈（位置照样算）。墙体所在区域是困难地形；任何进入墙体所在空间的远程武器攻击在攻击检定中具有劣势；穿过墙体抵达目标的火焰效果造成的火焰伤害减半；造成寒冷伤害的法术穿过墙体时会把穿过的部分冻结（每 5 平方尺 AC 5、15 点生命值，降到 0 就摧毁且水不会补上缺口）。困难地形、远程穿墙劣势、火焰伤害减半、冻结块的 AC / 生命值这四件引擎都不结算（不判断几何与光照），请人工处理；区域节点只是把墙画在地图上、有人进入时提醒一句。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "水墙术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 60,
+       "area": {
+        "shape": "line",
+        "length": 30,
+        "width": 1
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "note",
+       "zone"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少持续墙体（Zone）判定弹道穿过减半火焰伤害、进入墙体攻击劣势以及寒冷法术局部冻结生成物理实体的环境互动",
+    "now": false
+   }
   }
  ]
 }

@@ -1,658 +1,132 @@
 {
  "batch": "batch-028",
- "count": 20,
+ "count": 10,
  "entries": [
   {
-   "key": "XPHB:强效法术",
-   "name": "强效法术",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "manual",
-   "text": "超魔法：当你为一个法术进行伤害掷骰时，可以消耗 1 术法点，重掷最多等同于你魅力调整值数量（至少一个）的伤害骰，且必须使用新的结果（可与其它超魔同用）。引擎没有重掷伤害骰的操作（窗口里的 reroll 只认 d20，伤害骰的修正只有取最大 / 最小骰面这类），所以不自动化：请自己扣 1 术法点，重掷那么多颗这次的伤害骰，在「事后裁定」里把这次伤害改成新结果。",
-   "data": {
-    "automation": "manual",
-    "actions": [],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "reactModify",
-    "need": "缺少在法术伤害掷骰后重掷至多魅力调整值数量伤害骰的重投机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:擒抱者",
-   "name": "擒抱者",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "连擒带打已写：回合内用攻击动作的徒手打击命中后，可以额外进行一次擒抱（DC 同基础擒抱），每回合一次。优势攻击已写：你攻击受擒于你的生物时具有优势（靠受擒效应的施加者判断）。擒抱需要一只空手，这一点由人确认。高速拖行（拖动受擒生物不额外耗移动力）引擎无法处理移动消耗，需人手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [
-     {
-      "id": "grapple",
-      "label": "擒抱者：连擒带打",
-      "on": "attackHit",
-      "role": "actor",
-      "window": "after",
-      "when": "attack.unarmed && turn.isMine",
-      "cost": [],
-      "modify": [],
-      "do": [
-       "save"
-      ]
-     }
-    ],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "condition",
-    "need": "缺少擒抱状态下拖曳移动消耗加倍（或免除额外移动消耗）的底层状态规则支持",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:刃之魔契",
-   "name": "刃之魔契",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "以附赠动作，你在手中咒唤出一把与你连结的简易 / 军用近战武器，或者与一把你触碰的魔法武器建立连结（不能是与别的生物同调、或已与另一魔契师连结的魔法武器）。连结期间你拥有其熟练，也可以把它当施法法器。用连结的武器攻击时，你可以用魅力代替力量 / 敏捷做攻击检定和伤害掷骰（已自动化：用它攻击时问一句「是不是连结的那把」，答是就按魅力算）。注意「代替」是用「魅力调整值 − 原属性调整值」实现的，引擎读不到武器用的是哪个属性时（攻击行没声明属性）会退化成加整个魅力调整值，数值对不上请手动改这一次的攻击与伤害。连结在你再次使用本特性的附赠动作、武器离开你 5 尺满 1 分钟、你死亡时结束。要人处理：①引擎没有「武器 / 装备」这个对象——做不出契约武器的实体、读不到你手里拿的是哪一把、也没法自动给熟练；②你可以让武器造成黯蚀 / 心灵 / 光耀伤害来取代原类型，但引擎没有「替换武器伤害类型」的写法，请在攻击结算后到详情抽屉里手动改伤害类型；③「再次使用附赠动作」= 再点一次「咒唤 / 连结武器」，旧连结会被新的顶掉；「结束连结」只是方便你手动移除，严格按规则连结并没有单独结束的动作。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "bond",
-      "name": "刃之魔契：咒唤 / 连结武器",
-      "activation": "bonus",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "applyEffect"
-      ]
-     },
-     {
-      "id": "unbond",
-      "name": "刃之魔契：结束连结（方便操作）",
-      "activation": "bonus",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.hasEffect('刃之魔契')",
-      "root": [
-       "removeEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "刃之魔契",
-      "statics": [],
-      "flags": null,
-      "rollMods": 2,
-      "triggers": 0,
-      "duration": {
-       "manual": true
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "item",
-    "need": "缺少生成契约武器实体、绑定魔法武器、授予熟练并将武器伤害类型转换为暗蚀/心灵/光耀的物品管理机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:融身入影",
-   "name": "融身入影",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "身处微光光照或黑暗环境时，可无需法术位对自身施展隐形术（环境由人确认）。隐形术的专注时长为 1 小时。手动：攻击或施法后失去隐形等结束条件，需人工移除。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "融身入影：隐形术",
-      "activation": "action",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": {
-       "hours": 1
-      },
-      "requires": "ask('你身处微光光照或黑暗环境吗？')",
-      "root": [
-       "applyEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "vision",
-    "need": "缺少环境微光/黑暗光照检测，以及隐形在攻击、造成伤害或施法后自动解除的判定",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:哨兵",
-   "name": "哨兵",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "【阻拦】你的借机攻击命中一名生物时，该生物在当前回合剩余时间内速度为 0：引擎问你要不要借机攻击、你真打了并命中之后会自动施加。若这次借机攻击是人在别处手动发起的（引擎没问过），命中弹窗会多问一句「这次命中的是借机攻击吗」，答是才施加。这两个时机引擎认得出来、会提示你，但「用你的武器打这一下」引擎替不了你（守护者的两个时机还没接进借机攻击的结算流程 —— 引擎自己的借机攻击弹窗是有的，会按你的近战武器列选项），请自己发起。执行撤离后始终没离开你触及范围的生物，引擎不会提示（它只在离开触及范围时才知道），这种请自己留意。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [
-     {
-      "id": "oaMark",
-      "label": "哨兵：借机攻击时机",
-      "on": "leftReach",
-      "role": "target",
-      "window": "after",
-      "when": null,
-      "cost": [],
-      "modify": [],
-      "do": [
-       "applyEffect"
-      ]
-     },
-     {
-      "id": "hinder",
-      "label": "哨兵：阻拦",
-      "on": "attackHit",
-      "role": "actor",
-      "window": "after",
-      "when": "attack.melee && (self.hasEffect('借机攻击时机') || (!turn.isMine && ask('这次命中的是借机攻击（反应）吗？')))",
-      "cost": [],
-      "modify": [],
-      "do": [
-       "applyEffect"
-      ]
-     },
-     {
-      "id": "guardianDisengage",
-      "label": "哨兵：守护者（它撤离了）",
-      "on": "leftReach",
-      "role": "target",
-      "window": "after",
-      "when": "attacker.hasEffect('撤离')",
-      "cost": [],
-      "modify": [],
-      "do": [
-       "note"
-      ]
-     },
-     {
-      "id": "guardianAttack",
-      "label": "哨兵：守护者（它打了别人）",
-      "on": "attackHit",
-      "role": "any",
-      "window": "after",
-      "when": "attacker.id != self.id && target.id != self.id && within(self, attacker, 5)",
-      "cost": [],
-      "modify": [],
-      "do": [
-       "note"
-      ]
-     }
-    ],
-    "effects": [
-     {
-      "name": "借机攻击时机",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnStart",
-        "of": "bearer",
-        "nth": 1
-       },
-       "endsOn": [
-        {
-         "event": "moved"
-        }
-       ]
-      }
-     },
-     {
-      "name": "阻拦",
-      "statics": [
-       "speedSet"
-      ],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnEnd",
-        "of": "bearer",
-        "nth": 0
-       }
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "timing",
-    "need": "缺少邻接5尺生物执行撤离或攻击其他目标时触发借机攻击的窗口与机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:神射手",
-   "name": "神射手",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "manual",
-   "text": "【绕过掩体】你使用武器发动的远程攻击无视掩护（半身掩护、四分之三掩护）。引擎不模拟掩护，攻击检定本来就不会因为掩护带上劣势，所以这里没有需要写进去的修正。【抵近射击】位于一个敌人 5 尺范围内时，你使用远程武器发动的攻击检定不会因此具有劣势 —— 引擎同样没有「贴身时的远程劣势」这条规则。【百步穿杨】攻击超出常规射程的目标时，攻击检定不会因此具有劣势 —— 引擎也没有「超出常规射程的劣势」。这三条都是引擎不实现的地形 / 射程规则，本条目保持手动：掷远程攻击时由人确认这三种情况都不加劣势（引擎不会自己加，也不会自己拦）。",
-   "data": {
-    "automation": "manual",
-    "actions": [],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "vision",
-    "need": "缺少远程攻击无视半身/四分之三掩护（cover）及超出常规射程不具有劣势的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:升阶法术",
-   "name": "升阶法术",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "超魔法：当你施展一道迫使生物进行豁免的法术时，消耗 2 术法点，使法术影响的某一名生物对这次豁免具有劣势。引擎只能自动处理「法术只有一个目标」的情形：施法时会问你要不要用（前提会一起列出来），用了就扣 2 术法点，目标紧接着的那次豁免掷两次取低（实现上是在它身上挂一个只活到这次豁免的短效应，日志里会看到它出现又消失）。多目标的法术（火球术这类）引擎没法在施法窗口里只挑其中一名生物：请自己扣 2 术法点、在目标掷豁免时用「事后裁定」改那次结果。同一道法术只能用一种超魔法（强效法术除外），这一点引擎不校验，请自己保证。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [
-     {
-      "id": "heighten",
-      "label": "升阶法术",
-      "on": "spellCast",
-      "role": "actor",
-      "window": "before",
-      "when": "target.id != self.id && ask('这道法术是否迫使该生物进行豁免？')",
-      "cost": [
-       {
-        "resource": "sorcery_points",
-        "n": 2
-       }
-      ],
-      "modify": [],
-      "do": [
-       "applyEffect"
-      ]
-     }
-    ],
-    "effects": [
-     {
-      "name": "升阶：豁免劣势",
-      "statics": [],
-      "flags": null,
-      "rollMods": 1,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnEnd",
-        "of": "bearer",
-        "nth": 0
-       },
-       "endsOn": [
-        {
-         "event": "d20Rolled",
-         "when": "event.roller == self.id && event.kind == 'save'"
-        }
-       ]
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "reactModify",
-    "need": "缺少施展法术时指定单体目标使其对抗该法术的豁免检定具有劣势的超魔法修饰机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:圣武士:仇敌誓言:3",
-   "name": "仇敌誓言",
+   "key": "TCE:野蛮人:野兽之形:3",
+   "name": "野兽之形",
    "kind": "classFeature",
-   "from": "data/dyn/ai/features.json",
+   "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "在执行攻击动作时消耗引导神力立下誓言（何时可用由人判断）。誓言目标降至 0 后换给另一个生物（无需动作）为手动处理。",
+   "text": "进入狂暴时长出一种天生武器，直到狂暴结束：啃咬 1d8 穿刺、爪击 1d6 挥砍、尾击 1d8 穿刺（触及 10 尺），都被视为简易近战武器、用力量。三个攻击条目只点你本次狂暴选的那一个（引擎不会隐藏另外两个）；命中伤害已含力量调整值，狂暴伤害由「狂暴」效应自动加，不要重复写。爪击：用爪击进行攻击检定时自动多给 1 次攻击机会（每回合一次，会问你用不用）。啃咬：用啃咬命中且生命值低于一半时恢复熟练加值点生命（每回合一次，会问）。尾击：被 10 尺内你能看见的生物的攻击命中时，可以用反应把 d8 加到 AC 上 —— 引擎没有「掷一颗骰当作数值」的写法，用这条反应时请自己掷 d8，把点数填进弹窗。",
    "data": {
     "automation": "partial",
     "actions": [
      {
-      "id": "use",
-      "name": "仇敌誓言",
-      "activation": "free",
+      "id": "bite",
+      "name": "野兽之形：啃咬",
+      "activation": "none",
       "cost": [
        {
-        "resource": "channel-divinity"
+        "economy": "attack"
        }
       ],
       "targeting": {
        "type": "creature",
        "count": 1,
-       "range": 30,
-       "filter": "canSee(self, target)"
+       "range": 5
       },
       "trigger": null,
       "concentration": null,
-      "requires": "turn.isMine",
+      "requires": "self.hasEffect('狂暴')",
       "root": [
-       "applyEffect"
+       "attack"
       ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
+     },
      {
-      "name": "仇敌誓言",
-      "statics": [],
-      "flags": null,
-      "rollMods": 1,
-      "triggers": 0,
-      "duration": {
-       "minutes": 1
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "timing",
-    "need": "缺少目标生命值降至0时无需动作将标记效应转移给另一有效目标的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:圣武士:奉献灵光:7",
-   "name": "奉献灵光",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "守护灵光内的盟友免疫魅惑；陷入魅惑的盟友进入灵光时，该状态在灵光内暂时无效。你自己的魅惑免疫已在静态层，因此光环不含自身。与守护灵光一样，失能时光环无效。灵光半径固定为 10 尺，18 级灵光增效的 30 尺未在本条处理，见「灵光增效」，需人手动。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "condition",
-    "need": "缺少光环内暂时压制/挂起（suspend）特定状态（魅惑）的机制，以及光环半径随等级动态缩放的能力",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:圣武士:复仇天使:20",
-   "name": "复仇天使",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "飞行 60 尺与悬浮为静态层的修正，不随本特性开始与结束，需人工处理。豁免 DC 取圣武士的法术豁免 DC。恐慌与攻击优势自动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "复仇天使",
-      "activation": "bonus",
+      "id": "claw",
+      "name": "野兽之形：爪击",
+      "activation": "none",
       "cost": [
        {
-        "resource": "avenging-angel"
+        "economy": "attack"
        }
       ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "turn.isMine",
-      "root": [
-       "applyEffect"
-      ]
-     },
-     {
-      "id": "end",
-      "name": "复仇天使：提前结束",
-      "activation": "free",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.hasEffect('复仇天使')",
-      "root": [
-       "removeEffect"
-      ]
-     },
-     {
-      "id": "reset",
-      "name": "复仇天使：重置",
-      "activation": "free",
-      "cost": [
-       {
-        "slot": {
-         "min": 5,
-         "max": 5
-        }
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.resource('avenging-angel') < 1",
-      "root": [
-       "resource"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "复仇天使",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "minutes": 10
-      }
-     },
-     {
-      "name": "复仇天使：恐慌",
-      "statics": [],
-      "flags": null,
-      "rollMods": 1,
-      "triggers": 0,
-      "duration": {
-       "minutes": 1,
-       "endsOn": [
-        {
-         "event": "damageTaken"
-        }
-       ]
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "move",
-    "need": "缺少随激活形态动态赋予与结束飞行速度（60尺附带悬浮）的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:圣武士:复仇之魂:15",
-   "name": "复仇之魂",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "受你仇敌誓言影响的生物发动一次攻击之后（命中与否都算），只要它在你武器的触及内，你就可以用反应对它发动一次近战攻击。触发与目标绑定都自动化：每次攻击结算后引擎会看攻击者是不是你「仇敌誓言」效应里记下的那个生物（誓言 1 分钟内还在才算），是就问你用不用这个反应，并把反击的目标直接定成那个攻击者。两处是近似或手动：① 触及按 5 尺算，用长触及武器（10 尺）时引擎会挡下来，请自己确认后手动处理；② 反击用的武器引擎拿不到你装备的那把 —— 选「徒手打击」是自动结算的，要用武器请选「近战武器攻击（手动）」，反应已经在这里付过，在武器行发起即可。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "avenge",
-      "name": "复仇之魂",
-      "activation": "reaction",
-      "cost": [],
       "targeting": {
        "type": "creature",
        "count": 1,
-       "range": "reach"
+       "range": 5
       },
-      "trigger": {
-       "on": [
-        "attackHit",
-        "attackMissed"
-       ],
-       "role": "any",
-       "window": "after",
-       "aim": "actor",
-       "when": "attacker.id == self.effect('仇敌誓言').state.target && dist(self, attacker) <= 5"
-      },
+      "trigger": null,
       "concentration": null,
-      "requires": null,
+      "requires": "self.hasEffect('狂暴')",
       "root": [
-       "choose"
+       "attack"
       ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "source",
-    "need": "缺少在被标记目标发动攻击后以反应对其进行近战武器反击的触发与目标绑定支持",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:圣武士:复原之触:14",
-   "name": "复原之触",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "manual",
-   "text": "对生物使用圣疗时，可以终止其身上的目盲、魅惑、耳聋、恐慌、麻痹或震慑中的一种或多种；每终止一个效应花费圣疗 5 点治疗能量，且不恢复该生物的生命值。这是对圣疗使用的附加选项，不自动化：由人在圣疗时选择终止哪些状态，并手动扣除治疗能量。",
-   "data": {
-    "automation": "manual",
-    "actions": [],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "choice",
-    "need": "缺少在圣疗时交互式选择移除目标身上的特定状态并按每项5点扣减治疗池的选项机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:圣武士:鼓舞斩:3",
-   "name": "鼓舞斩",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "施展至圣斩后，可消耗一次引导神力，为 30 尺内你选择的生物或你自身分配 2d8 + 圣武士等级的临时生命值。自动化部分：默认全部给自己。分配给其他生物、以及免法术位的至圣斩（圣武斩）是否触发，需人手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [
+     },
      {
-      "id": "inspire",
-      "label": "鼓舞斩：临时生命值",
-      "on": "spellCast",
-      "role": "actor",
-      "window": "after",
-      "when": "event.key == 'XPHB:spell:至圣斩'",
+      "id": "tail",
+      "name": "野兽之形：尾击",
+      "activation": "none",
       "cost": [
        {
-        "resource": "channel-divinity"
+        "economy": "attack"
        }
       ],
-      "modify": [],
-      "do": [
-       "tempHp"
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 10
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('狂暴')",
+      "root": [
+       "attack"
       ]
-     }
-    ],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "choice",
-    "need": "缺少施展至圣斩后消耗引导神力将临时生命值自由分配给30尺内多个生物的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:圣武士:辉煌防御:15",
-   "name": "辉煌防御",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "你或 10 尺内你可见的生物被攻击命中时，用反应给被命中者加 AC（你的魅力调整值，至少 +1）：这一半自动 —— 引擎在命中窗口里先把 AC 抬上去，再重新判一次，可能因此改为失手，加成在这次攻击结算完就没了（失手或受到伤害都结束它）。剩下的「若这次攻击因此失手、且攻击者在你的武器触及内，可以用武器对其攻击一次」引擎串不起来：AC 抬高后要等重新判定才知道失手，那个时点没有能改结算的窗口；而且没法把这次反击挂回你身上（效应结束时执行的效果算在效应承受者头上）。所以失手后请手动发起那一次武器攻击（它算这个反应的一部分，不再付反应）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
+     },
      {
-      "id": "use",
-      "name": "辉煌防御",
+      "id": "tail-guard",
+      "name": "野兽之形：尾击防御",
       "activation": "reaction",
-      "cost": [
-       {
-        "resource": "radiantDefense"
-       }
-      ],
+      "cost": [],
       "targeting": null,
       "trigger": {
        "on": "attackHit",
-       "role": "any",
+       "role": "target",
        "window": "before",
-       "when": "target.id == self.id || (target.isAllyOf(self) && within(self, target, 10) && canSee(self, target))"
+       "when": "self.hasEffect('狂暴') && attacker != null && within(self, attacker, 10) && canSee(self, attacker) && ask('本次狂暴你选的是野兽之形·尾击吗？')"
       },
       "concentration": null,
       "requires": null,
       "root": [
-       "applyEffect",
+       "number",
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [
+     {
+      "id": "bite-heal",
+      "label": "野兽之形：啃咬回血",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "self.hasEffect('狂暴') && attack.item == '野兽之形·啃咬' && self.hp * 2 < self.hpMax",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "heal"
+      ]
+     },
+     {
+      "id": "claw-extra",
+      "label": "野兽之形：追加爪击",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "after",
+      "when": "turn.isMine && self.hasEffect('狂暴') && roll.kind == 'attack' && attack.item == '野兽之形·爪击'",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "economy",
        "note"
       ]
      }
     ],
-    "triggers": [],
     "effects": [
      {
-      "name": "辉煌防御",
+      "name": "尾击防御",
       "statics": [
        "ac"
       ],
@@ -666,7 +140,7 @@
          "event": "attackMissed"
         },
         {
-         "event": "damageTaken"
+         "event": "damageIncoming"
         }
        ]
       }
@@ -675,175 +149,69 @@
     "resources": []
    },
    "old_audit": {
-    "gap": "source",
-    "need": "缺少反应加AC使攻击失手后立即对攻击者（attacker）发动武器反击的连贯反应结算机制",
+    "gap": "item",
+    "need": "动态向角色装备行添加天生武器并绑定啃咬回血/尾击反应加 AC 触发器",
     "now": false
    }
   },
   {
-   "key": "XPHB:圣武士:坚韧复仇:7",
-   "name": "坚韧复仇",
+   "key": "TCE:野蛮人:振奋魔法:6",
+   "name": "振奋魔法",
    "kind": "classFeature",
-   "from": "data/dyn/ai/features.json",
+   "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "你以借机攻击命中一个生物时，可以将其速度降为 0（直到当前回合结束），并在该攻击后立刻移动至多相当于你速度一半的距离（这次移动是原反应的一部分、不引发借机攻击）。引擎问你要不要借机攻击、你真打了并命中之后会自动认出这个时机；若是人在别处手动发起的借机攻击（引擎没问过），弹窗会多问一句「这次命中的是借机攻击吗」。速度降为 0 自动；攻击后那半速移动要人处理（引擎的移动流程只跑当前回合的那个棋子），移动期间你带着「坚韧复仇之步」效应——它到你的下一回合开始、或你走过一次（引擎的移动）后消失。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [
-     {
-      "id": "oaMark",
-      "label": "坚韧复仇：借机攻击时机",
-      "on": "leftReach",
-      "role": "target",
-      "window": "after",
-      "when": null,
-      "cost": [],
-      "modify": [],
-      "do": [
-       "applyEffect"
-      ]
-     },
-     {
-      "id": "relentless",
-      "label": "坚韧复仇",
-      "on": "attackHit",
-      "role": "actor",
-      "window": "after",
-      "when": "attack.melee && (self.hasEffect('借机攻击时机') || (!turn.isMine && ask('这次命中的是借机攻击（反应）吗？')))",
-      "cost": [],
-      "modify": [],
-      "do": [
-       "applyEffect",
-       "note"
-      ]
-     }
-    ],
-    "effects": [
-     {
-      "name": "借机攻击时机",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnStart",
-        "of": "bearer",
-        "nth": 1
-       },
-       "endsOn": [
-        {
-         "event": "moved"
-        }
-       ]
-      }
-     },
-     {
-      "name": "坚韧复仇",
-      "statics": [
-       "speedSet"
-      ],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnEnd",
-        "of": "bearer",
-        "nth": 0
-       }
-      }
-     },
-     {
-      "name": "坚韧复仇之步",
-      "statics": [],
-      "flags": {
-       "cannot": [
-        "provoke"
-       ]
-      },
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnStart",
-        "of": "bearer",
-        "nth": 1
-       },
-       "endsOn": [
-        {
-         "event": "moved",
-         "when": "event.id == self.id"
-        }
-       ]
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "move",
-    "need": "缺少在借机攻击命中后作为同一反应的一部分立即移动至多半速且不引发借机攻击的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:圣武士:绝伦健将:3",
-   "name": "绝伦健将",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "跳远、跳高距离 +10 尺不由引擎计算，需人工处理。",
+   "text": "以一个动作触碰一个生物（可为自己），提供以下增益之一：①10分钟内，该生物攻击检定或属性检定可额外加 1d3；②掷 1d3，目标恢复一个环数小于等于掷骰结果的法术位（目标自选环阶，该生物直到长休前无法再次享受恢复法术位，需手动调整法术位）。长休恢复，次数等于熟练加值。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "绝伦健将",
-      "activation": "bonus",
+      "name": "振奋魔法",
+      "activation": "action",
       "cost": [
        {
-        "resource": "channel-divinity"
+        "resource": "bolstering-magic"
        }
       ],
-      "targeting": null,
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
       "trigger": null,
       "concentration": null,
-      "requires": "turn.isMine",
+      "requires": null,
       "root": [
-       "applyEffect"
+       "choose"
       ]
      }
     ],
     "triggers": [],
     "effects": [
      {
-      "name": "绝伦健将",
+      "name": "振奋检定",
       "statics": [],
       "flags": null,
-      "rollMods": 2,
+      "rollMods": 1,
       "triggers": 0,
-      "duration": {
-       "hours": 1
-      }
+      "duration": null
      }
     ],
     "resources": []
    },
    "old_audit": {
-    "gap": "move",
-    "need": "缺少跳跃距离（跳高/跳远增加10尺）的计算与移动力规则支持",
+    "gap": "resource",
+    "need": "掷骰判定并为目标恢复指定环阶法术位，及记录目标长休前不可重复享受该恢复",
     "now": false
    }
   },
   {
-   "key": "XPHB:圣武士:灵光增效:18",
-   "name": "灵光增效",
+   "key": "TCE:吟游诗人:不竭鼓舞:6",
+   "name": "不竭鼓舞",
    "kind": "classFeature",
-   "from": "data/dyn/ai/features.json",
+   "from": "data/dyn/ai/books.json",
    "automation": "manual",
-   "text": "守护灵光（6 级）的光环范围提升至 30 尺，勇气灵光与奉献灵光同样基于守护灵光的范围，也随之变为 30 尺。光环半径在引擎中是固定数字，本条无法改写其他条目的半径，需人手动按 30 尺处理。",
+   "text": "当一个生物使用了你的诗人激励骰，将结果加入到攻击检定、属性检定或豁免检定中，但仍然失败了，他可以保留这个诗人激励骰而不消耗（由玩家手动保留该生物身上的诗人激励效果）。",
    "data": {
     "automation": "manual",
     "actions": [],
@@ -852,41 +220,247 @@
     "resources": []
    },
    "old_audit": {
-    "gap": "zone",
-    "need": "缺少光环半径（radius）支持表达式或随角色等级动态扩展（10尺扩展至30尺）的能力",
+    "gap": "resource",
+    "need": "检定结算后若仍失败则保留/返还盟友身上的诗人激励骰",
     "now": false
    }
   },
   {
-   "key": "XPHB:圣武士:弃绝众敌:9",
-   "name": "弃绝众敌",
+   "key": "TCE:吟游诗人:传播鼓舞:14",
+   "name": "传播鼓舞",
    "kind": "classFeature",
-   "from": "data/dyn/ai/features.json",
+   "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "以魔法动作消耗一次引导神力，对 60 尺内至多 max(1, 魅力调整值) 个可见生物进行感知豁免（DC 为法术豁免 DC），失败则陷入恐慌 1 分钟或直到受到任何伤害。陷入恐慌的目标每回合只能移动、执行一个动作或一个附赠动作三选一，这一限制需人手动处理。",
+   "text": "当 60 尺内一个生物使用你的诗人激励骰增益攻击、属性检定或豁免成功后，你可以用反应鼓励另一个 60 尺内能听见你的生物（除你外），使其获得一个诗人激励骰而不消耗你的诗人激励次数。可用次数等于魅力调整值（至少 1 次），长休恢复。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "弃绝众敌",
-      "activation": "action",
+      "name": "传播鼓舞",
+      "activation": "reaction",
       "cost": [
        {
-        "resource": "channel-divinity"
+        "resource": "infectious-inspiration"
        }
       ],
       "targeting": {
        "type": "creature",
-       "count": "max(1, self.mod.cha)",
+       "count": 1,
        "range": 60,
-       "filter": "canSee(self, target)"
+       "filter": "target.id != self.id"
+      },
+      "trigger": {
+       "on": "d20Rolled",
+       "role": "any",
+       "window": "after",
+       "when": "ask('60尺内有生物使用你的诗人激励骰增益检定成功了吗？')"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "诗人激励",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "监听盟友消耗激励骰且检定成功的事件窗口，以反应将激励骰扩散给另一生物",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:吟游诗人:活化表演:6",
+   "name": "活化表演",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个动作活化 30 尺内你可见的、未被着装或携带的大型或更小非魔法物品，持续 1 小时，使用舞空物品的数据：大型（或更小）构装生物，AC 16，HP 10 + 5 × 你的吟游诗人等级，速度 30 尺、飞行 30 尺（悬浮），力量 18 / 敏捷 14 / 体质 16 / 智力 4 / 感知 10 / 魅力 6，力场动能猛击（法术攻击，触及 5 尺，1d10 + 熟练加值 力场伤害），免疫毒素与心灵伤害，免疫魅惑、力竭、中毒、恐慌。它与你共用先攻、在你回合后立即行动，可以自行移动和执行反应，但你只有用附赠动作命令它，它才会执行动作（引擎让召唤物自己行动，这一条请用「舞空物品：命令行动」记录）；使用诗人激励时，这道命令可以作为同一个附赠动作的一部分发出。同一时间只能有一件：再次使用会替换掉旧的（引擎已自动替换）。它生命值降为 0 时直接消失；1 小时后失活、你死亡时失活、以及「不变形态」「难抑舞动」两项特性需要人手动处理。长休前只能使用一次，可以消耗一个 3 环或更高法术位重置使用次数。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "活化表演",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "animating-performance"
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": 30
       },
       "trigger": null,
       "concentration": null,
       "requires": null,
       "root": [
-       "save"
+       "summon"
+      ]
+     },
+     {
+      "id": "command",
+      "name": "舞空物品：命令行动",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "reset",
+      "name": "活化表演：消耗法术位重置",
+      "activation": "free",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.resource('animating-performance') == 0",
+      "root": [
+       "resource"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": [
+     {
+      "id": "animating-performance",
+      "name": "活化表演",
+      "formula": 1,
+      "recovery": "long"
+     }
+    ]
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "活化非生物物件为随从生物入场并协同先攻与附赠动作指挥",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:吟游诗人:潜能微尘:3",
+   "name": "潜能微尘",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "给予诗人激励时创造一团潜能微尘。当承受者将该激励骰用于属性检定、攻击检定或豁免检定时产生额外效果（属性检定可重掷激励骰取其一；攻击检定使目标及5尺内生物过体质豁免受雷鸣伤害；豁免检定获得激励骰加魅力调整值的临时生命值）。分支效果由人工判定结算。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "潜能微尘：赋予激励",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "诗人激励"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "target.id != self.id"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "潜能微尘",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "诗人激励骰在属性检定/攻击/豁免使用时附加微尘次级联动效应",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:吟游诗人:造物表演:3",
+   "name": "造物表演",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个动作在 10 尺内未被占据空间创造一个非魔法物品，价值不超等级×20gp，初始为中型或更小（6级大型，14级巨型），持续等同于熟练加值小时。每长休免费使用一次；之后可消耗 2 环或更高法术位重置。物品详情与尺寸限制由人手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "造物表演",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "performance-of-creation"
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": 10
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "reset",
+      "name": "造物表演：消耗法术位重置",
+      "activation": "free",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.resource('performance-of-creation') == 0",
+      "root": [
+       "resource"
       ]
      }
     ],
@@ -895,110 +469,45 @@
     "resources": []
    },
    "old_audit": {
-    "gap": "condition",
-    "need": "缺少限制生物在其回合内只能在移动、动作、附赠动作中三选一的动作经济约束机制",
+    "gap": "item",
+    "need": "凭空创造指定尺寸与价值上限的非魔法物品并在时长后消失",
     "now": false
    }
   },
   {
-   "key": "XPHB:圣武士:上古斗士:20",
-   "name": "上古斗士",
+   "key": "TCE:游荡者:灵能面纱:13",
+   "name": "灵能面纱",
    "kind": "classFeature",
-   "from": "data/dyn/ai/features.json",
+   "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "附赠动作盈满守护灵光，持续 1 分钟，每次长休一次；可随时（无需动作）提前结束，也可消耗一个五环法术位重置使用权。瓦解反抗：灵光（30 尺）内的敌人对抗你法术或引导神力的豁免具有劣势（靠提问判断来源）。复生：你每个自己的回合开始时恢复 10 点生命值。迅捷法术：施展施法时间为动作的法术时可改为附赠动作——靠提问确认后扣附赠动作、退还动作；以附赠动作施法后本回合不能再用动作施展 1 环以上法术的限制需要人遵守。",
+   "text": "以一个动作，你连同你所穿或携带的任何东西可以魔法性地隐形至多1小时。若你主动解除隐形（无需动作）、发动攻击、或迫使一个生物进行豁免检定，此隐形状态将会提前结束。长休恢复1次免费使用；没有使用次数时可消耗一枚灵能骰使用。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "上古斗士",
-      "activation": "bonus",
+      "name": "灵能面纱",
+      "activation": "action",
       "cost": [
        {
-        "resource": "elderChampion"
+        "resource": "灵能面纱"
        }
       ],
       "targeting": null,
       "trigger": null,
       "concentration": null,
-      "requires": "!self.hasEffect('上古斗士')",
+      "requires": null,
       "root": [
        "applyEffect"
       ]
      },
      {
-      "id": "end",
-      "name": "结束上古斗士",
-      "activation": "free",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.hasEffect('上古斗士')",
-      "root": [
-       "removeEffect"
-      ]
-     },
-     {
-      "id": "reset",
-      "name": "上古斗士：重置使用权（五环法术位）",
-      "activation": "free",
+      "id": "use-psionic",
+      "name": "灵能面纱（消耗灵能骰）",
+      "activation": "action",
       "cost": [
        {
-        "slot": {
-         "min": 5,
-         "max": 5
-        }
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.resource('elderChampion') < 1",
-      "root": [
-       "resource"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "上古斗士",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 2,
-      "duration": {
-       "minutes": 1
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "timing",
-    "need": "缺少将动作法术动态改为附赠动作施法的时机改写机制及同回合施法限制校验",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:圣武士:神圣感知:3",
-   "name": "神圣感知",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "感知 60 尺内天界生物、邪魔与不死生物的位置与类型，以及受圣居等法术祝福或亵渎的地点与物件。感知的结果本身需要人处理，引擎只记录消耗与持续时间。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "神圣感知",
-      "activation": "bonus",
-      "cost": [
-       {
-        "resource": "channel-divinity"
+        "resource": "灵能力量"
        }
       ],
       "targeting": null,
@@ -1013,27 +522,123 @@
     "triggers": [],
     "effects": [
      {
-      "name": "神圣感知",
+      "name": "灵能面纱",
       "statics": [],
       "flags": null,
       "rollMods": 0,
       "triggers": 0,
-      "duration": {
-       "minutes": 10,
-       "endsOn": [
-        {
-         "event": "effectApplied",
-         "when": "event.bearer == self.id && self.has('失能')"
-        }
-       ]
-      }
+      "duration": null
      }
     ],
     "resources": []
    },
    "old_audit": {
-    "gap": "vision",
-    "need": "缺少自动探测周围特定生物类型与神圣/亵渎物件的感知机制，属于探索社交感知",
+    "gap": "condition",
+    "need": "隐形效应在主动攻击或迫使豁免时自动解除（endsOn 复合判定）",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:游荡者:撕裂心智:17",
+   "name": "撕裂心智",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "当你使用心灵之刃对一个生物造成偷袭攻击伤害时，可迫使其进行感知豁免（DC = 8 + 熟练加值 + 敏捷调整值）。豁免失败则陷入震慑 1 分钟，目标每回合结束时可重复豁免。长休恢复 1 次免费使用；没有使用次数时可消耗三枚灵能骰使用。是否为心灵之刃造成的偷袭伤害由人判断。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "rend-mind",
+      "label": "撕裂心智",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "ask('此次攻击是使用心灵之刃且造成了偷袭攻击伤害吗？')",
+      "cost": [
+       {
+        "resource": "撕裂心智"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "save"
+      ]
+     },
+     {
+      "id": "rend-mind-psionic",
+      "label": "撕裂心智（消耗3枚灵能骰）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "ask('此次攻击是使用心灵之刃且造成了偷袭攻击伤害吗？')",
+      "cost": [
+       {
+        "resource": "灵能力量",
+        "n": 3
+       }
+      ],
+      "modify": [],
+      "do": [
+       "save"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "撕裂心智",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "自动判定攻击是否同时满足心灵之刃与偷袭伤害条件以触发震慑豁免",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:游荡者:心灵传送:9",
+   "name": "心灵传送",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个附赠动作，你塑造一把心灵之刃，消耗并投掷一枚灵能骰，传送到至多距离灵能骰结果数字十倍尺数的一处可见的未被占据的空间内。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "心灵传送",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "灵能力量"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "number",
+       "move"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "投掷灵能骰并传送至 10×骰值 尺内的可见未占据空间",
     "now": false
    }
   }

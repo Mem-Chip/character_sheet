@@ -1,0 +1,374 @@
+{
+ "batch": "batch-064",
+ "count": 10,
+ "entries": [
+  {
+   "key": "XPHB:吟游诗人:创生圣言:20",
+   "name": "创生圣言",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "律令医疗、律令死亡的法术授予已在人物卡静态层。施展这两道法术时可以再选一个第二目标（须位于第一个目标 10 尺内），引擎无法为法术追加目标，需手动处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "施展指定单目标法术时无法为其动态追加一个次要目标（须在首目标10尺内）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:吟游诗人:额外攻击:6",
+   "name": "额外攻击",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "执行攻击动作时可以发动两次攻击而非一次；其中一次可以替换为施法时间为一动作的戏法。攻击次数的增加与戏法替换由人手动处理（引擎不自动管理攻击动作的次数）。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "攻击动作中缺少将其中一次武器攻击替换为施展戏法的动作替换机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:吟游诗人:鼓舞之移:6",
+   "name": "鼓舞之移",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "当一名你可见的敌人位于你 5 尺内结束它的回合时，你可以用反应并消耗一次诗人激励使用次数，移动至多等于你速度一半的距离；随后位于你 30 尺内的一名盟友（由你选择）可以用他的反应移动至多等于他速度一半的距离。这两段移动都不引发借机攻击。触发时机、反应与诗人激励代价引擎自动处理；两段移动都要人手动（引擎的移动流程只跑当前回合那个棋子），你这边挂上「鼓舞之移之步」效应当提醒，盟友那一段请人手动移动，并让该玩家自己扣反应。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "鼓舞之移",
+      "activation": "reaction",
+      "cost": [
+       {
+        "resource": "诗人激励"
+       }
+      ],
+      "targeting": null,
+      "trigger": {
+       "on": "turnEnded",
+       "role": "enemy",
+       "when": "within(self, target, 5) && canSee(self, target)"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "鼓舞之移之步",
+      "statics": [],
+      "flags": {
+       "cannot": [
+        "provoke"
+       ]
+      },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "bearer",
+        "nth": 1
+       },
+       "endsOn": [
+        {
+         "event": "moved",
+         "when": "event.id == self.id"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少敌方在其自身回合结束且位于特定距离（5尺）时触发反应移动的事件窗口与无借机攻击移动支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:吟游诗人:灵感织衣:3",
+   "name": "灵感织衣",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "以一个附赠动作消耗一次诗人激励并掷诗人激励骰，从你 60 尺内的其他生物中选择至多等于你魅力调整值（至少 1 名）的生物，每个被选中的生物获得等于两倍该诗人骰骰值的临时生命值，然后每名生物都可以用自己的反应立即移动至多等于自己速度的距离，这次移动不会引发借机攻击。选择目标、临时生命值与效应都会自动加上。原文是掷一次诗人骰、所有目标共用两倍该骰值；引擎按每名目标各掷一次（掷的是两颗骰，分布和两倍单颗骰略有不同），想严格按原规则就在掷完后按第一名的值口头统一、其余目标在详情抽屉里改。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "灵感织衣",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "诗人激励"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": "max(1, mod.cha)",
+       "range": 60,
+       "filter": "target.id != self.id"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "tempHp",
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "灵感织衣之步",
+      "statics": [],
+      "flags": {
+       "cannot": [
+        "provoke"
+       ]
+      },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "bearer",
+        "nth": 1
+       },
+       "endsOn": [
+        {
+         "event": "moved",
+         "when": "event.id == self.id"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少在动作结算中指挥多名选定盟友各自消耗反应进行即时移动且免除借机攻击的协同机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:吟游诗人:灵巧打击:3",
+   "name": "灵巧打击",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "当你在一次动作、附赠动作或反应中消耗了诗人激励使用次数后，作为那个动作的一部分，你可以发动一次徒手打击 —— 不额外花动作 / 附赠动作 / 反应，所以写成「不占动作」的按钮。引擎读不到「刚刚消耗过诗人激励」（没有资源消耗的触发窗口），这一条只能人守：只在你确实刚花掉一次诗人激励的那个动作里点它，别凭空点。徒手打击的命中与伤害按「力量或敏捷取高」近似；舞蹈学院的诗人痛击允许改用「诗人激励骰 + 敏捷调整值」的钝击伤害，要那样打请照「诗人痛击」那条手动改伤害。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "灵巧打击",
+      "activation": "free",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "reach"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "attack"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少在动作/附赠/反应中消耗特定资源（诗人激励）后追加执行一次徒手打击的后置触发窗口",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:吟游诗人:诗人痛击:3",
+   "name": "诗人痛击",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "用敏捷代替力量的徒手打击攻击检定已自动（敏捷高于力量时把差值加到攻击检定上，且须未着装护甲、未持盾，见炫目舞步）。以徒手打击造成伤害时改用「诗人激励骰 + 敏捷调整值」的钝击伤害、且不消耗诗人激励次数，需手动处理（引擎不能替换徒手打击自身的伤害）。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少将徒手打击的基础伤害公式动态替换为诗人激励骰加敏捷调整值的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:吟游诗人:协同舞步:6",
+   "name": "协同舞步",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "自己的先攻加值已自动：投先攻时可选花一次诗人激励，加上诗人骰。30 尺内能听见或看见你的盟友，其先攻同样加上该骰值，需手动处理（引擎不能把同一骰值分享给其他人的先攻）。未失能时才可用。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "coordinated-steps",
+      "label": "协同舞步：先攻加诗人骰",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "when": "(roll.kind == 'initiative' || roll.sub == 'initiative') && !self.has('失能')",
+      "cost": [
+       {
+        "resource": "诗人激励"
+       }
+      ],
+      "modify": [
+       "addToRoll"
+      ],
+      "do": [
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "remember",
+    "need": "缺少将先攻掷骰时掷出的诗人激励骰值同步共享给周围多名盟友并加到其各自先攻上的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:吟游诗人:引导闪避:14",
+   "name": "引导闪避",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "你受到一个「允许敏捷豁免来只承受一半伤害」的效应影响时：豁免成功则完全不受伤害，豁免失败只受一半伤害。位于你 5 尺内、同样要做这次敏捷豁免的其他生物也可以享受。已自动化：这类伤害一进来就把结果改成「成功 0 伤害 / 失败一半」；5 尺内的盟友身上也会挂上同一套判定（引擎会确认「他在吟游诗人 5 尺内吗」——有地图时直接算距离）。你失能时不起作用。要人处理：法术得把「豁免成功只受一半」写成减半的伤害节点，引擎才认得出是这一类效应；写成别的形式（比如成功分支里另写一份伤害）就改不了，请手动按一半结算。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "evasion",
+      "label": "引导闪避",
+      "on": "damageIncoming",
+      "role": "target",
+      "window": "before",
+      "when": "damage.save == 'dex' && !self.has('失能')",
+      "cost": [],
+      "modify": [
+       "evasion"
+      ],
+      "do": []
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少反射闪避（敏捷豁免半伤变0伤、全伤变半伤）并向5尺内盟友共享此减伤判定的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:吟游诗人:战斗激励:3",
+   "name": "战斗激励",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "拥有你的诗人激励骰的生物（身上挂着「诗人激励」效应）可以改用它来做两件事：【防御】被一次攻击检定命中时，用反应掷诗人激励骰、把点数加到对抗这次攻击的 AC 上，可能让它变成失手；【进攻】以攻击检定命中一个目标后，立即掷诗人激励骰、把点数加到这次攻击造成的伤害里。已自动化：只要那个生物身上还有你的诗人激励效应，命中 / 被命中时就会弹出这两个用法，用完把诗人激励消耗掉；【进攻】自动掷点、按这次攻击的伤害类型加伤害，【防御】弹窗让你输入掷出的点数（引擎的 AC 加值只能是定数），按新 AC 重新判定这次攻击，这一次攻击结束就撤掉那份 AC 加值。要人处理：①诗人激励骰的面数随你的吟游诗人等级变（d6 / d8 / d10 / d12），【进攻】自动按等级取；【防御】弹窗上下限按 d12 给，低等级时按实际点数填；②「用不用、给谁用」由你决定，引擎没法限制只有你点名的那个生物能用；③法术攻击的伤害类型引擎常常没记下（会记成无类型），这类攻击的激励骰伤害请按实际类型核对抗性。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "source",
+    "need": "缺少将赋予他人的激励资源及其专属反应（改AC）和攻击加伤触发器动态注入到盟友身上的分发机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:吟游诗人:战斗魔法:14",
+   "name": "战斗魔法",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "在你施展一道施法时间为一动作的法术后，你能够以一个附赠动作，使用一把武器发动一次攻击。已自动化：这是一个附赠动作的武器攻击动作——选目标、掷攻击检定、掷伤害都由引擎做（弹窗里按你用的武器选伤害骰和伤害类型），伤害里含属性调整值。要人处理：引擎读不到「你本回合刚施展完一道施法时间为一动作的法术」，所以每次用之前会问一句；武器是哪一把、够不够得着由你判断；用远程武器时这次攻击在引擎里仍按近战攻击标记，少数按「近战 / 远程」区分的加值可能记错，介意的话直接用那把武器自己的动作手动打。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "weapon",
+      "name": "战斗魔法：附赠动作武器攻击",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && ask('你本回合刚施展完一道施法时间为一动作的法术吗？')",
+      "root": [
+       "choose",
+       "attack"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "施法后缺少自动调取装备武器并发起一次附赠动作武器攻击的动作生成能力",
+    "now": false
+   }
+  }
+ ]
+}

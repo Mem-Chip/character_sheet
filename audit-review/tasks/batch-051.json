@@ -1,674 +1,27 @@
 {
  "batch": "batch-051",
- "count": 20,
+ "count": 10,
  "entries": [
   {
-   "key": "XPHB:spell:繁彩球",
-   "name": "繁彩球",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
+   "key": "XPHB:敏锐心灵",
+   "name": "敏锐心灵",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
    "automation": "partial",
-   "text": "选择强酸/寒冷/火焰/闪电/毒素/雷鸣发动远程法术攻击，命中造成 (2 + slot.level)d8 伤害；若伤害骰出现两枚或更多相同点数时的跳跃攻击（至多跳跃环阶次、30 尺内新目标）需手动处理。",
+   "text": "快速研究已写成附赠动作；研究本身的智力检定（奥秘/历史/调查/自然/宗教）需人手动处理。",
    "data": {
     "automation": "partial",
     "actions": [
      {
-      "id": "cast",
-      "name": "繁彩球",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 1
-        }
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 90
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "choose",
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "other",
-    "need": "缺少伤害掷骰检测点数相同并触发链式跳跃攻击新目标的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:spell:反魔法场",
-   "name": "反魔法场",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "以自身为中心半径 10 尺的光环区域（专注至多 1 小时）。区域内无法施展法术、执行魔法动作或产生魔法效应，正在持续的法术被压制，魔法物品失效，无法传送与位面旅行（魔法压制与环境抑制需手动处理）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "反魔法场",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 8
-        }
-       }
-      ],
-      "targeting": {
-       "type": "self"
-      },
-      "trigger": null,
-      "concentration": {
-       "hours": 1
-      },
-      "requires": null,
-      "root": [
-       "applyEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "反魔法场",
-      "statics": [],
-      "flags": {
-       "cannot": [
-        "castSpells"
-       ]
-      },
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:spell:反转重力",
-   "name": "反转重力",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "专注至多 1 分钟。以 100 尺内一点为中心创造半径 50 尺、高 100 尺的重力反转柱状区域。区域内未固定的生物和物件向上落去；生物可进行敏捷豁免抓住固定物件避免坠落。撞击固体受到坠落冲击，到达顶部悬浮；法术终止时向下坠落（撞击伤害与物理悬浮/下坠需手动处理）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "反转重力",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 7
-        }
-       }
-      ],
-      "targeting": {
-       "type": "area",
-       "range": 100,
-       "area": {
-        "shape": "cylinder",
-        "radius": 50
-       }
-      },
-      "trigger": null,
-      "concentration": {
-       "minutes": 1
-      },
-      "requires": null,
-      "root": [
-       "forEach"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "反转重力",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "minutes": 1
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:spell:防护法阵",
-   "name": "防护法阵",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "manual",
-   "text": "施法时间 1 分钟，无专注。指定地面上一点，创造 10 尺半径、20 尺高的柱状魔法能量，持续 slot.level - 2 小时；指定天界生物、元素生物、精类、邪魔、不死生物中的一种或多种。整条只能手动：被指定类型的生物不能以非魔法手段主动进入（引擎的区域不阻止移动）、用传送或位面旅行进入须先通过魅力豁免、对法阵内目标发动攻击检定具有劣势、法阵内目标不受其魅惑 / 恐慌 / 附身，以及可以选择反向施展阻止其离开 —— 这些都要按生物类型在桌上判定，区域本身只作为地图上的标记。",
-   "data": {
-    "automation": "manual",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "防护法阵",
-      "activation": {
-       "minutes": 1
-      },
-      "cost": [
-       {
-        "slot": {
-         "min": 3
-        }
-       }
-      ],
-      "targeting": {
-       "type": "area",
-       "range": 10,
-       "area": {
-        "shape": "cylinder",
-        "radius": 10,
-        "size": 20
-       }
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "zone",
-    "need": "缺少地图持续柱状法阵区域（阻止特定生物种类跨越边界及穿透传送）",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:spell:防护善恶",
-   "name": "防护善恶",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "自愿生物获得针对异怪、天界生物、元素生物、精类、邪魔、不死生物的防护：这些生物对目标的攻击检定具有劣势；目标不能被其附身、魅惑或恐慌（免疫需手动处理）；若已受其影响，后续豁免具有优势。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "防护善恶",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 1
-        }
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": "touch"
-      },
-      "trigger": null,
-      "concentration": {
-       "minutes": 10
-      },
-      "requires": null,
-      "root": [
-       "applyEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "防护善恶",
-      "statics": [],
-      "flags": null,
-      "rollMods": 2,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "condition",
-    "need": "缺少针对特定生物类型来源的条件性状态免疫接口",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:spell:防活物护罩",
-   "name": "防活物护罩",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "专注至多 1 小时。以自身为源点形成 10 尺光环屏障，阻绝除亡灵与构装生物外的所有生物穿过或触及内部。法术与远程/触及攻击可穿过屏障；施法者移动迫使生物进入护罩会导致法术终止。物理穿行阻挡与移动触发法术终止需手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "防活物护罩",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 5
-        }
-       }
-      ],
-      "targeting": {
-       "type": "self"
-      },
-      "trigger": null,
-      "concentration": {
-       "hours": 1
-      },
-      "requires": null,
-      "root": [
-       "applyEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "防活物护罩",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "zone",
-    "need": "缺少随角色移动的屏障光环物理阻隔移动以及主动挤压破除法术的判定",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:spell:防死结界",
-   "name": "防死结界",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "持续 8 小时；目标生命值降至 0 时改为降至 1 并结束法术；直接致死而不造成伤害的效应使其失效并结束法术需手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "防死结界",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 4
-        }
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": "touch"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "applyEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "防死结界",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 1,
-      "duration": {
-       "hours": 8
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "reactModify",
-    "need": "缺少对不造成伤害的即死效应（如死亡一指、九环绝杀）进行拦截取消的触发窗口",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:spell:放逐术",
-   "name": "放逐术",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "魅力豁免失败被放逐至半位面并陷入失能状态；目标离开战场、返回战场或异怪/天族/元素/妖精/邪魔维持满 1 分钟后不返回需人手动处理移出/移入。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "放逐术",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 4
-        }
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": "slot.level - 3",
-       "range": 30,
-       "filter": "canSee(self, target)"
-      },
-      "trigger": null,
-      "concentration": {
-       "minutes": 1
-      },
-      "requires": null,
-      "root": [
-       "save"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "放逐",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "condition",
-    "need": "缺少将生物暂时移出战场（从先攻与地图隐藏）及专注结束/超时后返回战场的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:spell:放逐斩",
-   "name": "放逐斩",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "使用近战武器或徒手打击命中后以附赠动作施展，额外造成 5d10 点力场伤害（专注至多 1 分钟）。若此次攻击将目标生命值削减至 50 点或更低，目标须进行魅力豁免，失败被放逐至半位面并陷入失能状态。50 生命值门槛判断与移出/重返战场需手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "放逐斩",
+      "id": "research",
+      "name": "快速研究：研究",
       "activation": "bonus",
-      "cost": [
-       {
-        "slot": {
-         "min": 5
-        }
-       }
-      ],
+      "cost": [],
       "targeting": null,
-      "trigger": {
-       "on": "attackHit",
-       "role": "actor",
-       "window": "before",
-       "when": "attack.melee && (attack.weapon || attack.unarmed)"
-      },
-      "concentration": {
-       "minutes": 1
-      },
+      "trigger": null,
+      "concentration": null,
       "requires": "turn.isMine",
       "root": [
-       "addDamage",
-       "save"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "放逐斩：放逐",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "minutes": 1
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "condition",
-    "need": "缺少将目标移出战场机制以及攻击结算后基于目标当前HP门槛触发后续豁免判定",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:spell:飞行术",
-   "name": "飞行术",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "触碰自愿生物，专注至多 10 分钟。目标获得 60 尺飞行速度且可以悬浮。法术终止时若仍在空中则坠落。升环施法时每比 3 环高一环可额外指定一名生物。三维飞行与坠落需手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "飞行术",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 3
-        }
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": "slot.level - 2",
-       "range": "touch"
-      },
-      "trigger": null,
-      "concentration": {
-       "minutes": 10
-      },
-      "requires": null,
-      "root": [
-       "applyEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "飞行术",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "move",
-    "need": "缺少地图三维高度坐标管理、飞行移动模式及失速坠落判定",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:spell:焚云术",
-   "name": "焚云术",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "150 尺内以一点为中心创造半径 20 尺球状烟云（专注至多 1 分钟）。区域被重度遮蔽。出现时处于其内的生物敏捷豁免，失败受 10d8 火焰伤害，成功半数；区域移动至生物空间、生物进入或在其中结束回合时也须进行该豁免（每回合至多一次）；施法者每回合开始烟云直线远离 10 尺。重度遮蔽、烟云移动与后续豁免需手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "焚云术",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 8
-        }
-       }
-      ],
-      "targeting": {
-       "type": "area",
-       "range": 150,
-       "area": {
-        "shape": "sphere",
-        "radius": 20
-       }
-      },
-      "trigger": null,
-      "concentration": {
-       "minutes": 1
-      },
-      "requires": null,
-      "root": [
-       "forEach",
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:spell:粉碎音波",
-   "name": "粉碎音波",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "以该点为中心半径 10 尺球状区域内的所有生物进行体质豁免，失败受到 3d8（每升一环 +1d8）雷鸣伤害，成功受到半数伤害。构装生物进行该豁免具有劣势以及未被携带的非魔法物件受损需手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "粉碎音波",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 2
-        }
-       }
-      ],
-      "targeting": {
-       "type": "area",
-       "range": 60,
-       "area": {
-        "shape": "sphere",
-        "radius": 10
-       }
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "forEach"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "condition",
-    "need": "豁免节点（save node）缺少根据目标特征（如构装生物）施加劣势的参数配置",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:spell:风墙术",
-   "name": "风墙术",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "专注至多 1 分钟。在 120 尺内升起至多长 50 尺、高 15 尺、厚 1 尺的烈风墙。风墙出现时占据区域内的生物须进行力量豁免，失败受到 4d8 钝击伤害，成功受到半数伤害。风墙阻隔浓雾烟尘等气体；小型或更小的飞行生物或物件无法穿过；对墙后目标射出的普通飞行物直接判为打失。风墙阻挡与弹道判定需在地图上手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "风墙术",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 3
-        }
-       }
-      ],
-      "targeting": {
-       "type": "area",
-       "range": 120,
-       "area": {
-        "shape": "line",
-        "length": 50,
-        "width": 5
-       }
-      },
-      "trigger": null,
-      "concentration": {
-       "minutes": 1
-      },
-      "requires": null,
-      "root": [
-       "forEach",
        "note"
       ]
      }
@@ -678,243 +31,228 @@
     "resources": []
    },
    "old_audit": {
-    "gap": "zone",
-    "need": "缺少地图墙体实体阻挡小型飞行生物穿过及拦截投掷/远程箭矢弹道的机制",
+    "gap": "timing",
+    "need": "缺少执行研究（Study）动作时自动发起对应智力检定（奥秘/历史/调查/自然/宗教）的流程支持",
     "now": false
    }
   },
   {
-   "key": "XPHB:spell:疯狂冠冕",
-   "name": "疯狂冠冕",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "专注至多 1 分钟。120 尺内一名可见类人生物进行感知豁免，失败陷入魅惑状态。目标每回合必须在移动前使用其动作对施法者精神指定的生物进行一次近战攻击。目标每回合结束可重复豁免。施法者每回合须用魔法动作维持控制（受控攻击与维持动作需手动配合处理）。",
+   "key": "XPHB:魔法学徒",
+   "name": "魔法学徒",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "起源专长：从牧师 / 德鲁伊 / 法师法术列表里选一个，习得两道戏法（建卡时选定，静态）；再从该列表选一道一环法术始终准备，它可以不用法术位施展一次，长休恢复（资源池「魔法学徒 · 免费施放 1 环法术」freeCast），也可以照常用任意法术位施展。免法术位那一次引擎做不到：法术条目按法术位扣费，没有「这次改扣 freeCast」的写法。手动做法：照常施放那道一环法术（**没有任何可用法术位时这一步会被拒**，那种情况请手动结算效果），结算完在角色抽屉里把该环法术位的「已用」减 1，并把 freeCast 的「已用」改成 1（长休自动恢复）；用过之后就只能按法术位施展。每升一级可替换一道法术、可重复选本专长（每次选不同列表）都是建卡 / 升级时的选择，不在战斗里发生。",
    "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "疯狂冠冕",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 2
-        }
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 120,
-       "filter": "target.type == '类人生物'"
-      },
-      "trigger": null,
-      "concentration": {
-       "minutes": 1
-      },
-      "requires": null,
-      "root": [
-       "save"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "疯狂冠冕",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "condition",
-    "need": "缺少强制受术者在移动前对指定生物发动攻击以及施法者每回合需花费动作维持效应的控制链",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:spell:浮空术",
-   "name": "浮空术",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "专注至多 10 分钟。60 尺内一名生物或未固定物件垂直上升至多 20 尺并悬浮。非自愿生物进行体质豁免以避免受影响。目标只能通过推拉固定表面攀爬移动。施法者可在其回合改变目标悬浮高度至多 20 尺（自身为目标则为移动的一部分，他人则需动作）。垂直高度与空间移动需在地图上手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "浮空术",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 2
-        }
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 60
-      },
-      "trigger": null,
-      "concentration": {
-       "minutes": 10
-      },
-      "requires": null,
-      "root": [
-       "if"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "浮空术",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "move",
-    "need": "缺少垂直高度（Z轴）悬浮管理与施法者在其回合远程升降目标高度的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:spell:复仇风暴",
-   "name": "复仇风暴",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "以施法距离内一点为中心创造半径 300 尺翻腾乌云。云团出现时其下生物进行体质豁免，失败受 2d6 雷鸣伤害并在持续时间内陷入耳聋。后续每回合乌云依次降下酸雨（4d6强酸）、闪电（6道各10d6敏捷半）、冰雹（2d6钝击）及冻雨狂风（1d6寒冷并阻碍远程攻击等），后续回合效应需手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "复仇风暴",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 9
-        }
-       }
-      ],
-      "targeting": {
-       "type": "area",
-       "range": 5280,
-       "area": {
-        "shape": "cylinder",
-        "radius": 300
-       }
-      },
-      "trigger": null,
-      "concentration": {
-       "minutes": 1
-      },
-      "requires": null,
-      "root": [
-       "forEach"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "复仇风暴：耳聋",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:spell:复苏秘法",
-   "name": "复苏秘法",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "附赠动作消耗法术位治愈自身。投掷 1 或 2 枚未消耗的生命骰（每升一环可多投 1 枚），恢复等于掷骰总和加施法属性调整值的生命值。生命骰的扣除需手动在人物卡记录。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "复苏秘法",
-      "activation": "bonus",
-      "cost": [
-       {
-        "slot": {
-         "min": 2
-        }
-       }
-      ],
-      "targeting": {
-       "type": "self"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "number",
-       "heal"
-      ]
-     }
-    ],
+    "automation": "manual",
+    "actions": [],
     "triggers": [],
     "effects": [],
     "resources": []
    },
    "old_audit": {
     "gap": "resource",
-    "need": "缺少消耗角色未使用的生命骰（Hit Dice）并掷骰回血的引擎接口",
+    "need": "缺少将特定法术的消耗重定向至专长固有免费池（freeCast）或任意可用法术位的机制",
     "now": false
    }
   },
   {
-   "key": "XPHB:spell:钢风斩",
-   "name": "钢风斩",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
+   "key": "XPHB:魔能长枪",
+   "name": "魔能长枪",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "施展所选的魔契师戏法时，射程增加 30 × 魔契师等级 尺。这是对其他法术射程的修改，引擎无法自动化，需手动加上。可多次选择，每次须选不同的戏法（选择在建卡时完成）。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少跨条目动态增加特定戏法施法距离（30×魔契师等级）的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔契师:创造奴仆:14",
+   "name": "创造奴仆",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "（旧日支配者宗主）你施展异怪召唤术时可以修改它使其无需专注：这样施法时持续时间变为 1 分钟，并且召唤来的异怪获得等于你魔契师等级 + 魅力调整值的临时生命值；此外该异怪每回合第一次命中受你的脆弱诅咒影响的生物时，额外造成等于该法术附加伤害的心灵伤害。这两条都要改写另一个法术（异怪召唤术）召唤出来的生物，引擎做不到，请手动处理：先照常施展异怪召唤术，不接受专注提示并把持续时间记为 1 分钟，给异怪手动加临时生命值（数值 = 魔契师等级 + 魅力调整值），它命中被脆弱诅咒的目标时在日志里手动补一次等价的心灵伤害（该法术当前的附加伤害）。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少改写召唤法术专注需求与持续时间、强化召唤物生命值以及协同触发诅咒伤害的随从修饰机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔契师:斗转星移:10",
+   "name": "斗转星移",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
    "automation": "partial",
-   "text": "选择 30 尺内最多 5 个可见生物，对每个生物分别进行一次近战法术攻击，命中造成 6d10 力场伤害。攻击结算后可传送到目标之一周围 5 尺内可见的未占据空间（传送需手动处理）。",
+   "text": "反应（长休前一次，次数记在资源池「斗转星移」）：一个你能看见的敌人的攻击检定命中你后，那次攻击的伤害减半，然后迫使攻击者做一次感知豁免（DC = 你的法术豁免 DC），失败则受到等同于你本次实际承受伤害的心灵伤害。引擎在你被命中时问要不要用，选「用」之后伤害减半，并在伤害掷出后自动完成攻击者的豁免与反击（心灵伤害 = 掷出的伤害 ÷ 2）。反应在命中那一刻问、不等伤害掷出：只有那时才分得出「这是一次攻击命中」——挂到伤害窗口的话，法术的豁免伤害也会来问。日志里「获得 / 结束『斗转星移：反击』」那两行是串起这两步用的临时标记，不用管。要人处理的：①若你对这次伤害还有抗性 / 免疫 / 其他减伤，或伤害被别人代受，实际承受的更少，请手动把攻击者受到的心灵伤害改小；②魅惑免疫在人物卡数据里只是一条说明，战斗里不会自动拦下魅惑状态。反应被用掉后，可以消耗一个契约魔法法术位（无需动作）重置使用权。",
    "data": {
     "automation": "partial",
     "actions": [
      {
-      "id": "cast",
-      "name": "钢风斩",
-      "activation": "action",
+      "id": "use",
+      "name": "斗转星移：消耗契约魔法法术位重置",
+      "activation": "free",
       "cost": [
        {
         "slot": {
-         "min": 5
+         "min": 1,
+         "max": 5
         }
        }
       ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.resource('beguiling-defenses') < 1",
+      "root": [
+       "resource"
+      ]
+     }
+    ],
+    "triggers": [
+     {
+      "id": "bewilder",
+      "label": "斗转星移：伤害减半并反击攻击者",
+      "on": "attackHit",
+      "role": "target",
+      "window": "before",
+      "when": "attacker.isEnemyOf(self) && canSee(self, attacker)",
+      "cost": [
+       {
+        "economy": "reaction"
+       },
+       {
+        "resource": "beguiling-defenses"
+       }
+      ],
+      "modify": [
+       "halveDamage"
+      ],
+      "do": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "斗转星移：反击",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       },
+       "endsOn": [
+        {
+         "event": "damageApplied"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "source",
+    "need": "缺少在受击/减伤后对攻击者（attacker）迫使豁免并反弹等额心灵伤害的能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔契师:光耀之魂:6",
+   "name": "光耀之魂",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "获得光耀伤害抗性（人物卡已算）。每回合一次，当你施展的法术造成光耀伤害或火焰伤害时，可以把魅力调整值加到该法术对其中一个目标造成的伤害上。引擎没有法术伤害结算前的修改窗口，此加伤需要人手动处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少法术造成特定类型（光耀/火焰）伤害时向其中一个目标的伤害包增加魅力调整值的修改窗口",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔契师:骇异恶咒:10",
+   "name": "骇异恶咒",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "你始终准备着脆弱诅咒法术（静态层已经在人物卡上准备好这道法术）。当你施展脆弱诅咒、并为它选择了一项属性时，目标在法术持续时间内还会在以这项属性进行的豁免上具有劣势。已自动化：施法完成时会弹出一次「脆弱诅咒选了哪项属性」的选择，选中后自动给被诅咒的目标挂上「骇异恶咒」，把所选属性记在效应里，此后它用这项属性做的任何豁免检定都会自动带劣势（其他属性的豁免不受影响）；再施展一次脆弱诅咒换到别的生物身上时，会重新问一次、挂到新目标上，旧目标身上的自动移除。要人处理的一件事：效应结束的时间 —— 引擎没有「随另一个法术的专注一起结束」的写法，这里是每到一个回合边界先检查施法者身上还有没有脆弱诅咒，没有就移除；如果专注在别人的回合里提前断掉，这个劣势最多多留到本回合结束，请在目标身上手动删除「骇异恶咒」。另：脆弱诅咒自己那条「所选属性的属性检定具有劣势」仍归法术那边（未自动化），不在本条目里。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "eldritchHex",
+      "label": "骇异恶咒",
+      "on": "spellCast",
+      "role": "actor",
+      "window": "after",
+      "when": "event.key == 'XPHB:spell:脆弱诅咒'",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "choose",
+       "applyEffect"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "remember",
+    "need": "缺少施法时选定属性并记录进效应状态（state）、令目标该属性豁免具有劣势的记忆机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔契师:唤醒心灵:3",
+   "name": "唤醒心灵",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "以附赠动作与 30 尺内一个你可见的生物建立心灵连结；交流距离上限为魅力调整值（里，至少 1 里），双方需通晓同一语言。持续时间为魔契师等级（分钟），由人手动结束；建立新连结时旧连结自动结束。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "唤醒心灵",
+      "activation": "bonus",
+      "cost": [],
       "targeting": {
        "type": "creature",
-       "count": 5,
+       "count": 1,
        "range": 30,
        "filter": "canSee(self, target)"
       },
@@ -922,94 +260,7 @@
       "concentration": null,
       "requires": null,
       "root": [
-       "attack"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "move",
-    "need": "缺少攻击全部结算后在所选目标周围5尺内进行网格传送的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:spell:高等复原术",
-   "name": "高等复原术",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "触碰一名生物，选择并移除其身上的下列效应之一：1 级力竭；魅惑或石化状态；一道诅咒（含同调诅咒）；一项属性值减损；生命值上限的降低。属性减损与生命上限恢复需手动调整。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "高等复原术",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 5
-        }
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": "touch"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "choose"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "condition",
-    "need": "缺少自动恢复被降低的生命值上限与属性减损的接口",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:spell:隔离术",
-   "name": "隔离术",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "触碰一个物件或自愿生物，以魔法将其隔离并陷入静滞。受术生物陷入昏迷并获得隐形状态，不会衰老且不需要进食/饮水/呼吸，不会被预言学派法术作为目标或被魔法侦测。持续至受到任何伤害或预设的触发条件达成（预设解除条件需手动判定）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "隔离术",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 7
-        }
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": "touch"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
+       "removeEffect",
        "applyEffect"
       ]
      }
@@ -1017,24 +268,116 @@
     "triggers": [],
     "effects": [
      {
-      "name": "隔离",
+      "name": "唤醒心灵：链接",
       "statics": [],
       "flags": null,
       "rollMods": 0,
       "triggers": 0,
       "duration": {
-       "endsOn": [
-        {
-         "event": "damageTaken"
-        }
-       ],
        "manual": true
       }
      }
     ],
     "resources": []
    },
-   "old_audit": null
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少心灵感应通信连结（跨距离心电感应交流）的系统支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔契师:锐眼斗士:6",
+   "name": "锐眼斗士",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "用唤醒心灵与生物形成连结时，可迫使其进行感知豁免（DC 为你的法术豁免 DC）；失败则连结期间它对你的攻击检定具有劣势，你对它的攻击检定具有优势。使用后直到短休或长休前不能再用，除非消耗一个契约魔法法术位（无需动作）复原使用次数。只能紧接唤醒心灵使用、连结结束时移除效果，由人处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "锐眼斗士",
+      "activation": "free",
+      "cost": [
+       {
+        "resource": "use"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     },
+     {
+      "id": "reset",
+      "name": "锐眼斗士：复原使用次数",
+      "activation": "free",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.resource('use') < 1",
+      "root": [
+       "resource"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "锐眼斗士：连结",
+      "statics": [],
+      "flags": null,
+      "rollMods": 2,
+      "triggers": 0,
+      "duration": {
+       "manual": true
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少与另一特性效应（唤醒心灵连结）生命周期绑定的联动机制及在前置特性使用时附带触发的能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔契师:思维之盾:10",
+   "name": "思维之盾",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "心灵抗性已在人物卡（静态）。思维不可被心灵感应阅读属于纯叙事，不处理。每当一个生物对你造成心灵伤害，该生物受到等同于你所承受伤害的伤害：反射对象是伤害来源，引擎的伤害节点无法指定来源，需人工处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "source",
+    "need": "缺少受到伤害后将伤害反射/施加给伤害来源（source/attacker）的节点目标支持",
+    "now": false
+   }
   }
  ]
 }

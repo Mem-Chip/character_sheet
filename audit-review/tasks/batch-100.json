@@ -1,0 +1,634 @@
+{
+ "batch": "batch-100",
+ "count": 10,
+ "entries": [
+  {
+   "key": "XPHB:spell:炽焰法球",
+   "name": "炽焰法球",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。在 60 尺内地面上的一处未被占据的空间创造一颗直径 5 尺的炽焰法球（所以施法瞬间不会有生物被它打中）。任何生物在火球周围 5 尺内结束其回合时必须进行敏捷豁免，失败受 (slot.level)d6 火焰伤害（2 环 2d6，每高一环 +1d6），成功减半；法球被移入某名生物所占据的空间时，该生物也做同样的豁免，法球在该回合内停止移动。你可以用附赠动作把法球沿地面移动 30 尺：引擎不会移动区域、界面也只能删掉重画（重画出来的区域带不了本法术的豁免与升环），请在棋盘上标记法球的新位置；「被移入空间」与「在法球 5 尺内（相邻格）结束回合」这两次豁免用「炽焰法球：法球豁免」结算。法球散发 20 尺明亮光照与额外 20 尺微光、被它触碰的未着装或携带的可燃物件会开始燃烧：这两条请人工记录。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "炽焰法球",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 60,
+       "area": {
+        "shape": "sphere",
+        "radius": 5
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "note",
+       "zone"
+      ]
+     },
+     {
+      "id": "move",
+      "name": "炽焰法球：移动法球",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && self.hasEffect('炽焰法球（激活）')",
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "save",
+      "name": "炽焰法球：法球豁免",
+      "activation": "free",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "filter": "ask('炽焰法球：这个生物是被法球移入了它占据的空间，或者在法球周围 5 尺内结束其回合（但不在区域格子里）吗？')"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('炽焰法球（激活）')",
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "炽焰法球",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少可移动的地图区域/实体（附赠动作移动撞击并在邻近生物回合结束时触发豁免）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:臭云术",
+   "name": "臭云术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。以 90 尺内一点为中心创造半径 20 尺恶臭气体球状区域。在云团内开始其回合的生物进行体质豁免，失败陷入中毒状态直到其当前回合结束，期间无法执行动作或附赠动作（引擎按区域的回合开始时机自动结算）。云团内的重度遮蔽与「强风吹散」需人工处理；云团留在空中、不随施法者移动也需人工判定。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "臭云术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 90,
+       "area": {
+        "shape": "sphere",
+        "radius": 20
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "zone",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "恶心呕吐",
+      "statics": [],
+      "flags": {
+       "blocks": [
+        "action",
+        "bonus"
+       ]
+      },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "bearer",
+        "nth": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少地图持续区域实体（在云团内开始回合触发体质豁免与状态附加）及遮蔽规则",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:篡改记忆",
+   "name": "篡改记忆",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "30 尺内指定一可见生物进行感知豁免（若正与该生物战斗则其豁免具有优势，优势需手动指定）。失败陷入魅惑与失能状态（专注至多 1 分钟）。受到任何伤害或成为另一法术的目标时法术提前终止。具体记忆重塑与升环追溯范围需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "篡改记忆",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "篡改记忆",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1,
+       "endsOn": [
+        {
+         "event": "damageApplied",
+         "when": "event.target == self.id && event.total > 0"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "复杂记忆重塑与长叙事事件回溯属于DM叙事判定范畴",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:催眠图纹",
+   "name": "催眠图纹",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。在 120 尺内边长 30 尺立方区域内创造彩色图纹，区域内能看见图纹的生物必须进行感知豁免，失败陷入魅惑状态，且在魅惑期间陷入失能状态、速度降为 0。受术生物受到任何伤害、或有其他生物用动作将其摇醒时提前终止（摇醒与视线需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "催眠图纹",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "cube",
+        "size": 30
+       },
+       "filter": "ask('目标能看见催眠图纹吗？')"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "催眠图纹",
+      "statics": [
+       "speedSet"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "endsOn": [
+        {
+         "event": "damageTaken"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "缺少视线能见度自动检测（仅影响能看见图纹的生物）及盟友花费动作摇醒解除状态的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:摧心术",
+   "name": "摧心术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "目标进行智力豁免，失败受 10d12 心灵伤害并无法施法与执行魔法动作（每 30 日可重复豁免，高等复原术/医疗术/祈愿术可解除）；成功受半数伤害。无法执行魔法动作与 30 日重复豁免需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "摧心术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 8
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 150,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "摧心术",
+      "statics": [],
+      "flags": {
+       "cannot": [
+        "castSpells"
+       ]
+      },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "manual": true
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:脆弱诅咒",
+   "name": "脆弱诅咒",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "以附赠动作诅咒 90 尺内一名你能看见的生物，专注至多 1 小时。施法时选一项属性：目标在持续时间内进行该属性的属性检定时具有劣势（已自动）。你对命中该目标的任意攻击额外造成 1d6 黯蚀伤害（已自动）。升环施法把专注延长到 4 / 8 / 24 小时，以及「目标生命值降至 0 后你可以用附赠动作用同一个诅咒换一个目标」引擎做不了，请手动：专注时长按 1 小时记；换目标时先在旧目标身上移除「脆弱诅咒」，再对新目标重新施放一次（会重新扣一个法术位，请在资源里手动退回来）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "脆弱诅咒",
+      "activation": "bonus",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 90,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "choose",
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "脆弱诅咒",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 1,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "缺少施法时指定单项属性检定劣势以及目标归零后以附赠动作转移诅咒的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:地震术",
+   "name": "地震术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "500 尺内以一点为中心 100 尺圆形范围持续震颤（专注 1 分钟）。地面为困难地形。施展及施法者回合结束时，地面生物敏捷豁免，失败倒地且专注被打断；裂缝与建筑崩塌效应需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "地震术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 8
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 500,
+       "area": {
+        "shape": "cylinder",
+        "radius": 100
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "forEach",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "地震震颤",
+      "statics": [],
+      "flags": {
+       "breaksConcentration": true
+      },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:动物形态",
+   "name": "动物形态",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "30 尺内任意数量自愿生物变形为 CR 不超过 4 且体型不大于大型的野兽形态，持续 24 小时。目标无法施法且无法使用装备；获得等同于首个形态生命值的临时生命值（需手动填入）。野兽数据替换、后续魔法动作再次变形及附赠动作结束形态需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "动物形态",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 8
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "range": 30
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "动物形态",
+      "statics": [],
+      "flags": {
+       "cannot": [
+        "castSpells"
+       ]
+      },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "hours": 24
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:法师护甲",
+   "name": "法师护甲",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "未着装护甲的目标 AC 获得 +3 加值（等效于基础 AC 变为 13 + 敏捷调整值，持续 8 小时）；与其它计算基础 AC 的特性（如无甲防御）不叠加、着装护甲时法术提前终止需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "法师护甲",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "法师护甲",
+      "statics": [
+       "ac"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "hours": 8
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少着装护甲时自动终止法术以及非装甲基础AC计算方式互斥的底层支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:法术无效结界",
+   "name": "法术无效结界",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。在你周围创造固定的 10 尺放射微光屏障。在屏障外施展的 5 环或更低环阶法术（升环施法时，使用的法术位每比六环高一环，屏障能阻挡的法术就高一环）无法影响屏障内的任何生物、物件或区域（阻挡法术效应与屏障空间排除需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "法术无效结界",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 6
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": "self",
+       "area": {
+        "shape": "emanation",
+        "radius": 10
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "法术无效结界",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  }
+ ]
+}

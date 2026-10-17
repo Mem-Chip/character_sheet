@@ -1,0 +1,572 @@
+{
+ "batch": "batch-103",
+ "count": 10,
+ "entries": [
+  {
+   "key": "XPHB:spell:怪影杀手",
+   "name": "怪影杀手",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "以 120 尺内一点为中心半径 30 尺球状区域内的生物进行感知豁免，失败受到 10d10 心灵伤害并陷入恐慌（专注至多 1 分钟），成功受半伤。恐慌目标在其每回合结束时进行感知豁免，成功终止效应，失败受到 5d10 心灵伤害（失败伤害需手动扣除）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "怪影杀手",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 9
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "sphere",
+        "radius": 30
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "怪影杀手",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "saveEnds": {
+        "ability": "wis",
+        "at": "turnEnd"
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:哈达之欲",
+   "name": "哈达之欲",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。以 150 尺内一点为中心出现半径 20 尺的球状黑暗区域（画在地图上，随专注结束消失）。区域是困难地形、任何光照（含魔法光照）都照不亮它、还发散着 30 尺内可闻的不谐耳语与啜嚼噪音 —— 地形、光照、声音引擎都不处理，请人工裁定。「完全进入区域内的生物陷入目盲」：引擎在施放当下和之后每次进入时会自动挂上「哈达之欲：目盲」，但判断不了「完全位于」与「已经离开」—— 边缘只擦到一点的、以及离开（或不再完全位于）区域的，请在它的详情抽屉里手动增删。「任何在区域内开始其回合的生物受 2d6 寒冷伤害」与「任何在区域内结束其回合的生物进行敏捷豁免、失败受 2d6 强酸伤害」（原文成功不减半）都已按回合时机分区域结算。升环施法时每比三环高一环、由你选择的那一种伤害 +1d6（施放时会问你选哪一种）。引擎的区域里分不出「开始回合」和「结束回合」两种时机，所以这条法术会在地图上放三个重叠的区域（进入挂目盲 / 开始回合结算寒冷 / 结束回合结算强酸）—— 名字相同是正常的，专注结束时它们一起消失。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "哈达之欲",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 150,
+       "area": {
+        "shape": "sphere",
+        "radius": 20
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "choose",
+       "applyEffect",
+       "note",
+       "forEach",
+       "zone"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "哈达之欲：目盲",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     },
+     {
+      "name": "哈达之欲",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少地图持续区域实体（困难地形、魔法黑暗视线阻隔、回合开始受寒冷与回合结束受强酸伤害）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:海啸术",
+   "name": "海啸术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "施法时间 1 分钟。升起至多长 300 尺、高 300 尺、厚 50 尺的水墙（专注至多 6 轮）。出现时区域内生物进行力量豁免，失败受 6d10 钝击伤害，成功半数；水墙后续推进移动、生物卷入力量豁免（受 5d10 递减伤害）、水下运动检定移动与掉落需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "海啸术",
+      "activation": {
+       "minutes": 1
+      },
+      "cost": [
+       {
+        "slot": {
+         "min": 8
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 5280,
+       "area": {
+        "shape": "line",
+        "length": 300,
+        "width": 50
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "rounds": 6
+      },
+      "requires": null,
+      "root": [
+       "forEach",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:黑暗术",
+   "name": "黑暗术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 60 尺内指定一点，扩散出半径 15 尺的球状魔法黑暗：区域会画在地图上、随专注结束消失，生物进入时日志会提示它处在魔法黑暗中（黑暗视觉看不穿、非魔法光无法照亮 —— 引擎不处理视线与光照，请人工裁定）。区域与 2 环或更低环阶造光法术重叠时解除那些法术（引擎不处理区域重叠，请人工解除）。也可以施展在未被着装或携带的物件上形成源自该物件的 15 尺光环：区域跟着物件走、用不透明的东西遮住物件就隔绝黑暗，这两条请人工处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "黑暗术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 60,
+       "area": {
+        "shape": "sphere",
+        "radius": 15
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "note",
+       "zone"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "缺少地图魔法黑暗区域的光照遮蔽判定以及驱散低环造光法术的互动机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:虹光法墙",
+   "name": "虹光法墙",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "manual",
+   "text": "持续 10 分钟。在 60 尺内一点创造至多长 90 尺高 30 尺的垂直墙壁或直径 30 尺的球体。法墙发出 100 尺明亮光照与 100 尺微光光照；施法时可指定任意生物免疫墙体伤害并可穿行。其他能看见法墙的生物移动到距墙 20 尺内或在该处开始回合须进行体质豁免，失败陷入目盲 1 分钟。穿过法墙的生物逐层穿过七层光层并进行敏捷豁免（红12d6火、橙12d6酸、黄12d6雷、绿12d6毒、蓝12d6寒、靛束缚及累计石化、紫目盲及放逐至异界）。法墙具 AC 10 且须由红至紫按特定方式逐层摧毁。由于七层复合防御、环境光照与复杂地形阻挡交互，需手动处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "虹光法墙",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 9
+        }
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:虹光喷射",
+   "name": "虹光喷射",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "向 60 尺锥状区域喷射彩光。区域内每名生物进行一次敏捷豁免，并掷 1d8 决定受到的射线（1红:12d6火焰; 2橙:12d6强酸; 3黄:12d6闪电; 4绿:12d6毒素; 5蓝:12d6寒冷，成功均半伤; 6靛:束缚及石化判定; 7紫:目盲及位面放逐; 8特殊:承受两道射线）。具体射线类型与多阶段状态需手动结算。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "虹光喷射",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 7
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 60,
+       "area": {
+        "shape": "cone",
+        "length": 60
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:花言巧语",
+   "name": "花言巧语",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "持续 1 小时。每次进行魅力检定时可以用 15 代替掷出的数值；判断是否说谎的魔法将你的话视为真实（谎言判定需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "花言巧语",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 8
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "花言巧语",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": {
+       "hours": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:缓慢术",
+   "name": "缓慢术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。指定 120 尺内 40 尺立方区域至多 6 个生物进行感知豁免，失败速度减半、AC 和敏捷豁免-2、不能执行反应。其每回合只能在动作或附赠动作中二选一、攻击动作只能发动一次攻击、施展带姿势成分法术有 25% 概率失败（需手动判定）。受术者在其每回合结束时可再进行一次感知豁免，成功则终止效应。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "缓慢术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 6,
+       "range": 120
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "缓慢",
+      "statics": [
+       "speed",
+       "ac"
+      ],
+      "flags": {
+       "blocks": [
+        "reaction"
+       ]
+      },
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少动作/附赠动作二选一、攻击动作限制仅能攻击一次、以及姿势成分施法概率延迟的复合状态限制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:徽记术",
+   "name": "徽记术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "施法耗时 1 分钟。在表面或物件上刻下有害符纹并设定触发条件。触发时以符纹为中心照亮 60 尺半径球状区域 10 分钟。区域内的生物根据施法时选择的徽记承受对应效应：死亡（体质豁免受 10d10 暗蚀伤害，成功减半）、争斗（感知豁免，失败 1 分钟内攻击和属性检定具有劣势）、恐惧（感知豁免，失败恐慌 1 分钟且必须远离）、痛苦（体质豁免，失败失能 1 分钟）、睡眠（感知豁免，失败昏迷 10 分钟）、震慑（感知豁免，失败震慑 1 分钟）。符纹触发条件与生物移动触发需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "徽记术",
+      "activation": {
+       "minutes": 1
+      },
+      "cost": [
+       {
+        "slot": {
+         "min": 7
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": "touch",
+       "area": {
+        "shape": "sphere",
+        "radius": 60
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "徽记：争斗",
+      "statics": [],
+      "flags": null,
+      "rollMods": 2,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     },
+     {
+      "name": "徽记：恐惧",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     },
+     {
+      "name": "徽记：痛苦",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     },
+     {
+      "name": "徽记：睡眠",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 10,
+       "endsOn": [
+        {
+         "event": "damageTaken"
+        }
+       ]
+      }
+     },
+     {
+      "name": "徽记：震慑",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:回生术",
+   "name": "回生术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "触碰在前 1 分钟内刚刚死亡的一名生物，使其以 1 点生命值回生。无法复活老死的生物，也不能恢复失去的身体部位（需在界面上手动移除死亡状态并设置生命值为 1）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "回生术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少将死亡（dead）生物复活、移除死亡标记并将当前生命值设为1的复活接口",
+    "now": false
+   }
+  }
+ ]
+}

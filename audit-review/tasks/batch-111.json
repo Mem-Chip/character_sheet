@@ -1,0 +1,548 @@
+{
+ "batch": "batch-111",
+ "count": 10,
+ "entries": [
+  {
+   "key": "XPHB:spell:识破隐形",
+   "name": "识破隐形",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "持续 1 小时。施法者能看见任何处于隐形状态的生物和物件，如同其正常可见一样；并能看见以太位面（看见隐形生物需在询问视线时确认或手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "识破隐形",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "识破隐形",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "hours": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "缺少视线系统对隐形生物/物件的视觉穿透特异感知（透视隐形）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:守护之链",
+   "name": "守护之链",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "建立神秘连接，持续 1 小时。目标位于施法者 60 尺内时，AC 和所有豁免检定 +1，且对所有伤害具有抗性。每当目标受到伤害时施法者受到相同伤害；施法者生命值降至 0 或双方相距超过 60 尺时法术终止（伤害分担与距离超出终止需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "守护之链",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "守护之链",
+      "statics": [
+       "ac",
+       "resistAll"
+      ],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": {
+       "hours": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "source",
+    "need": "受术者受伤害时将等量伤害同步传递给施法者（source），以及超出60尺自动终止法术的距离监听",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:守卫刻文",
+   "name": "守卫刻文",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "施法耗时 1 小时。在表面或物件上刻画刻纹并设定触发条件。可选择爆炸符文（触发时 20 尺半径球状区域内每个生物进行敏捷豁免，失败受 (2 + slot.level)d8 点强酸/寒冷/火焰/闪电/雷鸣伤害，成功减半）或法术刻纹（储存一道已准备且环阶不超过此法术位的法术，触发时释放）。符文触发判定与法术储存需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "守卫刻文",
+      "activation": {
+       "minutes": 60
+      },
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": "touch",
+       "area": {
+        "shape": "sphere",
+        "radius": 20
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少在地图/物体上埋设触发式陷阱铭文以及储存嵌套法术并在触发时自动施展的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:术法爆发",
+   "name": "术法爆发",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "远程法术攻击，命中造成 1d8（随等级成长）自选类型伤害（强酸、寒冷、火焰、闪电、毒素、心灵、雷鸣）。若掷出 8 可追加 d8 伤害（最多等同于施法属性调整值个额外 d8 伤害骰，需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "术法爆发",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 120
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "伤害骰缺少骰出最大点数时爆炸追加骰子（exploding dice）的语法与上限控制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:树跃术",
+   "name": "树跃术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。获得在活树之间传送的能力：在你的每个回合内限一次，可消耗 5 尺移动力进入一棵至少与你同等大小的活树，感知 500 尺内所有同类树木位置，并消耗 5 尺移动力从其中一棵活树 5 尺内出现；必须在树外结束回合（树木传送与移动消耗需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "树跃术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "树跃术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少利用地图植物环境作为传送门消耗5尺移动力进行节点传送的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:睡眠术",
+   "name": "睡眠术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。以 60 尺内一点为源点 5 尺半径球状区域内所选生物须进行感知豁免，失败则失能至其下回合结束；届时须重复豁免，失败陷入昏迷。目标受到伤害或专注结束时法术终止。免疫力竭、无需睡眠的生物自动成功，以及用动作摇醒需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "睡眠术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 60,
+       "area": {
+        "shape": "sphere",
+        "radius": 5
+       },
+       "filter": "ask('这是你选择的目标吗？')"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "睡眠术：失能",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 1
+       },
+       "endsOn": [
+        {
+         "event": "damageTaken"
+        }
+       ]
+      }
+     },
+     {
+      "name": "睡眠术：昏迷",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "endsOn": [
+        {
+         "event": "damageTaken"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少特定免疫标签（免疫力竭/无需睡眠生物豁免自动成功）及第三方花费动作唤醒的交互机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:死亡一指",
+   "name": "死亡一指",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "60 尺内可见生物进行体质豁免，失败受到 7d8 + 30 点暗蚀伤害，成功则伤害减半。若杀死了类人生物，在施法者下一回合开始时将其唤起为受其控制的丧尸（丧尸召唤与操控需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "死亡一指",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 7
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:死云术",
+   "name": "死云术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 120 尺内指定一点创造半径 20 尺球状剧毒浓雾（视为重度遮蔽，浓雾与遮蔽需人工处理）。区域内的生物进行体质豁免，失败受 (slot.level)d8 毒素伤害（5 环 5d8，每高一环 +1d8），成功半数；区域移动到生物空间、生物进入区域或在其中结束回合时同样须进行该豁免（每名生物每回合限一次）。在你的每个回合开始时，球状区域会往远离你的方向移动 10 尺 —— 引擎的区域不会自己动，请手动在地图上挪动区域。浓雾被强风（比如造风术）吹散时法术解除，请人工删掉区域并结束专注。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "死云术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "sphere",
+        "radius": 20
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "note",
+       "forEach",
+       "zone"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少在施法者每回合开始时沿施法者视线方向自动移动10尺的重度遮蔽毒雾区域实体",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:塔莎狂笑术",
+   "name": "塔莎狂笑术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。目标感知豁免失败则陷入倒地和失能，且无法凭自己结束倒地状态（在界面上点「起立」不会真的起来，只会白扣一半移动力，请留意）。目标在其每回合结束时、以及受到伤害时各可再做一次感知豁免，成功即结束法术。因受到伤害而做的这次豁免具有优势——引擎分不清这次豁免是不是因受伤而来，掷骰时会弹窗确认，答「是」才加优势。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "塔莎狂笑术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": "slot.level",
+       "range": 30,
+       "filter": "target.id != self.id && canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "塔莎狂笑术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 1,
+      "duration": {
+       "saveEnds": {
+        "ability": "wis",
+        "at": "turnEnd"
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少禁止结束倒地状态（起立）的限制标记，以及受伤害触发的豁免缺少来源事件标签以自动套用优势",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:塔莎泡泡坩埚",
+   "name": "塔莎泡泡坩埚",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "在 5 尺内地面未占空间咒唤一口冒泡大锅，持续 10 分钟。大锅复制一种自选的普通或非普通药剂（如治疗药水）。施法者或盟友可以附赠动作从中捞出一瓶药水，可产生瓶数等同于施法属性调整值（最少 1 瓶）。取出最后一瓶后大锅消失。药剂选择、瓶数追踪与饮用效果需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "塔莎泡泡坩埚",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 6
+        }
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": 5
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "塔莎泡泡坩埚：捞取药水",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  }
+ ]
+}

@@ -1,0 +1,334 @@
+{
+ "batch": "batch-066",
+ "count": 10,
+ "entries": [
+  {
+   "key": "XPHB:游荡者:击昏（花费：6d6）:14",
+   "name": "击昏（花费：6d6）",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "诡诈打击选项，花费 6d6 偷袭骰：需人工从偷袭伤害中扣除（引擎没有偷袭骰池）。目标进行体质豁免（DC = 8 + 敏捷调整值 + 熟练加值）；失败则陷入昏迷，持续 1 分钟。昏迷的目标在自己的回合结束时可以重新豁免，通过即结束；受到任何伤害也会结束。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "knockout",
+      "label": "击昏（花费：6d6）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "(attack.finesse || attack.ranged) && (roll.adv || (allyWithin(target, 5, { exclude: [self], notCond: '失能' }) && !roll.disadv))",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "save"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少从偷袭伤害中扣除6d6伤害骰的资源抵扣机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游荡者:极效潜行:9",
+   "name": "极效潜行",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "诡诈打击新选项「无声袭击」（花费 1d6）：若你通过躲藏获得隐形，且回合结束时仍处于掩护中或掩护之后，本次攻击不会使这个隐形结束。诡诈打击的花费与选项需在「诡诈打击」条目中加入；隐形的结束由 DM 手动处理，本条目无法自动化。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少攻击时不破除躲藏隐形状态的条件豁免机制，且缺少扣除偷袭骰支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游荡者:进阶诡诈打击:11",
+   "name": "进阶诡诈打击",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "偷袭时可以一次性选用两种诡诈打击效果，每种都要独立扣除对应的偷袭伤害骰。诡诈打击的选项与扣骰都由人处理（引擎没有偷袭骰池，也不在本条里写诡诈打击选项）。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少支持同时激活两种诡诈打击并分别扣除相应偷袭骰的复合选项机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游荡者:可靠才能:7",
+   "name": "可靠才能",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "属性检定可以运用技能或工具熟练时，可以把 d20 掷出的 9 及以下视为 10。是否可以运用熟练、以及是否选择使用，由人在 ask 中确认。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "RollFilter和roll上下文缺少判断该检定是否具备熟练项（skill/tool proficiency）的属性",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游荡者:快手:3",
+   "name": "快手",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "附赠动作可用于：巧手（敏捷（巧手）检定，开锁、解除陷阱或扒窃，DC 由 DM 定，手动处理）；使用物件（附赠动作换得一个动作，只能用于操作动作，或要求该动作的魔法物品的魔法动作，这一限制由人遵守）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "sleight",
+      "name": "快手（巧手）",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "object",
+      "name": "快手（使用物件）",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "economy",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "附赠动作操作物件或激活魔法物品缺少物品具体动作接口，开锁与扒窃属于DM手动判定范畴",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游荡者:灵振诀窍:3",
+   "name": "灵振诀窍",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "用熟练的技能或工具做属性检定失败时，可以掷一颗灵能骰加到结果上；只有加完变为成功才消耗这颗骰子。引擎无法判断检定是否用到熟练项，询问时请自行确认。灵能骰池按 2 × 熟练加值计，骰子大小随游荡者等级成长（5 级 d8、11 级 d10、17 级 d12）；短休恢复一颗的部分手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "knack",
+      "label": "灵振诀窍：+灵能骰（仅限熟练的技能 / 工具）",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "when": "roll.kind == 'check' && roll.failing",
+      "cost": [
+       {
+        "resource": "灵能力量"
+       }
+      ],
+      "modify": [
+       "addToRoll"
+      ],
+      "do": [
+       "if"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "检定缺少判断是否运用熟练项的属性（roll.proficient），且缺少短休恢复单颗灵能骰的恢复规则",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游荡者:窃盗本能:17",
+   "name": "窃盗本能",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "每次战斗的第一轮可以行动两个回合：第二个回合以先攻减 10 行动。引擎没有额外回合与先攻顺序的机制，需要人手动处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少在首轮以先攻-10插入第二个完整个人回合的战斗行动轮次调度机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游荡者:使用魔法装置:13",
+   "name": "使用魔法装置",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "【同调】你最多可以同时同调于四个魔法物品（注意：物品页现在把同调上限写死成 3，第四个还同调不了，需要时请手动处理） —— 这是物品 / 人物卡那边的静态上限，引擎不检查，请自己留意（超了就手动拒绝同调）。【充能】每当你使用一个魔法物品消耗充能的特性时，投一个 1d6，结果为 6 则本次不消耗充能 —— 引擎没有「扣充能」这个窗口，也没法拦下扣充能的那一下，请手动：用完自己掷 1d6，出 6 就在详情抽屉里把那一发充能加回去。【卷轴】已自动化的只有检定那一步：点「使用魔法装置：阅读卷轴」，填卷轴记载的法术环阶 —— 戏法与一环直接可用；二环及以上引擎会掷一次智力（奥秘）检定，DC = 10 + 该法术的环阶，失败会提示你卷轴化为尘埃。要人处理的：①这条动作只掷检定、不代你施展法术：卷轴里的法术本身仍按那道法术的数据在战斗里结算（引擎没有「从卷轴施法」的入口，「以智力作为施法关键属性」也改不了 —— 法术攻击加值 / 豁免 DC 用的是你卡上的数值，与你的智力施法数值不同时请手动改）；②戏法与一环「稳定可用」也只由这条动作给个提示，法术照常施放。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "scroll",
+      "name": "使用魔法装置：阅读卷轴",
+      "activation": "free",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "number",
+       "if"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少魔法物品充能消耗事件与掷骰免消耗判定（掷出6不扣充能）的物品互动机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游荡者:摔绊（花费：1d6）:5",
+   "name": "摔绊",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "狡诈打击选项，花费 1d6 偷袭骰。偷袭骰减 1d6 由人手动处理（引擎无法减少偷袭骰），由人确认是否使用。仅对大型及以下目标生效；目标进行敏捷豁免（DC 为狡诈打击通用公式 8 + 敏捷调整值 + 熟练加值），失败则倒地，直到移除。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "trip",
+      "label": "摔绊（花费：1d6）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "target.size != '巨型' && target.size != '超巨型' && ask('这次命中是否造成了偷袭伤害，并用 1d6 偷袭骰选择摔绊？')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "save"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少从偷袭伤害中抵扣1d6伤害骰的资源联动机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游荡者:撕裂心智:17",
+   "name": "撕裂心智",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "用心灵之刃对生物造成偷袭伤害时，可迫使其进行感知豁免（DC 8 + 熟练 + 敏捷），失败则震慑 1 分钟；其回合结束时可重复豁免，成功即结束。「偷袭生效」按攻击条件近似（心灵之刃、灵巧或远程，且具有优势或 5 尺内有盟友），需人确认。每次长休一次；消耗三枚灵能骰（无需动作）可重置。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "reset",
+      "name": "撕裂心智（重置）",
+      "activation": "free",
+      "cost": [
+       {
+        "resource": "灵能力量",
+        "n": 3
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.resource('撕裂心智') == 0",
+      "root": [
+       "resource"
+      ]
+     }
+    ],
+    "triggers": [
+     {
+      "id": "shred",
+      "label": "撕裂心智：感知豁免",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.item == '心灵之刃' && (attack.finesse || attack.ranged) && (roll.adv || (allyWithin(target, 5, { exclude: [self], notCond: '失能' }) && !roll.disadv))",
+      "cost": [
+       {
+        "resource": "撕裂心智"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "save"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少在造成偷袭伤害时触发目标豁免的专用偷袭伤害结算事件（当前只能在attackHit后近似判断）",
+    "now": false
+   }
+  }
+ ]
+}

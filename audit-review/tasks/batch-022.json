@@ -1,95 +1,283 @@
 {
  "batch": "batch-022",
- "count": 20,
+ "count": 10,
  "entries": [
   {
-   "key": "XGE:spell:谭森变形术",
-   "name": "谭森变形术",
-   "kind": "spell",
+   "key": "TCE:德鲁伊:炽烈回生:14",
+   "name": "炽烈回生",
+   "kind": "classFeature",
    "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "专注至多 10 分钟。赋予自身耐久和武艺：获得 50 点临时生命（法术结束时失去）；使用简易或军用武器攻击检定具有优势；武器命中额外造成 2d12 力场伤害；获得所有盔甲、盾牌、简易与军用武器熟练；获得力量和体质豁免熟练；可进行两次攻击；法术期间不能施展法术。法术结束后必须通过 DC 15 体质豁免，否则承受 1 级力竭。",
+   "text": "当你生命值降至 0 且因此陷入昏迷时，若野火灵魄与你相距不超过 120 尺，你可以令灵魄降至 0 生命值，你改为恢复一半最大生命值并立刻站起来。引擎问不了距离，弹出这个触发器时请人回答「灵魄在 120 尺内且存活吗」；灵魄降为 0 并消失也要手动处理。必须完成一次长休才能再次使用。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "blazing-revival",
+      "label": "炽烈回生：免于死亡",
+      "on": "reducedTo0",
+      "role": "target",
+      "window": "before",
+      "when": "ask('野火灵魄在 120 尺内且存活吗？')",
+      "cost": [
+       {
+        "resource": "blazing-revival"
+       }
+      ],
+      "modify": [
+       "setHp"
+      ],
+      "do": [
+       "removeEffect",
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": [
+     {
+      "id": "blazing-revival",
+      "name": "炽烈回生",
+      "formula": 1,
+      "recovery": "long"
+     }
+    ]
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少自身降为0生命值（reducedTo0 before）时牺牲指定召唤物灵魄（令其降为0血）以恢复半数生命值并站起的接口",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:德鲁伊:扩散孢子:10",
+   "name": "扩散孢子",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "处于一体共生状态下，可以用附赠动作将真菌孢子投向至多 30 尺远，在地图上留下一片 10 尺立方的孢子区域，持续 1 分钟（10 轮）。生物移动进入该区域或在该处开始回合时，须进行对抗你法术豁免 DC 的体质豁免，失败受到孢子环绕的伤害（每名生物每回合至多一次）。只要孢子存在，你就不能使用孢子环绕的反应能力。提前消失（再次使用、附赠动作取消、一体共生结束）需要在界面上手动删掉区域。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "谭森变形术",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 6
-        }
-       }
-      ],
+      "name": "扩散孢子",
+      "activation": "bonus",
+      "cost": [],
       "targeting": {
-       "type": "self"
+       "type": "area",
+       "range": 30,
+       "area": {
+        "shape": "cube",
+        "size": 10
+       }
       },
       "trigger": null,
-      "concentration": {
-       "minutes": 10
-      },
-      "requires": null,
+      "concentration": null,
+      "requires": "self.hasEffect('一体共生')",
       "root": [
-       "tempHp",
-       "applyEffect"
+       "applyEffect",
+       "zone",
+       "note"
+      ]
+     },
+     {
+      "id": "dismiss",
+      "name": "取消扩散孢子",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('扩散孢子')",
+      "root": [
+       "removeEffect",
+       "note"
       ]
      }
     ],
     "triggers": [],
     "effects": [
      {
-      "name": "谭森变形术",
+      "name": "扩散孢子",
       "statics": [],
-      "flags": {
-       "cannot": [
-        "castSpells"
-       ]
-      },
-      "rollMods": 1,
-      "triggers": 1,
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
       "duration": null
      }
     ],
     "resources": []
    },
-   "old_audit": null
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少在指定点创建持续存在的10尺立方区域并在生物进入或开始回合时自动触发体质豁免结算的机制",
+    "now": false
+   }
   },
   {
-   "key": "XGE:spell:土石喷发",
-   "name": "土石喷发",
-   "kind": "spell",
+   "key": "TCE:德鲁伊:强化链接:6",
+   "name": "强化链接",
+   "kind": "classFeature",
    "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "120 尺内 20 尺立方区域喷发泥石流，区域内每个生物敏捷豁免，失败受 slot.level d12 钝击伤害，成功半伤（3 环 3d12，每高一环 +1d12）。该区域地面变为困难地形直到被清理（每 5 平方尺至少 1 分钟），困难地形与清理需人工处理。",
+   "text": "在你的野火灵魄存在期间，你施展一个造成火焰伤害或回复生命值的法术时，骰一枚 d8，你在该法术的一次伤害掷骰或治疗掷骰中获得等同于骰出数值的加值。引擎只能自动处理「法术攻击命中后的那次伤害掷骰」：修正挂在法术攻击的伤害包上，每次命中都会问一句「野火灵魄存在，且这个法术造成火焰伤害吗？」，答是就加 1d8（与被加骰的伤害同类型）。引擎做不到、要人工加的部分：① 豁免型法术的伤害掷骰（火球术、燃烧之手这类没有攻击检定的，引擎只在有攻击检定时读施法者的伤害加骰修正）；② 治疗掷骰的加值（治疗结算只读「取最大值」那一类修正，不读加骰）；③ 原文限「该法术的一次」掷骰，引擎每包伤害都会加，多包（灼热射线三束）时只算一次。此外，你施展施法范围非自身的法术时，可以自由选择以你或野火灵魄为发出点 —— 引擎不管位置，请手动判定距离与视线。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少施法时以在场召唤随从为法术源点进行射程检查与释放的机制，以及对法术治疗掷骰追加 1d8 的触发接口",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:德鲁伊:闪耀星座:10",
+   "name": "闪耀星座",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "每个你的回合开始时，若处于星耀形态，可以更换身上闪耀的星座。射手座与圣杯座的数值提升已在2级对应条目中通过等级判断实现；巨龙座的飞行速度由人物卡静态层体现。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "swap",
+      "label": "闪耀星座：更换星座",
+      "on": "turnStarted",
+      "role": "actor",
+      "window": "after",
+      "when": "self.hasEffect('星耀形态')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "choose"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "巨龙座激活时缺少赋予 20 尺飞行速度与悬浮（flying & hover）的动态能力",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:德鲁伊:一体共生:2",
+   "name": "一体共生",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个动作消耗一次荒野形态使用次数，立刻获得等同于德鲁伊等级 4 倍的临时生命值，并进入「一体共生」状态，持续 10 分钟。已自动化：状态期间你的近战武器攻击命中时自动加 1d6 黯蚀伤害；失去全部临时生命值（临时生命值降到 0）或再次使用荒野形态时，状态与这项加伤一起结束。【要人处理】①「当你的孢子环绕造成伤害时，可以再骰一枚伤害骰并加入伤害」这一条引擎做不到：孢子环绕是豁免伤害、不是攻击，引擎没有「给别的条目造成的伤害补骰」的钩子。那一次孢子环绕的伤害掷完后，请用「事后裁定」把多掷的那一枚补进伤害总量。②结束条件是按「受到伤害结算时临时生命值被吃光」判定的；如果是 DM 在详情抽屉里手改临时生命值 / 手动移除，请自己把「一体共生」效应删掉。③临时生命值取较高者：如果你身上本来就有更高的临时生命值，这次不会顶掉它，「失去全部临时生命值」也以那个更高的数为准（只是计数高一些，规则结果一致）。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "土石喷发",
+      "name": "一体共生",
       "activation": "action",
       "cost": [
        {
-        "slot": {
-         "min": 3
+        "resource": "wildshape-uses"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "tempHp",
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "一体共生",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": {
+       "minutes": 10,
+       "endsOn": [
+        {
+         "event": "damageApplied",
+         "when": "event.target == self.id && self.tempHp > 0 && event.tempAbsorbed >= self.tempHp"
+        },
+        {
+         "event": "effectApplied",
+         "when": "event.bearer == self.id && event.key == 'XPHB:德鲁伊:荒野形态:2#荒野形态'"
         }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少临时生命值耗尽时自动终止效应的事件监听，以及为特性豁免伤害（孢子环绕）注入额外伤害骰的触发/修正机制",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:德鲁伊:召唤野火精魂:2",
+   "name": "召唤野火精魂",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个动作消耗一次荒野形态使用次数，召唤出与你灵魂连接的野火灵魄 —— 它以你选择的、30 尺内一处你可见的未被占据空间出现；它出现时，它 10 尺范围内除你之外的每个生物都要通过一次对抗你法术豁免 DC 的敏捷豁免，失败受 2d6 火焰伤害。数据（TCE 野火精魂数据卡）：小型元素生物，AC 13，HP 5 + 5 × 你的德鲁伊等级，速度 30 尺另有飞行 30 尺（悬浮），力量 10 / 敏捷 14 / 体质 14 / 智力 13 / 感知 15 / 魅力 11，黑暗视觉 60 尺，免疫火焰，免疫魅惑 / 恐慌 / 受擒 / 倒地 / 束缚；火种（远程法术攻击，射程 60 尺，1d6 + 熟练加值 火焰伤害）、烈焰传送。它对你和同伴友善、遵从你的命令，与你共用先攻并在你回合后立即行动；可以自行移动和执行反应，但你只有用附赠动作命令它，它才会执行动作（否则只能回避；你失能时它可以自行选择任何动作）。已自动：灵魄实体与数值、出现时的 2d6 火焰伤害（施法时选中那 10 尺范围内的生物就行）、火种、烈焰传送的爆炸。灵魄的生命值降为 0 时消失（引擎只把它标成死亡、棋子还留在遭遇里，请手动从地图上移除）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "召唤野火精魂",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "wildshape-uses"
        }
       ],
       "targeting": {
        "type": "area",
-       "range": 120,
+       "range": 30,
        "area": {
-        "shape": "cube",
-        "size": 20
-       }
+        "shape": "sphere",
+        "radius": 10
+       },
+       "filter": "target.id != self.id"
       },
       "trigger": null,
       "concentration": null,
       "requires": null,
       "root": [
+       "summon",
        "forEach",
+       "note"
+      ]
+     },
+     {
+      "id": "command",
+      "name": "命令野火精魂",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
        "note"
       ]
      }
@@ -99,29 +287,83 @@
     "resources": []
    },
    "old_audit": {
-    "gap": "zone",
-    "need": "缺少在法术瞬间结算后在战棋地图对应区域留下永久性困难地形标记的接口",
+    "gap": "summon",
+    "need": "召唤具有独立属性块的随从生物入场并支持附赠动作指挥行动",
     "now": false
    }
   },
   {
-   "key": "XGE:spell:舞风术",
-   "name": "舞风术",
-   "kind": "spell",
+   "key": "TCE:德鲁伊:真菌感染:6",
+   "name": "真菌感染",
+   "kind": "classFeature",
    "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "在 30 尺内一点制造一阵风，三选一：①一个中型或更小的生物做力量豁免，失败被你推离 5 尺（有地图会真的推动棋子）；②把一件不超过 5 磅、未被持握或携带的物体推离你 10 尺；③制造无害的感官效果（树叶沙沙作响、百叶窗闭合、衣摆飘动之类）。②③没有战斗数值，选完只在日志里写一句，具体请手动处理；引擎的过滤器对三个选项都生效，所以没写体型过滤：选①时请只点中型或更小的生物，点错了自己在事后裁定里撤销。",
+   "text": "你周围 10 尺内一个生物降到 0 生命值时，如果它是小型或中型的野兽或类人生物，你可以用反应（并消耗一次「真菌感染」次数）把它的尸体活化成丧尸：生命值 1 点、AC 8、速度 20 尺、猛击 +3 命中 1d8+1 钝击，毒素免疫、力竭和中毒状态免疫，先攻紧接在你的回合之后（引擎把召唤物排在你后面）。类型和体型按怪物数据判断；数据里认不出类型 / 体型的怪会问你一句。活化状态持续 1 小时，到点自动退场（引擎用一份 1 小时的「真菌感染」记录把丧尸链接住，时间流逝满 1 小时就一起消失）。丧尸降到 0 生命值时会问你要不要用「不死坚韧」（体质豁免 DC 5 + 所受伤害，光耀伤害或重击不适用），成功就改成 1 点生命值。次数上限等于你的感知调整值（至少 1 次），长休恢复。【要人处理】①原文说丧尸「唯一能执行的动作只有攻击动作并进行一次近战攻击」——引擎不知道这个限制，它的动作栏里也有疾走等通用动作，请只用攻击动作做一次猛击。②丧尸的黑暗视觉 60 尺没有写进战斗数据。③多只丧尸同时存在时，用来计时的那份「真菌感染」记录在界面上只有最新那份显示为生效、其余标「被压制」，但每只丧尸的 1 小时各自计时，不影响结算。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "infest",
+      "label": "真菌感染：活化尸体",
+      "on": "reducedTo0",
+      "role": "any",
+      "window": "before",
+      "when": "within(self, target, 10) && ((target.type == '野兽' || target.type == '类人生物') && (target.size == '小型' || target.size == '中型') || ((target.type == '' || target.size == '') && ask('死者的类型 / 体型不在数据里：它是小型或中型的野兽或类人生物吗？')))",
+      "cost": [
+       {
+        "economy": "reaction"
+       },
+       {
+        "resource": "fungal-infestation"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": [
+     {
+      "id": "fungal-infestation",
+      "name": "真菌感染",
+      "formula": "max(1, wis)",
+      "recovery": "long"
+     }
+    ]
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "生物死亡时反应活化为丧尸并在施法者回合后协同行动",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:德鲁伊:灼烧烈焰:10",
+   "name": "灼烧烈焰",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "当小型或更大生物在你或野火灵魄30尺内死亡时涌现幽火，持续1分钟。可见生物进入该空间时，你可以用反应熄灭幽火，对该生物造成 2d10+感知调整值 点火焰伤害或恢复等量生命值。幽火位置与进入时机由人工判定，进入时以自由动作（消耗反应与资源）结算。次数等于熟练加值，长休恢复。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "舞风术",
-      "activation": "action",
-      "cost": [],
+      "name": "灼烧烈焰",
+      "activation": "free",
+      "cost": [
+       {
+        "economy": "reaction"
+       },
+       {
+        "resource": "cauterizing-flames"
+       }
+      ],
       "targeting": {
        "type": "creature",
-       "count": 1,
        "range": 30
       },
       "trigger": null,
@@ -137,381 +379,31 @@
     "resources": []
    },
    "old_audit": {
-    "gap": "move",
-    "need": "缺少在豁免失败后自动将目标生物沿直线向外强制推离5尺的战棋物理位移执行接口",
+    "gap": "zone",
+    "need": "生物死后在格子生成持续幽火区域，并在生物进入格子时触发反应造成伤害或治疗",
     "now": false
    }
   },
   {
-   "key": "XGE:spell:吸收元素",
-   "name": "吸收元素",
-   "kind": "spell",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "受到强酸、寒冷、火焰、闪电或雷鸣伤害时用反应施放：获得触发法术的那个伤害类型的抗性（这次伤害也随之减半），持续到你的下个回合开始；在你的下个回合中，近战攻击首次命中时额外造成 1d6 点同类型伤害（每高一环 +1d6），之后法术结束。要人处理的：一次伤害包里有多种伤害类型时只认第一种 —— 只有第一种属于那五种时才提供这个反应，抗性与额外伤害也都按第一种算。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "吸收元素",
-      "activation": "reaction",
-      "cost": [
-       {
-        "slot": {
-         "min": 1
-        }
-       }
-      ],
-      "targeting": {
-       "type": "self"
-      },
-      "trigger": {
-       "on": "damageIncoming",
-       "role": "target",
-       "window": "before",
-       "when": "damage.amount > 0 && (damage.type == '强酸' || damage.type == '寒冷' || damage.type == '火焰' || damage.type == '闪电' || damage.type == '雷鸣')"
-      },
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "applyEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "吸收元素·抗性",
-      "statics": [
-       "resist"
-      ],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnStart",
-        "of": "bearer",
-        "nth": 1
-       }
-      }
-     },
-     {
-      "name": "吸收元素·蓄能",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 1,
-      "duration": {
-       "until": {
-        "at": "turnEnd",
-        "of": "bearer",
-        "nth": 1
-       }
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "reactModify",
-    "need": "反应法术的 root 中无法修改正在结算的受击伤害（无法 halveDamage），且无法动态捕获受击伤害类型并将其传递给后续附加伤害",
-    "now": false
-   }
-  },
-  {
-   "key": "XGE:spell:西风打击",
-   "name": "西风打击",
-   "kind": "spell",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "附赠动作，专注至多 1 分钟。持续时间内你的移动不会引发借机攻击（引擎用「不引发借机攻击」的标记处理）。此外在法术结束前仅一次，你可以在自己的回合让自己的一次武器攻击检定获得优势：这次攻击若击中额外造成 1d8 力场伤害；无论是否击中，你的步行速度都增加 30 尺直到这个回合结束。引擎把这次优势给你本回合的第一次武器攻击（用掉即消失，不能留到同回合的下一次攻击；要留给后面那次请先别攻击），法杖等非武器攻击不消耗它。速度加值只做在「步行速度 +30 尺」上，其他速度类型不区分。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "西风打击",
-      "activation": "bonus",
-      "cost": [
-       {
-        "slot": {
-         "min": 1
-        }
-       }
-      ],
-      "targeting": {
-       "type": "self"
-      },
-      "trigger": null,
-      "concentration": {
-       "minutes": 1
-      },
-      "requires": null,
-      "root": [
-       "applyEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "西风打击",
-      "statics": [],
-      "flags": {
-       "cannot": [
-        "provoke"
-       ]
-      },
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     },
-     {
-      "name": "西风打击：蓄势",
-      "statics": [],
-      "flags": null,
-      "rollMods": 1,
-      "triggers": 3,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "resource",
-    "need": "缺少在专注法术持续期间仅限一次消耗特权激活攻击优势，并联动附加本回合内+30尺移动速度的资源标记与时机联动",
-    "now": false
-   }
-  },
-  {
-   "key": "XGE:spell:心灵尖啸",
-   "name": "心灵尖啸",
-   "kind": "spell",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "1 动作。轰击 90 尺内至多 10 个可见生物的心智（智力值 ≤ 2 的生物不受影响）。每个目标必须进行一次智力豁免，失败受到 14d6 心灵伤害并陷入震慑，成功受到半伤且不被震慑。被震慑的生物在其每个回合结束时可重新进行智力豁免，成功则结束震慑。若有头的生物被此伤害杀死，其头颅爆炸。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "心灵尖啸",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 9
-        }
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 10,
-       "range": 90,
-       "filter": "target.score.int > 2"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "save"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "心灵尖啸：震慑",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "saveEnds": {
-        "ability": "int",
-        "dc": "self.spell.dc",
-        "at": "turnEnd"
-       }
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XGE:spell:旋风术",
-   "name": "旋风术",
-   "kind": "spell",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "专注至多 1 分钟。在 300 尺内地表升起半径 10 尺、高 30 尺的旋风柱。在回合中第一次进入旋风或被旋风进入空间的生物（包括初始出现时）须进行敏捷豁免，失败受到 10d6 钝击伤害，成功减半；体型为大型或更小的生物敏捷豁免失败时还须进行力量豁免，失败则陷入束缚直到法术结束。被束缚者开始其回合时向上推动 5 尺，并随旋风移动；法术结束时坠落。被束缚者可用动作进行力量或敏捷检定对抗法术 DC，脱离后被向随机方向抛离 3d6×10 尺。后续可用动作水平移动旋风至多 30 尺。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "旋风术",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 7
-        }
-       }
-      ],
-      "targeting": {
-       "type": "area",
-       "range": 300,
-       "area": {
-        "shape": "cylinder",
-        "radius": 10
-       }
-      },
-      "trigger": null,
-      "concentration": {
-       "minutes": 1
-      },
-      "requires": null,
-      "root": [
-       "save"
-      ]
-     },
-     {
-      "id": "move-whirlwind",
-      "name": "旋风术：移动旋风",
-      "activation": "action",
-      "cost": [],
-      "targeting": {
-       "type": "point",
-       "range": 300
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.concentrating",
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "旋风术：束缚",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XGE:spell:亚比达奇凋死术",
-   "name": "亚比达奇凋死术",
-   "kind": "spell",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "1 动作。抽取 150 尺内由你指定的 30 尺立方空间内每个生物的水汽。每个生物必须进行一次体质豁免，构装生物和不死生物不受影响，植物和水元素进行此豁免检定时具有劣势。豁免失败受到 12d8 黯蚀伤害，成功只承受一半。区域内的非魔法非生物植物立即死亡。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "亚比达奇凋死术",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 8
-        }
-       }
-      ],
-      "targeting": {
-       "type": "area",
-       "range": 150,
-       "area": {
-        "shape": "cube",
-        "size": 30
-       },
-       "filter": "target.type != '构装生物' && target.type != '不死生物'"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "save",
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XGE:spell:烟火术",
-   "name": "烟火术",
-   "kind": "spell",
+   "key": "TCE:法师:大书士:10",
+   "name": "大书士",
+   "kind": "classFeature",
    "from": "data/dyn/ai/books.json",
    "automation": "manual",
-   "text": "选择 60 尺内你能看见的一处不超过 5 尺立方区域的非魔法火焰，熄灭它以制造焰火或浓烟。【烟火】目标周围 10 尺内的生物体质豁免，失败目盲直到你的下个回合结束。【浓烟】火焰散发浓重黑烟，充满 20 尺半径区域并造成重度遮蔽，持续 1 分钟或被强风吹散。重度遮蔽（视线与遮蔽）、熄灭火焰、以及「目标必须是一处非魔法火焰」引擎都处理不了：这条只有豁免与目盲能结算，其余请人工。",
+   "text": "每次长休完成时，可用法师笔触碰空白纸张将觉醒魔典中一个施法时间为1动作的1环或2环法术抄成强化卷轴（视为高1环阶）。你可以以动作阅读卷轴施展该法术（仅你自己可用，施展后或下次长休后消失）。长休恢复1次。此外制造法术卷轴的时间与金币减半。卷轴制作与具体法术施展由人手动处理。",
    "data": {
     "automation": "manual",
     "actions": [
      {
       "id": "use",
-      "name": "烟火术：烟火",
+      "name": "施展卷轴法术",
       "activation": "action",
       "cost": [
        {
-        "slot": {
-         "min": 2
-        }
+        "resource": "master-scrivener"
        }
       ],
-      "targeting": {
-       "type": "area",
-       "range": 60,
-       "area": {
-        "shape": "sphere",
-        "radius": 10
-       }
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note",
-       "forEach"
-      ]
-     },
-     {
-      "id": "smoke",
-      "name": "烟火术：浓烟",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 2
-        }
-       }
-      ],
-      "targeting": {
-       "type": "area",
-       "range": 60,
-       "area": {
-        "shape": "sphere",
-        "radius": 20
-       }
-      },
+      "targeting": null,
       "trigger": null,
       "concentration": null,
       "requires": null,
@@ -521,885 +413,51 @@
      }
     ],
     "triggers": [],
-    "effects": [
-     {
-      "name": "烟火目盲",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnEnd",
-        "of": "source",
-        "nth": 1
-       }
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "zone",
-    "need": "缺少在地图上生成持续性烟雾区域（Zone）并自动判定区域内生物重度遮蔽/阻挡视线的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XGE:spell:幽影刃",
-   "name": "幽影刃",
-   "kind": "spell",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "附赠动作把幽影织成手中实化的剑，专注至多 1 分钟。它被视为你具有熟练项的简易近战武器（灵巧、轻型、投掷 20/60 尺），命中造成 2d8 心灵伤害＋力量或敏捷调整值；升环施法：3~4 环 3d8、5~6 环 4d8、7 环及以上 5d8（伤害骰引擎自动按环阶算）。放下或投掷出去后它在那个回合结束时消散，法术持续期间可以用附赠动作让它重新出现在手中（消散与召回要人处理）。投掷攻击在引擎里和近战攻击用同一套数值（不区分远近，够得到目标就按这把剑砍）。「攻击微光光照或黑暗中的目标时攻击检定具有优势」引擎判断不了光照，需要时请手动给这次攻击加上优势。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "幽影刃",
-      "activation": "bonus",
-      "cost": [
-       {
-        "slot": {
-         "min": 2
-        }
-       }
-      ],
-      "targeting": {
-       "type": "self"
-      },
-      "trigger": null,
-      "concentration": {
-       "minutes": 1
-      },
-      "requires": null,
-      "root": [
-       "applyEffect"
-      ]
-     },
-     {
-      "id": "attack",
-      "name": "幽影刃：攻击",
-      "activation": "none",
-      "cost": [
-       {
-        "economy": "attack"
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 20
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.hasEffect('幽影刃（在手）')",
-      "root": [
-       "attack"
-      ]
-     },
-     {
-      "id": "recall",
-      "name": "幽影刃：召回",
-      "activation": "bonus",
-      "cost": [],
-      "targeting": {
-       "type": "self"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.hasEffect('幽影刃（在手）')",
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "幽影刃（在手）",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
+    "effects": [],
     "resources": []
    },
    "old_audit": {
     "gap": "item",
-    "need": "缺少向角色装备栏临时具象化/装备一把魔法武器、并在光照条件（微光/黑暗）下动态赋予攻击检定优势的物品武器系统",
+    "need": "长休制作升环专属法术卷轴并在战斗中阅读施展",
     "now": false
    }
   },
   {
-   "key": "XGE:spell:元素灾厄",
-   "name": "元素灾厄",
-   "kind": "spell",
+   "key": "TCE:法师:觉醒魔典:2",
+   "name": "觉醒魔典",
+   "kind": "classFeature",
    "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "选择90尺内一个可见生物并指定一种伤害类型（强酸、寒冷、火焰、闪电或雷鸣）。目标必须通过体质豁免，否则在持续时间内受其影响：失去对该伤害类型的抗性，且每回合首次受到该类型伤害时额外受2d6点伤害（升环：每高一环可多选一个30尺内的目标）。抗性剥夺与每回合首次额外伤害需手动处理。",
+   "text": "法术书可作为施法法器。消耗法术位施展法师法术时，可将伤害类型替换为法术书中同环阶另一法术的伤害类型（由人手动替换伤害类型）。能以法术正常施法时间进行仪式施法而无需额外花费10分钟，长休恢复1次。短休时可用法师笔将魔典转移至新书。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "元素灾厄",
-      "activation": "action",
+      "name": "觉醒魔典：快速仪式",
+      "activation": "none",
       "cost": [
        {
-        "slot": {
-         "min": 4
-        }
+        "resource": "awakened-spellbook-ritual"
        }
       ],
-      "targeting": {
-       "type": "creature",
-       "range": 90
-      },
+      "targeting": null,
       "trigger": null,
-      "concentration": {
-       "minutes": 1
-      },
+      "concentration": null,
       "requires": null,
       "root": [
-       "save"
+       "note"
       ]
      }
     ],
     "triggers": [],
-    "effects": [
-     {
-      "name": "元素灾厄",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
+    "effects": [],
     "resources": []
    },
    "old_audit": {
     "gap": "choice",
-    "need": "缺少选定伤害类型并持久化存储（remember/choice）、剥夺目标固有抗性、以及在目标每回合首次承受该类型伤害时追加伤害的判定接口",
+    "need": "施放法术造成伤害时自由将伤害类型替换为法术书中同环阶法术的伤害类型",
     "now": false
-   }
-  },
-  {
-   "key": "XGE:spell:召唤次级恶魔",
-   "name": "召唤次级恶魔",
-   "kind": "spell",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "在 60 尺内召唤一群恶魔，专注至多 1 小时。掷 d6 决定出现哪一种：1-2 为 2 只挑战等级 1 或更低的恶魔，3-4 为 4 只挑战等级 1/2 或更低的恶魔，5-6 为 8 只挑战等级 1/4 或更低的恶魔；用六环或七环法术位施展时数量变为两倍，用八环或九环时变为三倍。恶魔的种类由 DM 决定（例如原魔或怯魔），由你选择施法距离内可见的未占据空间让它们出现。引擎做不了的部分：数量与挑战等级由掷骰决定（界面里先掷 d6 再选对应的一项）、恶魔的数据块要 DM 从图鉴取、恶魔对包括你在内的所有生物抱有敌意、它们整体掷一次先攻并自主追逐攻击最近的非恶魔生物 —— 这些都要人工处理，请把恶魔当作 DM 操控的敌对生物加进遭遇。作为施法的一部分，你可以用施法材料的血液在地上画一个法阵（大到能容纳你），法术持续期间被召唤的恶魔不能穿过或伤害法阵、也不能以法阵中的人为目标：法阵需人工在地图上画出并遵守。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "召唤次级恶魔",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 3
-        }
-       }
-      ],
-      "targeting": {
-       "type": "point",
-       "range": 60
-      },
-      "trigger": null,
-      "concentration": {
-       "hours": 1
-      },
-      "requires": null,
-      "root": [
-       "choose",
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "summon",
-    "need": "缺少按掷骰随机召唤复数敌对恶魔入场、生成独立先攻与自动索敌攻击最近非恶魔生物的群体随从系统",
-    "now": false
-   }
-  },
-  {
-   "key": "XGE:spell:治愈之魂",
-   "name": "治愈之魂",
-   "kind": "spell",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "附赠动作施放，专注至多 1 分钟。在 60 尺内一处 5 尺立方空间召唤自然精魂并留在地图上；你或你能看见的生物在回合里第一次进入该空间、或在其开始回合时，你可以让精魂为它恢复 (1 + slot.level)d6 点生命值（不能治疗构装体与不死生物，每回合限一次，随专注结束消失）。精魂至多治愈 1 + 施法属性调整值次（至少 2 次），次数与「用附赠动作把精魂移动 30 尺」需人工处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "治愈之魂",
-      "activation": "bonus",
-      "cost": [
-       {
-        "slot": {
-         "min": 2
-        }
-       }
-      ],
-      "targeting": {
-       "type": "area",
-       "range": 60,
-       "area": {
-        "shape": "cube",
-        "size": 5
-       }
-      },
-      "trigger": null,
-      "concentration": {
-       "minutes": 1
-      },
-      "requires": null,
-      "root": [
-       "forEach",
-       "note",
-       "zone"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "zone",
-    "need": "缺少可在战棋地图上位移的持续性治疗实体/区域（Zone）、进入/开始回合触发治疗以及消耗固定治疗次数后自动消失的计数机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XGE:spell:致病辐射",
-   "name": "致病辐射",
-   "kind": "spell",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "专注至多 10 分钟。120 尺内一点为中心扩散 30 尺半径的绿色微光，光芒绕过拐角，区域留在地图上、随专注消失。一个生物在某一回合内第一次进入区域、或在其中开始回合时，必须做体质豁免，失败受 4d10 光耀伤害、承受 1 级力竭，并散发 5 尺半径的绿光（同一生物每回合只结算一次；按原文，法术出现时已经在里面的生物不立刻豁免，等它进入或开始回合）。绿光让生物无法从隐形中获益、以及光芒绕过拐角的判定，引擎不处理，请人工判定；力竭与绿光按 10 分钟到期，法术提前结束时请手动移除残留的力竭。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "致病辐射",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 4
-        }
-       }
-      ],
-      "targeting": {
-       "type": "area",
-       "range": 120,
-       "area": {
-        "shape": "sphere",
-        "radius": 30
-       }
-      },
-      "trigger": null,
-      "concentration": {
-       "minutes": 10
-      },
-      "requires": null,
-      "root": [
-       "zone",
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "致病辐射：绿光",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "minutes": 10
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "zone",
-    "need": "缺少持续地图区域（Zone）对首次进入或开始回合生物触发豁免，以及在法术结束时统一清除该法术所赋予力竭状态的生命周期联动",
-    "now": false
-   }
-  },
-  {
-   "key": "XGE:spell:众星冠冕",
-   "name": "众星冠冕",
-   "kind": "spell",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "持续 1 小时。7 个星型光点环绕头顶。可以使用附赠动作消耗 1 个光点袭向 120 尺内一生物或物体，进行一次远程法术攻击，命中造成 4d12 光耀伤害。无论命中与否该光点均被消耗；消耗最后一枚光点时法术提前结束。留存 ≥4 枚光点时提供 30 尺明亮及额外 30 尺微光照明；留存 1~3 枚时提供 30 尺微光照明。升环施法：使用 8 环或更高法术位时，每高一环额外创造 2 枚光点。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "众星冠冕",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 7
-        }
-       }
-      ],
-      "targeting": {
-       "type": "self"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "applyEffect"
-      ]
-     },
-     {
-      "id": "mote-attack",
-      "name": "众星冠冕：射出光点",
-      "activation": "bonus",
-      "cost": [],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 120
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.hasEffect('众星冠冕')",
-      "root": [
-       "attack",
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "众星冠冕",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "hours": 1
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XGE:spell:转化岩石",
-   "name": "转化岩石",
-   "kind": "spell",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "转化 120 尺内至多 40 尺立方区域内的非魔法岩石或泥土，持续永久。选择【化石为泥】（地表：移动每尺消耗4尺移动力，施法时、首次进入或回合结束力量豁免失败陷入泥浆束缚，动作可脱离；天花板：掉落泥浆，敏捷豁免失败受4d8钝击伤害，成功半伤）或【化泥为石】（泥中生物敏捷豁免成功安全移至表面，失败被软质岩石束缚，可用动作DC 20力量检定或攻击破坏岩石AC 15/HP 25脱离）。地形改变与站位需手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "转化岩石",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 5
-        }
-       }
-      ],
-      "targeting": {
-       "type": "area",
-       "range": 120,
-       "area": {
-        "shape": "cube",
-        "size": 40
-       }
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "choose"
-      ]
-     },
-     {
-      "id": "mudSave",
-      "name": "化石为泥：进入或回合结束豁免",
-      "activation": "none",
-      "cost": [],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 120
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "save"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "泥浆束缚",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     },
-     {
-      "name": "岩石束缚",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "zone",
-    "need": "缺少永久修改地图三维地形（泥浆/岩石）、4比1超困难地形移动力消耗及生物进入/结束回合触发束缚判定的地形交互接口",
-    "now": false
-   }
-  },
-  {
-   "key": "XGE:spell:自然之怒",
-   "name": "自然之怒",
-   "kind": "spell",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "专注至多 1 分钟。120 尺内一点为中心 60 尺立方区域里的树木、岩石和草丛被活化（区域留在地图上，随专注消失）。草丛与灌木使区域内的地面对你的敌人是困难地形——地形引擎不处理，请人工按半速移动，区域会在敌人进入时提醒一次。树木挥击（你每个回合开始时，区域内树木 10 尺内的每个敌人敏捷豁免，失败受 4d6 挥砍）与根藤缠绕（你每个回合结束时，区域内站于地面上的一个你选择的生物力量豁免，失败被束缚直到法术结束、可用动作做力量（运动）检定对抗你的法术 DC 挣脱）都是自动时机，引擎不能在「你的回合」对区域里的别人逐个结算，请在你的回合开始 / 结束时点对应按钮、选中目标结算。附赠动作投石（远程法术攻击 3d8 钝击，命中再力量豁免否则倒地）已按原文写全。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "自然之怒",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 5
-        }
-       }
-      ],
-      "targeting": {
-       "type": "area",
-       "range": 120,
-       "area": {
-        "shape": "cube",
-        "size": 60
-       }
-      },
-      "trigger": null,
-      "concentration": {
-       "minutes": 1
-      },
-      "requires": null,
-      "root": [
-       "applyEffect",
-       "zone",
-       "note"
-      ]
-     },
-     {
-      "id": "treeStrike",
-      "name": "自然之怒：树木挥击",
-      "activation": "free",
-      "cost": [],
-      "targeting": {
-       "type": "creature",
-       "range": 120
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.hasEffect('自然之怒（激活）')",
-      "root": [
-       "save"
-      ]
-     },
-     {
-      "id": "rootGrasp",
-      "name": "自然之怒：根藤缠绕",
-      "activation": "free",
-      "cost": [],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 120
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.hasEffect('自然之怒（激活）')",
-      "root": [
-       "save"
-      ]
-     },
-     {
-      "id": "throwRock",
-      "name": "自然之怒：投石",
-      "activation": "bonus",
-      "cost": [],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 120,
-       "filter": "canSee(self, target)"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.hasEffect('自然之怒（激活）') && turn.isMine",
-      "root": [
-       "attack"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "自然之怒",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     },
-     {
-      "name": "自然之怒：束缚",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "minutes": 1
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "zone",
-    "need": "缺少复合型大型地图持续区域（Zone）对敌方单向困难地形、回合开始/结束根据地形要素自动触发不同豁免与附赠动作区域攻击的综合控制系统",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:阿斯莫",
-   "name": "阿斯莫",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "天界抗性、黑暗视觉、光辉掌者（光亮术）是静态部分，由人物卡处理。天堂飞翼的飞行速度、内耀辉光的光照需要手动处理；内耀辉光的回合结束伤害请在自己的回合结束时用「内耀辉光（回合结束伤害）」触发。天界启示的额外伤害对攻击或法术造成的伤害都会询问，不是攻击 / 法术伤害（例如内耀辉光自己的伤害）时请拒绝。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "healing-hands",
-      "name": "治愈之手",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "治愈之手"
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": "touch"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "heal"
-      ]
-     },
-     {
-      "id": "revelation-wings",
-      "name": "天界启示：天堂飞翼",
-      "activation": "bonus",
-      "cost": [
-       {
-        "resource": "天界启示"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.level >= 3",
-      "root": [
-       "applyEffect"
-      ]
-     },
-     {
-      "id": "revelation-radiance",
-      "name": "天界启示：内耀辉光",
-      "activation": "bonus",
-      "cost": [
-       {
-        "resource": "天界启示"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.level >= 3",
-      "root": [
-       "applyEffect"
-      ]
-     },
-     {
-      "id": "radiance-pulse",
-      "name": "天界启示：内耀辉光（回合结束伤害）",
-      "activation": "free",
-      "cost": [],
-      "targeting": {
-       "type": "area",
-       "range": "self",
-       "area": {
-        "shape": "emanation",
-        "radius": 10
-       }
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "turn.isMine && self.hasEffect('内耀辉光')",
-      "root": [
-       "forEach"
-      ]
-     },
-     {
-      "id": "revelation-shroud",
-      "name": "天界启示：死灵环绕",
-      "activation": "bonus",
-      "cost": [
-       {
-        "resource": "天界启示"
-       }
-      ],
-      "targeting": {
-       "type": "area",
-       "range": "self",
-       "area": {
-        "shape": "emanation",
-        "radius": 10
-       }
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.level >= 3",
-      "root": [
-       "applyEffect",
-       "forEach"
-      ]
-     },
-     {
-      "id": "end-revelation",
-      "name": "天界启示：提前结束变身",
-      "activation": "free",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.hasEffect('天堂飞翼') || self.hasEffect('内耀辉光') || self.hasEffect('死灵环绕')",
-      "root": [
-       "removeEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "天堂飞翼",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 1,
-      "duration": {
-       "minutes": 1
-      }
-     },
-     {
-      "name": "内耀辉光",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 1,
-      "duration": {
-       "minutes": 1
-      }
-     },
-     {
-      "name": "死灵环绕",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 1,
-      "duration": {
-       "minutes": 1
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "move",
-    "need": "缺少变形形态下动态赋予飞行速度（flySpeed）的效应修正机制以及动态光照系统",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:矮人",
-   "name": "矮人",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "黑暗视觉、毒素抗性、生命值上限加 1 属于静态（人物卡）。石中精妙：附赠动作获得 60 尺震颤感知 10 分钟，次数等于熟练、长休全部恢复（资源「石中精妙」）。震颤感知本身引擎不处理，效果只记录文字；必须位于岩石表面或接触岩石才能使用，由人判断。中毒豁免优势只在由人确认为避免或结束中毒时生效。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "石中精妙：震颤感知",
-      "activation": "bonus",
-      "cost": [
-       {
-        "resource": "石中精妙"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "applyEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "震颤感知",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "minutes": 10
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "vision",
-    "need": "缺少震颤感知（tremorsense）特殊感官支持以及检定筛选针对特定状态（避免/结束中毒）豁免的能力",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:暗夜精魂之恩惠",
-   "name": "暗夜精魂之恩惠",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "身处微光光照或黑暗期间才能用融身入影（使用时询问）；隐形在你执行动作、附赠动作或反应后立即结束（攻击检定后、或开始其他动作 / 附赠动作 / 反应时结束）。幽影化身的抗性是否生效取决于你是否身处微光光照或黑暗，由人判断：进入时用「幽影化身」启用，离开时用「结束幽影化身」去掉。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "暗夜精魂之恩惠：融身入影",
-      "activation": "bonus",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "!self.has('隐形') && ask('你身处微光光照或黑暗中吗？')",
-      "root": [
-       "applyEffect"
-      ]
-     },
-     {
-      "id": "shadow-form",
-      "name": "暗夜精魂之恩惠：幽影化身",
-      "activation": "free",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "!self.hasEffect('幽影化身')",
-      "root": [
-       "applyEffect"
-      ]
-     },
-     {
-      "id": "shadow-form-end",
-      "name": "暗夜精魂之恩惠：结束幽影化身",
-      "activation": "free",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.hasEffect('幽影化身')",
-      "root": [
-       "removeEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "幽影化身",
-      "statics": [
-       "resist"
-      ],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "manual": true
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "timing",
-    "need": "给施加的隐形效应设置 duration: { endsOn: [{ event: 'actionUsed' }] } 即可在执行动作时自动结束",
-    "now": true
    }
   }
  ]

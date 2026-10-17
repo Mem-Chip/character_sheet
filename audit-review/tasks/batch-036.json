@@ -1,554 +1,27 @@
 {
  "batch": "batch-036",
- "count": 20,
+ "count": 10,
  "entries": [
   {
-   "key": "XPHB:战士:战争魔法:7",
-   "name": "战争魔法",
+   "key": "XGE:吟游诗人:不破威仪:14",
+   "name": "不破威仪",
    "kind": "classFeature",
-   "from": "data/dyn/ai/features.json",
+   "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "自己回合执行攻击动作时，可以把其中一次攻击替换为施展一道施法时间为动作的法师戏法。引擎只扣这一次攻击次数；戏法的选择与施放效果由人手动处理。",
+   "text": "以附赠动作展现威严存在，持续 1 分钟（陷入失能时提前结束）。持续时间内，任何生物在每回合中首次试图攻击你时，必须通过一次对抗你的法术豁免 DC 的魅力豁免。豁免失败时，该生物在该回合内无法攻击你，且必须为本次攻击选定新目标或放弃攻击；豁免成功时能正常攻击，但在你的下个回合中对抗你的法术豁免具有劣势。攻击判定、豁免与改选目标由人手动处理。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "战争魔法：替换一次攻击",
-      "activation": "none",
-      "cost": [
-       {
-        "economy": "attack"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "turn.isMine",
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "other",
-    "need": "缺少在攻击动作中将其中一次攻击替换为调用/施展法师戏法的动作调度接口",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:长柄武器大师",
-   "name": "长柄武器大师",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "【长柄打击】执行攻击动作、并用长棍、矛或同时具有重型词条与触及词条的武器攻击后，可以用附赠动作以该武器的另一端发动一次近战攻击：伤害骰改为 d4、伤害类型改为钝击（已写入；「刚才用的算不算合格武器」引擎看不到，请自行确认）。【反应打击】持握这类武器期间，生物进入你的触及范围时你可以用反应对它发动一次近战攻击——引擎没有「生物进入触及范围」这个时机，请直接用该武器的攻击行作为反应发起。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "长柄打击（附赠动作）",
-      "activation": "bonus",
-      "cost": [],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": "reach"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "turn.isMine",
-      "root": [
-       "attack"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "timing",
-    "need": "缺少敌方生物进入自身触及范围时的反应触发时机（creatureEnteredReach 事件窗口）",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:指挥官奇袭",
-   "name": "指挥官奇袭",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "替换一次攻击、消耗卓越骰、给所选伙伴挂上「命中时加卓越骰伤害」；伙伴用反应发动攻击并扣除其反应由人处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "指挥官奇袭",
-      "activation": "none",
-      "cost": [
-       {
-        "economy": "attack"
-       },
-       {
-        "resource": "卓越骰"
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "filter": "target.id != self.id && target.isAllyOf(self)"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "turn.isMine",
-      "root": [
-       "applyEffect",
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "指挥官奇袭",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 2,
-      "duration": {
-       "until": {
-        "at": "turnEnd",
-        "of": "source",
-        "nth": 0
-       }
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "other",
-    "need": "缺少命令指定盟友立即消耗反应并执行武器攻击/徒手打击的动作调度接口",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:中甲大师",
-   "name": "中甲大师",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "manual",
-   "text": "穿中甲且敏捷在 16 或以上时，AC 中计入的敏捷调整值由 2 点改为 3 点（需人工在 AC 上额外加 1）。",
-   "data": {
-    "automation": "manual",
-    "actions": [],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "item",
-    "need": "护甲系统缺少将中甲计入敏捷调整值上限从 +2 改为 +3 的动态计算规则支持",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:侏儒",
-   "name": "侏儒",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "partial",
-   "text": "黑暗视觉为静态；血系的戏法与法术（次级幻象、修复术、魔法伎俩、动物交谈）为静态，动物交谈的免费施展只在休息或探索时用，不自动化。岩石侏儒的微型发条装置（10 分钟创造、8 小时解体、附赠动作触碰激活、其效果）需人工处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "item",
-    "need": "缺少创造与追踪非战斗微型发条装置（物品制造与持续时间）的接口",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:转化法术",
-   "name": "转化法术",
-   "kind": "feature",
-   "from": "data/dyn/ai/features.json",
-   "automation": "manual",
-   "text": "超魔法：施展造成强酸、冷冻、火焰、闪电、毒素或雷鸣伤害的法术时，消耗 1 术法点，将该伤害类型转换为列表中的另一种。引擎不改写伤害类型，由人处理。",
-   "data": {
-    "automation": "manual",
-    "actions": [],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "choice",
-    "need": "施法时缺少让玩家在伤害类型列表中自由选择并动态替换法术伤害类型的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XDMG:item:+1 契约掌控者权杖",
-   "name": "+1 契约掌控者权杖",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "以一个动作恢复一个魔契师法术位（每次长休可用一次）。法术位恢复手动处理；固定加值已在人物卡处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "+1 契约掌控者权杖：恢复法术位",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品次数:+1 契约掌控者权杖"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": [
-     {
-      "id": "物品次数:+1 契约掌控者权杖",
-      "name": "+1 契约掌控者权杖",
-      "formula": 1,
-      "recovery": "long"
-     }
-    ]
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:+2 契约掌控者权杖",
-   "name": "+2 契约掌控者权杖",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "以一个动作恢复一个魔契师法术位（每次长休可用一次）。法术位恢复手动处理；固定加值已在人物卡处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "+2 契约掌控者权杖：恢复法术位",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品次数:+2 契约掌控者权杖"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": [
-     {
-      "id": "物品次数:+2 契约掌控者权杖",
-      "name": "+2 契约掌控者权杖",
-      "formula": 1,
-      "recovery": "long"
-     }
-    ]
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:+3 契约掌控者权杖",
-   "name": "+3 契约掌控者权杖",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "以一个魔法动作恢复一个魔契师法术位（每次长休可用一次）。法术位恢复需手动处理；固定加值已在人物卡处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "+3 契约掌控者权杖：恢复法术位",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品次数:+3 契约掌控者权杖"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": [
-     {
-      "id": "物品次数:+3 契约掌控者权杖",
-      "name": "+3 契约掌控者权杖",
-      "formula": 1,
-      "recovery": "long"
-     }
-    ]
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:矮人飞锤",
-   "name": "矮人飞锤",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "+3 武器加值与投掷属性已在人物卡处理。用此武器发动远程攻击命中时，造成 1d8 额外力场伤害；若目标为巨人，额外伤害提升为 2d8。攻击后武器立即飞回手中。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [
-     {
-      "id": "dwarven-thrower-hit",
-      "on": "attackHit",
-      "role": "actor",
-      "window": "after",
-      "when": "attack.ranged && attack.weapon",
-      "cost": [],
-      "modify": [],
-      "do": [
-       "if"
-      ]
-     }
-    ],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:矮人王圣斧",
-   "name": "矮人王圣斧",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "+3 战斧。攻击掷出20时额外造成20挥砍伤害。投掷（20/60尺），远程命中额外1d8力场伤害（巨人2d8），命中或失手后立即飞回手中。同调获得黑暗视觉+60尺、体质+2（至多20）、铁匠/酿酒/石匠工具熟练、毒素免疫与火焰抗性、命中物件最大伤害。次日黎明前可召唤土元素一次。三日内可施展传送术一次（地下无事故）。固定加值与属性已在人物卡处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "summon-elemental",
-      "name": "矮人王圣斧：咒唤土元素",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品次数:矮人王圣斧:咒唤土元素"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     },
-     {
-      "id": "teleport",
-      "name": "矮人王圣斧：地幔潜游",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品次数:矮人王圣斧:地幔潜游"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": [
-     {
-      "id": "物品次数:矮人王圣斧:咒唤土元素",
-      "name": "矮人王圣斧：咒唤土元素",
-      "formula": 1,
-      "recovery": "long"
-     },
-     {
-      "id": "物品次数:矮人王圣斧:地幔潜游",
-      "name": "矮人王圣斧：地幔潜游",
-      "formula": 1,
-      "recovery": "long"
-     }
-    ]
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:矮人腰带",
-   "name": "矮人腰带",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "获得矮人语；体质+2（至多20）。与矮人和灰矮人互动时的游说检定具有优势。若非矮人，获得60尺黑暗视觉、毒素抗性，且为避免/结束中毒状态所做的豁免检定具有优势（抗性与属性已由人物卡处理或手动调整）。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:艾恩石, 储法",
-   "name": "艾恩石, 储法",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "manual",
-   "text": "需同调。至多储存总计4环的法术。任何生物施展1~4环法术触碰艾恩石可存入法术。环绕头顶期间，你可以施展其中储存的法术，使用原施法者的法术豁免DC、法术攻击加值和施法关键属性。法术储存与释放需手动处理。",
-   "data": {
-    "automation": "manual",
-    "actions": [
-     {
-      "id": "use",
-      "name": "施展储存的法术",
-      "activation": "action",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:艾恩石, 高等吸收",
-   "name": "艾恩石, 高等吸收",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "艾恩石环绕头顶期间，你可以用一个反应使一名你能看到的生物即将施展的一道八环或更低环阶的法术无效化。被无效化的法术不会产生任何效应且其施法资源被浪费。此石无效化了总计 20 环的法术后，变成黯淡的灰色并失去魔力。无效化判定与总环数消耗需手动记录。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "艾恩石, 高等吸收：无效化法术",
-      "activation": "reaction",
-      "cost": [],
-      "targeting": null,
-      "trigger": {
-       "on": "spellCast",
-       "role": "any"
-      },
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:艾恩石, 吸收",
-   "name": "艾恩石, 吸收",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "需同调。以一个反应使一名能见生物即将施展的4环或更低环阶法术无效化。此石总计无效化20环法术后失去魔力（需手动记录环数）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "absorb",
-      "name": "吸收法术",
-      "activation": "reaction",
-      "cost": [],
-      "targeting": null,
-      "trigger": {
-       "on": "spellCast",
-       "role": "any"
-      },
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:暗蚀抗性药水",
-   "name": "暗蚀抗性药水",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "?",
-   "text": "",
-   "data": {
-    "automation": "?",
-    "actions": [
-     {
-      "id": "use",
-      "name": "饮用暗蚀抗性药水",
+      "name": "不破威仪",
       "activation": "bonus",
       "cost": [
        {
-        "resource": "物品:暗蚀抗性药水"
+        "resource": "不破威仪"
        }
       ],
-      "targeting": {
-       "type": "self"
-      },
+      "targeting": null,
       "trigger": null,
       "concentration": null,
       "requires": null,
@@ -558,136 +31,294 @@
      }
     ],
     "triggers": [],
-    "effects": [],
+    "effects": [
+     {
+      "name": "不破威仪",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1,
+       "endsOn": [
+        {
+         "event": "effectApplied",
+         "when": "self.has('失能')"
+        }
+       ]
+      }
+     },
+     {
+      "name": "不破威仪：豁免劣势",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "source",
+        "nth": 1
+       }
+      }
+     }
+    ],
     "resources": []
    },
-   "old_audit": null
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少在生物宣告攻击目标时触发豁免并强制改选目标或放弃攻击（圣域术/威仪机制）的拦截接口",
+    "now": false
+   }
   },
   {
-   "key": "XDMG:item:奥喀斯之杖",
-   "name": "奥喀斯之杖",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
+   "key": "XGE:吟游诗人:灵感织衣:3",
+   "name": "灵感织衣",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "+3 魔法硬头锤。命中额外造成 2d12 暗蚀伤害。AC+3（固定加值人物卡已处理）。非奥喀斯生物同调需 DC 17 体质豁免（成功受 10d6 暗蚀，失败死亡）。次日黎明前可魔法动作召唤 15 丧尸和 15 骷髅。消耗充能施法（DC 18）：活化死尸（1充能）、死者交谈（1充能）、枯萎术（2充能）、死亡法阵（3充能）、死亡一指（3充能）、律令死亡（4充能）。",
+   "text": "附赠动作消耗一次诗人激励：选择你周围 60 尺内至多等同于你魅力调整值（至少 1 个）个你可见且能看见你的生物，每个获得临时生命值（3 级 5 点，5 级 8 点，10 级 11 点，15 级 14 点）。临时生命值自动加上；获得临时生命值的生物可以立刻用其反应移动至多等同于其速度的距离，这次移动不引发借机攻击——引擎给每个目标挂一个「免借机」标记，移动一次即消失（或到你的回合结束），反应与移动本身请手动执行。",
    "data": {
     "automation": "partial",
     "actions": [
      {
-      "id": "animate-undead",
-      "name": "奥喀斯之杖：唤起不死生物",
-      "activation": "action",
+      "id": "use",
+      "name": "灵感织衣",
+      "activation": "bonus",
       "cost": [
        {
-        "resource": "物品次数:奥喀斯之杖:唤起不死生物"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     },
-     {
-      "id": "animate-dead",
-      "name": "奥喀斯之杖：活化死尸",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:奥喀斯之杖",
-        "n": 1
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     },
-     {
-      "id": "speak-with-dead",
-      "name": "奥喀斯之杖：死者交谈",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:奥喀斯之杖",
-        "n": 1
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     },
-     {
-      "id": "blight",
-      "name": "奥喀斯之杖：枯萎术",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:奥喀斯之杖",
-        "n": 2
+        "resource": "诗人激励"
        }
       ],
       "targeting": {
        "type": "creature",
-       "count": 1,
-       "range": 30
+       "count": "max(1, mod.cha)",
+       "range": 60,
+       "filter": "canSee(self, target) && canSee(target, self)"
       },
       "trigger": null,
       "concentration": null,
       "requires": null,
       "root": [
-       "save"
+       "tempHp",
+       "applyEffect",
+       "note"
       ]
-     },
+     }
+    ],
+    "triggers": [],
+    "effects": [
      {
-      "id": "circle-of-death",
-      "name": "奥喀斯之杖：死亡法阵",
-      "activation": "action",
+      "name": "灵感织衣：免借机",
+      "statics": [],
+      "flags": {
+       "cannot": [
+        "provoke"
+       ]
+      },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "source",
+        "nth": 0
+       },
+       "endsOn": [
+        {
+         "event": "moved",
+         "when": "event.id == self.id"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少让受影响生物立即消耗反应进行不引发借机攻击的战棋位移接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:吟游诗人:乱击剑舞:3",
+   "name": "乱击剑舞",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "在你的回合内以攻击动作进行武器攻击命中时，可以消耗一次诗人激励（每回合限一次剑舞）。对命中的目标造成等同于激励骰结果的额外同类型伤害，且你周围 5 尺内由你选择的另一名可见生物也受到等同于该激励骰结果的伤害（次要目标的伤害需手动扣除）。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "slashing-flourish",
+      "label": "乱击剑舞：消耗激励横扫加伤",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "turn.isMine && attack.weapon",
       "cost": [
        {
-        "resource": "物品充能:奥喀斯之杖",
-        "n": 3
+        "resource": "诗人激励"
        }
       ],
-      "targeting": {
-       "type": "area",
-       "range": 150,
-       "area": {
-        "shape": "sphere",
-        "radius": 60
-       }
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "forEach"
+      "modify": [],
+      "do": [
+       "number",
+       "addDamage",
+       "note"
       ]
-     },
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "remember",
+    "need": "缺少记录本次激励骰投出的具体点数并将其同等伤害应用至周围第二目标的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:吟游诗人:推击剑舞:3",
+   "name": "推击剑舞",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "在你的回合内以攻击动作进行武器攻击命中时，可以消耗一次诗人激励（每回合限一次剑舞）。造成等同于激励骰结果的额外同类型伤害，并将目标推离你至多 5 + 激励骰结果尺；之后可立即用反应移动至多自身步行速度距离来到目标 5 尺内未占据空间（战棋移动与反应由人手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
      {
-      "id": "finger-of-death",
-      "name": "奥喀斯之杖：死亡一指",
-      "activation": "action",
+      "id": "mobile-flourish",
+      "label": "推击剑舞：消耗激励加伤并击退",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "turn.isMine && attack.weapon",
       "cost": [
        {
-        "resource": "物品充能:奥喀斯之杖",
-        "n": 3
+        "resource": "诗人激励"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "number",
+       "addDamage",
+       "move",
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少命中后强制推移目标并在命中结算后消耗反应进行战棋跟进位移的能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:吟游诗人:威仪作锦:6",
+   "name": "威仪作锦",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以附赠动作施展命令术（无需法术位），同时获得超凡美貌并进入专注（至多 1 分钟）。持续时间内，每个你的回合都能以附赠动作再次施展命令术（无需法术位）。被你魅惑的生物对抗此特性施放的命令术时自动豁免失败。具体命令指令及效果由人手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "威仪作锦",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "majesty"
        }
       ],
       "targeting": {
        "type": "creature",
        "count": 1,
        "range": 60,
-       "filter": "canSee(self, target)"
+       "filter": "target.id != self.id"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "if",
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "command",
+      "name": "威仪作锦：命令术",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "target.id != self.id"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('威仪作锦') && turn.isMine",
+      "root": [
+       "if"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "威仪作锦",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少命令术等强制行动/限制行为状态的执行控制逻辑",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:吟游诗人:阴暗学识:14",
+   "name": "阴暗学识",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个动作对 30 尺内能听见声音的生物发出低语，感知豁免失败则被魅惑 8 小时（受攻击、伤害或被迫豁免时提前结束）。共通语言要求与非战斗秘密恐吓角色扮演效果由人工处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "阴暗学识",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "shadowLore"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30,
+       "filter": "target.id != self.id"
       },
       "trigger": null,
       "concentration": null,
@@ -695,135 +326,34 @@
       "root": [
        "save"
       ]
-     },
-     {
-      "id": "power-word-kill",
-      "name": "奥喀斯之杖：律令死亡",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品充能:奥喀斯之杖",
-        "n": 4
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 60
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [
-     {
-      "id": "necrotic-strike",
-      "label": "奥喀斯之杖：额外暗蚀伤害",
-      "on": "attackHit",
-      "role": "actor",
-      "window": "before",
-      "when": "attack.melee",
-      "cost": [],
-      "modify": [],
-      "do": [
-       "addDamage"
-      ]
-     }
-    ],
-    "effects": [],
-    "resources": [
-     {
-      "id": "物品次数:奥喀斯之杖:唤起不死生物",
-      "name": "奥喀斯之杖：唤起不死生物",
-      "formula": 1,
-      "recovery": "long"
-     }
-    ]
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:芭芭·雅嘎的舞空帚",
-   "name": "芭芭·雅嘎的舞空帚",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "持握时以一个动作使其变形为受控的活化扫帚（移动至最近未占据空间并在你的先攻后行动，具体生物由DM/玩家手动控制）；以附赠动作说出命令词变回非活化状态并恢复失去的生命值。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "芭芭·雅嘎的舞空帚：变形活化",
-      "activation": "action",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
      }
     ],
     "triggers": [],
-    "effects": [],
+    "effects": [
+     {
+      "name": "阴暗学识",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
     "resources": []
    },
-   "old_audit": null
+   "old_audit": {
+    "gap": "other",
+    "need": "长达8小时的非战斗秘密恐吓与社交角色扮演效果无需引擎自动化，手动处理即可",
+    "now": false
+   }
   },
   {
-   "key": "XDMG:item:白龙鳞甲",
-   "name": "白龙鳞甲",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
+   "key": "XGE:永生者赠礼",
+   "name": "永生者赠礼",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "+1 AC 与寒冷抗性已在人物卡处理。对抗龙类的战栗威仪与吐息武器豁免具有优势。每天可使用一次魔法动作感知30哩内最近的白龙方向和距离。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "白龙鳞甲：感知白龙",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "物品次数:白龙鳞甲"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": [
-     {
-      "id": "物品次数:白龙鳞甲",
-      "name": "白龙鳞甲",
-      "formula": 1,
-      "recovery": "long"
-     }
-    ]
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XDMG:item:百眼法袍",
-   "name": "百眼法袍",
-   "kind": "item",
-   "from": "data/dyn/ai/items.json",
-   "automation": "partial",
-   "text": "着装此长袍期间，你在依赖视觉的感知（察觉）检定中具有优势；具有120尺黑暗视觉与真实视觉。\n【缺点】对法袍施展光亮术或5尺内施展昼明术会使你陷入目盲1分钟，每回合结束时可进行体质豁免尝试终止（光亮术DC 11，昼明术DC 15；需手动处理）。",
+   "text": "当你被恢复生命值时，只要此时你的魔宠与你之间的距离不超过 100 尺，所有决定你恢复生命值点数的骰都视为骰出了最大值。引擎在治疗结算时会把「被治疗者身上」这类取最大值的修正算进去（不论治疗来自法术、药水还是特性），但它不知道你的魔宠站在哪里 —— 魔宠不在 100 尺内（或已消失、不在身边）时，这次治疗请让 DM 手动把多恢复的部分扣回去（手动伤害同数值，或直接改成掷骰结果）。",
    "data": {
     "automation": "partial",
     "actions": [],
@@ -831,7 +361,134 @@
     "effects": [],
     "resources": []
    },
-   "old_audit": null
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少在承受治疗时将治疗骰点数最大化的拦截/修正机制（以及魔宠距离判定）",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:幽魂凝视",
+   "name": "幽魂凝视",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个动作开启幽魂凝视，持续至多 1 分钟（专注）。看穿 30 尺固态物件及黑暗视觉感官属于探索与视觉效果，由玩家手动处理。短休或长休恢复 1 次。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "幽魂凝视",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "ghostlyGaze"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "幽魂凝视",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "看穿固态障碍物（透视）属于探索层感官与地图视线剔除机制，战斗引擎无需处理",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:游荡者:火眼金睛:13",
+   "name": "火眼金睛",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "只要你未处于目盲或耳聋状态，可以一个动作感知周围 30 尺内幻术的存在、非原本形态下的变形生物以及其他欺瞒感官的魔法。可用次数等于感知调整值（至少 1 次），长休恢复。你能感知到欺瞒效果的存在但无法得知真相，细节由 DM 手动告知。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "火眼金睛",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "unerring-eye"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "!self.has('目盲') && !self.has('耳聋')",
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "探测周围幻术与变形生物属于叙事探索侦测能力，由DM告知即可",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:游荡者:鉴识之眼:3",
+   "name": "鉴识之眼",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "可以使用附赠动作进行一次感知（察觉）检定来侦测隐藏的生物或物体，或者进行一次智力（调查）检定来揭示和破译线索。线索与隐匿生物由 DM 手动告知判定。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "鉴识之眼",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "通过察觉/调查侦测隐匿生物与破译线索属于探索判定，由DM告知结果",
+    "now": false
+   }
   }
  ]
 }

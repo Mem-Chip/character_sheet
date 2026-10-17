@@ -1,302 +1,28 @@
 {
  "batch": "batch-006",
- "count": 20,
+ "count": 10,
  "entries": [
   {
-   "key": "AU:欺诈弹",
-   "name": "欺诈弹",
+   "key": "XPHB:action:终止专注",
+   "name": "终止专注",
    "kind": "feature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "远程武器攻击命中生物时，消耗一次奥术射击使用次数（短休恢复）：目标额外受到两枚奥术射击骰的心灵伤害，且必须通过感知豁免，否则直到你的下个回合开始前陷入魅惑状态。选择盟友作为魅惑者以及魅惑者伤害/强迫豁免提前结束魅惑需手动处理。",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "",
    "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [
-     {
-      "id": "beguiling",
-      "label": "欺诈弹",
-      "on": "attackHit",
-      "role": "actor",
-      "window": "before",
-      "when": "attack.ranged && attack.weapon",
-      "cost": [
-       {
-        "resource": "arcaneShot"
-       }
-      ],
-      "modify": [],
-      "do": [
-       "addDamage",
-       "save"
-      ]
-     }
-    ],
-    "effects": [
-     {
-      "name": "魅惑",
-      "statics": [],
-      "flags": {
-       "forbidTarget": "source"
-      },
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnStart",
-        "of": "source",
-        "nth": 1
-       }
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "condition",
-    "need": "施加状态效应时无法指定第三方盟友作为效应来源（source/魅惑者），且缺少魅惑者造成伤害时提前结束状态的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "AU:尚武魔宠",
-   "name": "尚武魔宠",
-   "kind": "feature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "【战斗魔宠】你始终准备着战斗魔宠法术（静态层已经给了法术与资源「战斗魔宠」）。这里写它的两种施展：每日一次无需法术位（资源「战斗魔宠」，长休恢复），以及用任意合适环阶的法术位施展。魔宠的数据按 5etools「战斗魔宠」数据卡随法术环阶走：AC = 11 + 环阶（蛮勇是 13 + 环阶）、生命值 = 30（蛮勇）或 20 + 每比二环高一环 5、撕裂 = 1d8 + 3 + 环阶（力场，命中用你的法术攻击加值）、多重攻击次数 = 环阶的一半（向下取整）。施展时选生物类型（天族 / 妖精 / 邪魔）和形态（蛮勇 / 掠空 / 潜猎）；掠空的飞行 30 尺（可悬浮）与飞掠、潜猎的潜步、内在禀赋（把环阶的一半加到它的属性检定与豁免）引擎不自动，见它的备注手动。【拦截攻击】一名位于你魔宠 5 尺内的生物被一次攻击检定命中时，你的魔宠可以用反应让该生物对抗那次攻击的 AC 加上你的熟练加值，这可能让那次攻击改为失手。已写成反应：只有「命中值够打到但还没超出目标 AC + 你的熟练」时才会问你（加了才有意义），答应就直接改判为失手。引擎不知道魔宠站在哪，会问你「被攻击的生物是否在你魔宠 5 尺内」；你自己发起的攻击不会问（拦下来没有意义）。另外引擎扣的是你自己的反应而不是魔宠的 —— 规则上是魔宠花它的反应，用完后请在魔宠身上手动划掉反应（或把自己的反应加回来）。另外三件事引擎不管，请手动：① 魔宠持续 1 小时（不是专注）；② 你死亡时魔宠消失（引擎不会自动移除，请手动删棋子）；③ 你已经通过「寻获魔宠」有魔宠时，本法术不再召唤新的，而是把那一只替换成本数据卡、并给它等同于生命值的临时生命值。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast-free",
-      "name": "尚武魔宠：无需法术位施展战斗魔宠",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "battle-familiar"
-       }
-      ],
-      "targeting": {
-       "type": "point",
-       "range": 10
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "choose"
-      ]
-     },
-     {
-      "id": "cast-slot",
-      "name": "尚武魔宠：用法术位施展战斗魔宠",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 2
-        }
-       }
-      ],
-      "targeting": {
-       "type": "point",
-       "range": 10
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "choose"
-      ]
-     },
-     {
-      "id": "intercept",
-      "name": "尚武魔宠：拦截攻击",
-      "activation": "reaction",
-      "cost": [],
-      "targeting": null,
-      "trigger": {
-       "on": "attackHit",
-       "role": "any",
-       "window": "before",
-       "when": "!roll.crit && attacker.id != self.id && roll.total >= target.ac && roll.total < target.ac + self.pb && ask('被攻击的生物是否位于你魔宠 5 尺内？')"
-      },
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "modify"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "summon",
-    "need": "缺少魔宠独立实体判定，以及魔宠消耗自身反应为5尺内生物拦截攻击增加AC的触发接口",
-    "now": false
-   }
-  },
-  {
-   "key": "AU:死灵专家",
-   "name": "死灵专家",
-   "kind": "feature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "manual",
-   "text": "额外法术属于人物卡静态层授予。操纵生命：当你使用法术位施展死灵学派法术时，可立即投掷至多两枚未消耗的生命值骰，恢复等于骰值总值加法术位环阶的生命值，并消耗那些生命值骰。生命值骰面数、消耗与恢复生命值由玩家手动处理。",
-   "data": {
-    "automation": "manual",
-    "actions": [],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "resource",
-    "need": "缺少在战斗中消耗角色生命骰（Hit Dice）并根据投掷数值恢复生命值的资源交互节点",
-    "now": false
-   }
-  },
-  {
-   "key": "AU:塑能专家",
-   "name": "塑能专家",
-   "kind": "feature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "manual",
-   "text": "额外法术属于人物卡静态层授予。塑能助燃：每回合一次，施展塑能法术并以之造成伤害时，可投掷至多两枚未消耗的生命值骰并将骰值总值加入该法术的其中一枚伤害骰，并消耗那些生命值骰。生命值骰面数、消耗与伤害加值由玩家手动处理。",
-   "data": {
-    "automation": "manual",
-    "actions": [],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "resource",
-    "need": "缺少消耗角色生命骰（Hit Dice）并将骰值加入正在结算的法术伤害中的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "AU:慰疗魔宠",
-   "name": "慰疗魔宠",
-   "kind": "feature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "manual",
-   "text": "【治愈信标】只要你的魔宠位于你 120 尺内，正能量便充斥源自魔宠的 5 尺光环；每当一名盟友在这个光环里掷骰决定一名生物恢复的生命值数量时，那名盟友可以把骰出的 1 和 2 都当作 3。不自动化的原因：光环的源点是魔宠（别的条目召唤出来的生物），引擎的灵光只能挂在持有者自己身上；而且引擎只对伤害骰支持「骰值下限」（minDie），治疗骰不支持。请以魔宠为中心量 5 尺，并在光环里的盟友掷治疗骰时手动把 1、2 当作 3。",
-   "data": {
-    "automation": "manual",
-    "actions": [],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "summon",
-    "need": "缺少源自魔宠随从的移动光环，以及重写/保底光环内盟友治疗骰结果（RollMod on heal）的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "AU:武僧:精通秘法战斗风格:17",
-   "name": "精通秘法战斗风格",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "manual",
-   "text": "每当你使用疾风连击时，你可以把两次徒手打击替换为施展一道施法时间为动作、环阶为一环或二环的你的术士法术，且这次施法算在你发动疾风连击的同一个附赠动作里。引擎做不到「在一次附赠动作里把两次徒手打击换成施法」，请手动处理：用疾风连击那个附赠动作（扣 1 功力），但**引擎会把疾风连击的徒手打击直接结算掉**（17 级是 3 次），请在结算后撤销那几笔伤害，再按那道法术结算、扣掉 1 环或 2 环法术位。注意：引擎会把这次施法当成普通施法，另外扣掉你的「动作」—— 要严格按原文的话，请在引擎外结算这道法术，或者让 DM 把多扣的动作还回来。",
-   "data": {
-    "automation": "manual",
-    "actions": [],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "other",
-    "need": "缺少在附赠动作能力（疾风连击）中将攻击次数替换为调用/施展法术位法术的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "AU:武僧:秘法武功:6",
-   "name": "秘法武功",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "可以将法术位转换为功力，或将功力转换为法术位。法术位转功力（无需动作）：消耗一个法术位，恢复等同于该法术位环阶数量的已消耗功力。恢复法术位：完成短休或使用运转周天时，转换未消耗的功力恢复一个已消耗法术位（1环2点/6级；2环3点/7级；3环5点/13级；4环6点/19级），恢复出的法术位需手动记到法术位上。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "slotToKi",
-      "name": "秘法武功：法术位转功力",
-      "activation": "free",
-      "cost": [
-       {
-        "slot": {
-         "min": 1
-        }
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "resource"
-      ]
-     },
-     {
-      "id": "kiToSlot",
-      "name": "秘法武功：恢复法术位",
-      "activation": "none",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "choose"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "resource",
-    "need": "缺少消耗功力/资源并恢复已消耗法术位（slot 资源恢复）的执行节点",
-    "now": false
-   }
-  },
-  {
-   "key": "AU:武僧:秘法战斗风格:6",
-   "name": "秘法战斗风格",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "在自己回合执行攻击动作时，可以将其中一次徒手打击替换为施展一道施法时间为动作的术士戏法。引擎只扣这一次攻击次数；戏法的选择与施放效果由人手动处理。",
-   "data": {
-    "automation": "partial",
+    "automation": "?",
     "actions": [
      {
       "id": "use",
-      "name": "秘法战斗风格：替换一次徒手打击",
-      "activation": "none",
-      "cost": [
-       {
-        "economy": "attack"
-       }
-      ],
+      "name": "终止专注",
+      "activation": "free",
+      "cost": [],
       "targeting": null,
       "trigger": null,
       "concentration": null,
-      "requires": "turn.isMine",
+      "requires": "self.concentrating",
       "root": [
-       "note"
+       "removeEffect"
       ]
      }
     ],
@@ -304,479 +30,49 @@
     "effects": [],
     "resources": []
    },
-   "old_audit": {
-    "gap": "other",
-    "need": "缺少在攻击动作中将单次徒手打击替换为调用/施展戏法的动作嵌套接口",
-    "now": false
-   }
+   "old_audit": null
   },
   {
-   "key": "AU:武僧:凝神击:11",
-   "name": "凝神击",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "使用震慑拳时，无论目标豁免是否成功，直至你下个回合开始，目标在对抗你的法术的豁免检定上具有劣势。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [
-     {
-      "id": "focusedStrike",
-      "label": "凝神击",
-      "on": "attackHit",
-      "role": "actor",
-      "window": "after",
-      "when": "turn.isMine && ask('本次命中是否使用了震慑拳？')",
-      "cost": [],
-      "modify": [],
-      "do": [
-       "applyEffect"
-      ]
-     }
-    ],
-    "effects": [
-     {
-      "name": "凝神击",
-      "statics": [],
-      "flags": null,
-      "rollMods": 1,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnStart",
-        "of": "source"
-       }
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "source",
-    "need": "豁免检定（RollMod on save）缺少判断迫使豁免者（source）及是否为法术的上下文过滤，且缺少震慑拳触发挂接",
-    "now": false
-   }
-  },
-  {
-   "key": "AU:虚弱弹",
-   "name": "虚弱弹",
+   "key": "XPHB:action:借机攻击",
+   "name": "借机攻击",
    "kind": "feature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "远程武器攻击命中生物时，消耗一次奥术射击使用次数（短休恢复）：目标额外受到两枚奥术射击骰的黯蚀伤害，且必须通过体质豁免，否则直到其下一回合结束前获得中毒状态。在此期间目标以攻击命中时伤害扣减一枚奥术射击骰需手动处理。",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "你可见的生物离开你的触及范围时，你可以执行反应，用武器或徒手打击对其发动一次近战攻击。（在地图上走时引擎会问；撤离了的不会被打。不在地图上的，用武器攻击并选择「作为反应」发起。）",
    "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [
-     {
-      "id": "weakening",
-      "label": "虚弱弹",
-      "on": "attackHit",
-      "role": "actor",
-      "window": "before",
-      "when": "attack.ranged && attack.weapon",
-      "cost": [
-       {
-        "resource": "arcaneShot"
-       }
-      ],
-      "modify": [],
-      "do": [
-       "addDamage",
-       "save"
-      ]
-     }
-    ],
-    "effects": [
-     {
-      "name": "虚弱中毒",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnEnd",
-        "of": "bearer",
-        "nth": 1
-       }
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "reactModify",
-    "need": "缺少施加在攻击者身上的效应在造成伤害时降低/扣减其伤害骰（modify: reduceDamage on attackHit/damageDealing）的接口",
-    "now": false
-   }
-  },
-  {
-   "key": "AU:异界魔宠",
-   "name": "异界魔宠",
-   "kind": "feature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "manual",
-   "text": "【异界赋能】你施展寻获魔宠时可以赋予魔宠异界威能，持续到你再次施展寻获魔宠。赋能期间魔宠获得：【能量抗性】你选暗蚀 / 毒素 / 心灵 / 光耀 / 雷鸣之一，魔宠对所选类型具有抗性；【相位行走】魔宠可以穿过其他生物和物件，如同穿过困难地形，若它在其回合结束时还待在一个物件里，就被转移到最后身处的未占据空间。这两项都作用在魔宠身上，而魔宠是别的条目召唤出来的生物：引擎既不能改写它的抗性，也没有困难地形 / 物件 / 空间推挤的概念，所以整条不自动化 —— 请把所选抗性手动写在魔宠身上，相位行走由你在移动时判断、必要时手动把棋子拖到最后身处的空位。",
-   "data": {
-    "automation": "manual",
+    "automation": "?",
     "actions": [],
     "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "summon",
-    "need": "缺少在召唤/施法时为魔宠实体定制伤害抗性与相位行走移动能力的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "AU:预言专家",
-   "name": "预言专家",
-   "kind": "feature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "【额外法术】静态层已经在人物卡上准备好那几个法术，这里不写。【先见干预】当一名位于你 60 尺内、你能看见的生物进行 D20 检定时，你可以用一个反应让那次掷骰获得优势或劣势。已自动化：只在会改变结果时才问（自己或盟友将要失败 → 给优势；敌人正要成功 → 给劣势），答用就扣掉一个反应与这次使用次数，并当场多掷一颗 d20 取高 / 取低（这就是引擎实现优势 / 劣势的方式，和「幸运」一样）。要人留意的两处：一是目标原本就带着劣势时再给优势，引擎按「多掷一颗取高」近似，不是两者抵销；二是既不是盟友也不是敌人的第三方掷骰时引擎不会问；如果你要在别的组合上用（比如给敌人的成功掷骰再加优势、给没有 DC 的检定用），请自己在详情抽屉里改结果。【次数】完成一次长休前只能用一次（人物卡上的「先见干预」池）；当你消耗法术位施展一道预言学派法术时恢复 —— 引擎看到你花法术位施法会问一句「是不是预言学派」，答是就恢复。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [
-     {
-      "id": "adv",
-      "label": "预言专家：先见干预（给这次掷骰优势）",
-      "on": "d20Rolled",
-      "role": "any",
-      "window": "before",
-      "when": "(roll.vs == null || roll.failing) && !roll.adv && (roll.roller == self.id || (self.isAllyOf(combatant(roll.roller)) && within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))))",
-      "cost": [
-       {
-        "economy": "reaction"
-       },
-       {
-        "resource": "glimpse-intervention"
-       }
-      ],
-      "modify": [
-       "reroll"
-      ],
-      "do": []
-     },
-     {
-      "id": "disadv",
-      "label": "预言专家：先见干预（给这次掷骰劣势）",
-      "on": "d20Rolled",
-      "role": "any",
-      "window": "before",
-      "when": "(roll.vs == null || !roll.failing) && !roll.failing && !roll.disadv && self.isEnemyOf(combatant(roll.roller)) && within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))",
-      "cost": [
-       {
-        "economy": "reaction"
-       },
-       {
-        "resource": "glimpse-intervention"
-       }
-      ],
-      "modify": [
-       "reroll"
-      ],
-      "do": []
-     },
-     {
-      "id": "regain-intervention",
-      "label": "预言专家：消耗法术位施展预言法术，恢复先见干预",
-      "on": "spellCast",
-      "role": "actor",
-      "window": "after",
-      "when": "event.slotLevel > 0 && self.resource('glimpse-intervention') < 1 && ask('刚才那道法术是预言学派的吗？（消耗了法术位，恢复先见干预）')",
-      "cost": [],
-      "modify": [],
-      "do": [
-       "resource"
-      ]
-     }
-    ],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "reactModify",
-    "need": "d20Rolled 反应窗口缺少向已开始判定的检定追溯施加优势/劣势或强制重掷的 modify 操作",
-    "now": false
-   }
-  },
-  {
-   "key": "AU:元素魔宠",
-   "name": "元素魔宠",
-   "kind": "feature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "【元素赋能】你施展寻获魔宠时选一种伤害类型（强酸 / 寒冷 / 火焰 / 闪电 / 雷鸣），魔宠获得该类型抗性，直到你再次施展寻获魔宠。抗性要落在魔宠身上，而魔宠是别的条目召唤出来的生物，引擎改不了它的数值 —— 请把所选抗性手动写在魔宠身上。【能量脉冲】以附赠动作命令 120 尺内的魔宠用反应释放一次元素爆发：源自魔宠的 5 尺光环内每名生物做敏捷豁免（DC 用你人物卡上的法术豁免 DC，也就是 8 + 施法属性调整值 + 熟练；若你寻获魔宠用的是另一个施法属性，请手动改），失败受 2d4 所选类型伤害，体型中型或更小的还要陷入倒地 —— 这一段已写（伤害类型每次使用时问你一次，请选与赋能时相同的那种）。做不到的部分：引擎不知道你魔宠的位置，也不知道哪些生物在它 5 尺光环里 —— 用之前会问你「魔宠是否在你 120 尺内」，选目标时每个目标会问一次「是否位于魔宠 5 尺光环内」；魔宠消耗的反应请手动划掉。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "pulse",
-      "name": "元素魔宠：能量脉冲",
-      "activation": "bonus",
-      "cost": [],
-      "targeting": {
-       "type": "creature",
-       "filter": "ask('该生物是否位于你魔宠的 5 尺光环内？')"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "turn.isMine && ask('你的魔宠是否在你 120 尺内？')",
-      "root": [
-       "choose",
-       "save",
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "summon",
-    "need": "缺少以附赠动作远程指挥魔宠实体消耗反应以其位置为中心释放范围伤害与豁免的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "AU:战士:奥术射击:3",
-   "name": "奥术射击",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "每回合一次，当你使用具备弹药属性的武器发动远程攻击时，可以给这次攻击赋予一种奥术射击选项（命中并造成伤害时决定用不用；不涉及攻击检定的选项除外）。可用次数 = 智力调整值（至少 1 次），短休或长休恢复 —— 这个次数池在人物卡上（「奥术射击」），各个选项都是独立的子条目，用一次就扣一次。奥术射击骰 3 级 1d6、10 级 1d8、15 级 1d10、18 级 1d12（升级写法已经写进各个子条目的骰子表达式）；需要豁免的选项 DC = 8 + 熟练加值 + 智力调整值。要人留意：「每回合一次」引擎不记账，本回合已经用过奥术射击后请不要再点第二次。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "resource",
-    "need": "作为父特性主要声明奥术射击选项与资源池，实际动作逻辑分散在各子条目中",
-    "now": false
-   }
-  },
-  {
-   "key": "AU:战士:不屈传送:15",
-   "name": "不屈传送",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "当你使用不屈特性且该次豁免检定成功时，你能传送至多 60 尺至一处你可见的未占据空间。是否使用了不屈特性由人确认，落点的视线与未占据空间由人判断。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [
-     {
-      "id": "teleport",
-      "label": "不屈传送",
-      "on": "d20Rolled",
-      "role": "actor",
-      "window": "after",
-      "when": "roll.kind == 'save' && !roll.failing && ask('这次豁免检定是否使用了「不屈」特性？')",
-      "cost": [],
-      "modify": [],
-      "do": [
-       "move",
-       "note"
-      ]
-     }
-    ],
     "effects": [],
     "resources": []
    },
    "old_audit": {
     "gap": "timing",
-    "need": "缺少特定特性（如不屈）检定成功时的触发时机，以及传送至未占据空格",
+    "need": "缺少敌方生物离开触及范围（移动离开格子）时的反应触发时机（窗口）",
     "now": false
    }
   },
   {
-   "key": "AU:战士:注魔弹:7",
-   "name": "注魔弹",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "以一个魔法动作为一枚非魔法弹药注入魔法效应（暗幕弹、解锁弹或蔓生弹），射向射程内可见固体表面。短休或长休恢复，也可消耗一次回气重置使用权。开锁、藤蔓生长及环境效果由人工裁决。",
+   "key": "XPHB:action:躲藏",
+   "name": "躲藏",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "需要处于重度遮蔽或至少四分之三掩护之后、且不在敌人视线内（由 DM 判断）。进行一次 DC 15 的敏捷（隐匿）检定，成功则获得隐形状态，直到被发现、发出声响、攻击或施法（由 DM 移除）。",
    "data": {
-    "automation": "partial",
+    "automation": "?",
     "actions": [
      {
       "id": "use",
-      "name": "注魔弹",
+      "name": "躲藏",
       "activation": "action",
-      "cost": [
-       {
-        "resource": "imbuedArrow"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "choose"
-      ]
-     },
-     {
-      "id": "reset",
-      "name": "注魔弹：重置使用权",
-      "activation": "free",
-      "cost": [
-       {
-        "resource": "回气"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "resource"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "other",
-    "need": "缺少非战斗环境交互（熄灭火焰、开锁、生成藤蔓地形供攀爬）的自动化机制",
-    "now": false
-   }
-  },
-  {
-   "key": "AU:战士:宗师射术:18",
-   "name": "宗师射术",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "当一名你可见的生物对你进行攻击检定并失手时，你能以反应向远离攻击者的方向移动至多等于你速度一半的距离，且不会因此引发借机攻击。其后作为该反应的一部分，若攻击者还处在你的武器射程范围内，你可以对其进行一次远程攻击检定。移动与远程武器攻击由人手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "宗师射术",
-      "activation": "reaction",
       "cost": [],
       "targeting": null,
-      "trigger": {
-       "on": "attackMissed",
-       "role": "target",
-       "window": "after",
-       "when": "attacker != null && canSee(self, attacker)"
-      },
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "move",
-    "need": "缺少被攻击失手时触发免借机位移、并在位移后自动衔接远程武器攻击的复合动作接口",
-    "now": false
-   }
-  },
-  {
-   "key": "AU:咒能爆发之恩惠",
-   "name": "咒能爆发之恩惠",
-   "kind": "feature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "【法术过载】当你使用法术位施展一道造成伤害的法术时，可以消耗一次法术过载：该法术伤害骰投出的 1 和 2 均视为 3，且受到该法术伤害的生物陷入倒地状态。投掷先攻、短休或长休恢复 1 次。伤害骰保底与受损生物倒地状态由玩家手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "咒能爆发：法术过载",
-      "activation": "free",
-      "cost": [
-       {
-        "resource": "spell-overload"
-       }
-      ],
-      "targeting": null,
       "trigger": null,
       "concentration": null,
       "requires": null,
       "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [
-     {
-      "id": "regain-on-initiative",
-      "label": "法术过载：投掷先攻重获使用次数",
-      "on": "initiativeRolled",
-      "role": "actor",
-      "window": "after",
-      "when": null,
-      "cost": [],
-      "modify": [],
-      "do": [
-       "if"
-      ]
-     }
-    ],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "reactModify",
-    "need": "施法造成伤害时缺少拦截伤害掷骰设置保底点数（minDie）、并对所有受伤害目标施加倒地状态的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "AU:追踪弹",
-   "name": "追踪弹",
-   "kind": "feature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "替换一次远程武器攻击，消耗一次奥术射击使用次数（短休恢复）：无需攻击检定，选择前 1 分钟内见过的一名生物，弹药绕过拐角并无视掩护追踪目标。身处武器最大射程内的目标须进行敏捷豁免，失败受到武器伤害加两枚奥术射击骰的力场伤害并知晓其当前位置，成功受半伤。距离判断与位置获知需手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "追踪弹",
-      "activation": "none",
-      "cost": [
-       {
-        "economy": "attack"
-       },
-       {
-        "resource": "arcaneShot"
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "turn.isMine",
-      "root": [
-       "save"
+       "check"
       ]
      }
     ],
@@ -786,67 +82,155 @@
    },
    "old_audit": {
     "gap": "vision",
-    "need": "缺少无视视线与掩护选取目标、绕过障碍追踪及获知隐蔽目标坐标位置的机制",
+    "need": "缺少地图视线、遮蔽程度与掩护状态的自动检测判定机制",
     "now": false
    }
   },
   {
-   "key": "AU:spell:爆破术",
-   "name": "爆破术",
-   "kind": "spell",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "在 500 尺内一名可见生物体内植入爆裂之种。目标进行体质豁免，失败受 10d10 火焰伤害，成功受半伤。随后目标处发生爆炸，源自目标 60 尺光环内的所有其他生物进行敏捷豁免（若目标生命值被降为 0 则该豁免具有劣势），失败受 10d10 火焰伤害，成功受半伤。未被携带的非魔法可燃物开始燃烧（爆炸中心判定与劣势由人处理）。",
+   "key": "XPHB:action:搜索",
+   "name": "搜索",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "manual",
+   "text": "进行一次感知检定（洞悉 / 医药 / 察觉 / 求生）。",
    "data": {
-    "automation": "partial",
-    "actions": [
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "属于开放式感知/探索检定，目标与DC由DM裁定，无需战斗自动化",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:action:研究",
+   "name": "研究",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "manual",
+   "text": "进行一次智力检定（奥秘 / 历史 / 调查 / 自然 / 宗教）。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "属于开放式智力/知识检定，由DM根据场景信息交互裁定，无需战斗自动化",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:action:影响",
+   "name": "影响",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "manual",
+   "text": "进行一次魅力或感知检定以改变他人的态度。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "属于开放式社交态度改变检定，由DM裁定NPC态度与DC，无需战斗自动化",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:action:操作",
+   "name": "操作",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "manual",
+   "text": "使用一件非魔法物件。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "场景非魔法物件（如开门、拉拉杆）缺乏通用实体与交互规范",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:action:魔法",
+   "name": "魔法",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "manual",
+   "text": "施展一个法术、使用一件魔法物品或一项魔法特性。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "规则总括性动作定义，具体法术与魔法特性已有独立动作，无需独立自动化",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:action:预备",
+   "name": "预备",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "manual",
+   "text": "准备在某个可感知的触发条件发生时，用反应执行一个动作。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少准备动作并在满足自定义触发条件时用反应执行的延迟触发机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:mastery:擦掠",
+   "name": "擦掠",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "以这把武器的攻击检定失手时，仍对目标造成等同于该攻击所用属性调整值的伤害（类型与武器一致）。",
+   "data": {
+    "automation": "?",
+    "actions": [],
+    "triggers": [
      {
-      "id": "use",
-      "name": "爆破术",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 9
-        }
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 500,
-       "filter": "canSee(self, target)"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "save",
-       "note"
-      ]
-     },
-     {
-      "id": "explosion",
-      "name": "爆破术：余波爆炸",
-      "activation": "none",
+      "id": "graze",
+      "label": "擦掠",
+      "on": "attackMissed",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.mastery == '擦掠' && abilityMod(attack.ability) > 0",
       "cost": [],
-      "targeting": {
-       "type": "area",
-       "range": 500,
-       "area": {
-        "shape": "sphere",
-        "radius": 60
-       }
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "save"
+      "modify": [],
+      "do": [
+       "damage"
       ]
      }
     ],
-    "triggers": [],
     "effects": [],
     "resources": []
    },

@@ -8,7 +8,7 @@
 |---|---|
 | `interfaces.md` | **先读这个**：引擎现在能做什么（动作 / 节点 / 触发器 / 旗标 / 明确做不到的清单） |
 | `tasks/index.json` | 总共多少条、分成多少批、每批包含哪些键 |
-| `tasks/batch-NNN.json` | 每批 20 条：规则原文、现在的数据摘要、旧的审查意见（可能过时） |
+| `tasks/batch-NNN.json` | 每批 10 条：规则原文、现在的数据摘要、旧的审查意见（可能过时） |
 | `answers/batch-NNN.json` | **你的产出**，和 tasks 同名 |
 | `../tools/check-review.ts` | 自检脚本：`npx tsx tools/check-review.ts` 会校验格式 + 跑一遍数据检查 |
 
@@ -63,6 +63,6 @@
 
 ## 提示
 
-- 一批 20 条，逐条看完再写，别抽样。
+- 一批 10 条，逐条看完再写，别抽样。
 - `patch` 里的 JSON 只要包含你要改的字段就行（引擎是按字段合并的）。
 - 拿不准的宁可写 `partial` + 说明，也不要谎报 `full`。

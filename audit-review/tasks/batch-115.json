@@ -1,0 +1,595 @@
+{
+ "batch": "batch-115",
+ "count": 10,
+ "entries": [
+  {
+   "key": "XPHB:spell:元素武器",
+   "name": "元素武器",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "触碰一把非魔法武器，使其变为魔法武器并赋予所选元素类型（强酸、寒冷、火焰、闪电、雷鸣）。持续时间内武器攻击检定获得加值（3-4环+1，5-6环+2，7环+3），命中时造成额外伤害（3-4环1d4，5-6环2d4，7环3d4）。非魔法武器限制与指定单把武器需手动判定。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "元素武器",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "元素武器",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 1,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少直接为武器对象附魔（攻击加值与元素伤害附加）并在施法时自选伤害类型的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:原力法阵",
+   "name": "原力法阵",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。以你为中心 30 尺灵光内的你与你的盟友（灵光随你移动，有地图时按地图算距离，没有地图时按「都在范围内」处理）：① 为对抗法术或其他魔法效应而进行的豁免检定具有优势 —— 引擎分不出这次豁免是不是对抗法术 / 魔法效应，会问你一句；② 对抗「豁免成功只受半数伤害」的法术或魔法效应并豁免成功时完全不受伤害（已自动：豁免成功的那次伤害直接归零；这不是原文里的反射闪避，所以失败时照常受全额伤害；灵光范围外的盟友不该受这条保护，引擎会在没有地图时问一句他在不在范围内）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "原力法阵",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "原力法阵",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少对抗法术豁免成功时将半数伤害降为0（反射闪避/免伤结算）的修改能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:援助术",
+   "name": "援助术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "选择 30 尺内至多三个生物，其生命值上限和当前生命值在 8 小时内提高 5 点（每升 1 环 +5）。生命值上限与当前生命值的提升需手动调整。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "援助术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 3,
+       "range": 30
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "援助术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "hours": 8
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少临时提升生物生命值上限（hpMax）并同步增加当前生命值的静态修正或效果节点",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:月光涌泉",
+   "name": "月光涌泉",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "散发 20 尺明亮光照与 20 尺微光光照（光照需手动处理）。获得光耀伤害抗性，近战攻击命中时额外造成 2d6 点光耀伤害。受到 60 尺内可见生物伤害后，可以反应迫使其进行体质豁免，失败则目盲至你的下个回合结束。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "月光涌泉",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "月光涌泉：致盲反击",
+      "activation": "reaction",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": {
+       "on": "damageTaken",
+       "role": "target",
+       "window": "after",
+       "when": "damage.amount > 0 && attacker != null && attacker.id != self.id && within(self, attacker, 60) && canSee(self, attacker)"
+      },
+      "concentration": null,
+      "requires": "self.hasEffect('月光涌泉')",
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "月光涌泉",
+      "statics": [
+       "resist"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "地图缺少动态散发20尺明亮光照与20尺微光光照的照明系统支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:月华之光",
+   "name": "月华之光",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。指定 120 尺内一点，产生半径 5 尺、高 40 尺的柱状微光区域。光柱出现时区域内的生物进行体质豁免，失败受 (slot.level)d10 光耀伤害（2 环 2d10，每高一环 +1d10），成功半数。生物进入光柱或在其中结束回合时同样须进行该豁免（每名生物每回合限一次）。已变形的生物豁免失败会变回真实形态、且在离开光柱前无法变形 —— 引擎不判断变形状态，这一条请人工处理。用「月华之光：移动光柱」把区域挪到新位置（区域不会自己动，最多 60 尺，请手动拖）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "月华之光",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "cylinder",
+        "radius": 5
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "forEach",
+       "zone"
+      ]
+     },
+     {
+      "id": "move",
+      "name": "月华之光：移动光柱",
+      "activation": "action",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "地图缺少持续区域（进入或在其中结束回合触发豁免判定）以及后续以动作移动区域位置的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:云雾术",
+   "name": "云雾术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 小时。以 120 尺内一点为中心创造半径 20 尺的球状浓雾，区域被重度遮蔽，留在地图上、随专注消失（使用的法术位每比 1 环高 1 环，半径增加 20 尺 —— 选范围时请手动选大些）。重度遮蔽（视线、攻击与察觉的判断）和被强风吹散引擎不处理，请人工判定；被吹散时法术提前结束，请手动删掉地图上的区域。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "云雾术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "sphere",
+        "radius": 20
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "zone",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少地图持续浓雾区域（提供重度遮蔽并阻挡视线）以及受强风吹散的环境交互机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:再生术",
+   "name": "再生术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "施法耗时 1 分钟。触碰一名生物使其立即恢复 4d8 + 15 点生命值。在接下来的 1 小时内，目标在其每回合开始时恢复 1 点生命值，且失去的身体部位将在 2 分钟后重新长出（断肢再生需叙事处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "再生术",
+      "activation": {
+       "minutes": 1
+      },
+      "cost": [
+       {
+        "slot": {
+         "min": 7
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "heal",
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "再生术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": {
+       "hours": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:造风术",
+   "name": "造风术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。从自身向指定方向吹出长 60 尺、宽 10 尺的线状强风。区域内的生物进行力量豁免，失败被推离你 15 尺；在风线内结束其回合也要进行同样的豁免（引擎按区域自动结算；有地图时 push 会真的移动棋子）。迎风移动每 1 尺花 2 尺移动力、吹散毒气蒸汽、吹灭火焰、以及用附赠动作改变风道方向都需人工处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "造风术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": "self",
+       "area": {
+        "shape": "line",
+        "length": 60,
+        "width": 10
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "forEach",
+       "zone",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少地图持续线状风场区域（逆风移动消耗加倍、回合结束触发推离）以及附赠动作改变方向的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:召雷术",
+   "name": "召雷术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "召唤半径 60 尺风暴云，持续至多 10 分钟（专注）。施法时及后续可用动作降下闪电，指定点 5 尺内生物进行敏捷豁免，失败受 3d10（升环每比三环高一环+1d10）闪电伤害，成功受半数伤害；室外暴风雨天气伤害+1d10、风暴云覆盖范围及后续动作升环伤害需手动调整判定。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "召雷术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "cylinder",
+        "radius": 5
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "forEach"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "召雷术：降下闪电",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "cylinder",
+        "radius": 5
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating",
+      "root": [
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "召雷术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "remember",
+    "need": "持续法术后续以动作激活降雷时无法继承施法时的法术位环阶（缺少跨动作记忆施法环阶机制）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:真知术",
+   "name": "真知术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "持续 1 小时。触碰一个自愿生物，使其获得 120 尺真实视觉：看穿普通与魔法黑暗，看见隐形生物与物件，自动看穿视觉幻象且对抗幻象的豁免自动成功，辨析变形生物或变形魔法的原本形态，看入以太位面（真实视觉的视线判定需在询问时确认或手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "真知术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 6
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "真知术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "hours": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  }
+ ]
+}

@@ -1,0 +1,619 @@
+{
+ "batch": "batch-099",
+ "count": 10,
+ "entries": [
+  {
+   "key": "XPHB:spell:变巨/缩小术",
+   "name": "变巨/缩小术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "使 30 尺内可见的一个生物或物件大小发生改变（专注至多 1 分钟）。非自愿生物可进行体质豁免对抗。变巨：体型增大一级，力量检定与豁免具有优势，使用变巨的武器或徒手打击命中时额外造成 1d4 伤害。缩小：体型缩小一级，力量检定与豁免具有劣势，使用缩小的武器或徒手打击命中时伤害减少 1d4（无法降至 1 以下）。体型变化、针对物件及缩小伤害减少底线需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "变巨/缩小术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "变巨",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 1,
+      "duration": null
+     },
+     {
+      "name": "缩小",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少改变生物体型等级（size）的静态修正接口以及伤害减少保底机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:变身术",
+   "name": "变身术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "变换自身形态，持续 1 小时（专注）。施法时从水栖适应、改变面容、天生武器中三选一；持续时间内可用一个魔法动作切换为另一形态。水栖适应：水下呼吸且获得等同步行速度的游泳速度。改变面容：自行设定外观。天生武器：徒手打击造成 1d6 对应类型伤害，且使用施法关键属性调整值代替力量调整值作为攻击与伤害调整值。游泳速度、外貌变换及天生武器替换需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "变身术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "水栖适应",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     },
+     {
+      "name": "改变面容",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     },
+     {
+      "name": "天生武器",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少赋予特定天生武器替代徒手打击以及增加特殊移动类型（游泳速度）的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:变形术",
+   "name": "变形术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "目标进行感知豁免，失败被变形为野兽形态（无法施法与说话；替换为野兽数据、赋予临时生命值需手动处理；临时生命值耗尽时法术提前结束）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "变形术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "变形术",
+      "statics": [],
+      "flags": {
+       "cannot": [
+        "castSpells",
+        "speak"
+       ]
+      },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "endsOn": [
+        {
+         "event": "damageApplied",
+         "when": "self.tempHp <= 0"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少完全替换生物属性面板与动作列表的变形（Polymorph）机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:冰风暴",
+   "name": "冰风暴",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "300 尺内一点为中心、半径 20 尺高 40 尺的柱状区域内冰雹砸落（瞬时）：区域内每个生物做敏捷豁免，失败受 (slot.level - 2)d10 钝击伤害和 4d6 寒冷伤害，成功只受一半（使用的法术位每比 4 环高 1 环，钝击伤害 +1d10）。冰雹让区域内的地面变为困难地形，直至你的下一回合结束 —— 困难地形引擎不处理（请人工按半速移动），地图上会留下一个持续 1 轮的区域作标记；柱状区域高 40 尺也请人工判断。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "冰风暴",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 300,
+       "area": {
+        "shape": "cylinder",
+        "radius": 20
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "forEach",
+       "zone",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少在地图上生成持续性困难地形区域的接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:冰墙术",
+   "name": "冰墙术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 120 尺内创造由 10 个 10×10 尺方板块构成的平面（厚 1 尺），或半径最长 10 尺的半球/球状冰墙。冰墙形成穿过生物占据空间时，生物被推向一侧并进行敏捷豁免，失败受到 10d6（升环每高一环 +2d6）寒冷伤害，成功半数。每段 10 尺长冰墙 AC 12、HP 30，免疫寒冷/毒素/心灵伤害，易伤火焰伤害。某段被摧毁后留下刺骨寒气，生物每回合首次穿过时进行体质豁免，失败受 5d6（升环每高一环 +1d6）寒冷伤害，成功半数（推移方向、冰墙承受破坏与寒气穿过判定需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "冰墙术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 6
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "line",
+        "length": 100,
+        "width": 1
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:冰刃",
+   "name": "冰刃",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "远程法术攻击命中目标造成 1d10 穿刺伤害；无论命中与否，目标均需进行敏捷豁免，失败受到 (1 + slot.level)d6 寒冷伤害；目标周围 5 尺内其他生物的豁免与伤害需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "冰刃",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "attack",
+       "save",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少以初次攻击目标为中心对周围生物触发次级豁免与伤害的链式范围机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:不谐低语",
+   "name": "不谐低语",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "指定 60 尺内可见生物进行感知豁免，失败受 (2 + slot.level)d6 心灵伤害，并需立即使用其反应尽可能远离施法者移动（反应与移动需手动处理）；成功受半数伤害。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "不谐低语",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少强制目标立即消耗反应按指定方向移动的执行机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:操控水体",
+   "name": "操控水体",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。控制 300 尺内边长至多 100 尺立方区域中的水体，从上涨 / 分水 / 转向 / 漩涡中选择其一生效（施放时问你选哪一个），在你的后续回合可以用动作重复同一效应或改用另一效应（用「操控水体：切换效应」）。漩涡：水中位于漩涡 25 尺内的生物会被拉向中心 10 尺（引擎把它拉向你，中心不在你身上时请手动把棋子移到中心方向 10 尺处）；一回合内第一次进入漩涡或在漩涡内结束回合的生物进行力量豁免，失败受 2d8 钝击伤害，成功半数。区域画的是整个 100 尺立方水区，而原文的豁免只在中央那个漩涡（25 尺）里：引擎认不出「漩涡」这个子区域，所以每次区域触发都会问一句「这个生物在漩涡里、而且这回合还没结算过吗」（问的是施法者这一方），答否就不结算。水位上涨、波浪推载具、地形改变与「以动作游泳离开漩涡、通过力量（运动）检定」都要人工结算；区域钉在格子上，漩涡中心变化请手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "操控水体",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 300,
+       "area": {
+        "shape": "cube",
+        "size": 100
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "choose",
+       "zone"
+      ]
+     },
+     {
+      "id": "switch",
+      "name": "操控水体：切换效应",
+      "activation": "action",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('操控水体：漩涡') || ask('操控水体：法术还在持续吗？（在的话用动作重复或改用别的效应）')",
+      "root": [
+       "choose"
+      ]
+     },
+     {
+      "id": "vortex-pull",
+      "name": "操控水体：漩涡拉拽",
+      "activation": "free",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "range": 25,
+       "filter": "ask('操控水体：这个生物在水中、且位于漩涡 25 尺内吗？')"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('操控水体：漩涡') && turn.isMine",
+      "root": [
+       "move",
+       "note"
+      ]
+     },
+     {
+      "id": "escape",
+      "name": "操控水体：游出漩涡",
+      "activation": "free",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "filter": "ask('操控水体：这个生物要用一个动作游泳离开漩涡吗？')"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('操控水体：漩涡')",
+      "root": [
+       "if"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "操控水体：漩涡",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少环境水体操控与持续漩涡区域（进入/回合结束判定伤害及强制位移）的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:颤栗之触",
+   "name": "颤栗之触",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "近战法术攻击。命中造成 1d10（随等级增长）暗蚀伤害，且直至施法者下一回合结束前无法恢复生命值（无法恢复生命值需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "颤栗之触",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "attack"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "颤栗之触",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "source",
+        "nth": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少禁止目标恢复生命值（cannot regain HP）的状态标记与治疗拦截",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:沉默术",
+   "name": "沉默术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 120 尺内指定一点创造半径 20 尺的球状静音区域：区域内产生不了任何声音，外界的声音也传不进来（引擎不处理声音，请人工裁定）。完全位于该区域内的生物与物件都免疫雷鸣伤害，其中的生物还会陷入耳聋状态；该区域内也无法施展包含言语成分的法术（引擎不拦施法，请人工拒绝）。施放时已在区域内的、以及之后进入区域的生物，引擎会自动挂上「沉默术」效应（耳聋 + 免疫雷鸣）；但引擎判断不了「完全位于」也判断不了「已经离开」—— 边缘只擦到一点的、以及离开（或不再完全位于）区域的，请在它的详情抽屉里手动增删。施放当下挂的那份随专注结束一起消失，之后走进来挂的那份不会自己消失 —— 法术结束或离开区域后请手动移除。区域随专注结束一起消失。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "沉默术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "sphere",
+        "radius": 20
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "note",
+       "forEach",
+       "zone"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "沉默术",
+      "statics": [
+       "immune"
+      ],
+      "flags": {
+       "cannot": [
+        "speak"
+       ]
+      },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少地图持续区域实体以在生物进出时自动附加/移除状态与法术限制",
+    "now": false
+   }
+  }
+ ]
+}

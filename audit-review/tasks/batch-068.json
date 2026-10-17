@@ -1,0 +1,371 @@
+{
+ "batch": "batch-068",
+ "count": 10,
+ "entries": [
+  {
+   "key": "XPHB:游侠:防守战术:7",
+   "name": "防守战术",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "二选一（完成短休或长休时可以替换；引擎没有记录这个选择的地方，相关时机到了会问一次「选的是哪一个」，请如实回答）。【冲出重围】当你离开一个敌人的触及范围时（正是引擎问借机攻击的那个时机），引擎会让这次借机攻击具有劣势。【多重防御】当一个生物的攻击检定命中你之后，引擎会让它在本回合内对你进行的其它攻击检定具有劣势。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "escape-the-horde",
+      "label": "防守战术：冲出重围（借机攻击劣势）",
+      "on": "leftReach",
+      "role": "actor",
+      "window": "after",
+      "when": "ask('防守战术选的是「冲出重围」吗？（短休或长休后可以在卡上替换）')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "multiattack-defense",
+      "label": "防守战术：多重防御（它本回合对你的其它攻击劣势）",
+      "on": "attackHit",
+      "role": "target",
+      "window": "after",
+      "when": "ask('防守战术选的是「多重防御」吗？（短休或长休后可以在卡上替换）')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "防守战术：冲出重围",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       },
+       "endsOn": [
+        {
+         "event": "d20Rolled",
+         "when": "event.kind == 'attack' && event.target == self.id"
+        }
+       ]
+      }
+     },
+     {
+      "name": "防守战术：多重防御",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少自动识别攻击是否为借机攻击的标签，且缺少追踪同回合内特定生物是否已命中过自身的命中历史",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游侠:高阶猎杀技艺:11",
+   "name": "高阶猎杀技艺",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "每回合一次，对被猎人印记标记的生物造成伤害后，可以对该生物 30 尺内、你能看见的另一生物施加猎人印记的额外伤害（1d6 力场）。引擎无法选择第二个目标，这里只在命中标记目标时提醒，额外伤害由人手动施加。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "hm-extra",
+      "label": "高阶猎杀技艺：转移猎人印记额外伤害（手动选目标）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "self.hasEffect('猎人印记') && target.id == self.effect('猎人印记').state.mark && damage.amount > 0",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "伤害结算后缺少以当前目标为圆心在30尺内选取第二目标并直接施加伤害（跨目标连锁伤害）的节点支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游侠:恐惧伏击:3",
+   "name": "恐惧伏击",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "伏击者之跃：每场战斗第一个回合开始时速度 +10，直到该回合结束。人物卡静态层的速度 +10 是常驻的，「仅第一个回合」这一限定无法在静态层表达，需要人手动处理（第一个回合之外速度应减 10）。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "dread-strike",
+      "label": "恐惧伏击：恐惧打击（额外 2d6 心灵伤害）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "attack.weapon",
+      "cost": [
+       {
+        "resource": "恐惧打击"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "addDamage"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少仅在战斗首轮（round == 1）首回合生效的速度临时修正机制（静态层速度加值无法限定特定轮次）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游侠:猎杀技艺:3",
+   "name": "猎杀技艺",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "二选一，所选由人在 ask 中确认。巨像屠夫已写：用武器命中生命值不满的生物时额外造成 1d8 点武器同类型伤害，每回合一次。灭族者未写：需要对另一生物再发动一次武器攻击，引擎无法选择新目标，由人手动处理。短休或长休后可以替换所选，由人在卡上更改。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "colossus",
+      "label": "猎杀技艺：巨像屠夫（额外 1d8）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "attack.weapon && target.hp < target.hpMax && ask('猎杀技艺选的是巨像屠夫吗？')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "addDamage"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "灭族者缺少在武器攻击后针对原目标5尺内另一生物立即追加一次同武器攻击的连锁攻击机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游侠:兽性狂怒:11",
+   "name": "兽性狂怒",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "（驯兽师）原初行侣野兽。①当你命令原初行侣执行野兽打击动作时，它能使用该动作两次 —— 这一条已经写在「原初伴侣」的召唤数据里（游侠 11 级起它每次用野兽打击动作攻击 2 次），意思一致，本条目不重复写（写重了会变成 4 次攻击）。②每个回合中，当它首次击中一个受到你的「猎人印记」影响的生物时，它可以额外造成等同于那道法术额外伤害的力场伤害；猎人印记的额外伤害恒为 1d6（升环只延长专注），所以这里就是 +1d6 力场。②已经自动：原初野兽命中时会问你要不要用（每回合最多一次）。前提是引擎按名字认出那只野兽（大地野兽 / 天空野兽 / 海洋野兽）——如果你从图鉴里加了别的野兽、或者改了它的名字，这条不会自己生效，请在日志里手动补一次 1d6 力场伤害。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "fury",
+      "label": "兽性狂怒：原初野兽首次击中猎人印记目标（+1d6 力场）",
+      "on": "attackHit",
+      "role": "any",
+      "window": "before",
+      "when": "self.hasEffect('猎人印记') && target.id == self.effect('XPHB:spell:猎人印记').state.mark && attacker.side == self.side && (attacker.name == '大地野兽' || attacker.name == '天空野兽' || attacker.name == '海洋野兽')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "addDamage"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少原初行侣实体入场管理，无法自动处理随从的双重野兽打击与猎人印记伤害类型转换",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游侠:特殊训练:7",
+   "name": "特殊训练",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "（驯兽师）原初行侣野兽，两条都要人处理。①当你以附赠动作命令你的原初行侣野兽执行动作时，你还可以令它以它自己的附赠动作执行疾走、撤离、回避或协助动作 —— 引擎的经济只记在命令者身上，不能替另一个生物花掉一次附赠动作；请手动在野兽身上划掉附赠动作，并照常执行那个动作（疾走 / 撤离 / 回避 / 协助由你在野兽身上点）。②每当你的野兽的攻击检定命中并造成伤害时，其伤害类型可以是力场伤害或其原本的伤害类型（由你选择）—— 召唤出来的野兽攻击的伤害类型是固定的，引擎不能在结算时把它改成力场，请在日志里手动把这次伤害改成力场（数值不变、不加不减）。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少原初行侣自主实体与附赠动作命令随从执行基础动作（疾走/撤离/协助）的指令接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游侠:屠灭众敌:20",
+   "name": "屠灭众敌",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "猎人印记的伤害骰从 d6 改为 d10。要改的是猎人印记法术自己的伤害骰（1d6），本条目无法修改它；需要人手动按游侠 20 级把猎人印记的伤害骰当作 d10 处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少高阶职业特性跨条目动态替换/提升指定法术（猎人印记）基础伤害骰（d6升为d10）的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游侠:雾行漫游:15",
+   "name": "雾行漫游",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "每次施展迷踪步时可以携带 5 尺内一个你可见的自愿生物一同传送，它落在你目标位置 5 尺内的未占据空间。这一同行效果需要人手动处理；自动化部分只覆盖免费施展的迷踪步本身（消耗 mistyStepFree 次数、不耗法术位）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "free",
+      "name": "雾行漫游：免费迷踪步",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "mistyStepFree"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "move",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少携同5尺内自愿盟友共同传送至目标点相邻空格的网格传送机制，且缺少迷踪步免费次数池",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游侠:妖思魅缕:7",
+   "name": "妖思魅缕",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "对抗或终止魅惑 / 恐慌的豁免优势：引擎无法判断豁免的来源，仅对感知豁免询问；反应部分也只检查感知豁免，距离与视线由询问确认，两次询问都由人回答。反应的目标要选择「不同于通过豁免的那一位」的生物（手动留意）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "twist",
+      "name": "妖思魅缕",
+      "activation": "reaction",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 120,
+       "filter": "target.id != self.id"
+      },
+      "trigger": {
+       "on": "d20Rolled",
+       "role": "any",
+       "window": "after",
+       "when": "roll.kind == 'save' && roll.ability == 'wis' && !roll.failing && ask('刚通过的是对抗或终止魅惑 / 恐慌状态的豁免，且豁免者是你或你 120 尺内你可见的生物吗？')"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少在60尺内任意生物完成对抗魅惑/恐慌豁免时触发反应并选择120尺内另一生物进行豁免的反弹机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游侠:阴影视野:3",
+   "name": "阴影视野",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "60 尺黑暗视觉（及在既有值上叠加）是感官属性，引擎没有对应字段，不写。隐形部分：完全身处黑暗中时，对只能依靠黑暗视觉看见你的生物具有隐形状态（它们攻击你具有劣势，你攻击它们具有优势）。引擎无法判断对方的视觉来源与光照，每次由人确认。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "缺少环境光照（完全身处黑暗）与观察者感官类型（仅依赖黑暗视觉）的自动判定与动态隐形机制",
+    "now": false
+   }
+  }
+ ]
+}

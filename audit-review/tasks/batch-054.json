@@ -1,42 +1,38 @@
 {
  "batch": "batch-054",
- "count": 20,
+ "count": 10,
  "entries": [
   {
-   "key": "XPHB:spell:流星爆",
-   "name": "流星爆",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
+   "key": "XPHB:牧师:维持生命:3",
+   "name": "维持生命",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
    "automation": "partial",
-   "text": "在 1 英里（5280 尺）内指定至多 4 处不同地点，以每个点为中心 40 尺半径球状区域内的生物进行敏捷豁免。豁免失败受 20d6 点火焰伤害和 20d6 点钝击伤害，豁免成功受一半伤害。同时处于多个区域内的生物仅受一次影响。4 处落点位置选定、重叠排除及未着装可燃物件引燃需手动处理。",
+   "text": "治疗能量池（5 × 牧师等级）原文可分给 30 尺内任意数量的浴血生物，每个恢复至多到其生命上限的一半。这里只做单个目标：分给多个生物时需手动分配。",
    "data": {
     "automation": "partial",
     "actions": [
      {
-      "id": "cast",
-      "name": "流星爆",
+      "id": "use",
+      "name": "维持生命",
       "activation": "action",
       "cost": [
        {
-        "slot": {
-         "min": 9
-        }
+        "resource": "引导神力"
        }
       ],
       "targeting": {
-       "type": "area",
-       "range": 5280,
-       "area": {
-        "shape": "sphere",
-        "radius": 40
-       }
+       "type": "creature",
+       "count": 1,
+       "range": 30,
+       "filter": "target.hp * 2 <= target.hpMax"
       },
       "trigger": null,
       "concentration": null,
       "requires": null,
       "root": [
-       "forEach",
-       "note"
+       "number",
+       "heal"
       ]
      }
     ],
@@ -44,55 +40,55 @@
     "effects": [],
     "resources": []
    },
-   "old_audit": null
+   "old_audit": {
+    "gap": "choice",
+    "need": "缺少将固定总额治疗能量池自由拆分并分配给范围内多个浴血目标的交互式分配界面与机制",
+    "now": false
+   }
   },
   {
-   "key": "XPHB:spell:龙息术",
-   "name": "龙息术",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
+   "key": "XPHB:牧师:战神祝福:6",
+   "name": "战神祝福",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "可以用引导神力代替法术位施展虔诚护盾或灵体武器。这样施展的法术不需要专注，持续时间变为 1 分钟，但会在你再次施展该法术、陷入失能或死亡时提前结束。法术消耗的替换与持续时间的改变由人处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少以引导神力替换特定法术法术位消耗、免除专注并修改持续时间的法术修饰机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:牧师:战争祭司:3",
+   "name": "战争祭司",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
    "automation": "partial",
-   "text": "专注至多 1 分钟。触碰一名自愿生物，使其可用动作呼出 15 尺锥状龙息，区域内生物敏捷豁免失败受 3d6（升环每环+1d6）对应属性伤害，成功半数。施加给盟友时需由盟友使用，升环额外伤害需手动调整。",
+   "text": "以附赠动作发动一次武器攻击或一次徒手打击，可用次数等于你的感知调整值（最少 1 次），短休或长休后恢复。已自动：花掉一个附赠动作与一次「战争祭司」次数；选徒手打击时命中与伤害引擎自己掷（1 + 力量调整值，钝击）。要人处理的：选武器攻击时命中、伤害与武器精通效果都请你自己掷、自己结算 —— 用这张卡的武器手掷，别点快捷栏里的武器行（那会占掉攻击动作的次数）。",
    "data": {
     "automation": "partial",
     "actions": [
      {
-      "id": "cast",
-      "name": "龙息术",
+      "id": "use",
+      "name": "战争祭司：附赠动作攻击",
       "activation": "bonus",
       "cost": [
        {
-        "slot": {
-         "min": 2
-        }
+        "resource": "warPriest"
        }
       ],
       "targeting": {
        "type": "creature",
        "count": 1,
-       "range": "touch"
-      },
-      "trigger": null,
-      "concentration": {
-       "minutes": 1
-      },
-      "requires": null,
-      "root": [
-       "applyEffect"
-      ]
-     },
-     {
-      "id": "use",
-      "name": "龙息术：喷吐",
-      "activation": "action",
-      "cost": [],
-      "targeting": {
-       "type": "area",
-       "range": "self",
-       "area": {
-        "shape": "cone",
-        "size": 15
-       }
+       "range": "reach"
       },
       "trigger": null,
       "concentration": null,
@@ -103,793 +99,51 @@
      }
     ],
     "triggers": [],
-    "effects": [
-     {
-      "name": "龙息术",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
+    "effects": [],
     "resources": []
    },
    "old_audit": {
-    "gap": "remember",
-    "need": "缺少将临时范围吐息动作赋予受术盟友并动态继承施法者环阶与关键DC的机制",
+    "gap": "item",
+    "need": "缺少在附赠动作中直接调取引配武器（含武器熟练、属性调整值与伤害骰）发起攻击的通用武器动作机制",
     "now": false
    }
   },
   {
-   "key": "XPHB:spell:律令巩固",
-   "name": "律令巩固",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
+   "key": "XPHB:牧师:召现分身:3",
+   "name": "召现分身",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
    "automation": "partial",
-   "text": "增强 60 尺内你可见的至多六名生物的防御。赋予受术者共计 120 点临时生命值，由施法者在受术者中任意分配（具体分配数值需手动在界面调整）。",
+   "text": "附赠动作：消耗一次引导神力，创造一个无实体的完美幻象，位于你 30 尺内一处可见的未占据空间。幻象持续 1 分钟，可无需动作解除，陷入失能时结束。幻象存在期间：可如同在幻象位置施法（须用你自己的感官）；你和幻象都在某生物 5 尺内、且该生物能看见幻象时，你对它的攻击具有优势；附赠动作可把幻象移动至多 30 尺，目的地须是你 120 尺内一处可见的未占据空间。",
    "data": {
     "automation": "partial",
     "actions": [
-     {
-      "id": "cast",
-      "name": "律令巩固",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 7
-        }
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 6,
-       "range": 60,
-       "filter": "canSee(self, target)"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:spell:律令死亡",
-   "name": "律令死亡",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "强迫 60 尺内一名可见生物死亡。若目标生命值不超过 100 点，目标立即死亡；否则目标受到 12d12 点心灵伤害（直接死亡需由 DM/手动确认处理）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "律令死亡",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 9
-        }
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 60,
-       "filter": "canSee(self, target)"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "if"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:spell:律令医疗",
-   "name": "律令医疗",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "使 60 尺内一名可见生物恢复其所有生命值，并结束其身上的魅惑、恐慌、麻痹、中毒与震慑状态。若目标处于倒地状态，可用其反应立刻起身（反应起身需手动操作）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "律令医疗",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 9
-        }
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 60,
-       "filter": "canSee(self, target)"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "heal",
-       "removeEffect",
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:spell:魅惑怪物",
-   "name": "魅惑怪物",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "30 尺内一名你可见的生物进行感知豁免；如果你或你的盟友正在与它战斗，它在这次豁免上具有优势（引擎会问一句，答是就给优势；实现上是在施法时给目标挂一个只活到这次豁免的短效应，日志里会看到它出现又消失）。失败则陷入魅惑状态，持续至多 1 小时，或在你或你的盟友对它造成伤害时提前结束（伤害来源是施法者本人或与施法者同阵营时引擎自动结束）。升环每比四环高一级可多指定一名生物。「对你态度友好」「法术结束时它知道曾被你魅惑」是叙事层面，需要人处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "魅惑怪物",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 4
-        }
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": "slot.level - 3",
-       "range": 30,
-       "filter": "canSee(self, target)"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "applyEffect",
-       "save"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "战斗豁免优势",
-      "statics": [],
-      "flags": null,
-      "rollMods": 1,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnEnd",
-        "of": "bearer",
-        "nth": 0
-       },
-       "endsOn": [
-        {
-         "event": "d20Rolled",
-         "when": "event.roller == self.id && event.kind == 'save' && event.ability == 'wis'"
-        }
-       ]
-      }
-     },
-     {
-      "name": "魅惑怪物",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "hours": 1,
-       "endsOn": [
-        {
-         "event": "damageApplied",
-         "when": "event.target == self.id && event.total > 0 && (event.source == source.id || (event.source != null && combatant(event.source).isAllyOf(source)))"
-        }
-       ]
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "condition",
-    "need": "缺少目标处于战斗状态时迫使豁免自动获得优势的战斗态判定机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:spell:魅惑类人",
-   "name": "魅惑类人",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "30 尺内一名你可见的类人生物进行感知豁免；如果你或你的盟友正在与它战斗，它在这次豁免上具有优势（引擎会问一句，答是就给优势；实现上是在施法时给目标挂一个只活到这次豁免的短效应，日志里会看到它出现又消失）。失败则陷入魅惑状态，持续至多 1 小时，或在你或你的盟友对它造成伤害时提前结束（伤害来源是施法者本人或与施法者同阵营时引擎自动结束）。升环每比一环高一级可多指定一名生物。「对你态度友好」「法术结束时它知道曾被你魅惑」是叙事层面，需要人处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "魅惑类人",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 1
-        }
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": "slot.level",
-       "range": 30,
-       "filter": "target.type == '类人生物' && canSee(self, target)"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "applyEffect",
-       "save"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "战斗豁免优势",
-      "statics": [],
-      "flags": null,
-      "rollMods": 1,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnEnd",
-        "of": "bearer",
-        "nth": 0
-       },
-       "endsOn": [
-        {
-         "event": "d20Rolled",
-         "when": "event.roller == self.id && event.kind == 'save' && event.ability == 'wis'"
-        }
-       ]
-      }
-     },
-     {
-      "name": "魅惑类人",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "hours": 1,
-       "endsOn": [
-        {
-         "event": "damageApplied",
-         "when": "event.target == self.id && event.total > 0 && (event.source == source.id || (event.source != null && combatant(event.source).isAllyOf(source)))"
-        }
-       ]
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "condition",
-    "need": "缺少目标处于战斗状态时迫使豁免自动获得优势的战斗态判定机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:spell:魅影之力",
-   "name": "魅影之力",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "专注至多 1 分钟。60 尺内一名生物进行智力豁免，失败则受 10 尺立方内的魅影幻象影响并认定其为真实。目标可用研究动作进行智力（调查）检定对抗法术 DC，成功则法术终止。若魅影代表危险现象，施法者在自己的每回合可对处于魅影 5 尺内的目标造成 2d8 心灵伤害。调查检定与叙事互动需手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "魅影之力",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 2
-        }
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 60
-      },
-      "trigger": null,
-      "concentration": {
-       "minutes": 1
-      },
-      "requires": null,
-      "root": [
-       "save"
-      ]
-     },
      {
       "id": "use",
-      "name": "魅影之力：幻觉伤害",
-      "activation": "none",
-      "cost": [],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 60
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.concentrating",
-      "root": [
-       "damage"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "魅影之力",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "other",
-    "need": "缺少幻象环境认知、受术者花费研究动作进行调查检定挣脱以及施法者每回合造成自选幻觉伤害的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:spell:朦胧术",
-   "name": "朦胧术",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "专注至多 1 分钟。所有生物对施法者发动的攻击检定具有劣势。攻击者若依靠盲视或真实视觉观测则免疫该效应（需手动处理）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "朦胧术",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 2
-        }
-       }
-      ],
-      "targeting": {
-       "type": "self"
-      },
-      "trigger": null,
-      "concentration": {
-       "minutes": 1
-      },
-      "requires": null,
-      "root": [
-       "applyEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "朦胧术",
-      "statics": [],
-      "flags": null,
-      "rollMods": 1,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "vision",
-    "need": "攻击检定修正（rollMods）缺少检测攻击者是否具备盲视（blindsight）或真实视觉（truesight）的条件谓词",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:spell:迷宫术",
-   "name": "迷宫术",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "将 60 尺内可见的一名生物放逐至半位面迷宫（专注至多 10 分钟），目标陷入失能。目标可用研究动作进行 DC 20 智力（调查）检定尝试逃脱，成功则法术终止并返回原位（移出战场、研究检定逃脱与返回原位需手动处理）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "迷宫术",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 8
-        }
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 60,
-       "filter": "canSee(self, target)"
-      },
-      "trigger": null,
-      "concentration": {
-       "minutes": 10
-      },
-      "requires": null,
-      "root": [
-       "applyEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "迷宫放逐",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:spell:秘法门",
-   "name": "秘法门",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "专注至多 10 分钟。在 500 尺内指定一处未被占据的大型空间，并在身边 10 尺内指定另一处未被占据的大型空间，开启相连的单面圆形传送门。任何进入传送门的东西从另一门出现如同两门邻接。以附赠动作可改变传送门开门朝向（传送门位置与穿越需在地图上手动操作）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "秘法门",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 6
-        }
-       }
-      ],
-      "targeting": {
-       "type": "point",
-       "range": 500
-      },
-      "trigger": null,
-      "concentration": {
-       "minutes": 10
-      },
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     },
-     {
-      "id": "use",
-      "name": "秘法门：改变朝向",
+      "name": "召现分身",
       "activation": "bonus",
-      "cost": [],
-      "targeting": {
-       "type": "self"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.concentrating",
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:spell:命令术",
-   "name": "命令术",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "目标进行感知豁免，失败在其下一回合必须服从指定命令（过来、放下、走开、趴下、阻拦）。趴下附带倒地，阻拦限制动作和附赠动作；移动路径与提前结束回合需手动配合处理。升环每高一环可多选一个目标。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "命令术",
-      "activation": "action",
       "cost": [
        {
-        "slot": {
-         "min": 1
-        }
+        "resource": "引导神力"
        }
       ],
-      "targeting": {
-       "type": "creature",
-       "count": "slot.level",
-       "range": 60
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "save"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "命令术：趴下",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnEnd",
-        "of": "bearer",
-        "nth": 1
-       }
-      }
-     },
-     {
-      "name": "命令术：阻拦",
-      "statics": [],
-      "flags": {
-       "blocks": [
-        "action",
-        "bonus"
-       ]
-      },
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnEnd",
-        "of": "bearer",
-        "nth": 1
-       }
-      }
-     },
-     {
-      "name": "命令术：过来",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnEnd",
-        "of": "bearer",
-        "nth": 1
-       }
-      }
-     },
-     {
-      "name": "命令术：放下",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnEnd",
-        "of": "bearer",
-        "nth": 1
-       }
-      }
-     },
-     {
-      "name": "命令术：走开",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "until": {
-        "at": "turnEnd",
-        "of": "bearer",
-        "nth": 1
-       }
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "condition",
-    "need": "缺少强制目标在下个回合执行预设动作（接近、丢弃手持物、远离、提前结束回合）的行为控制机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:spell:魔邓肯之剑",
-   "name": "魔邓肯之剑",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "动作在 90 尺内创造悬浮的灵体剑刃（专注至多 1 分钟）并对该剑 5 尺内目标发动近战法术攻击，命中造成 4d12 + 施法属性调整值点力场伤害。后续回合可用附赠动作将剑移动至多 30 尺并重复攻击（剑的位置移动在地图上手动处理）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "魔邓肯之剑",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 7
-        }
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 90
-      },
-      "trigger": null,
-      "concentration": {
-       "minutes": 1
-      },
-      "requires": null,
-      "root": [
-       "attack",
-       "applyEffect"
-      ]
-     },
-     {
-      "id": "use",
-      "name": "魔邓肯之剑：移动并攻击",
-      "activation": "bonus",
-      "cost": [],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 90
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.concentrating && self.hasEffect('魔邓肯之剑')",
-      "root": [
-       "attack"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "魔邓肯之剑",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:spell:魔邓肯忠犬",
-   "name": "魔邓肯忠犬",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "创造幻影守护犬（持续 8 小时，相距超 300 尺终止）。守护犬拥有 30 尺真实视觉，有生物进入 30 尺且无口令时吠叫。施法者每回合开始时守护犬尝试啮咬 5 尺内一名敌人（通过「魔邓肯忠犬：啮咬」敏捷豁免对抗法术 DC，失败受 4d8 力场伤害）；后续回合可用动作令守护犬移动至多 30 尺。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "魔邓肯忠犬",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 4
-        }
-       }
-      ],
-      "targeting": {
-       "type": "self"
-      },
+      "targeting": null,
       "trigger": null,
       "concentration": null,
       "requires": null,
       "root": [
        "applyEffect"
-      ]
-     },
-     {
-      "id": "bite",
-      "name": "魔邓肯忠犬：啮咬",
-      "activation": "none",
-      "cost": [],
-      "targeting": {
-       "type": "creature",
-       "count": 1
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.hasEffect('魔邓肯忠犬')",
-      "root": [
-       "save"
       ]
      },
      {
       "id": "move",
-      "name": "魔邓肯忠犬：移动",
-      "activation": "action",
+      "name": "召现分身：移动幻象",
+      "activation": "bonus",
       "cost": [],
       "targeting": null,
       "trigger": null,
       "concentration": null,
-      "requires": "self.hasEffect('魔邓肯忠犬')",
+      "requires": "self.hasEffect('幻象')",
       "root": [
        "note"
       ]
@@ -898,13 +152,19 @@
     "triggers": [],
     "effects": [
      {
-      "name": "魔邓肯忠犬",
+      "name": "幻象",
       "statics": [],
       "flags": null,
-      "rollMods": 0,
+      "rollMods": 1,
       "triggers": 0,
       "duration": {
-       "hours": 8
+       "minutes": 1,
+       "endsOn": [
+        {
+         "event": "effectApplied",
+         "when": "event.bearer == self.id && self.has('失能')"
+        }
+       ]
       }
      }
     ],
@@ -912,116 +172,106 @@
    },
    "old_audit": {
     "gap": "summon",
-    "need": "缺少带独立真视感知与回合开始自动索敌攻击的不可见忠犬实体及地图移动",
+    "need": "缺少地图分身实体（追踪坐标、附赠动作移动、作为施法原点及提供5尺攻击优势）的管理机制",
     "now": false
    }
   },
   {
-   "key": "XPHB:spell:魔化武器",
-   "name": "魔化武器",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
+   "key": "XPHB:牧师:灼净亡灵:5",
+   "name": "灼净亡灵",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "使用驱散亡灵时，可以投掷等于你感知调整值枚 d8（最少 1d8），每个在驱散亡灵豁免中失败的亡灵受到等同于骰值之和的光耀伤害；此伤害不会结束驱散效应。一次掷骰由所有失败的亡灵共用，引擎暂不支持，由人手动投掷并结算。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少在驱散亡灵生效时对所有豁免失败亡灵共享单次投骰并造成伤害的特性联动机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:耐性",
+   "name": "耐性",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
    "automation": "partial",
-   "text": "附赠动作触碰一件非魔法武器：它成为魔法武器，攻击检定与伤害掷骰 +1（3～5 环法术位 +2，6 环及以上 +3），持续 1 小时。已自动化：加值按施法环阶算好、挂在被触碰的持有者身上，用它攻击 / 造成伤害时问一句「是不是这把武器」再加；你再次施展本法术时，先前那份效应（包括施在别人武器上的）会自动结束。要人处理：引擎没有「武器 / 装备」这个对象，只能把加值挂在持有者身上，所以①「非魔法武器」这个前提请自己确认；②同一个人身上有两把武器时，靠每击的弹窗区分；③「成为魔法武器」用来穿透非魔法武器抗性这件事引擎不判，请 DM 手动认定。",
+   "text": "【悍不畏死】已自动化：死亡豁免检定自动带优势。【高速恢复】附赠动作消耗一枚生命值骰，恢复等于骰值的生命值。已自动化「掷骰 + 回血」这一半：用附赠动作时会问这次消耗的生命值骰是几面（骰面随职业变，引擎读不到），选完当场掷骰并把结果加到生命值上。要人处理的是那颗生命值骰：引擎没有生命值骰池（战斗里的池打完这一场就重置，不适合记生命骰），界面也没有扣它的地方 —— 请自己记着这次消耗了一枚，长休后生命骰回满。",
    "data": {
     "automation": "partial",
     "actions": [
      {
-      "id": "cast",
-      "name": "魔化武器",
+      "id": "recover",
+      "name": "耐性：高速恢复",
       "activation": "bonus",
-      "cost": [
-       {
-        "slot": {
-         "min": 2
-        }
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": "touch"
-      },
+      "cost": [],
+      "targeting": null,
       "trigger": null,
       "concentration": null,
       "requires": null,
       "root": [
-       "applyEffect"
+       "choose",
+       "heal",
+       "note"
       ]
      }
     ],
     "triggers": [],
-    "effects": [
-     {
-      "name": "魔化武器",
-      "statics": [],
-      "flags": null,
-      "rollMods": 2,
-      "triggers": 0,
-      "duration": {
-       "hours": 1,
-       "endsOn": [
-        {
-         "event": "spellCast",
-         "when": "event.key == 'XPHB:spell:魔化武器' && event.actor == source.id"
-        }
-       ]
-      }
-     }
-    ],
+    "effects": [],
     "resources": []
    },
    "old_audit": {
-    "gap": "item",
-    "need": "缺少直接为武器装备对象赋予临时附魔加值（而非作用于角色导致每次攻击均需询问）的机制",
+    "gap": "resource",
+    "need": "缺少生命值骰（Hit Point Die）资源池的扣减、根据职业骰面投骰并恢复等额生命值的机制",
     "now": false
    }
   },
   {
-   "key": "XPHB:spell:魔魂壶",
-   "name": "魔魂壶",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
+   "key": "XPHB:能量抗性之恩惠",
+   "name": "能量抗性之恩惠",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
    "automation": "partial",
-   "text": "施法时间 1 分钟。灵魂离开身体进入容器，肉体陷入昏迷失神。处于容器中时，可用动作投射灵魂尝试附身 100 尺内可见类人生物。目标必须进行魅力豁免，失败则灵魂被困在容器中（失能且无法移动），施法者控制其身体（生命值、力量、敏捷、体质、速度和感官替换为目标数据）。成功则 24 小时内免疫附身。宿主身体死亡、容器被毁或回归身体的判定需手动处理。",
+   "text": "先用「选择抗性」选两种伤害类型（长休后可以重选，再用一次即可，会替换旧的选择）。能量重导：受到所选类型的伤害后，用反应把相同类型的伤害传导给 60 尺内可见的另一名生物；对你全身掩护的生物不能选，由人判断。",
    "data": {
     "automation": "partial",
     "actions": [
      {
-      "id": "cast",
-      "name": "魔魂壶",
-      "activation": {
-       "minutes": 1
-      },
-      "cost": [
-       {
-        "slot": {
-         "min": 6
-        }
-       }
-      ],
-      "targeting": {
-       "type": "self"
-      },
+      "id": "use",
+      "name": "能量抗性之恩惠：选择抗性",
+      "activation": "free",
+      "cost": [],
+      "targeting": null,
       "trigger": null,
       "concentration": null,
       "requires": null,
       "root": [
-       "applyEffect"
+       "removeEffect",
+       "choose"
       ]
      },
      {
-      "id": "use",
-      "name": "魔魂壶：附身",
-      "activation": "action",
+      "id": "redirect",
+      "name": "能量抗性之恩惠：能量重导",
+      "activation": "reaction",
       "cost": [],
       "targeting": {
        "type": "creature",
        "count": 1,
-       "range": 100,
-       "filter": "canSee(self, target)"
+       "range": 60,
+       "filter": "target.id != self.id && canSee(self, target)"
       },
-      "trigger": null,
+      "trigger": {
+       "on": "damageTaken",
+       "role": "target",
+       "when": "damage.amount > 0 && ((damage.type == '强酸' && self.hasEffect('能量抗性：强酸')) || (damage.type == '寒冷' && self.hasEffect('能量抗性：寒冷')) || (damage.type == '火焰' && self.hasEffect('能量抗性：火焰')) || (damage.type == '闪电' && self.hasEffect('能量抗性：闪电')) || (damage.type == '黯蚀' && self.hasEffect('能量抗性：黯蚀')) || (damage.type == '毒素' && self.hasEffect('能量抗性：毒素')) || (damage.type == '心灵' && self.hasEffect('能量抗性：心灵')) || (damage.type == '光耀' && self.hasEffect('能量抗性：光耀')) || (damage.type == '雷鸣' && self.hasEffect('能量抗性：雷鸣')))"
+      },
       "concentration": null,
       "requires": null,
       "root": [
@@ -1032,232 +282,206 @@
     "triggers": [],
     "effects": [
      {
-      "name": "魔魂壶：出窍",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     },
-     {
-      "name": "魔魂壶：宿主受困",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:spell:欧提路克冰封法球",
-   "name": "欧提路克冰封法球",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "300 尺内指定一点爆炸形成 60 尺半径球状区域。区域内生物进行体质豁免，失败受 10d6（每比 6 环高 1 环 +1d6）点寒冷伤害，成功半数。若击中水面冻结 30 尺方形坚冰持续 1 分钟并使游泳者束缚；亦可凝聚为冰球投掷或用投石索弹射（水面冻结与冰球暂存投掷需手动处理）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "欧提路克冰封法球",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 6
-        }
-       }
-      ],
-      "targeting": {
-       "type": "area",
-       "range": 300,
-       "area": {
-        "shape": "sphere",
-        "radius": 60
-       }
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "forEach",
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:spell:欧提路克弹力法球",
-   "name": "欧提路克弹力法球",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "专注至多 1 分钟。30 尺内大型或更小的生物进行敏捷豁免，失败则被封在发光的弹力法球内（自愿生物自动被封入）。法球内生物免受一切伤害，任何实体或法术无法进出，且无法对球外造成伤害。被困者可用动作以半速滚动法球。实体进出阻隔、滚动移动与解离术摧毁需手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "欧提路克弹力法球",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 4
-        }
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 30,
-       "filter": "target.size != '巨型' && target.size != '超巨型'"
-      },
-      "trigger": null,
-      "concentration": {
-       "minutes": 1
-      },
-      "requires": null,
-      "root": [
-       "if"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "弹力法球",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 1,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "zone",
-    "need": "缺少完全阻隔一切内外物理穿行、法术投射与伤害免疫的力场球体屏障",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:spell:祈愿术",
-   "name": "祈愿术",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "manual",
-   "text": "动作施展。可模仿任意 8 环或更低环阶法术（无需满足前提条件或材料成分），或创造特定效应（创造至多 25000GP 物件、恢复至多 20 个生物生命值并解除高等复原术列举效应、赋予永久伤害抗性、法术免疫 8 小时、专长替换、强制重投上一轮掷骰、或由 DM 自由裁决的现实重塑愿望）。用于非模仿法术时施法者承受严重虚弱反噬（施法受暗蚀伤害、力量变为 3、33% 几率永远失去祈愿术）。极度开放多变，由玩家与 DM 人工裁决与执行。",
-   "data": {
-    "automation": "manual",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "祈愿术",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 9
-        }
-       }
-      ],
-      "targeting": {
-       "type": "self"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:spell:气化形体",
-   "name": "气化形体",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "触碰自愿生物转化为云雾（升环每高一环可多选一个目标）：拥有钝击/穿刺/挥砍抗性，免疫倒地，力量/敏捷/体质豁免具有优势；不能攻击、施法、言语或操作物件；仅有 10 尺悬浮飞行速度；穿过狭隙与占据已有生物空间需手动处理；生命值降至 0 或自愿用魔法动作终止时法术结束。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "气化形体",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 3
-        }
-       }
-      ],
-      "targeting": {
-       "type": "creature",
-       "count": "slot.level - 2",
-       "range": "touch"
-      },
-      "trigger": null,
-      "concentration": {
-       "hours": 1
-      },
-      "requires": null,
-      "root": [
-       "applyEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "气化形体",
+      "name": "能量抗性：强酸",
       "statics": [
-       "resist",
-       "conditionImmune",
-       "speedSet"
+       "resist"
       ],
-      "flags": {
-       "cannot": [
-        "speak",
-        "castSpells"
-       ]
-      },
-      "rollMods": 1,
+      "flags": null,
+      "rollMods": 0,
       "triggers": 0,
       "duration": {
-       "hours": 1,
-       "endsOn": [
-        {
-         "event": "reducedTo0"
-        }
-       ]
+       "manual": true
+      }
+     },
+     {
+      "name": "能量抗性：寒冷",
+      "statics": [
+       "resist"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "manual": true
+      }
+     },
+     {
+      "name": "能量抗性：火焰",
+      "statics": [
+       "resist"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "manual": true
+      }
+     },
+     {
+      "name": "能量抗性：闪电",
+      "statics": [
+       "resist"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "manual": true
+      }
+     },
+     {
+      "name": "能量抗性：黯蚀",
+      "statics": [
+       "resist"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "manual": true
+      }
+     },
+     {
+      "name": "能量抗性：毒素",
+      "statics": [
+       "resist"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "manual": true
+      }
+     },
+     {
+      "name": "能量抗性：心灵",
+      "statics": [
+       "resist"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "manual": true
+      }
+     },
+     {
+      "name": "能量抗性：光耀",
+      "statics": [
+       "resist"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "manual": true
+      }
+     },
+     {
+      "name": "能量抗性：雷鸣",
+      "statics": [
+       "resist"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "manual": true
       }
      }
     ],
     "resources": []
    },
    "old_audit": {
+    "gap": "vision",
+    "need": "缺少掩护（全掩护阻挡视线与目标选取）自动判定，以及伤害节点类型动态继承自触发伤害类型的能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:念动力",
+   "name": "念动力",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "念动力：次级心灵遥控（习得法师之手；施放时无言语与姿势成分、灵体手可隐形、施法距离与可远离距离各 +30 尺，施法属性为本专长提升的属性）。念力推撞（附赠动作，30 尺内一个可见生物进行力量豁免，DC = 8 + 本专长提升属性的调整值 + 熟练加值，失败则拉近或推离 5 尺）。本专长提升的属性在建卡时选定，人物卡数据里没有对应字段，且法术的距离与成分修改引擎不支持，目前手动处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
     "gap": "move",
-    "need": "缺少穿过微小裂隙与同格重叠站位的气态移动特异规则",
+    "need": "缺少建卡自选属性动态绑定至DC计算，法术射程修改，以及地图实际执行5尺推拉位移的能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:骑乘战斗",
+   "name": "骑乘战斗",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "【骑乘突击】骑乘期间，你对位于坐骑 5 尺内、体型比坐骑至少小一级、且未被骑乘的生物进行攻击检定具有优势（引擎每次攻击前问一句是否满足这几个位置条件，答「是」才给优势）。【侧跃躲闪】坐骑为「豁免成功只受一半伤害」的效应做敏捷豁免时，成功则不受伤害、失败只受一半 —— 引擎在伤害结算前把这条列成可选项，选中就套上去（只对带豁免的减半伤害生效，别的情形选了也没用）；「受到伤害的是不是你正骑着的坐骑」「你和坐骑都没失能」用问题确认。【我身作盾】命中坐骑的攻击可以强制改打你（按你的 AC 重新判定，可能因此变成未命中），同样是一个可选项。引擎不认识「骑乘关系」，所以每一条里「是不是你的坐骑」都要人确认；我身作盾在每个盟友被命中时都会列进可选清单，请只在被命中的确实是你的坐骑时才选。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "leap-aside",
+      "label": "骑乘战斗：侧跃躲闪（坐骑敏捷豁免）",
+      "on": "damageIncoming",
+      "role": "ally",
+      "window": "before",
+      "when": "damage.save == 'dex' && !self.has('失能') && !target.has('失能') && ask('这次敏捷豁免伤害打在你正骑着的坐骑身上吗？')",
+      "cost": [],
+      "modify": [
+       "evasion"
+      ],
+      "do": []
+     },
+     {
+      "id": "shield-mount",
+      "label": "骑乘战斗：我身作盾（改打自己）",
+      "on": "attackHit",
+      "role": "ally",
+      "window": "before",
+      "when": "!self.has('失能') && ask('被命中的是你的坐骑、而且你正骑乘着它（你没失能）吗？')",
+      "cost": [],
+      "modify": [
+       "redirect"
+      ],
+      "do": []
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少将针对坐骑的攻击重定向至自身（改变攻击目标）以及坐骑敏捷豁免成功免伤（反射闪避）的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:强弩专家",
+   "name": "强弩专家",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "三条增益里有两条引擎里没有对应的规则可挂，第三条引擎已经在伤害里算进去了，所以这条不自动化：【无视装填】引擎不模拟「装填」词条（弩可以照常连射，也不记弹药），这条不用额外处理。【抵近射击】引擎不模拟「远程攻击在敌人 5 尺内具有劣势」这条规则（距离与视线类规则由人判断），所以没有劣势要被取消；如果桌面上按那条规则罚了劣势，请自己手动处理。【双持射击】引擎的武器伤害始终含属性调整值 —— 它也没实现「轻型词条的追加攻击不加属性调整值」，追加攻击的伤害里本来就有调整值，这个专长要的「可以加」已经体现在里面了，不要再给它额外加一次。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少无视武器装填（Loading）词条限制以及取消敌人邻接5尺内远程攻击劣势的机制",
     "now": false
    }
   }

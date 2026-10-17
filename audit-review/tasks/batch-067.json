@@ -1,0 +1,386 @@
+{
+ "batch": "batch-067",
+ "count": 10,
+ "entries": [
+  {
+   "key": "XPHB:游荡者:投毒（花费：1d6）:5",
+   "name": "投毒",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "狡诈打击选项，花费 1d6 偷袭骰。引擎无法减少偷袭骰，偷袭骰减 1d6 由人手动处理；需先造成偷袭伤害，并随身携带毒药工具（由人确认）。命中后目标进行体质豁免（DC 为狡诈打击通用公式 8 + 敏捷调整值 + 熟练加值），失败则中毒 1 分钟，目标每次自己的回合结束时可重新豁免，成功则中毒结束。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "poison",
+      "label": "投毒（花费：1d6）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "ask('这次命中是否造成了偷袭伤害，并用 1d6 偷袭骰选择投毒？')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "save"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少从偷袭伤害中抵扣1d6伤害骰的资源联动机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游荡者:万能诡术:13",
+   "name": "万能诡术",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "对生物使用诡诈打击的摔绊选项时，还可以对法师之手 5 尺内的另一个生物施加同样效果。法师之手的位置与距离由人判断，摔绊选项本身不在本条里，人工处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少法师之手作为地图实体的坐标跟踪以及联动摔绊选项施加次要目标判定的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游荡者:心灵传送:9",
+   "name": "心灵传送",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "附赠动作：消耗一枚灵能骰，传送到至多「骰值 × 10 尺」处一处可见、未被占据的空间（心灵之刃随即消失，无伤害）。需要你掷灵能骰并输入点数；目的地是否可见、是否未被占据由人确认。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "心灵传送",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "灵能力量"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "number",
+       "move"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "move节点只提示文本，缺少掷骰动态计算距离（骰值×10尺）并执行网格传送的能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游荡者:心灵低语:3",
+   "name": "心灵低语",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "魔法动作：消耗一枚灵能骰，掷出的结果数即心灵感应的小时数（手动记录）；可以选择至多等同于熟练加值数量的可见生物建立感应。感应的时长、一里的距离限制、发送与接收信息，以及生物随时断开，由人处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "心灵低语",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "灵能力量"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": "pb",
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note",
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "心灵低语",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "持续时间不支持以掷出的灵能骰值为小时数动态计时，且长距离感应通讯属社交探索范畴",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游荡者:心灵之刃:3",
+   "name": "心灵之刃",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "执行攻击动作时的心灵之刃攻击已写（近战，1d6 心灵伤害，攻击与伤害加值按灵巧近似，需人确认）。本回合用过心灵之刃后，附赠动作化出第二把刃（1d4 伤害）已写；「另一只手空闲」由人确认。借机攻击时化刃、远程心灵之刃由人手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "心灵之刃",
+      "activation": "none",
+      "cost": [
+       {
+        "economy": "attack"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "reach"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "attack",
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "bonus",
+      "name": "心灵之刃（附赠）",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "reach"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && self.hasEffect('心灵之刃：本回合已化刃') && ask('另一只手空闲吗？')",
+      "root": [
+       "attack"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "心灵之刃：本回合已化刃",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少随动作临时生成虚拟武器（心灵之刃）并随攻击结束自动消失的动态武器管理机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游荡者:眩目（花费：3d6）:14",
+   "name": "眩目（花费：3d6）",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "诡诈打击选项，花费 3d6 偷袭骰：需人工从偷袭伤害中扣除（引擎没有偷袭骰池）。目标进行敏捷豁免（DC = 8 + 敏捷调整值 + 熟练加值）；失败则陷入目盲，直到其下个回合结束。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "dazzle",
+      "label": "眩目（花费：3d6）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "(attack.finesse || attack.ranged) && (roll.adv || (allyWithin(target, 5, { exclude: [self], notCond: '失能' }) && !roll.disadv))",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "save"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少从偷袭伤害中抵扣3d6伤害骰的资源联动机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游荡者:致命一击:17",
+   "name": "致命一击",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "第一轮偷袭命中时，目标的体质豁免已自动询问（DC 8 + 熟练 + 敏捷）。豁免失败后「本次攻击造成双倍伤害」需人手动加倍（引擎不能加倍本次攻击的全部伤害）。「偷袭生效」按攻击条件近似（灵巧或远程，且具有优势或 5 尺内有盟友），需人确认。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "coup",
+      "label": "致命一击：体质豁免",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "round == 1 && (attack.finesse || attack.ranged) && (roll.adv || (allyWithin(target, 5, { exclude: [self], notCond: '失能' }) && !roll.disadv))",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "save"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "豁免失败后缺少将本次攻击造成的总伤害进行翻倍（doubleDamage）的结算操作支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游荡者:专业渗透:9",
+   "name": "专业渗透",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "模仿大师：钻研至少一小时后，精准模仿他人的言语、笔迹（非战斗，手动处理）。机动瞄准：使用「稳定瞄准」时速度不归零。稳定瞄准的速度归零写在其自身条目里，本条目无法取消它，需人手动处理（速度保持不变）。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "高阶特性无法跨条目覆盖或取消稳定瞄准（Steady Aim）条目施加的速度归零限制，且模仿言语笔迹属于非战斗叙事",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游侠:不知疲倦:10",
+   "name": "不知疲倦",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "短休减少 1 级力竭：引擎没有减一级力竭的节点，需人工处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "temp",
+      "name": "不知疲倦：临时生命值",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "tireless"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "tempHp"
+      ]
+     }
+    ],
+    "triggers": [
+     {
+      "id": "short-rest",
+      "label": "不知疲倦：减少力竭",
+      "on": "restCompleted",
+      "role": "actor",
+      "window": "after",
+      "when": "event.kind == 'short' && self.exhaustion > 0",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少减少或扣除角色当前力竭等级（exhaustion level）的节点接口（如 reduceExhaustion）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游侠:法术共享:15",
+   "name": "法术共享",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "（驯兽师）你施展的、以自己为目标的法术，若原初行侣在你 30 尺内，可以让该法术效应同时作用于它。引擎没有独立的原初行侣参与者，需要人手动处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少原初行侣作为独立战斗参与者实体，无法自动将指向自身的法术效应同时复制作用于行侣",
+    "now": false
+   }
+  }
+ ]
+}

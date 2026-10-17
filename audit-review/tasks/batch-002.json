@@ -1,182 +1,74 @@
 {
  "batch": "batch-002",
- "count": 20,
+ "count": 10,
  "entries": [
   {
-   "key": "XPHB:spell:元素召唤术",
-   "name": "元素召唤术",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
+   "key": "XPHB:吟游诗人:威仪作锦:6",
+   "name": "威仪作锦",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
    "automation": "partial",
-   "text": "在 90 尺内可见未占据空间唤来元素灵魄（气/土/火/水），持续 1 小时（专注）；元素灵魄作为独立参战生物入场（使用对应法术位环阶数据块）需人手动在战斗中添加与操控。",
+   "text": "始终准备命令术属于人物卡静态层授予，此处不写。附赠动作无需法术位施展命令术的结算，以及魅惑你的生物在对抗此命令术时豁免自动失败，需手动处理。",
    "data": {
     "automation": "partial",
     "actions": [
      {
-      "id": "cast",
-      "name": "元素召唤术",
-      "activation": "action",
+      "id": "use",
+      "name": "威仪作锦",
+      "activation": "bonus",
       "cost": [
        {
-        "slot": {
-         "min": 4
-        }
+        "resource": "majesty"
        }
       ],
-      "targeting": {
-       "type": "point",
-       "range": 90
-      },
+      "targeting": null,
       "trigger": null,
       "concentration": {
-       "hours": 1
+       "minutes": 1
       },
       "requires": null,
+      "root": [
+       "note",
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "command",
+      "name": "威仪作锦：附赠动作施展命令术",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('威仪作锦')",
       "root": [
        "note"
       ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "summon",
-    "need": "缺少召唤独立参战生物入场并在战斗中自主行动的召唤机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:spell:异怪召唤术",
-   "name": "异怪召唤术",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "在 90 尺内可见未占据空间唤来异怪灵魄（类眼魔/夺心魔/史拉蟾），持续 1 小时（专注）；异怪灵魄作为独立参战生物入场（使用对应法术位环阶数据块）需人手动在战斗中添加与操控。",
-   "data": {
-    "automation": "partial",
-    "actions": [
+     },
      {
-      "id": "cast",
-      "name": "异怪召唤术",
-      "activation": "action",
+      "id": "reset",
+      "name": "威仪作锦：重置",
+      "activation": "free",
       "cost": [
        {
         "slot": {
-         "min": 4
+         "min": 3
         }
        }
       ],
-      "targeting": {
-       "type": "point",
-       "range": 90
-      },
+      "targeting": null,
       "trigger": null,
-      "concentration": {
-       "hours": 1
-      },
-      "requires": null,
+      "concentration": null,
+      "requires": "self.resource('majesty') < 1",
       "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "summon",
-    "need": "缺少召唤独立异怪灵魄生物入场参战并跟随施法者先攻行动的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:spell:构装召唤术",
-   "name": "构装召唤术",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "在 90 尺内可见未占据空间唤来构装灵魄（粘土/金属/岩石），持续 1 小时（专注）；构装灵魄作为独立参战生物入场（使用对应法术位环阶数据块）需人手动在战斗中添加与操控。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "构装召唤术",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 4
-        }
-       }
-      ],
-      "targeting": {
-       "type": "point",
-       "range": 90
-      },
-      "trigger": null,
-      "concentration": {
-       "hours": 1
-      },
-      "requires": null,
-      "root": [
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "summon",
-    "need": "缺少召唤独立构装灵魄生物入场参战并与施法者行动绑定的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:spell:龙类召唤术",
-   "name": "龙类召唤术",
-   "kind": "spell",
-   "from": "data/dyn/ai/spells.json",
-   "automation": "partial",
-   "text": "在 60 尺内召唤一个龙类灵魄，持续至多 1 小时（专注）。龙类灵魄拥有独立数据卡，使用施法者的先攻并在施法者回合后行动，遵从口头指令（无需动作），生命降为 0 或法术结束时消失；升环提升灵魄属性。灵魄的具体属性、移动与行动需在战斗中由玩家手动操控。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "cast",
-      "name": "龙类召唤术",
-      "activation": "action",
-      "cost": [
-       {
-        "slot": {
-         "min": 5
-        }
-       }
-      ],
-      "targeting": {
-       "type": "point",
-       "range": 60
-      },
-      "trigger": null,
-      "concentration": {
-       "hours": 1
-      },
-      "requires": null,
-      "root": [
-       "applyEffect",
-       "note"
+       "resource"
       ]
      }
     ],
     "triggers": [],
     "effects": [
      {
-      "name": "龙类召唤术",
+      "name": "威仪作锦",
       "statics": [],
       "flags": null,
       "rollMods": 0,
@@ -187,34 +79,186 @@
     "resources": []
    },
    "old_audit": {
-    "gap": "summon",
-    "need": "缺少召唤独立龙类灵魄实体入场并跟随施法者先攻行动的机制",
+    "gap": "resource",
+    "need": "缺少将一动作法术（命令术）改为附赠动作免法术位施展且使特定目标（魅惑源）豁免自动失败的复合机制",
     "now": false
    }
   },
   {
-   "key": "XPHB:spell:天界召唤术",
-   "name": "天界召唤术",
+   "key": "XPHB:战地施法者",
+   "name": "战地施法者",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "【专注】你为维持专注所做的体质豁免具有优势（自动）。【响应法术】当一个生物因离开你的触及范围而引发你的借机攻击时，你能使用你的反应来对这个生物施展一道法术，而非发动一次借机攻击：引擎在问你要不要借机攻击之前会先把这条列出来，选它就花掉你的反应、引擎不再问借机攻击；法术本身引擎施展不了（别人的回合里它不允许施放施法时间为动作的法术），请手动结算——施法时间为动作、且只把该生物选为唯一目标，这两点自己确认（它若因别的效果本来就不引发借机攻击，这条仍会列出来，选之前先看一眼日志里有没有问过借机攻击）。【姿势成分】手上有武器 / 盾牌也能满足姿势成分，纯叙事。注意：引擎只为「有近战攻击、能借机攻击」的人打开离开触及范围的时机，你完全没有近战攻击时它不会提示，这时请自己按反应处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "reactiveSpell",
+      "label": "战地施法者：响应法术",
+      "on": "leftReach",
+      "role": "target",
+      "window": "after",
+      "when": "!attacker.hasEffect('撤离')",
+      "cost": [
+       {
+        "economy": "reaction"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少敌对生物离开自身触及范围时的借机触发窗口（opportunityTrigger），及将借机攻击替换为施法反应的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:暗影寿衣",
+   "name": "暗影寿衣",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "可以随意施展隐形术，且无需消耗法术位。引擎的施法动作会扣法术位，且没有「免位施放」的写法，需人工施放且不扣法术位；法术效果按隐形术本身处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "支持不消耗法术位（at will）施展特定已知法术（隐形术）",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:永恒奴役",
+   "name": "永恒奴役",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "你可以在不消耗法术位的情况下施展一次活化死尸，长休恢复（资源「永恒奴役」）。引擎不改写法术消耗，需人工施展且不扣法术位；法术效果及仆从控制按活化死尸本身处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "允许不消耗法术位施展活化死尸法术",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:诡术师的逃脱术",
+   "name": "诡术师的逃脱术",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "你可以以自己为目标施展一次行动自如法术，无需消耗法术位。长休恢复（资源「诡术师的逃脱术」）。引擎不改写法术消耗，需人工施展且不扣法术位；法术效果按行动自如本身处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "允许无需法术位每日免费施展一次行动自如",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:点点星芒",
+   "name": "点点星芒",
    "kind": "spell",
    "from": "data/dyn/ai/spells.json",
    "automation": "partial",
-   "text": "专注至多 1 小时。在 90 尺内可见未占据空间唤来天界灵魄（复仇圣灵或守护圣灵）。天界灵魄作为独立盟友生物参战，使用施法者的先攻并在施法者回合后立即行动，生命降为 0 或法术结束时消失；升环施法时数据使用对应法术位环阶。灵魄的参战、属性及行动需手动操控。",
+   "text": "远程法术攻击。命中造成 1d8（随等级增长）光耀伤害，直到施法者下个回合结束前散发出 10 尺微光光照，且无法受益于隐形状态（微光与无法受益于隐形状态需手动处理）。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "cast",
-      "name": "天界召唤术",
+      "name": "点点星芒",
       "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "attack"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "点点星芒",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "source",
+        "nth": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "缺少动态光源光照范围渲染以及压制/禁止隐形状态受益的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:猎人印记",
+   "name": "猎人印记",
+   "kind": "spell",
+   "from": "data/dyn/spells.json",
+   "automation": "partial",
+   "text": "附赠动作，专注至多 1 小时，指定 90 尺内一个你能看见的生物。法术持续期间：① 你以任何攻击命中该目标时额外造成 1d6 点力场伤害（已自动）；② 你为寻找它而进行的感知（察觉或求生）检定具有优势（会问你一句这次检定是不是为了找它）。目标生命值降到 0 后，你可以用附赠动作「猎人印记：转移标记」把标记移到 90 尺内另一个你能看见的生物身上（引擎靠重新开启专注来换标记，所以转移后剩余时长按 1 小时重新算；目标是否真的降到 0 引擎不拦，请自己看）。手动部分：升环施法的时长（3~4 环 8 小时、5 环以上 24 小时）要自己延长专注；游侠 20 级的「伤害骰改 d10」也要手动改。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "猎人印记",
+      "activation": "bonus",
       "cost": [
        {
         "slot": {
-         "min": 5
+         "min": 1
         }
        }
       ],
       "targeting": {
-       "type": "point",
+       "type": "creature",
+       "count": 1,
        "range": 90
       },
       "trigger": null,
@@ -223,38 +267,66 @@
       },
       "requires": null,
       "root": [
-       "note"
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "transfer",
+      "name": "猎人印记：转移标记",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 90
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": "self.hasEffect('猎人印记')",
+      "root": [
+       "applyEffect"
       ]
      }
     ],
     "triggers": [],
-    "effects": [],
+    "effects": [
+     {
+      "name": "猎人印记",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 1,
+      "duration": null
+     }
+    ],
     "resources": []
    },
    "old_audit": {
-    "gap": "summon",
-    "need": "缺少召唤独立天界灵魄生物入场参战并跟随施法者先攻行动的机制",
+    "gap": "timing",
+    "need": "缺少专注持续期间以附赠动作重定向/转移标记目标（更新效应状态）的机制",
     "now": false
    }
   },
   {
-   "key": "XPHB:spell:邪魔召唤术",
-   "name": "邪魔召唤术",
+   "key": "XPHB:spell:野兽召唤术",
+   "name": "野兽召唤术",
    "kind": "spell",
    "from": "data/dyn/ai/spells.json",
    "automation": "partial",
-   "text": "专注至多 1 小时。在 90 尺内可见未占据空间唤来邪魔灵魄（魔鬼、恶魔或尤格罗斯魔），使用对应法术位环阶数据块。邪魔灵魄与施法者共用先攻并在施法者回合后立即行动，遵从口头指令（未发令时执行回避）；生命值降至 0 或法术结束时消失（召唤物实体与战斗行动由人手动处理）。",
+   "text": "专注至多 1 小时。在 90 尺内召唤一个野兽灵魄（天空、大地或海洋），使用对应环阶的野兽灵魄数据块。灵魄共用先攻并在施法者回合后立即行动，遵从口头指令；生命值降至 0 或法术结束时消失（召唤物实体与战斗行动由人手动处理）。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "cast",
-      "name": "邪魔召唤术",
+      "name": "野兽召唤术",
       "activation": "action",
       "cost": [
        {
         "slot": {
-         "min": 6
+         "min": 2
         }
        }
       ],
@@ -276,22 +348,26 @@
     "effects": [],
     "resources": []
    },
-   "old_audit": null
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少召唤独立野兽灵魄实体（陆地/空中/水生）入场参战并跟随施法者行动的机制",
+    "now": false
+   }
   },
   {
-   "key": "XPHB:spell:法术反制",
-   "name": "法术反制",
+   "key": "XPHB:spell:妖精召唤术",
+   "name": "妖精召唤术",
    "kind": "spell",
    "from": "data/dyn/ai/spells.json",
    "automation": "partial",
-   "text": "1 反应（当你看见 60 尺内一名生物施展一道具有言语、姿势或材料成分的法术时可用）。迫使该施法生物进行一次体质豁免。豁免失败则其法术消散且毫无效果，用于施展法术的动作/附赠动作/反应随之浪费，但法术位不被消耗。打断施法与返还法术位需手动处理。",
+   "text": "在 90 尺内召唤一个妖精灵魄（愤怒/欢欣/诡诈），持续至多 1 小时（专注）。妖精灵魄拥有独立数据卡，使用施法者的先攻并在施法者回合后行动，生命降为 0 或法术结束时消失；升环提升灵魄属性。灵魄的具体属性、移动与行动需在战斗中由玩家手动操控。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "cast",
-      "name": "法术反制",
-      "activation": "reaction",
+      "name": "妖精召唤术",
+      "activation": "action",
       "cost": [
        {
         "slot": {
@@ -300,79 +376,26 @@
        }
       ],
       "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 60,
-       "filter": "target.id != self.id && canSee(self, target)"
+       "type": "point",
+       "range": 90
       },
-      "trigger": {
-       "on": "spellCast",
-       "role": "any"
+      "trigger": null,
+      "concentration": {
+       "hours": 1
       },
-      "concentration": null,
       "requires": null,
       "root": [
-       "save"
+       "applyEffect",
+       "note"
       ]
      }
     ],
     "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "reactModify",
-    "need": "缺少反应打断正在施展的法术并使法术取消结算（但返还法术位）的机制",
-    "now": false
-   }
-  },
-  {
-   "key": "XPHB:condition:目盲",
-   "name": "目盲",
-   "kind": "feature",
-   "from": "data/rules-2024.json",
-   "automation": "?",
-   "text": "你无法视物，且会自动失败于任何需要视觉的属性检定。以你为目标的攻击检定具有优势，而你进行的攻击检定具有劣势。",
-   "data": {
-    "automation": "?",
-    "actions": [],
-    "triggers": [],
     "effects": [
      {
-      "name": "目盲",
+      "name": "妖精召唤术",
       "statics": [],
-      "flags": {
-       "cannot": [
-        "see"
-       ]
-      },
-      "rollMods": 3,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:condition:魅惑",
-   "name": "魅惑",
-   "kind": "feature",
-   "from": "data/rules-2024.json",
-   "automation": "partial",
-   "text": "你无法攻击魅惑源，也无法将其作为伤害性能力或魔法效应的对象。魅惑源对你进行的任何有关社交的属性检定均具有优势。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "魅惑",
-      "statics": [],
-      "flags": {
-       "forbidTarget": "source"
-      },
+      "flags": null,
       "rollMods": 0,
       "triggers": 0,
       "duration": null
@@ -381,323 +404,55 @@
     "resources": []
    },
    "old_audit": {
-    "gap": "condition",
-    "need": "缺少魅惑源对受术者进行社交属性检定时具有优势的底层规则支持",
+    "gap": "summon",
+    "need": "缺少召唤独立妖精灵魄实体入场参战并跟随施法者先攻行动的机制",
     "now": false
    }
   },
   {
-   "key": "XPHB:condition:耳聋",
-   "name": "耳聋",
-   "kind": "feature",
-   "from": "data/rules-2024.json",
-   "automation": "?",
-   "text": "你无法听声，且会自动失败于任何依赖听觉的属性检定。",
+   "key": "XPHB:spell:亡灵召唤术",
+   "name": "亡灵召唤术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "在 90 尺内可见未占据空间唤来亡灵灵魄（幽体/腐尸/骷髅），持续 1 小时（专注）；亡灵灵魄作为独立参战生物入场（使用对应法术位环阶数据块）需人手动在战斗中添加与操控。",
    "data": {
-    "automation": "?",
-    "actions": [],
-    "triggers": [],
-    "effects": [
+    "automation": "partial",
+    "actions": [
      {
-      "name": "耳聋",
-      "statics": [],
-      "flags": {
-       "cannot": [
-        "hear"
-       ]
-      },
-      "rollMods": 1,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:condition:力竭",
-   "name": "力竭",
-   "kind": "feature",
-   "from": "data/rules-2024.json",
-   "automation": "?",
-   "text": "可叠加。D20 检定减少力竭等级的两倍；速度减少力竭等级的 5 倍尺；6 级时死亡；长休降低 1 级。",
-   "data": {
-    "automation": "?",
-    "actions": [],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "力竭",
-      "statics": [
-       "speed"
-      ],
-      "flags": null,
-      "rollMods": 1,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:condition:恐慌",
-   "name": "恐慌",
-   "kind": "feature",
-   "from": "data/rules-2024.json",
-   "automation": "?",
-   "text": "只要恐惧源在你的视线范围内，你进行的属性检定与攻击检定就具有劣势。你无法自愿地向靠近恐惧源的方向移动。",
-   "data": {
-    "automation": "?",
-    "actions": [],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "恐慌",
-      "statics": [],
-      "flags": {
-       "cannot": [
-        "moveCloser:source"
-       ]
-      },
-      "rollMods": 1,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:condition:受擒",
-   "name": "受擒",
-   "kind": "feature",
-   "from": "data/rules-2024.json",
-   "automation": "?",
-   "text": "你的速度变为 0，且无法被增加。除擒抱者外，你对其他任何目标进行的攻击检定都具有劣势。",
-   "data": {
-    "automation": "?",
-    "actions": [],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "受擒",
-      "statics": [
-       "speedSet"
-      ],
-      "flags": null,
-      "rollMods": 1,
-      "triggers": 0,
-      "duration": {
-       "manual": true,
-       "endsOn": [
-        {
-         "event": "effectApplied",
-         "when": "source != null && event.bearer == source.id && source.has('失能')"
+      "id": "cast",
+      "name": "亡灵召唤术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
         }
-       ]
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:condition:失能",
-   "name": "失能",
-   "kind": "feature",
-   "from": "data/rules-2024.json",
-   "automation": "?",
-   "text": "你无法执行任何动作、附赠动作以及反应。你的专注将被打断。你无法说话。如果你在陷入失能状态期间投掷先攻，你的先攻检定将具有劣势。",
-   "data": {
-    "automation": "?",
-    "actions": [],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "失能",
-      "statics": [],
-      "flags": {
-       "blocks": [
-        "action",
-        "bonus",
-        "reaction"
-       ],
-       "breaksConcentration": true,
-       "cannot": [
-        "speak"
-       ]
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": 90
       },
-      "rollMods": 1,
-      "triggers": 0,
-      "duration": null
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "note"
+      ]
      }
     ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:condition:隐形",
-   "name": "隐形",
-   "kind": "feature",
-   "from": "data/rules-2024.json",
-   "automation": "?",
-   "text": "投掷先攻时具有优势。以你为目标的攻击检定具有劣势，而你进行的攻击检定具有优势；能看见你的生物不受此影响。",
-   "data": {
-    "automation": "?",
-    "actions": [],
     "triggers": [],
-    "effects": [
-     {
-      "name": "隐形",
-      "statics": [],
-      "flags": null,
-      "rollMods": 3,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
+    "effects": [],
     "resources": []
    },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:condition:麻痹",
-   "name": "麻痹",
-   "kind": "feature",
-   "from": "data/rules-2024.json",
-   "automation": "?",
-   "text": "你陷入失能状态。速度变为 0 且无法被增加。力量与敏捷豁免自动失败。以你为目标的攻击检定具有优势。攻击者位于你 5 尺内时，命中你的攻击都会变为重击。",
-   "data": {
-    "automation": "?",
-    "actions": [],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "麻痹",
-      "statics": [
-       "speedSet"
-      ],
-      "flags": null,
-      "rollMods": 3,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:condition:石化",
-   "name": "石化",
-   "kind": "feature",
-   "from": "data/rules-2024.json",
-   "automation": "?",
-   "text": "你陷入失能状态。速度变为 0。以你为目标的攻击检定具有优势。力量与敏捷豁免自动失败。你具有所有伤害的抗性，并免疫中毒状态。",
-   "data": {
-    "automation": "?",
-    "actions": [],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "石化",
-      "statics": [
-       "speedSet",
-       "resistAll",
-       "conditionImmune"
-      ],
-      "flags": null,
-      "rollMods": 2,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:condition:中毒",
-   "name": "中毒",
-   "kind": "feature",
-   "from": "data/rules-2024.json",
-   "automation": "?",
-   "text": "你进行的攻击检定与属性检定具有劣势。",
-   "data": {
-    "automation": "?",
-    "actions": [],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "中毒",
-      "statics": [],
-      "flags": null,
-      "rollMods": 1,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:condition:倒地",
-   "name": "倒地",
-   "kind": "feature",
-   "from": "data/rules-2024.json",
-   "automation": "?",
-   "text": "你只能匍匐，或消耗一半速度起立。你进行的攻击检定具有劣势。攻击者位于你 5 尺内时对你的攻击具有优势，否则具有劣势。",
-   "data": {
-    "automation": "?",
-    "actions": [],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "倒地",
-      "statics": [],
-      "flags": null,
-      "rollMods": 3,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
-  },
-  {
-   "key": "XPHB:condition:束缚",
-   "name": "束缚",
-   "kind": "feature",
-   "from": "data/rules-2024.json",
-   "automation": "?",
-   "text": "你的速度变为 0。以你为目标的攻击检定具有优势，而你进行的攻击检定具有劣势。你进行的敏捷豁免检定具有劣势。",
-   "data": {
-    "automation": "?",
-    "actions": [],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "束缚",
-      "statics": [
-       "speedSet"
-      ],
-      "flags": null,
-      "rollMods": 3,
-      "triggers": 0,
-      "duration": null
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": null
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少召唤独立亡灵灵魄生物入场参战并跟随施法者先攻行动的机制",
+    "now": false
+   }
   }
  ]
 }

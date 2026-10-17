@@ -1,192 +1,173 @@
 {
  "batch": "batch-013",
- "count": 20,
+ "count": 10,
  "entries": [
   {
-   "key": "TCE:牧师:午夜飞步:6",
-   "name": "午夜飞步",
-   "kind": "classFeature",
+   "key": "AU:spell:步履维艰",
+   "name": "步履维艰",
+   "kind": "spell",
    "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "身处微光光照或黑暗中时，能以附赠动作获得等于自身步行速度的飞行速度，持续1分钟。可使用次数等同于熟练加值，长休恢复。引擎不追踪环境光照（通过询问确认）与飞行高度，飞行移动需由人手动处理。",
+   "text": "专注至多 1 分钟。选择 120 尺内至多三名可见生物进行智力豁免。豁免失败则目标速度减半且无法执行疾走动作。一名被妨碍的目标在其每个回合结束时重复此豁免，成功则终止法术（疾走限制需手动处理）。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "午夜飞步",
-      "activation": "bonus",
+      "name": "步履维艰",
+      "activation": "action",
       "cost": [
        {
-        "resource": "午夜飞步"
+        "slot": {
+         "min": 2
+        }
        }
       ],
-      "targeting": null,
+      "targeting": {
+       "type": "creature",
+       "count": 3,
+       "range": 120
+      },
       "trigger": null,
-      "concentration": null,
-      "requires": "ask('当前身处微光光照或黑暗中？')",
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
       "root": [
-       "applyEffect"
+       "save"
       ]
      }
     ],
     "triggers": [],
     "effects": [
      {
-      "name": "午夜飞步",
-      "statics": [],
+      "name": "步履维艰",
+      "statics": [
+       "speed"
+      ],
       "flags": null,
       "rollMods": 0,
       "triggers": 0,
       "duration": {
-       "minutes": 1
+       "minutes": 1,
+       "saveEnds": {
+        "ability": "int",
+        "dc": "self.spell.dc",
+        "at": "turnEnd"
+       }
       }
      }
     ],
     "resources": []
    },
    "old_audit": {
-    "gap": "vision",
-    "need": "动态感知环境光照级别（微光或黑暗）并解锁飞行速度与三维移动",
+    "gap": "condition",
+    "need": "状态效应（EffectTemplate.flags）缺少禁止执行特定通用动作（如疾走 Dash）的标记控制",
     "now": false
    }
   },
   {
-   "key": "TCE:牧师:引导神力：和平抚慰:3",
-   "name": "引导神力：和平抚慰",
-   "kind": "classFeature",
+   "key": "AU:spell:沉鱼落雁",
+   "name": "沉鱼落雁",
+   "kind": "spell",
    "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "以一个动作消耗一次引导神力：移动等同于你速度的距离，此移动不引发借机攻击。移动期间进入任意其他生物周围5尺范围内时，可为其恢复 2d6 + 感知调整值（最低1点）生命值，每个生物限一次。战棋移动路径与借机攻击豁免由人处理；移动距离与对所选目标的治疗已部分自动化。",
+   "text": "专注至多 1 分钟。选择 60 尺内可见生物进行魅力豁免，失败则陷入魅惑与失能状态。若距你超过 5 尺，其回合内将径直向你移动；若在其回合结束时处于你 5 尺内，受到 4d8（每升一环 +1d8）心灵伤害。进入伤害地形可重掷豁免；后续回合可使用动作指定新目标（移动轨迹与升环伤害需手动处理）。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "引导神力：和平抚慰",
+      "name": "沉鱼落雁",
       "activation": "action",
       "cost": [
        {
-        "resource": "引导神力"
+        "slot": {
+         "min": 7
+        }
        }
       ],
       "targeting": {
        "type": "creature",
-       "filter": "target.id != self.id"
+       "count": 1,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     },
+     {
+      "id": "retarget",
+      "name": "沉鱼落雁：指定新目标",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating",
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "沉鱼落雁",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "AU:spell:负能量洪流",
+   "name": "负能量洪流",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "向 60 尺内一个你可见的生物射出负能量。目标不是亡灵：体质豁免，失败受 3d10+25 黯蚀伤害（法术位每比五环高一环，伤害 +1d10），成功则伤害减半。被这次伤害杀死的类人生物，会在你的下一回合开始时变成一只受你语言指令控制的丧尸，持续 24 小时（之后依自己的本性行动）——引擎认不出「死于这次伤害」、也不会在下一回合开始时凭空放进一个新生物，这一步请手动处理。目标若是亡灵：改为获得 3d10 临时生命值。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "负能量洪流",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "canSee(self, target)"
       },
       "trigger": null,
       "concentration": null,
       "requires": null,
       "root": [
-       "economy",
-       "heal"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "move",
-    "need": "移动过程中经过盟友周围 5 尺时触发单次治疗（移动轨迹事件）",
-    "now": false
-   }
-  },
-  {
-   "key": "TCE:牧师:增强联结:17",
-   "name": "增强联结",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "manual",
-   "text": "勇气联结和保护联结在两名联结生物相距不超过60尺时即可生效。当生物使用保护联结为他人承受伤害时，对该伤害具有抗性。保护联结已标记为手动处理，其生效距离与代受伤害的抗性结算由人在结算保护联结时手动处理；勇气联结的60尺范围已在其效果中按等级体现。",
-   "data": {
-    "automation": "manual",
-    "actions": [],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "reactModify",
-    "need": "替他人代受伤害时代受者获得伤害抗性及远距离代受判定",
-    "now": false
-   }
-  },
-  {
-   "key": "TCE:奇械学徒",
-   "name": "奇械学徒",
-   "kind": "feature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "manual",
-   "text": "所选奇械师戏法、一环法术、智力施法属性与工匠工具熟练及法器功能均属于人物卡静态层。每日可无需法术位施展一次所选的一环法术（资源「奇械学徒（免费施展一环法术）」，长休恢复），亦可用法术位施展。具体法术施展与法术位免除由玩家手动处理。",
-   "data": {
-    "automation": "manual",
-    "actions": [],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "resource",
-    "need": "专长绑定动态自选法术并提供长休免费施展与后续法术位施展联动",
-    "now": false
-   }
-  },
-  {
-   "key": "TCE:枪手",
-   "name": "枪手",
-   "kind": "feature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "manual",
-   "text": "枪械熟练项属于人物卡静态层（建卡时选的熟练项），战斗数据里不用再写。引擎不结算枪械的 LD（装填）词条，忽略即可。「你在敌对生物 5 尺范围内发动远程攻击检定时不会因此具有劣势」是站位规则：引擎本身不会因为敌人在 5 尺内就给远程攻击加劣势，所以也不需要在战斗数据里取消；如果你在地图上手动给这类攻击加了劣势，请自己改回来。",
-   "data": {
-    "automation": "manual",
-    "actions": [],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "timing",
-    "need": "免除因 5 尺内有未失能敌对生物导致的远程攻击检定劣势",
-    "now": false
-   }
-  },
-  {
-   "key": "TCE:人工生命仆从",
-   "name": "人工生命仆从",
-   "kind": "feature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "注法造出的人工生命仆从（注法时用一颗价值至少 100gp 的宝石或水晶作它的心脏）：微型构装生物，AC 13，HP = 1 + 你的智力调整值 + 你的奇械师等级（生命骰数量同奇械师等级），速度 20 尺、飞行 30 尺，力量 4 / 敏捷 15 / 体质 12 / 智力 10 / 感知 10 / 魅力 7，力场打击（法术攻击，射程 30 尺，1d4 + 熟练加值 力场伤害），免疫毒素与力竭、中毒状态；它对你和同伴友善、服从你的命令，与你共用先攻并在你回合后立即行动。它可以自行移动和执行反应，但你只有用一个附赠动作命令它，它才会执行数据中的动作或其他动作（否则只能回避；你失能时它可以自行选择任何动作）——引擎让召唤物自己行动、管不了这条附赠动作，请用「人工生命仆从：命令行动」记录。反射闪避已经自动化；生命骰、对它施展修复术恢复 2d6、以及你或它死亡时它消失（只留心脏）都要人手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "人工生命仆从：唤出仆从",
-      "activation": "free",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "summon"
-      ]
-     },
-     {
-      "id": "command",
-      "name": "人工生命仆从：命令行动",
-      "activation": "bonus",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "turn.isMine",
-      "root": [
-       "note"
+       "if"
       ]
      }
     ],
@@ -196,177 +177,85 @@
    },
    "old_audit": {
     "gap": "summon",
-    "need": "随从生物模板、独立先攻排队及附赠动作命令行动",
+    "need": "缺少被法术杀死后延迟生成受控丧尸随从并加入战斗的召唤机制",
     "now": false
    }
   },
   {
-   "key": "TCE:圣武士:尘世壁垒:20",
-   "name": "尘世壁垒",
-   "kind": "classFeature",
+   "key": "AU:spell:改写命运",
+   "name": "改写命运",
+   "kind": "spell",
    "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "以附赠动作获得 1 分钟增益，每次长休 1 次（可消耗 5 环法术位重置）。获得 120 尺真实视觉（手动处理）。对异怪、天界生物、元素、精类或邪魔的攻击检定具有优势。攻击命中并造成伤害时可迫使其进行魅力豁免，失败且不属于此位面时被放逐回原生位面，成功则 24 小时内免疫该放逐（放逐与免疫需手动处理）。",
+   "text": "1 反应（60 尺内可见生物 d20 检定失败时执行）。该生物以优势重新进行该检定并必须使用新结果；若最终成功，则获得 6d10 临时生命值（重骰与临时生命值需手动处理）。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "尘世壁垒",
-      "activation": "bonus",
-      "cost": [
-       {
-        "resource": "mortalBulwark"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "!self.hasEffect('尘世壁垒')",
-      "root": [
-       "applyEffect"
-      ]
-     },
-     {
-      "id": "end",
-      "name": "结束尘世壁垒",
-      "activation": "free",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.hasEffect('尘世壁垒')",
-      "root": [
-       "removeEffect"
-      ]
-     },
-     {
-      "id": "reset",
-      "name": "尘世壁垒：重置使用权（五环法术位）",
-      "activation": "free",
+      "name": "改写命运",
+      "activation": "reaction",
       "cost": [
        {
         "slot": {
-         "min": 5,
-         "max": 5
+         "min": 7
         }
        }
       ],
-      "targeting": null,
-      "trigger": null,
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": {
+       "on": "d20Rolled",
+       "role": "any",
+       "window": "before",
+       "when": "roll.failing && within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))"
+      },
       "concentration": null,
-      "requires": "self.resource('mortalBulwark') < 1",
+      "requires": null,
       "root": [
-       "resource"
+       "note"
       ]
      }
     ],
     "triggers": [],
-    "effects": [
-     {
-      "name": "尘世壁垒",
-      "statics": [],
-      "flags": null,
-      "rollMods": 1,
-      "triggers": 1,
-      "duration": {
-       "minutes": 1
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "vision",
-    "need": "真实视觉自动穿透隐形/幻觉，以及按生物所属原生位面判定放逐与免疫",
-    "now": false
-   }
-  },
-  {
-   "key": "TCE:圣武士:鼓舞斩:3",
-   "name": "鼓舞斩",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "以至圣斩造成伤害时，可立即用附赠动作消耗 1 次引导神力，为你自身或 30 尺内由你选择的生物分配合计 2d8 + 你的圣武士等级 点临时生命值。自动化默认加给自身，分配给他人需手动调整。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "引导神力：鼓舞斩",
-      "activation": "bonus",
-      "cost": [
-       {
-        "resource": "channel-divinity"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "ask('刚才是否以至圣斩造成了伤害？')",
-      "root": [
-       "tempHp",
-       "note"
-      ]
-     }
-    ],
-    "triggers": [
-     {
-      "id": "inspire",
-      "label": "鼓舞斩：至圣斩后触发",
-      "on": "spellCast",
-      "role": "actor",
-      "window": "after",
-      "when": "event.key == 'XPHB:spell:至圣斩'",
-      "cost": [
-       {
-        "resource": "channel-divinity"
-       }
-      ],
-      "modify": [],
-      "do": [
-       "tempHp",
-       "note"
-      ]
-     }
-    ],
     "effects": [],
     "resources": []
    },
-   "old_audit": {
-    "gap": "choice",
-    "need": "将 2d8+等级点临时生命值自由分配给自身或 30 尺内任意自选生物（点数池自由拆分分配）",
-    "now": false
-   }
+   "old_audit": null
   },
   {
-   "key": "TCE:圣武士:辉煌防御:15",
-   "name": "辉煌防御",
-   "kind": "classFeature",
+   "key": "AU:spell:钢铁之躯",
+   "name": "钢铁之躯",
+   "kind": "spell",
    "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "当你或你周围 10 尺内你可见的其他生物被一次攻击检定命中时，你可以用反应（消耗 1 次辉煌防御，次数等于魅力调整值、至少 1 次，长休恢复）使被击中的生物获得等同于你魅力调整值（至少 +1）的 AC 加值。加值由引擎加上并立刻按新 AC 重新判定这次攻击，因此该次攻击可能变成失手；这次攻击结算后加值消失。需要人处理的部分：若这次攻击因此失手、且攻击者在你的武器触及范围内，你可以对那个攻击者进行一次武器攻击（属于本反应的一部分）—— 引擎不会自动发起这次武器攻击，请在武器行手动攻击一次。",
+   "text": "专注至多 1 小时。触碰一名自愿生物化作活着的钢铁。法术结束前，目标力竭等级不会提升；具有对钝击、火焰、穿刺和挥砍伤害的抗性；免疫毒素伤害以及麻痹、石化和中毒状态。施法时目标身上的麻痹、石化或中毒状态立即结束（力竭与状态解除需手动处理）。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "辉煌防御",
-      "activation": "reaction",
+      "name": "钢铁之躯",
+      "activation": "action",
       "cost": [
        {
-        "resource": "radiantDefense"
+        "slot": {
+         "min": 8
+        }
        }
       ],
-      "targeting": null,
-      "trigger": {
-       "on": "attackHit",
-       "role": "any",
-       "window": "before",
-       "when": "attacker.id != self.id && (target.id == self.id || (target.isAllyOf(self) && within(self, target, 10) && canSee(self, target)))"
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
       },
-      "concentration": null,
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
       "requires": null,
       "root": [
        "applyEffect",
@@ -377,102 +266,283 @@
     "triggers": [],
     "effects": [
      {
-      "name": "辉煌防御",
+      "name": "钢铁之躯",
       "statics": [
-       "ac"
+       "resist",
+       "immune",
+       "conditionImmune"
       ],
       "flags": null,
       "rollMods": 0,
       "triggers": 0,
       "duration": {
-       "rounds": 1,
-       "endsOn": [
-        {
-         "event": "attackMissed",
-         "when": "event.target == self.id"
-        },
-        {
-         "event": "damageTaken",
-         "when": "event.target == self.id"
-        }
-       ]
+       "hours": 1
       }
      }
     ],
     "resources": []
    },
-   "old_audit": {
-    "gap": "timing",
-    "need": "反应使攻击失手后无缝追加对触及内攻击者的近战武器反击攻击",
-    "now": false
-   }
+   "old_audit": null
   },
   {
-   "key": "TCE:圣武士:警戒呵斥:15",
-   "name": "警戒呵斥",
-   "kind": "classFeature",
+   "key": "AU:spell:幻影巨龙",
+   "name": "幻影巨龙",
+   "kind": "spell",
    "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "当你或你 30 尺内可见生物在智力、感知或魅力豁免上成功时，你可以用反应对迫使进行豁免检定的生物造成 2d8 + 魅力调整值点力场伤害（迫使豁免的生物需手动指定为目标结算）。",
+   "text": "专注至多 1 分钟。在 120 尺内可见未占据空间创造巨型阴影巨龙幻象，免疫所有伤害和状态。出现时可见幻象的敌人须通过 DC 感知豁免，否则丢下持握物并陷入恐慌；回合结束若看不到幻象可重投豁免。以附赠动作可令巨龙移动至多 60 尺并喷吐 60 尺锥状区域，区域内生物须通过 DC 智力豁免，失败受 6d6 强酸/寒冷/火焰/闪电/暗蚀/毒素伤害（施法时选择），成功受半伤。生物通过智力（调查）检定可看穿幻象，其对抗恐慌与吐息的豁免具有优势（巨龙实体、移动、看穿检定与视线豁免由人判定）。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "警戒呵斥",
-      "activation": "reaction",
+      "name": "幻影巨龙",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 8
+        }
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": 120
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "breath",
+      "name": "幻影巨龙：阴影吐息",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "cone",
+        "size": 60
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating",
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "幻影巨龙：恐慌",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "AU:spell:魂灵提灯",
+   "name": "魂灵提灯",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "持续 10 分钟。上方悬浮一盏幽灵般的黑色提灯，散发 60 尺微光光照。敌人在光照内死亡时飞入提灯一枚灵魂碎片（容量上限为施法属性调整值，法术结束时消散）。可用附赠动作消耗一枚灵魂碎片对 60 尺内可见目标产生效应：【汲取生命】体质豁免，失败受 4d8 + 施法属性调整值暗蚀伤害，成功减半；【修复亡灵】亡灵目标恢复 4d8 + 施法属性调整值生命值；【护佑盟友】其他生物对其攻击检定劣势至你下回合开始。引擎没有「光照范围内死亡」这个时机（死亡不开窗口），灵魂碎片的收集与计数需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "魂灵提灯",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "lantern-power",
+      "name": "魂灵提灯：释放碎片",
+      "activation": "bonus",
       "cost": [],
       "targeting": {
        "type": "creature",
        "count": 1,
        "range": 60
       },
-      "trigger": {
-       "on": "d20Rolled",
-       "role": "any",
-       "window": "after",
-       "when": "roll.kind == 'save' && (roll.ability == 'int' || roll.ability == 'wis' || roll.ability == 'cha') && !roll.failing && (roll.roller == self.id || (within(self, combatant(roll.roller), 30) && canSee(self, combatant(roll.roller))))"
-      },
+      "trigger": null,
       "concentration": null,
-      "requires": null,
+      "requires": "self.hasEffect('魂灵提灯')",
       "root": [
-       "damage"
+       "choose",
+       "note"
       ]
      }
     ],
     "triggers": [],
-    "effects": [],
+    "effects": [
+     {
+      "name": "魂灵提灯",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 10
+      }
+     },
+     {
+      "name": "魂灵护佑",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "source",
+        "nth": 1
+       }
+      }
+     }
+    ],
     "resources": []
    },
    "old_audit": {
-    "gap": "source",
-    "need": "豁免成功后获取迫使进行豁免的施法者/攻击者（source）作为反击目标造成力场伤害",
+    "gap": "resource",
+    "need": "缺少光照区域内敌人死亡时自动收集充能点数（临时专属资源池）并在后续回合附赠动作消耗的机制",
     "now": false
    }
   },
   {
-   "key": "TCE:圣武士:绝伦健将:3",
-   "name": "绝伦健将",
-   "kind": "classFeature",
+   "key": "AU:spell:汲能术",
+   "name": "汲能术",
+   "kind": "spell",
    "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "以附赠动作消耗 1 次引导神力，10 分钟内力量（运动）和敏捷（体操）检定具有优势。负重与拖拉重量翻倍、跳远跳高距离增加 10 尺需手动处理。",
+   "text": "专注至多 1 分钟。汲取 60 尺内一名可见生物的生命。目标进行敏捷豁免，失败受 (1 + slot.level)d8 暗蚀伤害并受汲能触须连接；成功受半伤且法术结束。造成伤害时你恢复等同于伤害一半的生命值。法术持续期间在你的每个回合可用附赠动作自动对目标造成 2d8 暗蚀伤害并恢复一半数值生命值。目标超出 60 尺或具有掩护时法术结束（恢复生命值、距离与掩护需手动判定）。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "绝伦健将",
-      "activation": "bonus",
+      "name": "汲能术",
+      "activation": "action",
       "cost": [
        {
-        "resource": "channel-divinity"
+        "slot": {
+         "min": 5
+        }
        }
       ],
-      "targeting": null,
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     },
+     {
+      "id": "drain",
+      "name": "汲能术：汲取",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
       "trigger": null,
       "concentration": null,
-      "requires": "turn.isMine",
+      "requires": "self.hasEffect('汲能术') && turn.isMine",
+      "root": [
+       "damage",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "汲能术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "healByDamage",
+    "need": "缺少按实际造成伤害的一半自动为施法者治疗生命值（吸血）的结算机制",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:spell:假寐术",
+   "name": "假寐术",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "选择 30 尺内至多 (slot.level) 名可见自愿生物，使其在 10 分钟持续时间内陷入昏迷状态。若目标受到伤害或有其他生物用动作摇醒，则法术提前终止。若目标完整处于昏迷状态达 10 分钟，则获得完成一次短休的增益，且在完成一次长休前不能再受此法术影响（短休结算与摇醒需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "假寐术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": "slot.level",
+       "range": 30
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
       "root": [
        "applyEffect"
       ]
@@ -481,10 +551,10 @@
     "triggers": [],
     "effects": [
      {
-      "name": "绝伦健将",
+      "name": "假寐",
       "statics": [],
       "flags": null,
-      "rollMods": 2,
+      "rollMods": 0,
       "triggers": 0,
       "duration": {
        "minutes": 10
@@ -494,40 +564,44 @@
     "resources": []
    },
    "old_audit": {
-    "gap": "other",
-    "need": "负重与拖拉上限翻倍及跳远跳高距离增加等非战斗属性计算",
+    "gap": "resource",
+    "need": "缺少法术持续满指定时间后自动为目标触发完成短休结算并施加长休前免疫标记的机制",
     "now": false
    }
   },
   {
-   "key": "TCE:圣武士:驱散异域:3",
-   "name": "驱散异域",
-   "kind": "classFeature",
+   "key": "AU:spell:距离失真",
+   "name": "距离失真",
+   "kind": "spell",
    "from": "data/dyn/ai/books.json",
    "automation": "partial",
-   "text": "以动作消耗 1 次引导神力，展示圣徽，周围 30 尺内能听到祷言的异怪、天界生物、元素、精类或邪魔须进行感知豁免（DC 为法术豁免 DC），失败陷入恐慌 1 分钟（受到任何伤害提前结束）。被驱散生物远离移动、只能疾走或挣脱等行为限制需手动处理。",
+   "text": "专注至多 10 分钟。在 120 尺内以一点为中心的 60 尺球状区域创造空间膨胀幻象。对区域内可见生物可选择：【天旋地转】智力豁免，失败受 2d10 心灵伤害且区域对其视为困难地形至其回合结束；【缩地成寸】速度增加 20 尺至其下一回合结束。法术持续期间，生物进入区域或在其中结束回合时可使其受其中一道效应（每回合限一次）。进入/结束回合触发与困难地形需手动处理。",
    "data": {
     "automation": "partial",
     "actions": [
      {
       "id": "use",
-      "name": "驱散异域",
+      "name": "距离失真",
       "activation": "action",
       "cost": [
        {
-        "resource": "channel-divinity"
+        "slot": {
+         "min": 4
+        }
        }
       ],
       "targeting": {
        "type": "area",
-       "range": "self",
+       "range": 120,
        "area": {
-        "shape": "emanation",
-        "radius": 30
+        "shape": "sphere",
+        "radius": 60
        }
       },
       "trigger": null,
-      "concentration": null,
+      "concentration": {
+       "minutes": 10
+      },
       "requires": null,
       "root": [
        "forEach"
@@ -535,131 +609,9 @@
      }
     ],
     "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "condition",
-    "need": "驱散/恐慌状态对生物行动的强制逻辑（强制远离、仅可疾走或规避）",
-    "now": false
-   }
-  },
-  {
-   "key": "TCE:圣武士:哨卫灵光:7",
-   "name": "哨卫灵光",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "当你未处于失能时，你和周围 10 尺内由你选择的盟友先攻检定获得等同于你熟练加值的加值。18 级灵光范围增至 30 尺需手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "other",
-    "need": "灵光作用半径 Aura.radius 支持随角色职业等级缩放的表达式（18 级从 10 尺增至 30 尺）",
-    "now": false
-   }
-  },
-  {
-   "key": "TCE:圣武士:现世传说:20",
-   "name": "现世传说",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "附赠动作获得 1 分钟增益，每次长休一次；也可消耗一个五环法术位重置使用权。魅力检定具有优势。重掷豁免：豁免失败时用反应重投，必须采用新结果。无误打击：每个自己回合一次，武器攻击失手时改为命中（用给攻击检定 +100 近似，天然 1 是否仍算失手请人工判断）。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "现世传说",
-      "activation": "bonus",
-      "cost": [
-       {
-        "resource": "livingLegend"
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "!self.hasEffect('现世传说')",
-      "root": [
-       "applyEffect"
-      ]
-     },
-     {
-      "id": "end",
-      "name": "结束现世传说",
-      "activation": "free",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.hasEffect('现世传说')",
-      "root": [
-       "removeEffect"
-      ]
-     },
-     {
-      "id": "reset",
-      "name": "现世传说：重置使用权（五环法术位）",
-      "activation": "free",
-      "cost": [
-       {
-        "slot": {
-         "min": 5,
-         "max": 5
-        }
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.resource('livingLegend') < 1",
-      "root": [
-       "resource"
-      ]
-     }
-    ],
-    "triggers": [],
     "effects": [
      {
-      "name": "现世传说",
-      "statics": [],
-      "flags": null,
-      "rollMods": 1,
-      "triggers": 2,
-      "duration": {
-       "minutes": 1
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "reactModify",
-    "need": "攻击失手时直接强制改为命中（无视天然 1 自动失手规则）",
-    "now": false
-   }
-  },
-  {
-   "key": "TCE:圣武士:迅捷灵光:7",
-   "name": "迅捷灵光",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "自身速度 +10 尺已在静态层。5 尺灵光内的盟友在自己回合开始时步行速度获得 +10 尺加值，直至那一回合结束；18 级灵光范围增至 10 尺需手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "迅捷灵光",
+      "name": "缩地成寸",
       "statics": [
        "speed"
       ],
@@ -678,292 +630,8 @@
     "resources": []
    },
    "old_audit": {
-    "gap": "other",
-    "need": "灵光作用半径 Aura.radius 支持随角色职业等级缩放的表达式（18 级从 5 尺增至 10 尺）",
-    "now": false
-   }
-  },
-  {
-   "key": "TCE:术士:灵能术法:6",
-   "name": "灵能术法",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "施展灵能法术特性中的 1 环或更高环阶法术时，可改为消耗等同于法术环数的术法点而非消耗法术位施展，且无视语言、姿势成分及不会消耗的材料成分。此处提供扣除术法点的辅助动作；具体法术施展与成分免除由人手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "灵能术法：消耗术法点施法",
-      "activation": "free",
-      "cost": [],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.resource('sorcery_points') > 0",
-      "root": [
-       "number",
-       "resource",
-       "note"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "resource",
-    "need": "以术法点替代法术位施展灵能法术并自动免除语言、姿势与无消耗材料成分",
-    "now": false
-   }
-  },
-  {
-   "key": "TCE:术士:律令之壁:6",
-   "name": "律令之壁",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "以一个动作消耗 1~5 点术法点，为你自己或 30 尺内一个你能看见的生物造出屏障：屏障里有等量的 d8。被守护者每次受到伤害时，可以选择消耗其中几颗 d8、掷出并把合计从这次伤害里减掉（会弹一个数字框，上限就是屏障里剩下的颗数）；颗数消完屏障就结束。屏障持续到你完成长休，或你再次使用这个特性（在新的生物身上再造屏障时，旧的那个自动结束）。【要人处理】①「屏障还剩几颗」是靠把效应重新施加一次来记的，所以界面上会看到一份旧的「律令之壁」标着「被压制」——它不参与结算，吃完最后一颗或长休时会一起清掉。②一次伤害包带有多种伤害类型时，引擎会把减伤分别从每种类型里各扣一次（引擎的既有行为），混合伤害请自己核对结果。③被守护的是别人时，那个「消耗几颗」的弹窗给的是那个生物的控制器；如果那是 DM 的怪，请让 DM 代答。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "律令之壁",
-      "activation": "action",
-      "cost": [],
-      "targeting": {
-       "type": "creature",
-       "count": 1,
-       "range": 30,
-       "filter": "canSee(self, target) || target.id == self.id"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.resource('sorcery_points') > 0",
-      "root": [
-       "number",
-       "resource",
-       "applyEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "律令之壁",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 1,
-      "duration": {
-       "manual": true,
-       "endsOn": [
-        {
-         "event": "restCompleted",
-         "when": "event.kind == 'long'"
-        },
-        {
-         "event": "effectApplied",
-         "when": "event.key == 'TCE:术士:律令之壁:6#律令之壁' && source != null && event.source == source.id && event.bearer != self.id"
-        }
-       ]
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "remember",
-    "need": "记录屏障所持有的 d8 骰子池，并在受伤害时逐次按需扣减骰子减伤",
-    "now": false
-   }
-  },
-  {
-   "key": "TCE:术士:扭曲爆裂:18",
-   "name": "扭曲爆裂",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "以一个动作，传送到 120 尺内可见未占据位置，原位置 30 尺内生物须进行力量豁免，失败受 3d10 力场伤害并被拉向原位置，成功受半伤且不被拉扯。传送与位移需手动处理。每次长休免费使用 1 次，之后可消耗 5 点术法点恢复使用次数。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "扭曲爆裂",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "warping-implosion"
-       }
-      ],
-      "targeting": {
-       "type": "area",
-       "range": "self",
-       "area": {
-        "shape": "sphere",
-        "radius": 30
-       }
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "move",
-       "forEach"
-      ]
-     },
-     {
-      "id": "restore",
-      "name": "扭曲爆裂：恢复使用次数（5术法点）",
-      "activation": "free",
-      "cost": [
-       {
-        "resource": "sorcery_points",
-        "n": 5
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "resource"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "move",
-    "need": "自身传送后将原位置周围 30 尺内豁免失败的敌人强制拉近至原位置",
-    "now": false
-   }
-  },
-  {
-   "key": "TCE:术士:时械矩阵:18",
-   "name": "时械矩阵",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "以动作召唤精魂覆盖以你为中心30尺立方，同时产生三种效应：治愈（合计至多100生命值，随意分配给范围内任意数量生物）、修复（范围内损坏的物件立刻修复）、破法（范围内任意生物或物件承受的六环或以下法术结束）。每次长休可免费使用一次；也可消耗7点术法点恢复使用权。治愈的总量不超过100由使用者自行控制；修复和破法手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "时械矩阵",
-      "activation": "action",
-      "cost": [
-       {
-        "resource": "clockwork-cavalcade"
-       }
-      ],
-      "targeting": {
-       "type": "area",
-       "range": "self",
-       "area": {
-        "shape": "cube",
-        "size": 30
-       }
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "note",
-       "forEach"
-      ]
-     },
-     {
-      "id": "restore",
-      "name": "时械矩阵：恢复使用权（7术法点）",
-      "activation": "free",
-      "cost": [
-       {
-        "resource": "sorcery_points",
-        "n": 7
-       }
-      ],
-      "targeting": null,
-      "trigger": null,
-      "concentration": null,
-      "requires": "self.resource('clockwork-cavalcade') < 1",
-      "root": [
-       "resource"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [],
-    "resources": [
-     {
-      "id": "clockwork-cavalcade",
-      "name": "时械矩阵",
-      "formula": 1,
-      "recovery": "long"
-     }
-    ]
-   },
-   "old_audit": {
-    "gap": "choice",
-    "need": "至多 100 点治疗池自由分配给多目标，以及批量驱散区域内 6 环及以下法术效应",
-    "now": false
-   }
-  },
-  {
-   "key": "TCE:术士:血肉启示:14",
-   "name": "血肉启示",
-   "kind": "classFeature",
-   "from": "data/dyn/ai/books.json",
-   "automation": "partial",
-   "text": "以一个附赠动作，消耗 1 点或更多术法点魔法性转变形态，持续 10 分钟。每消耗 1 术法点可选择获得一项增益：看见 60 尺内隐形生物；获得等同步行速度的飞行速度且能悬浮；获得两倍步行速度的游泳速度且能水下呼吸；穿过窄至 1 寸空间且消耗 5 尺移动力脱离非魔法束缚或受擒。具体选项与移动/感官效果需手动处理。",
-   "data": {
-    "automation": "partial",
-    "actions": [
-     {
-      "id": "use",
-      "name": "血肉启示",
-      "activation": "bonus",
-      "cost": [
-       {
-        "resource": "sorcery_points"
-       }
-      ],
-      "targeting": {
-       "type": "self"
-      },
-      "trigger": null,
-      "concentration": null,
-      "requires": null,
-      "root": [
-       "applyEffect"
-      ]
-     }
-    ],
-    "triggers": [],
-    "effects": [
-     {
-      "name": "血肉启示",
-      "statics": [],
-      "flags": null,
-      "rollMods": 0,
-      "triggers": 0,
-      "duration": {
-       "minutes": 10
-      }
-     }
-    ],
-    "resources": []
-   },
-   "old_audit": {
-    "gap": "choice",
-    "need": "根据消耗的术法点数自由多选对应的变身增益形态（看隐形、飞行、游泳、穿狭缝）",
+    "gap": "zone",
+    "need": "缺少地图上持续区域、生物进入或在区域内结束回合时的触发判定以及困难地形机制",
     "now": false
    }
   }

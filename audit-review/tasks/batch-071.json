@@ -1,0 +1,355 @@
+{
+ "batch": "batch-071",
+ "count": 10,
+ "entries": [
+  {
+   "key": "XPHB:战士:战争魔法:7",
+   "name": "战争魔法",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "自己回合执行攻击动作时，可以把其中一次攻击替换为施展一道施法时间为动作的法师戏法。引擎只扣这一次攻击次数；戏法的选择与施放效果由人手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "战争魔法：替换一次攻击",
+      "activation": "none",
+      "cost": [
+       {
+        "economy": "attack"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少在攻击动作中将其中一次攻击替换为调用/施展法师戏法的动作调度接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:长柄武器大师",
+   "name": "长柄武器大师",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "【长柄打击】执行攻击动作、并用长棍、矛或同时具有重型词条与触及词条的武器攻击后，可以用附赠动作以该武器的另一端发动一次近战攻击：伤害骰改为 d4、伤害类型改为钝击（已写入；「刚才用的算不算合格武器」引擎看不到，请自行确认）。【反应打击】持握这类武器期间，生物进入你的触及范围时你可以用反应对它发动一次近战攻击——引擎没有「生物进入触及范围」这个时机，请直接用该武器的攻击行作为反应发起。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "长柄打击（附赠动作）",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "reach"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "attack"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少敌方生物进入自身触及范围时的反应触发时机（creatureEnteredReach 事件窗口）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:指挥官奇袭",
+   "name": "指挥官奇袭",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "替换一次攻击、消耗卓越骰、给所选伙伴挂上「命中时加卓越骰伤害」；伙伴用反应发动攻击并扣除其反应由人处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "指挥官奇袭",
+      "activation": "none",
+      "cost": [
+       {
+        "economy": "attack"
+       },
+       {
+        "resource": "卓越骰"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "filter": "target.id != self.id && target.isAllyOf(self)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "指挥官奇袭",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 2,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "source",
+        "nth": 0
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少命令指定盟友立即消耗反应并执行武器攻击/徒手打击的动作调度接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:中甲大师",
+   "name": "中甲大师",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "穿中甲且敏捷在 16 或以上时，AC 中计入的敏捷调整值由 2 点改为 3 点（需人工在 AC 上额外加 1）。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "护甲系统缺少将中甲计入敏捷调整值上限从 +2 改为 +3 的动态计算规则支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:侏儒",
+   "name": "侏儒",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "黑暗视觉为静态；血系的戏法与法术（次级幻象、修复术、魔法伎俩、动物交谈）为静态，动物交谈的免费施展只在休息或探索时用，不自动化。岩石侏儒的微型发条装置（10 分钟创造、8 小时解体、附赠动作触碰激活、其效果）需人工处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少创造与追踪非战斗微型发条装置（物品制造与持续时间）的接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:转化法术",
+   "name": "转化法术",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "超魔法：施展造成强酸、冷冻、火焰、闪电、毒素或雷鸣伤害的法术时，消耗 1 术法点，将该伤害类型转换为列表中的另一种。引擎不改写伤害类型，由人处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "施法时缺少让玩家在伤害类型列表中自由选择并动态替换法术伤害类型的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XDMG:item:+1 契约掌控者权杖",
+   "name": "+1 契约掌控者权杖",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "以一个动作恢复一个魔契师法术位（每次长休可用一次）。法术位恢复手动处理；固定加值已在人物卡处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "+1 契约掌控者权杖：恢复法术位",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "物品次数:+1 契约掌控者权杖"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": [
+     {
+      "id": "物品次数:+1 契约掌控者权杖",
+      "name": "+1 契约掌控者权杖",
+      "formula": 1,
+      "recovery": "long"
+     }
+    ]
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XDMG:item:+2 契约掌控者权杖",
+   "name": "+2 契约掌控者权杖",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "以一个动作恢复一个魔契师法术位（每次长休可用一次）。法术位恢复手动处理；固定加值已在人物卡处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "+2 契约掌控者权杖：恢复法术位",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "物品次数:+2 契约掌控者权杖"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": [
+     {
+      "id": "物品次数:+2 契约掌控者权杖",
+      "name": "+2 契约掌控者权杖",
+      "formula": 1,
+      "recovery": "long"
+     }
+    ]
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XDMG:item:+3 契约掌控者权杖",
+   "name": "+3 契约掌控者权杖",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "以一个魔法动作恢复一个魔契师法术位（每次长休可用一次）。法术位恢复需手动处理；固定加值已在人物卡处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "+3 契约掌控者权杖：恢复法术位",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "物品次数:+3 契约掌控者权杖"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": [
+     {
+      "id": "物品次数:+3 契约掌控者权杖",
+      "name": "+3 契约掌控者权杖",
+      "formula": 1,
+      "recovery": "long"
+     }
+    ]
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XDMG:item:矮人飞锤",
+   "name": "矮人飞锤",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "+3 武器加值与投掷属性已在人物卡处理。用此武器发动远程攻击命中时，造成 1d8 额外力场伤害；若目标为巨人，额外伤害提升为 2d8。攻击后武器立即飞回手中。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "dwarven-thrower-hit",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.ranged && attack.weapon",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "if"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  }
+ ]
+}

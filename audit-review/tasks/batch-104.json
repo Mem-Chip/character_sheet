@@ -1,0 +1,579 @@
+{
+ "batch": "batch-104",
+ "count": 10,
+ "entries": [
+  {
+   "key": "XPHB:spell:活化物件",
+   "name": "活化物件",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "以一个动作在 120 尺内指定至多等同于施法属性调整值数量的非超巨型非魔法物件活化为构装生物（中型或更小计 1，大型计 2，巨型计 3），持续至多 1 分钟（专注）。活化生物在施法者先攻并在施法者回合后行动，可用附赠动作精神命令 500 尺内的活化生物；生命降至 0 时变回物件。升环增加生物猛击伤害。构装生物需在战斗中由玩家手动操控其移动与攻击。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "活化物件",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": 120
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "note"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "活化物件：精神命令",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "point",
+       "range": 500
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating && self.hasEffect('活化物件')",
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "活化物件",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少批量活化物件为多个独立参战构装生物并接受附赠动作统御指令的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:活力灵光",
+   "name": "活力灵光",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。以自身为中心发散 30 尺灵光。施法创造灵光时为区域内一名生物恢复 2d6 生命值；持续期间每个自己回合开始时，可为区域内一名生物恢复 2d6 生命值（后续回合的治疗需手动结算）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "活力灵光",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "heal"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "活力灵光",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "触发器中缺少选择灵光范围内目标并执行治疗的机制（或持续法术回合开始时的主动附赠/自选目标动作）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:火墙术",
+   "name": "火墙术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。在 120 尺内创造一条长 60 尺、高 20 尺、厚 1 尺的直线火墙，或直径 20 尺、高 20 尺、厚 1 尺的环形火墙（选直线还是环形由你在界面上选形状）。火墙不透明。火墙出现时，位于火墙所占据区域内的生物进行敏捷豁免，失败受 (1 + slot.level)d8 火焰伤害（4 环 5d8，每高一环 +1d8），成功半数。生物在一回合内首次进入火墙、或在火墙占据区域内结束回合时受到同样的伤害。施法时选择的「哪一侧造成伤害」以及该侧 10 尺内的伤害引擎不判断几何朝向，请人工确认（区域只覆盖火墙本身占的格子）；另一侧不受伤害。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "火墙术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "line",
+        "length": 60,
+        "width": 1
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "choose",
+       "note",
+       "forEach",
+       "zone"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少地图持续墙体区域实体（单向伤害朝向判定、进入墙体及邻近10尺内结束回合伤害）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:火焰刀",
+   "name": "火焰刀",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "附赠动作（消耗 2 环或更高的法术位），专注至多 10 分钟：在一只空手上召出一把外形近似弯刀的火焰刀。你可以用一个魔法动作（魔法动作 = 动作）用它发动一次近战法术攻击，命中造成 3d6 ＋ 你的施法属性调整值的火焰伤害；使用的法术位每比二环高一环，伤害就多 1d6（3d6 → 4d6 → …）。刀刃提供半径 10 尺的明亮光照以及额外 10 尺的微光光照。已自动处理：召出刀刃、记下施展时的环阶（攻击伤害按「环阶 ＋ 1」个 d6 算，二环就是 3d6）、近战法术攻击的命中与伤害、专注 10 分钟。需人处理：①光照（引擎不管光照）；②需要一只空手（引擎不检查你的手）；③放下刀刃即消失、可以用附赠动作重新唤出 —— 引擎不追踪刀刃是否在手上（效应会一直留到专注结束），放下以后要再用它，请自己先花掉一个附赠动作。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "火焰刀",
+      "activation": "bonus",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "note"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "火焰刀：攻击",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "reach"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('火焰刀（在手）')",
+      "root": [
+       "attack"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "火焰刀（在手）",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少召唤魔法武器并在专注持续期间重复执行专用近战法术攻击动作的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:火焰风暴",
+   "name": "火焰风暴",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "在 150 尺内创造由至多十个相连的 10 尺立方区域组成的烈焰风暴。区域内每个生物进行敏捷豁免，失败受到 7d10 火焰伤害，成功受到半数伤害。点燃未被着装或携带的可燃物件（十个立方的拼接形态由施法者安排，需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "火焰风暴",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 7
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 150,
+       "area": {
+        "shape": "cube",
+        "size": 10
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:火焰护盾",
+   "name": "火焰护盾",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "持续 10 分钟。选择温暖护盾（寒冷抗性）或冻寒护盾（火焰抗性），抗性自动生效。散发 10 尺明亮与 10 尺微光光照。每当 5 尺内生物以近战攻击命中你时，温暖护盾对其造成 2d8 火焰伤害，冻寒护盾对其造成 2d8 寒冷伤害（反弹伤害需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "火焰护盾",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "火焰护盾：温暖护盾",
+      "statics": [
+       "resist"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 10
+      }
+     },
+     {
+      "name": "火焰护盾：冻寒护盾",
+      "statics": [
+       "resist"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 10
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "source",
+    "need": "伤害节点（damage node）缺少向5尺内攻击者（attacker）自动反弹伤害的指向接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:棘雹术",
+   "name": "棘雹术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "远程武器命中后立即以附赠动作施展。目标及目标 5 尺内的每个生物必须进行一次敏捷豁免，失败受到 1d10（每升一环 +1d10）穿刺伤害，成功受到半数伤害。引擎自动结算被命中目标的豁免与伤害，其周围 5 尺内其他生物的豁免与伤害需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "棘雹术",
+      "activation": "bonus",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": null,
+      "trigger": {
+       "on": "attackHit",
+       "role": "actor",
+       "window": "before",
+       "when": "attack.ranged && attack.weapon"
+      },
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少以远程攻击命中的目标为中心对周围5尺内所有生物触发敏捷豁免与伤害的链式范围机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:棘墙术",
+   "name": "棘墙术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 120 尺内创造直墙（长至多 60 尺、高 10 尺、厚 5 尺）或环形墙（直径至多 20 尺、高 20 尺、厚 5 尺）。棘墙阻挡视线，在其中每移动 1 尺需消耗 4 尺移动力。出现时占据区域内的生物进行敏捷豁免，失败受到 7d8（升环每高一环 +1d8）穿刺伤害，成功半数。生物每回合首次进入棘墙或在其内结束回合时须进行敏捷豁免，失败受 7d8（升环每高一环 +1d8）挥砍伤害，成功半数（每生物每回合限一次）。墙体形态、阻挡视线、移动减速及入内/结束回合伤害需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "棘墙术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 6
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "line",
+        "length": 60,
+        "width": 5
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:加速术",
+   "name": "加速术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。自愿生物速度翻倍、AC+2、敏捷豁免优势，且每回合获得一个额外动作（仅限发动一次攻击、或疾走/撤离/躲藏/操作动作，需手动遵守限制）。法术终止时目标陷入失能且速度为 0，持续至其下一回合结束。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "加速术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "加速",
+      "statics": [
+       "speed",
+       "ac"
+      ],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 1,
+      "duration": null
+     },
+     {
+      "name": "加速倦意",
+      "statics": [
+       "speedSet"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少受限的额外动作经济池（仅限发动一次攻击、疾走、撤离、躲藏或操作动作）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:贾拉兹光辉风暴",
+   "name": "贾拉兹光辉风暴",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。在 120 尺内创造 10 尺半径、40 尺高的闪光雷鸣风暴柱。风暴出现时、一回合内首次进入或在其中结束回合的生物进行体质豁免，失败受 2d10 光耀与 2d10 雷鸣伤害（每比五环高一环各 +1d10），成功半数（引擎按区域自动结算，每回合每名生物限一次）。区域内目盲、耳聋与不能施展含声音成分的法术需人工处理；40 尺高度引擎不追踪。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "贾拉兹光辉风暴",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "cylinder",
+        "radius": 10,
+        "size": 40
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "forEach",
+       "zone",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少地图持续柱状区域实体（生物首次进入或在其中结束回合触发豁免伤害，每回合限一次）",
+    "now": false
+   }
+  }
+ ]
+}

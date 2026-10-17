@@ -1,0 +1,555 @@
+{
+ "batch": "batch-105",
+ "count": 10,
+ "entries": [
+  {
+   "key": "XPHB:spell:假象术",
+   "name": "假象术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "自身获得隐形状态并创造一个幻象分身，持续至多 1 小时（专注）。发动攻击、造成伤害或施展法术会结束自身隐形（分身仍持续存在）。可以动作操纵分身移动与言行，并通过其感官视听（需手动在地图与叙事中操控）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "假象术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "note"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "假象术：操控分身",
+      "activation": "action",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating && self.hasEffect('假象术')",
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "假象术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少隐形同时生成幻象分身并以动作同步控制分身移动与视听感官的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:剑刃护壁",
+   "name": "剑刃护壁",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 90 尺内创造旋转剑刃之墙，可选直墙（长至多 100 尺、高 20 尺、厚 5 尺）或环形墙（直径至多 60 尺、高 20 尺、厚 5 尺）。墙体提供四分之三掩护，占据空间视为困难地形。出现时位于护壁空间内的生物须进行敏捷豁免，失败受到 6d10 点力场伤害，成功半数。生物进入护壁或在其内结束回合时同样须进行该豁免（每回合限一次）。掩护、困难地形与入内/结束回合触发需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "剑刃护壁",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 6
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 90,
+       "area": {
+        "shape": "line",
+        "length": 100,
+        "width": 5
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:降咒",
+   "name": "降咒",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。触碰生物进行感知豁免，失败被诅咒并承受四种效应之一：1. 对施法者攻击劣势；2. 某属性检定与豁免劣势；3. 每回合开始感知豁免，失败被迫回避；4. 施法者伤害目标时额外 1d8 暗蚀伤害。升环施法可延长专注或免除专注（需手动调整专注与持续时间；属性选定与被迫回避需人工裁定）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "降咒",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "降咒：攻击劣势",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": null
+     },
+     {
+      "name": "降咒：属性劣势",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": null
+     },
+     {
+      "name": "降咒：行动受阻",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": null
+     },
+     {
+      "name": "降咒：额外伤害",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "缺少根据施法环阶动态免除专注并在四种截然不同的诅咒效果中自选一种施加的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:解除魔法",
+   "name": "解除魔法",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "指定 120 尺内一名生物、物件或魔法效应。直接终止影响目标的所有小于等于该施法环阶的法术效应；每个更高环阶法术需以施法关键属性进行属性检定（DC 10 + 法术环阶），成功则终止（法术环阶判断与检定需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "解除魔法",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 120
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少自动读取目标身上所有法术效应的环阶并进行属性检定以逐个驱散高环法术的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:解离术",
+   "name": "解离术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "向 60 尺内可见目标射出一道绿色射线。目标生物进行敏捷豁免，失败受到 10d6 + 40（升环每高一环 +3d6）力场伤害，成功则不受伤害。若此伤害将目标降至 0 生命值，其连同携带的非魔法物品化为灰尘（只能由完全复生术或祈愿术复活）。此法术直接解离大型或更小的非魔法物件或魔法力场造物（如力场墙）；对巨型或更大物件解离 10 尺立方部分。灰化及物体/力场解离需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "解离术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 6
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:禁锢术",
+   "name": "禁锢术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "施法时间 1 分钟。30 尺内可见生物进行感知豁免，成功不受影响且 24 小时内免疫此法术；失败则被永久禁锢（无需呼吸吃喝、不衰老、无法传送、预言无法定位感知），并承受埋葬、锁链（束缚）、避世监牢、微缩牢笼或沉睡（昏迷）之一。具体监禁形式、定制解除条件与 9 环解除魔法交互需人工处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "禁锢术",
+      "activation": {
+       "minutes": 1
+      },
+      "cost": [
+       {
+        "slot": {
+         "min": 9
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "禁锢术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:荆棘丛生",
+   "name": "荆棘丛生",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 150 尺内指定一点创造 20 尺半径的伪装棘刺区域（困难地形）。生物进入该区域或在其中移动时每移动 5 尺受到 2d4 穿刺伤害：引擎在进入（含被推进来）时自动结算一次，同一回合里进出几次就结算几次；同一回合在区域内继续走的每 5 尺需人工补算（用「荆棘丛生：移动伤害」）。区域经过伪装，须用搜索动作通过感知（察觉或求生）检定才能发现，这条需人工处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "荆棘丛生",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 150,
+       "area": {
+        "shape": "sphere",
+        "radius": 20
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "zone",
+       "note"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "荆棘丛生：移动伤害",
+      "activation": "none",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 150
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "damage"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少地图持续伪装困难地形区域实体（生物在其中每移动5尺触发一次穿刺伤害）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:警戒箭阵",
+   "name": "警戒箭阵",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "持续 8 小时，无专注。当着陆时插下至多 4 根（每比二环高一环 +2 根）非魔法箭矢，除你之外的生物第一次进入距弹药 30 尺内或在其中结束回合时，一枚弹药飞起攻击它：敏捷豁免失败受 2d4 穿刺伤害，难度按升环提高。引擎把这 30 尺做成以插下位置为中心的区域（区域不跟着你走，插好后你走开也没关系）；「除你之外」与「每枚弹药只打一次、打完就毁」需人工处理，弹药耗尽时法术终止也需人工。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "警戒箭阵",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": "self",
+       "area": {
+        "shape": "sphere",
+        "radius": 30
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "zone",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少消耗特定数量弹药设立警戒区域并在非指定生物进入/结束回合时自动射击消耗弹药的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:净化灵光",
+   "name": "净化灵光",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。以自身为中心 30 尺灵光范围内的你和盟友获得毒素伤害抗性，并在为抵抗或结束目盲、魅惑、耳聋、恐慌、麻痹、中毒、震慑状态所做的豁免中具有优势。引擎不知道一次豁免是不是为了抵抗 / 结束这些状态，掷骰时会弹窗确认（死亡豁免与专注检定不属于这一类，不会问）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "净化灵光",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "净化灵光",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "豁免检定（save roll）缺少所抵抗或结束的状态标签（用于自动匹配特定状态豁免优势）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:镜影术",
+   "name": "镜影术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "持续 1 分钟。创造 3 个幻象分身。每当受到攻击命中时，为每个剩余分身掷 1d6，只要有任一结果为 3 或以上，一个分身代受本次命中并被摧毁（可通过触发器取消命中）；3 个分身全部摧毁时法术终止。分身计数及攻击者目盲/盲视/真实视觉免疫需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "镜影术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "镜影术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": {
+       "minutes": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "remember",
+    "need": "缺少分身动态计数管理、受到命中时判定替身骰及判断攻击者盲视/真视免疫的机制",
+    "now": false
+   }
+  }
+ ]
+}
