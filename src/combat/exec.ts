@@ -221,6 +221,14 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
       endConcentration(tx, ctx.self, `「${ctx.actionName}」结束`, ctx.cause);
       return;
     }
+    case 'grantAction': {
+      grantActionNode(tx, n, ctx);
+      return;
+    }
+    case 'removeGrant': {
+      tx.emit('entryRevoked', { id: ctx.self, key: n.key }, ctx.cause);
+      return;
+    }
     case 'extendEffect': {
       const r = tx.rules.resolveTemplate(n.template, ctx.entryKey);
       const e = effectsOf(tx, ctx.self).find((x) => x.key === (r?.key ?? n.template) || x.name === n.template);
@@ -358,6 +366,51 @@ const SUMMON_TYPE_CN: Record<string, string> = {
   beast: '野兽', fey: '妖精', undead: '不死生物', elemental: '元素生物',
   aberration: '异怪', construct: '构装体', dragon: '龙类', celestial: '天界生物', fiend: '邪魔',
 };
+
+/**
+ * 临时授予一个动作：从别的条目复制（`from`）或直接写（`action`），可选改写代价 / 激活方式，
+ * 挂到 `key` 下。授予的条目在 `entryOf` 里**优先于规则书**，所以同 key = 覆盖。
+ * 典型用法：免法术位施放（复制法术动作 + `cost: []`）、篡改后的法术副本、临时武器。
+ */
+function grantActionNode(tx: Tx, n: Extract<Node, { kind: 'grantAction' }>, ctx: ExecCtx): void {
+  let action: Action | undefined;
+  let srcName: string | undefined;
+  try {
+    if (n.action) {
+      action = structuredClone(n.action);
+    } else if (n.from) {
+      const found = findAction(tx, ctx.self, n.from);
+      action = structuredClone(found.action);
+      srcName = found.action.name;
+    }
+  } catch (e) {
+    tx.emit('note', { text: `${ctx.actionName}：授予动作失败（${(e as Error).message}）`, owner: ctx.self }, ctx.cause);
+    return;
+  }
+  if (!action) {
+    tx.emit('note', { text: `${ctx.actionName}：没有可授予的动作（from / action 至少写一个）`, owner: ctx.self }, ctx.cause);
+    return;
+  }
+  if (n.cost) action.cost = structuredClone(n.cost);
+  if (n.activation) action.activation = n.activation;
+  const key = n.key ?? `grant:${n.from ?? action.id}`;
+  const entry: Entry = {
+    name: n.name ?? srcName ?? action.name,
+    actions: [action],
+    ...(n.text ? { text: n.text } : {}),
+  };
+  tx.emit('entryGranted', { id: ctx.self, key, entry, untilTurn: n.until === 'turnEnd' ? tx.turnKey() : null }, ctx.cause);
+}
+
+/** 回合结束时收回「只活到本回合」的临时动作 */
+export function expireGrants(tx: Tx, cause: number | null): void {
+  const now = tx.turnKey();
+  for (const [id, map] of Object.entries(tx.state.grants ?? {})) {
+    for (const [key, g] of Object.entries(map)) {
+      if (g.untilTurn === now) tx.emit('entryRevoked', { id, key }, cause);
+    }
+  }
+}
 
 function runSummon(tx: Tx, n: Extract<Node, { kind: 'summon' }>, ctx: ExecCtx): void {
   const summoner = tx.state.combatants[ctx.self];

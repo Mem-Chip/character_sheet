@@ -2,6 +2,7 @@ import { ABIL_CN, Unknown, runInt } from '../expr';
 import { applyHeal, kill } from './damage';
 import { d20Test } from './d20';
 import { effectiveView, effectsOf, endEffect, roundsOf } from './effects';
+import { expireGrants } from './exec';
 import { makeEnv } from './scope';
 import { expireZones, zonesOnTurn } from './space';
 import { fireWindow } from './triggers';
@@ -129,6 +130,7 @@ export function endTurn(tx: Tx, id: Id, cause: number | null): void {
   }
   fireWindow(tx, { event: 'turnEnded', window: 'after', actor: id, scope: {}, cause: seq });
   zonesOnTurn(tx, id, 'turnEnd', seq);
+  expireGrants(tx, seq);
   tx.emit('turnEnded', { id }, seq);
 }
 

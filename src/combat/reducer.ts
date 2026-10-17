@@ -1,4 +1,4 @@
-import type { ActiveEffect, Combatant, EncounterState, Economy, GameEvent, RememberedAnswer, Settings, Zone } from './types';
+import type { ActiveEffect, Combatant, EncounterState, Economy, GameEvent, GrantedEntry, RememberedAnswer, Settings, Zone } from './types';
 
 /**
  * Reducer：**唯一**修改遭遇状态的地方。
@@ -30,6 +30,22 @@ export function applyEvent(s: EncounterState, ev: GameEvent): void {
     case 'zoneHit': {
       const z = s.zones?.[p.zone as string];
       if (z) z.hits[p.id as string] = p.at as string;
+      break;
+    }
+    case 'entryGranted': {
+      const id = p.id as string;
+      const key = p.key as string;
+      ((s.grants ??= {})[id] ??= {})[key] = structuredClone({ entry: p.entry, untilTurn: p.untilTurn ?? null }) as GrantedEntry;
+      break;
+    }
+    case 'entryRevoked': {
+      const id = p.id as string;
+      const all = s.grants;
+      const map = all?.[id];
+      if (all && map) {
+        delete map[p.key as string];
+        if (!Object.keys(map).length) delete all[id];
+      }
       break;
     }
     case 'combatantAdded': {

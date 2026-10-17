@@ -209,9 +209,9 @@ const computing = new Set<string>();
 /** 条目的动态声明是否生效（`automation: 'manual'` = 这一条由人裁定，引擎不碰） */
 export const live = (e: Entry | undefined): e is Entry => !!e && e.automation !== 'manual';
 
-/** 某个参与者身上的条目：规则书里写好的优先，没有就用他自带的（怪物数据卡、自动生成的物品动作） */
+/** 某个参与者身上的条目：临时授予的优先（覆盖），然后是规则书，最后是他自带的（怪物数据卡、自动生成的物品动作） */
 export function entryOf(tx: Tx, id: Id, key: string): Entry | undefined {
-  return tx.rules.entry(key) ?? effectiveView(tx, id).entries?.[key];
+  return tx.state.grants?.[id]?.[key]?.entry ?? tx.rules.entry(key) ?? effectiveView(tx, id).entries?.[key];
 }
 
 export interface AuraHit { aura: Aura; holder: Id; from: string }
@@ -337,6 +337,13 @@ export function effectiveView(tx: Tx, id: Id): CombatantView {
     v.immune = [...new Set(v.immune)];
     v.vuln = [...new Set(v.vuln)];
     v.conditionImmune = [...new Set(v.conditionImmune)];
+    // 临时授予的条目（临时动作）并进 view：动作栏按 sources 列动作，所以键也要进 sources
+    const grants = tx.state.grants?.[id];
+    if (grants && Object.keys(grants).length) {
+      v.entries = { ...(v.entries ?? {}) };
+      for (const [key, g] of Object.entries(grants)) v.entries[key] = g.entry;
+      v.sources = [...v.sources, ...Object.keys(grants).filter((k) => !v.sources.includes(k))];
+    }
     // 条目自己声明的次数池（`resources: [{ id, name, formula, recovery }]`，和人物卡那边同一个写法）也进战斗：
     // 不然 `cost: [{ resource: '<id>' }]` 会被判成「没有这个资源」（上限算不出来的先不登记）
     for (const key of v.sources ?? []) {

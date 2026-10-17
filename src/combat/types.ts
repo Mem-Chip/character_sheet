@@ -269,6 +269,19 @@ export type Node =
   | { kind: 'extendEffect'; template: string }
   /** 结束施法者自己的专注（「目标挣脱 → 法术结束」这类；一个目标摆脱就结束的写法，不要靠移除效应自动触发） */
   | { kind: 'endConcentration' }
+  /**
+   * **临时授予一个动作**（免法术位施放、篡改后的法术副本、临时武器…）：
+   * - `from`：从某个条目键复制动作（`XPHB:spell:火球术#cast`），可以再用 `cost` / `activation` 改写；
+   * - `action`：直接写动作 JSON（和 `from` 二选一）。
+   * 授予的条目挂在 `key` 下（缺省 `grant:<来源键>`）；**同 key 会盖住规则书里的同名条目** —— 这就是「覆盖」。
+   * `until: 'turnEnd'` = 当前这回合结束时自动收回。
+   */
+  | {
+      kind: 'grantAction'; key?: string; from?: string; action?: Action; name?: string; text?: string;
+      cost?: Cost[]; activation?: 'action' | 'bonus' | 'reaction' | 'free' | 'none'; until?: 'turnEnd';
+    }
+  /** 收回一条临时授予的条目 */
+  | { kind: 'removeGrant'; key: string }
   | { kind: 'resource'; id: string; delta: ExprSrc }
   | { kind: 'economy'; action?: number; bonus?: number; reaction?: number; attacks?: number; move?: ExprSrc }
   /** var：把选中项的 value（没写就是 label）放进 `vars.<var>`，后面的节点可以用（伤害类型 `type: 'vars.elem'`） */
@@ -530,6 +543,18 @@ export interface EncounterState {
   nextId: number;
   /** 地图上的区域（旧存档没有） */
   zones?: Record<string, Zone>;
+  /**
+   * **临时授予的条目**（临时动作）：`参与者 → 键 → 条目`。
+   * 授予的条目会并进 `effectiveView` 的 `entries` 和 `sources`，所以动作栏、`findAction` 都直接能用；
+   * **同键的授予盖住规则书里的同名条目**（这就是「用一个改过的副本覆盖原动作」）。
+   */
+  grants?: Record<Id, Record<string, GrantedEntry>>;
+}
+
+/** 一条临时授予的条目（`untilTurn` 不为空 = 到那个回合结束就收回） */
+export interface GrantedEntry {
+  entry: Entry;
+  untilTurn: string | null;
 }
 
 /* ============================================================================

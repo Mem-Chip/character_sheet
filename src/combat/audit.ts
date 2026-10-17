@@ -25,11 +25,11 @@ export const EMITTED_EVENTS = new Set([
   ...WINDOW_EVENTS,
   'actionUsed', 'actionDone', 'saveFailed', 'saveSucceeded', 'damageApplied', 'damageRolled', 'healed', 'tempHpGained',
   'effectApplied', 'effectEnded', 'turnEnding', 'roundStarted', 'combatStarted', 'combatEnded', 'died', 'timeAdvanced',
-  'moved', 'zoneHit',
+  'moved', 'zoneHit', 'entryGranted', 'entryRevoked',
 ]);
 
 const NODE_KINDS = new Set([
-  'attack', 'save', 'check', 'damage', 'addDamage', 'heal', 'tempHp', 'applyEffect', 'removeEffect', 'extendEffect', 'endConcentration',
+  'attack', 'save', 'check', 'damage', 'addDamage', 'heal', 'tempHp', 'applyEffect', 'removeEffect', 'extendEffect', 'endConcentration', 'grantAction', 'removeGrant',
   'resource', 'economy', 'choose', 'if', 'forEach', 'repeat', 'move', 'note', 'number', 'modify', 'zone', 'summon',
 ]);
 const ROLL_OPS = new Set(['adv', 'disadv', 'noAdv', 'add', 'addDice', 'autoFail', 'autoSucceed', 'critRange', 'autoCritOnHit', 'minD20', 'minDie', 'targetAdd', 'maxDice']);
@@ -118,6 +118,13 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
         break;
       case 'extendEffect':
         tplRef(n.template, `${at}.template`);
+        break;
+      case 'grantAction':
+        if (!n.from && !n.action) out.push(`${where(at)}：grantAction 要么写 from（复制哪个条目的动作），要么写 action（直接写动作）`);
+        if (n.cost && !Array.isArray(n.cost)) out.push(`${where(at)}：grantAction 的 cost 要么不写（沿用原动作），要么是一个代价数组（空数组 = 不花任何代价）`);
+        break;
+      case 'removeGrant':
+        if (!n.key) out.push(`${where(at)}：removeGrant 缺少 key`);
         break;
       case 'resource':
         expr(n.delta, 'node', NUM, `${at}.delta`);
