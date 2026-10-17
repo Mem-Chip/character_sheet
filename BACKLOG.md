@@ -69,11 +69,13 @@
   3. ❌ **待确认**：`modify.maxDice` 挂在掷骰者身上 —— 治疗骰的场景里施法者与承受者不是同一个，`maximize` 取不到那包骰子（永生者赠礼这类写不出来）。
   4. ℹ️ **不是 bug，是约定**：`reducedTo0` 里 `self` = 挂这条能力的人、`target` = 倒下的那个（和别的窗口一致）；
      数据写 `self.hp` 读到的是能力拥有者。已用 `tests/combat/window-scope.test.ts` 把语义钉住，写数据时照它来。
-  5. ❌ **待确认**：区域里的 `applyEffect` 每个触发点挂一份 —— 同一生物多次触发会叠出多个同名效应（该去重或用 `stackKey`）。
-  6. ❌ **待确认**：条目顶层 `resources` 声明的池子不进战斗 —— `cost: [{ resource: '<id>' }]` 会被判成「没有这个资源」。
-  7. ❓ **复核怀疑、我没复现**：`leftReach` 这类窗口里数据写 `cost: [{ economy: 'reaction' }]` 不扣反应。
-     代码路径看起来是会扣的（`src/combat/triggers.ts` 的 `fire()` 会 `payCosts`），需要补一个测试确认（下一轮做）。
-  在哪：`src/combat/exec.ts`（summon / applyEffect）、`src/combat/triggers.ts` / `d20.ts`（窗口与 modify）、`src/combat/types.ts`、`src/bridge/from-sheet.ts`（资源进战斗）。
+  5. ✅ **已修**：区域里的 `applyEffect` 每个触发点挂一份 —— 现在**状态（condition）刷新而不是叠**（区域每回合触发、同一道法术再施加都只有一份）；
+     非状态的效应照旧可以共存（祝福术两份：取最近的，golden #12 就是这么设计的）。见 `tests/combat/effect-stack.test.ts`。
+  6. ✅ **已修**：条目顶层 `resources` 声明的池子不进战斗（`Entry` 类型里压根没这个字段，引擎也从不读）。
+     现在 `effectiveView` 会把条目声明的池子并进参与者的资源池（上限按 `formula` 在战斗作用域里求值），`cost: [{ resource }]` 可以花了。见 `tests/combat/entry-resources.test.ts`。
+  7. ✅ **复核那条是误报**：`leftReach` 这类窗口里数据写 `cost: [{ economy: 'reaction' }]` **是会扣的**（`fire()` 走 `payCosts`），扣完就不再触发。
+     已加 `tests/combat/window-cost.test.ts` 钉住；如果数据里没扣，多半是写成了 `activation: 'none'` 的动作而不是触发器。
+  在哪：`src/combat/exec.ts`（summon / applyEffect）、`src/combat/effects.ts`（`effectiveView` / 状态刷新）、`src/combat/damage.ts`（`maxDiceFor`）、`src/combat/types.ts`（`Entry.resources`、`summonGroup`）、`src/combat/triggers.ts`。
 - **自定义整个职业 / 自定义种族「建卡时能选到」**：账户资料库（[LIBRARY.md](LIBRARY.md)）现在支持特性、法术、物品、专长、可选特性、子职的数据化；整个职业（等级表、特性表、施法进度）和自定义种族要接静态层的职业表 / 种族候选，工程量大，先搁着。
   在哪：`src/sheet/`（`class-state.ts` 的职业表、`source.ts` 的候选过滤）、`app/lib/library.ts` 的 `pickable`。
 - **易伤（vulnerability）在卡面数据里表达不出来**：`mods` 里只有 `resist` 和 `immune`（`immune` 是这轮补的），

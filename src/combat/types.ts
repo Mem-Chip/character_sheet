@@ -349,6 +349,11 @@ export interface Entry {
   rollMods?: RollMod[];
   auras?: Aura[];
   effects?: Record<string, EffectTemplate>;
+  /**
+   * 条目自己声明的次数池（和人物卡那边的写法一样）：带上这条能力的人进战斗时并进他的资源池，
+   * `cost: [{ resource: '<id>' }]` 才能花。上限 `formula` 用战斗里的作用域求值（`pb`、`level` 之类）。
+   */
+  resources?: Array<{ id: string; name?: string; formula: ExprSrc; recovery: 'short' | 'long' }>;
   automation?: 'full' | 'partial' | 'manual';
   tags?: string[];
 }

@@ -262,6 +262,22 @@ export function effectiveView(tx: Tx, id: Id): CombatantView {
     v.immune = [...new Set(v.immune)];
     v.vuln = [...new Set(v.vuln)];
     v.conditionImmune = [...new Set(v.conditionImmune)];
+    // 条目自己声明的次数池（`resources: [{ id, name, formula, recovery }]`，和人物卡那边同一个写法）也进战斗：
+    // 不然 `cost: [{ resource: '<id>' }]` 会被判成「没有这个资源」（上限算不出来的先不登记）
+    for (const key of v.sources ?? []) {
+      const e = (tx.rules.entry(key) ?? v.entries?.[key]) as { resources?: Array<{ id?: unknown; name?: unknown; formula?: unknown }> } | undefined;
+      for (const r of e?.resources ?? []) {
+        if (!r || typeof r.id !== 'string' || r.id in v.resources) continue;
+        let max = 0;
+        if (r.formula !== undefined) {
+          const got = runInt(r.formula as never, makeEnv(tx, { self: id }));
+          if (got instanceof Unknown) continue;
+          max = Math.max(0, got);
+        }
+        v.resources = { ...v.resources, [r.id]: max };
+        if (typeof r.name === 'string') v.resourceNames = { ...(v.resourceNames ?? {}), [r.id]: r.name };
+      }
+    }
     cache.set(id, { seq: tx.state.seq, view: v });
     return v;
   } finally {
@@ -327,13 +343,15 @@ export function applyEffect(tx: Tx, o: ApplyOpts): ActiveEffect | null {
     }
   }
 
-  // 荒野形态 / 变形效应：再次施展时先结束旧形态，而不是压制共存
-  if (o.form || (tpl.tags ?? []).includes('wildshape')) {
-    for (const prev of effectsOf(tx, o.bearer)) {
-      if (prev.form || (prev.tags ?? []).includes('wildshape') || prev.key === key) {
-        endEffect(tx, prev.id, '换入新形态', o.cause);
-      }
-    }
+  // 状态（condition）不会叠：反复施加同一条状态（区域每回合触发、同一道法术再施展）算**刷新**——
+  // 先结束旧的那份，再挂新的。非状态效应照旧可以共存（祝福术叠两份：取最近的，见 golden #12）；
+  // 形态换装时旧形态一定要退场。
+  const isForm = !!o.form || (tpl.tags ?? []).includes('wildshape');
+  const isCondition = (tpl.tags ?? []).includes('condition');
+  for (const prev of effectsOf(tx, o.bearer)) {
+    const prevForm = !!prev.form || (prev.tags ?? []).includes('wildshape');
+    if (isForm && prevForm) endEffect(tx, prev.id, '换入新形态', o.cause);
+    else if (isCondition && prev.key === key) endEffect(tx, prev.id, `${name} 再次生效（刷新）`, o.cause);
   }
 
   const round = tx.state.round;
