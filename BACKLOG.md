@@ -60,13 +60,19 @@
 - **触发窗口里正规地花反应**：`leftReach` 这类窗口里数据写 `cost: [{ economy: 'reaction' }]` 不扣反应（实测反应 0 也能用、还能反复花）；另外 `flags.cannot: ['provoke']` 的效应活到**回合结束**而不是「这次移动结束」，数据要配 `endsOn: moved` 才对（散兵战术踩过）。在哪：`src/combat/tx.ts`（payCosts / canPay）、`src/combat/effects.ts`（disengaged）、`triggers.ts`。
 - **移动已经放下的区域**：zone 只有创建 / 删除，没有「把区域挪到别处」，原文里的「区域移入生物空间」触发也没实现（月华之光、炽焰法球、自然庇护卡这条）。在哪：`src/combat/session.ts`（`createZone`）、`space.ts`、`app/pages/combat/MapView.tsx`（拖动）。
 - **检查器补一条：`target.size` 的字面量**：数据写 `target.size == 'S'`（引擎里是「小型」，见 `src/sheet/constants.ts` 的 `SIZE_CN`）恒假，`npm run check:data` 不报。在哪：`src/combat/audit.ts`、`src/factory/lint.ts`。
-- **第三轮复核又挖出的引擎语义缺口**（写召唤数据时踩到的，按危险程度排）：
-  1. **召唤时 `link: false` 的旧召唤物会被下一次召唤删掉**：替换逻辑不区分「跟着专注退场」和「独立存续」（`exec.ts` 的 summon）；同一施法者第二次召唤会误踢掉第一只独立坐骑 / 魔宠。
-  2. **`spellCast` 窗口拿不到 `target`**：触发时没有目标，凡是要读「刚施展的那个法术打的是谁」的规则都写不了（例如「目标被打中时以反应施展迷踪步」）。
-  3. **`modify.maxDice` 挂在掷骰者身上**：治疗骰的场景里施法者与承受者不是同一个，`maximize` 取不到那包骰子（永生者赠礼这类写不出来）。
-  4. **`reducedTo0` 窗口里 `self` 是「动作的持有者」而不是被打倒的那个**：写 `self.hpMax` / `self.hp` 会读到错的人（TCE 炽烈回生踩到）。
-  5. **区域里的 `applyEffect` 会每个触发点挂一份**：同一个生物多次触发会叠出多个同名效应（该去重或用 `stackKey`）。
-  6. **条目顶层 `resources` 声明的池子不进战斗**：`cost: [{ resource: '<id>' }]` 会被判成「没有这个资源」，得写在动作能碰到的地方。
+- **第三轮复核又挖出的引擎语义缺口**（写召唤数据时踩到的）：
+  1. ✅ **已修**：独立存续的召唤物原来「按召唤者」互相顶替，第二次召唤任何独立召唤物都会误删前一只（坐骑 + 魔宠不能共存）。
+     现在按**组**顶替：缺省是这次动作（同一道法术再施展一次 = 换一只），跨条目同一效果的写 `group: 'steed'`（寻获坐骑 / 信实坐骑）。见 `tests/combat/summon-replace.test.ts`。
+  2. ✅ **已修**：`spellCast` 窗口原来拿不到目标（`target` 落在施法者身上）。现在 `target` = 被施法的那个、`attacker` = 施法者，
+     `event.targets` 是全部目标；`role: 'target'` 因此可用（「当有人对你施法时」写得出来了）。见 `tests/combat/window-scope.test.ts`。
+     注意：原来靠旧语义写 `when: 'target.side != self.side'` 的数据要改成 `attacker.side`（现有数据里没人这么写，只有测试里有）。
+  3. ❌ **待确认**：`modify.maxDice` 挂在掷骰者身上 —— 治疗骰的场景里施法者与承受者不是同一个，`maximize` 取不到那包骰子（永生者赠礼这类写不出来）。
+  4. ℹ️ **不是 bug，是约定**：`reducedTo0` 里 `self` = 挂这条能力的人、`target` = 倒下的那个（和别的窗口一致）；
+     数据写 `self.hp` 读到的是能力拥有者。已用 `tests/combat/window-scope.test.ts` 把语义钉住，写数据时照它来。
+  5. ❌ **待确认**：区域里的 `applyEffect` 每个触发点挂一份 —— 同一生物多次触发会叠出多个同名效应（该去重或用 `stackKey`）。
+  6. ❌ **待确认**：条目顶层 `resources` 声明的池子不进战斗 —— `cost: [{ resource: '<id>' }]` 会被判成「没有这个资源」。
+  7. ❓ **复核怀疑、我没复现**：`leftReach` 这类窗口里数据写 `cost: [{ economy: 'reaction' }]` 不扣反应。
+     代码路径看起来是会扣的（`src/combat/triggers.ts` 的 `fire()` 会 `payCosts`），需要补一个测试确认（下一轮做）。
   在哪：`src/combat/exec.ts`（summon / applyEffect）、`src/combat/triggers.ts` / `d20.ts`（窗口与 modify）、`src/combat/types.ts`、`src/bridge/from-sheet.ts`（资源进战斗）。
 - **自定义整个职业 / 自定义种族「建卡时能选到」**：账户资料库（[LIBRARY.md](LIBRARY.md)）现在支持特性、法术、物品、专长、可选特性、子职的数据化；整个职业（等级表、特性表、施法进度）和自定义种族要接静态层的职业表 / 种族候选，工程量大，先搁着。
   在哪：`src/sheet/`（`class-state.ts` 的职业表、`source.ts` 的候选过滤）、`app/lib/library.ts` 的 `pickable`。
