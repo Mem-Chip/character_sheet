@@ -21217,7 +21217,7 @@
   "XPHB:spell:咒唤林地卫士": {
    "name": "咒唤林地卫士",
    "automation": "partial",
-   "text": "10 尺光环缭绕自身，专注至多 10 分钟。持续时间内可以附赠动作撤离。每当光环进入可见生物空间、生物进入光环或在其中结束回合时，可对其结算「自然精魂冲击」：感知豁免失败受到 5d8（升环每高一环 +1d8）力场伤害，成功半数（每名生物每回合限一次，触发时机与每回合限制需手动处理）。",
+   "text": "专注至多 10 分钟。你身周 10 尺光环由自然精魂缭绕：施放时已在光环里的生物立刻进行一次感知豁免；此后每有一名生物在光环里结束其回合，同样进行一次感知豁免 —— 失败受 (1 + 施放环阶)d8 力场伤害（4 环 5d8，每高一环 +1d8），成功受半数。同一生物一回合只需要进行一次该豁免。持续时间内你还可以用附赠动作执行撤离动作。引擎自动处理的：施放当下在光环里的那次豁免、以及在光环里结束回合的那次（灵光跟着你走，用你身上的效应 + 距离条件结算，不画在地图上）。要人处理的：①「一名生物进入光环」和「光环移入一名生物所在的空间」这两个时机引擎没有窗口 —— 用「自然精魂冲击」手动补（自动按施放环阶掷骰）；② 这两次都是「你都可以迫使」，引擎每次都会问你要不要生效，不要就答「否」；③ 看不见的生物引擎会跳过（用 canSee 判断；没有地图时问 DM）；④「一名生物一回合只需要进行一次」引擎不替你合并：如果你已经用「自然精魂冲击」给某生物结算过本回合的那次，它结束回合时的自动结算要人工略过（撤销那笔）；⑤没有地图时，谁在光环里靠「要不要生效」的提问判断（每名生物回合结束时问一次）。",
    "actions": [
     {
      "id": "cast",
@@ -21238,7 +21238,12 @@
       "minutes": 10
      },
      "targeting": {
-      "type": "self"
+      "type": "area",
+      "range": "self",
+      "area": {
+       "shape": "emanation",
+       "radius": 10
+      }
      },
      "root": [
       {
@@ -21246,8 +21251,38 @@
        "template": "咒唤林地卫士",
        "to": "self",
        "state": {
-        "slot": "slot.level"
+        "lvl": "slot.level"
        }
+      },
+      {
+       "kind": "note",
+       "text": "咒唤林地卫士：光环跟着你走（不画区域）。施放当下在光环里的生物已经结算；之后「走进光环 / 光环移入某生物的空间」用「自然精魂冲击」手动补，「在光环里结束回合」引擎自动结算。"
+      },
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "wis",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "dmg",
+           "dice": "(1 + slot.level)d8",
+           "type": "力场"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "dmg",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
       }
      ]
     },
@@ -21255,7 +21290,7 @@
      "id": "use",
      "name": "咒唤林地卫士：撤离",
      "activation": "bonus",
-     "requires": "self.hasEffect('咒唤林地卫士') && turn.isMine",
+     "requires": "self.hasEffect('咒唤林地卫士（光环）') && turn.isMine",
      "root": [
       {
        "kind": "applyEffect",
@@ -21272,30 +21307,43 @@
       "spell",
       "magical"
      ],
-     "requires": "self.hasEffect('咒唤林地卫士')",
+     "requires": "self.hasEffect('咒唤林地卫士（光环）')",
      "targeting": {
       "type": "creature",
       "count": 1,
       "range": 10
      },
+     "text": "「某生物走进光环」或「光环移入某生物所在空间」时点这个补一次冲击：按施放环阶掷 (1 + 环阶)d8 力场伤害（4 环 5d8），感知豁免成功减半。同一生物一回合只需要一次豁免。",
      "root": [
       {
-       "kind": "save",
-       "ability": "wis",
-       "dc": "self.spell.dc",
-       "onFail": [
+       "kind": "if",
+       "when": "self.hasEffect('咒唤林地卫士（光环）')",
+       "then": [
         {
-         "kind": "damage",
-         "id": "d",
-         "dice": "5d8",
-         "type": "力场"
+         "kind": "save",
+         "ability": "wis",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "dmg",
+           "dice": "(1 + self.effect('咒唤林地卫士（光环）').state.lvl)d8",
+           "type": "力场"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "dmg",
+           "scale": 0.5
+          }
+         ]
         }
        ],
-       "onSuccess": [
+       "else": [
         {
-         "kind": "damage",
-         "ref": "d",
-         "scale": 0.5
+         "kind": "note",
+         "text": "先施放「咒唤林地卫士」再结算自然精魂冲击。"
         }
        ]
       }
@@ -21304,11 +21352,44 @@
    ],
    "effects": {
     "咒唤林地卫士": {
+     "name": "咒唤林地卫士（光环）",
      "tags": [
       "magical",
       "spell"
      ],
-     "text": "10 尺自然精魂光环；可以附赠动作撤离；进入光环或在其中结束回合的生物受冲击伤害。"
+     "text": "10 尺自然精魂光环（以你为中心，跟着你走）：生物在光环里结束其回合时进行感知豁免，失败受 (1 + 施放环阶)d8 力场伤害、成功受半数。持续时间内可以附赠动作执行撤离动作。「进入光环 / 光环移入生物空间」要用「自然精魂冲击」手动结算。",
+     "triggers": [
+      {
+       "id": "guardians-turn-end",
+       "label": "咒唤林地卫士：在光环里结束回合",
+       "on": "turnEnded",
+       "role": "any",
+       "when": "target.id != self.id && within(self, target, 10) && canSee(self, target)",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "wis",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "dice": "(1 + effect.state.lvl)d8",
+           "type": "力场"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "dice": "(1 + effect.state.lvl)d8",
+           "scale": 0.5,
+           "type": "力场"
+          }
+         ]
+        }
+       ],
+       "optional": true
+      }
+     ]
     }
    },
    "tags": [

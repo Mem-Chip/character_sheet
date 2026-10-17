@@ -50,14 +50,13 @@
   它现在主要用于伤害包；施法窗口只有 after、没有 before，得先加一个施法前的拦截窗口。
   在哪：`src/combat/audit.ts`（窗口表）、`src/combat/exec.ts`（施法流程）、`src/factory/spec.ts`（补说明书）。
 - **按手动审查报告重新数据化**：`datafy/manual-audit/` 那次审查（830 条：21 条当年就能写、50 条本来就不用自动化、760 条卡在接口上）已经过时 —— 之后引擎补了 `summon`、`zone`、`leftReach`、反应里的 `modify`、`evasion` / `halveDamage` / `cancel`、`redirect` / `absorb`、`maxDice` 等，那批里约 250 条现在能写了。
-  - **区域 + 借机攻击 + 召唤已经做了三轮**（[round2](datafy/manual-audit/round2/README.md) 53 条、[round3](datafy/manual-audit/round3/README.md) 40 条、[round4](datafy/manual-audit/round4/README.md) 23 条）：
-    每一轮的流程都是「子代理写 → 每个自检（结构 + 审计 + 小遭遇试算）→ 另派代理独立复核（拿 5etools 原文逐条比）→ 只合并复核通过的」。
-    第三轮起复核挑出的问题数在收敛：38 → 34 → 5。
-  - **还剩 9 条要收拾**：[round4/suspects.md](datafy/manual-audit/round4/suspects.md) 里有全部证据（野火精魂 0 血不移除、咒唤林地卫士该可选 + `canSee` 现成、链之魔契的图鉴说法是错的、哨兵给的原因编的、灵感织衣的 `to: 'each'` 不合法、
-    尚武魔宠 / 契灵伙伴的 `reach: 5`（布尔位写成数字）+ 原法术的持续与强化没写、亡灵仆役与死灵魔典说的「静态层已经有了」是空指针）。
-    其中 `reach` / `melee` / `ranged` / `finesse` 写数字这类错**检查器已经会报了**（`src/combat/audit.ts` 的 `flagsOf`）。
+  - **这一大类已经收口**（[round2](datafy/manual-audit/round2/README.md) 53 条、[round3](datafy/manual-audit/round3/README.md) 40 条、[round4](datafy/manual-audit/round4/README.md) 26 + 9 条，共 **128 条**）：
+    流程是「子代理写 → 每个自检（结构 + 审计 + 小遭遇试算）→ 另派代理独立复核（拿 5etools 原文逐条比）→ 只合并复核通过的 → 剩下的带证据修完」。
+    复核挑出的问题数：38 → 34 → 5 → 4，说明在收敛。
+  - **下一步做下一个大类**：重骰 / 加骰 / 改判定（38 条）、反应里改结算（20）、免伤（15）、物品消耗（12）、次数池（12）、改目标 / 替盟友挨打（9）、推拉（7）、骰子取最大（6）。
+    逐条的 `key` / `gap` / `need` 在 `datafy/manual-audit/answers/*.json`；先做「重骰 / 加骰 / 改判定」最合适（`reroll` / `addToRoll` / `succeed` / `d20Rolled` 都现成，而且刚修好的 `spellCast` / `leftReach` 窗口语义正好用得上）。
   - 测试：`tests/combat/zone-data.test.ts`、`tests/combat/summon-data.test.ts`（真数据跑遭遇）。
-  - 之后：审查报告里剩下的类别（重骰 / 加骰 / 改判定 38、反应里改结算 20、免伤 15、物品消耗 12、次数池 12、改目标 / 替盟友挨打 9、推拉 7、骰子取最大 6），逐条在 `datafy/manual-audit/answers/*.json`。
+  - 检查器已经补上：`reach` / `melee` / `ranged` / `finesse` 写数字会报（`src/combat/audit.ts` 的 `flagsOf`）。
 - **灵光（aura）的两个引擎缺口**（第二轮复核实测出来的）：① aura 授予的触发器**不检查半径**（`src/combat/triggers.ts` 没走 auraGate）—— 至圣光轮 30 尺、迅捷灵光 10 尺，实测 60 尺 / 20 尺外照样生效；数据侧暂时可以补 `when: 'dist(source, self) <= N'` 兜。
   ② `aura.grant.statics` **根本没被读取**（`effectiveView` 只看 rollMods / triggers）—— 勇气灵光授予的「免疫恐慌」是死数据，实测照样被恐慌。在哪：`src/combat/triggers.ts`、`src/combat/effects.ts`。
 - **区域（zone）拿不到 `vars`**：`src/combat/space.ts` 传给区域的是 `vars: {}`，施法时 `choose` 选出来的东西（伤害类型等）在区域里丢了（哈达之欲的升环加骰永远落在强酸上）。在哪：`space.ts` 的 `runZone` / `Zone`（把创建时的 vars 存进 zone）。

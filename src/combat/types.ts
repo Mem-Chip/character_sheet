@@ -305,8 +305,8 @@ export type Node =
   /** 在窗口里改正在结算的东西（反应动作的 root、触发器的 do 里用）：值在当前作用域里求（能用 slot.level），带骰子的当场掷 */
   | { kind: 'modify'; modify: Modify[] };
 
-/** attacker = 窗口的发起者（攻击者、伤害来源） */
-export type NodeTarget = 'target' | 'self' | 'attacker';
+/** attacker = 窗口的发起者（攻击者、伤害来源）；each = 这次动作选中的每一个目标（多目标治疗 / 临时生命值） */
+export type NodeTarget = 'target' | 'self' | 'attacker' | 'each';
 
 export type ZoneWhen = 'enter' | 'turnStart' | 'turnEnd';
 
