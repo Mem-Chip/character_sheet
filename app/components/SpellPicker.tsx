@@ -23,6 +23,8 @@ interface Props {
   onClose?: () => void;
 }
 
+const SWAP_ON_REST = new Set(['牧师', '德鲁伊', '圣武士', '法师']);
+
 export function SpellPicker({ engine, id, char, sheet, activeBookId, onClose }: Props) {
   const sc = sheet.spell || {};
   const casters: Json[] = sc.casters || [];
@@ -52,6 +54,12 @@ export function SpellPicker({ engine, id, char, sheet, activeBookId, onClose }: 
   const mine = (s: Json) => (s.cls ?? casters[0]?.name) === caster.name;
   const entryOf = (name: string) => spells.find((s) => s.name === name && mine(s));
   const granted = new Set((sc.granted || []).map((g: Json) => g.name));
+
+  // 职业上限与数量计算
+  const lvlOf = (name: string) => list.find((x) => x.name === name)?.level ?? engine.env.store.spellByName(name)?.level ?? 1;
+  const cantrips = spells.filter((s) => mine(s) && lvlOf(s.name) === 0).length;
+  const prepared = spells.filter((s) => mine(s) && lvlOf(s.name) > 0 && s.prepared !== false).length;
+  const over = (cur: number, max: number | null | undefined) => max != null && max > 0 && cur > max;
 
   // 搜索与过滤
   const query = q.trim().toLowerCase();
@@ -124,11 +132,31 @@ export function SpellPicker({ engine, id, char, sheet, activeBookId, onClose }: 
         )}
       </div>
 
+      {/* 施法上限与准备统计提示 */}
+      <div className="row small" style={{ gap: 10, marginBottom: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        {(caster.cantrips > 0 || cantrips > 0) && (
+          <span className={over(cantrips, caster.cantrips) ? 'warnline' : ''}>
+            戏法 {cantrips}{caster.cantrips != null ? ` / ${caster.cantrips}` : ''}
+          </span>
+        )}
+        <span className={over(prepared, caster.prepared) ? 'warnline' : ''}>
+          已准备 {prepared}{caster.prepared != null ? ` / ${caster.prepared}` : ''}
+        </span>
+        {isWizard && sc.spellbookMax != null && (
+          <span className={over(curBook?.spells.length ?? 0, sc.spellbookMax) ? 'warnline' : ''}>
+            法术书 {curBook?.spells.length ?? 0}{` / ${sc.spellbookMax}`}
+          </span>
+        )}
+        <span className="tiny faint">
+          {SWAP_ON_REST.has(caster.name) ? '长休后可以换准备的法术' : '升级时可以换一道'}
+        </span>
+        {over(prepared, caster.prepared) && <span className="warnline tiny">· 超出上限（只提醒不拦截）</span>}
+      </div>
+
       {/* 搜索栏 */}
       <div className="row" style={{ gap: 8, marginBottom: 8 }}>
         <input
           style={{ flex: 1 }}
-          placeholder="中英文即时搜索（如：火球术 / Fireball / 护盾 / Shield / 治疗…）"
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
@@ -229,7 +257,7 @@ export function SpellPicker({ engine, id, char, sheet, activeBookId, onClose }: 
                         className={'btn sm' + (inBook ? ' on' : ' primary')}
                         onClick={() => handleToggleBook(s.name)}
                       >
-                        {inBook ? '已在书中 ✓' : '+ 抄写入书'}
+                        {inBook ? '已在书中' : '+ 抄写入书'}
                       </button>
                     ) : (
                       // 非法师，或法师戏法：直接准备/学习
@@ -238,7 +266,7 @@ export function SpellPicker({ engine, id, char, sheet, activeBookId, onClose }: 
                         className={'btn sm' + (isPrep ? ' on' : ' primary')}
                         onClick={() => handleTogglePrepare(s.name, lv)}
                       >
-                        {isPrep ? (lv === 0 ? '已学戏法 ✓' : '已准备 ✓') : (lv === 0 ? '+ 学习戏法' : '+ 准备法术')}
+                        {isPrep ? (lv === 0 ? '已学戏法' : '已准备') : (lv === 0 ? '+ 学习戏法' : '+ 准备法术')}
                       </button>
                     )}
                   </div>

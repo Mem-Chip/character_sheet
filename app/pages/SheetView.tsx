@@ -242,14 +242,6 @@ function Spells({ engine, id, char, sheet }: Props) {
       title="法术"
       aside={<>
         {sc.dc != null && <span>豁免 DC <b className="serif">{sc.dc}</b> · 攻击 <b className="serif">{sgn(sc.atk)}</b> · {ABIL_CN[sc.ability as keyof typeof ABIL_CN]}</span>}
-        {sc.casters?.length > 0 && (
-          <button
-            className={'btn sm' + (expanded ? ' on' : ' primary')}
-            onClick={() => setExpanded(!expanded)}
-          >
-            {expanded ? '收起法术库 ▴' : (isWizard ? '+ 抄录/添加 ▾' : '+ 添加法术 ▾')}
-          </button>
-        )}
       </>}
     >
       {/* 法术位方格 */}
@@ -282,12 +274,6 @@ function Spells({ engine, id, char, sheet }: Props) {
 
       {/* 常驻列表 1：已准备法术与戏法 */}
       <div style={{ marginBottom: isWizard ? 14 : 6 }}>
-        {isWizard && (
-          <div className="row spread" style={{ marginBottom: 4, alignItems: 'center' }}>
-            <span className="tiny faint" style={{ fontWeight: 600, letterSpacing: '0.05em' }}>⚡ 今日已准备法术与戏法</span>
-            <span className="tiny faint">{order.length} 道</span>
-          </div>
-        )}
         <table className="rows">
           <tbody>
             {order.map(({ s, i }: Json) => {
@@ -307,24 +293,19 @@ function Spells({ engine, id, char, sheet }: Props) {
                     {sc.casters?.length > 1 && s.cls ? ` · ${s.cls}` : ''}
                   </td>
                   <td className="r">
-                    {isCantrip ? (
-                      <button className="btn ghost sm" aria-label={`移除${s.name}`} onClick={() => actions.update(id, (c) => { c.spells.splice(i, 1); })}>移除</button>
-                    ) : isWizard ? (
-                      <button
-                        className="btn sm on"
-                        title="从今日准备列表中卸下"
-                        onClick={() => actions.update(id, (c) => { togglePrepareFromBook(c, s.name); })}
-                      >
-                        已准备 ✓
-                      </button>
-                    ) : (
-                      <>
-                        <button className={'btn sm' + (s.prepared !== false ? ' on' : '')} onClick={() => actions.update(id, (c) => { c.spells[i].prepared = s.prepared === false; })}>
-                          {s.prepared !== false ? '已准备' : '未准备'}
-                        </button>
-                        <button className="btn ghost sm" aria-label={`移除${s.name}`} onClick={() => actions.update(id, (c) => { c.spells.splice(i, 1); })}>移除</button>
-                      </>
-                    )}
+                    <button
+                      className="btn ghost sm"
+                      aria-label={`移除${s.name}`}
+                      onClick={() => actions.update(id, (c) => {
+                        if (isWizard && !isCantrip) {
+                          togglePrepareFromBook(c, s.name);
+                        } else {
+                          c.spells.splice(i, 1);
+                        }
+                      })}
+                    >
+                      移除
+                    </button>
                   </td>
                 </tr>
               );
@@ -339,13 +320,13 @@ function Spells({ engine, id, char, sheet }: Props) {
         </table>
       </div>
 
-      {/* 法师专属：常驻「📖 法术书」列表 */}
+      {/* 法师专属：常驻「法术书」列表 */}
       {isWizard && (
         <div style={{ marginTop: 12, padding: '10px 10px 8px', background: 'var(--panel-2)', borderRadius: 'var(--r)', border: '1px solid var(--line)' }}>
           {/* 法术书切换与管理条 */}
           <div className="row spread" style={{ alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
             <div className="row" style={{ alignItems: 'center', gap: 6 }}>
-              <span className="serif" style={{ fontWeight: 600 }}>📖 法术书：</span>
+              <span className="serif" style={{ fontWeight: 600 }}>法术书：</span>
               <select
                 value={curBook.id}
                 onChange={(e) => {
@@ -488,7 +469,7 @@ function Spells({ engine, id, char, sheet }: Props) {
                           className={'btn sm' + (isPrep ? ' on' : '')}
                           onClick={() => actions.update(id, (c) => togglePrepareFromBook(c, name))}
                         >
-                          {isPrep ? '已准备 ✓' : '准备'}
+                          {isPrep ? '已准备' : '准备'}
                         </button>
                         <button
                           type="button"
@@ -521,20 +502,18 @@ function Spells({ engine, id, char, sheet }: Props) {
       ) : (
         <button
           type="button"
-          className="btn ghost spread"
+          className="btn ghost"
           style={{
             width: '100%',
             marginTop: 10,
             padding: '8px 12px',
             border: '1px dashed var(--line)',
             borderRadius: 'var(--r)',
-            justifyContent: 'center',
-            gap: 8,
+            textAlign: 'center',
           }}
           onClick={() => setExpanded(true)}
         >
-          <span>{isWizard ? `+ 抄录新法术入「${curBook.name}」… ▾` : '+ 添加/准备法术… ▾'}</span>
-          <span className="tiny faint">支持中英文即时双语搜索、环阶学派筛选</span>
+          {isWizard ? `+ 抄录新法术入「${curBook.name}」… ▾` : '+ 添加/准备法术… ▾'}
         </button>
       )}
     </Panel>
