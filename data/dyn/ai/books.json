@@ -12401,7 +12401,7 @@
   "TCE:风暴符文": {
    "name": "风暴符文",
    "automation": "partial",
-   "text": "铭刻此符文时，进行的智力（奥秘）检定具有优势，且只要未失能就不会被突袭。此外，可以附赠动作激活此符文进入先知形态持续 1 分钟（陷入失能提前结束）。形态持续期间，每当你或 60 尺内可见另一生物进行攻击检定、豁免检定或属性检定时，可以使用反应赋予该次检定优势或劣势（反应赋予优劣势需手动处理）。",
+   "text": "穿着或携带着铭刻此符文的物品时：你进行的智力（奥秘）检定具有优势；只要你未处于失能状态就不会被突袭（引擎不结算突袭，请人工处理）。附赠动作激活符文进入先知形态，持续 1 分钟，陷入失能会提前结束；激活次数见资源池，短休或长休后恢复。形态期间，每当你或你周围 60 尺内可见的另一生物进行攻击检定、豁免检定或属性检定时，你可以用反应让这次检定获得优势或劣势——引擎不支持在别人的掷骰上直接打优势/劣势标记，这里用「再掷一颗 d20 取高 / 取低」近似（已经有优势或劣势的那次不再提供，因为叠加结果会失真）。为了不打扰，只在会改变结果时问：自己或盟友的检定按现在会失败时问「给优势」，敌人的检定按现在会成功时问「给劣势」；先攻掷骰不提示，要调整请手动处理。",
    "rollMods": [
     {
      "on": {
@@ -12410,7 +12410,7 @@
      },
      "who": "bearer",
      "op": "adv",
-     "label": "风暴符文：奥秘优势"
+     "label": "风暴符文：智力（奥秘）检定优势"
     }
    ],
    "actions": [
@@ -12423,6 +12423,7 @@
        "resource": "风暴符文"
       }
      ],
+     "requires": "!self.hasEffect('先知形态')",
      "targeting": {
       "type": "self"
      },
@@ -12446,7 +12447,51 @@
        }
       ]
      },
-     "text": "持续 1 分钟（失能提前结束）。每当你或 60 尺内可见的另一生物进行攻击检定、豁免检定或属性检定时，可以使用反应赋予这次检定优势或劣势。"
+     "triggers": [
+      {
+       "id": "prophecy-adv",
+       "label": "风暴符文：让这次检定获得优势",
+       "on": "d20Rolled",
+       "role": "any",
+       "window": "before",
+       "optional": true,
+       "cost": [
+        {
+         "economy": "reaction"
+        }
+       ],
+       "when": "roll.sub != 'initiative' && roll.failing && !roll.adv && !roll.disadv && !combatant(roll.roller).isEnemyOf(self) && (roll.roller == self.id || (within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))))",
+       "modify": [
+        {
+         "op": "reroll",
+         "die": "d20",
+         "keep": "higher"
+        }
+       ]
+      },
+      {
+       "id": "prophecy-disadv",
+       "label": "风暴符文：让这次检定获得劣势",
+       "on": "d20Rolled",
+       "role": "any",
+       "window": "before",
+       "optional": true,
+       "cost": [
+        {
+         "economy": "reaction"
+        }
+       ],
+       "when": "roll.sub != 'initiative' && !roll.failing && !roll.adv && !roll.disadv && combatant(roll.roller).isEnemyOf(self) && within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))",
+       "modify": [
+        {
+         "op": "reroll",
+         "die": "d20",
+         "keep": "lower"
+        }
+       ]
+      }
+     ],
+     "text": "持续 1 分钟（失能提前结束）：你或你周围 60 尺内可见的生物掷 d20 时，可以用反应让这次检定获得优势（按再掷一颗取高近似）或劣势（按再掷一颗取低近似）。"
     }
    },
    "tags": [
@@ -12495,16 +12540,16 @@
   "TCE:符之魔契": {
    "name": "符之魔契",
    "automation": "partial",
-   "text": "宗主赐予一枚护身符。佩戴者在属性检定失败时，可消耗次数投掷 1d4 加在检定结果上，可能将其转为成功。次数等于熟练加值，长休恢复。转交盟友佩戴及遗失仪式重铸需手动处理。",
+   "text": "佩戴者在一次属性检定中失败时，可以掷 1d4 加在这次检定的结果上（引擎在「按现在的结果会失败」时问你要不要用；没有 DC 的检定判断不了失没失败，会直接问；先攻掷骰不算会失败的检定，不提示）。次数等于你的熟练加值，长休恢复。护身符可以转交给盟友佩戴：引擎只把它绑在你自己的检定上，盟友戴着时请由你手动给那次检定加 1d4。转交、遗失后 1 小时的仪式重铸、死亡时化为灰烬都要手动处理。",
    "triggers": [
     {
      "id": "talisman-check",
-     "label": "符之魔契：检定加骰",
+     "label": "符之魔契：属性检定加 1d4",
      "on": "d20Rolled",
      "role": "actor",
      "window": "before",
      "optional": true,
-     "when": "roll.kind == 'check' && roll.failing",
+     "when": "roll.kind == 'check' && roll.sub != 'initiative' && (roll.failing || roll.vs == null)",
      "cost": [
       {
        "resource": "符之魔契"
@@ -13965,7 +14010,7 @@
   "TCE:枪手": {
    "name": "枪手",
    "automation": "manual",
-   "text": "枪械熟练项属于人物卡静态层。忽略枪械装填（LD）词条以及位于敌对生物 5 尺内发动远程攻击检定不具劣势（抵近射击），引擎目前没有取消劣势机制，需由玩家手动处理。",
+   "text": "枪械熟练项属于人物卡静态层（建卡时选的熟练项），战斗数据里不用再写。引擎不结算枪械的 LD（装填）词条，忽略即可。「你在敌对生物 5 尺范围内发动远程攻击检定时不会因此具有劣势」是站位规则：引擎本身不会因为敌人在 5 尺内就给远程攻击加劣势，所以也不需要在战斗数据里取消；如果你在地图上手动给这类攻击加了劣势，请自己改回来。",
    "tags": [
     "ai",
     "未审"
@@ -14831,8 +14876,8 @@
   },
   "TCE:术士:归复平衡:1": {
    "name": "归复平衡",
-   "automation": "partial",
-   "text": "60尺内你可见的生物即将带着优势或劣势掷d20检定时，用反应使这次检定免受优势和劣势影响。引擎无法自动取消优势/劣势：用掉后请手动把这次检定改成只掷一颗d20（无优势无劣势）。",
+   "automation": "full",
+   "text": "60 尺内你可见的生物即将带着优势或劣势掷 d20 检定时，你可以用反应消耗一次归复平衡，使这次检定免受优势或劣势的影响：引擎把这次检定改回只掷一颗 d20（取第一颗骰子的点数，按无优势无劣势重算总值后再判定成败）。次数等于你的熟练加值，长休恢复。距离与「可见」有地图时按地图计算，没有地图时会问一句。",
    "actions": [
     {
      "id": "use",
@@ -14842,7 +14887,7 @@
       "on": "d20Rolled",
       "role": "any",
       "window": "before",
-      "when": "(roll.adv || roll.disadv) && within(self, combatant(event.roller), 60) && canSee(self, combatant(event.roller))"
+      "when": "(roll.adv || roll.disadv) && within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))"
      },
      "cost": [
       {
@@ -14851,10 +14896,23 @@
      ],
      "root": [
       {
-       "kind": "note",
-       "text": "归复平衡：这次 d20 检定免受优势和劣势影响，请手动改为只掷一颗 d20"
+       "kind": "modify",
+       "modify": [
+        {
+         "op": "clearAdv",
+         "which": "both"
+        }
+       ]
       }
      ]
+    }
+   ],
+   "resources": [
+    {
+     "id": "restore-balance",
+     "name": "归复平衡",
+     "formula": "pb",
+     "recovery": "long"
     }
    ],
    "tags": [
@@ -15162,8 +15220,8 @@
   },
   "TCE:术士:序列意识:14": {
    "name": "序列意识",
-   "automation": "partial",
-   "text": "以附赠动作进入1分钟的序列意识：在此期间，你的每次d20检定里，d20掷出9或以下按10计；对你的攻击不能具有优势（引擎无法自动取消优势：对你的攻击出现优势时请手动改为无优势）。每次长休可免费使用一次；也可消耗5点术法点重置使用权。",
+   "automation": "full",
+   "text": "以附赠动作进入 1 分钟的序列意识：期间你的每次 d20 检定（攻击、属性、豁免）里，d20 掷出 9 或以下一律按 10 计；对你的攻击检定不能具有优势（攻击方掷骰时直接按无优势结算，只掷一颗 d20）。每次长休可用一次；已经用完时可以（不占动作）消耗 5 点术法点再获得一次使用权。",
    "actions": [
     {
      "id": "use",
@@ -15175,6 +15233,9 @@
       }
      ],
      "requires": "!self.hasEffect('序列意识')",
+     "targeting": {
+      "type": "self"
+     },
      "root": [
       {
        "kind": "applyEffect",
@@ -15185,7 +15246,7 @@
     },
     {
      "id": "restore",
-     "name": "序列意识：恢复使用权（5术法点）",
+     "name": "序列意识：恢复使用权（5 术法点）",
      "activation": "free",
      "cost": [
       {
@@ -15193,6 +15254,10 @@
        "n": 5
       }
      ],
+     "requires": "self.resource('trance-of-order') < 1",
+     "targeting": {
+      "type": "self"
+     },
      "root": [
       {
        "kind": "resource",
@@ -15204,7 +15269,7 @@
    ],
    "effects": {
     "序列意识": {
-     "text": "1分钟内：d20检定掷出9或以下视为10；对你的攻击不能具有优势（需手动处理）。",
+     "text": "1 分钟内：你的每次 d20 检定里，d20 掷出 9 或以下按 10 计；对你的攻击检定不能具有优势。",
      "duration": {
       "minutes": 1
      },
@@ -15216,11 +15281,27 @@
        "who": "bearer",
        "op": "minD20",
        "value": 10,
-       "label": "序列意识：9或以下视为10"
+       "label": "序列意识：d20 掷出 9 或以下按 10 计"
+      },
+      {
+       "on": {
+        "kind": "attack"
+       },
+       "who": "against",
+       "op": "noAdv",
+       "label": "序列意识：对你的攻击不能具有优势"
       }
      ]
     }
    },
+   "resources": [
+    {
+     "id": "trance-of-order",
+     "name": "序列意识",
+     "formula": 1,
+     "recovery": "long"
+    }
+   ],
    "tags": [
     "ai",
     "未审"
@@ -29437,10 +29518,10 @@
   "XGE:spell:水墙术": {
    "name": "水墙术",
    "automation": "partial",
-   "text": "在 60 尺内地表召唤直线水墙（长至多 30 尺、厚 1 尺）或环形水墙（直径至多 20 尺、厚 1 尺），持续至多 10 分钟（专注）。墙体区域为困难地形；进入墙体的远程武器攻击检定具有劣势；穿过墙体的火焰伤害减半；穿过墙体的寒冷法术会冻结局部（每 5 平方尺 AC 5、15 HP，被摧毁后不填补；阻挡、减伤与冻结需手动处理）。",
+   "text": "在 60 尺内你能看到的地表一点召唤由水构成的墙，专注至多 10 分钟：可以是一道至多 30 尺长、10 尺高、1 尺厚的直墙，或一个至多 20 尺直径、20 尺高、1 尺厚的环形墙。引擎的画范围只有直线：放直墙用「水墙术」，放环形墙请在图上用「形状」工具自己画一个直径 20 尺的圈（位置照样算）。墙体所在区域是困难地形；任何进入墙体所在空间的远程武器攻击在攻击检定中具有劣势；穿过墙体抵达目标的火焰效果造成的火焰伤害减半；造成寒冷伤害的法术穿过墙体时会把穿过的部分冻结（每 5 平方尺 AC 5、15 点生命值，降到 0 就摧毁且水不会补上缺口）。困难地形、远程穿墙劣势、火焰伤害减半、冻结块的 AC / 生命值这四件引擎都不结算（不判断几何与光照），请人工处理；区域节点只是把墙画在地图上、有人进入时提醒一句。",
    "actions": [
     {
-     "id": "use",
+     "id": "cast",
      "name": "水墙术",
      "activation": "action",
      "tags": [
@@ -29469,7 +29550,21 @@
      "root": [
       {
        "kind": "note",
-       "text": "召唤直线或环形水墙，持续至多 10 分钟（专注）。墙体为困难地形，削弱远程武器攻击与火焰伤害，受寒冷法术可被冻结。"
+       "text": "水墙术：墙体所在区域是困难地形；进入墙体所在空间的远程武器攻击具有劣势；穿过墙体的火焰效果造成的火焰伤害减半；造成寒冷伤害的法术穿过时冻结穿过的部分（每 5 平方尺 AC 5、15 点生命值，摧毁后不补上缺口）。这些都要人工判断，引擎只把墙画在地图上。"
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter"
+       ],
+       "affects": "all",
+       "do": [
+        {
+         "kind": "note",
+         "text": "水墙术：这块空间是困难地形（移动花费翻倍）；从这里穿过墙体的远程武器攻击有劣势、火焰伤害减半，寒冷法术会冻结穿过的部分 —— 都要人工结算。"
+        }
+       ],
+       "name": "水墙术"
       }
      ]
     }
@@ -29788,10 +29883,10 @@
   "XGE:spell:西风打击": {
    "name": "西风打击",
    "automation": "partial",
-   "text": "专注至多 1 分钟。持续时间内你的移动不会引发借机攻击。此外法术结束前仅限一次，你可在自己回合让一次武器攻击检定获得优势，命中额外造成 1d8 力场伤害；无论命中与否，步行速度增加 30 尺直至该回合结束（仅限一次与速度加值需手动处理）。",
+   "text": "附赠动作，专注至多 1 分钟。持续时间内你的移动不会引发借机攻击（引擎用「不引发借机攻击」的标记处理）。此外在法术结束前仅一次，你可以在自己的回合让自己的一次武器攻击检定获得优势：这次攻击若击中额外造成 1d8 力场伤害；无论是否击中，你的步行速度都增加 30 尺直到这个回合结束。引擎把这次优势给你本回合的第一次武器攻击（用掉即消失，不能留到同回合的下一次攻击；要留给后面那次请先别攻击），法杖等非武器攻击不消耗它。速度加值只做在「步行速度 +30 尺」上，其他速度类型不区分。",
    "actions": [
     {
-     "id": "use",
+     "id": "cast",
      "name": "西风打击",
      "activation": "bonus",
      "tags": [
@@ -29816,12 +29911,29 @@
        "kind": "applyEffect",
        "to": "self",
        "template": "西风打击"
+      },
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "西风打击：蓄势"
       }
      ]
     }
    ],
    "effects": {
     "西风打击": {
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "flags": {
+      "cannot": [
+       "provoke"
+      ]
+     },
+     "text": "法术持续期间，你的移动不会引发借机攻击。"
+    },
+    "西风打击：蓄势": {
      "tags": [
       "spell",
       "magical"
@@ -29835,7 +29947,7 @@
         }
        },
        "who": "bearer",
-       "when": "turn.isMine && ask('本次攻击消耗西风打击的优势吗？')",
+       "when": "turn.isMine",
        "op": "adv",
        "label": "西风打击：武器攻击优势"
       }
@@ -29847,8 +29959,7 @@
        "on": "attackHit",
        "role": "actor",
        "window": "before",
-       "optional": true,
-       "when": "attack.weapon && turn.isMine",
+       "when": "attack.weapon && turn.isMine && roll.adv && self.hasEffect('西风打击：蓄势')",
        "do": [
         {
          "kind": "addDamage",
@@ -29856,9 +29967,83 @@
          "type": "力场"
         }
        ]
+      },
+      {
+       "id": "zephyr-spent-hit",
+       "label": "西风打击：用掉这次优势（命中）",
+       "on": "attackHit",
+       "role": "actor",
+       "when": "attack.weapon && turn.isMine && roll.adv && self.hasEffect('西风打击：蓄势')",
+       "do": [
+        {
+         "kind": "removeEffect",
+         "match": {
+          "name": "西风打击：蓄势"
+         },
+         "from": "self"
+        },
+        {
+         "kind": "applyEffect",
+         "to": "self",
+         "name": "西风打击：疾风",
+         "inline": {
+          "statics": [
+           {
+            "kind": "speed",
+            "bonus": 30
+           }
+          ],
+          "duration": {
+           "until": {
+            "at": "turnEnd",
+            "of": "bearer",
+            "nth": 0
+           }
+          },
+          "text": "步行速度 +30 尺，直到本回合结束。"
+         }
+        }
+       ]
+      },
+      {
+       "id": "zephyr-spent-miss",
+       "label": "西风打击：用掉这次优势（未命中）",
+       "on": "attackMissed",
+       "role": "actor",
+       "when": "attack.weapon && turn.isMine && roll.adv && self.hasEffect('西风打击：蓄势')",
+       "do": [
+        {
+         "kind": "removeEffect",
+         "match": {
+          "name": "西风打击：蓄势"
+         },
+         "from": "self"
+        },
+        {
+         "kind": "applyEffect",
+         "to": "self",
+         "name": "西风打击：疾风",
+         "inline": {
+          "statics": [
+           {
+            "kind": "speed",
+            "bonus": 30
+           }
+          ],
+          "duration": {
+           "until": {
+            "at": "turnEnd",
+            "of": "bearer",
+            "nth": 0
+           }
+          },
+          "text": "步行速度 +30 尺，直到本回合结束。"
+         }
+        }
+       ]
       }
      ],
-     "text": "移动不引发借机攻击。法术期间可令一次武器攻击检定具优势，命中额外造成 1d8 力场伤害，且回合结束前步行速度 +30 尺。"
+     "text": "法术结束前仅一次：你本回合的一次武器攻击检定具有优势，那一次击中额外造成 1d8 力场伤害；无论是否击中，步行速度 +30 尺直到本回合结束。"
     }
    },
    "tags": [
@@ -30231,10 +30416,10 @@
   "XGE:spell:幽影刃": {
    "name": "幽影刃",
    "automation": "partial",
-   "text": "附赠动作具象化幽影刃，持续至多 1 分钟（专注）。视为熟练的简易近战武器（灵巧、轻型、投掷 20/60 尺），命中造成 2d8 心灵伤害（升环：3~4 环 3d8，5~6 环 4d8，7 环以上 5d8）。攻击微光或黑暗中的目标具有优势。放下或投掷后回合结束消散，持续时间内可以附赠动作召回手中（光照优势与武器特性需手动处理）。",
+   "text": "附赠动作把幽影织成手中实化的剑，专注至多 1 分钟。它被视为你具有熟练项的简易近战武器（灵巧、轻型、投掷 20/60 尺），命中造成 2d8 心灵伤害＋力量或敏捷调整值；升环施法：3~4 环 3d8、5~6 环 4d8、7 环及以上 5d8（伤害骰引擎自动按环阶算）。放下或投掷出去后它在那个回合结束时消散，法术持续期间可以用附赠动作让它重新出现在手中（消散与召回要人处理）。投掷攻击在引擎里和近战攻击用同一套数值（不区分远近，够得到目标就按这把剑砍）。「攻击微光光照或黑暗中的目标时攻击检定具有优势」引擎判断不了光照，需要时请手动给这次攻击加上优势。",
    "actions": [
     {
-     "id": "use",
+     "id": "cast",
      "name": "幽影刃",
      "activation": "bonus",
      "tags": [
@@ -30258,19 +30443,28 @@
       {
        "kind": "applyEffect",
        "to": "self",
-       "template": "幽影刃"
+       "template": "幽影刃（在手）",
+       "state": {
+        "n": "min(5, 1 + ceil(slot.level / 2))"
+       }
       }
      ]
     },
     {
      "id": "attack",
      "name": "幽影刃：攻击",
-     "activation": "action",
+     "activation": "none",
+     "cost": [
+      {
+       "economy": "attack"
+      }
+     ],
      "tags": [
       "spell",
-      "magical"
+      "magical",
+      "weapon"
      ],
-     "requires": "self.hasEffect('幽影刃')",
+     "requires": "self.hasEffect('幽影刃（在手）')",
      "targeting": {
       "type": "creature",
       "count": 1,
@@ -30279,14 +30473,20 @@
      "root": [
       {
        "kind": "attack",
+       "bonus": "self.pb + max(self.mod.str, self.mod.dex)",
        "attack": {
         "melee": true,
-        "weapon": true
+        "ranged": true,
+        "finesse": true,
+        "weapon": true,
+        "ability": "dex",
+        "damageType": "心灵",
+        "item": "幽影刃"
        },
        "onHit": [
         {
          "kind": "damage",
-         "dice": "2d8",
+         "dice": "(self.effect('幽影刃（在手）').state.n)d8 + max(self.mod.str, self.mod.dex)",
          "type": "心灵"
         }
        ]
@@ -30301,25 +30501,25 @@
       "spell",
       "magical"
      ],
-     "requires": "self.hasEffect('幽影刃')",
+     "requires": "self.hasEffect('幽影刃（在手）')",
      "targeting": {
       "type": "self"
      },
      "root": [
       {
        "kind": "note",
-       "text": "以附赠动作使消散的幽影刃重现于手中。"
+       "text": "以附赠动作让消散的幽影刃重新出现在你手中（法术持续期间可用）。"
       }
      ]
     }
    ],
    "effects": {
-    "幽影刃": {
+    "幽影刃（在手）": {
      "tags": [
       "magical",
       "spell"
      ],
-     "text": "手中具象化一把幽影之剑，命中造成 2d8 心灵伤害（升环：3~4 环 3d8，5~6 环 4d8，7 环+ 5d8）。攻击微光或黑暗中的目标具有优势。放下或投掷后回合结束消散，可用附赠动作召回手中。"
+     "text": "手中具现一把幽影之剑（熟练的简易近战武器，灵巧、轻型、投掷 20/60 尺）：命中造成按环阶算的 d8 心灵伤害＋力量或敏捷调整值。松开或投掷后在那个回合结束时消散，可用附赠动作召回。"
     }
    },
    "tags": [
