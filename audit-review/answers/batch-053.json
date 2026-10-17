@@ -1,0 +1,138 @@
+{
+  "batch": "batch-053",
+  "answers": [
+    {
+      "key": "XPHB:牧师:诡诈换位:6",
+      "verdict": "manual",
+      "why": "原文「可以通过传送与幻象交换位置…引擎不追踪幻象位置，由人处理」：幻象不是引擎追踪的地图实体，且 interfaces §5 明确「两个生物换位」做不到，无法自动。",
+      "missing": [
+        "地图实体幻象的位置追踪（interfaces §5 无地图几何/实体坐标追踪）",
+        "与目标生物交换位置的换位能力（interfaces §5 明确禁止两个生物换位）"
+      ]
+    },
+    {
+      "key": "XPHB:牧师:极效治疗:17",
+      "verdict": "partial",
+      "why": "原文「引擎按这条修正把你掷的治疗骰全部取最大」——取最大已自动；但「别人治疗你、或你喝药水这类不该取最大的治疗也会被取最大」需手动改回，因为无法把取最大限定在「你施放法术/引导神力治疗他人」这一侧。",
+      "missing": [
+        "监听「你施放治疗法术/引导神力」的触发器事件（interfaces §3 窗口事件无 heal/healRolled 类事件）",
+        "限定「施法者=自身」的 heal 侧条件以排除被治疗/药水场景（无 heal 事件则无法区分 actor 为治疗者还是受治疗者）"
+      ]
+    },
+    {
+      "key": "XPHB:牧师:进阶神圣干预:20",
+      "verdict": "manual",
+      "why": "原文两半都无法在此条目自动：选祈愿术需改「神圣干预」本身的动作（该条目现为手动、本条目改不了）；2d4 次长休的冷却「引擎的次数池只有短休恢复/长休恢复两种，记不住」，原文即判手动。",
+      "missing": [
+        "按非标准长休次数（2d4 次长休）计的动态冷却资源恢复（interfaces 资源池只有短休/长休恢复两种）",
+        "跨条目改写另一动作（神圣干预）的可选项能力（本条目无法修改其它手动条目）"
+      ]
+    },
+    {
+      "key": "XPHB:牧师:精通分身:17",
+      "verdict": "manual",
+      "why": "原文「共享干扰：对幻象 5 尺内生物攻击优势」「治愈幻象：幻象消失时回血…幻象的位置和消失时机引擎不跟踪，请手动处理」：两项都依赖追踪幻象位置与消失时机，interfaces §5 无地图几何/实体光环追踪。",
+      "missing": [
+        "地图实体幻象的位置跟踪与以幻象为中心的 5 尺 zone 光环（interfaces §5 无地图几何）",
+        "幻象消失时触发治疗的时机（无任何消失事件可挂钩）"
+      ]
+    },
+    {
+      "key": "XPHB:牧师:精通受祝击:14",
+      "verdict": "partial",
+      "why": "原文「神圣打击额外 +1d8…做成可选，由你确认」可借助 choose 让 DM 确认（部分自动）；但「强力施法的临时生命值…引擎分不出牧师戏法，也没有 60 尺内另一生物的选目标流程」需手动，故整体 partial。",
+      "missing": [
+        "识别牧师戏法的能力（interfaces 无按法术来源/学派区分戏法的判定）",
+        "「60 尺内另一生物」的选目标流程（choose 的 fromVar/targeting 不足以在戏法命中时挑一名其它生物赋予临时生命值）"
+      ]
+    },
+    {
+      "key": "XPHB:牧师:黎明曙光:3",
+      "verdict": "partial",
+      "why": "原文「30 尺光环内体质豁免、失败 2d10+等级光耀伤害、成功减半」可由 action(area 30)+forEach+save+damage(scale 0.5) 自动结算；但「区域内任何魔法黑暗都会被解除——引擎不处理区域之间的互动，请人工解除」需手动。",
+      "missing": [
+        "区域之间互动/解除魔法黑暗的环境处理（interfaces 无地图区域交互能力，darkness 区域解除只能人工删区域）"
+      ],
+      "patch": {
+        "actions": [
+          {
+            "id": "use",
+            "name": "黎明曙光",
+            "activation": "action",
+            "cost": [{ "resource": "引导神力" }],
+            "targeting": { "type": "area", "range": "self", "area": { "shape": "emanation", "radius": 30 } },
+            "trigger": null,
+            "concentration": null,
+            "requires": null,
+            "root": [
+              { "forEach": "targets", "do": [
+                { "save": {
+                  "ability": "con", "dc": "self.spellDc", "to": "each",
+                  "onFail": [ { "damage": { "dice": "2d10", "type": "radiant", "bonus": "self.level" } } ],
+                  "onSuccess": [ { "damage": { "dice": "2d10", "type": "radiant", "bonus": "self.level", "scale": 0.5 } } ]
+                } }
+              ] }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "XPHB:牧师:驱散亡灵:2",
+      "verdict": "partial",
+      "why": "原文「被驱散的生物会尽可能远离你：引擎用『恐慌』的劣势与不能向你靠近来近似」可由 forEach+applyEffect(cannot:['moveCloser:source']) 自动；但「『尽可能远离』的移动由人处理」——强制逃跑移动引擎不做，故整体 partial。",
+      "missing": [
+        "被驱散生物强制消耗移动力向远离施法者方向逃跑的自动化移动逻辑（interfaces 无自动化逃跑移动，move 节点只做推/拉/传送）"
+      ],
+      "patch": {
+        "actions": [
+          {
+            "id": "use",
+            "name": "驱散亡灵",
+            "activation": "action",
+            "cost": [{ "resource": "引导神力" }],
+            "targeting": { "type": "area", "range": "self", "area": { "shape": "emanation", "radius": 30 } },
+            "trigger": null,
+            "concentration": null,
+            "requires": null,
+            "root": [
+              { "forEach": "targets", "do": [
+                { "applyEffect": { "template": "frightenedOfCaster", "to": "each", "duration": { "rounds": 1 } } }
+              ] }
+            ]
+          }
+        ],
+        "effects": [
+          { "name": "frightenedOfCaster", "flags": { "cannot": ["moveCloser:source"] }, "duration": { "rounds": 1 } }
+        ]
+      }
+    },
+    {
+      "key": "XPHB:牧师:神圣干预:10",
+      "verdict": "manual",
+      "why": "原文「选择一道 5 环或更低、施法时间不是 1 反应的牧师法术…无需法术位与材料成分…引擎无法免费施放任意法术，请手动扣除次数并按该法术数据结算」：choose+castFrom 能选并施放法术，但无法免除其法术位/材料代价，核心「免费」做不到；且排除 1 反应施法时间也非 pool.castTime 正向匹配能表达。",
+      "missing": [
+        "借 choose+castFrom 免费施放选中法术并免除其法术位/材料成分的机制（interfaces 无免除被选法术施法代价的字段）",
+        "排除「1 反应施法时间」的过滤（pool.castTime 仅正向匹配某一施法时间，不能表达『不是反应』）"
+      ]
+    },
+    {
+      "key": "XPHB:牧师:神佑医者:6",
+      "verdict": "manual",
+      "why": "原文「法术位施放为他人恢复生命值的法术后，你立即恢复 2 + 法术位环阶的生命值…引擎没有『治疗』事件可以监听，也读不到环阶，需人工加」：无 heal 事件可挂钩、无环阶读取，无法自动。",
+      "missing": [
+        "监听「你施放治疗法术」的触发器事件（interfaces §3 窗口事件列表无 heal/healDone 类事件）",
+        "读取所耗法术位环阶的能力（无 level 读取节点/表达式）"
+      ]
+    },
+    {
+      "key": "XPHB:牧师:生命门徒:3",
+      "verdict": "manual",
+      "why": "原文「消耗法术位施展的法术恢复生命值时，额外恢复 2 + 法术位环阶的生命值…引擎没有『治疗』事件可以监听，治疗节点写在各法术条目里，需人工加」：无 heal 事件拦截、无环阶读取，无法在各法术治疗节点上自动追加，需人工。",
+      "missing": [
+        "法术产生治疗时拦截并追加治疗量（2 + 法术环阶）的修改机制（interfaces §3 无 heal 类窗口事件）",
+        "读取法术位环阶的能力（无 level 读取节点）"
+      ]
+    }
+  ]
+}

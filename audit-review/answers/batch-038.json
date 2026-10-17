@@ -1,0 +1,158 @@
+{
+ "batch": "batch-038",
+ "answers": [
+  {
+   "key": "XGE:游侠:闪现打击:11",
+   "verdict": "partial",
+   "why": "「传送最多10尺至可见未占据空间」可用 move(teleport) 节点自动；但「在同一攻击动作中攻击了至少两个不同生物」引擎无法把多次攻击归并到同一个攻击动作并统计不同目标，只能靠 ask 让 DM 确认，因此额外攻击那部分不能全自动。",
+   "missing": ["无法把同一次攻击动作中的多次攻击关联起来并统计『攻击了至少两个不同生物』（缺少攻击动作级计数/关联接口）"],
+   "patch": {}
+  },
+  {
+   "key": "XGE:游侠:位面战士:3",
+   "verdict": "full",
+   "why": "「附赠动作指定30尺内可见的一名生物，本回合对其下一次武器攻击命中造成额外1d8（11级2d8）力场伤害」——bonus动作选目标(canSee判可见、range判30尺)，effect 挂一个 attackHit 触发器，在该生物武器攻击命中时对其攻击目标施加 1d8 force 伤害(damage节点)并自销，引擎可完全结算；11级2d8用等级表达式缩放。文本里『转写武器基础伤害类型』是误读，规则实为『额外力场伤害』，本就可加。",
+   "missing": [],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "位面战士",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": { "type": "creature", "count": 1, "range": 30, "filter": "canSee(self,target)" },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [ { "op": "applyEffect" } ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "位面战士",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": [
+       {
+        "on": "attackHit",
+        "role": "actor",
+        "window": "after",
+        "when": "attack.weapon",
+        "do": [
+         { "op": "damage", "dice": "1d8 + (self.level>=11 ? 1d8 : 0)", "type": "force", "to": "target" },
+         { "op": "removeEffect" }
+        ]
+       }
+      ],
+      "duration": { "until": { "at": "turnEnd", "of": "bearer", "nth": 0 } }
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:游侠:以太漫步:7",
+   "verdict": "partial",
+   "why": "「以附赠动作施展以太化、持续至本回合结束」的附赠动作+资源+effect 可自动；但「以太位面的交互与移动等细节需人工处理」——引擎无地图几何，无法表现以太位面穿透实体障碍的移动/交互，核心收益需人工，故整条不能全自动。",
+   "missing": ["以太位面 / 穿透实体障碍的移动与交互（无地图几何，缺少异次元位面支持）"],
+   "patch": {
+    "resources": [
+     { "id": "以太漫步", "name": "以太漫步", "formula": "1", "recovery": "rest" }
+    ]
+   }
+  },
+  {
+   "key": "XGE:游侠:阴影视野:3",
+   "verdict": "manual",
+   "why": "「在黑暗中，对依赖黑暗视觉观察你的生物你视为隐形」依赖光照与观察者视觉判定——interfaces.md 明确『视线/光照/掩护/隐蔽的判定（没有地图几何）』做不到，整条需人工确认光照与对方视觉情况。",
+   "missing": ["视线/光照判定接口（无法判定黑暗环境及观察者是否依赖黑暗视觉）"],
+   "patch": {}
+  },
+  {
+   "key": "XGE:战士:不懈:10",
+   "verdict": "full",
+   "why": "「当你投掷先攻时，若你斗战之魂的使用次数已被用尽时，你将重获一次使用次数」——initiativeRolled 窗口事件 + when self.resource('fightingSpirit')==0 + resource 节点返还1次，引擎可完全结算。",
+   "missing": [],
+   "patch": {
+    "triggers": [
+     {
+      "id": "tirelessSpirit",
+      "label": "不懈：重获一次斗战之魂",
+      "on": "initiativeRolled",
+      "role": "actor",
+      "window": "after",
+      "when": "self.resource('fightingSpirit') == 0",
+      "cost": [],
+      "modify": [],
+      "do": [ { "op": "resource", "resource": "fightingSpirit", "n": 1 } ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:战士:斗战之魂:3",
+   "verdict": "full",
+   "why": "「附赠动作为本回合任何武器攻击提供优势，并获得5点临时生命(10级10/15级15)，长休恢复3次」——bonus动作消耗 fightingSpirit 资源、tempHp(按等级缩放)、effect 对本回合武器攻击授优势(rollMods)、资源长休恢复全部3次，引擎可结算。",
+   "missing": [],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "斗战之魂",
+      "activation": "bonus",
+      "cost": [ { "resource": "fightingSpirit" } ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       { "op": "tempHp", "amount": "5 + (self.level>=10?5:0) + (self.level>=15?5:0)" },
+       { "op": "applyEffect" }
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "斗战之魂：优势",
+      "statics": [],
+      "flags": null,
+      "rollMods": { "attack": "advantage", "when": "attack.weapon" },
+      "triggers": 0,
+      "duration": { "until": { "at": "turnEnd", "of": "bearer", "nth": 0 } }
+     }
+    ],
+    "resources": [
+     { "id": "fightingSpirit", "name": "斗战之魂", "formula": "3", "recovery": "long" }
+    ]
+   }
+  },
+  {
+   "key": "XGE:战士:坚守战线:10",
+   "verdict": "partial",
+   "why": "「借机攻击命中→目标速度降为0(至本回合结束)」的 leftReach→蓄势→定身 链路已自动；但「生物在你触及范围内移动5尺或更多即引发借机攻击」引擎只认 leftReach(离开触及)，没有『触及范围内走动』的触发窗口，需人工判断并手动发起。",
+   "missing": ["生物在触及范围内移动（未离开触及）触发借机攻击的事件窗口（引擎仅有 leftReach）"],
+   "patch": {}
+  },
+  {
+   "key": "XGE:战士:警戒守卫:18",
+   "verdict": "manual",
+   "why": "「每个其他生物回合额外一次只能用于借机攻击的特殊反应，且与原本反应不能同回合并用」——引擎只有单一反应槽，无法表达『按其他生物回合刷新、且仅限借机攻击、且与原反应互斥』的专属反应配额，按文本只能手动记账。",
+   "missing": ["每个其他生物回合单独刷新、且仅限借机攻击、且与原本反应互斥的专属反应配额接口"],
+   "patch": {}
+  },
+  {
+   "key": "XGE:战士:生死流转:18",
+   "verdict": "manual",
+   "why": "「受会将生命值降到0且不会立即杀死你的伤害时，用反应延缓昏迷并立刻插入一个额外回合」——引擎未实现打断当前行动顺序、立即插入额外先攻回合(Extra Turn)的流程，按文本只能手动处理。",
+   "missing": ["打断当前行动顺序并立即插入额外完整回合（Extra Turn）的流程控制接口"],
+   "patch": {}
+  },
+  {
+   "key": "XGE:战士:守护战技:7",
+   "verdict": "partial",
+   "why": "「次数池+反应代价+两个结果（改为未命中/伤害减半）」已自动(cancel / halveDamage)；但「1d8加进被攻击者AC」引擎没有『把一次掷骰动态加进AC』的写法(AC加值只能是定值)，每条攻击都要人工掷1d8再选选项，且目标原有抗性时减半会连减两次需手动补回。",
+   "missing": ["把一次掷骰(1d8)动态加进AC并据重新判定是否命中的写法（AC加值只支持定值）"],
+   "patch": {}
+  }
+ ]
+}

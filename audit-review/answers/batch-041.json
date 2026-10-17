@@ -1,0 +1,283 @@
+{
+ "batch": "batch-041",
+ "answers": [
+  {
+   "key": "XGE:spell:寒冰赋权",
+   "verdict": "partial",
+   "why": "寒冷免疫与火焰抗性（applyEffect statics）及15尺寒风锥的体质豁免+4d6寒冷+减速（area/forEach/save/damage/applyEffect）可自动；但「冰雪困难地形不消耗额外移动力」「自身周围10尺对其他生物视为困难地形」属地图地形/几何，引擎无接口。",
+   "missing": [
+    "effect 旗标 statics 未写明具体伤害类型（现仅 immune/resist 缺寒冷/火焰），需补 statics 指定免疫寒冷、抗性火焰",
+    "困难地形相关两条（冰雪地形不耗额外移动、自身10尺内视为困难地形）无地图几何/地形接口（interfaces.md 第5节：视线/光照/掩护/隐蔽判定不做）",
+    "iceCone 动作 root 仅有 forEach 占位，需补 save+damage+applyEffect(减速) 节点"
+   ],
+   "patch": {
+    "effects": [
+     { "name": "寒冰赋权", "statics": { "immune": "寒冷", "resist": "火焰" }, "flags": null, "rollMods": 0, "triggers": 0, "duration": null },
+     { "name": "寒冰赋权：减速", "statics": { "speed": -0.5 }, "flags": null, "rollMods": 0, "triggers": 0, "duration": { "until": { "at": "turnStart", "of": "source", "nth": 1 } } }
+    ],
+    "actions": [
+     {
+      "id": "iceCone",
+      "name": "寒冰赋权：寒风锥",
+      "activation": "action",
+      "cost": [],
+      "targeting": { "type": "area", "range": "self", "area": { "shape": "cone", "size": 15 } },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       { "forEach": { "do": [
+        { "save": {
+         "ability": "con", "dc": "self.spellDc", "to": "target",
+         "onFail": [
+          { "damage": { "dice": "4d6", "type": "cold", "to": "target" } },
+          { "applyEffect": { "template": "寒冰赋权：减速", "to": "target", "duration": { "until": { "at": "turnStart", "of": "source", "nth": 1 } } } }
+         ],
+         "onSuccess": [
+          { "damage": { "dice": "4d6", "type": "cold", "to": "target", "scale": 0.5 } }
+         ] }
+        } ] } }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:spell:混乱箭",
+   "verdict": "partial",
+   "why": "120尺内远程法术攻击与命中2d8+1d6（每升一环+1d6）伤害可自动（attack+damage）；但伤害类型由两颗d8之一点数决定、且「两颗d8点数相同可跳跃至30尺内另一生物」需读取单颗骰子点数并触发分支，引擎无此接口。",
+   "missing": [
+    "无读取单颗骰子具体点数的节点/op（无法用d8结果决定酸/冷/火/力/电/毒/心/雷伤害类型）",
+    "无「对子时弹射至30尺内另一生物发起新攻击」的条件跳转机制（伤害类型与跳跃判定须人工）"
+   ],
+   "patch": {}
+  },
+  {
+   "key": "XGE:spell:骷髅之舞",
+   "verdict": "manual",
+   "why": "活化尸体为丧尸/骷髅需《怪物图鉴》数据块（不在引擎），且「以附赠动作精神性指挥你创造的生物」属替别的生物花你的附赠动作，引擎做不到，整条须人工。",
+   "missing": [
+    "summon 召唤物系统（用具体怪物数据块活化尸体并注入施法属性调整值加值）",
+    "替其他生物消耗自身附赠动作统一指挥的接口",
+    "升环额外活化数量（每高一环+2具）"
+   ],
+   "patch": {}
+  },
+  {
+   "key": "XGE:spell:雷霆步",
+   "verdict": "partial",
+   "why": "自身瞬移（move teleport 选落点）与消失处周围10尺内体质豁免+3d10雷鸣伤害（升环+1d10/环）可自动；但「可携带5尺内一名自愿生物」涉及两生物同传送/换位，引擎明确做不到。",
+   "missing": [
+    "携带相邻自愿生物一同传送（interfaces.md 第5节明确不做两个生物换位）",
+    "use 动作 root 仅有 forEach 占位，需补 move(teleport)+save+damage 节点"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "雷霆步",
+      "activation": "action",
+      "cost": [ { "slot": { "min": 3 } } ],
+      "targeting": { "type": "area", "range": "self", "area": { "shape": "emanation", "radius": 10 }, "filter": "target.id != self.id" },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       { "move": { "mode": "teleport", "to": "self", "distance": 90 } },
+       { "forEach": { "do": [
+        { "save": {
+         "ability": "con", "dc": "self.spellDc", "to": "target",
+         "onFail": [ { "damage": { "dice": "3d10", "type": "thunder", "to": "target" } } ],
+         "onSuccess": [ { "damage": { "dice": "3d10", "type": "thunder", "to": "target", "scale": 0.5 } } ]
+        } }
+       ] } },
+       { "note": "携带5尺内一名自愿生物一同传送引擎无法（两生物换位明确不做），请手动" }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:spell:烈焰箭矢",
+   "verdict": "partial",
+   "why": "施法者用箭袋弹药远程武器攻击命中时+1d6火焰可由 effect trigger(attackHit) 近似自动；但引擎无法区分弹药与投掷武器、无法限定仅施法者、也无弹药计数（12发）资源扣减，四条人工项无法自动。",
+   "missing": [
+    "trigger 无法区分「弹药」与「投掷类武器」、无法限定「仅施法者使用」（引擎分不清武器/弹药）",
+    "无 resource 资源池自动扣减12发弹药并在用尽时结束专注",
+    "他人使用箭袋弹药自动加伤、每次攻击扣一发均无法自动"
+   ],
+   "patch": {
+    "effects": [
+     {
+      "name": "烈焰箭矢",
+      "statics": {},
+      "flags": null,
+      "rollMods": 0,
+      "triggers": [
+       { "on": ["attackHit"], "role": "actor", "window": "after",
+         "when": "ask('这是你用「烈焰箭矢」箭袋弹药进行的远程武器攻击且命中吗？（投掷武器请选否）')",
+         "do": [ { "damage": { "dice": "1d6", "type": "fire", "to": "target" } } ] }
+      ],
+      "duration": null
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:spell:灵魂牢笼",
+   "verdict": "partial",
+   "why": "反应触发困魂、窃取生命治疗2d8、借鉴经验优势、亡者之眼专注均可自动；但「被困灵魂至多利用6次，用尽后法术结束」未用 resource 实现，且灵魂质问的如实回答、亡者之眼隐形传感器地点、被困期间禁止复活需人工。",
+   "missing": [
+    "利用次数上限（至多6次）缺少 resource 资源池（当前 resources 为空），且四个利用动作需挂该资源代价",
+    "灵魂质问的如实简短回答（对话/语义）无接口",
+    "亡者之眼在地点创造隐形传感器属地图几何/位置",
+    "被困类人生物期间禁止复活无对应机制"
+   ],
+   "patch": {
+    "resources": [ { "name": "灵魂利用次数", "max": 6 } ],
+    "actions": [
+     { "id": "steal-life", "name": "灵魂牢笼：窃取生命", "activation": "bonus", "cost": [ { "resource": "灵魂利用次数" } ], "targeting": null, "trigger": null, "concentration": null, "requires": "self.hasEffect('灵魂牢笼')", "root": [ { "heal": { "dice": "2d8", "to": "self" } }, { "note": "恢复2d8生命值" } ] },
+     { "id": "borrow-experience", "name": "灵魂牢笼：借鉴经验", "activation": "bonus", "cost": [ { "resource": "灵魂利用次数" } ], "targeting": null, "trigger": null, "concentration": null, "requires": "self.hasEffect('灵魂牢笼')", "root": [ { "applyEffect": { "template": "借鉴经验", "to": "self", "duration": { "until": { "at": "turnStart", "of": "bearer", "nth": 1 } } } }, { "note": "下一次攻击/属性/豁免检定具优势" } ] },
+     { "id": "eyes-of-the-dead", "name": "灵魂牢笼：亡者之眼", "activation": "action", "cost": [ { "resource": "灵魂利用次数" } ], "targeting": null, "trigger": null, "concentration": { "minutes": 10 }, "requires": "self.hasEffect('灵魂牢笼')", "root": [ { "note": "在死者生前见过的地点创造隐形传感器（地点与传感器需人工）" } ] },
+     { "id": "query-soul", "name": "灵魂牢笼：灵魂质问", "activation": "free", "cost": [ { "resource": "灵魂利用次数" } ], "targeting": null, "trigger": null, "concentration": null, "requires": "self.hasEffect('灵魂牢笼')", "root": [ { "note": "提问并获得如实简短回答（回答需人工）" } ] }
+    ]
+   }
+  },
+  {
+   "key": "XGE:spell:龙卷尘暴",
+   "verdict": "partial",
+   "why": "立方尘卷风区域(zone)+专注与立方格内回合结束力量豁免+(slot-1)d8钝击+推离10尺可自动；但 zone 不可移动、「周围5尺」相邻格不在区域覆盖内、移动产生的10尺半径残骸云重度遮蔽（光照/隐蔽）引擎无地图几何处理。",
+   "missing": [
+    "zone 无法移动（引擎无移动区域接口，须删旧放新人工）",
+    "「周围5尺」相邻格的生物触发豁免不在 zone 覆盖内（当前 endTurnSave 为 free 手动动作，未用 zone 回合结束 trigger 自动）",
+    "移动时10尺半径残骸云重度遮蔽属光照/隐蔽判定（interfaces.md 第5节明确不做）"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "endTurnSave",
+      "name": "龙卷尘暴：回合结束伤害",
+      "activation": "free",
+      "cost": [],
+      "targeting": { "type": "creature", "count": 1, "range": 5, "filter": "target.id != self.id" },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('龙卷尘暴（激活）')",
+      "root": [
+       { "save": {
+        "ability": "str", "dc": "self.spellDc", "to": "target",
+        "onFail": [
+         { "damage": { "dice": "(slot.level - 1)d8", "type": "bludgeoning", "to": "target" } },
+         { "move": { "mode": "push", "distance": 10, "to": "target" } }
+        ],
+        "onSuccess": [
+         { "damage": { "dice": "(slot.level - 1)d8", "type": "bludgeoning", "to": "target", "scale": 0.5 } }
+        ] }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:spell:马友夫微流星",
+   "verdict": "partial",
+   "why": "发射的爆炸半径5尺敏捷豁免+2d6火焰（升环+2颗/环数量已算）可自动；但「流星颗数(6)」无计数资源、一次发射两颗须手动执行两次、施放回合不花附赠动作须手动归还，均无法自动。",
+   "missing": [
+    "流星计数（6颗，升环+2/环）缺少 resource 资源池自动扣减并在用尽时结束专注",
+    "一次发射两颗须把动作执行两次（引擎无单动作双目标/双爆炸点）",
+    "施放回合「不花附赠动作发射」需手动归还附赠动作"
+   ],
+   "patch": {
+    "resources": [ { "name": "微流星数", "max": 6 } ],
+    "actions": [
+     {
+      "id": "meteor",
+      "name": "马友夫微流星：发射",
+      "activation": "bonus",
+      "cost": [ { "resource": "微流星数", "n": 1 } ],
+      "targeting": { "type": "area", "range": 120, "area": { "shape": "sphere", "radius": 5 } },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('马友夫微流星')",
+      "root": [
+       { "forEach": { "do": [
+        { "save": {
+         "ability": "dex", "dc": "self.spellDc", "to": "target",
+         "onFail": [ { "damage": { "dice": "2d6", "type": "fire", "to": "target" } } ],
+         "onSuccess": [ { "damage": { "dice": "2d6", "type": "fire", "to": "target", "scale": 0.5 } } ]
+        } }
+       ] } }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:spell:麦克斯米利安的地之攫",
+   "verdict": "partial",
+   "why": "初始30尺力量豁免+2d6钝击+挂束缚、以及动作挤压的力量豁免+2d6（成功半伤）可自动；但「移动大手抓取新目标」为地图实体物体位移、「被束缚生物用动作力量检定脱逃」及束缚(restrained)条件完整表示引擎无法。",
+   "missing": [
+    "大手在地图上移动抓取新目标（无地图实体物体位移接口）",
+    "被束缚生物用动作进行力量检定对抗施法DC逃脱无对应节点",
+    "束缚(restrained)条件无对应 effect flag（仅能挂名效应，无法完整表示速度0/劣势）",
+    "use/crush 动作 root 仅有 save 占位，需补 damage（+crush 的半伤 scale）节点"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "麦克斯米利安的地之攫",
+      "activation": "action",
+      "cost": [ { "slot": { "min": 2 } } ],
+      "targeting": { "type": "creature", "count": 1, "range": 30 },
+      "trigger": null,
+      "concentration": { "minutes": 1 },
+      "requires": null,
+      "root": [
+       { "save": {
+        "ability": "str", "dc": "self.spellDc", "to": "target",
+        "onFail": [
+         { "damage": { "dice": "2d6", "type": "bludgeoning", "to": "target" } },
+         { "applyEffect": { "template": "地之攫束缚", "to": "target", "duration": null } }
+        ],
+        "onSuccess": []
+       } }
+      ]
+     },
+     {
+      "id": "crush",
+      "name": "地之攫：挤压",
+      "activation": "action",
+      "cost": [],
+      "targeting": { "type": "creature", "count": 1, "range": 30 },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       { "save": {
+        "ability": "str", "dc": "self.spellDc", "to": "target",
+        "onFail": [ { "damage": { "dice": "2d6", "type": "bludgeoning", "to": "target" } } ],
+        "onSuccess": [ { "damage": { "dice": "2d6", "type": "bludgeoning", "to": "target", "scale": 0.5 } } ]
+       } }
+      ]
+     }
+    ],
+    "effects": [
+     { "name": "地之攫束缚", "statics": { "speed": 0 }, "flags": null, "rollMods": 0, "triggers": 0, "duration": null }
+    ]
+   }
+  },
+  {
+   "key": "XGE:spell:迷你仆役",
+   "verdict": "partial",
+   "why": "活化迷你仆役（summon+XGE数据卡+8小时不专注+升环数量）可自动；但攀爬速度/盲视无接口、同一法术多批仆役共存（引擎按组顶替）、生命值0变回原物体且溢出伤害转移均无法自动。",
+   "missing": [
+    "攀爬速度与盲视无对应 statics/aura 接口",
+    "同一法术再施展会按组顶替旧批，无法多批共存（需当NPC手动加）",
+    "生命值降为0时恢复成原物体、剩余伤害由原形态承担属形态转换（interfaces.md 第5节：变形/改变体型明确不做）"
+   ],
+   "patch": {}
+  }
+ ]
+}

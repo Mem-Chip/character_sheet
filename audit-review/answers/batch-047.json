@@ -1,0 +1,117 @@
+{
+ "batch": "batch-047",
+ "answers": [
+  {
+   "key": "XPHB:法师:奥术回想:1",
+   "verdict": "manual",
+   "why": "核心动作「恢复已消耗的法术位」引擎无法执行（text 明确「引擎不能直接恢复法术位，选定后由人手动恢复」），现有 triggers 只弹 number/note 让 DM 手动选，无法真正把法术位加回。",
+   "missing": [
+    "缺少「恢复/授予法术位」的节点或 op（引擎只有 cost:{slot} 消耗法术位，没有 grant/restock spell slots 的接口）",
+    "缺少按「环阶总和 ≤ 等级一半（向上取整）且每环 <6」动态选择并恢复法术位的结算机制"
+   ],
+   "patch": {}
+  },
+  {
+   "key": "XPHB:法师:奥术守御:3",
+   "verdict": "partial",
+   "why": "创建结界（applyEffect 标记 + tempHp 临时生命值，按 tempHP 池混用、到长休结束）可由引擎结算；但 text 要求「施展防护学派法术时是否用了法术位、环阶，由施法后的提问确认」，引擎无法自动判定法术学派与是否耗位，必须 ask，故无法 full。",
+   "missing": [
+    "缺少按「法术学派（防护）」过滤的 trigger when 条件（interfaces 的 trigger on=spellCast 没有 school 字段），只能 ask 确认是否防护学派且消耗法术位",
+    "tempHp 数值公式「法师等级×2+智力调整值」与「环阶×2」恢复值需要 number 节点引用 self.level / 智力调整值 / 本次施放环阶来计算"
+   ],
+   "patch": {}
+  },
+  {
+   "key": "XPHB:法师:超限导能:14",
+   "verdict": "partial",
+   "why": "自由动作开启「超限导能」效应并到回合结束自动消失可由引擎结算（现有 action + applyEffect + turnEnd 持续）；但 text 的核心收益「1–5 环法术伤害骰全部取最大值」与反噬「无视抗性的黯蚀伤害 + 长休前递增计数」引擎都做不到。",
+   "missing": [
+    "缺少「伤害骰取最大值」的 modify op / 节点（interfaces 的 modify op 列表无 maximize，effect 也无该旗标）",
+    "缺少「无视抗性与免疫的伤害」节点（damage 节点无法标记忽略免疫/抗性）",
+    "缺少跨长休的使用次数计数机制（引擎记不住长休前用过几次来递增每环阶 1d12）"
+   ],
+   "patch": {}
+  },
+  {
+   "key": "XPHB:法师:法术精通:18",
+   "verdict": "manual",
+   "why": "text「引擎不能识别所选法术，施展时需人工不扣法术位」，引擎无法对建卡时选定的特定一/二环动作法术豁免其法术位消耗（升环仍扣位也无法自动区分），每次长休换法也非战斗人工处理。",
+   "missing": [
+    "缺少「指定具体法术免法术位施放（跨法术的 slot 覆盖）」的接口（引擎没有按法术名/键豁免 cost:{slot} 的机制）"
+   ],
+   "patch": {}
+  },
+  {
+   "key": "XPHB:法师:法术抗性:14",
+   "verdict": "partial",
+   "why": "「对法术造成的伤害具有抗性、减半」已由 damageIncoming + halveDamage + ask 自动结算（现有 trigger）；但 text 另一半「抵抗法术时的豁免具有优势」缺少对应接口，无法在豁免时按法术来源给优势。",
+   "missing": [
+    "缺少「对法术豁免给予优势」的 modify op / 旗标（modify op 列表无 grantAdv，effect 也无按法术来源给优势的机制，只能对全部豁免或无法处理）"
+   ],
+   "patch": {}
+  },
+  {
+   "key": "XPHB:法师:法术塑形:6",
+   "verdict": "manual",
+   "why": "text「指定要在施法时由人选择，引擎无法在施法与豁免之间插入这一步，需人工处理」；引擎无法在施展塑能法术时指定 1+环阶 个塑形生物、令其对该法术豁免自动成功，且豁免后仍免半伤。",
+   "missing": [
+    "缺少「在施展塑能法术时指定塑形生物、令其对该法术豁免自动成功且若半伤则免伤」的接口（无在 cast 与 save 之间插入指定步骤的机制，也无按目标 id 强制 save 成功+免伤的 op）"
+   ],
+   "patch": {}
+  },
+  {
+   "key": "XPHB:法师:魅影生物:6",
+   "verdict": "full",
+   "why": "引擎可表达：两个动作各消耗一份长休恢复的次数池（phantom-beast/phantom-fey），经 choose 选法术后 castFrom 以最低环（无 slot 消耗）当场结算召唤；半血已写进召唤数据、专注 1 小时、共用先攻、专注结束消失均可由 summon/concentration 处理；改学派为纯叙事不改数据。当前 data 的 action root 仅留 choose，需补 castFrom 才能真正施放。",
+   "missing": [],
+   "patch": {
+    "actions": [
+     {
+      "id": "beast",
+      "root": [
+       { "choose": { "pool": { "from": "ownSpells" } } },
+       { "castFrom": { "fromVar": "chosen", "to": "self" } }
+      ]
+     },
+     {
+      "id": "fey",
+      "root": [
+       { "choose": { "pool": { "from": "ownSpells" } } },
+       { "castFrom": { "fromVar": "chosen", "to": "self" } }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XPHB:法师:破法者:10",
+   "verdict": "partial",
+   "why": "「附赠动作消耗 3 环法术位施展解除魔法」可由 action 自动结算（现有 bonus 动作 + cost slot.min:3）；但 text「若未能成功阻止或解除，法术位不消耗，这一返还引擎无法做到」—— 无施展后失败返还 slot 的接口；施法属性检定加熟练也需 ask 确认。",
+   "missing": [
+    "缺少「消耗法术位施展后未成功则返还法术位」的接口（trigger 的 cancel 含 refundSlot 但仅用于打断正在施放的法术，无「施展后失败返还 slot」机制）",
+    "缺少「施法属性检定自动加熟练」的判定（只能 ask 确认是否为解除魔法检定）"
+   ],
+   "patch": {}
+  },
+  {
+   "key": "XPHB:法师:强化幻术:3",
+   "verdict": "manual",
+   "why": "text「引擎都无法表达，需要人手动处理」；幻术法术去言语成分、射程 +60 尺、次级幻象改附赠动作并同时产生声音影像、额外戏法不计数，均超出 interfaces 第 5 节禁止的「改写另一道法术的施法时间/成分/专注」（modifyCast 仅支持 cancel/dc/attackBonus/damageType 四个字段）。",
+   "missing": [
+    "缺少「按学派（幻术）批量改写法术成分（去言语）与射程（+60尺）」的接口",
+    "缺少「将特定戏法改为附赠动作并同时产生声音+影像」的机制",
+    "额外戏法不计入已知戏法数的静态层处理（人工）"
+   ],
+   "patch": {}
+  },
+  {
+   "key": "XPHB:法师:强力戏法:3",
+   "verdict": "manual",
+   "why": "text「这要改戏法自己条目里失手与豁免成功的分支，本条目取不到戏法的伤害骰，需人工处理」；没有通用修正能在攻击失手或豁免成功时让戏法仍结算半数伤害（须逐条改戏法数据，超出本条目能力）。",
+   "missing": [
+    "缺少「攻击失手或豁免成功时仍结算半数伤害」的通用修正机制（无跨戏法的 onMiss/onSave 半伤注入接口，effect/trigger 也无此类旗标）"
+   ],
+   "patch": {}
+  }
+ ]
+}

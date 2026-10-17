@@ -1,0 +1,292 @@
+{
+ "batch": "batch-039",
+ "answers": [
+  {
+   "key": "XGE:战士:雅臣:7",
+   "verdict": "partial",
+   "why": "『魅力（游说）检定获得感知调整值加值』需 effect.rollMods 限定到具体技能（接口能否限定到单一技能检定不确定）；『感知（或智力/魅力）豁免熟练项由人物卡静态层处理』非引擎自动化范畴。",
+   "missing": [
+     "effect.rollMods 对具体技能检定（魅力-游说）的限定能力（若不支持则无法自动加值）",
+     "感知（或智力/魅力）豁免熟练项属人物卡静态层，非引擎自动化接口"
+   ]
+  },
+  {
+   "key": "XGE:战士:燕返:15",
+   "verdict": "partial",
+   "why": "『放弃优势换一次额外攻击』已由 trigger(d20Rolled, clearAdv + economy) 自动移除优势并给额外攻击；但原文明示『引擎分不出是否来自攻击动作、也不限制额外攻击只能打同一目标』需玩家自律，且『每回合一次』当前 trigger 未加 limit。",
+   "missing": [
+     "触发器缺少 limit:'oncePerTurn' 来强制『每回合一次』",
+     "引擎无法判定『该攻击是否来自攻击动作』与『额外攻击只能打同一目标』（需玩家手动遵守）"
+   ],
+   "patch": {
+    "triggers": [
+     {
+      "id": "rapid-strike",
+      "label": "燕返：放弃优势换一次额外攻击",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "when": "roll.kind == 'attack' && roll.adv && turn.isMine",
+      "cost": [],
+      "modify": ["clearAdv"],
+      "do": ["economy"],
+      "limit": "oncePerTurn"
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:spell:碧水法球",
+   "verdict": "partial",
+   "why": "『出现/进入力量豁免→束缚(saveEnds)』已由 use(zone+applyEffect+forEach) 与 effect 的 saveEnds 自动结算；但『容纳上限、把成功者排出、离地不超10尺、结束时灭火+被束缚者倒地』原文标注手动，属地图几何/环境/三维高度且无 prone 旗标。",
+   "missing": [
+     "zone 无容纳上限（4中型/1大型）与把豁免成功者排出的控制逻辑",
+     "三维高度判定（水球离地不超过10尺，明确做不到）",
+     "effect.flags 无 prone 旗标（法术结束被束缚者倒地出现）",
+     "非魔法火焰熄灭的环境互动接口（无）"
+   ]
+  },
+  {
+   "key": "XGE:spell:操控风力",
+   "verdict": "partial",
+   "why": "『300尺100尺立方区域留在地图、施放选效果、动作切换』已由 use(zone+choose)/shift(choose) 自动；但三种效果（穿透远程劣势、飞行生物力量豁免摔落、坠落减半、逆风消耗、跳跃高出）原文明示『降落/坠落/跳跃/飞行状态与逆风消耗都需人工处理』，属飞行/三维状态且无 prone 旗标。",
+   "missing": [
+     "对穿过/在区域内远程攻击施加劣势的定向 rollMods（zone 无穿透判定）",
+     "effect.flags 无 prone 旗标（摔落倒地）；飞行/坠落/跳跃状态与逆风移动消耗无接口（明确做不到）",
+     "坠落伤害减半需识别坠落类型，halveDamage 难定向"
+   ],
+   "patch": {
+    "triggers": [
+     {
+      "id": "t_downdraft",
+      "label": "操控风力：下沉气流飞行生物力量豁免",
+      "on": "turnStarted",
+      "role": "any",
+      "when": "target.inZone('操控风力') && target.flying",
+      "window": "after",
+      "do": [
+       {
+        "node": "save",
+        "ability": "str",
+        "dc": "self.spell.dc",
+        "to": "target",
+        "onFail": [
+         { "node": "note", "text": "摔落倒地（prone 旗标引擎无，需手动标记）" }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:spell:潮涌",
+   "verdict": "partial",
+   "why": "『敏捷豁免、失败4d8钝击+倒地、成功半伤』可由 save+damage(scale:0.5) 自动；但当前 data 仅 root:[forEach] 缺 save 节点，且『失败倒地(prone旗标无)』与『随后灭火(环境)』原文标注手动。",
+   "missing": [
+     "effect.flags 无 prone 旗标（失败倒地）",
+     "灭火环境效果（无接口）",
+     "当前 use 的 root 仅有 forEach，缺少 save+damage 结算节点（可补）"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "潮涌",
+      "activation": "action",
+      "cost": [{ "slot": { "min": 3 } }],
+      "targeting": { "type": "area", "range": 120, "area": { "shape": "line", "length": 30, "width": 10 } },
+      "concentration": null,
+      "requires": null,
+      "root": ["save"],
+      "save": { "ability": "dex", "dc": "self.spell.dc", "to": "each" },
+      "onFail": [
+       { "node": "damage", "dice": "4d8", "type": "bludgeoning", "to": "target" },
+       { "node": "note", "text": "目标倒地（prone 旗标引擎无，需手动标记）" }
+      ],
+      "onSuccess": [
+       { "node": "damage", "dice": "4d8", "type": "bludgeoning", "to": "target", "scale": 0.5 }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:spell:炽焰赋权",
+   "verdict": "partial",
+   "why": "『火焰免疫+寒冷抗性』已由 effect.statics 自动；『火线敏捷豁免4d8火、成功半伤』可由 save+damage 自动（当前 fireLine 仅 forEach 缺节点）；但『照亮30尺(光照)』明确做不到，且『近身灼烧』当前是手动动作未改成进入/回合结束5尺内的自动触发器。",
+   "missing": [
+     "光照/视线判定（照亮30尺明亮+30尺微光，明确做不到）",
+     "近身灼烧应改为『进入5尺/在5尺内结束回合』的自动触发器（aura/trigger），当前是手动动作",
+     "fireLine 的 forEach 缺少 save+damage 节点（可补）",
+     "effect.statics 应具体标明 fire immune / cold resist 类型"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "fireLine",
+      "name": "炽焰赋权：火线",
+      "activation": "action",
+      "cost": [],
+      "targeting": { "type": "area", "range": "self", "area": { "shape": "line", "length": 15, "width": 5 } },
+      "concentration": null,
+      "requires": null,
+      "root": ["save"],
+      "save": { "ability": "dex", "dc": "self.spell.dc", "to": "each" },
+      "onFail": [
+       { "node": "damage", "dice": "4d8", "type": "fire", "to": "target" }
+      ],
+      "onSuccess": [
+       { "node": "damage", "dice": "4d8", "type": "fire", "to": "target", "scale": 0.5 }
+      ]
+     }
+    ],
+    "triggers": [
+     {
+      "id": "proximityBurn",
+      "label": "炽焰赋权：近身灼烧",
+      "on": "turnEnded",
+      "role": "any",
+      "when": "target != self && distance(target, self) <= 5 && self.hasEffect('炽焰赋权')",
+      "window": "after",
+      "limit": "oncePerTurn",
+      "do": [
+       { "node": "damage", "dice": "1d10", "type": "fire", "to": "target" }
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "炽焰赋权",
+      "statics": ["immune:fire", "resist:cold"],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:spell:虫群孳生",
+   "verdict": "partial",
+   "why": "『体质豁免失败1d6毒素伤害』可由 save+onFail damage 自动（当前仅 save 缺伤害）；但『朝随机方向移动5尺』原文明示『引擎不做随机方向的移动』，且伤害随等级1d6→4d6的精确缩放难表达。",
+   "missing": [
+     "随机方向位移（move 仅 push/pull/teleport，不做随机方向；明确做不到）",
+     "伤害随等级缩放 1d6/2d6/3d6/4d6 的精确表达式（可近似）",
+     "当前 use 的 save 缺少 onFail 伤害节点（可补）"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "虫群孳生",
+      "activation": "action",
+      "cost": [],
+      "targeting": { "type": "creature", "count": 1, "range": 30 },
+      "concentration": null,
+      "requires": null,
+      "root": ["save"],
+      "save": { "ability": "con", "dc": "self.spell.dc", "to": "target" },
+      "onFail": [
+       { "node": "damage", "dice": "1d6", "type": "poison", "to": "target" },
+       { "node": "note", "text": "若目标能移动，掷1d4定方向手动挪5尺（引擎不做随机方向位移）" }
+      ],
+      "onSuccess": []
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:spell:创造篝火",
+   "verdict": "partial",
+   "why": "『60尺5尺立方篝火留在地图、专注1分钟』由 use(zone) 自动；『施放/进入/结束回合敏捷豁免(伤害随等级)火焰伤害』可由 zone+save+damage 自动（当前 root 仅 forEach/note/zone 缺 save 节点）；但『点燃未着装可燃物』原文标注手动，且伤害骰 (1+floor((level+1)/6))d8 的等级缩放公式难精表达。",
+   "missing": [
+     "点燃可燃物（环境互动，无接口）",
+     "伤害骰 (1+floor((level+1)/6))d8 的等级缩放公式（可近似）",
+     "当前 use 缺 save+damage 节点、zone 缺『进入/结束回合每回合限一次』触发（可补）"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "创造篝火",
+      "activation": "action",
+      "cost": [],
+      "targeting": { "type": "area", "range": 60, "area": { "shape": "cube", "size": 5 } },
+      "concentration": { "minutes": 1 },
+      "requires": null,
+      "root": ["save"],
+      "save": { "ability": "dex", "dc": "self.spell.dc", "to": "each" },
+      "onFail": [
+       { "node": "damage", "dice": "(1+floor((self.level+1)/6))d8", "type": "fire", "to": "target" }
+      ],
+      "onSuccess": [
+       { "node": "damage", "dice": "(1+floor((self.level+1)/6))d8", "type": "fire", "to": "target", "scale": 0.5 }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:spell:大漩涡",
+   "verdict": "partial",
+   "why": "『120尺半径30尺漩涡留在地图、专注1分钟』由 use(zone) 自动；『区域内开始回合力量豁免失败6d6钝击』可由 zone+save+damage 自动（当前 root 仅 note/zone 缺 save 节点）；但『拉向中心10尺(中心是地图点非施法者)』原文明示引擎做不到，且『困难地形与必须选地面/水面』需人工。",
+   "missing": [
+     "拉向漩涡中心10尺（move 仅朝施法者方向，中心是地图点，无节点；明确做不到）",
+     "区域内困难地形与必须选地面/水面（地图几何/地形，无接口）",
+     "当前 use 缺 zone 回合开始力量豁免+伤害触发器（可补）"
+   ],
+   "patch": {
+    "triggers": [
+     {
+      "id": "t_vortex",
+      "label": "大漩涡：回合开始力量豁免",
+      "on": "turnStarted",
+      "role": "any",
+      "when": "target.inZone('大漩涡')",
+      "window": "after",
+      "do": [
+       {
+        "node": "save",
+        "ability": "str",
+        "dc": "self.spell.dc",
+        "to": "target",
+        "onFail": [
+         { "node": "damage", "dice": "6d6", "type": "bludgeoning", "to": "target" },
+         { "node": "note", "text": "被拉向中心10尺：move节点只朝施法者，需手动朝漩涡中心挪10尺" }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:spell:弹射术",
+   "verdict": "partial",
+   "why": "『撞击生物敏捷豁免失败3d8钝击』可由 save+damage 自动；但核心是『物件沿直线飞出至多90尺、顺序撞击依次判定、撞中即停』，interfaces 无弹道/顺序碰撞节点，且物件重量随等级缩放与沿直线顺序判定原文明示手动。",
+   "missing": [
+     "物体沿直线弹道顺序碰撞判定（无弹道/顺序碰撞节点；move 仅 push/pull/teleport）",
+     "物件重量随等级缩放(每环+5磅)与沿直线顺序判定需手动",
+     "当前 use 的 targeting 为 creature 而非『物件+方向』，应改为 point/self+note 由人手动选轨迹"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "弹射术",
+      "activation": "action",
+      "cost": [{ "slot": { "min": 1 } }],
+      "targeting": { "type": "point", "count": 1, "range": 60 },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       { "node": "note", "text": "选定60尺内1~5磅(每环+5磅)未着装物件与方向，沿直线至多90尺手动判定：每撞一生物敏捷豁免，失败3d8钝击且停止，弹射物同伤；顺序由人处理" }
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,147 @@
+{
+  "batch": "batch-021",
+  "answers": [
+    {
+      "key": "FRHoF:spell:伊尔明斯特的绚丽光球",
+      "verdict": "partial",
+      "why": "光球环绕、吸收能量(反应+抗性)与光能爆(附赠+攻击)的框架已搭；但 text 明确「光球计数、伤害类型选择与法术提前结束需手动处理」——计数需 resource 池、类型需 choose、耗尽提前结束无触发。",
+      "missing": [
+        "resource 节点「光球」计数与消耗（现有 blast/absorb 的 cost 为空，未接资源）",
+        "choose 选伤害类型的接口（blast root 仅有 attack/note，无 choose）",
+        "资源耗尽时提前结束专注/效应的触发（无对应 op 或条件）"
+      ],
+      "patch": {
+        "resources": [
+          { "id": "光球", "max": "slot.level", "recover": "none" }
+        ],
+        "actions": {
+          "blast": {
+            "cost": [ { "resource": "光球", "n": 1 } ],
+            "root": [ "choose", "attack" ]
+          },
+          "absorb": {
+            "cost": [ { "resource": "光球", "n": 1 } ]
+          }
+        }
+      }
+    },
+    {
+      "key": "FRHoF:spell:灾厄之刃",
+      "verdict": "partial",
+      "why": "两次近战法术攻击+10d6 力场伤害可自动（repeat×2 + attack + damage）；但 text「d20 投出 18 或更高即算作重击」无对应 op，且「裂隙移动与屏障穿透需手动处理」。",
+      "missing": [
+        "attack 节点自定义重击阈值（d20≥18 即重击）的 op（interfaces §2 attack 未列）",
+        "在地图指定空间创建可移动裂隙实体（zone/summon 不含位移控制）",
+        "屏障/力场墙穿透（地图几何，interfaces §5 明确不做）"
+      ]
+    },
+    {
+      "key": "FRHoF:spell:噪鸣护盾",
+      "verdict": "partial",
+      "why": "雷鸣抗性+远程攻击劣势+光环内生物进入/结束回合的体质豁免（zone 进入/回合结束触发 + oncePerTurn）可自动；但 text「光环不跟随施法者、不『移入』生物空间、指定不受影响生物需人工」。",
+      "missing": [
+        "静态区域创建（不跟随施法者、不『移入』生物空间，属地图几何）",
+        "指定不受影响生物的豁免排除（filter 可部分处理但需人工确认）"
+      ],
+      "patch": {
+        "actions": {
+          "use": {
+            "root": [ "applyEffect", "forEach", "zone" ],
+            "zone": {
+              "on": [ "enter", "turnEnd" ],
+              "do": [ "save" ],
+              "save": { "ability": "con", "dc": "self.spellDc", "onFail": "3d6 thunder", "onSuccess": "scale 0.5", "limit": "oncePerTurn" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "key": "FRHoF:spell:制敌术",
+      "verdict": "partial",
+      "why": "体质豁免+失败 2d4 力场伤害（升环 +2d4）+成功半伤+速度减半（effect statics）可自动；但 text「构装/亡灵判定、速度减半与行动限制手动」——类型自动成功与下回合动作/附赠二选一无旗标。",
+      "missing": [
+        "按生物类型（构装/亡灵）自动豁免成功的判定（save 节点无类型自动成功 op，if 只能部分绕）",
+        "效应 flags 缺少「下回合动作与附赠动作二选一不可兼得」的复合经济限制（现有 blocks 只能整体封锁某一经济）"
+      ],
+      "patch": {
+        "effects": [
+          { "name": "制敌术", "statics": [ "speed*0.5" ], "duration": { "until": { "at": "turnStart", "of": "source", "nth": 1 } } }
+        ],
+        "actions": {
+          "use": {
+            "root": [ "save" ],
+            "save": { "ability": "con", "onFail": "2d4 force", "onSuccess": "scale 0.5" }
+          }
+        }
+      }
+    },
+    {
+      "key": "FRHoF:spell:咒唤机群",
+      "verdict": "partial",
+      "why": "咒唤中型机群（summon）+机关之力敏捷豁免 3d6 力场/半伤+秩序守护临时生命（tempHp 1d6+施法调整）可自动；但 text「机群移动与升环需手动处理」——召唤物位移与其为源点的 5 尺定位无接口。",
+      "missing": [
+        "summon 节点支持召唤但缺少「以召唤物为源点定位目标」及「移动召唤物」的接口",
+        "升环伤害/临时生命动态缩放（+1d6/环）"
+      ]
+    },
+    {
+      "key": "FRHoF:spell:咒火风暴",
+      "verdict": "partial",
+      "why": "光柱区域（zone）出现/进入/结束回合的体质豁免 4d10 光耀/半伤+每回合限一次可自动；但 text「区域内施法打断、指定不受影响生物、明亮光照、结阵施法需人工」。",
+      "missing": [
+        "区域内生物施法时触发打断豁免的窗口事件（引擎无「区域内施法」时机，modifyCast 仅作用于正在施展的法术）",
+        "明亮光照/结阵施法（地图几何与光照，interfaces §5 不做）",
+        "指定不受影响生物的豁免排除"
+      ]
+    },
+    {
+      "key": "FRHoF:spell:咒火闪焰",
+      "verdict": "partial",
+      "why": "远程法术攻击+2d10 光耀伤害可自动，升环额外攻击可用 count:slot.level + repeat 实现；但 text「目标无法从掩护中获益」引擎明确不做掩护判定（interfaces §5）。",
+      "missing": [
+        "忽略掩护/隐蔽的攻击修正（interfaces §5 明确做不到：没有地图几何）"
+      ],
+      "patch": {
+        "actions": {
+          "use": {
+            "targeting": { "type": "creature", "count": "slot.level", "range": 60 },
+            "root": [ "repeat", "attack" ]
+          }
+        }
+      }
+    },
+    {
+      "key": "TCE:奥能动力甲",
+      "verdict": "manual",
+      "why": "text「未持握物品的手套作为魔法近战/投掷武器……由玩家在武器攻击中发起并手动处理」——引擎无从装备/特性自动生成武器攻击行的接口；速度+5 属装备静态/叙事，亦非运行时自动结算。",
+      "missing": [
+        "从装备/特性自动生成魔法武器攻击行的接口（attack 节点是动作而非装备武器）",
+        "投掷后飞回重新连接的武器行为",
+        "装备静态（速度+5）虽可用 effect statics 表达但属角色卡构建层，非本条规则运行时自动结算"
+      ]
+    },
+    {
+      "key": "TCE:超魔导师",
+      "verdict": "partial",
+      "why": "text「获得 2 点术法点专门用于超魔法（长休恢复）」可用 resources 定义资源池自动管理；但「使用超魔法与扣除术法点由玩家手动处理」——跨条目在各超魔法条目中自动消耗并应用效果无接口。",
+      "missing": [
+        "跨条目在各超魔法条目中自动消耗专享术法点并应用超魔法效果的接口（需逐条建模超魔法效果）"
+      ],
+      "patch": {
+        "resources": [
+          { "id": "术法点(超魔法)", "max": 2, "recover": "longRest" }
+        ]
+      }
+    },
+    {
+      "key": "TCE:德鲁伊:孢子环绕:2",
+      "verdict": "partial",
+      "why": "在范围内开始其回合时（turnStarted）以反应发起体质豁免对抗施法 DC、失败受暗蚀伤害可自动（用 ask 触发）；但 text「移动进入 10 尺空间由玩家手动触发反应」——移动进入范围无时机，且伤害随等级 1d6/1d8/1d10 非均匀缩放需人工。",
+      "missing": [
+        "生物移动进入指定半径范围的触发时机（creatureEnteredRange 窗口事件缺失）",
+        "等级相关非均匀伤害缩放（1d4→1d6→1d8→1d10）"
+      ]
+    }
+  ]
+}

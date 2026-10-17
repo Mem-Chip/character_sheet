@@ -1,0 +1,217 @@
+{
+ "batch": "batch-034",
+ "answers": [
+  {
+   "key": "XGE:术士:暴风狂怒:14",
+   "verdict": "full",
+   "why": "被近战命中后反应对攻击者造成闪电伤害(=术士等级)、攻击者过力量豁免(你的法术DC)、失败被推开至多20尺——damage(to:attacker)、save(to:attacker, onFail move push)均有对应节点可完全自动；现有 root 仅占位，需补节点。",
+   "missing": [],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "暴风狂怒",
+      "activation": "reaction",
+      "cost": [],
+      "targeting": { "type": "creature", "count": 1, "range": 0, "filter": "target == attacker" },
+      "trigger": { "on": "attackHit", "role": "target", "window": "after", "when": "attack.melee" },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       { "damage": { "dice": "self.level", "type": "lightning", "to": "attacker" } },
+       { "save": {
+        "ability": "str", "dc": "self.spellDc", "to": "attacker",
+        "onFail": [ { "move": { "mode": "push", "distance": 20, "to": "attacker" } } ]
+       } }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:术士:暴风魔法:1",
+   "verdict": "partial",
+   "why": "附赠动作、+10尺移动力(statics speed)、本回合下次移动免借机攻击(cannot:provoke)均可自动；但文本明确‘飞行本身(越过障碍/悬空)’属三维移动，interfaces.md 第5节「三维高度、滞空、坠落」明确做不到，故飞行移动手动。",
+   "missing": ["三维高度/滞空/飞行的实际移动（interfaces.md 第5节：三维高度、滞空、坠落明确做不到）"],
+   "patch": {
+    "effects": [
+     {
+      "name": "暴风魔法：御风",
+      "statics": { "speed": 10 },
+      "flags": { "cannot": ["provoke"] },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": { "at": "turnEnd", "of": "bearer", "nth": 0 },
+       "endsOn": [ { "event": "moved", "when": "event.id == self.id" } ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:术士:风暴之心:6",
+   "verdict": "full",
+   "why": "施展1+环阶且造成闪电/雷鸣伤害的法术后(after spellCast, 条件用ask确认)，对10尺内可见生物造成等于术士等级一半的闪电或雷鸣伤害——area targeting+filter(canSee)、choose二选一、damage(to:target)均有接口可完全自动；现有 root 仅占位 choose，需补节点。",
+   "missing": [],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "风暴之心",
+      "activation": "free",
+      "cost": [],
+      "targeting": {
+       "type": "area", "range": "self",
+       "area": { "shape": "sphere", "radius": 10 },
+       "filter": "target.id != self.id && canSee(self, target)"
+      },
+      "trigger": {
+       "on": "spellCast", "role": "actor", "window": "after",
+       "when": "ask('施展的法术是 1 环或更高环阶，且能造成闪电或雷鸣伤害吗？')"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       { "choose": { "options": [
+        { "label": "闪电", "do": [ { "damage": { "dice": "floor(self.level/2)", "type": "lightning", "to": "target" } } ] },
+        { "label": "雷鸣", "do": [ { "damage": { "dice": "floor(self.level/2)", "type": "thunder", "to": "target" } } ] }
+       ] } }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:术士:强效治疗:6",
+   "verdict": "partial",
+   "why": "规则核心是‘重骰治疗骰一次’——interfaces.md 的触发窗口(on列表)无‘治疗骰掷出/healing rolled’事件，modify.reroll 也无法挂到已结算的治疗骰，故重骰本身无法自动；现有自动化只到‘花1点术法点+留记录’，这部分已自动。",
+   "missing": ["触发窗口：治疗骰掷出（healing dice rolled）——triggers 的 on 列表无 healing/healRolled 类事件；modify.reroll 也无法作用于已结算的治疗骰"],
+   "patch": {}
+  },
+  {
+   "key": "XGE:术士:清风之灵:18",
+   "verdict": "partial",
+   "why": "动作赋予30尺内至多(3+魅力调整)个生物30尺飞行速度、持续1小时——applyEffect(statics飞行速度+30)+duration+targeting计数均可自动(可补patch)；但‘自身飞行速度降至30尺’的精确赋值(statics只支持加值)及飞行的三维移动(interfaces.md第5节)需手动。",
+   "missing": ["将飞行速度精确‘设定/降至30尺’（statics 仅支持加值，无赋值接口）；飞行速度与三维移动（interfaces.md 第5节：三维高度、滞空、坠落明确做不到）"],
+   "patch": {
+    "effects": [
+     {
+      "name": "清风之灵",
+      "statics": { "speed": { "fly": 30 } },
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": { "until": { "at": "hours", "of": "bearer", "nth": 1 } }
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:术士:异界光翼:14",
+   "verdict": "partial",
+   "why": "附赠动作展开光翼获得30尺飞行速度(applyEffect statics飞行速度+30)、以附赠动作遣散(removeEffect)均可自动(可补patch)；但‘30尺飞行速度’的实际飞行、以及‘持续到失能/死亡’的自动结束(interfaces.md第5节三维移动、无失能自动结束事件)需手动。",
+   "missing": ["飞行的三维移动（interfaces.md 第5节：三维高度、滞空、坠落明确做不到）；效应在‘失能/死亡’时自动结束无对应事件（仅遣散可由 removeEffect 处理）"],
+   "patch": {
+    "effects": [
+     {
+      "name": "异界光翼",
+      "statics": { "speed": { "fly": 30 } },
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:武僧:锋锐剑影:11",
+   "verdict": "partial",
+   "why": "附赠动作选1~min(3,功力)点气、扣气、给被灌注武器攻击+点数加值(1分钟)——number选数、resource扣气、applyEffect加attack/damage加值均可自动；但‘无法作用于已提供攻防加值的魔法武器’引擎识别不了，且加值只作用在被灌注武器需每次攻击用ask确认‘是不是被灌注的剑圣武器’——这两点手动。",
+   "missing": ["引擎无法检测/排除‘已提供攻击检定与伤害掷骰加值的魔法武器’（interfaces.md 无物品/武器加值检测接口）；加值只作用于被灌注武器的判定需每次攻击 ask 人工确认"],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "锋锐剑影",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.resource('功力') >= 1",
+      "root": [
+       { "number": { "min": 1, "max": "min(3, self.resource('功力'))", "var": "n" } },
+       { "resource": { "resource": "功力", "n": "{{n}}" } },
+       { "applyEffect": { "template": "锋锐剑影", "duration": { "until": { "at": "minutes", "of": "bearer", "nth": 1 } } } }
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "锋锐剑影",
+      "statics": { "attack": "{{n}}", "damage": "{{n}}" },
+      "flags": null,
+      "rollMods": 0,
+      "triggers": [
+       { "on": ["attackHit", "attackMissed"], "role": "actor", "window": "before",
+         "when": "ask('这次攻击是否使用被「锋锐剑影」灌注的剑圣武器？')",
+         "do": [] }
+      ],
+      "duration": { "until": { "at": "minutes", "of": "bearer", "nth": 1 } }
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:武僧:酣醉若狂:17",
+   "verdict": "partial",
+   "why": "疾风连击时至多3次额外攻击(可grantAction给额外攻击动作)可自动；但‘每一次攻击在本回合中都必须以不同的生物为目标’引擎无法强制(无限制各次攻击目标互不相同的接口)，故不同目标的选择手动。",
+   "missing": ["引擎无法在单次连击的各次攻击之间强制‘目标互不相同’（无对应限制/追踪接口）"],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "酣醉若狂",
+      "activation": "bonus",
+      "cost": [ { "resource": "功力" } ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       { "grantAction": { "action": "attack", "count": 3, "until": "turnEnd" } },
+       { "note": "额外攻击每次须以不同生物为目标，由你手动选择" }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:武僧:借力打力:6",
+   "verdict": "partial",
+   "why": "反应时机(attackMissed命中你)+1点气代价+只在近战失手时提示已自动；但‘把失手的攻击重定向命中另一生物’引擎无写法(窗口不接受对未命中攻击的修改)，且攻击者武器伤害骰引擎读不到，故重定向与目标选择、伤害结算手动。",
+   "missing": ["攻击失手时‘改目标/重定向’让攻击命中另一生物（interfaces.md 无对应写法，窗口不接受对未命中攻击的修改）；读取攻击者武器伤害骰来结算（引擎读不到）"],
+   "patch": {}
+  },
+  {
+   "key": "XGE:武僧:灵巧格挡:3",
+   "verdict": "partial",
+   "why": "持握剑圣武器且回合内徒手打击(attackHit/Missed + ask确认)后AC+2至下回合开始——applyEffect(statics ac+2)+duration均可自动(可补patch)；但‘武器脱手/陷入失能提前结束’引擎无法检测，且‘持握剑圣武器’需ask人工确认。",
+   "missing": ["效应提前结束条件‘武器脱手/陷入失能’无对应事件或旗标（interfaces.md 无物品脱手/失能自动结束接口）；‘持握剑圣武器’需 ask 人工确认"],
+   "patch": {
+    "effects": [
+     {
+      "name": "灵巧格挡",
+      "statics": { "ac": 2 },
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": { "until": { "at": "turnStart", "of": "bearer", "nth": 1 } }
+     }
+    ]
+   }
+  }
+ ]
+}

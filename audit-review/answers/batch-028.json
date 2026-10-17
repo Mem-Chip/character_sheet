@@ -1,0 +1,80 @@
+{
+ "batch": "batch-028",
+ "answers": [
+  {
+   "key": "TCE:野蛮人:野兽之形:3",
+   "verdict": "partial",
+   "why": "啃咬/爪击/尾击三武器攻击、爪击追加攻击(claw-extra 每回合问一次)、啃咬半血回血(bite-heal)可由引擎结算；但尾击反应加 AC 需手动掷 d8 填值（原文：引擎没有「掷一颗骰当作数值」的写法，请自己掷 d8，把点数填进弹窗），故非 full。",
+   "missing": ["效应无法「掷一颗骰当作数值」：尾击防御的 d8 需人工掷骰后由 number 节点填值，applyEffect 才能加 AC"]
+  },
+  {
+   "key": "TCE:野蛮人:振奋魔法:6",
+   "verdict": "partial",
+   "why": "选项①的 +1d3 攻击/属性检定加值可由「振奋检定」效应(rollMods)结算；但选项②恢复法术位（原文：需手动调整法术位）引擎无给予/恢复法术位的节点，且「长休前不可再次享受该恢复」需人工记录，故非 full。",
+   "missing": ["无「给予/恢复法术位」节点（cost 仅能消费 slot，没有 grant slot）；无法记录目标长休前不可重复享受该恢复"]
+  },
+  {
+   "key": "TCE:吟游诗人:不竭鼓舞:6",
+   "verdict": "manual",
+   "why": "规则原文明确由玩家手动保留激励骰（原文：由玩家手动保留该生物身上的诗人激励效果）；引擎无法判定某次 d20 是否叠加了诗人激励骰及其成败以决定是否返还，只能人工处理。",
+   "missing": ["无法追踪某次 d20 检定是否叠加了诗人激励骰及其成败，以决定是否保留/返还该激励骰"]
+  },
+  {
+   "key": "TCE:吟游诗人:传播鼓舞:14",
+   "verdict": "partial",
+   "why": "反应触发用 ask 确认「有生物用你的激励骰增益检定成功」并给另一生物施加「诗人激励」效应可自动；但「能听见」无法由引擎判定（无声音/听觉几何），且 infectious-inspiration 资源（次数=魅力调整、长休恢复）未在 resources 定义，故非 full。",
+   "missing": ["无法判定「能听见」（无听觉几何）；infectious-inspiration 资源未配置（公式=魅力调整值，长休恢复）"],
+   "patch": {
+    "resources": [
+     { "id": "infectious-inspiration", "name": "传播鼓舞", "formula": "chaMod", "recovery": "long" }
+    ]
+   }
+  },
+  {
+   "key": "TCE:吟游诗人:活化表演:6",
+   "verdict": "partial",
+   "why": "已用 summon 入场 + 附赠「命令行动」+ 3 环法术位重置(animating-performance 资源 formula1/long)；但 summon 是否能承载完整自定义数据(AC16/HP公式/六维/力场猛击/免疫)不明确，且「你死亡时失活」无对应触发器，「不变形态」「难抑舞动」原文要求人工处理，故非 full。",
+   "missing": ["summon 接口是否支持自定义生物六维/AC/HP公式/攻击/免疫未知；无「你死亡时失活」触发器；「不变形态」「难抑舞动」原文要求人工处理"]
+  },
+  {
+   "key": "TCE:吟游诗人:潜能微尘:3",
+   "verdict": "partial",
+   "why": "赋予激励时施加「潜能微尘」效应可自动；但激励骰用于属性/攻击/豁免时的三个分支次级效果原文明确「由人工判定结算」，引擎无法按骰的用途分流施加不同效果（重掷/雷鸣免疫/临时生命），故非 full。",
+   "missing": ["无按激励骰用途(属性/攻击/豁免)分流并施加不同次级效应（重掷激励骰/体质豁免雷鸣免疫/临时生命）的机制；原文分支效果人工结算"]
+  },
+  {
+   "key": "TCE:吟游诗人:造物表演:3",
+   "verdict": "partial",
+   "why": "资源(长休1次/2环重置)可由 resource+reset 结算；但「创造非魔法物品」(价值/尺寸/详情)引擎无法生成实体物品，且「持续=熟练加值小时」为非回合计时无法精确表达，原文「物品详情与尺寸限制由人手动处理」，故非 full。",
+   "missing": ["无创建实体非魔法物品的接口；duration 单位为小时(熟练加值小时)无法用 rounds 精确表达；performance-of-creation 资源未在 resources 定义"],
+   "patch": {
+    "resources": [
+     { "id": "performance-of-creation", "name": "造物表演", "formula": 1, "recovery": "long" }
+    ]
+   }
+  },
+  {
+   "key": "TCE:游荡者:灵能面纱:13",
+   "verdict": "partial",
+   "why": "可施加「灵能面纱」效应并配置 duration 与 endsOn(saveForced=迫使豁免)提前结束、资源(长休1次/灵能骰)可结算；但引擎无「隐形/不可见」旗标(效应 flags 无 invisible)，无法真正让角色不可见，且「发动攻击」提前结束缺对应事件，故非 full。",
+   "missing": ["效应 flags 无「隐形/不可见」状态（cannot 系列无 invisible）；endsOn 缺「发动攻击」对应事件（仅 attackHit/attackMissed/saveForced 可用）"],
+   "patch": {
+    "effects": [
+     { "name": "灵能面纱", "statics": [], "flags": null, "rollMods": 0, "triggers": 0, "duration": { "rounds": 600, "endsOn": [ { "event": "saveForced" } ] } }
+    ]
+   }
+  },
+  {
+   "key": "TCE:游荡者:撕裂心智:17",
+   "verdict": "partial",
+   "why": "attackHit 后用 ask 确认心灵之刃+偷袭并触发感知豁免(DC=8+熟练+敏捷)可自动；但震慑状态无对应旗标(仅能以 blocks:action/bonus/reaction 近似)，且「每回合结束重复豁免」的 turnEnded 触发器未配置，1分钟需转 rounds 10，故非 full。",
+   "missing": ["无「震慑」旗标（only blocks/cannot 系列，需近似）；effect 缺少 turnEnded 重复豁免触发器；duration 1分钟需转 rounds 10"]
+  },
+  {
+   "key": "TCE:游荡者:心灵传送:9",
+   "verdict": "partial",
+   "why": "传送可由 move(teleport) 让界面选落点；但「掷灵能骰×10 尺」需人工掷骰填值(number 节点)，引擎无「掷骰当数值」写法，且「可见」落点无法由引擎校验（无视线几何），故非 full。",
+   "missing": ["无「掷一颗骰当作数值」接口（灵能骰结果×10 需人工 input 进 number）；move 无法校验落点「可见」（无视线几何）"]
+  }
+ ]
+}

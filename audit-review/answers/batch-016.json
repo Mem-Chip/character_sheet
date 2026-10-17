@@ -1,0 +1,136 @@
+{
+ "batch": "batch-016",
+ "answers": [
+  {
+   "key": "FRHoF:法师:额外攻击:6",
+   "verdict": "partial",
+   "why": "原文「可以进行两次攻击而非一次」需改写基础攻击动作的次数，引擎无此接口；但「将额外攻击中的一次替换为施展法师戏法」可用 choose(ownCantrips,castTime:action)+castFrom 自动结算。",
+   "missing": ["缺少在基础攻击动作上追加额外攻击次数（把攻击动作改为两次攻击）的接口"],
+   "patch": {
+    "actions": [
+     {
+      "id": "cantrip-swap",
+      "name": "额外攻击：以法师戏法替换一次攻击",
+      "activation": "free",
+      "cost": [],
+      "targeting": { "type": "creature", "count": 1, "range": null },
+      "trigger": null,
+      "requires": "turn.isMine",
+      "root": ["choose", { "pool": { "from": "ownCantrips", "castTime": "action", "singleTarget": true } }, "castFrom"]
+     }
+    ]
+   }
+  },
+  {
+   "key": "FRHoF:法师:剑歌:3",
+   "verdict": "partial",
+   "why": "已实现附赠动作唤起(requires未穿甲未持盾)、AC/速度加值、失能时结束、奥术回想恢复；但原文「可用智力替代力敏进行熟练武器的攻击与伤害掷骰」引擎无替换接口，「敏捷(体操)优势」未限定该检定，「穿甲/持盾/双手武器攻击时结束」也未接 endsOn。",
+   "missing": ["缺少把熟练武器攻击/伤害的力敏属性动态替换为智力的接口", "缺少对特定检定(敏捷-体操)限定优势的机制(rollMods 无法指定检定)", "缺少装备护甲/盾牌或发动双手武器攻击时自动终止效应的 endsOn 事件"],
+   "patch": {}
+  },
+  {
+   "key": "FRHoF:法师:胜利之歌:14",
+   "verdict": "partial",
+   "why": "现有只把附赠动作做成询问「是否施展过1动作法术」的 note，由玩家手动在武器行攻击；可把 root 改为 attack 让它真正发起一次攻击，但引擎 attack 节点默认走法术攻击加值、缺少「以持有武器进行武器攻击(自动采用武器加值/伤害骰)」的明确配置。",
+   "missing": ["缺少以角色持有武器发起武器攻击(自动采用武器攻击加值与伤害骰)的 attack 配置接口"],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "胜利之歌",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && ask('本回合是否施展过施法时间为一动作的法术？')",
+      "root": ["attack"]
+     }
+    ]
+   }
+  },
+  {
+   "key": "FRHoF:贵族信念",
+   "verdict": "partial",
+   "why": "已实现附赠动作消耗 banneret 次数、至多3名60尺内可见目标选择、增强信念1分钟(conditionImmune+rollMods优势)及你失能时结束；但原文「立刻结束倒地状态」在数据里只有 note 未真正 removeEffect，「无法获得魅惑与恐慌」未限定仅这两类，「已被魅惑/恐慌/附身时对抗这类效应才给优势」的条件与 ask 未实现，「以反应起立」需扣目标反应，且「附身」状态引擎不认识。",
+   "missing": ["缺少对选定目标移除倒地状态的 removeEffect 节点(forEach 内)", "缺少 conditionImmune 按条件(仅魅惑/恐慌)限定的写法", "缺少 save/豁免触发时按目标处于魅惑/恐慌/附身且 ask 确认才给优势的触发器+reroll(取高)", "缺少扣除他者(目标)反应经济的接口(economy 无法指定目标扣反应)", "附身状态引擎无此条件，需手动记录"],
+   "patch": {}
+  },
+  {
+   "key": "FRHoF:街头正义",
+   "verdict": "partial",
+   "why": "「锁头」已实现(盟友攻击你造成的受擒目标时 reroll 取高近似优势)；但「坚固锁结」(挣脱/破坏DC加熟练，属探索判定无战斗时机)与「强硬言辞」(态度带来的劣势引擎不模拟)原文即说明需手动，无法自动。",
+   "missing": ["缺少探索/社交判定时机挂载接口(坚固锁结的DC加值无对应战斗窗口事件)", "缺少基于「态度/敌对度」的劣势数据模型(强硬言辞无可抵消的劣势来源)"],
+   "patch": {}
+  },
+  {
+   "key": "FRHoF:惊魂落魄之恩惠",
+   "verdict": "partial",
+   "why": "已实现「逃吧，蠢料！」的反应触发(恐慌敌人在60尺内开始回合时强制感知豁免，DC 8+CHA+PB)；但原文「免疫恐慌」与「威吓熟练与专精」两项静态未写入数据，「无掩护」条件(掩护/视线引擎不模拟)无法校验，「失败必须以最快速度远离」的逃跑移动原文说明由人工处理，且 flee-fools 短/长休恢复未配置。",
+   "missing": ["缺少效果中静态写入免疫恐慌(conditionImmune)与威吓熟练/专精(skill 静态)的条目", "缺少掩护判定接口(无掩护条件无法校验)", "缺少强制目标在自身回合用尽移动力远离的控制行为接口(move 节点只支持推/拉/传送，不能强制其回合移动)", "缺少 flee-fools 资源在短/长休恢复的配置"],
+   "patch": {
+    "effects": [
+     { "name": "无畏", "statics": ["conditionImmune:恐慌"], "flags": null, "rollMods": 0, "triggers": 0, "duration": { "until": { "at": "combatEnd" } } },
+     { "name": "令人生畏", "statics": ["skill:威吓"], "flags": null, "rollMods": 0, "triggers": 0, "duration": { "until": { "at": "combatEnd" } } }
+    ]
+   }
+  },
+  {
+   "key": "FRHoF:巨灵魔法",
+   "verdict": "partial",
+   "why": "原文「以魔法动作施展自选术士1环法术(施法时间需为动作)一次，长休恢复」可用 choose(ownSpells,maxLevel:1,castTime:action)+castFrom+resource(长休恢复) 自动结算；但「到达11级如同2环、17级如同3环施展」需要按等级升环，引擎 choose/castFrom/modifyCast 均无指定施法环阶(level)的接口，无法自动升环。",
+   "missing": ["缺少在 castFrom/modifyCast 中按角色等级指定施法环阶(升环至2/3环)的接口"],
+   "patch": {
+    "actions": [
+     {
+      "id": "cast",
+      "name": "祈愿魔法",
+      "activation": "action",
+      "tags": ["spell", "magical"],
+      "cost": [{ "resource": "genie-magic" }],
+      "targeting": null,
+      "trigger": null,
+      "requires": null,
+      "root": ["choose", { "pool": { "from": "ownSpells", "maxLevel": 1, "castTime": "action", "singleTarget": true } }, "castFrom"]
+     }
+    ],
+    "resources": [{ "id": "genie-magic", "recover": "longRest" }]
+   }
+  },
+  {
+   "key": "FRHoF:领主联盟特工",
+   "verdict": "partial",
+   "why": "「重获荣誉」已实现(盟友在5尺内受伤后，对攻击者下次攻击获得优势、至下回合结束)；但原文「优势」未限定只对那个敌人(该 source)的攻击，effect 只给 rollMods 优势未按来源筛选；「激励打击」只做了 note，未真正实现「向30尺内无英雄激励的可见听盟友授予英雄激励」，引擎缺少检测/授予他者该资源的接口。",
+   "missing": ["缺少 effect rollMods 优势按特定敌人(source)过滤的写法(只对造成伤害的该敌人攻击才给优势)", "缺少向指定盟友检测并授予「英雄激励」资源的接口(resource/grant 无法便捷指向他者且该资源引擎未建模)"],
+   "patch": {}
+  },
+  {
+   "key": "FRHoF:迷锁触碰",
+   "verdict": "manual",
+   "why": "触发条件(法术攻击命中你/对抗法术豁免失败)可用 trigger 实现，但核心是「掷1d20从密斯特拉之触表随机出20种各异效应(力场伤害、心灵链接、反转重力、相互震慑、AC+2、法术消散…)」，引擎没有随机骰表节点，且其中反转重力、心灵链接、法术消散等效果本身无对应接口，只能手动掷骰并结算。",
+   "missing": ["缺少随机骰表(掷1d20并按点数为20种不同效应分流)的机制节点", "缺少反转重力/心灵链接/法术消散等多样效应的对应接口"],
+   "patch": {}
+  },
+  {
+   "key": "FRHoF:牧师:思维魔法:3",
+   "verdict": "partial",
+   "why": "原文「魔法动作消耗一次引导神力，施展知识领域已准备的预言学派法术，无需法术位及材料」可用 choose(ownSpells)+castFrom+cost(resource:channelDivinity)+activation:action 大体自动；但「无需法术位」无明确接口(castFrom 会沿用所选法术的 slot 代价)，且「预言学派/知识领域」无 choose 过滤条件，只能由玩家自行挑选，这两点无法强制自动。",
+   "missing": ["缺少在 castFrom 施展所选法术时免除法术位消耗的接口(castFrom 会沿用所选法术的 slot 代价)", "缺少按学派(预言)/领域(知识)过滤自备法术的 choose 过滤条件"],
+   "patch": {
+    "actions": [
+     {
+      "id": "cast",
+      "name": "思维魔法",
+      "activation": "action",
+      "tags": ["spell", "magical"],
+      "cost": [{ "resource": "channelDivinity" }],
+      "targeting": null,
+      "trigger": null,
+      "requires": null,
+      "root": ["choose", { "pool": { "from": "ownSpells", "singleTarget": true } }, "castFrom"]
+     }
+    ]
+   }
+  }
+ ]
+}

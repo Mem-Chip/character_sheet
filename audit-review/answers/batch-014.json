@@ -1,0 +1,148 @@
+{
+ "batch": "batch-014",
+ "answers": [
+  {
+   "key": "AU:spell:恐龙召唤术",
+   "verdict": "partial",
+   "why": "专注 1 小时、90 尺选点、choose 选恐龙类型已自动；但原文明写‘召唤物实体与战斗行动由人手动处理’，引擎需 summon 节点引用恐龙数据块才能生成灵魄，且灵魄战斗由玩家以口头指令手动控制。",
+   "missing": [
+    "缺少 summon 节点（引用甲龙/三角龙/霸王龙对应环阶数据块）来生成灵魄实体",
+    "缺少让灵魄‘遵从口头指令’由玩家手动控制其战斗行动的接口（引擎 summon 可生成共享先攻的生物，但战斗行动需玩家手动）"
+   ]
+  },
+  {
+   "key": "AU:spell:力竭波",
+   "verdict": "partial",
+   "why": "附赠动作开光环（applyEffect）、60 尺锥状光幕（area+forEach）、区域内体质豁免已自动；但‘失败获得一层力竭’‘力竭不超 4 级’‘法术结束移除其造成的所有力竭’原文标注手动，引擎无力竭层级接口。",
+   "missing": [
+    "缺少以层级叠加的力竭（exhaustion）状态接口（applyEffect/flags 无层级计数）",
+    "缺少限制力竭不超过 4 层的上限机制",
+    "缺少法术结束时统一追踪并 removeEffect 该法术所施加力竭等级的机制"
+   ]
+  },
+  {
+   "key": "AU:spell:律令痛苦",
+   "verdict": "partial",
+   "why": "6d8 力场伤害、魅惑（speedSet=10、rollMods 劣势）、每回合结束体质豁免 saveEnds 已自动；但‘试图施法须过体质豁免否则消散（法术位不消耗）’原文标注手动，且 rollMods 劣势无法排除体质豁免。",
+   "missing": [
+    "缺少‘试图施法须先过体质豁免否则法术消散且动作浪费（法术位不消耗）’的 trigger(spellCast)+modify(cancelUnlessSave + refundSlot) 组合",
+    "缺少让 d20 检定劣势排除体质豁免的接口（rollMods 一律作用于所有 d20 检定）"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "root": [
+       "damage",
+       { "if": "target.hp <= 100", "do": ["applyEffect:律令痛苦"] }
+      ]
+     }
+    ],
+    "triggers": [
+     {
+      "id": "t_cast",
+      "label": "律令痛苦：施法打断",
+      "on": "spellCast",
+      "role": "target",
+      "when": "target.hasEffect('律令痛苦')",
+      "window": "before",
+      "modify": [
+       { "op": "cancelUnlessSave", "ability": "con", "dc": "self.spell.dc", "refundSlot": true }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "AU:spell:埋骨墓地",
+   "verdict": "partial",
+   "why": "专注 1 分钟、120 尺区域（zone）、出现时力量豁免+（1+slot.level)d6 伤害、进入/结束回合触发（每回合限一次）可由 zone 自动；但‘困难地形与多方格拼合需人工处理’，引擎无困难地形属性与自定义多方格形状。",
+   "missing": [
+    "缺少困难地形（对敌人）地图属性接口（zone 仅支持进入/回合触发，无 difficult-terrain 旗标）",
+    "缺少由至多四个 10 尺方格自由拼合的自定义区域形状（zone 的 area 仅接受单一 cube/sphere/cone 等形状）",
+    "缺少把伤害掷骰减 1d6（非劣势）的 penalty 接口（rollMods 只给劣势，不能设 -1d6）"
+   ]
+  },
+  {
+   "key": "AU:spell:迷魂魔镜",
+   "verdict": "partial",
+   "why": "迷惑 3 名可见生物、智力豁免、7d6 心灵伤害（失败全/成功半）、每回合结束重复豁免 saveEnds 已自动；但‘速度减半需手动处理’，且震慑状态无对应旗标（flags 无 stunned）。",
+   "missing": [
+    "缺少把目标速度减半（相对值）的 statics 接口（statics.speed 仅支持 set 固定值，不支持减半）",
+    "缺少震慑（stunned）状态旗标（flags 无 stunned，只能以 blocks 近似，且仍无法表达‘速度减半’）"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "root": ["save"],
+      "save": { "ability": "int", "dc": "self.spell.dc", "to": "target" },
+      "onFail": [
+       { "node": "damage", "dice": "7d6", "type": "psychic", "to": "target" },
+       { "node": "applyEffect", "template": "迷魂魔镜", "to": "target" }
+      ],
+      "onSuccess": [
+       { "node": "damage", "dice": "7d6", "type": "psychic", "to": "target", "scale": 0.5 }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "AU:spell:靡叶生华",
+   "verdict": "partial",
+   "why": "60 尺球状区域、区域内生物体质豁免、（1+slot.level)d6 暗蚀伤害（成功半伤）可由 save+damage 自动；但‘生命骰消耗与恢复需手动处理’，而 interfaces.md 第 5 节明确骰池（生命骰）扣除引擎做不到。",
+   "missing": [
+    "缺少消耗目标未使用生命骰（Hit Dice）并据此结算治疗的接口（interfaces.md 第 5 节明确‘骰池扣除’做不到；cost.hitDie 仅支持消耗，无结合施法者属性调整值恢复的机制）"
+   ]
+  },
+  {
+   "key": "AU:spell:魔邓肯冥思术",
+   "verdict": "manual",
+   "why": "现数据仅 root:[note]，无任何自动结算；原文‘法术位恢复由玩家手动在人物卡处理’，且引擎无恢复法术位的接口（actions/cost 仅支持消耗 slot，old_audit 亦指出缺 restoreSlot）。",
+   "missing": [
+    "缺少恢复指定环阶已消耗法术位的接口（restoreSlot/recoverSlot 节点；cost 仅支持消耗 {slot:{min,max}}，不支持返还/恢复）"
+   ]
+  },
+  {
+   "key": "AU:spell:女妖之嚎",
+   "verdict": "partial",
+   "why": "选 10 名生物、HP>50 体质豁免、12d10 心灵伤害（失败全/成功半）、耳聋 1 小时可由 save+damage+applyEffect 自动；但‘听觉判定与直接致死由人手动处理’，引擎无听觉/听不到判定接口。",
+   "missing": [
+    "缺少‘听不到你的生物不受影响’的听觉/音频判定接口（interfaces.md 第 5 节：无光照/听觉几何）",
+    "缺少将 HP≤50 目标直接致死的 clean 接口（可经 if+modify.setHp(0) 近似，但原文标注手动且听力过滤无法自动）"
+   ],
+   "patch": {
+    "effects": [
+     {
+      "name": "女妖之嚎：耳聋",
+      "statics": [],
+      "flags": { "cannot": ["hear"] },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": { "hours": 1 }
+     }
+    ]
+   }
+  },
+  {
+   "key": "AU:spell:瞥见亘古一瞬",
+   "verdict": "partial",
+   "why": "欺骗 1 名可见生物、智力豁免、10d12 心灵伤害、每回合结束重复豁免 saveEnds 已自动；但‘力竭与摇醒需手动处理’，引擎无力竭层级接口、无麻痹旗标、也无 5 尺内生物摇醒提前结束的接口。",
+   "missing": [
+    "缺少层级力竭（‘失败获得一层力竭’）接口",
+    "缺少麻痹（paralyzed）状态旗标（flags 无 paralyzed，只能以 blocks 近似）",
+    "缺少 5 尺内生物用动作摇醒提前结束法术的 grantAction/trigger 接口"
+   ]
+  },
+  {
+   "key": "AU:spell:刹时预知",
+   "verdict": "manual",
+   "why": "现数据仅 root:[note]，无实际结算；原文‘结果修改需由人手动处理’，引擎 modify op 无‘将已掷 d20 改为 20 / 攻击检定改为 1’的设定绝对结果接口，且反应触发仅覆盖 d20Rolled 未覆盖‘被攻击命中’。",
+   "missing": [
+    "缺少将一次已掷 d20 检定强制改为 20（或将触发攻击检定改为 1）的 modify op（现有 reroll/addToRoll/reduceDamage/halveDamage 等均不能设定绝对结果）",
+    "缺少覆盖‘一名生物以攻击检定命中你’的 attackHit 反应窗口（当前 trigger.on 仅为 d20Rolled）"
+   ]
+  }
+ ]
+}

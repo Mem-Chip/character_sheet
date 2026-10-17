@@ -1,0 +1,144 @@
+{
+  "batch": "batch-058",
+  "answers": [
+    {
+      "key": "XPHB:术士:狂野魔法浪涌:3",
+      "verdict": "partial",
+      "why": "原文「只自动做 1d20 的判定和提示；浪涌表上的随机效应…需要查表手动处理」——1d20 可自动，1d100 浪涌表随机效应（多分支、部分还是法术）无法自动结算。",
+      "missing": [
+        "没有「在随机表（1d100 多分支）上查表分发随机效应」的节点（节点列表仅有 number/choose/note，无 table lookup），浪涌表的随机效应需手动处理"
+      ],
+      "patch": {
+        "triggers": [
+          {
+            "id": "surge",
+            "label": "狂野魔法浪涌：骰 1d20",
+            "on": "spellCast",
+            "role": "actor",
+            "window": "after",
+            "when": "ask('这是用法术位施展的术士法术吗？') && self.spentSlot > 0",
+            "cost": [],
+            "modify": [],
+            "do": [
+              { "number": { "dice": "1d20", "var": "r" } },
+              { "if": { "when": "r == 20", "do": [
+                { "note": "骰 1d100 查狂野魔法浪涌表，随机效应（含可能触发的法术）手动处理" },
+                { "number": { "dice": "1d100", "var": "table" } }
+              ] } }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "XPHB:术士:灵能术法:6",
+      "verdict": "manual",
+      "why": "原文「各法术的施法动作只认法术位，这部分需要人手动处理」——以术法点替代法术位、以及无视言语/姿势/材料成分都改变了另一道法术的施法方式与成分，引擎不支持。",
+      "missing": [
+        "施法动作的 cost 只支持消耗法术位（slot），不支持以术法点（resource）替代法术位来施展",
+        "modifyCast 仅支持 cancel/dc/attackBonus/damageType 四个字段，不含「无视言语/姿势/材料成分」；且 interfaces §5 明确禁止改写另一道法术的施法成分"
+      ]
+    },
+    {
+      "key": "XPHB:术士:龙翼:14",
+      "verdict": "partial",
+      "why": "展开/解散/重置（applyEffect+removeEffect+resource，1 小时持续）已自动；但原文「60 尺飞行速度无法自动化（效应里没有飞行速度字段），需人手动处理」。",
+      "missing": [
+        "effect 的 statics 没有飞行速度（fly speed）字段（text 原文「效应里没有飞行速度字段」），无法自动赋予 60 尺飞行速度"
+      ]
+    },
+    {
+      "key": "XPHB:术士:律令之壁:6",
+      "verdict": "partial",
+      "why": "创造屏障（number 决定骰数 + resource 扣术法点 + applyEffect）已部分自动；但伤害触发缺少逐次消耗骰子并减伤的真实结算，且原文「你再次使用时，原来在别的生物身上的旧屏障请手动移除」。",
+      "missing": [
+        "伤害触发减伤——modify 的 reduceDamage 能否引用效应内存储的变量骰数（N d8 合计）不明，缺少「效应内动态骰子池 + 按总骰数减伤」的结算机制",
+        "重新施放时旧目标身上的屏障需手动移除（text 原文「原来在别的生物身上的旧屏障请手动移除」），引擎无跨目标自动清除旧效应的接口"
+      ]
+    },
+    {
+      "key": "XPHB:术士:魔力泉涌:2",
+      "verdict": "partial",
+      "why": "消耗法术位得术法点（resource 节点）已自动；但原文「以附赠动作把未消耗的术法点转化为法术位…转化出的法术位要手动记到法术位上，长休时消失」。",
+      "missing": [
+        "resource 节点（及整体）不支持动态增加临时法术位（slot）的能力（text「转化出的法术位要手动记到法术位上，长休时消失」；old_audit 亦记 resource 仅改普通资源）"
+      ]
+    },
+    {
+      "key": "XPHB:术士:扭曲爆裂:18",
+      "verdict": "partial",
+      "why": "原文「力量豁免失败受伤并被拉回原位、成功半伤」可用 save+damage+move(pull) 实现，但当前 data 的 use 动作只有 forEach+move（缺 save 与伤害节点）；且「传送目的地(120尺可见未占据)与拉回后落点(最近空格)」原文由人判断。",
+      "missing": [
+        "传送目的地与拉回后落点的选择（无地图几何，interfaces §5 不处理位置/传送落点），须人判断",
+        "当前 data 的 use 动作缺失力量豁免 + 伤害 + 拉回原位的节点（需补 save+damage+move(pull)）"
+      ],
+      "patch": {
+        "actions": [
+          {
+            "id": "use",
+            "root": [
+              { "forEach": { "in": "targets", "do": [
+                { "save": { "ability": "str", "dc": "8 + self.prof + self.cha", "to": "target",
+                  "onFail": [
+                    { "note": "失败：承受伤害（具体骰数见规则，引擎未给出，需补）" },
+                    { "move": { "mode": "pull", "distance": 30, "to": "target" } }
+                  ],
+                  "onSuccess": [
+                    { "note": "成功：承受一半伤害（骰数见规则）" }
+                  ] } }
+              ] } }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "XPHB:术士:时械矩阵:18",
+      "verdict": "partial",
+      "why": "召唤 30 尺立方（area）与「治愈(合计至多100，随意分配)」可由 heal 节点处理（总量手动控），但原文「修复和破法手动处理」，且当前 data 的 use 动作仅 note+forEach（未接 heal）。",
+      "missing": [
+        "「破法」无对应节点：结束范围内六环或以下法术——removeEffect/endConcentration 仅针对已知效应/专注，没有按环阶驱散法术的节点（old_audit 亦记此缺口）",
+        "「修复物件」无对应节点（引擎无修复损坏物件的接口）",
+        "当前 data 的 use 动作未接入 heal（治愈可由 heal 节点实现但缺失）"
+      ],
+      "patch": {
+        "actions": [
+          {
+            "id": "use",
+            "root": [
+              { "note": "范围内生物可分配治疗，合计 ≤100 由使用者控制；修复物件与破法手动处理" },
+              { "forEach": { "in": "targets", "do": [
+                { "heal": { "to": "target", "amount": "ask('本目标治疗量，剩余池≤100')" } }
+              ] } }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "XPHB:术士:术法化身:7",
+      "verdict": "partial",
+      "why": "消耗 2 点术法点重新激活先天术法（bonus+resource+applyEffect）已自动；但原文「先天术法激活期间，每道法术可以应用两次超魔法（引擎不限制超魔法次数）」无法自动约束。",
+      "missing": [
+        "引擎不限制单道法术可应用的超魔法次数，没有「每道法术至多两次超魔法」的约束接口（text「引擎不限制超魔法次数」）"
+      ]
+    },
+    {
+      "key": "XPHB:术士:心灵防御:6",
+      "verdict": "partial",
+      "why": "原文「避免和结束魅惑、恐慌状态的豁免检定具有优势」，引擎无法识别豁免来源，只能 saveForced 触发 + ask 让人确认；且 modify 列表无「授予优势」op、effect statics 无 advantage 旗标。",
+      "missing": [
+        "没有在触发器中为某次豁免「授予优势」的 modify op（列表含 clearAdv 但无 grantAdv；statics 仅 ac/speed/resist/save/spellDc/attack，无 advantage 旗标）",
+        "豁免来源无法自动识别（text「引擎无法识别豁免的来源，每次豁免会询问是否属于这类」），只能 ask 让人确认"
+      ]
+    },
+    {
+      "key": "XPHB:术士:血肉启示:14",
+      "verdict": "partial",
+      "why": "扣术法点 + 记录选中形态 + 计 10 分钟已自动；但原文「游泳/飞行速度、水下呼吸、60 尺识破隐形、挤过窄缝和脱离非魔法束缚…引擎不能自动处理：具体效果手动处理」。",
+      "missing": [
+        "effect statics 无飞行/游泳速度、水下呼吸、识破隐形（60 尺）、挤过窄缝/脱离非魔法束缚等字段（text「游泳/飞行速度、水下呼吸、60尺识破隐形、挤过窄缝…引擎不能自动处理」）"
+      ]
+    }
+  ]
+}

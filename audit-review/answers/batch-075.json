@@ -1,0 +1,95 @@
+{
+  "batch": "batch-075",
+  "answers": [
+    {
+      "key": "XDMG:item:读心勋章",
+      "verdict": "partial",
+      "why": "「消耗 1 充能施展侦测思想」已实现充能扣减并输出提示；但「表层思想阅读与心智探测由人手动处理」，且动作未配置专注（concentration）与 DC 13 感知豁免结算。",
+      "missing": [
+        "缺少侦测思想的专注（concentration: {minutes: 1}）与 DC 13 感知豁免（save）结算节点",
+        "表层思想阅读与心智探测属叙事/社交机制，战斗引擎无法自动结算"
+      ]
+    },
+    {
+      "key": "XDMG:item:读心药水",
+      "verdict": "partial",
+      "why": "「饮用后获得侦测思想效应持续 10 分钟」已实现饮用附赠动作与无专注效应挂载；但「侦测思想探察心智效果需手动处理」，且效应中未提供激活 DC 13 探察豁免的动作（grantAction）。",
+      "missing": [
+        "缺少在获得效应后执行 DC 13 感知豁免探察心智的动作或 grantAction 接口",
+        "探察心智与阅读思想属叙事/社交机制，战斗引擎无法自动结算"
+      ]
+    },
+    {
+      "key": "XDMG:item:发条护符",
+      "verdict": "partial",
+      "why": "「发条护符：取10」配置了扣减1充能的自由动作与说明提示；但「放弃掷骰并在 d20 的骰值上取 10」未在 d20Rolled 窗口挂触发器，且 modify 的 op 列表中缺少直接将 d20 结果固定为特定数值（setRoll: 10）的接口。",
+      "missing": [
+        "缺少在 d20Rolled 窗口拦截攻击检定并将掷骰结果固定设为 10 的 modify 操作（现有 modify op 仅 reroll/addToRoll/succeed 等，无 setRoll 固定数值接口）"
+      ]
+    },
+    {
+      "key": "XDMG:item:法力再生珍珠",
+      "verdict": "partial",
+      "why": "「以动作使用珍珠」已自动管理每日1次的物品消耗与长休恢复；但「恢复一枚已消耗的三环或更低环阶的法术位」仅有 note 提示，引擎缺少动态选择并恢复特定环阶法术位的接口。",
+      "missing": [
+        "缺少供玩家选择并恢复指定环阶（<=3环）已消耗法术位的 resource / slot 恢复接口（现有 resource 节点不支持交互式选环阶补法术位）"
+      ]
+    },
+    {
+      "key": "XDMG:item:法球护符",
+      "verdict": "partial",
+      "why": "已建立移动湮灭法球的动作框架；但「操控湮灭法球的智力（奥秘）检定具优势」未配置常驻效应或条件检定优势，且「湮灭法球」作为独立魔法实体的控制与移动需由人手动处理。",
+      "missing": [
+        "缺少针对特定对象（湮灭法球）检定提供优势的条件修正（rollMods/check advantage）",
+        "湮灭法球作为战场独立控制实体缺少实体引用与空间移动控制接口"
+      ]
+    },
+    {
+      "key": "XDMG:item:法术反转戒指",
+      "verdict": "partial",
+      "why": "已在 saveForced 配置反应动作框架；但「对抗法术所进行的豁免具有优势」未在常驻效应中实现，且「<=7环单体法术豁免成功后用反应将法术反弹回原施法者」涉及复杂的法术重定向与反向结算，引擎缺少反弹法术接口。",
+      "missing": [
+        "缺少常驻对抗法术豁免优势的效应（effects 缺少 save rollMods advantage: spell）",
+        "缺少在豁免成功时完全免疫不超过七环法术效应的判定机制",
+        "缺少将正在判定的单体法术重定向并以此前施法者为目标反弹结算的接口（interfaces.md modify op 的 redirect 无法逆向调用原法术当场反弹结算）"
+      ]
+    },
+    {
+      "key": "XDMG:item:反射闪避戒指",
+      "verdict": "partial",
+      "why": "「敏捷豁免失败时消耗 1 充能」已建立反应触发时机与充能扣减；但「让该豁免改为成功」仅写了 note，未在触发器 modify 中使用 succeed 操作自动将豁免改为成功，且缺少每日重获 1d3 充能的 resources 配置。",
+      "missing": [
+        "缺少在触发器中使用 modify: [{op: 'succeed'}] 自动改写敏捷豁免结果为成功的配置",
+        "缺少每日黎明重获 1d3 充能的 resources 资源公式与恢复配置"
+      ]
+    },
+    {
+      "key": "XDMG:item:防护圣甲虫",
+      "verdict": "partial",
+      "why": "「存护」建立了消耗1充能的反应动作框架；但「对抗死灵系法术或亡灵有害效应豁免失败改为成功」缺少目标类型与法术学派判定，未用 modify op: succeed 自动改写结果，且「法术豁免优势」未配置常驻效应。",
+      "missing": [
+        "缺少在 d20Rolled 判定死灵系法术（school=='necromancy'）或亡灵来源（source.type=='undead'）的精确触发条件与 modify: [{op: 'succeed'}] 自动改写",
+        "缺少常驻对法术豁免具有优势的效应定义（save rollMods advantage: spell）",
+        "缺少充能耗尽自动销毁物品的机制"
+      ]
+    },
+    {
+      "key": "XDMG:item:飞行药水",
+      "verdict": "partial",
+      "why": "「饮用药水获得飞行效应持续 1 小时」已实现附赠动作与时间管理；但「获得等同于你速度的飞行速度并可以悬浮」未在 statics 中赋予 fly 速度，且「三维高度与坠落」属 interfaces.md §5 明确做不到的清单。",
+      "missing": [
+        "效应 statics 缺少飞行速度（speed.fly）与悬浮特性的具体配置",
+        "三维高度、滞空与坠落判定属于 interfaces.md §5 明确做不到的清单"
+      ]
+    },
+    {
+      "key": "XDMG:item:飞翼斗篷",
+      "verdict": "partial",
+      "why": "「以动作展开双翼」配置了动作和物品次数消耗并施加效应；但效应缺少 1 小时持续时间及 60 尺飞行速度配置（statics 为空），且「翅膀消失后在 1d12 小时内无法再次使用」的随机冷却时间无法自动追踪。",
+      "missing": [
+        "效应缺少 1 小时持续时间（duration: {hours: 1}）与 60 尺飞行速度（statics.speed.fly: 60）的配置",
+        "缺少在效应结束后动态掷 1d12 并设定冷却时间锁定的资源恢复接口"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+ "batch": "batch-018",
+ "answers": [
+  {
+   "key": "FRHoF:术士:汲纳法术:6",
+   "verdict": "partial",
+   "why": "『当一个目标在对抗你所施展的法术反制的豁免中失败时，你重获1d4术法点』的回点可用 resource 节点自动，但缺少把触发精确限定在『你的法术反制』豁免失败的事件窗口。",
+   "missing": [
+     "缺少 saveForced 事件中能识别『具体哪道法术（法术反制）』的字段/过滤条件，无法把回点只限定在该法术豁免失败时（只能宽泛地对所有 self 强迫的豁免失败回点）"
+   ],
+   "patch": {}
+  },
+  {
+   "key": "FRHoF:术士:咒火冠冕:18",
+   "verdict": "partial",
+   "why": "燃尽（被命中减伤）与法术闪避（evasion 对法术/魔法效应减半）可自动，但『60 尺飞行速度与悬浮』引擎只记一个步行速度、且三维高度/滞空属于 section 5 明确做不到。",
+   "missing": [
+     "缺少记录飞行速度/悬浮并据此移动棋子的接口（引擎只记一个步行速度；三维高度、滞空属于 interfaces.md §5 明确做不到）"
+   ],
+   "patch": {}
+  },
+  {
+   "key": "FRHoF:竖琴手协同",
+   "verdict": "partial",
+   "why": "妙语连珠的『下次豁免劣势』效应可 applyEffect（rollMods 劣势），但引擎无『协助动作』触发钩子需手动点按钮；意志激励『成功通过豁免结束恐慌/麻痹时为盟友解除同状态』原文写明手动结算。",
+   "missing": [
+     "缺少执行协助（Help）动作时的触发时机（现有事件列表无 Help 事件，只能做成手动按钮）",
+     "缺少『自身豁免结束某状态时为 30 尺内可见盟友解除相同状态』的接口（需识别 save 结束的具体状态并 choose 盟友 removeEffect）"
+   ],
+   "patch": {}
+  },
+  {
+   "key": "FRHoF:新锻臂铠",
+   "verdict": "partial",
+   "why": "警觉『对你下次攻击劣势』可 applyEffect 自动给劣势并在攻击结算后结束；但比肩而立『盟友被推离/拉近时反应阻止』引擎没有强制位移的拦截窗口，原文写明必须手动。",
+   "missing": [
+     "缺少盟友即将被推离/拉近（强制位移）时的反应拦截窗口（onPush/onPull 之类事件；move 节点只支持 push/pull/teleport 执行，没有触发拦截）"
+   ],
+   "patch": {}
+  },
+  {
+   "key": "FRHoF:新晋龙巫教徒",
+   "verdict": "partial",
+   "why": "龙之威『DC 8+WIS+PB 感知豁免失败陷入恐慌』可用 save+applyEffect 自动，但『豁免成功/效应结束 24 小时内免疫』无干净接口，且饮惧为励『获得英雄激励』原文写明由玩家手动记录。",
+   "missing": [
+     "缺少『豁免成功或效应结束后记录 24 小时免疫』的接口（effect 的 onEnd/duration 难以干净表达 24h 免疫）",
+     "缺少使生物因你陷入恐慌时获取英雄激励（Heroic Inspiration）的机制（原文：由玩家手动记录）"
+   ],
+   "patch": {}
+  },
+  {
+   "key": "FRHoF:旭日骄阳之恩惠",
+   "verdict": "partial",
+   "why": "附赠动作开光环、每回合开始给 10 临时生命可用 applyEffect/tempHp 近似，但『阳光照亮与黑暗驱散』原文写明人工判定，且『光环内可见盟友』的可见性无地图几何。",
+   "missing": [
+     "缺少阳光光照与驱散/消除重叠黑暗术法术效应的互动机制（光照/视线判定属于 interfaces.md §5 明确做不到）",
+     "缺少『光环内可见盟友』的可见性判定（无地图几何，只能近似为 30 尺内全体）"
+   ],
+   "patch": {}
+  },
+  {
+   "key": "FRHoF:妖精诡术",
+   "verdict": "partial",
+   "why": "惊惶打击『攻击命中消耗次数迫使感知豁免失败则豁免劣势』已用 attackHit 触发器+save+applyEffect 自动；但妖精轻步『撤离时本回合困难地形不耗额外移动力』棋盘移动由人工处理、无地形修正接口。",
+   "missing": [
+     "缺少无视困难地形额外移动力消耗的移动修正机制（棋盘移动/地形属于 interfaces.md §5 明确做不到；无 difficultTerrain 相关 modify 接口）"
+   ],
+   "patch": {}
+  },
+  {
+   "key": "FRHoF:夜宴狂欢之恩惠",
+   "verdict": "manual",
+   "why": "舞动灵感『奥图迷舞无需成分且受伤不打断专注』属于改写另一道法术的专注/成分（interfaces.md §5 明确做不到），放声歌唱『魅惑时禁言语施法』亦无 verbal-only 限制接口，原文写明法术施展与附加限制由人工处理，目前 data 为空无任何自动结算。",
+   "missing": [
+     "缺少『改写另一道法术（奥图迷舞）的施法成分/受伤不打断专注』的接口（interfaces.md §5 明确做不到）",
+     "缺少魅惑状态下『禁止需要言语成分的法术』的粒度限制（effect.cannot 只能整体禁 castSpells，不能限定 verbal 成分）"
+   ],
+   "patch": {}
+  },
+  {
+   "key": "FRHoF:熠熠生辉之恩惠",
+   "verdict": "partial",
+   "why": "磊落光明『点按钮消耗次数、造成伤害骰全部取最大、掷完自动结束』的激活/消耗/结束可自动，但『伤害骰取最大值』缺少对应修正操作；永恒安眠『降 0 不能变亡灵』是叙事层手工排除。",
+   "missing": [
+     "缺少在造成伤害时将伤害骰全部取最大值（maximizeDamageDice）的修正操作（interfaces.md §3 的 modify op 列表里没有 max 骰子 op）"
+   ],
+   "patch": {}
+  },
+  {
+   "key": "FRHoF:吟游诗人:明月激励:3",
+   "verdict": "partial",
+   "why": "月隐启迪『赋予激励时隐形+传送』可用 applyEffect+move(teleport) 近似、月辉活力『治疗+速度+10』可 heal+applyEffect，但真实隐形（hide 视觉）无旗标、且月辉活力『用带法术位法术回血时自动追加』缺 spellCast 触发时机。",
+   "missing": [
+     "缺少『用带法术位的法术恢复生命值时自动消耗诗人激励骰追加治疗+速度加值』的触发时机（spellCast 后识别治疗法术并追加的接口，且需 oncePerTurn 限制）",
+     "缺少真实隐形（hide 视觉）条件——视线/隐蔽判定属于 interfaces.md §5 明确做不到（effect.flags 无 invisible）"
+   ],
+   "patch": {}
+  }
+ ]
+}

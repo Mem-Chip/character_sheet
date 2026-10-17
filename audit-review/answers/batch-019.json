@@ -1,0 +1,111 @@
+{
+ "batch": "batch-019",
+ "answers": [
+  {
+   "key": "FRHoF:吟游诗人:月光祝福:6",
+   "verdict": "partial",
+   "why": "「自身散发5尺微光光照」属光照机制（interfaces §5 明确不做：视线/光照/掩护/隐蔽），且「每当有生物未能通过月华之光的豁免，可选60尺内一名可见生物恢复2d4生命值」缺少 saveFailed 触发时机与任择目标的 heal 钩子。",
+   "missing": [
+    "光照/微光区域机制（视线/光照/掩护/隐蔽，interfaces §5 明确不做，无地图几何）",
+    "缺少以 saveForced 并判定豁免失败结果、且关联特定法术「月华之光」来驱动任择60尺可见生物为目标的 heal 节点"
+   ]
+  },
+  {
+   "key": "FRHoF:游荡者:恶毒灵光:13",
+   "verdict": "partial",
+   "why": "现有 free 动作做了区域选择与 choose，但「该伤害无视抗性」无 damage 节点支持，「与敬怖之忠所选神明抗性类型相同」需动态取值，且原文明写「无视抗性与目标生物选择由人处理」。",
+   "missing": [
+    "damage 节点缺少忽略特定伤害类型抗性的参数（无视抗性）",
+    "缺少「嗜血传送」（teleport 事件）触发出发点与落点各10尺范围伤害的钩子",
+    "伤害类型依赖神明选择（敬怖之忠抗性类型）的动态取值接口"
+   ]
+  },
+  {
+   "key": "FRHoF:游荡者:恐怖化身:17",
+   "verdict": "partial",
+   "why": "「【割喉】完成短休时恢复一次已消耗的嗜血特性使用次数」已由 restCompleted(short) 触发器自动处理，但「【杀戮意图】将偷袭伤害骰投出的1和2都视为3」缺少仅限偷袭骰的保底点数（minDie）机制。",
+   "missing": [
+    "modify 的 op 列表（interfaces §3）无 minDie/保底点数，无法将偷袭伤害骰最低值设为3且仅限偷袭骰"
+   ]
+  },
+  {
+   "key": "FRHoF:游荡者:嗜血:3",
+   "verdict": "partial",
+   "why": "原文明写「传送与后续近战攻击由人处理」，且「陷入浴血状态」非标准条件，现有 damageTaken 事件无法判定敌方是否进入浴血，故反应传送+近战攻击序列无法自动触发。",
+   "missing": [
+    "缺少「敌方承受伤害后陷入浴血状态」的事件检测（浴血非标准条件，damageTaken 无法判定是否进入该状态，反应触发条件无法自动）"
+   ]
+  },
+  {
+   "key": "FRHoF:游荡者:袭杀恐惧:9",
+   "verdict": "partial",
+   "why": "「目标须通过感知豁免（DC=8+熟练+敏捷）」已由 attackHit 触发器 do save 处理，但「花费1d6偷袭伤害（由人处理减除）」属骰池扣除（interfaces §5 不做），且恐慌状态行为、对其攻击具有优势、每回合重复豁免均未能自动。",
+   "missing": [
+    "骰池（偷袭骰）扣除以减除1d6伤害（interfaces §5 明确不做）",
+    "缺少「对其进行的攻击检定具有优势」的效应旗标（flags 列表无 grantAdvantage/advantageVs）",
+    "缺少每回合结束重复感知豁免、通过则解除恐慌的循环机制",
+    "恐慌（震慑类）状态的完整行为（远离施法者、无法接近）需 cannot:moveCloser 等旗标"
+   ]
+  },
+  {
+   "key": "FRHoF:游侠:冰结恶灵:15",
+   "verdict": "partial",
+   "why": "「施展猎人印记化身幽灵形态直至法术结束」「免疫寒冷伤害；免疫受擒、倒地和束缚状态」已由 spellCast 触发器与 statics 处理，但「15尺光环内由你选择的生物受到2d4寒冷伤害」缺光环伤害节点、穿行障碍手动，且长休恢复资源缺失。",
+   "missing": [
+    "缺少回合开始时以光环（zone）对15尺内自选生物施加2d4寒冷伤害的节点（可建 zone 但「由你选择」逐回合目标选取需人）",
+    "缺少「如同困难地形般穿过生物与物件」的移动/穿行机制（无地图几何）",
+    "缺少长休恢复 rime-wraith 资源次数的 restCompleted(long) 触发器"
+   ]
+  },
+  {
+   "key": "FRHoF:游侠:冬猎霜寒:3",
+   "verdict": "partial",
+   "why": "「当你施展猎人印记法术时，获得1d10+游侠等级点临时生命值」已由 spellCast 触发器 do tempHp 处理，但「被你的猎人印记标记的生物不可执行撤离动作」缺禁止 Disengage 的旗标。",
+   "missing": [
+    "EffectTemplate.flags 的 cannot 列表无 Disengage/撤离动作禁止项，无法以效应旗标阻止目标执行撤离"
+   ]
+  },
+  {
+   "key": "FRHoF:游侠:冻原探索者:3",
+   "verdict": "partial",
+   "why": "「【极地打击】武器攻击命中额外1d4寒冷伤害（每目标每回合一次）」已由 attackHit 触发器 addDamage+applyEffect 处理，但「【刺骨严寒】造成的伤害无视寒冷抗性」缺 ignore-resistance 参数，原文亦写「需人工手动处理」。",
+   "missing": [
+    "damage/addDamage 节点缺少「无视特定伤害类型抗性」（无视寒冷抗性）的参数（damage 仅 dice/type/to/scale）",
+    "（可选）极地打击 1d4→1d6 的 11 级缩放需在 addDamage 的 dice 表达式中体现"
+   ]
+  },
+  {
+   "key": "FRHoF:游侠:寒心复仇:11",
+   "verdict": "full",
+   "why": "「当你被一次攻击检定命中时，可用反应迫使攻击你的生物进行感知豁免（DC为你的法术豁免DC），豁免失败陷入震慑且速度降至0直到你的下个回合结束」可由 attackHit(target)触发+save(to:'attacker')+applyEffect 完全自动；次数=感知调整值（至少1）与长休恢复可用 resource + restCompleted(long) 补上，无需人介入。",
+   "missing": [],
+   "patch": {
+    "resources": [
+     { "id": "coldhearted-vengeance", "max": "max(1, self.mod.wis)", "recover": "longRest" }
+    ],
+    "actions": [
+     {
+      "id": "use",
+      "targeting": null,
+      "root": [
+       { "save": { "ability": "wis", "dc": "self.spell.dc", "to": "attacker", "onFail": [ { "applyEffect": { "template": "寒心复仇：震慑" } } ] } }
+      ]
+     }
+    ],
+    "triggers": [
+     { "id": "recover", "label": "寒心复仇：长休恢复", "on": "restCompleted", "role": "actor", "window": "after", "when": "event.kind == 'long'", "cost": [], "modify": [], "do": [ "resource" ] }
+    ]
+   }
+  },
+  {
+   "key": "FRHoF:战士:集结如潮:10",
+   "verdict": "partial",
+   "why": "「使用动作如潮时，可选择30尺内至多魅力调整值（至少1）个盟友」已由 free 动作+区域选取+applyEffect 处理，但「各可用反应发动一次武器/徒手攻击或移动半速且不触发借机攻击」需对每名盟友 grantAction，且移动半速无对应节点、盟友自行执行需跨角色操作。",
+   "missing": [
+    "缺少 forEach 对每名选定盟友 grantAction 临时给予「反应：武器/徒手攻击」的调度",
+    "移动半速且不触发借机攻击的「移动」动作无对应节点（move 仅 push/pull/teleport，无半速自由移动）",
+    "「盟友的反应由其自行执行」——跨角色反应需各自玩家操作，引擎无法代执行"
+   ]
+  }
+ ]
+}

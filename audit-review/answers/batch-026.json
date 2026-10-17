@@ -1,0 +1,206 @@
+{
+ "batch": "batch-026",
+ "answers": [
+  {
+   "key": "TCE:圣武士:绝伦健将:3",
+   "verdict": "partial",
+   "why": "10分钟内力量(运动)和敏捷(体操)检定优势可由 rollMods(op:'adv', on:{kind:'check',skill}) 自动结算（text：‘力量（运动）和敏捷（体操）检定具有优势’）；但 text 明确‘负重与拖拉重量翻倍、跳远跳高距离增加 10 尺需手动处理’——这两项是非战斗属性，引擎无对应接口。",
+   "missing": [
+    "负重/拖拉重量翻倍的接口（引擎无携行/负重能力字段）",
+    "跳远/跳高距离 +10 尺的接口（引擎无跳跃距离字段）"
+   ],
+   "patch": {
+    "effects": [
+     {
+      "name": "绝伦健将",
+      "statics": [],
+      "flags": null,
+      "rollMods": [
+       {"on": {"kind": "check", "skill": "运动"}, "who": "bearer", "op": "adv", "label": "绝伦健将：运动优势"},
+       {"on": {"kind": "check", "skill": "体操"}, "who": "bearer", "op": "adv", "label": "绝伦健将：体操优势"}
+      ],
+      "triggers": 0,
+      "duration": {"minutes": 10}
+     }
+    ]
+   }
+  },
+  {
+   "key": "TCE:圣武士:驱散异域:3",
+   "verdict": "partial",
+   "why": "动作+引导神力+30尺灵光(emanation)内特定类型生物感知豁免(DC=法术豁免DC)、失败挂恐慌1分钟且受任何伤害提前结束可由 save+applyEffect(恐慌, duration 1min, endsOn damageTaken) 自动结算（text：‘须进行感知豁免…失败陷入恐慌1分钟（受到任何伤害提前结束）’）；但 text 明确‘被驱散生物远离移动、只能疾走或挣脱等行为限制需手动处理’——恐慌后的逃跑/仅可疾走等行为逻辑无接口。",
+   "missing": [
+    "恐慌状态下强制远离施法者、仅可疾走或挣脱的行为约束（效应 flags/cannot 无此行为控制流）",
+    "‘能听到祷言’的听觉判定（§5 无听觉/隐蔽几何判定）"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "驱散异域",
+      "activation": "action",
+      "cost": [{"resource": "channel-divinity"}],
+      "targeting": {"type": "area", "range": "self", "area": {"shape": "emanation", "radius": 30}, "filter": "['异怪','天界生物','元素生物','精类','邪魔'].includes(target.type)"},
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       {"save": {"ability": "wis", "dc": "self.spell.dc", "to": "target", "onFail": [{"applyEffect": {"template": "驱散异域·恐慌", "to": "target"}}], "onSuccess": []}}
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "驱散异域·恐慌",
+      "statics": [],
+      "flags": {"cannot": ["moveCloser:source"]},
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {"minutes": 1, "endsOn": [{"event": "damageTaken"}]}
+     }
+    ]
+   }
+  },
+  {
+   "key": "TCE:圣武士:哨卫灵光:7",
+   "verdict": "partial",
+   "why": "自身及10尺内盟友先攻检定+熟练加值可由 aura(affects:allies, radius:10) 的 grant.rollMods(op:'add', on:{kind:'initiative'}, value:'source.pb') 自动结算（text：‘先攻检定获得等同于你熟练加值的加值’）；但 text 限定‘由你选择的盟友’——灵光一律覆盖范围内全部盟友、无按选择筛选的接口，且‘18级灵光范围增至30尺’需随等级缩放的半径（无）。",
+   "missing": [
+    "灵光只授予‘由你选择的盟友’而非范围内所有盟友的筛选接口（aura.grant 一律覆盖范围内全部盟友）",
+    "灵光半径随职业等级缩放（18级 10→30 尺）的接口（aura.radius 不支持表达式）"
+   ],
+   "patch": {
+    "effects": [
+     {
+      "name": "哨卫灵光",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "aura": {
+       "id": "哨卫灵光",
+       "radius": 10,
+       "affects": "allies",
+       "includeSelf": true,
+       "grant": {
+        "rollMods": [
+         {"on": {"kind": "initiative"}, "who": "bearer", "op": "add", "value": "source.pb", "label": "哨卫灵光：先攻加值"}
+        ]
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "key": "TCE:圣武士:现世传说:20",
+   "verdict": "partial",
+   "why": "附赠动作获得1分钟增益、长休1次+五环法术位重置、魅力检定优势(rollMods op:'adv' on cha) 及‘豁免失败用反应重投必须采用新结果’(saveForced before + reaction cost + modify reroll keep:'new', when roll.failing) 可由现有接口自动结算；但‘无误打击：每个自己回合一次武器攻击失手时改为命中’引擎无‘强制命中’节点（仅 addToRoll +100 近似且天然1仍失手），需人工判断。",
+   "missing": [
+    "武器攻击失手时强制改为命中的接口（无‘forceHit’类 modify op；addToRoll +100 仅近似且天然1自动失手规则不绕过）",
+    "‘每个自己回合一次’该强化的次数限制与天然1是否仍算失手的人工确认"
+   ],
+   "patch": {
+    "effects": [
+     {
+      "name": "现世传说",
+      "statics": [],
+      "flags": null,
+      "rollMods": [
+       {"on": {"kind": "check", "ability": "cha"}, "who": "bearer", "op": "adv", "label": "现世传说：魅力优势"}
+      ],
+      "triggers": 1,
+      "duration": {"minutes": 1}
+     }
+    ],
+    "triggers": [
+     {
+      "id": "rerollSave",
+      "label": "现世传说：重掷豁免",
+      "on": "saveForced",
+      "role": "actor",
+      "window": "before",
+      "when": "roll.failing && self.hasEffect('现世传说')",
+      "cost": [{"economy": "reaction"}],
+      "modify": [{"op": "reroll", "die": "d20", "keep": "new"}]
+     }
+    ]
+   }
+  },
+  {
+   "key": "TCE:圣武士:迅捷灵光:7",
+   "verdict": "partial",
+   "why": "自身速度+10（静态层）及5尺灵光内盟友步行速度+10可由 aura(affects:allies, radius:5, grant.statics speed+10) 自动结算（text：‘5尺灵光内的盟友…步行速度获得+10尺加值’）；但‘在自己回合开始时…直至那一回合结束’的精确计时灵光无法仅于其回合内授予，且‘18级灵光范围增至10尺’需随等级缩放的半径（无）。",
+   "missing": [
+    "灵光只在盟友自身回合内授予+10速度、回合结束移除的精确计时（aura 在范围内持续授予，无法按‘仅其回合’限定）",
+    "灵光半径随职业等级缩放（18级 5→10 尺）的接口（aura.radius 不支持表达式）"
+   ],
+   "patch": {
+    "effects": [
+     {
+      "name": "迅捷灵光",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "aura": {
+       "id": "迅捷灵光",
+       "radius": 5,
+       "affects": "allies",
+       "includeSelf": true,
+       "grant": {
+        "statics": [{"kind": "speed", "bonus": 10}]
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "key": "TCE:术士:灵能术法:6",
+   "verdict": "partial",
+   "why": "现有 free 动作仅作扣除术法点的辅助（number+resource+note）；但 text 核心‘施展灵能法术时改为消耗术法点而非法术位、且无视语言/姿势/不耗材料成分’——即改写另一道法术的施法消耗与成分，属 §5 明确‘改写另一道法术的施法时间/成分/专注’做不到（modifyCast 仅支持 dc/攻击加值/伤害类型/cancel）。",
+   "missing": [
+    "以术法点替代法术位施展灵能法术的接口（§5 明确‘改写另一道法术的施法消耗’做不到，modifyCast 仅改 dc/attackBonus/damageType/cancel）",
+    "自动免除语言/姿势/无消耗材料成分的接口（同上 §5）"
+   ]
+  },
+  {
+   "key": "TCE:术士:律令之壁:6",
+   "verdict": "partial",
+   "why": "动作+术法点消耗+为自身或30尺可见生物造屏障(applyEffect, duration 至长休/重用结束) 已建模；但 text 核心‘屏障持有等量d8，被守护者每次受伤时选消耗几颗掷出从伤害减掉、颗数消完屏障结束’需要在效应内记录可递减骰子池并在受伤害时交互式减伤——当前无‘效应内骰子池+受伤害触发 number 选颗数+reduceDamage’的组合，且 text 标注守护者为DM怪时弹窗需DM代答。",
+   "missing": [
+    "效应内记录可递减 d8 骰子池并‘受伤害时弹出选颗数→掷骰减伤’的接口（无 effect 内骰子池 + damageIncoming 触发 number 选值 + reduceDamage 的组合；text 亦标注 DM 怪需代答）",
+    "‘颗数消完屏障结束’的自动判定（需池归零触发 removeEffect）"
+   ]
+  },
+  {
+   "key": "TCE:术士:扭曲爆裂:18",
+   "verdict": "partial",
+   "why": "动作+消耗 warping-implosion 资源+传送(move teleport, 界面选落点)+原位置30尺生物力量豁免(3d10力场, 成功半伤) 可由 move(teleport)+save+damage(scale 0.5) 自动结算；但 text‘原位置30尺内生物…被拉向原位置’的‘原位置’在传送后无法引用为锚点（move 传送后当前位置已是新落点，AoE 与拉扯都应以传送前原点为基准），且无记录传送前原点的接口。",
+   "missing": [
+    "以传送前的‘原位置’为锚点的 30 尺范围与‘拉向原位置’位移的接口（move 传送后无法引用原位置锚点，AoE 与 pull 都需以原点为基准）"
+   ]
+  },
+  {
+   "key": "TCE:术士:时械矩阵:18",
+   "verdict": "partial",
+   "why": "动作+消耗 clockwork-cavalcade 资源+30尺立方区域(forEach)已建模；但 text 三效应中‘修复损坏物件’无 repair 接口、‘破法：范围内任意生物或物件承受的六环或以下法术结束’无按环阶批量结束法术效应的 dispel 接口（endConcentration 仅结束专注法术）、‘治愈至多100生命值随意分配给范围内任意数量生物’的100点跨多目标上限需记录治疗池，均无法完全自动。",
+   "missing": [
+    "修复物件（损坏物件立刻修复）的接口（引擎无 repair/修复节点）",
+    "区域内批量结束 6 环及以下法术效应的 dispel 接口（endConcentration 仅结束专注法术，无法按环阶结束所有效应）",
+    "至多 100 点治疗池跨多目标自由分配并累计上限的接口（需记录剩余治疗量）"
+   ]
+  },
+  {
+   "key": "TCE:术士:血肉启示:14",
+   "verdict": "partial",
+   "why": "附赠动作+消耗术法点+持续10分钟(applyEffect) 已建模；但 text 四项增益‘看见60尺内隐形生物 / 飞行速度=步行速度且悬浮 / 游泳速度=2倍步行且水下呼吸 / 穿1寸狭缝脱离束缚’——看见隐形属 §5 视线/隐蔽判定不支持；飞行/游泳速度 statics 仅支持通用 speed 不支持区分 fly/swim；穿狭缝脱离非魔法束缚/受擒无移动接口。",
+   "missing": [
+    "看见 60 尺内隐形生物的接口（§5 视线/光照/隐蔽判定不支持；无 seeInvisible 旗标）",
+    "单独授予飞行速度/游泳速度的接口（statics 仅支持通用 speed，无 fly/swim 区分）",
+    "穿窄至1寸空间、消耗5尺移动力脱离非魔法束缚/受擒的移动接口（无 squeeze/脱擒节点）"
+   ]
+  }
+ ]
+}

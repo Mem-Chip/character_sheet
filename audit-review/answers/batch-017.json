@@ -1,0 +1,217 @@
+{
+ "batch": "batch-017",
+ "answers": [
+  {
+   "key": "FRHoF:散塔林会暴徒",
+   "verdict": "partial",
+   "why": "见缝插针『掷两遍伤害骰取其一』无重掷伤害骰接口；家人至上英雄激励不在资源池、盟友先攻优势无接口，且 interfaces 无直接加优势 op——仅自述的自己先攻优势可用 initiativeRolled 近似，余下须人守。",
+   "missing": [
+    "modify 的 reroll 只能重掷 d20，无「重掷伤害骰取其一」接口",
+    "英雄激励不在战斗资源池（引擎读不到也扣不掉）",
+    "先攻修正只能挂掷骰者自己，无「给他人先攻加优势」接口",
+    "无直接「加优势」的 modify op（仅有 reroll/addToRoll 等）"
+   ],
+   "patch": {
+    "triggers": [
+     {
+      "id": "family-above",
+      "label": "家人至上：先攻（英雄激励）",
+      "on": "initiativeRolled",
+      "role": "actor",
+      "window": "before",
+      "when": "self.has('heroic-inspiration')",
+      "cost": [],
+      "modify": [],
+      "do": ["note"]
+     }
+    ]
+   }
+  },
+  {
+   "key": "FRHoF:散塔林会战术",
+   "verdict": "partial",
+   "why": "反击『受击后消耗反应发动借机攻击』可由 attackHit 触发器+reaction 自动发起（当前 do 仅 note）；万能佣兵『长休给已熟练技能加专精』属人物卡技能层，引擎改不了。",
+   "missing": [
+    "人物卡技能层（长休给已熟练技能加专精）不在战斗引擎范围",
+    "触发器 do 内对『攻击者』这一目标的选择/attack 节点目标指定接口不清晰（当前仅 note）"
+   ],
+   "patch": {
+    "triggers": [
+     {
+      "id": "riposte",
+      "label": "散塔林会战术：受击反击",
+      "on": "attackHit",
+      "role": "target",
+      "window": "after",
+      "when": "attack.melee && within(self, attacker, 5)",
+      "cost": [{"economy": "reaction"}],
+      "modify": [],
+      "do": ["attack"]
+     }
+    ]
+   }
+  },
+  {
+   "key": "FRHoF:生机勃发之恩惠",
+   "verdict": "manual",
+   "why": "超健康『获得临时生命值+5』无 tempHp 获得类窗口事件、动态层改不了别人算出的数字；超恢复『生命骰取最大』属骰池，interfaces §5 明确做不到。",
+   "missing": [
+    "缺少「获得临时生命值时拦截并 +5」的窗口事件（tempHp 由法术/特性节点直接入账，动态层改不了）",
+    "生命骰恢复取最大值——骰池（生命骰）扣除/掷骰不在战斗引擎（interfaces §5 明确做不到）"
+   ]
+  },
+  {
+   "key": "FRHoF:圣武士:火巨灵之狂怒:3",
+   "verdict": "partial",
+   "why": "至圣斩目标额外 2d4 火焰可由 damage 节点自动结算（当前仅 note），但『弹射至30尺内可见的另一生物』需从生物中单选，触发器无生物选择接口，须手动。",
+   "missing": [
+    "弹射伤害需从『你30尺内可见的另一生物』中选一个——触发器 do 内无可选的「生物选择」接口（choose 的 pool 只支持 ownSpells/ownCantrips）"
+   ],
+   "patch": {
+    "triggers": [
+     {
+      "id": "efreeti-fury",
+      "label": "火巨灵之狂怒",
+      "on": "spellCast",
+      "role": "actor",
+      "window": "after",
+      "when": "event.spell == '至圣斩' || event.key == 'XPHB:spell:至圣斩' || event.key == 'XPHB:圣武士:圣武斩:2'",
+      "cost": [{"resource": "channel-divinity"}],
+      "modify": [],
+      "do": [{"op": "damage", "dice": "2d4", "type": "fire", "to": "target"}, "note"]
+     }
+    ]
+   }
+  },
+  {
+   "key": "FRHoF:圣武士:巨灵贵胄:20",
+   "verdict": "partial",
+   "why": "附赠动作获增益/长休重置、以及『D20失败用反应改成功』（succeed op）可自动化，但『60尺飞行速度且能悬浮』属 interfaces §5 明确做不到的滞空/悬浮机制，须手动。",
+   "missing": [
+    "飞行与悬浮速度（fly & hover）—— interfaces §5 明确做不到三维高度/滞空/坠落的移动机制"
+   ],
+   "patch": {
+    "triggers": [
+     {
+      "id": "genie-ward",
+      "label": "巨灵贵胄：反应改成功",
+      "on": "d20Rolled",
+      "role": "any",
+      "window": "before",
+      "when": "self.hasEffect('巨灵贵胄') && (event.actor == self || inAura(self, '守护灵光', event.actor)) && event.roll < event.dc",
+      "cost": [{"economy": "reaction"}],
+      "modify": [{"op": "succeed"}],
+      "do": []
+     }
+    ]
+   }
+  },
+  {
+   "key": "FRHoF:圣武士:水巨灵之激流:3",
+   "verdict": "partial",
+   "why": "至圣斩目标力量豁免失败被推15尺+倒地可由 save+move 自动（倒地 flag 缺），但『10尺光环内你指定的其他生物各自豁免被推倒地』引擎不会替你选，须手动。",
+   "missing": [
+    "倒地（prone）没有对应的 effect flag（flags 列表只有 blocks/cannot 等，无 prone）",
+    "光环内你指定的其他生物各自豁免、被推开并倒地——引擎在至圣斩窗口里只知道目标，不会替你选光环里的其他生物"
+   ],
+   "patch": {
+    "triggers": [
+     {
+      "id": "marid-torrent",
+      "label": "水巨灵之激流",
+      "on": "spellCast",
+      "role": "actor",
+      "window": "after",
+      "when": "event.spell == '至圣斩' || event.key == 'XPHB:spell:至圣斩' || event.key == 'XPHB:圣武士:圣武斩:2'",
+      "cost": [{"resource": "channel-divinity"}],
+      "modify": [],
+      "do": [
+       {"op": "save", "ability": "str", "dc": "self.spellDc", "to": "target", "onFail": [{"op": "move", "mode": "push", "distance": 15}]},
+       "note"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "FRHoF:圣武士:土巨灵之碾压:3",
+   "verdict": "partial",
+   "why": "目标受擒（逃脱DC=你的法术豁免DC）并束缚，effect 无自定义逃脱DC字段、受擒/束缚也无对应 flag，引擎施加不了，须手动。",
+   "missing": [
+    "通过法术/能力直接施加带「逃脱DC=施法者法术豁免DC」的受擒+束缚复合状态——effect 无自定义逃脱DC字段，且受擒/束缚无对应 flag"
+   ]
+  },
+  {
+   "key": "FRHoF:圣武士:元素守御灵光:7",
+   "verdict": "partial",
+   "why": "选择/切换抗性可由 choose+resist 效应自动，且10尺守护灵光可加 aura 扩及盟友，但『18级灵光增至30尺』radius 不支持按等级变化表达式，须手动。",
+   "missing": [
+    "守护灵光半径随等级（18级）增至30尺——aura radius 只支持固定数值，不支持按等级变化的表达式"
+   ],
+   "patch": {
+    "effects": [
+     {"name": "元素守御：强酸", "statics": ["resist"], "flags": null, "rollMods": 0, "triggers": 0, "duration": null, "aura": {"radius": 10, "grant": {"statics": ["resist"]}}},
+     {"name": "元素守御：寒冷", "statics": ["resist"], "flags": null, "rollMods": 0, "triggers": 0, "duration": null, "aura": {"radius": 10, "grant": {"statics": ["resist"]}}},
+     {"name": "元素守御：火焰", "statics": ["resist"], "flags": null, "rollMods": 0, "triggers": 0, "duration": null, "aura": {"radius": 10, "grant": {"statics": ["resist"]}}},
+     {"name": "元素守御：闪电", "statics": ["resist"], "flags": null, "rollMods": 0, "triggers": 0, "duration": null, "aura": {"radius": 10, "grant": {"statics": ["resist"]}}},
+     {"name": "元素守御：雷鸣", "statics": ["resist"], "flags": null, "rollMods": 0, "triggers": 0, "duration": null, "aura": {"radius": 10, "grant": {"statics": ["resist"]}}}
+    ]
+   }
+  },
+  {
+   "key": "FRHoF:术士:炽焰鼓舞:3",
+   "verdict": "full",
+   "why": "『1d4+魅力调整（14级起+术士等级）临时生命值、消耗至少1术法点、每回合限一次』均可用 tempHp 节点+术法点资源+回合标记效应自动结算，玩家只需选目标。",
+   "missing": [],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "炽焰鼓舞",
+      "activation": "free",
+      "cost": [{"resource": "sorcery-points", "n": 1}],
+      "targeting": {"type": "creature", "count": 1, "range": 30, "filter": "canSee(self, target) || target.id == self.id"},
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && !self.hasEffect('ciyan-gubu-once')",
+      "root": [
+       {"op": "tempHp", "amount": "1d4 + self.chaMod + (self.level >= 14 ? self.level : 0)", "to": "target"},
+       {"op": "applyEffect", "template": "ciyan-gubu-once", "to": "self", "duration": {"turns": 1}}
+      ]
+     }
+    ],
+    "effects": [
+     {"name": "ciyan-gubu-once", "statics": [], "flags": null, "rollMods": 0, "triggers": 0, "duration": {"turns": 1}}
+    ]
+   }
+  },
+  {
+   "key": "FRHoF:术士:辉耀之火:3",
+   "verdict": "full",
+   "why": "『30尺内可见生物受1d4（14级起1d8）火焰或光耀伤害、消耗至少1术法点、每回合限一次』可用 choose+damage 节点+术法点资源+回合标记效应自动结算，玩家只需选目标与伤害类型。",
+   "missing": [],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "辉耀之火",
+      "activation": "free",
+      "cost": [{"resource": "sorcery-points", "n": 1}],
+      "targeting": {"type": "creature", "count": 1, "range": 30, "filter": "canSee(self, target)"},
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && !self.hasEffect('huiyao-once')",
+      "root": [
+       {"op": "choose", "options": ["fire", "radiant"], "var": "dtype"},
+       {"op": "damage", "dice": "self.level >= 14 ? '1d8' : '1d4'", "type": "dtype", "to": "target"},
+       {"op": "applyEffect", "template": "huiyao-once", "to": "self", "duration": {"turns": 1}}
+      ]
+     }
+    ],
+    "effects": [
+     {"name": "huiyao-once", "statics": [], "flags": null, "rollMods": 0, "triggers": 0, "duration": {"turns": 1}}
+    ]
+   }
+  }
+ ]
+}

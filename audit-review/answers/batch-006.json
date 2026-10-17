@@ -1,0 +1,213 @@
+{
+ "batch": "batch-006",
+ "answers": [
+  {
+   "key": "XPHB:action:终止专注",
+   "verdict": "full",
+   "why": "规则只是「停止专注」，引擎有 endConcentration 节点（interfaces.md 第2节）可在满足 requires:self.concentrating 时一键结算；现有 data 用 removeEffect 但未指名要移除的效应，应改为 endConcentration。",
+   "missing": [],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "终止专注",
+      "activation": "free",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating",
+      "root": ["endConcentration"]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XPHB:action:借机攻击",
+   "verdict": "partial",
+   "why": "引擎有 leftReach 窗口事件（interfaces.md 第3节）可在敌人离开触及范围时触发反应近战攻击，且地图移动/撤离由引擎处理；但原文「你可见的生物」要求视线判定，引擎无地图几何无法自动确认（第5节明确做不到）。",
+   "missing": ["缺少视线/可见状态的自动判定接口（interfaces.md 第5节：视线/光照/掩护/隐蔽判定无地图几何）"],
+   "patch": {
+    "triggers": [
+     {
+      "id": "opportunityAttack",
+      "label": "借机攻击",
+      "on": "leftReach",
+      "window": "after",
+      "role": "actor",
+      "when": "event.leavingCreature.hostile == true",
+      "cost": [{"economy": "reaction"}],
+      "do": ["attack"]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XPHB:action:躲藏",
+   "verdict": "partial",
+   "why": "引擎可做 DC 15 敏捷（隐匿）检定并成功挂隐形（check+applyEffect），但原文「需处于重度遮蔽或四分之三掩护且不在敌人视线内（由 DM 判断）」的前置与「被发现/发出声响/攻击/施法后由 DM 移除隐形」都需 DM 判定（第5节：视线/掩护判定做不到）。",
+   "missing": ["缺少地图遮蔽程度与视线（可见性）自动判定接口", "缺少按『被发现/发出声响/攻击/施法』自动移除隐形的接口（这些结束条件由 DM 判定）"],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "躲藏",
+      "activation": "action",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       {"note": "由 DM 判定是否处于重度遮蔽/四分之三掩护且不在敌人视线内"},
+       {"check": {"ability": "DEX", "skill": "Stealth", "dc": 15}},
+       {"applyEffect": {"template": "隐形", "to": "self", "duration": "untilRemoved"}}
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XPHB:action:搜索",
+   "verdict": "partial",
+   "why": "引擎的 check 节点可发起感知（察觉/洞悉/医药/求生）检定并掷骰，但原文未给 DC、且「搜索到什么」的成败与判定目标由 DM 裁定（old_audit 亦记为 DM 裁定）。",
+   "missing": ["缺少与场景绑定的搜索目标与 DC 自动设定接口（由 DM 裁定）"],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "搜索",
+      "activation": "action",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       {"check": {"ability": "WIS", "skills": ["Perception", "Insight", "Medicine", "Survival"], "dc": "dm"}}
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XPHB:action:研究",
+   "verdict": "partial",
+   "why": "引擎的 check 节点可发起智力（奥秘/历史/调查/自然/宗教）检定并掷骰，但原文未给 DC、且「研究出什么」的成败由 DM 裁定（old_audit 记为 DM 根据场景信息交互裁定）。",
+   "missing": ["缺少与场景绑定的研究目标与 DC 自动设定接口（由 DM 裁定）"],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "研究",
+      "activation": "action",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       {"check": {"ability": "INT", "skills": ["Arcana", "History", "Investigation", "Nature", "Religion"], "dc": "dm"}}
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XPHB:action:影响",
+   "verdict": "partial",
+   "why": "引擎的 check 节点可发起魅力或感知检定去改变他人态度并掷骰，但原文未给 DC、且「态度如何改变」由 DM 裁定 NPC 态度（old_audit 记为 DM 裁定 NPC 态度与 DC）。",
+   "missing": ["缺少 NPC 态度模型与对应 DC 的自动设定接口（由 DM 裁定）"],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "影响",
+      "activation": "action",
+      "cost": [],
+      "targeting": {"type": "creature", "count": 1, "range": 0, "filter": "other"},
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       {"check": {"ability": "CHA", "skills": [], "dc": "dm"}}
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XPHB:action:操作",
+   "verdict": "manual",
+   "why": "原文仅为「使用一件非魔法物件」，属开放式场景交互；引擎没有通用场景非魔法物件（开门、拉拉杆等）的实体与交互规范（old_audit gap:item），没有任何可自动结算的数值或机制。",
+   "missing": ["缺少场景非魔法物件的通用实体与交互接口（开门/拉拉杆等需逐场景建模）"],
+   "patch": {}
+  },
+  {
+   "key": "XPHB:action:魔法",
+   "verdict": "manual",
+   "why": "原文为总括性定义「施展法术/使用魔法物品/魔法特性」，本身无独立数值或机制；具体法术、魔法物品、魔法特性已有各自独立动作负责自动结算（old_audit 亦记无需独立自动化）。",
+   "missing": ["无（本条目为总括定义，实际自动化由各自法术/物品/特性条目承载）"],
+   "patch": {}
+  },
+  {
+   "key": "XPHB:action:预备",
+   "verdict": "partial",
+   "why": "引擎有 triggers（when 表达式 + do 节点）+ grantAction/castFrom + reaction 经济，可搭建「存储动作→满足条件时用反应释放」；但原文「在某个可感知的触发条件发生时」的触发条件是玩家/DM 自定义的，引擎无法自动识别这种开放式可感知条件。",
+   "missing": ["缺少由玩家/DM 自定义的「可感知触发条件」的自动识别与延迟释放接口（需 DM 填写 when 表达式或用 note/ask 确认）"],
+   "patch": {
+    "actions": [
+     {
+      "id": "ready",
+      "name": "预备",
+      "activation": "action",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       {"note": "由玩家声明要执行的动作与可感知的触发条件（DM 确认）"},
+       {"choose": {"options": ["攻击", "施法", "其他动作"], "store": "readiedAction"}}
+      ]
+     }
+    ],
+    "triggers": [
+     {
+      "id": "release",
+      "label": "预备释放",
+      "on": "customCondition",
+      "window": "after",
+      "role": "actor",
+      "when": "<玩家/DM 填写的可感知条件>",
+      "cost": [{"economy": "reaction"}],
+      "do": [{"castFrom": {"fromVar": "readiedAction", "to": "target"}}]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XPHB:mastery:擦掠",
+   "verdict": "partial",
+   "why": "现有 trigger 在 attackMissed 且 attack.mastery=='擦掠' 且 abilityMod>0 时触发，脚手架正确；但 do:[\"damage\"] 未编码「伤害量=攻击所用属性调整值、类型与武器一致」，伤害节点缺少具体 dice/type 参数，无法完整自动结算。",
+   "missing": ["do 中的 damage 未指定伤害量（应等于攻击所用属性调整值）与伤害类型（应与武器一致）；需补充 damage 节点的 dice/type 参数以引用属性调整值与武器伤害类型"],
+   "patch": {
+    "triggers": [
+     {
+      "id": "graze",
+      "label": "擦掠",
+      "on": "attackMissed",
+      "window": "after",
+      "role": "actor",
+      "when": "attack.mastery == '擦掠' && abilityMod(attack.ability) > 0",
+      "cost": [],
+      "modify": [],
+      "do": [
+       {"damage": {"dice": "abilityMod(attack.ability)", "type": "attack.damageType", "to": "target"}}
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

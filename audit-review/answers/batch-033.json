@@ -1,0 +1,197 @@
+{
+ "batch": "batch-033",
+ "answers": [
+  {
+   "key": "XGE:魔契师:咒缚幽灵:6",
+   "verdict": "partial",
+   "why": "引擎只自动扣次数并 summon 预配置恶灵棋子；text ①击杀触发无窗口、②出场临时生命值、③独立先攻、④吸取生命降上限/虚体/日照、⑤长休移除、⑥魅力加值冻结均需人工",
+   "missing": [
+    "没有「击杀一个类人生物」的窗口事件（triggers 的 on 列表无 killHumanoid 类事件；reducedTo0 仅判定生物降至0，无法限定由你击杀且为类人并自动在身侧召唤）",
+    "summon 节点无法在生成恶灵棋子的同时给它加「等于魔契师等级一半（向下取整）」的临时生命值（tempHp 节点不能作用于刚召唤的新棋子）",
+    "没有独立先攻/调整先攻顺序的接口（引擎把它排在你后面，需 DM 手动调整）",
+    "damage 节点不能降低目标生命值上限（吸取生命效果）；虚体移动、日照敏感、长休后移出遭遇均无对应接口"
+   ],
+   "patch": {}
+  },
+  {
+   "key": "XGE:魔契师:咒剑诅咒:1",
+   "verdict": "partial",
+   "why": "附赠动作诅咒+applyEffect、attackHit 加伤害、reducedTo0 回血已搭框架；但效应未定义 duration、伤害加值/回血数值未指定、19-20 重击无接口、提前结束条件无触发器",
+   "missing": [
+    "effects 中缺少名为「咒剑诅咒」的效应定义（无 duration 1 分钟，也无提前结束的 removeEffect 触发器——目标/你死亡或失能时结束）",
+    "trigger hex-damage 的 addDamage 未指定等于熟练加值的加值（dice 未填）",
+    "trigger hex-kill-heal 的 heal 未指定等于魔契师等级+魅力调整值（至少1）的数值",
+    "攻击检定 19-20 即重击无对应 op（interfaces §2 attack 未列自定义重击阈值的接口）"
+   ],
+   "patch": {
+    "effects": [
+     {
+      "name": "咒剑诅咒",
+      "statics": {},
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": { "until": { "at": "minutes", "of": "bearer", "nth": 1 } }
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:魔契师:灼光复仇:14",
+   "verdict": "partial",
+   "why": "free 动作已含 heal/if/forEach 占位；但「回合开始需进行死亡豁免」无窗口事件（玩家倒地时手动发动），起立（清除倒地/prone）与半血/2d8+魅力的光耀伤害+目盲数值未在 root 实现",
+   "missing": [
+    "没有「回合开始需要进行死亡豁免检定」的窗口事件（triggers 的 on 列表无 deathSaveDue 类事件，turnStarted 无法判定是否处于死亡豁免状态）",
+    "起立结束倒地（清除 prone）没有对应接口（removeEffect 仅在倒地被建模为效应时可用）",
+    "heal 未指定等于最大生命值一半的数值；forEach 内的 2d8+魅力调整值光耀伤害与 applyEffect 目盲（duration 当前回合结束）未在 root 接入"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "灼光复仇",
+      "activation": "free",
+      "cost": [ { "resource": "searing-vengeance" } ],
+      "targeting": { "type": "area", "area": { "shape": "emanation", "radius": 30 } },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       { "heal": { "dice": "floor(self.maxHp/2)", "to": "self" } },
+       { "forEach": { "in": "area", "do": [
+        { "damage": { "dice": "2d8 + self.chaMod", "type": "radiant", "to": "target" } },
+        { "applyEffect": { "template": "目盲", "to": "target", "duration": { "until": { "at": "turnEnd", "of": "self", "nth": 0 } } } }
+       ] } }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:木精灵魔法",
+   "verdict": "partial",
+   "why": "feature 为人物卡静态授予（自选德鲁伊戏法 + 习得大步奔行/行动无踪，无位每长休1次），引擎无「向已知法术列表静态授予法术（无位、每长休1次）」的动作接口，text 亦明确由玩家手动处理",
+   "missing": [
+    "没有「向已知法术列表静态授予法术（无消耗法术位、每长休1次）」的接口（grantAction 仅给临时动作，非静态已知法术；spell 节点无「无位」开关）",
+    "德鲁伊戏法自选需在人物卡配置，无 choose 类静态授予接口"
+   ],
+   "patch": {}
+  },
+  {
+   "key": "XGE:圣武士:不移胜者:20",
+   "verdict": "partial",
+   "why": "全伤害抗性可由 statics:resistAll 自动；但 19-20 重击无自定义重击阈值 op，额外攻击次数无接口（text 也承认无「攻击动作额外攻击次数」接口，仅能回合开始+1攻击绕），故不能完整自动",
+   "missing": [
+    "攻击检定 19-20 即重击无对应 op（interfaces §2 attack 未列自定义重击阈值的接口，如 batch-021 所述）",
+    "额外攻击次数无对应节点/旗标（引擎无「额外攻击次数」可改写的量，effect 也无对应字段，batch-016/043/049/050 均确认）"
+   ],
+   "patch": {
+    "effects": [
+     {
+      "name": "不移胜者",
+      "statics": { "resistAll": true },
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": { "until": { "at": "minutes", "of": "bearer", "nth": 1 } }
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:圣武士:叱喝暴力:3",
+   "verdict": "partial",
+   "why": "反应触发（30尺内盟友受击、伤害>0）已由 trigger 实现；但 save 默认以受击者为靶、需 to:'attacker' 重定向，且失败/成功的光耀伤害需等于刚刚造成的伤害数额（damage.amount 引用未明确），无法完全自动",
+   "missing": [
+    "reaction 窗口默认目标为受击者，需 save 的 to:'attacker' 把感知豁免与反伤指向攻击者（interfaces §2 save 的 to:'attacker' 可重定向，但需确认）",
+    "damage 节点的 dice 是否能引用刚刚造成的伤害 damage.amount 以结算等额/半数光耀伤害不明确（无文档确认该变量可在 damage 骰子中使用）"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "叱喝暴力",
+      "activation": "reaction",
+      "cost": [ { "resource": "channel-divinity" } ],
+      "targeting": { "type": "creature", "count": 1, "range": 30, "filter": "attacker != null" },
+      "trigger": { "on": "attackHit", "role": "any", "window": "after", "when": "within(self, attacker, 30) && target.id != self.id && damage.amount > 0" },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       { "save": { "ability": "wis", "dc": "self.spell.dc", "to": "attacker",
+        "onFail": [ { "damage": { "dice": "damage.amount", "type": "radiant", "to": "attacker" } } ],
+        "onSuccess": [ { "damage": { "dice": "damage.amount", "type": "radiant", "to": "attacker", "scale": 0.5 } } ] } }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:圣武士:救赎使节:20",
+   "verdict": "partial",
+   "why": "伤害减半抗性已由 halveDamage+ask 实现；但反噬光耀伤害（等于攻击者造成伤害一半）当前仅 note 提醒未结算，「对该生物失效直到长休」的按生物失效状态无接口",
+   "missing": [
+    "反噬伤害需对攻击者结算等于其造成伤害一半的光耀伤害（damage 节点 dice 引用 damage.amount 及 to:'attacker' 支持不明确，当前为 note 手动）",
+    "「你对某生物攻击/施法/造成伤害则该特性对该生物失效直到长休」需按生物记录失效状态，无对应接口",
+    "减半抗性无「其他生物」自动判定（当前用 ask 人工确认是否来自其他生物且对该生物仍有效）"
+   ],
+   "patch": {
+    "triggers": [
+     {
+      "id": "emissaryRebuke",
+      "label": "救赎使节：反噬光耀伤害",
+      "on": "damageTaken",
+      "role": "target",
+      "window": "after",
+      "when": "damage.amount > 0 && attacker != null && ask('此特性目前对该攻击者有效吗（长休前未对其攻击/施法/造成伤害）？')",
+      "cost": [],
+      "modify": [],
+      "do": [ { "damage": { "dice": "floor(damage.amount/2)", "type": "radiant", "to": "attacker" } } ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:圣武士:轻蔑呵斥:15",
+   "verdict": "full",
+   "why": "受击触发（未失能、attacker 存在）已由 trigger 实现，将 do 的 note 改为 damage（to:'attacker'、psychic、dice=max(chaMod,1)）即可自动对攻击者结算心灵反伤——damage/to:'attacker' 均有对应节点，无数值缩放/距离/视线判定",
+   "missing": [],
+   "patch": {
+    "triggers": [
+     {
+      "id": "scornfulRebuke",
+      "label": "轻蔑呵斥",
+      "on": "attackHit",
+      "role": "target",
+      "window": "after",
+      "when": "!self.has('失能') && attacker != null",
+      "cost": [],
+      "modify": [],
+      "do": [ { "damage": { "to": "attacker", "dice": "max(self.chaMod, 1)", "type": "psychic" } } ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:圣武士:征服灵光:7",
+   "verdict": "partial",
+   "why": "灵光（aura）、灵光内开始回合的心灵伤害（zone+turnStarted）部分可建模；但 aura 的 grant statics 无法限定只作用于「陷入恐慌」的生物，「未处于失能才生效」无开关，18级范围扩展需手动；当前 data 为空",
+   "missing": [
+    "aura 的 grant statics 无法按「陷入恐慌」状态过滤（作用是范围内所有生物，非仅恐慌者，interfaces §4 无按状态过滤的接口）",
+    "「只要你未处于失能」灵光才生效，无对应开关/条件（无失能自动结束事件，仅可由 removeEffect 处理）",
+    "zone 内回合开始造成心灵伤害可用 zone+turnStarted 但需 frightened 条件过滤（不明确）；18级灵光扩展至30尺需手动处理"
+   ],
+   "patch": {}
+  },
+  {
+   "key": "XGE:兽人狂怒",
+   "verdict": "partial",
+   "why": "命中触发与坚韧不屈反应已由 trigger 搭好框架并扣资源/反应；但怒火追加需把「该武器伤害骰」追加到本次攻击（addDamage 引用武器骰不明确），坚韧反击需检测「使用了坚韧不屈」事件（无窗口）并授予武器攻击",
+   "missing": [
+    "怒火追加需将「该武器伤害骰」追加进本次攻击伤害（addDamage 引用当前武器伤害骰不明确，interfaces 未提供读取武器原始伤害骰的接口，batch-045 确认）",
+    "坚韧反击需检测「使用了坚韧不屈种族特质」这一事件以触发反应武器攻击，无对应窗口/标记（grantAction 可授予攻击但触发条件缺失）"
+   ],
+   "patch": {}
+  }
+ ]
+}

@@ -1,0 +1,98 @@
+{
+ "batch": "batch-005",
+ "answers": [
+  {
+   "key": "XPHB:condition:震慑",
+   "verdict": "partial",
+   "why": "「失能」可由 effect 的 blocks 旗标模拟，但「力量与敏捷豁免自动失败」与「以你为目标的攻击检定具有优势」在现有 effect 旗标中无对应接口（无 saveAutoFail、无攻击者优势旗标）。",
+   "missing": [
+    "缺少让特定属性（力量/敏捷）豁免自动失败的旗标或 modify 接口",
+    "缺少让以该生物为目标的攻击检定获得优势的旗标（effect 无 grantAttackerAdvantage）"
+   ],
+   "patch": { "effects": [ { "name": "震慑", "flags": { "blocks": ["action", "bonus", "reaction"] } } ] }
+  },
+  {
+   "key": "XPHB:condition:昏迷",
+   "verdict": "partial",
+   "why": "速度 0（speedSet）与无法感知（cannot:perceive）已可模拟，但失能、倒地、掉落手持物、豁免自动失败、攻击优势、5 尺内重击、状态结束倒地不随之结束均无法自动结算。",
+   "missing": [
+    "缺少倒地（prone）旗标",
+    "缺少失能整体旗标（仅能用 blocks 覆盖部分，无法表达整体失能语义）",
+    "缺少力量/敏捷豁免自动失败的旗标",
+    "缺少以你为目标的攻击优势旗标",
+    "缺少 5 尺内命中即重击的旗标",
+    "缺少「状态结束时倒地不随之结束」的 duration/onEnd 语义接口",
+    "缺少生物陷入昏迷自动掉落手持物的装备交互接口（old_audit:item）"
+   ],
+   "patch": { "effects": [ { "name": "昏迷", "statics": ["speedSet"], "flags": { "blocks": ["action", "bonus", "reaction"], "cannot": ["perceive"] } } ] }
+  },
+  {
+   "key": "XPHB:action:疾走",
+   "verdict": "partial",
+   "why": "动作已声明（activation:action, root:economy），但原文（疾走=本回合额外获得等于速度的移动力）未建模任何速度翻倍/额外移动力的 effect 或 cost。",
+   "missing": [
+    "缺少本回合额外获得等于速度的移动力（速度翻倍）的 effect/接口（economy 节点未定义移动翻倍语义，且无 speed 加成 effect）"
+   ]
+  },
+  {
+   "key": "XPHB:action:撤离",
+   "verdict": "full",
+   "why": "撤离=本回合移动不引发借机攻击，可由 effect 的 cannot:['provoke'] 旗标在 until turnEnd（of bearer）期间自动结算，玩家只需点动作。",
+   "missing": [],
+   "patch": { "effects": [ { "name": "撤离", "flags": { "cannot": ["provoke"] } } ] }
+  },
+  {
+   "key": "XPHB:action:回避",
+   "verdict": "partial",
+   "why": "原文（自身豁免优势、攻击者对你劣势）中自身豁免优势可借 effect rollMods 近似，但「攻击者对你进行的攻击检定具有劣势」无对应旗标，无法自动结算。",
+   "missing": [
+    "缺少让以该生物为目标的攻击检定获得劣势的旗标（effect 无 grantAttackerDisadvantage）"
+   ]
+  },
+  {
+   "key": "XPHB:action:协助",
+   "verdict": "partial",
+   "why": "攻击版协助可由 choose 选友方 + applyEffect（rollMods:1 下一次攻击优势，endsOn 友方攻击）自动结算，但原文另一选项「协助能力检定」需在技能/工具列表中选一项并赋优势，无对应交互（old_audit:choice）。",
+   "missing": [
+    "缺少让玩家在技能/工具列表中选择一项、并对该次检定赋优势的交互接口（old_audit:choice）"
+   ]
+  },
+  {
+   "key": "XPHB:action:起立",
+   "verdict": "partial",
+   "why": "requires（self.has('倒地') && self.speed>0）与 removeEffect 终止倒地可用，但「消耗速度一半的移动力」无对应 cost 接口，且倒地旗标本身在引擎中不存在。",
+   "missing": [
+    "缺少消耗等于速度一半移动力的移动 cost 接口",
+    "倒地（prone）旗标不存在，removeEffect 目标与 requires 检查均依赖它"
+   ]
+  },
+  {
+   "key": "XPHB:action:擒抱",
+   "verdict": "partial",
+   "why": "徒手打击选项 + 力量/敏捷豁免（目标选 ability，DC=8+力调+熟练）可由 save 节点结算，失败陷入受擒——但受擒状态无旗标，且「需要一只空手」「目标体型至多大一级」无检查接口。",
+   "missing": [
+    "缺少受擒（grappled）状态旗标（save 失败 onFail:applyEffect 无目标 effect）",
+    "缺少空手检查接口（requires 无法判断 self 是否空手）",
+    "缺少目标体型至多比自身大一级的 targeting filter 接口"
+   ]
+  },
+  {
+   "key": "XPHB:action:推撞",
+   "verdict": "partial",
+   "why": "豁免（DC=8+力调+熟练）可由 save 节点结算，失败「推离 5 尺」可由 move 节点 push 自动；但失败「令其倒地」依赖不存在的倒地旗标，且失败后二选一需用 choose 节点目前未建模。",
+   "missing": [
+    "缺少倒地（prone）旗标（令其倒地选项无法自动结算）",
+    "缺少 save 失败后「推离 5 尺 / 令其倒地」二选一的 choose 节点编排"
+   ]
+  },
+  {
+   "key": "XPHB:action:结束擒抱",
+   "verdict": "partial",
+   "why": "requires(self.has('受擒')) 可判断，但受擒状态旗标不存在；动作当前仅 root:['choose']，缺少真正终止受擒的 removeEffect 节点。",
+   "missing": [
+    "缺少受擒（grappled）状态旗标（requires 检查与 removeEffect 目标均依赖它）",
+    "动作缺少 removeEffect 节点来真正终止受擒（现仅 choose）"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,118 @@
+{
+ "batch": "batch-010",
+ "answers": [
+  {
+   "key": "AU:放逐弹",
+   "verdict": "full",
+   "why": "攻击命中→消耗奥术射击→addDamage心灵伤害→save魅力豁免→效应失能+速度0（speedSet）均可由接口完成；'离开与重新出现在空间需手动处理'为原文授权手动。当前缺：save未配能力/DC、效应未加失能旗标(blocks)，补上即full。",
+   "missing": [],
+   "patch": {
+    "triggers": [
+     {
+      "id": "banishing",
+      "do": [
+       { "op": "addDamage", "dice": "1d6", "type": "psychic", "to": "target" },
+       { "op": "save", "ability": "cha", "dc": "self.spell.dc" }
+      ]
+     }
+    ],
+    "effects": [
+     { "name": "放逐", "statics": ["speedSet"], "flags": { "blocks": ["action", "bonus", "reaction"] }, "duration": { "until": { "at": "turnEnd", "of": "bearer", "nth": 1 } } }
+    ]
+   }
+  },
+  {
+   "key": "AU:魔宠密友",
+   "verdict": "full",
+   "why": "忠实伙伴/魔契师施法两动作 root summon 自动召唤、强韧魔宠加值已写入召唤数据；得力助手用 d20Rolled+ask+reroll（重掷取高近似优势）自动。'魔宠形态由人挑选'为原文授权选择，引擎查不了熟练/5尺用 ask 近似。",
+   "missing": []
+  },
+  {
+   "key": "AU:魔法行家",
+   "verdict": "manual",
+   "why": "原文明确'具体法术施展与法术位免除由玩家手动处理'，且当前无任何自动结算数据（actions/triggers/effects/resources 全空），仅说明文字。",
+   "missing": [
+    "缺少授予免费施法资源（魔法行家：一环/二环免费法术）与法术准备的静态层接口（按原文本就手动处理）"
+   ]
+  },
+  {
+   "key": "AU:魔契师:拟态生命:14",
+   "verdict": "manual",
+   "why": "原文确认'引擎换不掉随从的数据卡，也读不出灵魄数据卡的生命值，所以变形、数据替换与临时生命值全部由人手动处理'；interfaces.md 第5节明确不能变形/替换整张数据卡。动作仅消耗 mimic-life 并 note 留记录。",
+   "missing": [
+    "缺少替换随从数据卡为灵魄数据卡的接口（interfaces.md：不能变形/替换整张数据卡）",
+    "缺少读取灵魄数据卡生命值以附临时生命值的接口"
+   ]
+  },
+  {
+   "key": "AU:魔契师:契灵复苏:10",
+   "verdict": "partial",
+   "why": "反应+契约魔法法术位+次数池(spirit-resurgence)+生命值回满可由接口自动（modify/setHp）；但'传送到自身30尺内可见未占据空间'引擎不校验范围/视线、不替选格子，需人把契灵拖到落点（原文确认）。",
+   "missing": [
+    "缺少 reducedTo0 后将目标传送至 30尺内可见未占据空间并校验范围/视线/格子的接口（move teleport 仅让界面选落点，不校验 30尺与视线）"
+   ],
+   "patch": {
+    "actions": [
+     { "id": "use", "root": [ { "op": "modify", "setHp": "max" }, "note" ] }
+    ]
+   }
+  },
+  {
+   "key": "AU:魔契师:契灵伙伴:3",
+   "verdict": "partial",
+   "why": "召唤/更换形态动作(choose)存在、数据卡属性(AC/HP/速度/免疫/契约连结修正)由静态层处理；但飞行/步行速度换算、神圣之力(1/日)、指挥驱动、遣散增删棋子均按原文手动（'请手动换算''请照卡手动''只写文字提示''请手动增删棋子'）。",
+   "missing": [
+    "缺少飞行/步行双速度字段（引擎只有单一速度字段，需手动换算）",
+    "缺少附赠动作指挥随从执行数据卡动作的驱动接口（指挥只写文字提示，不真驱动）",
+    "缺少遣散/召回时增删棋子的接口（move teleport 不替增删棋子）",
+    "缺少随从每日次数（神圣之力）自动恢复/消耗接口"
+   ]
+  },
+  {
+   "key": "AU:魔契师:契灵神威:6",
+   "verdict": "partial",
+   "why": "同类伤害抗性可由 damageIncoming+halveDamage 自动减半（引擎不知站位/伤害类型用 ask 确认）；但'恢复神圣之力使用次数'引擎读不到契灵数据卡上的次数，只留 note 提示人工恢复。",
+   "missing": [
+    "缺少读取契灵随从数据卡上『神圣之力』次数并自动恢复/消耗的接口",
+    "缺少契灵 30尺光环范围与伤害类型的自动判定（引擎无地图几何，用 ask 近似）"
+   ]
+  },
+  {
+   "key": "AU:牧师:巩固法术:3",
+   "verdict": "partial",
+   "why": "触发器在 spellCast 后消耗引导神力并 choose 选目标已就绪，但 do 里只有 choose，没有结算 2d8+牧师等级临时生命值（缺 tempHp 节点）；且 spellCast 事件不携带目标列表(event.targets)，无法自动枚举法术目标（原文允许非自身目标手动指定）。",
+   "missing": [
+    "spellCast 事件缺少 event.targets 载荷，无法从法术目标中自动点选",
+    "触发器 do 缺少 tempHp 节点以结算 2d8+牧师等级的临时生命值"
+   ],
+   "patch": {
+    "triggers": [
+     {
+      "id": "fortify-spell",
+      "do": [ "choose", { "op": "tempHp", "dice": "2d8+self.level", "to": "target" } ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "AU:牧师:驱法复原:6",
+   "verdict": "partial",
+   "why": "spellCast 触发+ask 确认+消耗本特性次数已自动化，重置（消耗引导神力恢复使用权，resource 节点）亦自动化；但'立即免费施展解除魔法'的嵌套施法与目标结算按原文手动（do 仅 note）。",
+   "missing": [
+    "缺少在施法结算后立即免费嵌套调用并施展《解除魔法》的接口（castFrom 可近似，但免法术位+目标/结算原文要求手动）",
+    "缺少 spell-breaking-recovery 使用次数资源定义（resources 为空）"
+   ]
+  },
+  {
+   "key": "AU:牧师:稳固法术:3",
+   "verdict": "full",
+   "why": "d20Rolled 成功豁免+canSee+ask 确认后，消耗引导神力并对该豁免 addToRoll 减 1d6 可由接口完成（'法术来源与首次豁免需人工确认'用 ask 近似，属必要选择）；当前 modify 仅写 addToRoll 未配 -1d6，补上即 full。",
+   "missing": [],
+   "patch": {
+    "triggers": [
+     { "id": "steady-spell", "modify": [ { "op": "addToRoll", "value": "-1d6" } ] }
+    ]
+   }
+  }
+ ]
+}

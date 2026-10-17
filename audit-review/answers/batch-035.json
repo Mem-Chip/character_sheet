@@ -1,0 +1,87 @@
+{
+ "batch": "batch-035",
+ "answers": [
+  {
+   "key": "XGE:武僧:热能袭:6",
+   "verdict": "partial",
+   "why": "附赠动作施放『燃烧之手』与升环选择可由 choose(ownSpells)+castFrom 实现，且『是否刚执行攻击动作由人确认』用 ask 满足；但『每消耗 1 点上升 1 环、总消耗最多武僧等级一半』的额外功力无法随所选环级动态计价（cost 数值不支持引用 choose 结果，modifyCast 也不改环级消耗）。",
+   "missing": ["随所选升环等级动态扣除额外功力的接口（cost 不支持以 choose 结果为变量的动态数值；modifyCast 仅改 dc/攻击加值/伤害类型，不改环级消耗）"]
+  },
+  {
+   "key": "XGE:武僧:人剑合一:6",
+   "verdict": "partial",
+   "why": "【巧劲】命中追加武艺骰额外伤害已由 trigger(attackHit)+addDamage+ask(是否剑圣武器) 自动化；但【剑气】『攻击视为魔法攻击』对『非魔法攻击』有抗性/免疫的目标无接口实现（interfaces.md 无普通武器攻击『视为魔法』的旗标或 modify）。",
+   "missing": ["武器攻击『视为魔法攻击』的开关（modifyCast 仅改正在施放的法术，普通武器攻击无『视为魔法』旗标/modify）"]
+  },
+  {
+   "key": "XGE:武僧:太阳盾:17",
+   "verdict": "partial",
+   "why": "被近战命中后以反应对攻击者造成『5+感知调整值』光耀伤害可由 trigger(attackHit,role:target,window:after)+ask(光照未熄灭)+damage 实现；但发散/熄灭 30 尺明亮光照无接口（§5 光照/视线不处理），且伤害需引用感知调整值表达式。",
+   "missing": ["发散/熄灭光照的接口（interfaces.md §5：光照/视线/掩护/隐蔽的判定不处理）"],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "root": [
+       { "damage": { "dice": "5+@{wis}", "type": "radiant", "to": "attacker" } }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:武僧:焰阳爆:11",
+   "verdict": "partial",
+   "why": "150 尺内选点、半径 20 尺区域体质豁免(DC=8+熟练+感知)、失败 2d6 光耀、气升环(每点+2d6,至多3)均可自动化；但文本明示『不透光掩护下不需豁免』引擎不处理（§5 视线/掩护无接口），需人工作废部分生物豁免。",
+   "missing": ["区域法术按掩护/视线判定是否豁免的接口（interfaces.md §5：视线/掩护不处理）"],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "root": [
+       { "number": { "ask": "消耗几点气（0-3）？", "var": "qi", "max": 3 } },
+       { "save": { "ability": "con", "dc": "8+prof+@{wis}", "to": "each", "onFail": [ { "damage": { "dice": "2d6 + @{qi}*2d6", "type": "radiant", "to": "each" } } ] } },
+       { "note": "处于不透光掩护下的生物豁免请手动作废" }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:武僧:耀阳箭:3",
+   "verdict": "partial",
+   "why": "攻击动作内耀阳箭特殊远程攻击(武艺骰+敏捷光耀)与『本回合使用后耗1功力附赠两次额外攻击』（同一目标）可由 attack+applyEffect 与 bonus 内 repeat 实现；但文本明示『若要将两次攻击分给不同目标需手动处理』，无逐次选目标的接口。",
+   "missing": ["附赠两次攻击分别选不同目标的能力（repeat 默认同一目标，无『每次攻击分别选目标』的接口）"]
+  },
+  {
+   "key": "XGE:武僧:醉拳技巧:3",
+   "verdict": "partial",
+   "why": "『获得撤离好处+步行速度+10 直至回合结束』已由 free 动作+applyEffect(speed) 实现；但『每当使用疾风连击时』自动联动无触发器——on 列表仅有 attackHit/spellCast 等具体事件，无『某特性/动作被使用』的事件钩子。",
+   "missing": ["监听『使用疾风连击』以自动联动的触发器（on 列表无『使用特定特性/动作』事件）"]
+  },
+  {
+   "key": "XGE:野蛮人:冻原:14",
+   "verdict": "full",
+   "why": "激活灵光时选灵光内可见生物力量豁免(DC=8+熟练+体质)、失败速度降为0直至下个回合开始，已由 free 动作+save+applyEffect(speedSet, 至 source 下个 turnStart) 完整实现，按原文设计为『由人在激活灵光时使用』。",
+   "missing": []
+  },
+  {
+   "key": "XGE:野蛮人:风暴之盾:10",
+   "verdict": "partial",
+   "why": "狂暴期间灵光(10尺)内生物获风暴之魂伤害抗性的机制(aura+resist 静态)存在；但『由你选择的生物/盟友』定向授予缺乏过滤（aura.grant 作用于范围内全部生物，无阵营/选择过滤），且荒漠/海洋/冻原环境类型缺持久选择接口。",
+   "missing": ["灵光(aura)对范围内『选定盟友』定向授予抗性的过滤（aura.grant 作用于范围内全部生物，无阵营/选择过滤）", "风暴之魂环境类型(荒漠/海洋/冻原)的持久选择接口"]
+  },
+  {
+   "key": "XGE:野蛮人:精魂之盾:6",
+   "verdict": "full",
+   "why": "文本【已自动化】：反应时机、狂暴条件、30尺+可见判断、以及按等级自动选 2d6/3d6/4d6 减伤，已由 trigger(damageIncoming,role:any,window:before)+cost:reaction+modify:reduceDamage 完整实现。",
+   "missing": []
+  },
+  {
+   "key": "XGE:野蛮人:怒不畏死:14",
+   "verdict": "manual",
+   "why": "狂暴期间『0生命值不昏迷』与『死亡豁免累积失败3次不致死、狂暴结束仍0血才死』均无接口实现（无控制昏迷/死亡状态的旗标或触发器，§5 亦未涵盖生命/死亡状态控制），现有 data 全空。",
+   "missing": ["0 生命值免除昏迷状态的接口", "拦截死亡豁免致死（暂缓死亡判定至效应结束）的接口（无控制昏迷/死亡状态的旗标或触发器）"]
+  }
+ ]
+}

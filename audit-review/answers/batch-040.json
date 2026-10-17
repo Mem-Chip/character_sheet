@@ -1,0 +1,311 @@
+{
+ "batch": "batch-040",
+ "answers": [
+  {
+   "key": "XGE:spell:地颤",
+   "verdict": "partial",
+   "why": "自动部分：区域内生物敏捷豁免、slot.level d6 钝击伤害、倒地（forEach+save+damage+applyEffect 可结算）；无法自动：地表松软/石头时成为困难地形（text「引擎不处理地形，需人工」）。",
+   "missing": [
+     "地图地形/困难地形接口（引擎无地图几何，无法在法术范围内将地面持续设为困难地形；text 明示需人工）"
+   ],
+   "patch": {
+     "actions": [
+       {
+         "id": "use",
+         "root": [
+           {
+             "op": "forEach",
+             "each": "creatureInArea(self, 10)",
+             "do": [
+               {
+                 "op": "save",
+                 "ability": "dex",
+                 "dc": "source.spell.dc",
+                 "to": "target",
+                 "onFail": [
+                   { "op": "damage", "dice": "{slot.level}d6", "type": "bludgeoning", "to": "target" },
+                   { "op": "applyEffect", "template": "地颤：倒地", "to": "target", "duration": { "rounds": 1 } }
+                 ],
+                 "onSuccess": []
+               }
+             ]
+           }
+         ]
+       }
+     ],
+     "effects": [
+       { "name": "地颤：倒地", "statics": [ { "speed": 0 } ], "flags": null }
+     ]
+   }
+  },
+  {
+   "key": "XGE:spell:地缚",
+   "verdict": "partial",
+   "why": "自动部分：300尺内可见生物力量豁免、豁免失败挂效应（fly speed 0）；无法自动：飞行中每轮60尺安全垂直降落（text「飞行速度与降落需手动处理」），且 section 5 明确不做三维高度/滞空/坠落。",
+   "missing": [
+     "飞行速度锁定为0的专用 fly-speed statics（statics 仅有通用 speed，无飞行速度字段）",
+     "每轮60尺安全垂直降落的三维移动处理（section 5 明确不做三维高度/滞空/坠落）"
+   ]
+  },
+  {
+   "key": "XGE:spell:地狱呼唤",
+   "verdict": "manual",
+   "why": "text 明确「魔鬼对你和同伴不友好、由 DM 控制、单独掷先攻并按其本性行动（DM 掌握数据）」，命令对抗检定、真名、免疫状态、专注中断后残留3d6分钟均由人工记录，不能用 summon 节点（引擎召唤物归你控制、同阵营）。",
+   "missing": [
+     "召唤敌方独立先攻、由 DM 控制、跨回合维持命令对抗检定与免疫状态的召唤物系统（text 要求作为 NPC 人工加入，不用 summon 节点）"
+   ]
+  },
+  {
+   "key": "XGE:spell:地之骨",
+   "verdict": "partial",
+   "why": "自动部分：生物脚下升起时的敏捷豁免（save 节点已有）；无法自动：是否被天花板/障碍阻挡（需三维几何，引擎无地图几何），只有被阻挡才造成6d6钝击+束缚，且升起石柱作为物体/地形均需人工判定。",
+   "missing": [
+     "判定石柱是否被天花板/障碍阻挡的三维几何检测（section 5 不做三维高度/跌落）",
+     "升起石柱作为地形/物体的处理（引擎无地图几何）"
+   ]
+  },
+  {
+   "key": "XGE:spell:敌群环绕",
+   "verdict": "partial",
+   "why": "自动部分：智力豁免并挂效应，且「每次受伤害时重复智力豁免」可用 damageTaken 触发器自动（trigger on:damageTaken + save）；无法自动：视所有可见生物为敌并随机选目标、强制借机攻击的行为控制（无对应 flags/interface），以及恐慌免疫自动通过的条件检测。",
+   "missing": [
+     "强制生物视所有可见生物为敌并随机选目标、强制可用借机攻击的行为控制状态（无对应 flags/interface）",
+     "恐慌免疫自动通过的条件检测（无 immune-to-fear 判定）"
+   ],
+   "patch": {
+     "effects": [
+       {
+         "name": "敌群环绕",
+         "triggers": [
+           {
+             "id": "repeat",
+             "on": "damageTaken",
+             "role": "target",
+             "window": "after",
+             "do": [
+               {
+                 "op": "save",
+                 "ability": "int",
+                 "dc": "source.spell.dc",
+                 "to": "target",
+                 "onSuccess": [ { "op": "removeEffect", "template": "敌群环绕", "to": "target" } ],
+                 "onFail": []
+               }
+             ]
+           }
+         ]
+       }
+     ]
+   }
+  },
+  {
+   "key": "XGE:spell:风暴法球",
+   "verdict": "partial",
+   "why": "自动部分：zone 留地图、出现/回合结束力量豁免（zone turnEnd + forEach save）、升环加伤、附赠动作闪电法术攻击（attack 命中4d6闪电）；无法自动：球内困难地形、周围30尺感知(察觉)劣势（text「地形、光照与范围外检定引擎不处理」）。",
+   "missing": [
+     "zone 内部困难地形接口（引擎无地图几何/地形）",
+     "覆盖 sphere 周围30尺的感知(察觉)劣势范围检定修正（需 map geometry，text 明示不处理）"
+   ],
+   "patch": {
+     "actions": [
+       {
+         "id": "use",
+         "root": [
+           {
+             "op": "forEach",
+             "each": "creatureInArea(target, 20)",
+             "do": [
+               {
+                 "op": "save",
+                 "ability": "str",
+                 "dc": "source.spell.dc",
+                 "to": "target",
+                 "onFail": [ { "op": "damage", "dice": "({slot.level}-2)d6", "type": "bludgeoning", "to": "target" } ],
+                 "onSuccess": [ { "op": "damage", "dice": "({slot.level}-2)d6", "type": "bludgeoning", "to": "target", "scale": 0.5 } ]
+               }
+             ]
+           },
+           {
+             "op": "zone",
+             "shape": "sphere",
+             "radius": 20,
+             "center": "target",
+             "onTurnEnd": [
+               {
+                 "op": "save",
+                 "ability": "str",
+                 "dc": "source.spell.dc",
+                 "to": "occupant",
+                 "onFail": [ { "op": "damage", "dice": "({slot.level}-2)d6", "type": "bludgeoning", "to": "occupant" } ],
+                 "onSuccess": [ { "op": "damage", "dice": "({slot.level}-2)d6", "type": "bludgeoning", "to": "occupant", "scale": 0.5 } ]
+               }
+             ],
+             "limit": "oncePerRound"
+           }
+         ]
+       }
+     ]
+   }
+  },
+  {
+   "key": "XGE:spell:疯狂之暗",
+   "verdict": "partial",
+   "why": "自动部分：生物在范围内开始回合的感知豁免与8d8心灵伤害、成功半伤（zone turnStarted + save scale:0.5）；无法自动：魔法黑暗蔓延、黑暗视觉无法看穿、≤8环光亮无法照亮（section 5 明确不做视线/光照/隐蔽）。",
+   "missing": [
+     "魔法黑暗、黑暗视觉无法看穿、非魔法/≤8环光亮无法照亮的视觉与光照判定（section 5 不做视线/光照/掩护/隐蔽）"
+   ],
+   "patch": {
+     "actions": [
+       {
+         "id": "use",
+         "root": [
+           {
+             "op": "zone",
+             "shape": "sphere",
+             "radius": 60,
+             "center": "target",
+             "onTurnStart": [
+               {
+                 "op": "save",
+                 "ability": "wis",
+                 "dc": "source.spell.dc",
+                 "to": "occupant",
+                 "onFail": [ { "op": "damage", "dice": "8d8", "type": "psychic", "to": "occupant" } ],
+                 "onSuccess": [ { "op": "damage", "dice": "8d8", "type": "psychic", "to": "occupant", "scale": 0.5 } ]
+               }
+             ],
+             "limit": "oncePerRound"
+           }
+         ]
+       }
+     ]
+   }
+  },
+  {
+   "key": "XGE:spell:拂晓",
+   "verdict": "partial",
+   "why": "自动部分：出现时体质豁免4d10光耀、回合结束在光柱内重复豁免（zone turnEnd + save）、成功半伤；无法自动：阳光性质（光照）、40尺高度（三维）、附赠动作移动光柱60尺（text「引擎不移动区域」）。",
+   "missing": [
+     "阳光性质/40尺高度的三维与光照判定（section 5 不做视线/光照/三维高度）",
+     "zone 的附赠动作位移接口（text 明示引擎不移动区域）"
+   ],
+   "patch": {
+     "actions": [
+       {
+         "id": "use",
+         "root": [
+           {
+             "op": "forEach",
+             "each": "creatureInArea(target, 30)",
+             "do": [
+               {
+                 "op": "save",
+                 "ability": "con",
+                 "dc": "source.spell.dc",
+                 "to": "target",
+                 "onFail": [ { "op": "damage", "dice": "4d10", "type": "radiant", "to": "target" } ],
+                 "onSuccess": [ { "op": "damage", "dice": "4d10", "type": "radiant", "to": "target", "scale": 0.5 } ]
+               }
+             ]
+           },
+           {
+             "op": "zone",
+             "shape": "cylinder",
+             "radius": 30,
+             "center": "target",
+             "onTurnEnd": [
+               {
+                 "op": "save",
+                 "ability": "con",
+                 "dc": "source.spell.dc",
+                 "to": "occupant",
+                 "onFail": [ { "op": "damage", "dice": "4d10", "type": "radiant", "to": "occupant" } ],
+                 "onSuccess": [ { "op": "damage", "dice": "4d10", "type": "radiant", "to": "occupant", "scale": 0.5 } ]
+               }
+             ],
+             "limit": "oncePerRound"
+           }
+         ]
+       }
+     ]
+   }
+  },
+  {
+   "key": "XGE:spell:高阶恶魔召唤术",
+   "verdict": "manual",
+   "why": "text 明确恶魔数据块人工添加、拥有独立回合由 DM 掷先攻；每回合结束魅力豁免（脱控）、脱控后攻击最近非恶魔、专注中断后残留1d6轮——均人工处理，且要求 DM 加 NPC 而非用 summon 节点。",
+   "missing": [
+     "召唤恶魔入场、独立先攻与行为控制、每回合结束魅力豁免判定脱控、专注中断后残留1d6轮的召唤物生命周期系统（text 要求DM加NPC、不用 summon 节点）"
+   ]
+  },
+  {
+   "key": "XGE:spell:光墙术",
+   "verdict": "partial",
+   "why": "自动部分：出现时体质豁免(slot.level-1)d8光耀+目盲（saveEnds 已建）、回合结束/进入墙内重复豁免、光辉射线法术攻击命中(slot.level-1)d8光耀（ray 节点已有）；无法自动：墙体阻挡视线/发光（section 5 不做视线/光照）、每次发射缩短10尺（text「需人工处理」）。",
+   "missing": [
+     "墙体阻挡视线/发光的光照与视线判定（section 5 不做视线/光照）",
+     "每次发射光束动态削减墙体长度的 zone 长度修改接口（text 明示需人工）"
+   ],
+   "patch": {
+     "actions": [
+       {
+         "id": "use",
+         "root": [
+           {
+             "op": "forEach",
+             "each": "creatureInArea(target)",
+             "do": [
+               {
+                 "op": "save",
+                 "ability": "con",
+                 "dc": "source.spell.dc",
+                 "to": "target",
+                 "onFail": [
+                   { "op": "damage", "dice": "({slot.level}-1)d8", "type": "radiant", "to": "target" },
+                   { "op": "applyEffect", "template": "光墙术：目盲", "to": "target", "duration": { "minutes": 10, "saveEnds": { "ability": "con", "dc": "source.spell.dc", "at": "turnEnd" } } }
+                 ],
+                 "onSuccess": [ { "op": "damage", "dice": "({slot.level}-1)d8", "type": "radiant", "to": "target", "scale": 0.5 } ]
+               }
+             ]
+           },
+           {
+             "op": "zone",
+             "shape": "line",
+             "length": 60,
+             "width": 5,
+             "center": "target",
+             "onTurnEnd": [
+               {
+                 "op": "save",
+                 "ability": "con",
+                 "dc": "source.spell.dc",
+                 "to": "occupant",
+                 "onFail": [
+                   { "op": "damage", "dice": "({slot.level}-1)d8", "type": "radiant", "to": "occupant" },
+                   { "op": "applyEffect", "template": "光墙术：目盲", "to": "occupant", "duration": { "minutes": 10, "saveEnds": { "ability": "con", "dc": "source.spell.dc", "at": "turnEnd" } } }
+                 ],
+                 "onSuccess": [ { "op": "damage", "dice": "({slot.level}-1)d8", "type": "radiant", "to": "occupant", "scale": 0.5 } ]
+               }
+             ],
+             "onEnter": [
+               {
+                 "op": "save",
+                 "ability": "con",
+                 "dc": "source.spell.dc",
+                 "to": "occupant",
+                 "onFail": [
+                   { "op": "damage", "dice": "({slot.level}-1)d8", "type": "radiant", "to": "occupant" },
+                   { "op": "applyEffect", "template": "光墙术：目盲", "to": "occupant", "duration": { "minutes": 10, "saveEnds": { "ability": "con", "dc": "source.spell.dc", "at": "turnEnd" } } }
+                 ],
+                 "onSuccess": [ { "op": "damage", "dice": "({slot.level}-1)d8", "type": "radiant", "to": "occupant", "scale": 0.5 } ]
+               }
+             ],
+             "limit": "oncePerRound"
+           }
+         ]
+       }
+     ]
+   }
+  }
+ ]
+}

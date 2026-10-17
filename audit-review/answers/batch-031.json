@@ -1,0 +1,100 @@
+{
+  "batch": "batch-031",
+  "answers": [
+    {
+      "key": "TCE:spell:塔莎酸蚀酿",
+      "verdict": "partial",
+      "why": "线状酸液区域与『敏捷豁免失败被强酸覆盖』可用 area/save/applyEffect 自动，但『受影响生物在其每个回合开始时受到 2d4 强酸伤害』且『升环每比1环高1环伤害增加2d4』的回合初伤害缺少随施法环阶递增的接口。",
+      "missing": [
+        "effect 的 turnStarted 触发伤害缺少『每比1环高1环 +2d4』的升环缩放接口（damage 节点仅 doc 了 scale:0.5 半伤，无 level-above 递增；effect 触发伤害也不读取 slot.level）",
+        "清除强酸的终止动作可由 removeEffect/endConcentration 补，不阻塞 full，但升环伤害缩放阻塞"
+      ]
+    },
+    {
+      "key": "TCE:spell:塔莎心灵鞭",
+      "verdict": "partial",
+      "why": "『智力豁免失败受3d6心灵伤害且直到其下一回合结束不能做反应』可用 save+damage(scale:0.5 半伤)+flags.blocks:reaction 自动，但『在其下一回合中移动/动作/附赠动作只能三选一行使』无对应旗标。",
+      "missing": [
+        "effect 缺少『移动/动作/附赠动作只能三选一』的限制接口（cannot/blocks 旗标只覆盖整类剥夺，无三选一经济限额）"
+      ]
+    },
+    {
+      "key": "XGE:矮人坚毅",
+      "verdict": "manual",
+      "why": "『执行回避动作时消耗一颗生命骰治愈自己』中生命骰扣除被 interfaces.md 明确列为做不到，且无『执行回避动作』的窗口事件可触发，只能由玩家手动扣骰并回血。",
+      "missing": [
+        "triggers on 列表无『执行回避动作 / take-dodge-action』事件",
+        "骰池（生命骰）扣除被 interfaces.md『明确做不到的』列为不支持"
+      ]
+    },
+    {
+      "key": "XGE:残酷巫咒",
+      "verdict": "partial",
+      "why": "『附赠动作魔法性传送到目标周围5尺内未占据空间』可用 move(mode:teleport) 让界面选落点自动，但『被你的脆弱诅咒或咒剑诅咒等诅咒的目标』缺少可识别的诅咒状态/旗标接口，需 note+ask 让 DM 确认。",
+      "missing": [
+        "targeting.filter 缺少『被你施加的诅咒标记的目标』判定接口（interfaces.md 未定义 curse 状态/旗标，无法在 filter 表达式中引用）"
+      ]
+    },
+    {
+      "key": "XGE:德鲁伊:精魂图腾:2",
+      "verdict": "partial",
+      "why": "『附赠动作召唤虚体精魂形成半径30光环并选熊/鹰/独角兽精魂赋予增益』可用 summon/choose/effect.aura+statics+rollMods 与独角兽的治疗触发近似自动，但『移动精魂（附赠动作）』及『精魂守卫（10级）光环内召唤兽回合结束回血』无对应接口。",
+      "missing": [
+        "移动光环/精魂（zone 跟随生物移动）无对应接口（zone 为静态地图区域；effect.aura 只随持有者触发其自身事件，不对光环内他者触发）",
+        "精魂守卫（10级）门槛子特性需 when 等级判定，且『光环内他者回合结束触发治疗』无现成接口"
+      ]
+    },
+    {
+      "key": "XGE:德鲁伊:全能牧者:6",
+      "verdict": "manual",
+      "why": "『召唤物出现时每生命骰+2最大生命且天生武器视为魔法』中改写召唤物生命值上限与单独标记天生武器为魔法均不被引擎支持（text 亦明确手动处理）。",
+      "missing": [
+        "summon 节点无『生成后改写召唤物生命值上限』接口",
+        "无『给某召唤物天生武器标记视为魔法伤害』的接口"
+      ]
+    },
+    {
+      "key": "XGE:德鲁伊:忠诚牧畜:14",
+      "verdict": "partial",
+      "why": "『生命降为0或陷入失能时消耗资源召唤4只野兽随从入场』的 reducedTo0 触发器与失能入口/扣资源可由现有接口自动，但『具体哪四只野兽的数据与攻击、20尺内落点、无命令自主行为、提前解消移出棋子』均需人工。",
+      "missing": [
+        "summon 仅给通用 AC12/HP10 无攻击的棋子，无『按选中野兽套用其数据与攻击』接口",
+        "无『20尺内自动落点 / 无命令自主行为 / 提前解消移出棋子』接口（属战场选位与 AI 行为，非引擎能力）"
+      ]
+    },
+    {
+      "key": "XGE:癫狂巫咒",
+      "verdict": "partial",
+      "why": "『附赠动作对被诅咒目标造成等同魅力调整值（最低1）心灵伤害』可用 damage+number 自动，但『目标周围5尺内所选生物受同等心灵伤害』的选择与溅射无现成接口，需人工。",
+      "missing": [
+        "对『目标周围5尺内自选生物』的溅射伤害无 forEach/area+choose 半径选取并复用同等值的清晰接口（damage 节点的 to 仅覆盖 attacker/target/self/each，缺半径内自选子集）",
+        "被诅咒目标 filter 同『残酷巫咒』缺 curse 状态接口"
+      ]
+    },
+    {
+      "key": "XGE:法师:魔力潮涌:6",
+      "verdict": "partial",
+      "why": "『每回合一次法师法术攻击命中追加等同等级一半力场伤害』可用 attackHit 触发器+addDamage+resource 近似自动（现缺 oncePerTurn 限制，可补），但『非攻击法术造成伤害追加』与『成功反制/解除魔法打断法术获潮涌』无对应窗口事件。",
+      "missing": [
+        "无『非攻击（豁免型）法术造成伤害』的窗口事件（damageIncoming/damageTaken 均指向承受方，非施法方造成伤害）",
+        "无『成功以法术反制/解除魔法打断法术』的窗口事件",
+        "attackHit 触发器缺少 limit: oncePerTurn（可由现有 limit 接口补，见 patch）"
+      ],
+      "patch": {
+        "triggers": [
+          { "id": "surge-damage-hit", "limit": "oncePerTurn" }
+        ]
+      }
+    },
+    {
+      "key": "XGE:飞蝇斗篷",
+      "verdict": "partial",
+      "why": "『附赠动作唤起以你为中心5尺灵光，魅力（威吓）优势其他魅力劣势』可用 effect.aura+rollMods 自动，但『任何在灵光内开始回合的生物受等同魅力调整值毒素伤害』需随自身移动的自中心光环对区域内他者回合开始触发，zone 为静态、effect.aura 只触发持有者自身事件，无此接口；且缺主动解消动作。",
+      "missing": [
+        "缺『随自身移动的5尺自中心光环，对光环内他者回合开始触发伤害』接口（zone 静态不跟随；effect.aura 触发器只认持有者事件）",
+        "缺主动解消灵光的附赠动作（removeEffect/endConcentration 可补，但前述光环触发阻塞 full）",
+        "rollMods 对『特定技能优势+同属性其他技能劣势』的细粒度表达未 doc"
+      ]
+    }
+  ]
+}

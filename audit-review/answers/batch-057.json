@@ -1,0 +1,125 @@
+{
+ "batch": "batch-057",
+ "answers": [
+  {
+   "key": "XPHB:圣武士:现世传说:20",
+   "verdict": "partial",
+   "why": "「附赠动作盈满/随时提前结束/消耗五环位重置使用权」(use/end/reset 动作) 与「神眷天恩：魅力检定优势」(effect.rollMods) 已可自动；但「无误打击：武器攻击失手时改为命中」引擎无将未命中改为命中的操作，且「重掷豁免：豁免失败用反应重投」现数据未实现（可用 saveForced+reroll 补，但天然1/反应消耗需人确认）。",
+   "missing": [
+    "缺少在攻击未命中（attackMissed）后将该次武器攻击改为命中的 modify 操作——interfaces.md 的 modify op（reroll/addToRoll/reduceDamage…）无「未命中转命中/重掷攻击」；attackMissed 窗口的 addToRoll 是同步求值，无法改变已结算的失手结果"
+   ]
+  },
+  {
+   "key": "XPHB:圣武士:信实坐骑:5",
+   "verdict": "full",
+   "why": "「不消耗法术位施展寻获坐骑一次、长休后才能再次」可用附赠/动作 + resource(faithful-steed, 长休恢复) 配合 summon 节点自动召唤相同坐骑（AC12/HP25/异界猛击1d8+2 按二环计由坐骑模板提供）；文本明确「坐骑实体与骑乘、失能后的独立行动仍需人处理」属探索/骑乘范畴，非本规则自动结算部分。",
+   "missing": [],
+   "patch": {
+    "actions": [
+     {
+      "id": "steed",
+      "root": [
+       { "op": "summon", "count": 1, "group": "faithful-steed", "template": "寻获坐骑" }
+      ]
+     }
+    ],
+    "resources": [
+     { "id": "faithful-steed", "max": 1, "restore": "longRest" }
+    ]
+   }
+  },
+  {
+   "key": "XPHB:圣武士:迅捷灵光:7",
+   "verdict": "partial",
+   "why": "「灵光内盟友自己回合开始时获 +10 尺速度直到其下个回合结束」可用 aura + effect（回合触发/until turnEnd of bearer）自动；但「盟友在自己回合里第一次走进灵光」的进入时机引擎处理不了（被动灵光无施放动作，zone 需施放时选格子），需人工。",
+   "missing": [
+    "缺少被动灵光（无施放动作、跟随施法者移动）在生物移动中首次进入灵光范围时触发授予效果的机制（zone 节点需施放时选定格子，无法挂到跟随型 aura；且引擎不自动查 aura 半径）"
+   ]
+  },
+  {
+   "key": "XPHB:圣武士:勇气灵光:10",
+   "verdict": "manual",
+   "why": "「灵光内你与盟友免疫恐慌」引擎无法自动生效——aura 只自动发放「检定修正」与「回合触发」，不发放 conditionImmune；「陷入恐慌的盟友进入灵光时该状态暂时无效」也无暂时压制状态的机制，施加恐慌前需人工确认目标是否在灵光内。",
+   "missing": [
+    "effects 无 conditionImmune（免疫恐慌）旗标，aura 授予的 conditionImmune 不会自动生效",
+    "缺少进入灵光时暂时压制/解除既有状态（suppress effect）的机制",
+    "灵光半径写死、18 级扩大到 30 尺无表达式成长（属数据调整，归人工）"
+   ]
+  },
+  {
+   "key": "XPHB:圣武士:至圣光轮:20",
+   "verdict": "partial",
+   "why": "「附赠动作盈满/随时结束/五环位重置」(use/end/reset)、「至圣守护：被邪魔/不死迫使的豁免优势」(rollMods + ask 判断来源)、「敌人在灵光内开始回合受 魅力+熟练 光耀伤害」(aura + turnStarted 触发 damage) 均可用现有接口自动；但「灵光内为明亮光照、视为阳光」属 interfaces.md 第5节明确做不到的光照/视线判定，需人工。",
+   "missing": [
+    "光照/视线判定：引擎无地图几何，无法将灵光区域设为明亮光照/视为阳光（interfaces.md 第5节明确做不到）"
+   ],
+   "patch": {
+    "triggers": [
+     {
+      "id": "radiant",
+      "label": "至圣光轮：灵光内敌人回合开始受光耀伤害",
+      "on": "turnStarted",
+      "role": "any",
+      "window": "after",
+      "when": "!target.isAllyOf(self) && ask('该敌人是否在至圣光轮（30 尺）灵光内？')",
+      "do": [
+       { "op": "damage", "dice": "self.chaMod + self.prof", "type": "radiant", "to": "target" }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XPHB:守护馈赠",
+   "verdict": "partial",
+   "why": "「名字在页上的生物生命值降为 0 且未当场死亡时变为 1（长休前不重复触发）」已用 reducedTo0 触发器 + ask 判定 + setHp 自动；但「写名字（一个动作，数量=魅力调整值至少 1）」与「魔法动作触碰消除名字」需人工维护书页名单，引擎无对应动作。",
+   "missing": [
+    "缺少写名字/消除名字的动作机制（维护影之书页受赠者名单），引擎无对应节点；但降至 0 变 1 的判定已由 ask 动态处理，无需持久名单"
+   ]
+  },
+  {
+   "key": "XPHB:术士:奥术登神:20",
+   "verdict": "manual",
+   "why": "「先天术法激活期间每个你的回合一次，不消耗术法点使用一次超魔法选项」无任何统一执行机制，超魔法效果需人手动处理。",
+   "missing": [
+    "缺少超魔法（metamagic）统一调用/执行节点；modifyCast 仅支持 cancel/dc/attackBonus/damageType，不足以表达「免费使用一次超魔法选项」"
+   ]
+  },
+  {
+   "key": "XPHB:术士:超魔法:2",
+   "verdict": "manual",
+   "why": "「获得 2 个超魔法选项」「施展法术时使用超魔法（消耗术法点、每道法术一次）」无执行机制，需在施法时手动选择并应用，引擎也不限制每道法术一次。",
+   "missing": [
+    "施法时无弹出超魔法选项菜单并联动消耗术法点、改写该法术结算的机制（interfaces.md 无 metamagic 节点；modifyCast 不足以表达各类超魔法效果）"
+   ]
+  },
+  {
+   "key": "XPHB:术士:传心谈话:3",
+   "verdict": "partial",
+   "why": "「附赠动作对 30 尺内可见生物建立心灵感应链接」已用 use 动作 + applyEffect 自动；但「链接持续等同于术士等级的分钟数」（引擎持续时间只接受固定值）、「交流距离=魅力调整值里至少 1 里」与「共同语言要求」属探索/社交范畴无法自动，「与另一生物建新链接时旧链接提前结束」可用 removeEffect+applyEffect 近似但等级分钟时长本身无法自动。",
+   "missing": [
+    "持续时间只接受固定值，无法表达「持续等同于术士等级的分钟数」",
+    "交流距离（魅力调整值里至少 1 里）与共同语言要求属探索/社交范畴，引擎不处理（无可映射接口）"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "root": [
+       { "op": "removeEffect", "template": "传心谈话" },
+       { "op": "applyEffect", "template": "传心谈话" }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XPHB:术士:混沌之潮:3",
+   "verdict": "partial",
+   "why": "「掷 d20 前使用，下一次 d20 检定获优势直到下次掷 d20」(use + applyEffect rollMods + duration endsOn d20Rolled) 与「用法术位施展术士法术恢复使用次数」(spellCast 触发器 + ask + resource) 均已自动；但「恢复时必须在狂野魔法浪涌表上掷骰」(d100 随机事件表) 引擎无自动机制，需人工。",
+   "missing": [
+    "缺少狂野魔法浪涌表（d100 随机事件表）的自动掷骰与按结果结算的机制（interfaces.md 无随机事件表节点）"
+   ]
+  }
+ ]
+}

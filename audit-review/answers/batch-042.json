@@ -1,0 +1,162 @@
+{
+ "batch": "batch-042",
+ "answers": [
+  {
+   "key": "XGE:spell:魔石术",
+   "verdict": "partial",
+   "why": "自身投掷的基础远程法术攻击可由 attack 节点自动结算（1d6+施法属性调整值点钝击），但原文明确石头数量(1~3)引擎不记、他人投掷时攻击/伤害须加施法者属性（引擎按投掷者自己算）、投完须手动移除「魔石术」效应，均无法自动。",
+   "missing": [
+     "item 附魔/传递机制：让石块作为可转交物品并借用施法者施法属性加值的接口（interfaces 第5节未覆盖）",
+     "追踪 1~3 块注入石块数量的接口",
+     "对「再施放刷新效应、旧石块魔法提前结束」的处理"
+   ],
+   "patch": {
+     "actions": [
+       {
+         "id": "throw",
+         "root": ["attack"],
+         "onHit": { "damage": { "dice": "1d6", "type": "bludgeoning", "bonus": "self.spell.mod" } }
+       }
+     ]
+   }
+  },
+  {
+   "key": "XGE:spell:莫伊之影",
+   "verdict": "partial",
+   "why": "光耀伤害抗性可由 effects.statics 的 resist 自动，但原文明确「重度遮蔽与反击伤害需手动处理」，重度遮蔽/照明降低属无地图几何与光照的明确做不到项，且「10尺内生物命中你时向攻击者反噬 2d8 暗蚀」缺 NodeTarget 'attacker'/'source' 反噬机制。",
+   "missing": [
+     "NodeTarget 'attacker'/'source' 反噬机制（触发器 do 节点 damage 无法指向伤害来源）",
+     "视线/光照/遮蔽判定（interfaces 第5节明确做不到）"
+   ],
+   "patch": {
+     "effects": [
+       { "name": "莫伊之影", "statics": [{ "resist": "radiant" }] }
+     ]
+   }
+  },
+  {
+   "key": "XGE:spell:磐石赋权",
+   "verdict": "partial",
+   "why": "地震动作（15尺内其他生物敏捷豁免否则倒地）可用 forEach+save+applyEffect 自动，但非魔法钝击/穿刺/挥砍抗性（statics resist 不支持按‘非魔法’过滤）、穿固态泥石移动、困难地形免额外移动消耗均属无地形/几何的明确做不到项，需人工。",
+   "missing": [
+     "statics resist 不支持按‘非魔法’来源过滤",
+     "地形/几何：穿墙移动与困难地形免额外移动消耗（interfaces 第5节未覆盖）"
+   ],
+   "patch": {
+     "actions": [
+       {
+         "id": "earthquake",
+         "root": ["forEach", "save"],
+         "area": { "shape": "emanation", "radius": 15, "filter": "target.id != self.id" },
+         "save": { "ability": "dex", "dc": "self.spell.dc", "onFail": { "applyEffect": "磐石赋权：倒地" } }
+       }
+     ]
+   }
+  },
+  {
+   "key": "XGE:spell:圈套术",
+   "verdict": "partial",
+   "why": "区域进入触发敏捷豁免、失败被束缚且每回合结束可重复豁免解除可用 zone + saveEnds 效应自动，但原文明确陷阱隐蔽（调查发现）、奥秘解除、无生物束缚时法术结束及「倒吊半空」高度效果引擎处理不了，需人工。",
+   "missing": [
+     "restrained/束缚 条件的效应旗标（flags 列表无 'restrained'）",
+     "视线/隐蔽/调查侦测判定（interfaces 第5节明确做不到）",
+     "无生物被束缚时法术自动结束的判定"
+   ],
+   "patch": {
+     "actions": [
+       {
+         "id": "trigger-snare",
+         "root": ["forEach", "zone"],
+         "zone": {
+           "shape": "sphere", "radius": 5,
+           "onEnter": { "save": { "ability": "dex", "dc": "source.spell.dc", "onFail": { "applyEffect": "圈套倒吊" } } }
+         }
+       }
+     ]
+   }
+  },
+  {
+   "key": "XGE:spell:群体变形术",
+   "verdict": "partial",
+   "why": "感知豁免（非自愿目标对抗变形、自愿目标自动成功）与「不能说话/施法」可由 save + effects.flags.cannot 自动，但原文明确野兽数据替换整张卡与等同新形态生命值的临时生命值需手动结算，属 interfaces 第5节明确做不到的变形/改变体型。",
+   "missing": [
+     "变形（替换整张数据卡）/改变体型（interfaces 第5节明确做不到）",
+     "按新形态生命值赋临时生命值并失去时变回原形的联动"
+   ]
+  },
+  {
+   "key": "XGE:spell:沙墙术",
+   "verdict": "partial",
+   "why": "墙体可作为 zone 画在地图上作视觉提醒，但原文明确「墙体占据空间、视线阻挡与移动力消耗需手动处理」，阻挡视线、墙内生物目盲、每移动1尺耗3尺移动力均属无地图几何/光照的明确做不到项。",
+   "missing": [
+     "视线/光照/掩护判定（interfaces 第5节明确做不到）",
+     "区域内生物施加目盲效应与移动力消耗倍率的接口"
+   ]
+  },
+  {
+   "key": "XGE:spell:神圣武器",
+   "verdict": "partial",
+   "why": "解散爆发的体质豁免+4d8光耀伤害+目盲（成功半伤）可用 forEach+save+applyEffect 自动，但原文明确武器发光照明、武器攻击额外+2d8及非魔法转魔法、以及爆发以武器为中心定位均缺 item 附魔/绑定接口，需人工。",
+   "missing": [
+     "item 附魔/绑定接口：让武器发光、攻击+2d8、非魔法转魔法、以武器为爆发中心（interfaces 第5节未覆盖）",
+     "光照/照明判定（interfaces 第5节明确做不到）"
+   ],
+   "patch": {
+     "actions": [
+       {
+         "id": "burst",
+         "root": ["forEach", "removeEffect"],
+         "area": { "shape": "emanation", "radius": 30, "filter": "target.id != self.id" },
+         "forEach": {
+           "save": {
+             "ability": "con", "dc": "self.spell.dc",
+             "onFail": { "damage": { "dice": "4d8", "type": "radiant" }, "applyEffect": "神圣武器：目盲" },
+             "onSuccess": { "damage": { "dice": "4d8", "type": "radiant", "scale": 0.5 } }
+           }
+         }
+       }
+     ]
+   }
+  },
+  {
+   "key": "XGE:spell:生命转换",
+   "verdict": "partial",
+   "why": "自身受 4d8 暗蚀伤害可由 damage(to:'self') 自动，但原文明确「不可减伤与双倍恢复数值需手动处理」，目标恢复等于自身承受伤害两倍需读取实际伤害值的联动治疗，引擎缺 healByDamage 机制。",
+   "missing": [
+     "healByDamage：读取施法者实际承受伤害数值并以其两倍治疗目标的伤害联动回复机制",
+     "「伤害无法以任何方式减少」的不可减免旗标"
+   ],
+   "patch": {
+     "actions": [
+       {
+         "id": "use",
+         "root": ["damage", "note"],
+         "damage": { "to": "self", "dice": "4d8", "type": "necrotic", "reducible": false }
+       }
+     ]
+   }
+  },
+  {
+   "key": "XGE:spell:守护之风",
+   "verdict": "partial",
+   "why": "耳聋可由 effects.flags.cannot:['hear'] 表示，但原文明确区域不随施法者移动（须手动重画）、重画后不自动施加、困难地形/灭火/隔气/远程穿区劣势均属无地图几何/元素的明确做不到项，需人工。",
+   "missing": [
+     "随身移动动态区域（区域不跟随施法者，须手动删旧重画）",
+     "地图几何：困难地形、远程攻击线穿过区域劣势、灭火/隔气（interfaces 第5节明确做不到）"
+   ],
+   "patch": {
+     "effects": [
+       { "name": "守护之风：耳聋", "flags": { "cannot": ["hear"] } }
+     ]
+   }
+  },
+  {
+   "key": "XGE:spell:水墙术",
+   "verdict": "partial",
+   "why": "区域节点可把墙画在地图上并有人进入时提醒一句，但原文明确困难地形、远程穿墙劣势、火焰伤害减半、冻结块 AC/生命值四件引擎都不结算（不判断几何与光照），需人工。",
+   "missing": [
+     "地图几何：困难地形、远程攻击线穿墙劣势、火焰伤害减半、冻结实体块生成（interfaces 第5节明确做不到）"
+   ]
+  }
+ ]
+}

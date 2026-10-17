@@ -1,0 +1,96 @@
+{
+ "batch": "batch-011",
+ "answers": [
+  {
+   "key": "AU:欺诈弹",
+   "verdict": "partial",
+   "why": "原文自动了：远程武器命中→耗奥术射击→附加心灵伤害(addDamage)+感知豁免(save)→失败则魅惑至你下回合开始(效应 duration=turnStart of source)；仍须人做的：选择盟友作为魅惑者(source)、以及魅惑者造成伤害/强迫豁免时提前结束魅惑。",
+   "missing": ["缺少把效应来源(source)指定为第三方盟友(魅惑者)的接口", "缺少魅惑者造成伤害或强迫豁免时提前结束该魅惑状态的触发接口"]
+  },
+  {
+   "key": "AU:尚武魔宠",
+   "verdict": "partial",
+   "why": "原文自动了：拦截攻击反应——命中值够打到但未超目标AC+你的熟练时询问站位、同意即改判失手(trigger attackHit+modify)；仍须人做的：把魔宠作为独立召唤实体并按环阶设AC/生命值/多攻、飞行/潜步/内在禀赋、持续1小时(非专注)、你死亡时移除、替换既有魔宠并给临时生命。",
+   "missing": ["缺少把魔宠作为独立召唤实体并按法术环阶设置AC/生命值/多攻次数及飞行/潜步/内在禀赋的summon接口", "缺少非专注的1小时持续、死亡自动移除、替换既有魔宠并赋予临时生命的机制"]
+  },
+  {
+   "key": "AU:死灵专家",
+   "verdict": "manual",
+   "why": "原文只有说明：施展死灵法术时投至多两枚生命骰、恢复骰值+环阶生命值并消耗那些骰——生命骰的扣除与按骰值回血全部由玩家手动处理，无任何自动结算。",
+   "missing": ["缺少消耗角色生命骰(Hit Dice)并按骰值恢复生命的资源交互节点(接口明确不支持骰池扣除)"]
+  },
+  {
+   "key": "AU:塑能专家",
+   "verdict": "manual",
+   "why": "原文只有说明：每回合一次施展塑能法术造成伤害时投至多两枚生命骰、把骰值加入该法术的一枚伤害骰并消耗那些骰——生命骰扣除与伤害加值全手动，无自动结算。",
+   "missing": ["缺少消耗角色生命骰的接口(骰池扣除不受支持)", "缺少把生命骰骰值加入正在结算的法术伤害骰的机制"]
+  },
+  {
+   "key": "AU:慰疗魔宠",
+   "verdict": "manual",
+   "why": "原文只有说明：魔宠120尺内源自魔宠的5尺光环中，盟友治疗骰的1和2当作3——光环源点是魔宠(召唤物)且治疗骰不支持骰值下限，全手动。",
+   "missing": ["缺少源自魔宠随从的移动光环(aura只能挂在持有者自身)", "缺少治疗骰的「骰值下限」(minDie)改写机制(引擎仅伤害骰支持minDie)"]
+  },
+  {
+   "key": "AU:武僧:精通秘法战斗风格:17",
+   "verdict": "manual",
+   "why": "原文只有说明：用疾风连击时把两次徒手打击替换为施展一道1/2环术士法术、且算在同一附赠动作里——引擎无法在附赠动作内把攻击次数替换为法术施放，只能先结算徒手打击再手动撤销并按法术结算。",
+   "missing": ["缺少在附赠动作能力(疾风连击)中将攻击次数替换为调用/施展法术位法术的机制(动作嵌套/共享同一附赠动作不受支持)"]
+  },
+  {
+   "key": "AU:武僧:秘法武功:6",
+   "verdict": "partial",
+   "why": "原文自动了：法术位转功力(耗一个法术位→恢复等同环阶的已消耗功力，动作slotToKi用cost slot+resource节点)；仍须人做的：功力转法术位——当前kiToSlot只有choose，恢复出的法术位需手动记到法术位上。",
+   "missing": ["缺少消耗功力并恢复一个已消耗法术位(slot资源恢复)的执行节点", "缺少按等级换算比例(1环2点/2环3点/3环5点/4环6点)的接口"]
+  },
+  {
+   "key": "AU:武僧:秘法战斗风格:6",
+   "verdict": "full",
+   "why": "原文：攻击动作中把一次徒手打击替换为施展一道施法时间动作的术士戏法；用choose(ownCantrips,castTime:action)挑选戏法、castFrom当场结算，cost economy:attack扣掉该次攻击即可完全自动，玩家只需点动作并选戏法。",
+   "missing": [],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "root": [
+       { "choose": { "pool": { "from": "ownCantrips", "castTime": "action" } } },
+       { "castFrom": { "fromVar": true, "to": "target" } }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "AU:武僧:凝神击:11",
+   "verdict": "partial",
+   "why": "原文自动了：用震慑拳命中后(trigger attackHit+ask确认)施加效应至你下回合开始(duration=turnStart of source)；仍做不到的：效应须令目标「对抗你的法术」的豁免具劣势，但RollMod无法限定为来源者法术这一上下文，只能给笼统劣势。",
+   "missing": ["缺少将效应限制为「目标对抗来源者(你的)法术的豁免检定具劣势」的上下文过滤(RollMod on save 无法判断迫使豁免者及是否为法术)"]
+  },
+  {
+   "key": "AU:虚弱弹",
+   "verdict": "full",
+   "why": "原文自动了：远程武器命中→耗奥术射击→附加黯蚀伤害(addDamage)+体质豁免(save)→失败则中毒至目标下回合结束(效应 duration=turnEnd of bearer)；中毒期间目标命中时减伤一枚奥术射击骰，可用效应 triggers 的 attackHit + modify:reduceDamage 补上，完全自动。",
+   "missing": [],
+   "patch": {
+    "effects": [
+     {
+      "name": "虚弱中毒",
+      "triggers": [
+       {
+        "id": "weakReduction",
+        "label": "虚弱弹：中毒期间命中减伤",
+        "on": "attackHit",
+        "role": "actor",
+        "window": "before",
+        "when": "true",
+        "modify": [
+         { "op": "reduceDamage", "amount": "1d@arcaneShotDie" }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

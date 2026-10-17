@@ -1,0 +1,112 @@
+{
+ "batch": "batch-050",
+ "answers": [
+  {
+   "key": "XPHB:酒馆斗殴者",
+   "verdict": "partial",
+   "why": "推离已用 attackHit 后 move 自动结算；但「强化徒手打击改为 1d4+力量钝击」与「伤害骰重掷 1」原文明确说引擎不能替换或重掷伤害骰，需人工。",
+   "missing": [
+     "替换攻击伤害骰的接口（引擎 attack 节点按武器决定伤害，无 setWeaponDamage / 改写伤害骰的节点）",
+     "仅重掷结果为 1 的伤害骰的条件重掷（modify 的 reroll 不支持写条件，且通常作用于 d20 掷骰而非伤害骰）"
+   ]
+  },
+  {
+   "key": "XPHB:巨武器大师",
+   "verdict": "partial",
+   "why": "重武器掌握（加熟练加值伤害）用 ask 确认后 addDamage 已自动；但砍伐者的附赠动作额外攻击只给了 economy+note 提示，原文说「必须用同一把近战武器，由人保证」，实际攻击引擎不结算。",
+   "missing": [
+     "用 grantAction 把「同一把近战武器」的攻击做成可当场结算的附赠动作攻击（引擎 grantAction 难以绑定刚用过的那把武器）；当前 hew 仅 economy+note 提示，攻击由人保证"
+   ]
+  },
+  {
+   "key": "XPHB:苦痛魔爆",
+   "verdict": "partial",
+   "why": "攻击检定的魔契师戏法命中时加魅力调整值已用 addDamage 自动（当前 when 只判 attack.spell，未 ask 是否所选戏法）；但「需要豁免的戏法（不走攻击检定）」的伤害引擎无法自动加，原文要求手动。",
+   "missing": [
+     "对非攻击检定（豁免类）戏法伤害追加魅力调整值的能力（引擎无「非攻击来源伤害检定追加修正」的接口；damage/addDamage 节点都跟攻击或 incoming 伤害绑定）"
+   ],
+   "patch": {
+     "triggers": [
+       {
+         "id": "agonizing",
+         "when": "attack.spell && self.mod.cha > 0 && ask('这次命中的是所选的魔契师戏法吗？')"
+       }
+     ]
+   }
+  },
+  {
+   "key": "XPHB:链之魔契",
+   "verdict": "partial",
+   "why": "免法术位召唤魔宠（summon）已自动；但「魔宠代为攻击」只记了放弃攻击（economy attack）并提示，原文说魔宠用反应发起的攻击由它自己数据结算、反应需手动划掉，引擎不结算。",
+   "missing": [
+     "让被召唤的魔宠以其反应发动一次攻击的接口（grantAction 难以绑定到召唤物并消耗它的反应）；当前 use 只记放弃攻击并提示",
+     "召唤分组 group 需与「寻获魔宠」法术共用（summon 节点 group 字段）以保证同时只有一只魔宠互相顶替"
+   ],
+   "patch": {
+     "actions": [
+       {
+         "id": "cast",
+         "root": [
+           { "summon": { "group": "XPHB:spell:寻获魔宠#寻获魔宠" } },
+           "note"
+         ]
+       }
+     ]
+   }
+  },
+  {
+   "key": "XPHB:链主赋能",
+   "verdict": "partial",
+   "why": "迅捷打击（附赠动作指挥）与魔宠受伤时反应减半伤害（halveDamage）已自动；但赋予魔宠 40 尺飞行/游泳速度、伤害类型改光耀/暗蚀、用主人法术DC进行豁免这三项需改写召唤物数据，原文说引擎做不到。",
+   "missing": [
+     "改写召唤物（魔宠）数据卡的速度（飞行/游泳）、伤害类型、豁免DC 的接口（引擎召唤只有默认数据，特殊形态靠 choose 选择，无法程控增强魔宠属性）"
+   ]
+  },
+  {
+   "key": "XPHB:灵动攻击",
+   "verdict": "partial",
+   "why": "消耗卓越骰把骰值加到伤害已用 addDamage 自动；但指定友方用反应移动半速且免疫所攻击目标借机攻击，原文说引擎说不清是谁、移到哪，仅 note 提醒人工。",
+   "missing": [
+     "令指定友方消耗反应移动且其来源敌人免疫借机攻击的协同位移接口（引擎 move 节点只能 push/pull/teleport，无法指定友方反应移动；effects 的 cannot:['opportunityAttack'] 对自身有效但无法定向豁免「所攻击目标」的借机攻击）"
+   ]
+  },
+  {
+   "key": "XPHB:灵巧步法",
+   "verdict": "full",
+   "why": "附赠动作消耗卓越骰（已扣资源）、执行撤离（补 cannot:opportunityAttack 旗标即不引发借机攻击）、AC 加值（applyEffect + number 让玩家填入骰值）均可由引擎结算。",
+   "missing": [],
+   "patch": {
+     "effects": [
+       {
+         "name": "灵巧步法",
+         "flags": { "cannot": ["opportunityAttack"] }
+       }
+     ]
+   }
+  },
+  {
+   "key": "XPHB:龙裔",
+   "verdict": "partial",
+   "why": "吐息武器（锥形/线形）伤害类型由 choose 让玩家按龙种选择已自动；龙族飞翼展开/收起（applyEffect/removeEffect）已自动，但飞行速度原文说引擎不追踪，需手动拖动棋子。",
+   "missing": [
+     "动态赋予飞行速度（flySpeed）的效应 statics 类型（引擎 effect.statics 无 flySpeed 字段）与对应移动力支持"
+   ]
+  },
+  {
+   "key": "XPHB:孪生法术",
+   "verdict": "manual",
+   "why": "需在施展下一道法术前把其有效环阶提升一环（增加目标数/DC/伤害），原文说引擎未改写施法机制；modifyCast 仅支持 cancel/dc/attackBonus/damageType，无法加目标，需人工扣术法点并按高一环结算。",
+   "missing": [
+     "在施法前消耗资源并把该法术有效环阶+1（增加目标数、按高一环缩放 DC/伤害）的超魔法前置修饰机制（引擎 modifyCast 无「提升环阶/加目标」字段；第5节明确不重写他法施法机制）"
+   ]
+  },
+  {
+   "key": "XPHB:灭世魔刃",
+   "verdict": "manual",
+   "why": "本条目要把「饥渴魔刃」的额外攻击次数由1改为2，但原文说该次数写死在其数据里、引擎无「额外攻击次数」可改写的量，跨条目改写做不到，只能人工用契约武器攻击两次。",
+   "missing": [
+     "跨条目改写/增加契约武器额外攻击次数的接口（引擎无「额外攻击次数」可改写的量，effect 也无对应字段）"
+   ]
+  }
+ ]
+}

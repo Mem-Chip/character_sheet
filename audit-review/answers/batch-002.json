@@ -1,0 +1,139 @@
+{
+ "batch": "batch-002",
+ "answers": [
+  {
+   "key": "XPHB:吟游诗人:威仪作锦:6",
+   "verdict": "partial",
+   "why": "附赠动作免法术位施展命令术可由 choose+applyEffect(cost:[]) 自动结算，但「魅惑你的生物对抗此命令术豁免自动失败」无对应接口（无 force auto-fail save 的节点/op），需手动。",
+   "missing": [
+    "缺少令被魅惑生物对命令术豁免自动失败的接口（modifyCast 仅支持 dc/attackBonus/damageType/cancel，无强制失败；亦无相应旗标）"
+   ],
+   "patch": {
+    "actions": [
+     { "id": "use", "name": "威仪作锦", "activation": "bonus", "cost": [ { "resource": "majesty" } ], "targeting": null, "trigger": null, "concentration": { "minutes": 1 }, "requires": null, "root": ["note", "applyEffect"] },
+     { "id": "command", "name": "威仪作锦：附赠动作施展命令术", "activation": "bonus", "cost": [], "targeting": { "type": "creature", "count": 1, "range": 60 }, "trigger": null, "concentration": null, "requires": "self.hasEffect('威仪作锦')", "root": ["applyEffect"], "template": "spell:命令术" },
+     { "id": "reset", "name": "威仪作锦：重置", "activation": "free", "cost": [ { "slot": { "min": 3 } } ], "targeting": null, "trigger": null, "concentration": null, "requires": "self.resource('majesty') < 1", "root": ["resource"] }
+    ]
+   }
+  },
+  {
+   "key": "XPHB:战地施法者",
+   "verdict": "partial",
+   "why": "离开触及范围的响应法术时机与反应消耗已由 leftReach 触发器自动列出，但「维持专注的体质豁免优势」无旗标、且敌方回合施放动作型法术被引擎禁止，法术本身需手动。",
+   "missing": [
+    "缺少为维持专注的体质豁免授予优势（advantage on concentration CON save）的接口/旗标",
+    "缺少在敌方回合以反应施放动作型法术的能力（引擎禁止，文本已确认）"
+   ]
+  },
+  {
+   "key": "XGE:暗影寿衣",
+   "verdict": "full",
+   "why": "「随意施展隐形术且无需法术位」可由 cost:[]（免位）+ applyEffect(template:'spell:隐形术') 当场结算，法术效果按隐形术本身处理；全文数值/时机/限制均可由现有接口完成，玩家点动作并选目标即可。",
+   "missing": [],
+   "patch": {
+    "actions": [
+     {
+      "id": "cast",
+      "name": "暗影寿衣：隐形术",
+      "activation": "action",
+      "cost": [],
+      "targeting": { "type": "creature", "count": 1, "range": "touch" },
+      "root": ["applyEffect"],
+      "template": "spell:隐形术"
+     }
+    ]
+   }
+  },
+  {
+   "key": "TCE:永恒奴役",
+   "verdict": "full",
+   "why": "「不耗法术位每日一次施展活化死尸、长休恢复」可由 cost:[{resource:'永恒奴役'}]（免位+每日一次）+ applyEffect(template:'spell:活化死尸') 结算，restCompleted 触发器恢复资源；限制与时机均可由现有接口完成。",
+   "missing": [],
+   "patch": {
+    "actions": [
+     {
+      "id": "cast",
+      "name": "永恒奴役：活化死尸",
+      "activation": "action",
+      "cost": [ { "resource": "永恒奴役" } ],
+      "targeting": { "type": "creature", "count": 1, "range": "touch" },
+      "root": ["applyEffect"],
+      "template": "spell:活化死尸"
+     }
+    ],
+    "triggers": [
+     { "id": "recover", "label": "永恒奴役：长休恢复", "on": "restCompleted", "window": "after", "role": "actor", "cost": [], "do": ["resource"] }
+    ],
+    "resources": [ { "id": "永恒奴役", "max": 1 } ]
+   }
+  },
+  {
+   "key": "XGE:诡术师的逃脱术",
+   "verdict": "full",
+   "why": "「以自己为目标每日一次免位施展行动自如、长休恢复」可由 cost:[{resource:'诡术师的逃脱术'}] + applyEffect(template:'spell:行动自如'，targeting 自身) 结算，restCompleted 恢复资源；均可由现有接口完成。",
+   "missing": [],
+   "patch": {
+    "actions": [
+     {
+      "id": "cast",
+      "name": "诡术师的逃脱术：行动自如",
+      "activation": "action",
+      "cost": [ { "resource": "诡术师的逃脱术" } ],
+      "targeting": { "type": "self" },
+      "root": ["applyEffect"],
+      "template": "spell:行动自如"
+     }
+    ],
+    "triggers": [
+     { "id": "recover", "label": "诡术师的逃脱术：长休恢复", "on": "restCompleted", "window": "after", "role": "actor", "cost": [], "do": ["resource"] }
+    ],
+    "resources": [ { "id": "诡术师的逃脱术", "max": 1 } ]
+   }
+  },
+  {
+   "key": "XPHB:spell:点点星芒",
+   "verdict": "partial",
+   "why": "远程法术攻击与 1d8（随等级 scale）光耀伤害已由 attack+onHit 自动；但「散发出 10 尺微光光照」属光照/视线（§5 明确做不到）、「无法受益于隐形状态」无对应旗标，需手动。",
+   "missing": [
+    "缺少动态光源/光照范围渲染（interfaces.md §5 视线/光照/掩护/隐蔽明确做不到）",
+    "缺少禁止目标受益于隐形状态的接口（无 forbid-benefit-of-invisible 旗标）"
+   ]
+  },
+  {
+   "key": "XPHB:spell:猎人印记",
+   "verdict": "partial",
+   "why": "①命中额外 1d6 力场伤害（rollMods）+ ②寻找它的察觉/求生优势 + 附赠动作转移标记均已自动；但「升环施法时长（3~4 环 8h、5+ 24h）」与「游侠 20 级伤害骰改 d10」无对应接口，需手动。",
+   "missing": [
+    "缺少按环阶改变专注时长的接口（concentration 为固定值，无 upcast 时长 scale）",
+    "缺少游侠 20 级将猎人印记伤害骰改为 d10 的接口"
+   ]
+  },
+  {
+   "key": "XPHB:spell:野兽召唤术",
+   "verdict": "partial",
+   "why": "入场召唤可由 summon 节点完成，但「对应环阶的野兽灵魄数据块（天空/大地/海洋）」「共用先攻并在施法者回合后立即行动」「遵从口头指令操控」无对应接口/数据，召唤物战斗行动需手动。",
+   "missing": [
+    "缺少按环阶选取对应野兽灵魄数据块并令其共用施法者先攻、在其回合后行动的接口（summon 节点仅支持 count/group）",
+    "缺少召唤物按口头指令由玩家操控战斗行动的接口"
+   ]
+  },
+  {
+   "key": "XPHB:spell:妖精召唤术",
+   "verdict": "partial",
+   "why": "入场召唤可由 summon 节点完成，但「独立妖精灵魄数据卡（愤怒/欢欣/诡诈）」「共用先攻并在施法者回合后行动」「升环提升灵魄属性」「战斗中手动操控」无对应接口/数据，需手动。",
+   "missing": [
+    "缺少按类型/环阶选取对应妖精灵魄数据卡并令其共用先攻、在施法者回合后行动的接口（summon 仅支持 count/group）",
+    "缺少召唤物战斗行动由玩家手动操控的接口"
+   ]
+  },
+  {
+   "key": "XPHB:spell:亡灵召唤术",
+   "verdict": "partial",
+   "why": "入场召唤可由 summon 节点完成，但「对应环阶的亡灵灵魄数据块（幽体/腐尸/骷髅）」「作为独立参战生物入场」「战斗中由人添加与操控」无对应接口/数据，需手动。",
+   "missing": [
+    "缺少按环阶选取对应亡灵灵魄数据块并令其作为独立参战生物入场的接口（summon 仅支持 count/group，未涵盖环阶数据块与先攻排序）",
+    "缺少召唤物在战斗中由人添加与操控的接口"
+   ]
+  }
+ ]
+}

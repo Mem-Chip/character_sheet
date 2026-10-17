@@ -1,0 +1,163 @@
+{
+ "batch": "batch-043",
+ "answers": [
+  {
+   "key": "XGE:spell:谭森变形术",
+   "verdict": "partial",
+   "why": "「50点临时生命（法术结束失去）」与「法术期间不能施展法术」已自动（tempHp + applyEffect/cannot castSpells）；但「获得盔甲/盾牌/简易与军用武器/力量与体质豁免熟练」「可进行两次攻击」「武器命中+2d12力场」「法术结束DC15体质豁免否则1级力竭」无对应接口。",
+   "missing": [
+     "statics/flags 中无'熟练项/proficiency'字段，无法给盔甲、盾牌、武器、力量/体质豁免加熟练",
+     "无'额外攻击次数'节点或 flag（原文'可进行两次攻击'）",
+     "无'力竭'等级效应建模（原文'承受 1 级力竭'无法用现有 effect flag 表达），且法术结束触发的一次性体质豁免需 saveEnds 外的一次性 onEnd 联动"
+   ],
+   "patch": {
+    "effects": [
+     {"name":"谭森变形术","rollMods":"持有者武器攻击检定优势（auto）","triggers":[
+       {"on":"attackHit","role":"actor","when":"lastAttack.weapon","do":[{"damage":{"dice":"2d12","type":"force"}}]},
+       {"on":"concentrationEnded","do":[{"save":{"ability":"con","dc":15,"onFail":{"applyEffect":{"template":"谭森变形术：力竭1级"}}}}]}
+     ]},
+     {"name":"谭森变形术：力竭1级","duration":"permanent"}
+    ],
+    "actions":[
+     {"id":"use","root":["tempHp","applyEffect"]},
+     {"id":"extraAttack","name":"谭森变形术：额外攻击","activation":"none","cost":[{"economy":"attack"}],"requires":"self.hasEffect('谭森变形术')","root":["attack"]}
+    ]
+   }
+  },
+  {
+   "key": "XGE:spell:土石喷发",
+   "verdict": "partial",
+   "why": "「区域内每个生物敏捷豁免，失败 slot.level d12、成功半伤（3环3d12、每高1环+1d12）」可用 forEach+save+damage 自动；但「地面变为困难地形直到被清理」及「清理」引擎无地形/zone 接口。",
+   "missing": [
+     "无在地图上把区域设为'困难地形'并持续到被清理的接口（zone 只能挂进入/回合触发，无地形类型字段）；旧线索 gap=zone，'清理'需人工"
+   ],
+   "patch": {
+    "actions": [
+     {"id":"use","root":[
+       {"forEach":{"in":"area","do":[
+         {"save":{"ability":"dex","dc":"self.spell.dc",
+           "onFail":{"damage":{"dice":"{slot.level}d12","type":"bludgeoning"}},
+           "onSuccess":{"damage":{"dice":"{slot.level}d12","type":"bludgeoning","scale":0.5}}}}
+       ]}}
+     ]}
+    ]
+   }
+  },
+  {
+   "key": "XGE:spell:舞风术",
+   "verdict": "partial",
+   "why": "选项①「中型或更小生物力量豁免，失败推离5尺」可用 save + move(push 5) 自动；选项②「推离未持握物体10尺」与③「无害感官效果」无对应接口。",
+   "missing": [
+     "move 只能推生物（target 为 creature），无法推'未被持握或携带的物体'（非生物对象无 target 类型）；②③感官/日志效果无数值，只能 note 后人工"
+   ],
+   "patch": {
+    "actions": [
+     {"id":"use","root":[
+       {"choose":{"options":[
+         {"label":"①推离生物5尺","then":[{"save":{"ability":"str","dc":"self.spell.dc","onFail":{"move":{"mode":"push","distance":5}}}}]},
+         {"label":"②推离物体10尺","then":[{"note":"物体非生物，引擎无法推，请手动"}]},
+         {"label":"③感官效果","then":[{"note":"无害感官效果，请手动"}]}
+       ]}}
+     ]}
+    ]
+   }
+  },
+  {
+   "key": "XGE:spell:吸收元素",
+   "verdict": "partial",
+   "why": "反应触发 + applyEffect 抗性（本次伤害随之减半）可对触发伤害生效；但「获得触发法术的那个伤害类型的抗性」与「下回合首次近战命中+1d6同类型」都依赖动态捕获受击 damage.type，引擎无法按触发类型参数化。",
+   "missing": [
+     "无法在反应触发时动态捕获 damage.type 并同时用作'抗性类型'与'蓄能附加伤害类型'（effect 的 statics resist 与蓄能触发 addDamage 都只能写死类型，无按触发伤害类型参数化的接口）；multi-type 伤害包'只认第一种'需人工过滤"
+   ]
+  },
+  {
+   "key": "XGE:spell:西风打击",
+   "verdict": "full",
+   "why": "「移动不引发借机攻击」已用 cannot provoke 标记；「仅一次、本回合第一次武器攻击优势，命中+1d8力场，无论是否击中步行速度+30至回合结束」均可用 rollMods(优势) + effect 触发 attackHit/attackMissed(附加伤害/加速/removeEffect 消耗) + statics speed 完全自动结算。",
+   "missing": [],
+   "patch": {
+    "effects": [
+     {"name":"西风打击：蓄势","rollMods":"持有者武器攻击检定优势（首次攻击结算后由 removeEffect 移除）","triggers":[
+       {"on":"attackHit","role":"actor","when":"lastAttack.weapon","do":[
+         {"damage":{"dice":"1d8","type":"force"}},
+         {"applyEffect":{"template":"西风打击：疾走"}},
+         {"removeEffect":{"name":"西风打击：蓄势"}}
+       ]},
+       {"on":"attackMissed","role":"actor","when":"lastAttack.weapon","do":[
+         {"applyEffect":{"template":"西风打击：疾走"}},
+         {"removeEffect":{"name":"西风打击：蓄势"}}
+       ]}
+     ]},
+     {"name":"西风打击：疾走","statics":["speed+30"],"duration":{"until":{"at":"turnEnd","of":"bearer","nth":1}}}
+    ]
+   }
+  },
+  {
+   "key": "XGE:spell:心灵尖啸",
+   "verdict": "partial",
+   "why": "「至多10个生物、智力>2、智力豁免，失败14d6心灵+震慑，成功半伤」与「震慑每回合结束重豁免」(saveEnds) 可自动；但「可见生物」与「有头的生物被杀死头颅爆炸」引擎无法判定。",
+   "missing": [
+     "「可见」(visibility/视线) 无法判定（interfaces 第5节明确做不到 视线/光照/隐蔽）；「被此伤害杀死且'有头的生物'头颅爆炸」——死亡与'有头'部位概念引擎无法建模（无 reducedTo0 后具体死亡效果接口、无部位系统）"
+   ],
+   "patch": {
+    "actions": [
+     {"id":"use","root":[
+       {"save":{"ability":"int","dc":"self.spell.dc",
+         "onFail":[
+           {"damage":{"dice":"14d6","type":"psychic"}},
+           {"applyEffect":{"template":"心灵尖啸：震慑"}}
+         ],
+         "onSuccess":{"damage":{"dice":"14d6","type":"psychic","scale":0.5}}
+       }}
+     ]}
+    ]
+   }
+  },
+  {
+   "key": "XGE:spell:旋风术",
+   "verdict": "partial",
+   "why": "「旋风柱内首次进入者敏捷豁免，失败10d6钝击、成功减半；大型或更小且敏捷失败再力量豁免失败则束缚」可用 zone 进入触发 + save + 条件 save 自动；但「向上推5尺/法术结束坠落」「随机方向抛离3d6×10尺」「随旋风移动」属三维/随机位移，引擎做不到。",
+   "missing": [
+     "三维高度/滞空/坠落 明确做不到（'向上推5尺'与'法术结束坠落'属 interfaces 第5节禁区）；'随机方向抛离3d6×10尺'无随机位移接口；'随旋风移动'需持续追踪生物相对旋风位置，引擎无该机制"
+   ]
+  },
+  {
+   "key": "XGE:spell:亚比达奇凋死术",
+   "verdict": "partial",
+   "why": "「30尺立方内生物体质豁免，构装/不死不受影响，失败12d8黯蚀、成功半」可自动；但「区域内非魔法非生物植物立即死亡」无接口，且「植物和水元素此豁免具劣势」在 save 节点无按目标类型 disadvantage 表达式。",
+   "missing": [
+     "'区域内非魔法非生物植物立即死亡'——植物为非生物对象，area 只 targeting 生物且 reducedTo0 仅处理生物归零，无对物体/植物致死的接口；'植物和水元素在此豁免具劣势'在 save 节点无按目标类型的 disadvantage 表达式（属可补但未实现）"
+   ]
+  },
+  {
+   "key": "XGE:spell:烟火术",
+   "verdict": "partial",
+   "why": "【烟火】「目标周围10尺生物体质豁免，失败目盲至下个回合结束」可用 save + applyEffect(blinded) 自动；但「选择并熄灭一处非魔法火焰」「浓烟20尺半径重度遮蔽1分钟」引擎做不到。",
+   "missing": [
+     "'熄灭火焰'（目标须是非魔法火焰物体）无物体 target 接口；'重度遮蔽/视线'——interfaces 明确做不到 视线/光照/遮蔽；浓烟 Zone 持续1分钟无地图遮蔽机制"
+   ],
+   "patch": {
+    "actions": [
+     {"id":"use","root":[
+       {"save":{"ability":"con","dc":"self.spell.dc","onFail":{"applyEffect":{"template":"烟火目盲"}}}}
+     ]}
+    ]
+   }
+  },
+  {
+   "key": "XGE:spell:幽影刃",
+   "verdict": "partial",
+   "why": "「专注1分钟、攻击造成2d8心灵+力/敏调整值、按环阶3d8/4d8/5d8」可用 attack 动作近似自动；但「手中实化武器、放下/投掷后回合结束消散、附赠动作召回」无 item 系统，「微光/黑暗攻击优势」属光照判定做不到。",
+   "missing": [
+     "无 item/装备栏接口——'手中实化武器''放下或投掷后回合结束消散''附赠动作召回'无法追踪（旧线索 gap=item）；'微光/黑暗攻击优势'属 interfaces 明确做不到的 光照判定"
+   ],
+   "patch": {
+    "actions": [
+     {"id":"attack","root":[
+       {"attack":{"bonus":"self.spell.atk","damage":{"dice":"{shadowDice}d8","type":"psychic","mod":"self.finesseMod"},"onHit":[]}}
+     ]}
+    ]
+   }
+  }
+ ]
+}

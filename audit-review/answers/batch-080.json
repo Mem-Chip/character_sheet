@@ -1,0 +1,98 @@
+{
+  "batch": "batch-080",
+  "answers": [
+    {
+      "key": "XDMG:item:精灵斗篷",
+      "verdict": "manual",
+      "why": "数据为空模板（actions/triggers/effects 均为空）；「为躲藏所进行的敏捷（隐匿）检定具有优势」与「他人感知到你的感知（察觉）检定具有劣势」没有任何自动结算。",
+      "missing": [
+        "缺少常驻效应（effects）以提供隐匿检定优势（rollMods check advantage: stealth）",
+        "缺少让第三方对自身进行察觉对抗时赋予劣势的机制（需手动判定）"
+      ]
+    },
+    {
+      "key": "XDMG:item:警戒之盾",
+      "verdict": "manual",
+      "why": "text 原文为空，且数据中 actions/triggers/effects/resources 全空，没有任何自动结算（通常警戒之盾提供先攻优势及防止被突袭，均未实装）。",
+      "missing": [
+        "text 原文缺失，无法核对具体规则文本",
+        "数据完全为空，缺少先攻掷骰优势（initiative rollMods）与免疫突袭的常驻效应"
+      ]
+    },
+    {
+      "key": "XDMG:item:警示权杖",
+      "verdict": "partial",
+      "why": "「防护灵光」已配置动作、长休恢复资源与 10 分钟持续时间；但持握常驻的「先攻优势与察觉优势」未建效应，四道侦测法术未实装动作，且「60尺内盟友AC与豁免+1及感知隐形」在效应中未配置灵光光环（aura）与感知。",
+      "missing": [
+        "缺少持握时常驻提供先攻优势与察觉优势的效应（rollMods: initiative & perception）",
+        "缺少侦测善恶/侦测魔法/侦测毒性和疾病/识破隐形的法术动作配置",
+        "防护灵光效应中缺少 60 尺盟友 AC 与豁免 +1 的 aura 光环定义及识破隐形感知能力"
+      ]
+    },
+    {
+      "key": "XDMG:item:静语卷册",
+      "verdict": "partial",
+      "why": "「以附赠动作施展法术」已配置附赠动作消耗、每日1次限制与长休恢复；但「无需法术位、无需言语姿势成分施展记录法术」仅有 note 提示，引擎缺少交互式选择法术书内法术并改写施法时间为附赠动作当场结算的接口。",
+      "missing": [
+        "缺少从法术书中选择法术并免法术位、免言语姿势成分当场施展的 choose/castFrom 联动机制",
+        "改写另一道法术施法时间（动作→附赠动作）属于 interfaces.md §5 明确做不到的清单"
+      ]
+    },
+    {
+      "key": "XDMG:item:纠缠绳",
+      "verdict": "partial",
+      "why": "「命令绳索缠住 20 尺内可见生物进行 DC 15 敏捷豁免」已配置动作、射程视线过滤与豁免框架；但束缚效应缺少实际状态旗标（flags/implies: ['restrained']），且「动作进行 DC 15 运动/特技逃脱检定」与「附赠动作释放并召回绳索」未自动化。",
+      "missing": [
+        "效应中缺少「束缚（Restrained）」状态旗标（flags 或 implies: ['restrained']）",
+        "缺少被束缚生物以动作执行 DC 15 运动/特技检定成功解除效应的交互动作（grantAction）",
+        "缺少附赠动作释放并收回绳索（主动 removeEffect）的操作"
+      ]
+    },
+    {
+      "key": "XDMG:item:巨蟒法杖",
+      "verdict": "partial",
+      "why": "已建立变为巨蟒与还原形态的动作经济框架；但动作内仅有 note 提示，「变为巨蟒（独立数据卡、紧随先攻、精神命令）」未通过 summon 节点实体召唤入场，且「生命值归0死亡并摧毁法杖」缺少生命联动机制。",
+      "missing": [
+        "缺少巨蟒实体数据卡及将其召唤入场并绑定先攻紧随其后的 summon 节点配置",
+        "缺少巨蟒归 0 死亡联动销毁法杖物品及还原形态后锁定 1 小时冷却的机制"
+      ]
+    },
+    {
+      "key": "XDMG:item:剧毒药水",
+      "verdict": "partial",
+      "why": "「饮用药水受到 4d6 毒素伤害并进行 DC 13 体质豁免」已配置附赠动作与伤害/豁免节点；但体质豁免失败后「陷入中毒状态 1 小时」未在 onFail 中配置 applyEffect 挂载中毒效应，且缺少药水物品消耗资源定义。",
+      "missing": [
+        "save 节点缺少 onFail: [applyEffect] 挂载 1 小时「中毒（Poisoned）」状态效应的配置",
+        "缺少药水物品消耗资源（resources）定义"
+      ]
+    },
+    {
+      "key": "XDMG:item:卡夫统灵药",
+      "verdict": "partial",
+      "why": "「为 5 尺内生物恢复 2d8+2 点生命值并解除中毒状态」已实现动作、目标范围、heal 与 removeEffect 节点；但「瓶中装有 1d4 + 1 剂（手动追踪）」未配置 1d4+1 剂数的消耗资源池。",
+      "missing": [
+        "缺少瓶中 1d4+1 剂消耗剂数的 resources 资源池定义（当前无代价消耗）",
+        "removeEffect 需显式指定清除中毒模板（template: 'poisoned'）"
+      ]
+    },
+    {
+      "key": "XDMG:item:凯斯之剑",
+      "verdict": "partial",
+      "why": "「召雷术、圣言术、死亡一指」三个每日法术与「对亡灵额外造成 2d10 挥砍伤害」已建动作、触发器与限次资源；但「19~20重击、先攻+1d10、暗蚀抗性」未建常驻效应，「转移攻击加值到AC」缺少动态分配接口，且「未见血狂暴/控制判定」未自动结算。",
+      "missing": [
+        "缺少常驻效应以实现 19~20 重击扩展（critRange: 19）、先攻 +1d10 与暗蚀伤害抗性（statics.resist）",
+        "缺少在发动攻击时动态将至多 +3 攻击加值转移至 AC 的交互式加值调整机制",
+        "出鞘 1 分钟未见血的计时、DC 15 魅力豁免反噬与被剑控制属于诅咒叙事机制"
+      ]
+    },
+    {
+      "key": "XDMG:item:抗法盾",
+      "verdict": "manual",
+      "why": "数据为空模板（actions/triggers/effects 均为空）；「持握盾牌期间抵抗法术和魔法效应的豁免具有优势」与「受到的法术攻击检定具有劣势」没有任何自动结算。",
+      "missing": [
+        "缺少盾牌常驻效应（effects），未能提供对抗法术与魔法效应的豁免优势（save rollMods advantage: magical）",
+        "缺少令敌方对自身发动的法术攻击检定承受劣势的常驻修正（attackIncoming rollMods disadvantage: spell）"
+      ]
+    }
+  ]
+}

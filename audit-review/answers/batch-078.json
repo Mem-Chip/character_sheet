@@ -1,0 +1,229 @@
+{
+ "batch": "batch-078",
+ "answers": [
+  {
+   "key": "XDMG:item:唤鱼三叉戟",
+   "verdict": "partial",
+   "why": "已建「消耗1充能对野兽施展支配野兽」的感知豁免动作，但 save 节点未配 DC15/感知、onFail 未施加魅惑/支配效应，filter 只查 type=='野兽'未查「具有游泳速度」，且「每次受伤害可重复DC15豁免」的触发器(triggers:1)未实现；「受支配」的控制关系无接口。",
+   "missing": [
+    "save 节点的 dc/ability/onFail=applyEffect（魅惑+支配效应）未配置",
+    "damageIncoming 触发器实现「受伤害重复豁免」未建（triggers 声明为1但无触发器数据）",
+    "filter 表达式对「游泳速度」的判定（无 swim-speed 字段访问接口）",
+    "效应无法表达「受支配」的控制/指挥关系（无对应 flag 或节点）"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "dominate-beast",
+      "targeting": { "type": "creature", "count": 1, "range": 60, "filter": "target.type == '野兽' && hasSpeed(target, 'swim')" },
+      "concentration": { "minutes": 1 },
+      "root": [
+       { "save": { "dc": 15, "ability": "wis", "onFail": [ { "applyEffect": { "template": "唤鱼三叉戟：支配野兽" } } ] } }
+      ]
+     }
+    ],
+    "effects": [
+     { "name": "唤鱼三叉戟：支配野兽", "statics": [], "flags": null, "rollMods": 0, "triggers": 1, "duration": { "minutes": 1 } }
+    ],
+    "triggers": [
+     { "on": "damageIncoming", "window": "after", "role": "target", "do": [ { "save": { "dc": 15, "ability": "wis", "onSuccess": [ { "removeEffect": { "template": "唤鱼三叉戟：支配野兽" } } ] } } ] }
+    ]
+   }
+  },
+  {
+   "key": "XDMG:item:秽暗之书",
+   "verdict": "partial",
+   "why": "已建秽恶灵言(自身1d12+周围15尺3d6心灵伤害)、活化死尸/死亡法阵/支配怪物/死亡一指四个法术动作，但「调谐失败转变为幼虫魔」属变形(替换数据卡)明确不支持，研读收益(属性调整/免疫术竭/智力优势/每日每法限一次)需人物卡或次数资源处理，支配怪物未配 save 参数与魅惑/控制效应。",
+   "missing": [
+    "变形/转换（「转变为幼虫魔」替换整张数据卡）在「明确做不到的」清单内，无接口",
+    "研读收益：属性值调整、免疫术竭、智力(邪恶学识)优势检定——无对应 statics/flag 接口，需人物卡手动",
+    "支配怪物 save 节点的 dc(18)/onFail=applyEffect（魅惑+控制）未配置",
+    "每个法术「次日黎明前限一次」需 long 恢复的资源次数(已有资源但未与法术绑定限次语义)"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "dark-speech",
+      "root": [
+       { "damage": { "dice": "1d12", "type": "psychic", "to": "self" } },
+       { "forEach": { "in": "within(15, self)", "do": [ { "save": { "dc": 18, "ability": "wis", "onFail": [ { "damage": { "dice": "3d6", "type": "psychic", "scale": 0.5 } } ], "onSuccess": [ { "damage": { "dice": "3d6", "type": "psychic", "scale": 0.5 } } ] } } ] } }
+      ]
+     },
+     {
+      "id": "dominate-monster",
+      "root": [ { "save": { "dc": 18, "ability": "wis", "onFail": [ { "applyEffect": { "template": "支配怪物" } } ] } } ]
+     }
+    ],
+    "effects": [
+     { "name": "支配怪物", "statics": [], "flags": null, "rollMods": 0, "triggers": 0, "duration": { "hours": 1 } }
+    ]
+   }
+  },
+  {
+   "key": "XDMG:item:活化盾",
+   "verdict": "partial",
+   "why": "已建附赠动作 applyEffect 活化盾牌，但效应未配「等同持盾」的 +2 AC、未设 1 分钟持续时间；「解放双手」为描述性无对应接口，「陷入失能/死亡提前终止」的结束条件无失能状态判定接口（死亡可用 reducedTo0 触发器近似）。",
+   "missing": [
+    "效应 statics.ac (+2 等同持用它) 未配",
+    "活化持续时间 1 分钟（effect.duration 为 null）",
+    "「解放双手」无对应接口（描述性）",
+    "「失能」状态判定（无 cannot/status 接口表达 incapacitated 来触发结束；死亡可近似 reducedTo0 触发器）"
+   ],
+   "patch": {
+    "effects": [
+     { "name": "活化盾：活化", "statics": [ { "ac": 2 } ], "flags": null, "rollMods": 0, "triggers": 1, "duration": { "minutes": 1 } }
+    ],
+    "triggers": [
+     { "on": "reducedTo0", "window": "after", "role": "actor", "do": [ { "removeEffect": { "template": "活化盾：活化" } } ] }
+    ]
+   }
+  },
+  {
+   "key": "XDMG:item:活力药水",
+   "verdict": "partial",
+   "why": "已建附赠动作 removeEffect+applyEffect 与 24 小时效应(rollMods:1)，可移除力竭/中毒；但「24小时内消耗生命值骰恢复时直接取最大值」无对应接口——窗口事件列表无生命骰掷骰事件，骰池取最大值不支持（「明确做不到的」含骰池扣除），rollMods 只是计数不强制最大值。",
+   "missing": [
+    "「消耗生命值骰恢复时取最大值」无接口（无 hitDieRolled 类窗口事件，骰池取最大值在「明确做不到的」清单内）",
+    "removeEffect 需指定具体效应名（力竭/中毒）以定位移除"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "root": [
+       { "removeEffect": { "template": "exhaustion" } },
+       { "removeEffect": { "template": "poisoned" } },
+       { "applyEffect": { "template": "活力药水" } }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XDMG:item:火巨灵囚瓶",
+   "verdict": "partial",
+   "why": "原文称「召唤与效应需人工处理」；现有动作仅 note，无实际结算。引擎有 summon 节点可召唤生物，但火巨灵的数据卡/1d10 随机效应表(攻击/服从命令回瓶/祈愿)/服从命令与逃走等叙事行为无对应接口。",
+   "missing": [
+    "1d10 随机效应表无 switch/random-branch 节点",
+    "特定生物「火巨灵」的数据卡与 AI 行为（服从命令、回瓶封印、第4次逃走）无接口",
+    "「回合结束时出现于30尺内未占据空间」的定时召唤需 turnEnded 触发器+summon，但生物定位/占据判定依赖地图几何"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "targeting": { "type": "point", "range": 30 },
+      "root": [ { "note": "首次打开掷1d10决定效应，召唤火巨灵需 DM 处理" } ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XDMG:item:火巨人之力药水",
+   "verdict": "partial",
+   "why": "已建附赠动作 applyEffect+note 与 1 小时效应，但「力量属性值变为25」无对应 statics 接口（statics 仅支持 ac/speed/resist/save/spellDc/attack，不含属性值），「若原本≥25无效」的条件需 requires 表达式；原文亦注明「临时力量属性值改变需手动调整人物卡」。",
+   "missing": [
+    "临时属性值(str)改变无对应 statics 接口（statics 不支持 ability score）",
+    "「若原本≥25则无效」需 requires 表达式判定（可补，但 str 改变本身不可自动）"
+   ],
+   "patch": {
+    "effects": [
+     { "name": "火巨人之力", "statics": [], "flags": null, "rollMods": 0, "triggers": 0, "duration": { "hours": 1 } }
+    ]
+   }
+  },
+  {
+   "key": "XDMG:item:火球项链",
+   "verdict": "partial",
+   "why": "已建魔法动作 area 投掷，但 root 仅 number/forEach/note 无实际结算；可补 save(DC15敏捷)+damage(8d6火焰,成功半数)+按珠数缩放，但「珠子为消耗品投掷后消失，消耗请手动扣除」原文要求手动扣资源，无自动消耗接口。",
+   "missing": [
+    "save 节点（DC15敏捷、成功半数）与 damage(8d6火焰) 未配置",
+    "每额外1颗+1d6 的伤害缩放需动态骰表达式（可补）",
+    "珠子消耗品的自动扣除无接口（原文要求手动在物品中扣除）"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "targeting": { "type": "area", "range": 60, "area": { "shape": "sphere", "radius": 20 } },
+      "root": [
+       { "number": { "name": "beads", "prompt": "投掷珠子数(1-?)" } },
+       { "forEach": { "in": "within(20, point)", "do": [ { "save": { "dc": 15, "ability": "dex", "onFail": [ { "damage": { "dice": "8d6 + (beads-1)d6", "type": "fire" } } ], "onSuccess": [ { "damage": { "dice": "8d6 + (beads-1)d6", "type": "fire", "scale": 0.5 } } ] } } ] } }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XDMG:item:火焰法杖",
+   "verdict": "partial",
+   "why": "已建三法术动作与充能代价，但 root 仅 forEach 无实际结算；「持握期间火焰抗性」statics.resist 可补但原文标「人物卡处理」，「每日黎明重获1d6+4充能」「耗尽掷d20出1摧毁」无对应 resources 公式/触发器接口。",
+   "missing": [
+    "三法术实际结算节点缺失：燃烧之手(cone save+伤害)、火球术(sphere save+伤害)、火墙术(zone) 需 save/damage/zone 节点",
+    "充能恢复「每日黎明 1d6+4」无对应 resources 公式接口（recovery 仅 long 等，不支持带骰表达式）",
+    "「充能耗尽掷d20出1摧毁」无 depletion 触发器接口",
+    "火焰伤害抗性在 statics.resist 可表达，但原文标「人物卡处理」"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "burning-hands",
+      "targeting": { "type": "area", "range": "self", "area": { "shape": "cone", "size": 15 } },
+      "root": [ { "forEach": { "in": "cone(15, self)", "do": [ { "save": { "dc": "self.spellDc", "ability": "dex", "onFail": [ { "damage": { "dice": "3d6", "type": "fire" } } ], "onSuccess": [ { "damage": { "dice": "3d6", "type": "fire", "scale": 0.5 } } ] } } ] } } ]
+     },
+     {
+      "id": "fireball",
+      "targeting": { "type": "area", "range": 150, "area": { "shape": "sphere", "radius": 20 } },
+      "root": [ { "forEach": { "in": "within(20, point)", "do": [ { "save": { "dc": "self.spellDc", "ability": "dex", "onFail": [ { "damage": { "dice": "8d6", "type": "fire" } } ], "onSuccess": [ { "damage": { "dice": "8d6", "type": "fire", "scale": 0.5 } } ] } } ] } } ]
+     },
+     {
+      "id": "wall-of-fire",
+      "targeting": { "type": "area", "range": 120, "area": { "shape": "line", "length": 60, "width": 1 } },
+      "concentration": { "minutes": 1 },
+      "root": [ { "zone": { "shape": "line", "length": 60, "width": 1, "onEnter": [ { "save": { "dc": "self.spellDc", "ability": "dex", "onFail": [ { "damage": { "dice": "5d8", "type": "fire" } } ], "onSuccess": [ { "damage": { "dice": "5d8", "type": "fire", "scale": 0.5 } } ] } } ] } } ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XDMG:item:火焰抗性药水",
+   "verdict": "partial",
+   "why": "text 原文为空，无法引用规则核对；现有附赠动作 applyEffect(self) 但 effects 数组为空，未定义火焰抗性效应。引擎 statics.resist 可表达火焰抗性，但缺 text 确认持续时间等，且效应未实配。",
+   "missing": [
+    "抗性效应未定义（effects 为空，需 statics.resist:['fire'] + 持续时间）",
+    "text 原文缺失，无法确认规则（持续时间/是否需饮用手势等）"
+   ],
+   "patch": {
+    "effects": [
+     { "name": "火焰抗性", "statics": [ { "resist": ["fire"] } ], "flags": null, "rollMods": 0, "triggers": 0, "duration": { "hours": 1 } }
+    ]
+   }
+  },
+  {
+   "key": "XDMG:item:火焰吐息药水",
+   "verdict": "partial",
+   "why": "已建饮用(附赠,note)与喷吐(附赠,creature range30,save)动作与3次资源，但 breath 的 save 未配 DC13/敏捷/4d6火焰/半数；「1小时内至多喷吐3次」的时间窗口与「饮用后才获得能力」的解锁未建模（需 grantAction/requires + 持续时间）。",
+   "missing": [
+    "breath 的 save 参数未配（dc13/敏捷/失败4d6火焰/成功半数）",
+    "「1小时内」时间窗口无对应接口（饮用后1h内才可喷吐，需 effect 持续时间门控或 requires）",
+    "「饮用后才获得喷吐能力」的解锁未建模（需 grantAction 或 requires 关联饮用效应）"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "breath",
+      "targeting": { "type": "creature", "count": 1, "range": 30 },
+      "root": [ { "save": { "dc": 13, "ability": "dex", "onFail": [ { "damage": { "dice": "4d6", "type": "fire" } } ], "onSuccess": [ { "damage": { "dice": "4d6", "type": "fire", "scale": 0.5 } } ] } } ]
+     },
+     {
+      "id": "use",
+      "root": [ { "applyEffect": { "template": "火焰吐息药水" } } ]
+     }
+    ],
+    "effects": [
+     { "name": "火焰吐息药水", "statics": [], "flags": null, "rollMods": 0, "triggers": 0, "duration": { "hours": 1 } }
+    ]
+   }
+  }
+ ]
+}

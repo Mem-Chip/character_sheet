@@ -1,0 +1,148 @@
+{
+ "batch": "batch-015",
+ "answers": [
+  {
+   "key": "AU:spell:闪避灵光",
+   "verdict": "partial",
+   "why": "光环内盟友的敏捷豁免优势可经 effect.aura 自动赋予（text「进行敏捷豁免时具有优势」），但「受允许敏捷豁免减半的效应影响时，成功不受伤害，失败只受半伤」需依来源效应判定减半/无伤，引擎在伤害窗口拿不到该上下文，原文亦注明需手动处理。",
+   "missing": ["伤害窗口中无法取得「造成这次豁免的来源效应是否允许敏捷减半」的上下文，从而无法按豁免成败把伤害归零/减半；失能生物排除也无法经 aura 自动"],
+   "patch": {
+    "effects": [
+     {
+      "name": "闪避灵光",
+      "aura": { "range": 30, "grant": { "rollMods": { "save": { "dex": "advantage" } } } },
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": { "minutes": 1 }
+     }
+    ]
+   }
+  },
+  {
+   "key": "AU:spell:闪电之环",
+   "verdict": "full",
+   "why": "光环进入/结束回合触发用 zone 节点可实现（text「生物进入或在其内结束回合时…体质豁免」），电能射线用 area line + save 节点（text「60 尺长 5 尺宽的电能线…敏捷豁免，失败 6d6 闪电、成功半伤」），伤害/耳聋/半伤均可用 damage/applyEffect/scale:0.5 结算。",
+   "missing": [],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "闪电之环",
+      "activation": "bonus",
+      "cost": [{ "slot": { "min": 8 } }],
+      "targeting": { "type": "self" },
+      "trigger": null,
+      "concentration": { "minutes": 10 },
+      "requires": null,
+      "root": [
+       { "zone": {
+         "shape": "ring", "radius": 10, "follow": "self",
+         "onEnter": { "save": { "ability": "con",
+           "onFail": [ { "damage": { "dice": "3d6", "type": "闪电" } }, { "damage": { "dice": "3d6", "type": "雷鸣" } }, { "applyEffect": "闪电之环：耳聋" } ],
+           "onSuccess": [ { "damage": { "dice": "3d6", "type": "闪电", "scale": 0.5 } }, { "damage": { "dice": "3d6", "type": "雷鸣", "scale": 0.5 } } ] } },
+         "onTurnEnd": { "save": { "ability": "con",
+           "onFail": [ { "damage": { "dice": "3d6", "type": "闪电" } }, { "damage": { "dice": "3d6", "type": "雷鸣" } }, { "applyEffect": "闪电之环：耳聋" } ],
+           "onSuccess": [ { "damage": { "dice": "3d6", "type": "闪电", "scale": 0.5 } }, { "damage": { "dice": "3d6", "type": "雷鸣", "scale": 0.5 } } ] } }
+       } }
+      ]
+     },
+     {
+      "id": "beam",
+      "name": "闪电之环：电能射线",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": { "type": "area", "range": "self", "area": { "shape": "line", "length": 60, "width": 5 } },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating",
+      "root": [
+       { "save": { "ability": "dex",
+         "onFail": [ { "damage": { "dice": "6d6", "type": "闪电" } } ],
+         "onSuccess": [ { "damage": { "dice": "6d6", "type": "闪电", "scale": 0.5 } } ] } }
+      ]
+     }
+    ],
+    "effects": [
+     { "name": "闪电之环：耳聋", "statics": [], "flags": null, "rollMods": 0, "triggers": 0, "duration": { "minutes": 1 } }
+    ]
+   }
+  },
+  {
+   "key": "AU:spell:友善之域",
+   "verdict": "manual",
+   "why": "核心效果「d20 掷出 9 或更低视为 10」需要把 d20 取下限 10，interfaces.md 的 modify op 没有 floor/min-d20 操作；且「是否用于影响区域内生物的属性检定」需人工判定，引擎无法自动识别，无可自动部分。",
+   "missing": ["d20Rolled 窗口中「将 d20 下限设为 10（minD20）」的 modify op；以及识别「属性检定是否用于影响 60 尺光环内生物」的上下文判定"],
+   "patch": {}
+  },
+  {
+   "key": "AU:spell:战斗魔宠",
+   "verdict": "partial",
+   "why": "召唤魔宠实体、数据卡（AC/HP/速度/多重攻击/撕裂）与再次施展替换旧宠可用 summon 节点自动（text「已写：魔宠入场、AC/HP/攻击随升环」）；但「强化已有寻获魔宠」需替换其数据卡（明确做不到）、飞掠/潜步/内在禀赋、1 小时或死亡移除均需手动。",
+   "missing": ["替换/改写已存在召唤物的整张数据卡（变形/替换整张数据卡，interfaces.md 第5节明确做不到）；多重速度（飞行/游泳）；定时（1 小时）与施法者死亡时的自动移除；飞掠/潜步/内在禀赋等特性"],
+   "patch": {
+    "actions": [
+     {
+      "id": "cast", "name": "战斗魔宠", "activation": "action",
+      "cost": [{ "slot": { "min": 2 } }],
+      "targeting": { "type": "point", "range": 10 },
+      "concentration": null, "requires": null,
+      "root": [ "choose", { "summon": { "group": "battleFamiliar", "duration": { "hours": 1 }, "replaceExisting": true } } ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "AU:spell:植物召唤术",
+   "verdict": "partial",
+   "why": "灵魄入场、数据卡、多重攻击、专注结束消失、HP 0 退场可用 summon 节点自动（text「已写：灵魄入场…随专注结束而消失」）；但孢子中毒与已中毒额外 3d4、易伤/攻城/迅捷脱身、口头指令、攀爬速度（引擎单一速度）均需手动。",
+   "missing": ["多重速度（攀爬/飞行，引擎只有单一速度）；易伤（火焰/挥砍）、对物件建筑的双倍伤害（攻城）、附赠动作疾走/撤离（迅捷脱身）在 summon 节点表达不了；口头指令服从；中毒状态与「已中毒则额外 3d4」的条件伤害"],
+   "patch": {
+    "actions": [
+     {
+      "id": "cast", "name": "植物召唤术", "activation": "action",
+      "cost": [{ "slot": { "min": 5 } }],
+      "targeting": { "type": "point", "range": 90 },
+      "concentration": { "hours": 1 }, "requires": null,
+      "root": [ "choose", { "summon": { "group": "plantSpirit", "duration": { "concentration": true } } } ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "FRHoF:暴风骤岚之恩惠",
+   "verdict": "partial",
+   "why": "【暴风之眼】抗性与浴血免疫已用 damageIncoming 窗口两触发器自动（text「对闪电与雷鸣伤害具有抗性；浴血…改为免疫」）；但【风暴之力】「对抗你造成闪电/雷鸣伤害的法术时豁免劣势」在豁免窗口拿不到施法者/法术/伤害类型上下文，需手动。",
+   "missing": ["豁免掷骰窗口中无法取得「施法者特性 / 法术标识 / 法术预定伤害类型」，故无法自动对「你的闪电或雷鸣法术」施加豁免劣势"],
+   "patch": {}
+  },
+  {
+   "key": "FRHoF:变幻无常之恩惠",
+   "verdict": "manual",
+   "why": "「变形为 CR<=10 生物并获新形态生命值+20 临时生命值」核心是替换整张数据卡，属 interfaces.md 第5节明确做不到的变形；临时生命值又依赖人工选定的新形态生命值，无法自动结算。",
+   "missing": ["变形 / 替换整张数据卡（interfaces.md 第5节明确做不到）；以及依赖所选生物生命值的临时生命值（新形态 HP+20）结算"],
+   "patch": {}
+  },
+  {
+   "key": "FRHoF:翠绿闲庭新羽",
+   "verdict": "partial",
+   "why": "【双人轮打】的免借机效果已用 applyEffect（cannot:provoke，移动即结束）自动；但「与盟友交换位置」引擎不能换位（第5节明确做不到）需地图手动对调，【动物交谈】准备法术与仪式时长属静态层手动。",
+   "missing": ["两个生物换位（interfaces.md 第5节明确做不到）；静态层「始终准备动物交谈」与仪式 8 小时时长"],
+   "patch": {}
+  },
+  {
+   "key": "FRHoF:翠色魔法",
+   "verdict": "manual",
+   "why": "【动物伙伴】对野兽属性检定优势的范围（社交/探索、是否影响野兽）需人工判定；【二体一心】准备法术与每日一次免环阶施展属静态层/玩家手动，引擎无可自动结算部分。",
+   "missing": ["识别「对野兽执行的社交/探索影响动作的属性检定」的上下文（无法自动判定范围）；静态层准备法术（野兽感官）与「每日一次免法术位、长休恢复、免专注」资源"],
+   "patch": {}
+  },
+  {
+   "key": "FRHoF:毒手殁心之恩惠",
+   "verdict": "partial",
+   "why": "【百毒不侵】毒素伤害免疫已用 damageIncoming+cancel 自动（text「把这一包毒素伤害归零」）；但「免疫中毒状态」需静态层补充，【完美毒师】「每回合一次、仅毒素伤害骰取最大」引擎「全部取最大」分不出伤害类型也无每回合限制，需手动。",
+   "missing": ["「全部取最大」修正无法区分伤害类型（毒素）且缺少每回合一次限制（无按伤害类型取最大值、每回合一次的 modify op）；对「中毒」状态免疫需在人物卡静态层补充"],
+   "patch": {}
+  }
+ ]
+}

@@ -1,0 +1,158 @@
+{
+ "batch": "batch-036",
+ "answers": [
+  {
+   "key": "XGE:吟游诗人:不破威仪:14",
+   "verdict": "manual",
+   "why": "text 原文明确「攻击判定、豁免与改选目标由人手动处理」，引擎无法在生物宣告攻击前强制其改选目标或放弃攻击，核心机制只能手动。",
+   "missing": [
+    "缺少在「生物每回合首次尝试攻击你」之前触发的拦截窗口（窗口事件列表无 attackDeclared/attackStarted；attackHit 发生在攻击已发生之后，无法在攻击检定前强制改选目标/放弃）",
+    "modify 的 redirect/cancel 只能作用于已发生的攻击，无法表达「该回合内无法攻击你且必须为本次攻击选定新目标或放弃」的圣域术/威仪式拦截"
+   ]
+  },
+  {
+   "key": "XGE:吟游诗人:灵感织衣:3",
+   "verdict": "partial",
+   "why": "临时生命值（tempHp）与「免借机」标记（effect.flags.cannot:['provoke']）已自动结算；text 原文「反应与移动本身请手动执行」，受影响的生物用反应位移不引发借机攻击需人手动跑。",
+   "missing": [
+    "缺少让受影响生物消耗自身反应、立即进行不引发借机攻击的战棋位移的代执行接口（移动需生物自身反应，引擎无法替其执行，且 text 明确手动）"
+   ]
+  },
+  {
+   "key": "XGE:吟游诗人:乱击剑舞:3",
+   "verdict": "partial",
+   "why": "命中主目标时消耗诗人激励并追加等同于激励骰的额外伤害已由 trigger(attackHit)+number+addDamage 自动结算；text 原文「次要目标的伤害需手动扣除」，周围 5 尺第二目标的同等伤害手动。",
+   "missing": [
+    "缺少自动选取「周围 5 尺内由你选择的另一名可见生物」并结算同等激励骰伤害的次要目标逻辑（text 明确次要目标伤害手动扣除）"
+   ]
+  },
+  {
+   "key": "XGE:吟游诗人:推击剑舞:3",
+   "verdict": "partial",
+   "why": "命中主目标时追加伤害（number+addDamage）并把目标推离至多 5+激励骰尺（move push）已可自动；text 原文「战棋移动与反应由人手动处理」，命中后消耗反应跟进至目标 5 尺内的位移手动。",
+   "missing": [
+    "缺少命中结算后让攻击者消耗自身反应、进行战棋跟进位移（来到目标 5 尺内未占据空间）的代执行接口（text 明确战棋移动与反应手动）"
+   ]
+  },
+  {
+   "key": "XGE:吟游诗人:威仪作锦:6",
+   "verdict": "partial",
+   "why": "附赠动作开启、获得超凡美貌并进入专注（concentration 1 分钟）、每回合再次施展命令术的框架可搭；但 text 原文「具体命令指令及效果由人手动处理」，命令术的实际效果无法自动结算。",
+   "missing": [
+    "缺少「被你魅惑的生物对抗此特性命令术时自动豁免失败」的强制失败接口（modify 无 force-fail save op，仅能借 modifyCast.dc 绕过，且并非专为此设计）",
+    "命令术的具体指令与效果按 text 手动，引擎无对应结算节点"
+   ]
+  },
+  {
+   "key": "XGE:吟游诗人:阴暗学识:14",
+   "verdict": "full",
+   "why": "text 的机械部分——30 尺内能听见声音的生物感知豁免失败则被魅惑 8 小时、受攻击/伤害/被迫豁免时提前结束——可用 save + applyEffect(魅惑, duration 8h, endsOn) 完整自动结算；「共通语言要求与非战斗秘密恐吓角色扮演」属 DM 叙事，不在引擎范畴。",
+   "missing": [],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "root": [
+       {
+        "save": {
+         "ability": "wis",
+         "dc": "self.spellDc",
+         "to": "target",
+         "onFail": [
+          { "applyEffect": { "template": "阴暗学识：魅惑" } }
+         ]
+        }
+       }
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "阴暗学识：魅惑",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "hours": 8,
+       "endsOn": [
+        { "event": "damageTaken" },
+        { "event": "attackHit" },
+        { "event": "saveForced" }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:永生者赠礼",
+   "verdict": "manual",
+   "why": "text 原文说明「魔宠不在 100 尺内（或已消失、不在身边）时，这次治疗请让 DM 手动把多恢复的部分扣回去」，即核心判定（魔宠距离≤100 尺→治疗骰取最大值）无法自动，因为引擎既无治疗窗口也无距离接口。",
+   "missing": [
+    "窗口事件列表无 healIncoming/healTaken 类「受到治疗时」事件，无法在治疗结算时插入取最大值修正",
+    "无地图距离接口，无法判定魔宠与自身是否相距 ≤100 尺（interfaces.md 第 5 节明确无地图几何/三维高度）"
+   ]
+  },
+  {
+   "key": "XGE:幽魂凝视",
+   "verdict": "partial",
+   "why": "以一个动作开启、持续至多 1 分钟专注（action + concentration + applyEffect 1 分钟）已自动；text 原文「看穿 30 尺固态物件及黑暗视觉感官属于探索与视觉效果，由玩家手动处理」，感官效果无法自动。",
+   "missing": [
+    "看穿固态物件/黑暗视觉属探索层感官与地图视线/光照剔除，引擎无对应接口（interfaces.md 第 5 节：无视线/光照/掩护/隐蔽判定）"
+   ]
+  },
+  {
+   "key": "XGE:游荡者:火眼金睛:13",
+   "verdict": "partial",
+   "why": "感知周围 30 尺内幻术/变形生物的侦测可借用 choose+check 自动掷出察觉/调查检定；但 text 原文「你能感知到欺瞒效果的存在但无法得知真相，细节由 DM 手动告知」，是否存在欺瞒、真相为何引擎无法判定。",
+   "missing": [
+    "无法让引擎判定周围是否存在幻术/变形生物或欺瞒感官魔法（无地图/真相探测接口），检定可自动但结果需 DM 告知"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "root": [
+       {
+        "choose": {
+         "options": [
+          { "label": "感知(察觉)侦测" },
+          { "label": "智力(调查)破译" }
+         ]
+        }
+       },
+       { "check": { "ability": "per", "to": "self" } }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XGE:游荡者:鉴识之眼:3",
+   "verdict": "partial",
+   "why": "附赠动作进行感知(察觉)或智力(调查)检定可借 choose(选项)+check 自动掷出；但 text 原文「线索与隐匿生物由 DM 手动告知判定」，判定结果（是否发现）引擎无法给出。",
+   "missing": [
+    "隐藏生物/线索的最终判定由 DM 手动告知（无地图/真相探测接口），引擎只能自动掷出检定不能给出结论"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "root": [
+       {
+        "choose": {
+         "options": [
+          { "label": "感知(察觉)侦测隐匿" },
+          { "label": "智力(调查)破译线索" }
+         ]
+        }
+       },
+       { "check": { "ability": "per", "to": "self" } }
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

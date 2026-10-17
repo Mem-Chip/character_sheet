@@ -1,0 +1,155 @@
+{
+ "batch": "batch-013",
+ "answers": [
+  {
+   "key": "AU:spell:步履维艰",
+   "verdict": "partial",
+   "why": "速度减半（effects[].statics:speed）与回合末重复智力豁免（duration.saveEnds int/turnEnd）已自动化；但'无法执行疾走动作'在 flags 里找不到对应旗标（原文：'无法执行疾走动作……疾走限制需手动处理'）。",
+   "missing": [
+    "缺少禁止执行特定通用动作（如疾走 Dash）的旗标——flags.cannot/blocks 只能限制整个经济类别（action/bonus/reaction）或列出的若干状态，无法禁止单个已命名动作"
+   ]
+  },
+  {
+   "key": "AU:spell:沉鱼落雁",
+   "verdict": "partial",
+   "why": "已自动化专注（1 分钟）、魅力豁免、后续附赠动作指定新目标（retarget）；但'陷入魅惑与失能状态'无对应条件旗标、'径直向你移动'无强制移动接口、'进入伤害地形重掷豁免'无地图机制、'每升一环 +1d8'需 scaling（原文：'移动轨迹与升环伤害需手动处理'）。",
+   "missing": [
+    "缺少施加魅惑(charmed)/失能(incapacitated)的条件旗标（flags.cannot 未含这两项状态）",
+    "缺少强制生物在其回合向施法者移动的节点/旗标（move 节点仅支持 push/pull/teleport）",
+    "缺少伤害地形及'进入地形重掷豁免'的地图几何机制",
+    "缺少按环位增量叠加伤害的 scale 字段（升环 +1d8）"
+   ]
+  },
+  {
+   "key": "AU:spell:负能量洪流",
+   "verdict": "partial",
+   "why": "非亡灵的体质豁免、3d10+25 黯蚀伤害（含升环 +1d10）、成功减半，以及亡灵获得 3d10 临时生命值，均可用 save/damage/tempHp 节点自动化；但'被这次伤害杀死的类人生物下一回合变成受控丧尸'引擎无法识别'死于本次伤害'并延迟召唤（原文明确：'引擎认不出「死于这次伤害」、也不会在下一回合开始时凭空放进一个新生物'）。",
+   "missing": [
+    "缺少被法术特定伤害击杀后延迟（下一回合开始）生成受控随从并加入战斗的召唤机制（summon 节点无法识别死因、无法延迟到指定时点生成并绑定语言指令）"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "cast",
+      "root": ["if"],
+      "if": "target.type == 'undead'",
+      "then": [{"tempHp": {"dice": "3d10", "to": "target"}}],
+      "else": [
+       {"save": {"ability": "con", "dc": "self.spell.dc", "to": "target",
+         "onFail": {"damage": {"dice": "(3 + (slot.level - 5))d10 + 25", "type": "necrotic", "to": "target"}},
+         "onSuccess": {"damage": {"dice": "(3 + (slot.level - 5))d10 + 25", "type": "necrotic", "to": "target", "scale": 0.5}}
+       }}
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "AU:spell:改写命运",
+   "verdict": "partial",
+   "why": "已自动化反应触发窗口（d20Rolled、roll.failing、60 尺内、可见）；但'以优势重骰并使用新结果'无对应优势重骰 op，'最终成功后获得 6d10 临时生命值'的条件结算需手动（原文：'重骰与临时生命值需手动处理'）。",
+   "missing": [
+    "缺少以优势重骰并强制采用新结果的 modify op（现有 reroll 不保证优势、也无法强制'必须使用新结果'）",
+    "缺少基于触发检定最终成功与否的条件性临时生命值（tempHp）结算（触发器 do 不保证在结算前执行）"
+   ]
+  },
+  {
+   "key": "AU:spell:钢铁之躯",
+   "verdict": "partial",
+   "why": "专注（1 小时）、钝击/火焰/穿刺/挥砍抗性、毒素伤害免疫及麻痹/石化/中毒状态免疫、施法时立即解除这些状态（onApply removeEffect）均可自动化；但'力竭等级不会提升'无对应旗标（原文：'力竭与状态解除需手动处理'）。",
+   "missing": [
+    "缺少阻止力竭(exhaustion)等级提升的旗标/机制（effects 的 statics/flags 无法表达'某条件等级不增加'）"
+   ],
+   "patch": {
+    "effects": [
+     {
+      "name": "钢铁之躯",
+      "statics": ["resist", "immune", "conditionImmune"],
+      "resist": ["bludgeoning", "fire", "piercing", "slashing"],
+      "immune": ["poison"],
+      "conditionImmune": ["paralyzed", "petrified", "poined"],
+      "onApply": [{"removeEffect": {"name": ["paralyzed", "petrified", "poisoned"], "on": "target"}}],
+      "duration": {"hours": 1}
+     }
+    ]
+   }
+  },
+  {
+   "key": "AU:spell:幻影巨龙",
+   "verdict": "partial",
+   "why": "已自动化专注（1 分钟）与附赠动作吐息的智力豁免、6d6（施法时选类型）伤害及半伤；但'创造免疫伤害/状态的巨龙幻象实体、出现时范围感知豁免、丢下持握物、回合末视线重投豁免、移动幻象、看穿检定给优势'均无接口（原文：'巨龙实体、移动、看穿检定与视线豁免由人判定'）。",
+   "missing": [
+    "缺少创造'免疫所有伤害与状态'的幻象实体（对象/召唤）机制",
+    "缺少出现时范围内敌人批量豁免并'丢下持握物'的节点（无持握物接口）",
+    "缺少视线判定与'看不到幻象重投豁免'的窗口（引擎无地图几何/视线）",
+    "缺少智力(调查)检定看穿幻象并获豁免优势的接口",
+    "缺少'陷入恐慌(frightened)'状态旗标（flags 未列出该状态）"
+   ]
+  },
+  {
+   "key": "AU:spell:魂灵提灯",
+   "verdict": "partial",
+   "why": "已自动化持续 10 分钟效应、附赠动作 choose 三种效应、护佑盟友的攻击劣势（魂灵护佑 rollMods）；但'光照内敌人死亡收集灵魂碎片（容量=施法属性调整值）'无死亡时机窗口与专属资源池，且 choose 选项里未补入汲取/修复的具体豁免与伤害/治疗（原文：'灵魂碎片的收集与计数需手动处理'）。",
+   "missing": [
+    "缺少'光照范围内敌人死亡'时机窗口（死亡不开窗口，引擎无 light/geometry 判定）以自动收集临时资源（灵魂碎片）",
+    "缺少上限=施法属性调整值、法术结束消散的专属资源池机制",
+    "choose 选项未补入【汲取生命】豁免伤害与【修复亡灵】治疗节点"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "lantern-power",
+      "root": ["choose"],
+      "choose": {
+       "options": [
+        {"label": "汲取生命", "root": ["save"], "save": {"ability": "con", "dc": "self.spell.dc", "to": "target", "onFail": {"damage": {"dice": "4d8 + self.spell.mod", "type": "necrotic", "to": "target"}}, "onSuccess": {"damage": {"dice": "4d8 + self.spell.mod", "type": "necrotic", "to": "target", "scale": 0.5}}}},
+        {"label": "修复亡灵", "filter": "target.type == 'undead'", "root": ["heal"], "heal": {"dice": "4d8 + self.spell.mod", "to": "target"}},
+        {"label": "护佑盟友", "root": ["applyEffect"], "applyEffect": {"template": "魂灵护佑", "to": "target"}}
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "key": "AU:spell:汲能术",
+   "verdict": "partial",
+   "why": "已自动化专注、敏捷豁免失败 (1+slot.level)d8 暗蚀伤害、成功半伤且法术结束、每回合附赠动作 2d8 伤害（drain）；但'造成伤害时你恢复一半生命值（吸血）'缺少按实际伤害自动治疗施法者的机制（原文：'恢复生命值、距离与掩护需手动判定'）。",
+   "missing": [
+    "缺少'按本次造成伤害的一半为施法者恢复生命值'的吸血结算机制（damage 节点无法联动治疗来源方；无 healByDamage 接口）"
+   ],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "root": ["save"],
+      "save": {"ability": "dex", "dc": "self.spell.dc", "to": "target",
+        "onFail": {"damage": {"dice": "(1 + slot.level)d8", "type": "necrotic", "to": "target"}, "applyEffect": {"template": "汲能术", "to": "target"}},
+        "onSuccess": {"damage": {"dice": "(1 + slot.level)d8", "type": "necrotic", "to": "target", "scale": 0.5}, "endConcentration": true}
+      }
+     }
+    ]
+   }
+  },
+  {
+   "key": "AU:spell:假寐术",
+   "verdict": "partial",
+   "why": "已自动化选择 (slot.level) 名自愿生物并施加 10 分钟昏迷效应；但'动作摇醒提前终止'无接口（受伤害终止可用 damageTaken 触发器实现）、'满 10 分钟自动完成短休结算 + 长休前免疫标记'无对应机制（原文：'短休结算与摇醒需手动处理'）。",
+   "missing": [
+    "缺少'其他生物用动作摇醒'的交互/触发接口",
+    "缺少持续满时长后自动触发'完成短休结算'的机制（restCompleted 窗口存在但无法强制发起短休）",
+    "缺少'长休前不能再受此法术影响'的免疫标记/资源机制",
+    "昏迷(unconscious)条件旗标能否直接施加需确认（flags.cannot 未列出该状态）"
+   ]
+  },
+  {
+   "key": "AU:spell:距离失真",
+   "verdict": "partial",
+   "why": "已自动化专注（10 分钟）、区域创造（area sphere/zone）、缩地成寸速度 +20 至下回合结束、forEach 选择；但'区域视为困难地形'无对应 statics/旗标，且'进入/结束回合触发'依赖 zone 节点的地图空间判定（引擎无地图几何）（原文：'进入/结束回合触发与困难地形需手动处理'）。",
+   "missing": [
+    "缺少'困难地形'的 statics/旗标表达（effects 无 difficultTerrain 字段）",
+    "zone 节点对'生物进入区域/区域内结束回合'的空间判定依赖地图几何，引擎未保证"
+   ]
+  }
+ ]
+}

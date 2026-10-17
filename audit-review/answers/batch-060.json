@@ -1,0 +1,130 @@
+{
+  "batch": "batch-060",
+  "answers": [
+    {
+      "key": "XPHB:武僧:返本还元:10",
+      "verdict": "full",
+      "why": "原文「每次自己的回合结束时，可以移除魅惑、恐慌或中毒之一」可用 turnEnded 触发器 + choose 选其一 + removeEffect 完整结算；「不吃不喝不提升力竭」按原文由人处理，不属本规则自动部分。",
+      "missing": [],
+      "patch": {
+        "triggers": [
+          {
+            "id": "clear",
+            "label": "返本还元：移除魅惑、恐慌或中毒",
+            "on": "turnEnded",
+            "role": "actor",
+            "window": "after",
+            "when": "self.has('魅惑') || self.has('恐慌') || self.has('中毒')",
+            "cost": [],
+            "do": [
+              { "choose": { "options": ["魅惑", "恐慌", "中毒"], "var": "cond" } },
+              { "if": { "when": "cond == '魅惑'", "do": [ { "removeEffect": { "template": "魅惑", "to": "self" } } ] } },
+              { "if": { "when": "cond == '恐慌'", "do": [ { "removeEffect": { "template": "恐慌", "to": "self" } } ] } },
+              { "if": { "when": "cond == '中毒'", "do": [ { "removeEffect": { "template": "中毒", "to": "self" } } ] } }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "XPHB:武僧:飞檐走壁:9",
+      "verdict": "manual",
+      "why": "原文「可在垂直表面和液体表面上移动而不坠落」属于三维高度/坠落与地形攀爬移动，引擎不处理（interfaces §5 明确不处理三维高度、滞空、坠落及地形/移动），完全由人处理。",
+      "missing": [
+        "三维高度/坠落与垂直表面、液体表面移动（interfaces §5：三维高度、滞空、坠落及地形/攀爬移动引擎不处理）"
+      ]
+    },
+    {
+      "key": "XPHB:武僧:黑暗术:3",
+      "verdict": "partial",
+      "why": "原文「消耗 1 点功力施展黑暗术…半径15尺球状区域、随专注10分钟存在、生物进入提示」已用 action(zone) + 进入日志自动结算；但「你可以看穿黑暗区域」属视线判定、「每个回合开始移动区域」引擎不能移动已放下区域，二者需人处理。",
+      "missing": [
+        "视线/光照判定（interfaces §5 不处理视线/光照）",
+        "区域源点每回合移动（zone 不支持移动已放下的区域）"
+      ]
+    },
+    {
+      "key": "XPHB:武僧:疾步如风:2",
+      "verdict": "manual",
+      "why": "原文仅「跳跃距离翻倍：引擎没有跳跃距离，由人处理」，跳跃距离属移动/地形类规则，引擎不管理，完全由人处理（现有 data 中的疾走/撤离动作不在本规则原文内）。",
+      "missing": [
+        "跳跃距离属性与翻倍计算（interfaces §5 移动/地形类规则引擎不处理）"
+      ]
+    },
+    {
+      "key": "XPHB:武僧:流星步:11",
+      "verdict": "partial",
+      "why": "原文「使用一个附赠动作而非疾步如风后，可立即使用疾步如风」已用 free 动作 + ask 提问实现疾走/撤离；但引擎不检查是否真用过附赠动作、不限制一回合一次、且「跳跃距离翻倍」不管，靠提问与玩家记忆。",
+      "missing": [
+        "附赠动作使用后联动时机与「非疾步如风附赠动作」判定（引擎无此后置时机、不记录所用附赠动作）",
+        "一回合一次限制（actions 无 limit 字段，触发器 limit 不适用此场景）",
+        "跳跃距离翻倍（移动/地形，引擎不处理）"
+      ]
+    },
+    {
+      "key": "XPHB:武僧:敏捷攻击:1",
+      "verdict": "partial",
+      "why": "原文「徒手打击与武僧武器的攻击检定与伤害改用敏捷」已自动化（底层处理）；但「擒抱/推撞的豁免 DC 改用敏捷」属基础动作本身，引擎不能替换关键属性，需人处理。",
+      "missing": [
+        "基础动作（擒抱/推撞）的豁免 DC 动态替换关键属性（力量→敏捷）接口（engine 不能替换基础动作 DC 的关键属性）"
+      ]
+    },
+    {
+      "key": "XPHB:武僧:命极之手:17",
+      "verdict": "partial",
+      "why": "原文「消耗5点功力、触碰、以4d10+感知调整值复活并移除目盲/耳聋/麻痹/中毒/震慑、每次长休一次」中，功力消耗、治疗、移除五种状态、长休一次均可自动；但「复活/清除死亡状态」引擎无对应节点，必要时手动。",
+      "missing": [
+        "清除死亡状态/复活死亡生物的节点（interfaces 节点列表无 revive；setHp 仅触发器 modify 可用，复活不属于可自动结算的动作节点）"
+      ]
+    },
+    {
+      "key": "XPHB:武僧:轻身坠:4",
+      "verdict": "partial",
+      "why": "原文「承受坠落伤害时用反应减 5×武僧等级」已用 damageIncoming 触发器 + reaction 代价 + reduceDamage 实现减量；但引擎无坠落伤害标记，需以钝击伤害 + ask 判定是否为坠落，非完全自动。",
+      "missing": [
+        "坠落伤害标记/判定（interfaces §5 未处理坠落，须以钝击+ask 绕）"
+      ]
+    },
+    {
+      "key": "XPHB:武僧:散打技巧:3",
+      "verdict": "full",
+      "why": "原文「命中后可迫使承受慌神/推离/失衡之一」全部可用：choose 选其一；慌神用 effect 旗标 cannot:['opportunityAttack']（interfaces §4 已支持）；推离用 save(str)+move(push 15)；失衡用 save(dex)+applyEffect(倒地)；DC=8+感知+熟练可写表达式。旧审计称无借机攻击标志已过时。",
+      "missing": [],
+      "patch": {
+        "triggers": [
+          {
+            "id": "open-hand",
+            "label": "散打技巧（疾风连击命中）",
+            "on": "attackHit",
+            "role": "actor",
+            "window": "after",
+            "when": "attack.unarmed",
+            "cost": [],
+            "do": [
+              { "choose": { "options": ["慌神", "推离", "失衡"], "var": "pick" } },
+              { "if": { "when": "pick == '慌神'", "do": [ { "applyEffect": { "template": "慌神", "to": "target" } } ] } },
+              { "if": { "when": "pick == '推离'", "do": [ { "save": { "ability": "str", "dc": "8 + self.wis + self.prof", "to": "target", "onFail": [ { "move": { "mode": "push", "distance": 15, "to": "target" } } ] } } ] } },
+              { "if": { "when": "pick == '失衡'", "do": [ { "save": { "ability": "dex", "dc": "8 + self.wis + self.prof", "to": "target", "onFail": [ { "applyEffect": { "template": "倒地", "to": "target" } } ] } } ] } }
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "name": "慌神",
+            "flags": { "cannot": ["opportunityAttack"] },
+            "duration": { "until": { "at": "turnStart", "of": "bearer", "nth": 1 } }
+          }
+        ]
+      }
+    },
+    {
+      "key": "XPHB:武僧:渗透劲:17",
+      "verdict": "partial",
+      "why": "原文「攻击打入暗劲、结束时的体质豁免 DC 按功力豁免 DC」可用 trigger(attackHit)+applyEffect 与 save 节点自动；但「暗劲持续武僧等级的天数」无法自动计时、「同一时间仅一名生物处于暗劲」的唯一性约束引擎不提供，需人手动。",
+      "missing": [
+        "Duration 天数（days）计时（effects duration 无 days 支持）",
+        "同时仅一名生物持有效果的唯一性约束（engine 无全局唯一性限制接口）"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,199 @@
+{
+  "batch": "batch-044",
+  "answers": [
+    {
+      "key": "XGE:spell:元素灾厄",
+      "verdict": "partial",
+      "why": "体质豁免（save）可自动结算，但「剥夺目标对该伤害类型的抗性」与「每回合首次受该类型伤害追加2d6」当前 data 里 effect 为空、root 仅 save，均未实现。",
+      "missing": [
+        "effect.statics 仅有 resist（赋予抗性），无「移除目标已有抗性」的 flag/节点（applyEffect 只能挂效应，不能减抗）",
+        "无持久化「选定伤害类型」并在 damageIncoming 触发器里按该类型过滤、且 oncePerTurn 追加 2d6 的接口组合（需 choose 选项持久化 + trigger on:damageIncoming + when 类型匹配 + limit:oncePerTurn，类型匹配表达式未确认）"
+      ],
+      "patch": {
+        "actions[0].root": ["save", "choose"],
+        "triggers": [
+          {
+            "id": "t-bane",
+            "label": "元素灾厄：每回合首次该类型伤害+2d6",
+            "on": "damageIncoming",
+            "window": "after",
+            "role": "target",
+            "when": "damage.type == chosenType",
+            "limit": "oncePerTurn",
+            "do": [{"damage": {"dice": "2d6", "to": "target"}}]
+          }
+        ]
+      }
+    },
+    {
+      "key": "XGE:spell:召唤次级恶魔",
+      "verdict": "manual",
+      "why": "规则原文明确列出「引擎做不了的部分」：数量与挑战等级由掷 d6 决定、恶魔数据块需 DM 从图鉴取、恶魔自主掷先攻并索敌攻击最近非恶魔生物、法阵需人工画——核心召唤效果完全人工。",
+      "missing": [
+        "按 d6 随机决定数量/挑战等级、从图鉴取恶魔数据块的随机召唤接口（summon 节点仅支持 count 同组顶替，无掷骰选型与图鉴取数）",
+        "群体随从的独立先攻与「自主追逐攻击最近非恶魔生物」的 AI 索敌系统（引擎无自主 AI）",
+        "地图上画出法阵并遵守「恶魔不能穿过/伤害法阵、不能以法阵中人为目标」的空间约束（无地图几何）"
+      ]
+    },
+    {
+      "key": "XGE:spell:治愈之魂",
+      "verdict": "partial",
+      "why": "zone 节点已可放置 5 尺立方并随专注存在，进入/回合开始的治疗可由 zone 触发器 + oncePerTurn 实现，但「不能治疗构装体与不死生物」的类型排除与「附赠动作移动精魂 30 尺」无法自动结算。",
+      "missing": [
+        "按生物类型排除治疗的过滤（when 表达式需 target 类型标签，构装体/不死的类型判定接口未确认）",
+        "「附赠动作把精魂移动 30 尺」的 zone 位移接口（move 节点仅 push/pull/teleport 作用于生物，无移动区域节点）"
+      ],
+      "patch": {
+        "resources": [
+          {"id": "治愈次数", "max": "1+self.spellMod", "min": 2}
+        ],
+        "triggers": [
+          {
+            "id": "t-heal",
+            "label": "治愈之魂：进入或回合开始治疗",
+            "on": "turnStarted",
+            "window": "after",
+            "role": "any",
+            "when": "inZone('治愈之魂')",
+            "limit": "oncePerTurn",
+            "do": [
+              {"heal": {"dice": "(1+slot.level)d6", "to": "target"}},
+              {"resource": {"id": "治愈次数", "n": -1}}
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "XGE:spell:致病辐射",
+      "verdict": "partial",
+      "why": "zone 节点可放置 30 尺半径区域，进入/回合开始的体质豁免 + 4d10 光耀 + 1 级力竭 + 绿光可由 zone 触发器实现，但「绿光使隐形失效」「光芒绕过拐角」「提前结束残留力竭」需人工。",
+      "missing": [
+        "绿光「使生物无法从隐形中获益」对应的 effect flag（cannot 列表无相关项）",
+        "光芒绕过拐角的判定（无地图几何/视线）",
+        "法术提前结束时统一清除所赋予力竭的生命周期联动（无 concentration 结束自动清效应接口，需手动 removeEffect）"
+      ],
+      "patch": {
+        "triggers": [
+          {
+            "id": "t-sicken",
+            "label": "致病辐射：首次进入/回合开始豁免",
+            "on": "turnStarted",
+            "window": "after",
+            "role": "any",
+            "when": "inZone('致病辐射')",
+            "limit": "oncePerTurn",
+            "do": [
+              {"save": {"ability": "con", "onFail": [
+                {"damage": {"dice": "4d10", "type": "radiant", "to": "target"}},
+                {"applyEffect": {"template": "致病辐射：力竭1", "to": "target", "duration": {"minutes": 10}}},
+                {"applyEffect": {"template": "致病辐射：绿光", "to": "target"}}
+              ]}}
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "XGE:spell:众星冠冕",
+      "verdict": "partial",
+      "why": "射出光点（mote-attack）的远程法术攻击 + 4d12 光耀已可自动结算，但光点计数（消耗计数、最后一枚时提前结束）与「≥4 明亮+微光 / 1-3 微光」的动态光照无法自动结算。",
+      "missing": [
+        "动态光照（statics 无光照字段，光照在 interfaces.md『明确做不到』清单中）",
+        "光点计数资源 + 消耗最后一枚时 endConcentration 的联动（resource 节点 + endConcentration 可补，属补able 部分）"
+      ],
+      "patch": {
+        "resources": [
+          {"id": "光点", "max": "7 + (slot.level>=8 ? (slot.level-7)*2 : 0)", "min": 0}
+        ],
+        "actions[1].root": [
+          "attack",
+          {"resource": {"id": "光点", "n": -1}},
+          {"if": {"cond": "self.resource('光点')==0", "do": [{"endConcentration": {}}]}},
+          "note"
+        ]
+      }
+    },
+    {
+      "key": "XGE:spell:转化岩石",
+      "verdict": "partial",
+      "why": "choose 选【化石为泥/化泥为石】+ 力量/敏捷豁免 + 4d8 钝击 + 束缚效应 + 脱离动作均可由节点实现，但「永久修改地图三维地形（泥浆/岩石）」与「4 比 1 困难地形移动力消耗」需人工。",
+      "missing": [
+        "永久修改地图地形的接口（无地形/几何修改节点）",
+        "4:1 超困难地形移动力消耗（无困难地形/地形移动力接口）"
+      ],
+      "patch": {
+        "actions[0].root": ["choose", {"zone": {"onEnter": "mudSave", "onTurnEnd": "mudSave"}}],
+        "actions[1].root": [
+          {"save": {"ability": "str", "onFail": [{"applyEffect": {"template": "泥浆束缚", "to": "target"}}]}}
+        ]
+      }
+    },
+    {
+      "key": "XGE:spell:自然之怒",
+      "verdict": "partial",
+      "why": "树木挥击/根藤缠绕/投石的豁免与攻击（treeStrike/rootGrasp/throwRock）在手动点按时可自动结算，但「区域内对敌人单向困难地形」与「在你的回合开始/结束时引擎自动对区域内每个敌人逐个结算」无法自动。",
+      "missing": [
+        "对敌方单向困难地形的地形接口（无困难地形/地形移动力节点）",
+        "「你的回合开始/结束」对区域内每个敌人自动触发结算的时机（zone 触发器按生物自身 turnStarted 触发，无法锚定到施法者回合并遍历区域内敌人，需 DM 点按钮）"
+      ],
+      "patch": {
+        "actions[0].root": ["applyEffect", {"zone": {"label": "自然之怒"}}, "note"]
+      }
+    },
+    {
+      "key": "XPHB:阿斯莫",
+      "verdict": "partial",
+      "why": "治愈之手、天界启示三种形态（飞翼/内耀辉光/死灵环绕）、内耀辉光回合结束伤害（radiance-pulse）、提前结束变身均已建模，但「天堂飞翼飞行速度」「内耀辉光光照」与「天界启示对攻击/法术伤害追加伤害并询问」无对应接口。",
+      "missing": [
+        "飞行速度 flySpeed 的 effect statics 修正（statics 列有 speed 但未确认支持 flySpeed 飞行速度）",
+        "动态光照接口（光照在『明确做不到』清单）",
+        "「对攻击或法术造成的伤害追加伤害并询问、非攻击/法术伤害拒绝」的窗口触发器（无直接挂到 attack/spell damage 上并按类型筛选的 modify/trigger，需 ask 筛选）"
+      ],
+      "patch": {
+        "triggers": [
+          {
+            "id": "t-radiance-end",
+            "label": "内耀辉光：回合结束伤害",
+            "on": "turnEnded",
+            "window": "after",
+            "role": "actor",
+            "when": "self.hasEffect('内耀辉光')",
+            "do": [{"forEach": {"in": "emanation(10)", "do": [{"damage": {"to": "each"}}]}}]
+          }
+        ]
+      }
+    },
+    {
+      "key": "XPHB:矮人",
+      "verdict": "partial",
+      "why": "资源「石中精妙」+ 附赠动作施加震颤感知效应（含 10 分钟 duration）已建模，但震颤感知这一特殊感官本身引擎不处理，且「仅在避免/结束中毒时中毒豁免优势」需条件化筛选。",
+      "missing": [
+        "震颤感知（tremorsense）特殊感官支持（statics/effect 无感官字段，也无地图几何判定是否位于岩石表面）",
+        "「仅当避免/结束中毒时」中毒豁免优势的条件化触发（需 saveForced 触发器 + when 中毒条件筛选，接口未确认）"
+      ],
+      "patch": {
+        "triggers": [
+          {
+            "id": "t-poison-adv",
+            "label": "矮人：中毒豁免优势",
+            "on": "saveForced",
+            "window": "before",
+            "role": "actor",
+            "when": "save.ability=='con' && self.condition('poisoned')",
+            "do": [{"rollMods": {"op": "advantage"}}]
+          }
+        ]
+      }
+    },
+    {
+      "key": "XPHB:暗夜精魂之恩惠",
+      "verdict": "partial",
+      "why": "融身入影（ask 确认微光/黑暗后 applyEffect 隐形）、幽影化身（apply/remove resist）已建模，但「隐形在动作/附赠/反应后立即结束」所需 endsOn 接口未在 interfaces.md 出现，且「幽影化身抗性依赖环境光照」需人工判断开/关。",
+      "missing": [
+        "隐形效应未在 effects 中定义，且「执行动作/附赠/反应后自动结束隐形」的 endsOn:{event:'actionUsed'} 在 interfaces.md 效应 duration 说明中未出现（无法确认可补）",
+        "幽影化身抗性是否生效依赖是否身处微光/黑暗的环境判定（无光照几何），需人工 apply/removeEffect 切换"
+      ]
+    }
+  ]
+}

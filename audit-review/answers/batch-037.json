@@ -1,0 +1,125 @@
+{
+  "batch": "batch-037",
+  "answers": [
+    {
+      "key": "XGE:游荡者:梦幻舞步:3",
+      "verdict": "full",
+      "why": "原文「攻击目标与效应的时机、持续时间引擎自动处理（效应在你回合结束时消失）」已由 d20Rolled 触发+applyEffect+回合末消失实现；「它不能对你借机攻击」可用 effects flags cannot:['opportunityAttack']（interfaces §4 已支持，旧审计称「引擎没有开关」已过时）完整结算。",
+      "missing": [],
+      "patch": {
+        "effects": [
+          {
+            "name": "梦幻舞步",
+            "statics": [],
+            "flags": { "cannot": ["opportunityAttack"] },
+            "rollMods": 0,
+            "triggers": 1,
+            "duration": { "until": { "at": "turnEnd", "of": "source", "nth": 0 } }
+          }
+        ]
+      }
+    },
+    {
+      "key": "XGE:游荡者:散兵战术:3",
+      "verdict": "partial",
+      "why": "原文「触发时机与反应代价引擎自动处理」已实现（turnEnded+enemy+within5 触发、reaction 代价、flags cannot:['provoke'] 防借机）；但「移动至多你速度一半的距离」引擎移动流程只跑当前回合棋子、别人回合手动拖子看不到借机攻击，需人手动移动。",
+      "missing": [
+        "别人回合里由引擎执行自愿的半速自我移动（engine 的 move 节点只支持 push/pull/teleport，且移动流程仅处理当前回合棋子；自愿移动须手动拖子）"
+      ]
+    },
+    {
+      "key": "XGE:游荡者:瞬息打击:17",
+      "verdict": "manual",
+      "why": "原文「额外的武器攻击与偷袭由人手动发起与判定」——引擎无偷袭(sneak attack)机制、无法自动发起武器攻击或套用偷袭伤害，也无可对「同一回合对同一目标偷袭两次」做限制，整条需人处理。",
+      "missing": [
+        "偷袭(sneak attack)机制（engine 无 apply/check 偷袭的节点，也无「本回合已对某目标偷袭」的资源/唯一性限制接口）",
+        "附赠动作附带发起额外武器攻击并结算（engine 无在 bonus 动作里自动发起武器攻击+判定的写法）"
+      ]
+    },
+    {
+      "key": "XGE:游荡者:误导:13",
+      "verdict": "partial",
+      "why": "原文「引擎取消对你的命中」已用 attackHit+window before+cancel 自动；但「对掩护生物的攻击由人手动判定结算」，且掩护(cover)判定属视线/掩护（interfaces §5 不处理，用 ask 桥接），重定向后的攻击解析不自动。",
+      "missing": [
+        "重定向后对新目标（掩护生物）的攻击自动结算（engine 的 redirect/attack 解析对新目标不自动，需人按 AC 手动结算）",
+        "掩护(cover)判定（interfaces §5 不处理视线/掩护/隐蔽，须用 ask 桥接）"
+      ]
+    },
+    {
+      "key": "XGE:游荡者:潇洒气质:9",
+      "verdict": "partial",
+      "why": "原文「检定对抗由人手动判定」——引擎无双方对抗检定(contested check)节点；「检定成功时施加嘲讽/魅惑」因需先有对抗结果、且涉及攻击劣势、友好态度、距离>60尺结束等无对应接口，亦需人处理。引擎仅能搭好动作与目标选择框架。",
+      "missing": [
+        "对抗检定节点（contested check：魅力(游说) vs 感知(洞悉) 双向掷骰与结果对比，interfaces 无此节点）",
+        "效应：对除你外目标的攻击劣势、视为友好(魅惑态度)、距离>60尺提前结束（无对应 flags/距离计时接口）",
+        "听见你且共享语言先决（interfaces §5 不处理听觉/语言类判定）"
+      ]
+    },
+    {
+      "key": "XGE:游荡者:战术洞悉:3",
+      "verdict": "manual",
+      "why": "原文「对抗检定由人手动判定」且「即使无优势也能造成偷袭伤害」依赖未建模的偷袭机制——引擎无 sneak attack 节点、无法套用偷袭或 17级+3d6，整条需人处理。",
+      "missing": [
+        "对抗检定节点（contested check：洞悉 vs 欺瞒，interfaces 无此节点）",
+        "偷袭机制（「无优势也能偷袭」及 17级+3d6 依赖未建模的 sneak attack，engine 无对应节点）"
+      ]
+    },
+    {
+      "key": "XGE:游侠:猎手感知:3",
+      "verdict": "partial",
+      "why": "原文「获知其伤害免疫、抗性与易伤信息……由 DM 手动告知」——引擎无读取目标数据卡并展示的信息查询节点；但动作/60尺可见目标选择/长休次数资源可由引擎建模，仅信息揭示手动。",
+      "missing": [
+        "信息查询接口（读取目标生物的伤害免疫/抗/易伤并向玩家展示，interfaces 无此节点，DM 手动告知）",
+        "资源池未定义（「猎手感知」次数=感知调整值至少1、长休恢复，data.resources 为空）"
+      ]
+    },
+    {
+      "key": "XGE:游侠:灵体防御:15",
+      "verdict": "partial",
+      "why": "原文「可用反应使本次伤害减半」已用 attackHit+window before+halveDamage 自动；但「期间该攻击包含的伤害类型的抗性需人工确认处理」——statics.resist 为静态、无法按该次攻击伤害类型动态套用，需人确认。",
+      "missing": [
+        "动态按该次攻击伤害类型赋予抗性的写法（statics.resist 静态，engine 无法从 incoming attack 的伤害类型自动套用；「该攻击包含的伤害类型的抗性」需人确认）"
+      ]
+    },
+    {
+      "key": "XGE:游侠:魔法使的克星:11",
+      "verdict": "full",
+      "why": "原文「迫使感知豁免（DC=你的法术豁免DC），豁免失败其法术或传送失败并浪费」可用 trigger(spellCast, before)+modify cancelUnlessSave（setDc=self.spellDc、失败即取消）全自动；反应与资源消耗由 cost 处理，60尺可见用 ask 桥接。",
+      "missing": [],
+      "patch": {
+        "actions": [],
+        "triggers": [
+          {
+            "id": "magic-users-nemesis",
+            "label": "魔法使的克星",
+            "on": "spellCast",
+            "role": "any",
+            "window": "before",
+            "when": "ask('周围60尺内是否有你可见的生物施展法术或传送？')",
+            "cost": [
+              { "economy": "reaction" },
+              { "resource": "magic-users-nemesis" }
+            ],
+            "modify": [
+              { "op": "cancelUnlessSave", "ability": "wis", "dc": "self.spellDc" }
+            ],
+            "do": [],
+            "aim": "actor"
+          }
+        ],
+        "resources": [
+          { "id": "magic-users-nemesis", "max": 1, "recover": "shortOrLongRest" }
+        ]
+      }
+    },
+    {
+      "key": "XGE:游侠:杀手反制:15",
+      "verdict": "partial",
+      "why": "原文「【已自动化】时机与目标、反应代价、动作自动瞄准」已实现（saveForced 触发+hasEffect(狩猎开始)+ask+reaction+瞄准迫使者）；但「武器攻击本身」与「命中后本次豁免自动成功」引擎无在 saveForced 窗口替你掷攻击、也无条件改写豁免结果为成功的写法，需人处理。",
+      "missing": [
+        "在 saveForced 窗口里让引擎替你掷武器攻击的写法（无节点在豁免掷骰前自动发起攻击）",
+        "命中后把原豁免结果改写为自动成功（engine 的 saveForced 窗口不接受结果改写；modify 的 succeed 是无条件成功，无法做「仅命中才成功」的联动）"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+{
+ "batch": "batch-029",
+ "answers": [
+  {
+   "key": "TCE:游荡者:心灵低语:3",
+   "verdict": "partial",
+   "why": "目标选择(至多熟练加值个可见生物)与掷灵能骰可由 choose/number 处理，但'获得双向心灵感应交流能力'属通信/距离(一里)无法自动化（text 明言'感应时长、通信与距离由人手动处理'）",
+   "missing": ["无节点表示'心灵感应通信'；效应时长=骰值小时数无法绑定 number 动态时长（effect duration 需手动填）"],
+   "patch": {}
+  },
+  {
+   "key": "TCE:游荡者:心灵之刃:3",
+   "verdict": "partial",
+   "why": "空闲手塑刃并发动攻击(1d6+属性心灵伤害)与附赠副手刃(1d4)的攻击结算可由 attack/damage 处理，但'空闲手中/另一只手空闲'无手槽接口需 ask（data 已用 ask），且原 data 主攻击缺 1d6+属性调整值心灵伤害节点",
+   "missing": ["无法检查'空闲手'(无装备/手槽接口)；主攻击 1d6+属性调整值心灵伤害未写入 damage 节点；'刀刃命中或失手后立即消失'只能靠 effect 到期近似处理"],
+   "patch": {}
+  },
+  {
+   "key": "TCE:游侠:翻腾浪涌:7",
+   "verdict": "partial",
+   "why": "附赠动作消耗使用次数(资源池)与持续 1 分钟 + 失能提前结束可由 effect 处理，但'10 尺飞行速度且能悬浮'属三维/滞空无法自动（text 明言'飞行与悬浮需由人手动处理'，且 §5 明确做不到）",
+   "missing": ["飞行速度与悬浮无对应旗标/static（§5：三维高度、滞空、坠落明确做不到；statics 无法表达飞行速度类型）"],
+   "patch": {}
+  },
+  {
+   "key": "TCE:游侠:蜂聚集群:3",
+   "verdict": "partial",
+   "why": "选项①1d6(11级1d8)穿刺伤害与选项②力量豁免失败水平推15尺(11级倒地)可由 damage/save/move 处理，但选项③自身水平移动5尺与半身掩护需地图手动（text 明言'移动需在地图上手动处理'，§5 掩护无法处理）；trigger 还缺每回合一次限制",
+   "missing": ["自身水平移动5尺需地图手动（§5 无地图几何）；半身掩护属掩护无法自动（§5）；'最多15尺'需选距离；trigger 缺 limit:oncePerTurn 且 do 仅 choose 未落地三个选项"],
+   "patch": {
+    "triggers": [
+     {
+      "id": "swarm-gather",
+      "label": "蜂聚集群",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "turn.isMine",
+      "limit": "oncePerTurn",
+      "cost": [],
+      "modify": [],
+      "do": ["choose"]
+     }
+    ]
+   }
+  },
+  {
+   "key": "TCE:游侠:精宸所与:11",
+   "verdict": "manual",
+   "why": "text 明言三项皆人工处理，且'本次施法不要专注'引擎做不到（§5：改写另一道法术的专注明确做不到）",
+   "missing": ["无法改写妖精召唤术的施法专注（§5 明确做不到：改写另一道法术的施法时间/成分/专注，除第3节4个 plan 字段）；无'免费施放且不耗法术位'资源钩子"],
+   "patch": {}
+  },
+  {
+   "key": "TCE:游侠:群逸逃散:15",
+   "verdict": "partial",
+   "why": "受伤反应减半伤害可由 trigger.modify:halveDamage 自动结算（data 已含），但传送至30尺内未占据空间需地图手动（text 明言'传送需在地图上手动移动'）；resources 还缺使用次数池",
+   "missing": ["传送至30尺内可见未占据空间需地图手动（§5 无地图几何）；resources 缺 swarming-dispersal 池定义(次数=熟练加值,长休恢复)"],
+   "patch": {
+    "resources": [
+     { "id": "swarming-dispersal", "count": "pb", "recover": "longRest" }
+    ]
+   }
+  },
+  {
+   "key": "TCE:游侠:雾行漫游:15",
+   "verdict": "partial",
+   "why": "免费迷踪步自身(消耗 mistyStepFree、不耗位、move 传送)可由 action+move 处理，但'携带5尺内一个自愿生物一同传送'需地图手动（text 明言'这一同行效果需要人手动处理'）；resources 缺 mistyStepFree 池",
+   "missing": ["携带5尺内自愿盟友一并传送需手动（§5 无地图几何/换位）；resources 缺 mistyStepFree 池定义"],
+   "patch": {
+    "resources": [
+     { "id": "mistyStepFree", "count": 1, "recover": "longRest" }
+    ]
+   }
+  },
+  {
+   "key": "TCE:游侠:妖思魅缕:7",
+   "verdict": "partial",
+   "why": "反应触发(监听对抗魅惑/恐慌豁免成功并 ask 确认)与迫使目标感知豁免可由 d20Rolled 触发+save 处理，但引擎无法自动识别豁免是否由魅惑/恐慌引起(需 ask)，且原 data 仅 root:['save'] 未落地'失败陷入魅惑或恐慌1分钟(回合结束重复豁免)'与'自身对抗此类豁免优势'",
+   "missing": ["onFail 应用魅惑/恐慌效应(1分钟,回合结束重复豁免)未编码；自身对抗魅惑/恐慌豁免优势未编码；引擎无法自动识别豁免来源(需 ask 守规矩)"],
+   "patch": {}
+  },
+  {
+   "key": "TCE:云雾符文",
+   "verdict": "full",
+   "why": "反应拦截 attackHit 并把攻击目标重定向给另一生物、按新目标 AC 用原检定值重新判定可由 trigger.modify:redirect 自动结算（text 已确认引擎支持），资源池与重定向补上后即全自动；仅'新目标须距你30尺内'引擎不检查需 DM 守规矩(非硬阻塞)",
+   "missing": [],
+   "patch": {
+    "resources": [
+     { "id": "云雾符文", "count": 1, "recover": "shortOrLongRest" }
+    ],
+    "actions": [
+     {
+      "id": "use",
+      "name": "云雾符文：欺诈转移",
+      "activation": "reaction",
+      "cost": [ { "resource": "云雾符文" } ],
+      "targeting": null,
+      "trigger": {
+       "on": "attackHit",
+       "role": "any",
+       "window": "before",
+       "when": "attacker.id != self.id && (target.id == self.id || (canSee(self,target) && within(self,target,30)))",
+       "modify": [ { "op": "redirect" } ]
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [ "note" ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "TCE:增强奥术法器",
+   "verdict": "partial",
+   "why": "持握时法术攻击 +1/+2 加值可由 effect.statics:attack 自动结算，但'法术攻击时无视半掩护'引擎无法处理（text 明言'引擎无法自动处理掩护'），且 §5 掩护/隐蔽无地图几何",
+   "missing": ["法术攻击无视半掩护无法自动（§5 掩护/隐蔽无地图几何）；当前 data 未编码 +1/+2 法术攻击加值 effect"],
+   "patch": {
+    "effects": [
+     { "name": "增强奥术法器", "statics": ["attack"], "flags": null, "rollMods": 0, "triggers": 0, "duration": null }
+    ]
+   }
+  }
+ ]
+}

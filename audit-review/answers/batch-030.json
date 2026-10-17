@@ -1,0 +1,189 @@
+{
+  "batch": "batch-030",
+  "answers": [
+    {
+      "key": "TCE:战士:灵力跃动:7",
+      "verdict": "partial",
+      "why": "已自动「附赠动作+消耗资源(灵力跃动/灵能力量)+持续到本回合结束」(applyEffect/economy/note)，但「获得等同于两倍速度的飞行速度/多出一份移动力」无法用 statics.speed 表达（只能定值、速度值未知），且原文明确飞行本身引擎不追踪。",
+      "missing": [
+        "statics.speed 只支持定值，无法表达动态「两倍/一倍步行速度」加成",
+        "飞行速度无接口追踪（规则原文明确不追踪）"
+      ]
+    },
+    {
+      "key": "TCE:战士:念力控物:3",
+      "verdict": "partial",
+      "why": "已自动「动作消耗资源念力控物 + 选中30尺内可见其他生物 + 消耗灵能骰reset」(move/resource节点)，但「移动至多30尺到对你可见的未占据空间」teleport 无法校验落点可见/未占据（无地图几何），目标是否自愿需 ask，且未固定物件/微型物件交互引擎无接口需人工。",
+      "missing": [
+        "move(teleport) 无地图几何，无法校验落点「对你可见且未占据」",
+        "无 ask 节点确认目标是否自愿",
+        "未固定物件(至多大型)/微型物件抓取、给出与收回无接口"
+      ],
+      "patch": {
+        "actions": [
+          {
+            "id": "use",
+            "root": [
+              { "move": { "mode": "teleport", "range": 30, "to": "target" } },
+              { "ask": "目标是否自愿被移动？" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "TCE:战士:念力突刺:7",
+      "verdict": "partial",
+      "why": "已自动「灵能打击命中后 ask 确认，迫使目标力量豁免(DC=8+智力+熟练)」(attackHit trigger + save 节点)，但 onFail 后「令其倒地」未接 applyEffect、「将其任意方向水平移动至多10尺」由人处理（无方向/几何接口）。",
+      "missing": [
+        "save 的 onFail 未处理（缺少 choose 倒地/移动 的二选一）",
+        "「任意方向水平移动至多10尺」无接口（无地图几何/方向）"
+      ],
+      "patch": {
+        "triggers": [
+          {
+            "id": "thrust",
+            "do": [
+              {
+                "save": {
+                  "ability": "str",
+                  "dc": "8+self.mod('int')+self.prof",
+                  "onFail": [
+                    {
+                      "choose": {
+                        "options": [
+                          { "label": "倒地", "do": [ { "applyEffect": { "template": "prone" } } ] },
+                          { "label": "水平移动10尺(人工)", "do": [ { "note": "由DM在任意方向水平移动目标至多10尺" } ] }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "TCE:战士:念力宗师:18",
+      "verdict": "partial",
+      "why": "已自动「长休一次资源tk-master施展心灵遥控(专注10分钟) + 附赠动作(gated by ask) + 灵能骰重置」，但「维持专注回合中附赠武器攻击」root仅为 note 未真正攻击，「正在对心灵遥控维持专注」无法按具体法术验证(self.concentrating 不区分法术)，心灵遥控具体操控需人工。",
+      "missing": [
+        "无接口校验「正在对心灵遥控(特定法术)维持专注」(self.concentrating 不区分法术名)",
+        "心灵遥控的具体操控无接口（需人工）"
+      ],
+      "patch": {
+        "actions": [
+          { "id": "attack", "root": [ "attack" ] }
+        ]
+      }
+    },
+    {
+      "key": "TCE:战士:意念守护:10",
+      "verdict": "partial",
+      "why": "已自动「回合开始若处于魅惑/恐慌，消耗灵能骰 removeEffect 结束状态」(turnStarted trigger)，但 removeEffect 无法按效应来源过滤，会误移除「由法术等其它效应造成的」魅惑/恐慌（规则要求这些需人工结束）。",
+      "missing": [
+        "removeEffect 无法按效应来源(直接施加 vs 法术等造成)过滤，会误移除法术造成的魅惑/恐慌"
+      ],
+      "patch": {
+        "triggers": [
+          {
+            "id": "warding",
+            "do": [
+              { "removeEffect": { "template": "魅惑" } },
+              { "removeEffect": { "template": "恐慌" } }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "TCE:spell:暗影衍体召唤术",
+      "verdict": "partial",
+      "why": "已自动「专注至多1小时 + 施法时选情感(choose)」，但 cast 动作 root 仅 choose 缺少 summon 节点实际召唤灵魄；「恐惧尖叫1/日」无每日一次接口、哀伤之重/暗影潜藏仅文字、召唤位置需手动拖放均无接口。",
+      "missing": [
+        "cast 动作缺少 summon 节点实际召唤灵魄（可补）",
+        "「1/日」动作次数无接口（引擎无每日一次限制）",
+        "哀伤之重/暗影潜藏只有文字说明无接口",
+        "召唤落点需手动拖放（无地图几何）"
+      ],
+      "patch": {
+        "actions": [
+          {
+            "id": "cast",
+            "root": [
+              "choose",
+              { "summon": { "group": "shadow_wraith", "count": 1 } }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "TCE:spell:翠炎剑",
+      "verdict": "partial",
+      "why": "已自动「5尺内近战武器攻击 + 武器正常伤害」(attack节点)，但「命中后翠绿火焰飞跃至其5尺内另一可见生物造成施法属性调整值火焰伤害」需二次选目标且按「与目标距离5尺」过滤（无地图几何），11/17级第二目标伤害递增需人工。",
+      "missing": [
+        "无接口按「与目标相距5尺」过滤并二次选第二目标追加火焰伤害（无地图几何/二次 targeting）",
+        "11/17级第二目标伤害递增需手动"
+      ]
+    },
+    {
+      "key": "TCE:spell:轰雷剑",
+      "verdict": "partial",
+      "why": "已自动「5尺内近战武器攻击 + 武器伤害」(attack)，5级起命中额外雷鸣伤害可接 onHit；但「目标主动移动5尺或以上触发雷鸣伤害并结束法术」无对应触发器(引擎 triggers 仅 leftReach，无通用 move/位移事件，且无地图几何)，按原文需手动。",
+      "missing": [
+        "无 move/位移 触发器（仅 leftReach），无法在「目标移动5尺+」时结算雷鸣伤害并结束法术",
+        "无地图几何判断移动距离"
+      ],
+      "patch": {
+        "actions": [
+          {
+            "id": "use",
+            "root": [
+              {
+                "attack": {
+                  "onHit": [
+                    {
+                      "if": {
+                        "when": "self.castLevel>=5",
+                        "do": [ { "damage": { "dice": "1d8", "type": "thunder", "to": "target" } } ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "TCE:spell:魂灵环绕",
+      "verdict": "partial",
+      "why": "已自动「专注1分钟 + 自施 + 选伤害类型(choose) + 禁疗effect占位」，但「10尺内攻击命中追加所选类型1d8伤害」「受伤害生物禁疗至下回合」「10尺内可见生物回合初减速10尺」三处 effect 标了 triggers:1 却未定义具体触发节点(需 aura/attackHit/turnStarted)，且升环2d8/3d8/4d8与减速按原文需人工。",
+      "missing": [
+        "effect triggers:1 未定义：缺少 attackHit 追加伤害 / damageTaken 应用禁疗 / turnStarted 减速10尺 的具体 trigger",
+        "升环伤害2d8/3d8/4d8与速度降低无接口（按文本手动）"
+      ]
+    },
+    {
+      "key": "TCE:spell:塔莎超凡形态",
+      "verdict": "partial",
+      "why": "已自动「专注1分钟 + 选位面(choose) + effect占位」，但「+40飞行速度」「所有武器攻击视为魔法且用施法属性代替力量/敏捷命中伤害」「攻击动作时攻击两次」均无接口，免疫伤害/状态需确认 statics.immune/conditionImmune 是否被支持（规则亦明确飞行与施法属性攻击加值需手动）。",
+      "missing": [
+        "飞行速度+40无接口（飞行不追踪）",
+        "无接口使「所有武器攻击视为魔法且用施法属性代替力/敏命中伤害」(statics/spellDc 无法改写武器攻击属性)",
+        "无「攻击动作时攻击两次」接口（无额外攻击次数）",
+        "statics.immune/conditionImmune 是否在引擎支持未确认（interfaces 仅列 resist）"
+      ],
+      "patch": {
+        "effects": [
+          { "name": "塔莎超凡形态：下层位面", "statics": { "ac": 2, "speed": 40 } },
+          { "name": "塔莎超凡形态：上层位面", "statics": { "ac": 2, "speed": 40 } }
+        ]
+      }
+    }
+  ]
+}

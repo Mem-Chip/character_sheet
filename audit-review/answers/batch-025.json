@@ -1,0 +1,123 @@
+{
+ "batch": "batch-025",
+ "answers": [
+  {
+   "key": "TCE:牧师:午夜飞步:6",
+   "verdict": "partial",
+   "why": "附赠动作+resource(长休恢复)+applyEffect获得1分钟增益已建模，但前置条件‘身处微光光照或黑暗中时’（text 原文）引擎无法自动判定，且飞行速度/三维移动需人工处理（text：‘引擎不追踪环境光照…飞行移动需由人手动处理’）。",
+   "missing": [
+    "环境光照级别判定（§5 视线/光照/掩护/隐蔽的判定，引擎无光照几何）",
+    "飞行模式与飞行高度/三维移动（§5 三维高度、滞空、坠落）"
+   ]
+  },
+  {
+   "key": "TCE:牧师:引导神力：和平抚慰:3",
+   "verdict": "partial",
+   "why": "消耗引导神力+对所选目标治疗（2d6+感知调整值）已由 action+economy+heal 建模；但‘移动期间进入任意其他生物5尺范围内时自动治疗（每个限一次）’需战棋移动轨迹事件（text：‘战棋移动路径与借机攻击豁免由人处理’），引擎无地图几何。",
+   "missing": [
+    "移动路径/轨迹事件判定（§5 无地图几何，无法判定移动中经过生物5尺范围）",
+    "借机攻击豁免（移动路径由人处理时一并手动）"
+   ]
+  },
+  {
+   "key": "TCE:牧师:增强联结:17",
+   "verdict": "manual",
+   "why": "text 明确‘保护联结…其生效距离与代受伤害的抗性结算由人在结算保护联结时手动处理’；引擎无‘联结生物’绑定关系接口，代受伤害需 redirect 但缺乏两端生物的绑定标识，无法自动识别保护联结双方。",
+   "missing": [
+    "生物间‘联结’绑定关系接口（引擎无生物间绑定/联结关系，无法锁定特定两名联结生物）",
+    "代受他人伤害时按 60 尺距离判定并施加伤害抗性的自动结算（redirect/减半可建模，但无绑定来源）"
+   ]
+  },
+  {
+   "key": "TCE:奇械学徒",
+   "verdict": "partial",
+   "why": "每日一次免费一环法术可用 resource(长休恢复)+choose(pool:ownSpells,maxLevel:1)+castFrom 建模；但 text 要求的‘所选（特定）的一环法术’无法用标准接口锁定为建卡时选定的那一道，choose 只能按 ownSpells 池放开选，无法固定为特定一道。",
+   "missing": [
+    "锁定‘所选特定一环法术’的接口（choose 只能按 ownSpells/ownCantrips 池放开选，无法固定为建卡时选定的那一道）"
+   ],
+   "patch": {
+    "resources": [
+     { "id": "奇械学徒（免费施展一环法术）", "recover": "longRest", "max": 1 }
+    ],
+    "actions": [
+     {
+      "id": "freeCast",
+      "name": "奇械学徒：免费施展一环法术",
+      "activation": "action",
+      "cost": [ { "resource": "奇械学徒（免费施展一环法术）" } ],
+      "targeting": { "type": "point", "count": 1, "range": 60 },
+      "root": [
+       { "choose": { "pool": { "from": "ownSpells", "maxLevel": 1, "singleTarget": true } } },
+       { "castFrom": { "fromVar": "choice", "to": "target" } }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "TCE:枪手",
+   "verdict": "full",
+   "why": "text 明确‘引擎本身不会因为敌人在 5 尺内就给远程攻击加劣势，所以也不需要在战斗数据里取消’，该站位规则已被引擎默认行为满足；枪械熟练属静态层、LD（装填）词条忽略，无需任何动作/节点，data 留空即正确。",
+   "missing": []
+  },
+  {
+   "key": "TCE:人工生命仆从",
+   "verdict": "partial",
+   "why": "召唤已由 summon 节点自动建模、反射闪避已自动化；但 text 明确‘引擎让召唤物自己行动、管不了这条附赠动作’——附赠动作命令仅以 note 记录，引擎无法强制召唤物仅在命令后行动，且死亡消失（只留心脏）、对它施展修复术恢复2d6需手动。",
+   "missing": [
+    "强制召唤物仅在附赠动作命令后行动的行为约束（§5 无此控制流）",
+    "你或它死亡时消失（仅留心脏）的自动结算",
+    "对它施展修复术恢复 2d6 的自动结算"
+   ]
+  },
+  {
+   "key": "TCE:圣武士:尘世壁垒:20",
+   "verdict": "partial",
+   "why": "附赠动作获得1分钟增益、长休1次+消耗5环法术位重置已由 resource/applyEffect/removeEffect/reset 动作建模；但 text 明确‘真实视觉（手动处理）’（§5 视线）与‘放逐与免疫需手动处理’，且‘对异怪/天界/元素/精类/邪魔优势’需按生物类型过滤，引擎无生物类型筛选接口。",
+   "missing": [
+    "真实视觉（§5 视线/光照/隐蔽判定，引擎无光照几何）",
+    "按生物类型（异怪/天界/元素/精类/邪魔）施加攻击优势的条件过滤（引擎无生物类型标签筛选）",
+    "命中后魅力豁免失败→放逐/成功→24h免疫的自动结算"
+   ]
+  },
+  {
+   "key": "TCE:圣武士:鼓舞斩:3",
+   "verdict": "full",
+   "why": "引擎可用 bonus 动作+resource(channel-divinity)+targeting(自身或30尺内盟友)+tempHp(2d8+圣武士等级) 完整结算‘以至圣斩造成伤害后以附赠动作分配合计 2d8+等级临时生命值给自身或所选生物’，无需再靠手动调整；原 partial 仅因‘分配给他人需手动调整’，该部分可用 targeting 补上。",
+   "missing": [],
+   "patch": {
+    "actions": [
+     {
+      "id": "use",
+      "name": "引导神力：鼓舞斩",
+      "activation": "bonus",
+      "cost": [ { "resource": "channel-divinity" } ],
+      "targeting": { "type": "creature", "count": 1, "range": 30, "filter": "target.id == self.id || target.isAllyOf(self)" },
+      "requires": "ask('刚才是否以至圣斩造成了伤害？')",
+      "root": [
+       { "tempHp": { "dice": "2d8 + self.level", "to": "target" } },
+       { "note": "临时生命值分配给自身或30尺内所选盟友" }
+      ]
+     }
+    ],
+    "triggers": []
+   }
+  },
+  {
+   "key": "TCE:圣武士:辉煌防御:15",
+   "verdict": "partial",
+   "why": "反应+resource(radiantDefense)+attackHit(before)触发 applyEffect 加 AC 已由建模，text 称‘加值由引擎加上并立刻按新AC重新判定’；但 text 明确‘引擎不会自动发起这次武器攻击，请在武器行手动攻击一次’——失手后对触及内攻击者的反击需人工。",
+   "missing": [
+    "攻击因本反应失手后对触及范围内攻击者的自动武器反击（text 明确引擎不发起，需人在武器行手动）"
+   ]
+  },
+  {
+   "key": "TCE:圣武士:警戒呵斥:15",
+   "verdict": "partial",
+   "why": "反应窗口 d20Rolled(智力/感知/魅力豁免成功、自身或30尺可见盟友)已可触发 damage(2d8+魅力调整值力场)；但‘迫使豁免的生物’（source）无标准接口可自动取得，text 明确‘迫使豁免的生物需手动指定为目标结算’，当前 targeting 需人手动选。",
+   "missing": [
+    "获取‘迫使进行豁免检定的生物’（source）作为自动目标（窗口事件 d20Rolled/saveForced 未暴露迫使者 source 字段，需手动选目标）"
+   ]
+  }
+ ]
+}

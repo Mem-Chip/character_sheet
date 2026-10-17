@@ -1,0 +1,150 @@
+{
+ "batch": "batch-001",
+ "answers": [
+  {
+   "key": "XPHB:瞬发法术",
+   "verdict": "manual",
+   "why": "规则核心是「把施法时间为动作的法术改为附赠动作」并限制本回合一环以上法术施放，但改写另一道法术施法时间属 interfaces.md §5 明确做不到、同回合一环以上施放校验也无接口，现有 data 全空、无任何自动结算。",
+   "missing": ["改写另一道法术施法时间（动作→附赠动作）的接口（interfaces.md §5 明确做不到）", "本回合一环以上法术施放次数限制的校验机制", "术法点资源池"]
+  },
+  {
+   "key": "XPHB:德鲁伊:荒野形态:2",
+   "verdict": "partial",
+   "why": "已自动：附赠动作消耗 wildshape-uses、获得德鲁伊等级临时生命、flags.cannot=castSpells、失能/死亡结束与提前结束；但变形为野兽形态（替换力量/敏捷/体质/AC/速度/动作数据卡）与装备处理属变形（§5 做不到）需人处理。",
+   "missing": ["把角色数据卡替换为野兽形态（力量/敏捷/体质、AC、速度、动作）的变形接口（interfaces.md §5 明确做不到）", "野兽形态下装备卸下与恢复的自动处理"]
+  },
+  {
+   "key": "XPHB:德鲁伊:荒野伙伴:2",
+   "verdict": "partial",
+   "why": "已自动：魔法动作消耗 wildshape-uses 或法术位（两个 action 的 cost 已建）；但魔宠（妖精）本身按文本由人处理，未用 summon 节点召唤入场，无自动结算。",
+   "missing": ["把寻获魔宠的妖精作为独立实体召唤入场的 summon 节点配置（现有 data 只建了资源消耗动作）"]
+  },
+  {
+   "key": "XPHB:德鲁伊:原力蛮击:7",
+   "verdict": "full",
+   "why": "trigger 已在 attackHit 用 ask 判定「是否荒野形态攻击」并限每回合一次，补 oncePerTurn 与 addDamage(1d8 选定类型) 后即可完全自动：命中后让玩家选寒冷/火焰/闪电/雷鸣并加 1d8。",
+   "missing": [],
+   "patch": {
+    "triggers": [
+     {
+      "id": "primal-strike",
+      "label": "原力蛮击",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "turn.isMine && !attack.spell && (attack.weapon || ask('这是荒野变形中野兽形态的攻击吗？'))",
+      "cost": [],
+      "limit": "oncePerTurn",
+      "modify": [],
+      "do": ["choose", "addDamage"]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XPHB:德鲁伊:月辉形态:14",
+   "verdict": "partial",
+   "why": "月耀炽光（+2d10 光耀、回合一限制、是否荒野形态由 ask 回答）可由 ask+addDamage+oncePerTurn 自动；但月辉同行需传送 10 尺内自愿生物，文本明示「位置引擎不处理，手动」，且 §5 两个生物换位/位置均做不到。",
+   "missing": ["与月光飞步传送时一并传送 10 尺内自愿生物到出现点 10 尺内的 move/teleport 配置（位置引擎不处理，interfaces.md §5 做不到）"],
+   "patch": {
+    "triggers": [
+     {
+      "id": "lunar-radiance",
+      "label": "月辉形态：月耀炽光（+2d10 光耀）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "!attack.spell && ask('这次攻击是荒野形态下进行的吗？')",
+      "cost": [],
+      "limit": "oncePerTurn",
+      "modify": [],
+      "do": ["addDamage"]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XPHB:游侠:原初伴侣:3",
+   "verdict": "partial",
+   "why": "已自动：附赠动作命令、牺牲一次攻击命令野兽打击（cost=economy:attack）、魔法动作耗法术位复活等行动经济；但原初野兽本身（数据卡/行动/生命值/死亡）按文本由人处理，未用 summon/creature 实体。",
+   "missing": ["原初野兽伴侣作为独立实体（数据卡、行动、生命值、死亡与复活后生命恢复）的 summon/creature 配置（现有 data 只建了命令与复活的行动经济动作）"]
+  },
+  {
+   "key": "XPHB:星移步法",
+   "verdict": "full",
+   "why": "「不消耗法术位对自己施放浮空术」可用一个无 slot 代价的 action 直接 applyEffect 浮空术模板到自身实现，绕开法术位施法动作，玩家点一次即完成。",
+   "missing": [],
+   "patch": {
+    "actions": [
+     {
+      "id": "star-step-levitate",
+      "name": "星移步法：浮空术（免法术位）",
+      "activation": "action",
+      "cost": [],
+      "targeting": { "type": "self" },
+      "root": ["applyEffect"]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XPHB:幽影护甲",
+   "verdict": "full",
+   "why": "「不消耗法术位对自己施放法师护甲」可用一个无 slot 代价的 action 直接 applyEffect 法师护甲模板到自身实现，绕开法术位施法动作，玩家点一次即完成。",
+   "missing": [],
+   "patch": {
+    "actions": [
+     {
+      "id": "shadow-armor-mage",
+      "name": "幽影护甲：法师护甲（免法术位）",
+      "activation": "action",
+      "cost": [],
+      "targeting": { "type": "self" },
+      "root": ["applyEffect"]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XPHB:游侠:精宸所与:11",
+   "verdict": "full",
+   "why": "免材料+免费一次（free_cast 池/长休恢复）+无需专注+持续1分钟+召唤妖精灵魄，均可用现有接口实现：建一个由 free_cast 门控、无 slot、无专注、召唤妖精灵魄的 action，无需改写原法术条目。",
+   "missing": [],
+   "patch": {
+    "actions": [
+     {
+      "id": "fey-wanderer-summon",
+      "name": "精宸所与：妖精召唤术（免费·免专注·1分钟）",
+      "activation": "action",
+      "cost": [{ "resource": "free_cast" }],
+      "targeting": { "type": "point", "range": 60 },
+      "concentration": null,
+      "root": ["summon"]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XPHB:术士:龙伴:18",
+   "verdict": "full",
+   "why": "免材料+无需法术位一次（资源「无需法术位施展」/长休恢复）+无需专注+持续1分钟+召唤龙类，均可实现：补资源并建由它门控、无 slot、无专注、召唤龙类的 action，玩家点一次即完成。",
+   "missing": [],
+   "patch": {
+    "resources": [
+     { "id": "no_slot_cast", "name": "无需法术位施展", "formula": 1, "recovery": "long" }
+    ],
+    "actions": [
+     {
+      "id": "draconic-companion-summon",
+      "name": "龙伴：龙类召唤术（免费·免专注·1分钟）",
+      "activation": "action",
+      "cost": [{ "resource": "no_slot_cast" }],
+      "targeting": { "type": "point", "range": 60 },
+      "concentration": null,
+      "root": ["summon"]
+     }
+    ]
+   }
+  }
+ ]
+}

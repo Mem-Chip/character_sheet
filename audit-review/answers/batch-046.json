@@ -1,0 +1,95 @@
+{
+  "batch": "batch-046",
+  "answers": [
+    {
+      "key": "XPHB:德鲁伊:进阶结社形态:6",
+      "verdict": "manual",
+      "why": "原文要求荒野形态攻击命中时把武器物理伤害类型改为光耀，但接口没有「攻击命中时改写伤害类型」的节点（modifyCast 的 setDamageType 只作用于正在施展的法术），原文也写「引擎目前无法改写伤害类型」，只能手动；强化韧性已静态处理。",
+      "missing": ["攻击命中时将武器物理伤害类型转换为光耀的接口（modifyCast 的 setDamageType 仅作用于正在施展的法术，不适用于武器攻击的 onHit）"]
+    },
+    {
+      "key": "XPHB:德鲁伊:闪耀星座:10",
+      "verdict": "partial",
+      "why": "回合开始若处于星耀形态可触发并选择更换星座（turnStarted 触发器 + choose 可实现），但数据里 do 仅占位 \"choose\"、未真正重新挂上对应星座标记效应并计 10 分钟，且「更换后不额外获得化身时的那一箭」「巨龙座飞行速度始终计入」需人工核对。",
+      "missing": ["将 choose 选中的星座真正 applyEffect 重新挂上其标记效应并计 10 分钟的数据接线（choose 需配 options + applyEffect）", "引擎无法判断『本次更换是否会让化身时已获得的箭再次获得』（不额外获得那一箭需人工核对）"],
+      "patch": {
+        "triggers": [
+          {
+            "id": "swap",
+            "label": "闪耀星座：更换星座",
+            "on": "turnStarted",
+            "role": "actor",
+            "window": "after",
+            "when": "self.hasEffect('星耀形态')",
+            "cost": [],
+            "modify": [],
+            "do": [
+              {
+                "choose": {
+                  "options": [
+                    { "label": "射手座", "applyEffect": { "template": "星耀形态：射手座", "duration": { "minutes": 10 } } },
+                    { "label": "圣杯座", "applyEffect": { "template": "星耀形态：圣杯座", "duration": { "minutes": 10 } } },
+                    { "label": "巨龙座", "applyEffect": { "template": "星耀形态：巨龙座", "duration": { "minutes": 10 } } }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "XPHB:德鲁伊:圣杯座:3",
+      "verdict": "partial",
+      "why": "星耀形态·圣杯座期间施法后可为自身或 30 尺内另一生物恢复 1d8+感知（spellCast 触发器 + choose 选目标 + heal 可实现），但原文明确「引擎无法判断法术是否消耗了法术位、是否为恢复生命值的法术」需 ask 由人确认，为他人恢复时目标也需人工选择。",
+      "missing": ["spellCast 事件中读取『法术是否消耗法术位 / 是否为恢复生命值的法术』的上下文（事件不含该信息，只能 ask）", "自动在 30 尺内选取另一生物为目标的能力（需 choose/人工）"]
+    },
+    {
+      "key": "XPHB:德鲁伊:水生亲和:6",
+      "verdict": "manual",
+      "why": "原文两条都需人工：①「瀚海之怒」光环半径改为 10 尺要手动改另一条目；②「获得等于速度的游泳速度」静态层没有游泳速度字段，接口无法补。",
+      "missing": ["跨条目动态修改「瀚海之怒」光环 radius 的接口（无跨条目修改机制）", "静态层 swimSpeed（游泳速度）字段（statics 仅有 speed/ac/resist/save 等，无分项游泳速度）"]
+    },
+    {
+      "key": "XPHB:德鲁伊:元素狂怒:15",
+      "verdict": "manual",
+      "why": "原文两条都需人工调整其他条目数据：①德鲁伊戏法施法距离 +300 尺；②「原力蛮击」额外伤害骰改为 2d8，均无跨条目动态修改接口。",
+      "missing": ["跨条目动态修改德鲁伊戏法施法距离（+300 尺）的接口", "跨条目修改「原力蛮击」额外伤害骰（2d8）的接口"]
+    },
+    {
+      "key": "XPHB:德鲁伊:月光飞步:10",
+      "verdict": "partial",
+      "why": "传送动作 use（move teleport + applyEffect）与恢复动作 restore 已写好，但原文「传送落点是否未被占据、是否在你视线内由人判断」，而视线/占据判定属于明确做不到项；且数据里 actions 引用了 resource 'moonlightStep' 但 resources[] 为空、长休恢复未声明。",
+      "missing": ["传送落点『未被占据 / 在视线内』的判定（明确做不到：视线/光照/掩护/隐蔽判定）"],
+      "patch": {
+        "resources": [
+          { "id": "moonlightStep", "name": "月光飞步次数", "formula": "max(1, wis)", "recovery": "long" }
+        ]
+      }
+    },
+    {
+      "key": "XPHB:德鲁伊:自然庇护:14",
+      "verdict": "partial",
+      "why": "动作已能放置 15 尺立方区域（applyEffect + zone）并计 1 分钟、附赠动作可放新区域，但原文明确引擎不处理掩护、也读不到「自然之护的当前抗性」，且移动区域需手动删旧区、新区域不会自动到期，均要人工。",
+      "missing": ["掩护（half cover）判定（明确做不到：掩护/隐蔽判定）", "读取「自然之护」当前抗性并赋予区域内盟友的能力", "移动已放置区域并自动到期的机制（地图区域只能由 DM 点删）"]
+    },
+    {
+      "key": "XPHB:德鲁伊:自然恢复:6",
+      "verdict": "partial",
+      "why": "短休记录次数的 restCompleted 触发器已写，但原文「引擎无法替换该法术的法术位消耗」需手动免除那一次施法、且「短休恢复法术位由人手动选择并恢复」，两条引擎都做不到自动。",
+      "missing": ["施法事件中动态免除法术位消耗（cost 替换）的接口", "短休时按所选环阶恢复法术位的接口（引擎无法自动选择恢复哪些环阶）"]
+    },
+    {
+      "key": "XPHB:毒师",
+      "verdict": "partial",
+      "why": "酿毒涂毒（bonus 动作 + 次数池 poison-doses + applyEffect 涂毒 + 伤害时 CON 豁免 2d8 中毒）已自动化，但原文明确「强效毒素无视毒素抗性」引擎无对应写法、DC 取敏捷/智力较高者若你提升的不是较高项需手动改、哪件武器/弹药已涂毒靠每次询问区分。",
+      "missing": ["造成伤害时『无视目标特定伤害抗性（毒素抗性）』的结算机制（无对应的伤害旗标/modify op）", "为武器/弹药涂毒的物品附魔接口（无法记录『哪件物品已涂毒』，只能每次询问）"]
+    },
+    {
+      "key": "XPHB:盾牌大师",
+      "verdict": "partial",
+      "why": "盾击（attackHit 后 STR 豁免 + push/prone，每回合一次）与介入盾牌（damageIncoming 读 dex 豁免成功 + evasion 清零）已自动化，但原文「引擎不知道这次命中是不是攻击动作中的那次攻击」（附赠/借机也会提示，需人工决定），且「敏捷豁免成功仍受全额」的效应会被误清零需手动补回。",
+      "missing": ["判断『本次命中是否来自攻击动作中的那次攻击』的上下文（附赠动作/借机攻击也会触发，无法区分）", "区分『敏捷豁免成功只受半伤』与『敏捷豁免成功仍受全额』效应的能力（介入盾牌会误清零后者）"]
+    }
+  ]
+}

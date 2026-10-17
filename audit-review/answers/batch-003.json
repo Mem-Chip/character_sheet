@@ -1,0 +1,71 @@
+{
+ "batch": "batch-003",
+ "answers": [
+  {
+   "key": "XPHB:spell:元素召唤术",
+   "verdict": "partial",
+   "why": "summon 节点可让元素灵魄作为独立参战生物入场并挂专注，但原文「使用对应法术位环阶数据块」需按环阶缩放召唤物属性，且「需人手动在战斗中添加与操控」说明战斗中行动无法自动结算。",
+   "missing": ["按法术位环阶选取/缩放召唤物数据块的接口（summon 仅支持 count/group）", "把召唤物作为独立参战生物入场并绑定先攻、在战斗中自主行动的接口（缺少灵魄行动 AI）"],
+   "patch": {"actions":[{"id":"cast","root":["choose","summon","note"]}]}
+  },
+  {
+   "key": "XPHB:spell:异怪召唤术",
+   "verdict": "partial",
+   "why": "summon 节点可让异怪灵魄入场并挂专注，但「使用对应法术位环阶数据块」需按环阶缩放属性，「需人手动在战斗中添加与操控」表明行动与跟随先攻无法自动结算。",
+   "missing": ["按法术位环阶选取/缩放异怪灵魄数据块的接口", "召唤物入场后跟随施法者先攻行动的行为接口"],
+   "patch": {"actions":[{"id":"cast","root":["choose","summon","note"]}]}
+  },
+  {
+   "key": "XPHB:spell:构装召唤术",
+   "verdict": "partial",
+   "why": "summon 节点可让构装灵魄入场并挂专注，但「使用对应法术位环阶数据块」需按环阶缩放属性，「需人手动在战斗中添加与操控」表明行动与施法者行动绑定无法自动结算。",
+   "missing": ["按法术位环阶选取/缩放构装灵魄数据块的接口", "召唤物与施法者行动绑定的接口"],
+   "patch": {"actions":[{"id":"cast","root":["choose","summon","note"]}]}
+  },
+  {
+   "key": "XPHB:spell:龙类召唤术",
+   "verdict": "partial",
+   "why": "现有 applyEffect+note 未真正召唤灵魄（effect 的 statics/flags 为空）；summon 可入场，但「使用施法者的先攻并在施法者回合后行动」「升环提升灵魄属性」及「具体属性、移动与行动需手动操控」均无法自动结算。",
+   "missing": ["按法术位环阶缩放龙类灵魄数据块的接口", "把灵魄先攻绑定到施法者并令其在施法者回合后行动的接口", "灵魄自主移动与行动的 AI"],
+   "patch": {"actions":[{"id":"cast","root":["summon","note"]}]}
+  },
+  {
+   "key": "XPHB:spell:天界召唤术",
+   "verdict": "partial",
+   "why": "summon 节点可让天界灵魄入场并挂专注，但「使用施法者的先攻并在施法者回合后立即行动」「升环施法时数据使用对应法术位环阶」及「参战、属性及行动需手动操控」无法自动结算。",
+   "missing": ["按法术位环阶选取天界灵魄数据块的接口", "把灵魄先攻绑定到施法者并令其立即行动的接口", "灵魄自主行动 AI"],
+   "patch": {"actions":[{"id":"cast","root":["choose","summon","note"]}]}
+  },
+  {
+   "key": "XPHB:spell:邪魔召唤术",
+   "verdict": "partial",
+   "why": "choose 节点可选类型，但 summon 入场后「与施法者共用先攻并在施法者回合后立即行动」「遵从口头指令（未发令时执行回避）」及「召唤物实体与战斗行动由人手动处理」无法自动结算。",
+   "missing": ["按法术位环阶缩放邪魔灵魄数据块的接口", "召唤物与施法者共用先攻并立即行动的接口", "未发令时执行回避的指令 AI"],
+   "patch": {"actions":[{"id":"cast","root":["choose","summon"]}]}
+  },
+  {
+   "key": "XPHB:spell:法术反制",
+   "verdict": "partial",
+   "why": "现有 save 节点会强制体质豁免并触发反应，但「豁免失败则其法术消散」需打断正在施展的法术，当前 root 仅 save 未取消该法术，「法术位不被消耗」也未处理。",
+   "missing": ["在 spellCast 触发窗口内「先掷体质豁免、失败则同步取消该法术结算」的接口（需 cancelUnlessSave / modifyCast.cancel 同步结算，当前 save 节点不会打断法术）", "被反制者法术位在失败时不消耗/返还的接口（cancelUnlessSave 无明确 refundSlot 参数）"]
+  },
+  {
+   "key": "XPHB:condition:目盲",
+   "verdict": "partial",
+   "why": "cannot:['see'] 标记失明、rollMods 编码以你为目标的攻击优势/你的攻击劣势，但「会自动失败于任何需要视觉的属性检定」需引擎判定哪些检定依赖视觉，而引擎无地图几何、无法全局表达。",
+   "missing": ["把「需要视觉的属性检定自动失败」表达为全局规则的接口（引擎无地图几何，cannot:see 仅标记失明、不取消依赖视觉的检定）"]
+  },
+  {
+   "key": "XPHB:condition:魅惑",
+   "verdict": "partial",
+   "why": "forbidTarget:'source' 已覆盖「无法攻击魅惑源、无法将其作为伤害性能力或魔法效应对象」，但「魅惑源对你进行的任何社交属性检定均具有优势」无对应旗标（rollMods 为 0 未编码）。",
+   "missing": ["表达「魅惑源对你进行社交属性检定时具有优势」的旗标/rollMod 接口（source→you 社交检定优势无对应字段）"]
+  },
+  {
+   "key": "XPHB:condition:耳聋",
+   "verdict": "partial",
+   "why": "cannot:['hear'] 标记失聪、rollMods 编码部分效果，但「会自动失败于任何依赖听觉的属性检定」需引擎判定哪些检定依赖听觉，无全局接口。",
+   "missing": ["把「依赖听觉的属性检定自动失败」表达为全局规则的接口（引擎无法判定哪些检定依赖听觉）"]
+  }
+ ]
+}

@@ -1,0 +1,75 @@
+{
+ "batch": "batch-007",
+ "answers": [
+  {
+   "key": "XPHB:mastery:削弱",
+   "verdict": "partial",
+   "why": "命中触发与『直到你的下一回合开始前 / 目标下次攻击前』的时效都能自动（attackHit 触发器 + applyEffect + duration.endsOn），但效应要『下一次攻击检定具有劣势』，interfaces.md 的 effect 字段（statics/flags/rollMods）均无施加攻击劣势的能力，data 里的 rollMods:1 也无定义语义。",
+   "missing": ["effect 缺少施加『攻击劣势』的旗标/字段（statics、flags 均不含劣势；rollMods 在接口中未定义）"]
+  },
+  {
+   "key": "XPHB:mastery:缓速",
+   "verdict": "partial",
+   "why": "命中且造成伤害触发、加速持续到下一回合开始都能自动（trigger：damage.amount>0 + applyEffect + duration），但 effects 中 statics:['speed'] 只列了属性名、没有 -10 的具体降幅，且原文『同类效果不超过 10 尺』的叠加上限没有对应接口。",
+   "missing": ["effect 的 statics 缺少 speed 降幅的具体写法（应为 -10 而非仅列名）；缺少同类减速叠加不超过 10 尺的不堆叠/判定机制"]
+  },
+  {
+   "key": "XPHB:mastery:失衡",
+   "verdict": "partial",
+   "why": "命中触发后引擎能自动掷体质豁免（trigger + save 节点，DC 可用 8+属性调整值+熟练表达），但失败『倒地』的判定——prone 不是 interfaces.md 中任何 effect 旗标（flags 只含 blocks/cannot/forbidTarget/quicken 等），data 也未定义倒地效应，需要手动处理。",
+   "missing": ["缺少把目标设为『倒地(prone)』的效应旗标/条件（effect.flags 不含 prone，且 data 未定义倒地 effect）"]
+  },
+  {
+   "key": "XPHB:mastery:侵扰",
+   "verdict": "partial",
+   "why": "命中且造成伤害触发、『直到你的下一回合结束前 / 针对该生物的下次攻击前』的时效都能自动（trigger + applyEffect + duration.endsOn 带 target 约束），但效应要『对该生物的下一次攻击具有优势』，effect 字段（statics/flags/rollMods）均无施加攻击优势的能力。",
+   "missing": ["effect 缺少施加『攻击优势（且限定目标）』的旗标/字段（statics、flags 均不含优势，且无法把优势限定到特定目标）"]
+  },
+  {
+   "key": "XPHB:mastery:推离",
+   "verdict": "full",
+   "why": "命中且目标体型不超过大型（when：非巨型/超巨型）时，用 move 节点的 push 模式自动直线推离，能力完整；距离『至多 10 尺』可由玩家在必要选择里定（符合 full 的『回答必要选择』）。",
+   "missing": [],
+   "patch": {
+    "triggers": [
+     {
+      "id": "push",
+      "do": [
+       { "move": { "mode": "push", "distance": 10 } }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "XPHB:mastery:横扫",
+   "verdict": "manual",
+   "why": "全文只描述规则：近战命中后可对 5 尺内、同在你触及范围内的另一生物再进行一次近战攻击（伤害不加属性调整值），每回合一次；data 完全为空（automation:manual，无 trigger/action/effect）。",
+   "missing": ["缺少『近战命中后选择首个目标 5 尺内、且仍在自身触及范围内的副目标并自动发动一次额外近战攻击』的触发器与动作机制（含空间查询 5 尺内/触及范围、伤害去属性调整值、每回合一次的限制）"]
+  },
+  {
+   "key": "XPHB:mastery:迅击",
+   "verdict": "manual",
+   "why": "全文仅说明：轻型武器的额外攻击可作为攻击动作的一部分而非附赠动作，每回合一次；data 为空（automation:manual），没有把副手额外攻击融入攻击动作（不耗附赠动作）的接口。",
+   "missing": ["缺少把轻型武器副手额外攻击并入攻击动作（免耗附赠动作）的动作经济改写机制，以及每回合一次的限制挂钩"]
+  },
+  {
+   "key": "AU:奥法殡葬师",
+   "verdict": "partial",
+   "why": "静态层授予死灵戏法可自动；但【源死之识】智力(历史)/感知(医药)检定的 +1d4 与【晓亡之理】执行协助动作稳定 0 生命值生物时获得英雄激励——后者需要『协助动作稳定伤势』的触发挂钩与英雄激励资源的自动获得，data 中 triggers 为空、无资源定义，只能手动记录。",
+   "missing": ["缺少 actionUsed:Help(稳定伤势) 的触发窗口以对目标/自身授予英雄激励资源；缺少检定 +1d4（源死之识）的 rollMods/static 写法"]
+  },
+  {
+   "key": "AU:奥法超负荷",
+   "verdict": "partial",
+   "why": "静态授予火焰箭可自动；法术攻击命中时已自动化（trigger：attackHit before + addDamage + 消耗 energy-surge 资源，并用 ask 确认是否塑能）；但『需要豁免的法术造成伤害』在伤害窗口缺少施法者侧触发时机（无 damageRolled/damageDealing 类窗口），无法自动加熟练加值，需手动。",
+   "missing": ["缺少需要豁免的法术在造成伤害前的施法者侧触发窗口（如 damageRolled/damageDealing），以便注入额外伤害骰"]
+  },
+  {
+   "key": "AU:奥法护佑者",
+   "verdict": "partial",
+   "why": "静态授予抵抗术可自动；附赠动作施展抵抗术已有 bonus 动作（但 root 仅 note，未真正免耗自动结算）；【庇护之援】执行协助动作辅助盟友属性检定时给该盟友临时生命值=熟练加值，需要『协助动作辅助属性检定』的触发窗口来自动赋予 tempHp，data 中 triggers 为空。",
+   "missing": ["缺少 actionUsed:Help(辅助属性检定) 的触发窗口以对受协助盟友自动赋予 tempHp=熟练加值；附赠施展抵抗术的动作 root 仅 note，未真正自动结算"]
+  }
+ ]
+}

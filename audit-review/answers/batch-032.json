@@ -1,0 +1,140 @@
+{
+  "batch": "batch-032",
+  "answers": [
+    {
+      "key": "XGE:弗莱格索斯之焰",
+      "verdict": "partial",
+      "why": "「火环」自动结算（施放火焰法术后 applyEffect 直到下回合结束）；但「光照 30 尺明亮+额外30尺微光」与「为火焰伤害骰重骰骰值为1的骰子」均无法自动——光照无模型，逐颗伤害骰重骰引擎不支持（只在 d20 上重骰）。",
+      "missing": [
+        "光照模型（interfaces 第5节：光照/隐蔽判定做不到）",
+        "逐颗伤害骰重骰接口（引擎 modify 的 reroll 仅作用于 d20 检定，无 per-die 重骰）",
+        "data 中缺少「5尺内近战命中反弹 1d4 火焰」的反射触发器（wreath-of-flame 只 applyEffect，未结算反弹伤害）"
+      ],
+      "patch": {
+        "triggers": [
+          {
+            "id": "wreath-reflect",
+            "label": "弗莱格索斯之焰：火焰反弹",
+            "on": "attackHit",
+            "role": "target",
+            "window": "after",
+            "when": "attacker.attackType == 'melee' && self.hasEffect('弗莱格索斯之焰：火环')",
+            "cost": [],
+            "modify": [],
+            "do": [ { "node": "damage", "dice": "1d4", "type": "fire", "to": "attacker" } ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "XGE:高等卓尔魔法",
+      "verdict": "manual",
+      "why": "文本明确「具体法术施展与法术位免除由玩家手动处理」；引擎无法把侦测魔法设为随意施展、也无法让浮空术/解除魔法各免法术位施展一次。",
+      "missing": [
+        "让某道法术「随意施展 / 免法术位施展一次」的接口（interfaces 第5节：不能改写另一道法术的施法成分/代价；也没有把法术加入已知列表/省位施放的节点）"
+      ]
+    },
+    {
+      "key": "XGE:慷慨吉运",
+      "verdict": "partial",
+      "why": "「盟友 d20 掷出天然1 时反应重骰（reroll）」已自动化；用后挂「幸运已封锁」提醒到下回合结束自动消失也已自动化；但「真正禁用半身人幸运特质」引擎无法封掉另一特性，只能靠人/DM 把关。",
+      "missing": [
+        "真正禁用「半身人幸运」特性的接口（引擎无法封掉另一个特性，interfaces 无相应能力；只能挂可见提醒）"
+      ]
+    },
+    {
+      "key": "XGE:莱维斯图斯之墓",
+      "verdict": "partial",
+      "why": "反应（damageIncoming 前）获得临时生命值吸收伤害 + 火焰易伤+速度0+失能 直到下回合结束，可由节点自动结算；但「冰墓融解时结束所有效果及剩余临时生命值」中的剩余临时生命清除，引擎不会随效应结束自动移除。",
+      "missing": [
+        "效应结束时自动移除所授予临时生命值的接口（tempHp 不与效应绑定，interfaces 无「随效应结束清临时生命」的能力）",
+        "data 缺 resource「tombOfLevistus」（短/长休恢复）与「失能」表示（效应 flags 为 null，未用 blocks 封经济）"
+      ],
+      "patch": {
+        "resources": [ { "id": "tombOfLevistus", "name": "莱维斯图斯之墓", "recover": "shortOrLongRest" } ],
+        "effects": [
+          {
+            "name": "冰墓",
+            "statics": [ "vuln", "speedSet" ],
+            "flags": { "blocks": [ "action", "bonus", "reaction" ] },
+            "rollMods": 0,
+            "triggers": 0,
+            "duration": { "until": { "at": "turnEnd", "of": "bearer", "nth": 1 } }
+          }
+        ]
+      }
+    },
+    {
+      "key": "XGE:龙之威怖",
+      "verdict": "partial",
+      "why": "咆哮动作（消耗吐息武器、30尺区域、感知豁免、失败陷入恐慌1分钟）可由动作+save+applyEffect 自动结算；但「无法听到或看到你则自动通过」与「受任意伤害时重复豁免提前结束」需手动。",
+      "missing": [
+        "视线/听觉判定接口（interfaces 第5节：视线/隐蔽判定做不到，无法自动通过）",
+        "受伤害重复豁免触发（damageTaken 触发可建模 save，但 LOS 部分无解，整体仍 partial）"
+      ],
+      "patch": {
+        "triggers": [
+          {
+            "id": "dragon-fear-resave",
+            "label": "龙之威怖：受伤害重复豁免",
+            "on": "damageTaken",
+            "role": "target",
+            "window": "after",
+            "when": "self.hasEffect('龙之威怖')",
+            "cost": [],
+            "modify": [],
+            "do": [ { "node": "save", "ability": "wis", "onSuccess": [ { "node": "removeEffect", "template": "龙之威怖" } ] } ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "XGE:魔契师:光耀之魂:6",
+      "verdict": "partial",
+      "why": "「光耀/火焰法术攻击命中时加魅力调整值到伤害骰」已由 attackHit 触发 addDamage 自动结算；但「非攻击类法术（豁免类）的伤害加成」需手动，且 data 缺失光耀抗性的效应。",
+      "missing": [
+        "非攻击类法术（豁免类）伤害加成的接口（引擎只能在 attackHit 上 addDamage，无法对非攻击法术结算）",
+        "光耀抗性效应（data 缺失，可用 statics.resist 补）"
+      ],
+      "patch": {
+        "effects": [
+          { "name": "光耀之魂：光耀抗性", "statics": [ "resist:光耀" ], "flags": null, "rollMods": 0, "triggers": 0, "duration": null }
+        ]
+      }
+    },
+    {
+      "key": "XGE:魔契师:天界韧性:10",
+      "verdict": "partial",
+      "why": "自身临时生命值（魔契师等级+魅力调整值）在 restCompleted 后由触发器自动发放已建模；但「选择最多五个可见生物各赋予临时生命值」需手动。",
+      "missing": [
+        "在休息触发中选择至多5名可见盟友并分别赋予临时生命值的接口（choose 节点仅明确支持法术池选择，未在触发器 do 中支持多选生物；文本亦注明手动）"
+      ]
+    },
+    {
+      "key": "XGE:魔契师:巫咒大师:14",
+      "verdict": "partial",
+      "why": "「对新目标施加咒剑诅咒（applyEffect）」可由动作建模；但「被诅咒生物死亡时」的自动触发与「转移时放弃从死亡获得生命回复」的联动无法自动。",
+      "missing": [
+        "生物死亡事件触发器（interfaces 窗口事件无 onDeath/creatureDied，仅有 reducedTo0）",
+        "「转移时放弃先前受咒目标死亡的生命回复」联动（无法改写另一特性/生命回复）"
+      ]
+    },
+    {
+      "key": "XGE:魔契师:巫咒盔甲:10",
+      "verdict": "partial",
+      "why": "被咒剑诅咒者命中你时，引擎问是否用反应、用掉反应后把攻击改为未命中（cancel）已自动化；但判定用的「掷 d6 ≥4」引擎无法在条件里掷非 d20 骰子，只能 ask 让 DM 决定。",
+      "missing": [
+        "在触发器条件/modify 中掷 d6 并判定≥4 的接口（引擎无法掷非 d20 骰子；仅能 ask）"
+      ]
+    },
+    {
+      "key": "XGE:魔契师:巫咒战士:1",
+      "verdict": "manual",
+      "why": "文本中攻击与伤害掷骰「由玩家确认是否为该武器」；引擎没有「绑定特定武器并以魅力调整值替代力量/敏捷进行命中与伤害结算」的接口，熟练项也不在战斗结算范围。",
+      "missing": [
+        "按武器替换属性调整值（以魅力替代力量/敏捷进行命中与伤害）的 statics/接口（interfaces 无按武器替换 ability modifier 的能力）",
+        "中甲/盾牌/军用武器熟练（不在战斗引擎自动范围）"
+      ]
+    }
+  ]
+}
