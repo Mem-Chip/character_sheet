@@ -98,7 +98,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.code === 'Space') space.current = true;
       if (e.key === 'Shift') setShift(true);
-      if (e.key === 'Escape') { setSelShape(null); setSetup(false); }
+      if (e.key === 'Escape') { setSelShape(null); setSetup(false); combat.cancelTeleport(); }
       // 测距时按 Ctrl：把现在这条线分享给所有人
       if (e.key === 'Control' && !e.repeat) {
         const d = dragRef.current;
@@ -217,9 +217,28 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
   }, [aimKey]);
 
   /* ───── 指针 ───── */
+  /** 传送模式的落点：点到的格子必须空着（含多格棋子的占位），其余交给服务器查距离 */
+  const doTeleport = async (cx: number, cy: number) => {
+    const tp = ui.tp;
+    if (!tp) return;
+    const me = footprint(s.view(tp.id).size);
+    const taken = Object.entries(map.tokens).some(([oid, t]) => {
+      if (oid === tp.id) return false;
+      const m2 = footprint(s.view(oid).size);
+      return cx < t.x + m2 && t.x < cx + me && cy < t.y + m2 && t.y < cy + me;
+    });
+    if (taken) { combat.toast('那里已经有棋子了，换一格'); return; }
+    const ok = await combat.teleport(tp.id, cx, cy, tp.maxFt);
+    if (ok) { combat.toast(`${name(tp.id)} 传送完成`, 'ok'); combat.cancelTeleport(); }
+  };
   const onDown = (e: React.PointerEvent) => {
     if (e.button === 2) return;
     const p = toWorld(e);
+    if (ui.tp && e.button === 0) {
+      const c = toCell(p);
+      void doTeleport(c.x, c.y);
+      return;
+    }
     if (areaAim && e.button === 0 && !space.current) {
       if (!tplAt(p)) { combat.toast('施法者不在地图上，在先攻条 / 列表里点人选目标'); return; }
       (e.currentTarget as Element).setPointerCapture(e.pointerId);
@@ -382,6 +401,8 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
   };
   const tokenDown = (e: React.PointerEvent, id: string) => {
     if (e.button !== 0 || placing || space.current) return;
+    // 传送模式：点到棋子就是「落点被占」，别拖它
+    if (ui.tp) { e.stopPropagation(); combat.toast('那里已经有棋子了，换一格'); return; }
     // 范围法术：交给地图（放模板）
     if (ui.aim?.area) return;
     if (ui.aim) { e.stopPropagation(); combat.aimPick(id); return; }
@@ -448,6 +469,13 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
         {dm && <button className={setup ? 'on' : ''} onClick={() => setSetup(!setup)} title="上传底图、对齐格子、斜走规则">底图</button>}
       </div>
       <div className="map-fly">
+      {ui.tp && (
+        <div className="hud map-bar" style={{ gap: 8 }}>
+          <b className="serif">传送「{name(ui.tp.id)}」</b>
+          <span className="tiny">点地图上的空格放下去{ui.tp.maxFt != null ? `（最多 ${ui.tp.maxFt} 尺）` : ''}</span>
+          <button className="btn sm ghost" onClick={() => combat.cancelTeleport()}>取消（Esc）</button>
+        </div>
+      )}
       {tool === 'shape' && (
         <div className="hud map-bar">
           {(['rect', 'circle', 'cone'] as ShapeKind[]).map((k) => <button key={k} className={'btn sm' + (k === shapeKind ? ' on' : '')} onClick={() => setShapeKind(k)}>{SHAPE_CN[k]}</button>)}

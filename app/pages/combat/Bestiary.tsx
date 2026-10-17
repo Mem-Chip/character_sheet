@@ -1,6 +1,6 @@
 /** 加怪物：从图鉴里挑（2024 怪物手册），或者贴一段自制怪物的文本。右边预览：哪些引擎自动处理、哪些要手动 */
 import { useMemo, useState } from 'react';
-import { crNum, parseMonster, type ParsedMonster } from '../../../src/bridge/from-monster';
+import { crNum, parseMonster, tokenUrlsOf, type ParsedMonster } from '../../../src/bridge/from-monster';
 import { MONSTER_TEMPLATE, textToMonster } from '../../../src/bridge/from-text-monster';
 import { makeView, type ViewInit } from '../../../src/combat';
 import { renderMonsterTask } from '../../../src/factory/ai';
@@ -12,7 +12,18 @@ import {
 
 type Json = any;
 type OnAdd = (view: ViewInit, count: number, side: string, hidden: boolean) => void;
-
+/** 图能不能加载得到（5etools 的棋子图不一定每只都有；加载不到就别设，否则棋子上是个空圈） */
+const probeImage = (url: string): Promise<boolean> => new Promise((res) => {
+  const img = new Image();
+  img.onload = () => res(true);
+  img.onerror = () => res(false);
+  img.src = url;
+});
+/** 按顺序试几张图，返回第一张能加载的 */
+const firstImage = async (urls: string[]): Promise<string | null> => {
+  for (const u of urls) if (await probeImage(u)) return u;
+  return null;
+};
 const CR_BANDS: Array<[string, number, number]> = [['全部', -1, 99], ['0–1', 0, 1], ['2–4', 2, 4], ['5–10', 5, 10], ['11–16', 11, 16], ['17+', 17, 99]];
 const TYPE_CN: Record<string, string> = {
   aberration: '异怪', beast: '野兽', celestial: '天界生物', construct: '构装生物', dragon: '龙类', elemental: '元素生物', fey: '精类',
@@ -138,8 +149,7 @@ interface AiHooks {
   remove: () => Promise<void>;
 }
 
-function MonsterPreview({ parsed, raw, title, cr, canHide, onAdd, ai }: { parsed: ParsedMonster; raw: ParsedMonster; title: React.ReactNode; cr: string; canHide?: boolean; onAdd: OnAdd; ai: AiHooks }) {
-  const [count, setCount] = useState(1);
+function MonsterPreview({ parsed, raw, title, cr, canHide, onAdd, ai }: { parsed: ParsedMonster; raw: ParsedMonster; title: React.ReactNode; cr: string; canHide?: boolean; onAdd: OnAdd; ai: AiHooks }) {  const [count, setCount] = useState(1);
   const [aiOpen, setAiOpen] = useState(false);
   const [side, setSide] = useState('enemy');
   const [hidden, setHidden] = useState(false);
@@ -189,7 +199,14 @@ function MonsterPreview({ parsed, raw, title, cr, canHide, onAdd, ai }: { parsed
         </select>
         {canHide && <label className="tiny"><input type="checkbox" checked={hidden} onChange={(e) => setHidden(e.target.checked)} /> 先藏起来</label>}
         <span style={{ flex: 1 }} />
-        <button className="btn primary" onClick={() => onAdd(v, Math.max(1, Math.min(20, count)), side, hidden)}>加入{count > 1 ? ` ${count} 个` : ''}</button>
+        <button
+          className="btn primary"
+          onClick={async () => {
+            // 5etools 图鉴里的怪：顺手把它的棋子图也带上（先试一下加载得到，免得棋子上是个空圈）
+            const url = await firstImage(raw.tokenUrls ?? []);
+            onAdd(url ? { ...v, avatar: url } : v, Math.max(1, Math.min(20, count)), side, hidden);
+          }}
+        >加入{count > 1 ? ` ${count} 个` : ''}</button>
       </div>
     </>
   );

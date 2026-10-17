@@ -94,14 +94,39 @@ function damages(text: string): Array<{ dice: string; type: string }> {
 export interface ParsedMonster {
   key: string;
   view: ViewInit;
+  /** 棋子图地址（5etools 站点按「来源 / 英文名」放）。界面加载成功之后才设到棋子身上 */
+  tokenUrl?: string;
+  /** 候选棋子图（先试自己的来源，再退到 MM） */
+  tokenUrls?: string[];
   /** 引擎能自动处理的（给界面显示） */
   auto: string[];
   /** 需要人处理的能力原文 */
   notes: Array<{ group: string; name: string; text: string }>;
 }
 
+/** 5etools 站点的棋子图地址（约定：`/img/bestiary/tokens/<来源>/<英文名>.webp`，名字里的空格是 %20） */
+export function tokenUrlOf(m: Json, source?: string): string | undefined {
+  const src = String(source ?? m?.source ?? '').trim().toUpperCase();
+  const eng = String(m?.ENG_name ?? m?.name ?? '').trim();
+  if (!src || !eng) return undefined;
+  return `https://5e.kiwee.top/img/bestiary/tokens/${src}/${encodeURIComponent(eng)}.webp`;
+}
+
+/**
+ * 候选棋子图（界面按顺序试）：先按怪物自己的来源，再退到 2014 的 MM ——
+ * 2024 很多怪沿用旧图，站点的 XMM 目录里不一定有。
+ */
+export function tokenUrlsOf(m: Json): string[] {
+  const own = tokenUrlOf(m);
+  const src = String(m?.source ?? '').trim().toUpperCase();
+  const legacy = src && src !== 'MM' ? tokenUrlOf(m, 'MM') : undefined;
+  return [...new Set([own, legacy].filter((x): x is string => !!x))];
+}
+
 export function parseMonster(m: Json): ParsedMonster {
   const key = `${m.source ?? 'XMM'}:怪物:${m.name}`;
+  const tokenUrls = tokenUrlsOf(m);
+  const tokenUrl = tokenUrls[0];
   const score = Object.fromEntries(ABILS.map((a) => [a, Number(m[a]) || 10])) as Record<Ability, number>;
   const mod = (a: Ability) => Math.floor((score[a] - 10) / 2);
   const cr = crNum(m.cr);
@@ -246,5 +271,5 @@ export function parseMonster(m: Json): ParsedMonster {
     ...(hasEntry ? { sources: [key], entries: { [key]: entry } } : {}),
     ...(notes.length ? { notes } : {}),
   };
-  return { key, view, auto, notes };
+  return { key, view, auto, notes, ...(tokenUrl ? { tokenUrl, tokenUrls } : {}) };
 }

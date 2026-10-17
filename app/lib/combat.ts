@@ -37,6 +37,8 @@ export interface CombatUi {
   targets: string[];
   /** 选目标模式：点了一个要目标的动作之后，点棋子 / 先攻条里的人把他加进来，最后确认 */
   aim: Aim | null;
+  /** 传送模式：点了「传送…」之后，下一次点地图上的格子就把他放到那里（Esc 取消） */
+  tp: { id: string; maxFt: number | null } | null;
   /** 荒野形态 / 寻获魔宠：选一个野兽数据卡后再执行动作 */
   formPick: FormPick | null;
   /** 手动给某个参与者加召唤物 / 伙伴 */
@@ -135,7 +137,7 @@ interface RemoteState {
   dice?: Record<string, DiceMode>; hidden?: string[]; map?: MapState; chat?: ChatRoll[]; actingAs?: string | null; dicePhys?: DicePhysics; diceColors?: Record<string, string>; diceOpen?: boolean; reveal?: Record<string, boolean>;
 }
 
-let ui: CombatUi = { session: null, version: 0, links: {}, dice: {}, selected: null, targets: [], aim: null, formPick: null, summonFor: null, replay: null, chat: [], toast: null, remote: null };
+let ui: CombatUi = { session: null, version: 0, links: {}, dice: {}, selected: null, targets: [], aim: null, tp: null, formPick: null, summonFor: null, replay: null, chat: [], toast: null, remote: null };
 let engineRef: Engine | null = null;
 let stream: EventSource | null = null;
 const listeners = new Set<() => void>();
@@ -442,6 +444,20 @@ export const combat = {
     const map = structuredClone(ui.remote.map);
     fn(map);
     set({ remote: { ...ui.remote, map } }, false);
+  },
+
+  /** 进入传送模式：下一次点地图上的格子就把这个棋子放过去（不扣移动力、不引发借机攻击，服务器查距离） */
+  startTeleport(id: string, maxFt: number | null = null): void {
+    set({ tp: { id, maxFt }, selected: id });
+  },
+  cancelTeleport(): void {
+    if (ui.tp) set({ tp: null });
+  },
+  /** 真的传过去（服务器校验距离 / 归属，回来失败会 toast） */
+  teleport(id: string, x: number, y: number, maxFt: number | null): Promise<boolean> {
+    const r = ui.remote;
+    if (!r) return Promise.resolve(false);
+    return this.map({ action: 'teleport', id, x, y, ...(maxFt != null ? { maxFt } : {}) });
   },
 
   dispatch(cmd: Command): DispatchResult {

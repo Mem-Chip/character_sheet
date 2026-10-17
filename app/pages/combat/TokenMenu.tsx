@@ -149,6 +149,14 @@ export function TokenMenu({ s, ui, engine, name }: { s: Session; ui: CombatUi; e
       )}
       {r && onMap && (dm || mine) && (
         <button onClick={act(() => {
+          const raw = window.prompt('传送到哪里？最多多少尺？（留空 = 不限）', '30');
+          if (raw === null) return;
+          const n = Number(raw.trim());
+          combat.startTeleport(m.id, raw.trim() && Number.isFinite(n) ? n : null);
+        })}>传送…（点地图上的空格）</button>
+      )}
+      {r && onMap && (dm || mine) && (
+        <button onClick={act(() => {
           if (!confirm(`把 ${name(m.id)} 拿下地图？（人还在遭遇里，之后可以再放上来）`)) return;
           combat.patchMap((mp) => { delete mp.tokens[m.id]; });
           void combat.map({ action: 'token', id: m.id, x: null });

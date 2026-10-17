@@ -338,6 +338,22 @@ export function createEncounters(d: Deps) {
         }
         return null;
       }
+      case 'teleport': {
+        // 传送：直接把棋子放过去 —— **不扣移动力、不引发借机攻击、不进轨迹**（王车易位、任意门这类）
+        const id = String(b.id ?? '');
+        if (!e.session.state.combatants[id]) return '没有这个参与者';
+        if (!dm && ownerOf(e, id) !== u.id) return '只能移动自己的棋子';
+        const to = { x: num(b.x, -200, 1000), y: num(b.y, -200, 1000) };
+        const from = m.tokens[id];
+        // 距离上限（尺）：给了就查，超了不许传（免得手滑传半个地图）
+        if (b.maxFt != null && from) {
+          const max = num(b.maxFt, 0, 1000);
+          const ft = gridFeet(to.x - from.x, to.y - from.y, m.grid.diagonal ?? '5');
+          if (ft > max) return `太远了：${ft} 尺超过 ${max} 尺`;
+        }
+        m.tokens[id] = to;
+        return null;
+      }
       case 'stroke': {
         const pts = Array.isArray(b.pts) ? (b.pts as unknown[]).slice(0, MAX_PTS * 2).map((v) => Math.round(Number(v) * 10) / 10) : [];
         if (pts.length < 4 || pts.some((v) => !Number.isFinite(v))) return '线太短';
