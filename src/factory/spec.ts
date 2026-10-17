@@ -233,6 +233,10 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
     - \`from\` 复制某个条目键里的动作（可以再用 \`cost\` / \`activation\` 改写），或者用 \`action\` 直接写动作 JSON；
     - 授予的条目挂在 \`key\` 下，**动作栏里直接能用**（不用额外做什么）；**同 key 会盖住规则书里的同名条目** —— 这就是「用一个改过的副本覆盖原动作」；
     - \`until: 'turnEnd'\` = 当前这回合结束时自动收回；要立刻收回写 \`{ kind: 'removeGrant', key }\`；
+    - 还能改写 \`targeting\`（\`{ type: 'self' }\` = 只能对自己，免位施放护盾类要靠它）；
+    - **免法术位施放的标准写法**：外层动作 \`activation: 'action'\`（付掉动作 / 附赠动作），root 写
+      \`{ kind: 'grantAction', from: 'XPHB:spell:<法术>#cast', cost: [], activation: 'free', until: 'turnEnd' }\` ——
+      授予的那个法术动作不再花动作经济，也不扣法术位；复制时会自动把「相对模板名」换成绝对键、\`slot.level\` 按基础环阶定下来；
     - 注意它只换**动作**，不改「引擎内部行为」（借机攻击、能不能用反应、专注）—— 那些用 \`flags\`（\`cannot\` / \`blocks\` / \`forbidTarget\`）。
 
 ## 6. 引擎怎么执行（容易想错的地方）

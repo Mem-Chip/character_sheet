@@ -1,591 +1,1688 @@
 {
-  "version": 1,
-  "note": "职业特性 / 专长的动态层（黄金条目）。键与 abilities-2024.json 一致，合并时只补动态字段，不冲掉静态的 mods/grants/choices/resources。",
-  "entries": {
-    "XPHB:游荡者:偷袭:1": {
-      "name": "偷袭",
-      "automation": "full",
-      "triggers": [{
-        "id": "sneak", "label": "偷袭", "on": "attackHit", "role": "actor", "window": "before",
-        "optional": true, "limit": "oncePerTurn",
-        "when": "(attack.finesse || attack.ranged) && (roll.adv || (allyWithin(target, 5, { exclude: [self], notCond: '失能' }) && !roll.disadv))",
-        "do": [{ "kind": "addDamage", "dice": "classTable('偷袭')", "type": "attack.damageType" }]
-      }]
-    },
-    "XPHB:游荡者:直觉闪避:5": {
-      "name": "直觉闪避",
-      "automation": "full",
-      "triggers": [{
-        "id": "uncanny", "label": "直觉闪避", "on": "attackHit", "role": "target", "window": "before",
-        "deferTo": "damageIncoming", "optional": true,
-        "cost": [{ "economy": "reaction" }],
-        "when": "canSee(self, attacker)",
-        "modify": [{ "op": "halveDamage" }]
-      }]
-    },
-    "XPHB:野蛮人:狂暴:1": {
-      "name": "狂暴",
-      "automation": "full",
-      "actions": [
-        {
-          "id": "enter", "name": "进入狂暴", "activation": "bonus",
-          "cost": [{ "resource": "狂暴" }],
-          "requires": "!self.wearing('HA') && !self.hasEffect('狂暴')",
-          "root": [{ "kind": "applyEffect", "to": "self", "template": "狂暴" }]
-        },
-        {
-          "id": "extend", "name": "延长狂暴", "activation": "bonus",
-          "requires": "self.hasEffect('狂暴') && turn.isMine",
-          "root": [{ "kind": "extendEffect", "template": "狂暴" }]
-        }
-      ],
-      "effects": {
-        "狂暴": {
-          "text": "钝击/穿刺/挥砍抗性；力量检定与力量豁免优势；力量攻击伤害加值；无法专注或施法。持续到你的下一回合结束，可逐轮延长，至多 10 分钟。",
-          "duration": {
-            "until": { "at": "turnEnd", "of": "bearer", "nth": 1 },
-            "max": { "minutes": 10 },
-            "endsOn": [{ "event": "effectApplied", "when": "event.bearer == self.id && self.has('失能')" }]
-          },
-          "statics": [{ "kind": "resist", "values": ["钝击", "穿刺", "挥砍"] }],
-          "rollMods": [
-            { "on": { "kind": ["check", "save"], "ability": "str" }, "who": "bearer", "op": "adv", "label": "狂暴" },
-            { "on": { "kind": "damage" }, "who": "bearer", "when": "attack.ability == 'str'", "op": "add", "value": "classTable('狂暴伤害')", "label": "狂暴伤害" }
-          ],
-          "flags": { "cannot": ["concentrate", "castSpells"] },
-          "triggers": [
-            {
-              "id": "ext-atk", "label": "狂暴延长（攻击敌人）", "on": "d20Rolled", "role": "actor", "window": "after",
-              "when": "roll.kind == 'attack' && turn.isMine && target.isEnemyOf(self)",
-              "do": [{ "kind": "extendEffect", "template": "狂暴" }]
-            },
-            {
-              "id": "ext-save", "label": "狂暴延长（迫使敌人豁免）", "on": "saveForced", "role": "actor", "window": "after",
-              "when": "turn.isMine && target.isEnemyOf(self)",
-              "do": [{ "kind": "extendEffect", "template": "狂暴" }]
-            }
-          ]
-        }
+ "version": 1,
+ "note": "职业特性 / 专长的动态层（黄金条目）。键与 abilities-2024.json 一致，合并时只补动态字段，不冲掉静态的 mods/grants/choices/resources。",
+ "entries": {
+  "XPHB:游荡者:偷袭:1": {
+   "name": "偷袭",
+   "automation": "full",
+   "triggers": [
+    {
+     "id": "sneak",
+     "label": "偷袭",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "limit": "oncePerTurn",
+     "when": "(attack.finesse || attack.ranged) && (roll.adv || (allyWithin(target, 5, { exclude: [self], notCond: '失能' }) && !roll.disadv))",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "classTable('偷袭')",
+       "type": "attack.damageType"
       }
-    },
-    "XPHB:野蛮人:鲁莽攻击:2": {
-      "name": "鲁莽攻击",
-      "automation": "full",
-      "actions": [{
-        "id": "use", "name": "鲁莽攻击", "activation": "free",
-        "requires": "turn.isMine && !self.hasEffect('鲁莽攻击')",
-        "root": [{ "kind": "applyEffect", "to": "self", "template": "鲁莽攻击" }]
-      }],
-      "effects": {
-        "鲁莽攻击": {
-          "rollMods": [
-            { "on": { "kind": "attack" }, "who": "bearer", "when": "attack.ability == 'str' && turn.isMine", "op": "adv", "label": "鲁莽攻击" },
-            { "on": { "kind": "attack" }, "who": "against", "op": "adv", "label": "目标鲁莽攻击" }
-          ],
-          "duration": { "until": { "at": "turnStart", "of": "bearer", "nth": 1 } }
-        }
-      }
-    },
-    "XPHB:战士:精通重击:3": {
-      "name": "精通重击",
-      "automation": "full",
-      "rollMods": [{ "on": { "kind": "attack", "attack": { "weapon": true } }, "who": "bearer", "op": "critRange", "value": 19, "label": "精通重击" }]
-    },
-    "XPHB:圣武士:守护灵光:6": {
-      "name": "守护灵光",
-      "automation": "full",
-      "text": "圣武士自己的加值已经在人物卡的豁免里（静态层 saveBonus），灵光只给范围内的盟友；圣武士失能时自己那份不会自动去掉（已知限制）。",
-      "auras": [{
-        "id": "protection", "radius": 10, "affects": "allies", "includeSelf": false,
-        "requires": "!self.has('失能')", "stackKey": "守护灵光",
-        "grant": {
-          "rollMods": [{ "on": { "kind": "save" }, "who": "bearer", "op": "add", "value": "max(1, source.mod.cha)", "label": "守护灵光" }]
-        }
-      }]
-    },
-    "XPHB:rule:英雄激励": {
-      "name": "英雄激励",
-      "global": true,
-      "automation": "full",
-      "text": "拥有英雄激励时，可以在掷出任何 D20 后消耗它重骰，必须采用新结果。",
-      "triggers": [{
-        "id": "reroll", "label": "英雄激励：重骰", "on": "d20Rolled", "role": "actor", "window": "before",
-        "optional": true,
-        "cost": [{ "resource": "英雄激励" }],
-        "modify": [{ "op": "reroll", "die": "d20", "keep": "new" }]
-      }]
-    },
-    "XPHB:战士:回气:1": {
-      "name": "回气",
-      "automation": "full",
-      "actions": [{
-        "id": "use", "name": "回气", "activation": "bonus",
-        "cost": [{ "resource": "回气" }],
-        "root": [{ "kind": "heal", "to": "self", "amount": "1d10 + self.levelOf('战士')" }]
-      }]
-    },
-    "XPHB:战士:战术思维:2": {
-      "name": "战术思维",
-      "automation": "full",
-      "text": "属性检定失败时，可以消耗一次回气，在检定上加 1d10；加完仍然失败则不消耗。",
-      "triggers": [{
-        "id": "tm", "label": "战术思维（+1d10）", "on": "d20Rolled", "role": "actor", "window": "before",
-        "optional": true,
-        "when": "roll.kind == 'check' && roll.failing",
-        "cost": [{ "resource": "回气" }],
-        "modify": [{ "op": "addToRoll", "value": "1d10" }],
-        "do": [{
-          "kind": "if", "when": "roll.failing",
-          "then": [
-            { "kind": "resource", "id": "回气", "delta": 1 }
-          ]
-        }]
-      }]
-    },
-    "XPHB:战士:动作如潮:2": {
-      "name": "动作如潮",
-      "automation": "full",
-      "actions": [{
-        "id": "use", "name": "动作如潮", "activation": "free",
-        "text": "本回合多一个动作（不能用来执行魔法动作）。每回合至多一次。",
-        "cost": [{ "resource": "动作如潮" }],
-        "requires": "turn.isMine && round > 0 && !self.hasEffect('动作如潮')",
-        "root": [
-          { "kind": "economy", "action": 1 },
-          { "kind": "applyEffect", "to": "self", "template": "动作如潮" }
-        ]
-      }],
-      "effects": {
-        "动作如潮": {
-          "text": "本回合已经用过动作如潮。额外的动作不能用来执行魔法动作。",
-          "duration": { "until": { "at": "turnEnd", "of": "bearer", "nth": 0 } }
-        }
-      }
-    },
-    "XPHB:游荡者:灵巧动作:2": {
-      "name": "灵巧动作",
-      "automation": "full",
-      "actions": [
-        {
-          "id": "dash", "name": "疾走（灵巧动作）", "activation": "bonus", "requires": "turn.isMine",
-          "root": [{ "kind": "economy", "move": "self.speed" }]
-        },
-        {
-          "id": "disengage", "name": "撤离（灵巧动作）", "activation": "bonus", "requires": "turn.isMine",
-          "root": [{ "kind": "applyEffect", "to": "self", "template": "XPHB:action:撤离#撤离" }]
-        },
-        {
-          "id": "hide", "name": "躲藏（灵巧动作）", "activation": "bonus", "requires": "turn.isMine",
-          "text": "需要处于重度遮蔽或至少四分之三掩护之后、且不在敌人视线内（由 DM 判断）。",
-          "root": [{
-            "kind": "check", "ability": "dex", "skill": "隐匿", "dc": 15,
-            "onSuccess": [{ "kind": "applyEffect", "to": "self", "template": "XPHB:condition:隐形", "duration": { "manual": true } }]
-          }]
-        }
-      ]
-    },
-    "XPHB:游荡者:稳定瞄准:3": {
-      "name": "稳定瞄准",
-      "automation": "full",
-      "actions": [{
-        "id": "use", "name": "稳定瞄准", "activation": "bonus",
-        "text": "只能在本回合还没移动时使用（由人判断）。本回合下一次攻击具有优势，速度归 0。",
-        "requires": "turn.isMine && !self.hasEffect('稳定瞄准')",
-        "root": [{ "kind": "applyEffect", "to": "self", "template": "稳定瞄准" }]
-      }],
-      "effects": {
-        "稳定瞄准": {
-          "statics": [{ "kind": "speedSet", "value": 0 }],
-          "rollMods": [{ "on": { "kind": "attack" }, "who": "bearer", "op": "adv", "label": "稳定瞄准" }],
-          "duration": {
-            "until": { "at": "turnEnd", "of": "bearer", "nth": 0 },
-            "endsOn": [{ "event": "d20Rolled", "when": "event.kind == 'attack' && event.roller == self.id" }]
-          }
-        }
-      }
-    },
-    "XPHB:野蛮人:危机感应:2": {
-      "name": "危机感应",
-      "automation": "full",
-      "rollMods": [{ "on": { "kind": "save", "ability": "dex" }, "who": "bearer", "when": "!self.has('失能')", "op": "adv", "label": "危机感应" }]
-    },
-    "XPHB:圣武士:圣疗:1": {
-      "name": "圣疗",
-      "automation": "full",
-      "actions": [{
-        "id": "use", "name": "圣疗", "activation": "bonus",
-        "text": "触碰一个生物（可以是自己），从治疗能量池里取任意点数为它恢复生命值；或者用 5 点移除中毒状态。",
-        "requires": "self.resource('layOnHands') > 0",
-        "targeting": { "type": "creature", "count": 1, "range": "touch" },
-        "root": [{
-          "kind": "choose", "prompt": "圣疗：恢复生命值，还是移除中毒？",
-          "options": [
-            {
-              "label": "恢复生命值", "when": "target.hp < target.hpMax",
-              "do": [
-                { "kind": "number", "prompt": "用多少点治疗量？", "var": "n", "min": 1, "max": "min(self.resource('layOnHands'), target.hpMax - target.hp)" },
-                { "kind": "heal", "amount": "vars.n" },
-                { "kind": "resource", "id": "layOnHands", "delta": "-vars.n" }
-              ]
-            },
-            {
-              "label": "移除中毒（消耗 5 点）", "when": "target.has('中毒') && self.resource('layOnHands') >= 5",
-              "do": [
-                { "kind": "removeEffect", "match": { "key": "XPHB:condition:中毒" } },
-                { "kind": "resource", "id": "layOnHands", "delta": -5 }
-              ]
-            }
-          ]
-        }]
-      }]
-    },
-    "XPHB:圣武士:圣武斩:2": {
-      "name": "圣武斩",
-      "automation": "full",
-      "text": "始终准备着至圣斩；每次长休可以不消耗法术位施展一次。",
-      "actions": [{
-        "id": "free", "name": "至圣斩（不消耗法术位）", "activation": "bonus", "tags": ["spell", "magical"],
-        "trigger": { "on": "attackHit", "role": "actor", "window": "before", "when": "attack.melee && (attack.weapon || attack.unarmed)" },
-        "requires": "turn.isMine",
-        "cost": [{ "resource": "free-smite" }],
-        "root": [
-          { "kind": "addDamage", "dice": "2d8", "type": "光耀" },
-          { "kind": "if", "when": "target.type == '邪魔' || target.type == '不死生物'", "then": [{ "kind": "addDamage", "dice": "1d8", "type": "光耀" }] }
-        ]
-      }]
-    },
-    "XPHB:圣武士:神圣武器:3": {
-      "name": "神圣武器",
-      "automation": "full",
-      "actions": [{
-        "id": "use", "name": "神圣武器", "activation": "free",
-        "text": "执行攻击动作时，消耗一次引导神力：10 分钟内近战武器攻击加魅力调整值（至少 +1）。",
-        "requires": "turn.isMine",
-        "cost": [{ "resource": "channel-divinity" }],
-        "root": [{ "kind": "applyEffect", "to": "self", "template": "神圣武器" }]
-      }],
-      "effects": {
-        "神圣武器": {
-          "duration": { "minutes": 10 },
-          "rollMods": [{
-            "on": { "kind": "attack", "attack": { "weapon": true, "melee": true } }, "who": "bearer",
-            "op": "add", "value": "max(1, self.mod.cha)", "label": "神圣武器"
-          }]
-        }
-      }
-    },
-    "XPHB:武僧:武艺:1": {
-      "name": "武艺",
-      "automation": "full",
-      "text": "徒手打击用武艺骰，可以用敏捷代替力量；附赠动作可以再进行一次徒手打击。",
-      "actions": [
-        {
-          "id": "unarmed", "name": "徒手打击", "activation": "none",
-          "cost": [{ "economy": "attack" }],
-          "targeting": { "type": "creature", "count": 1, "range": "reach" },
-          "tags": ["weapon"],
-          "root": [{
-            "kind": "attack", "bonus": "self.pb + max(self.mod.str, self.mod.dex)",
-            "attack": { "melee": true, "unarmed": true, "ability": "dex", "damageType": "钝击", "item": "徒手打击" },
-            "onHit": [{ "kind": "damage", "dice": "classTable('武艺') + max(self.mod.str, self.mod.dex)", "type": "钝击" }]
-          }]
-        },
-        {
-          "id": "bonus", "name": "附赠徒手打击", "activation": "bonus", "requires": "turn.isMine",
-          "targeting": { "type": "creature", "count": 1, "range": "reach" },
-          "tags": ["weapon"],
-          "root": [{
-            "kind": "attack", "bonus": "self.pb + max(self.mod.str, self.mod.dex)",
-            "attack": { "melee": true, "unarmed": true, "ability": "dex", "damageType": "钝击", "item": "徒手打击" },
-            "onHit": [{ "kind": "damage", "dice": "classTable('武艺') + max(self.mod.str, self.mod.dex)", "type": "钝击" }]
-          }]
-        }
-      ]
-    },
-    "XPHB:武僧:疾风连击:2": {
-      "name": "疾风连击",
-      "automation": "full",
-      "actions": [{
-        "id": "use", "name": "疾风连击", "activation": "bonus",
-        "text": "消耗 1 点功力，以附赠动作进行两次徒手打击（10 级起三次），都打选中的那个目标。要分给两个目标时，第二下请手动处理。",
-        "requires": "turn.isMine",
-        "cost": [{ "resource": "功力" }],
-        "targeting": { "type": "creature", "count": 1, "range": "reach" },
-        "tags": ["weapon"],
-        "root": [{
-          "kind": "repeat", "n": "2 + min(1, floor(self.levelOf('武僧') / 10))",
-          "do": [{
-            "kind": "attack", "bonus": "self.pb + max(self.mod.str, self.mod.dex)",
-            "attack": { "melee": true, "unarmed": true, "ability": "dex", "damageType": "钝击", "item": "徒手打击" },
-            "onHit": [{ "kind": "damage", "dice": "classTable('武艺') + max(self.mod.str, self.mod.dex)", "type": "钝击" }]
-          }]
-        }]
-      }]
-    },
-    "XPHB:武僧:震慑拳:5": {
-      "name": "震慑拳",
-      "automation": "full",
-      "text": "武僧武器按「近战武器」近似判断。",
-      "triggers": [{
-        "id": "stun", "label": "震慑拳", "on": "attackHit", "role": "actor", "window": "after",
-        "optional": true, "limit": "oncePerTurn",
-        "when": "(attack.unarmed || (attack.weapon && attack.melee)) && !target.dead",
-        "cost": [{ "resource": "功力" }],
-        "do": [{
-          "kind": "save", "ability": "con", "dc": "8 + self.mod.wis + self.pb",
-          "onFail": [{
-            "kind": "applyEffect", "template": "XPHB:condition:震慑",
-            "duration": { "until": { "at": "turnStart", "of": "source", "nth": 1 } }
-          }],
-          "onSuccess": [
-            { "kind": "applyEffect", "template": "震慑拳：减速" },
-            { "kind": "applyEffect", "template": "震慑拳：破绽" }
-          ]
-        }]
-      }],
-      "effects": {
-        "震慑拳：减速": {
-          "statics": [{ "kind": "speed", "bonus": "-floor(self.speed / 2)" }],
-          "duration": { "until": { "at": "turnStart", "of": "source", "nth": 1 } }
-        },
-        "震慑拳：破绽": {
-          "rollMods": [{ "on": { "kind": "attack" }, "who": "against", "op": "adv", "label": "震慑拳：下一次攻击具有优势" }],
-          "duration": {
-            "until": { "at": "turnStart", "of": "source", "nth": 1 },
-            "endsOn": [{ "event": "d20Rolled", "when": "event.kind == 'attack' && event.target == self.id" }]
-          }
-        }
-      }
-    },
-    "XPHB:吟游诗人:吟游诗人激励:1": {
-      "name": "吟游诗人激励",
-      "automation": "full",
-      "actions": [{
-        "id": "give", "name": "诗人激励", "activation": "bonus",
-        "cost": [{ "resource": "诗人激励" }],
-        "targeting": { "type": "creature", "count": 1, "range": 60, "filter": "target.id != self.id" },
-        "root": [{ "kind": "applyEffect", "template": "诗人激励", "duration": { "hours": 1 }, "state": { "die": "classTable('诗人骰')" } }]
-      }],
-      "effects": {
-        "诗人激励": {
-          "stackKey": "诗人激励",
-          "text": "1 小时内，D20 检定失败时可以掷这颗骰子加到结果上，可能把失败变成成功。用掉即消失。",
-          "triggers": [{
-            "id": "use", "label": "诗人激励", "on": "d20Rolled", "role": "actor", "window": "before",
-            "optional": true,
-            "when": "roll.failing",
-            "modify": [{ "op": "addToRoll", "value": "effect.state.die" }],
-            "do": [{ "kind": "removeEffect", "match": { "name": "诗人激励" }, "from": "self" }]
-          }]
-        }
-      }
-    },
-    "XPHB:幸运": {
-      "name": "幸运",
-      "automation": "full",
-      "text": "只在会改变结果时询问：自己的检定要失败时问「给自己优势」，别人对你的攻击要命中时问「施加劣势」。已有劣势时再给优势按「多掷一颗取高」近似。",
-      "triggers": [
-        {
-          "id": "adv", "label": "幸运：给自己优势", "on": "d20Rolled", "role": "actor", "window": "before",
-          "optional": true,
-          "when": "roll.failing && !roll.adv",
-          "cost": [{ "resource": "luck-points" }],
-          "modify": [{ "op": "reroll", "die": "d20", "keep": "higher" }]
-        },
-        {
-          "id": "disadv", "label": "幸运：对这次攻击施加劣势", "on": "d20Rolled", "role": "target", "window": "before",
-          "optional": true,
-          "when": "roll.kind == 'attack' && !roll.failing && !roll.disadv",
-          "cost": [{ "resource": "luck-points" }],
-          "modify": [{ "op": "reroll", "die": "d20", "keep": "lower" }]
-        }
-      ]
-    },
-    "XPHB:术士:先天术法:1": {
-      "name": "先天术法",
-      "automation": "full",
-      "text": "「术士法术」按所有法术近似（多职业时由人判断）。",
-      "actions": [{
-        "id": "use", "name": "先天术法", "activation": "bonus",
-        "cost": [{ "resource": "先天术法" }],
-        "requires": "!self.hasEffect('先天术法')",
-        "root": [{ "kind": "applyEffect", "to": "self", "template": "先天术法" }]
-      }],
-      "effects": {
-        "先天术法": {
-          "duration": { "minutes": 1 },
-          "statics": [{ "kind": "spellDc", "bonus": 1 }],
-          "rollMods": [{ "on": { "kind": "attack", "attack": { "spell": true } }, "who": "bearer", "op": "adv", "label": "先天术法" }]
-        }
-      }
-    },
-    "XPHB:瞬发法术": {
-      "name": "瞬发法术",
-      "automation": "full",
-      "text": "超魔法：消耗 2 术法点，本回合下一道施法时间为动作的法术改用附赠动作施放。先声明（不占动作），再照常施法。2024：一回合只能消耗一个法术位施法，引擎照常限制。",
-      "actions": [{
-        "id": "use", "name": "瞬发法术", "activation": "free",
-        "cost": [{ "resource": "sorcery_points", "n": 2 }],
-        "requires": "!self.hasEffect('瞬发法术')",
-        "root": [{ "kind": "applyEffect", "to": "self", "template": "瞬发法术", "duration": { "until": { "at": "turnEnd", "of": "bearer", "nth": 0 } } }]
-      }],
-      "effects": {
-        "瞬发法术": {
-          "text": "本回合下一道施法时间为动作的法术改用附赠动作施放。",
-          "flags": { "quicken": true }
-        }
-      }
-    },
-    "XPHB:德鲁伊:荒野形态:2": {
-      "name": "荒野形态",
-      "automation": "full",
-      "text": "附赠动作消耗一次荒野形态次数，变形为所选野兽：保留生命值、智力/感知/魅力、熟练加值与职业特性，替换体型、速度、力量/敏捷/体质、AC 与天生攻击；获得等于德鲁伊等级（月亮结社为 3 倍等级）的临时生命值；无法施法（月亮结社法术与 18 级兽形施法除外，不打断专注）；陷入失能或死亡时自动解除。",
-      "actions": [
-        {
-          "id": "enter", "name": "荒野形态", "activation": "bonus",
-          "tags": ["wildshape"],
-          "cost": [{ "resource": "wildshape-uses" }],
-          "root": [
-            { "kind": "applyEffect", "to": "self", "template": "荒野形态" },
-            { "kind": "tempHp", "to": "self", "amount": "cond(self.hasSource('结社形态'), 3 * self.levelOf('德鲁伊'), self.levelOf('德鲁伊'))" }
-          ]
-        },
-        {
-          "id": "end", "name": "结束荒野形态", "activation": "bonus",
-          "requires": "self.hasEffect('荒野形态')",
-          "root": [{ "kind": "removeEffect", "from": "self", "match": { "tag": "wildshape" } }]
-        }
-      ],
-      "effects": {
-        "荒野形态": {
-          "tags": ["wildshape"],
-          "text": "变形为野兽：保留智力/感知/魅力与生命值，使用野兽的力量/敏捷/体质、AC、速度与天生攻击；无法施法（月亮结社法术与兽形施法除外，不打断专注）。陷入失能时自动结束。",
-          "duration": {
-            "manual": true,
-            "endsOn": [{ "event": "effectApplied", "when": "event.bearer == self.id && self.has('失能')" }]
-          },
-          "flags": { "cannot": ["castSpells"] }
-        }
-      }
-    },
-    "XPHB:德鲁伊:荒野伙伴:2": {
-      "name": "荒野伙伴",
-      "automation": "full",
-      "text": "以魔法动作消耗一次荒野形态次数或一个法术位施展寻获魔宠（魔宠生物类型为妖精，随你先攻行动）。",
-      "actions": [
-        {
-          "id": "use", "name": "荒野伙伴（消耗荒野形态次数）", "activation": "action",
-          "tags": ["familiar"],
-          "cost": [{ "resource": "wildshape-uses" }],
-          "root": [{
-            "kind": "summon", "name": "荒野魔宠", "size": "T", "creatureType": "fey", "ac": 12, "hp": 3, "speed": 40,
-            "score": { "str": 3, "dex": 15, "con": 10, "int": 3, "wis": 12, "cha": 7 }, "link": false,
-            "attacks": [{ "name": "爪抓", "bonus": 4, "damage": "1", "damageType": "挥砍" }]
-          }]
-        },
-        {
-          "id": "slot", "name": "荒野伙伴（消耗法术位）", "activation": "action",
-          "tags": ["familiar"],
-          "cost": [{ "slot": { "min": 1 } }],
-          "root": [{
-            "kind": "summon", "name": "荒野魔宠", "size": "T", "creatureType": "fey", "ac": 12, "hp": 3, "speed": 40,
-            "score": { "str": 3, "dex": 15, "con": 10, "int": 3, "wis": 12, "cha": 7 }, "link": false,
-            "attacks": [{ "name": "爪抓", "bonus": 4, "damage": "1", "damageType": "挥砍" }]
-          }]
-        }
-      ]
-    },
-    "XPHB:德鲁伊:原力蛮击:7": {
-      "name": "原力蛮击",
-      "automation": "full",
-      "text": "每个你的回合内一次，武器攻击或荒野形态下野兽的攻击命中时，额外造成 1d8（15 级元素狂怒起为 2d8）寒冷 / 火焰 / 闪电 / 雷鸣伤害。",
-      "triggers": [{
-        "id": "primal-strike", "label": "原力蛮击", "on": "attackHit", "role": "actor", "window": "before",
-        "optional": true, "limit": "oncePerTurn",
-        "when": "turn.isMine && !attack.spell && (attack.weapon || self.hasEffect('荒野形态'))",
-        "do": [{
-          "kind": "choose", "prompt": "原力蛮击：选择额外伤害的类型",
-          "options": [
-            { "label": "寒冷", "do": [{ "kind": "addDamage", "dice": "cond(self.levelOf('德鲁伊') >= 15, 2d8, 1d8)", "type": "寒冷" }] },
-            { "label": "火焰", "do": [{ "kind": "addDamage", "dice": "cond(self.levelOf('德鲁伊') >= 15, 2d8, 1d8)", "type": "火焰" }] },
-            { "label": "闪电", "do": [{ "kind": "addDamage", "dice": "cond(self.levelOf('德鲁伊') >= 15, 2d8, 1d8)", "type": "闪电" }] },
-            { "label": "雷鸣", "do": [{ "kind": "addDamage", "dice": "cond(self.levelOf('德鲁伊') >= 15, 2d8, 1d8)", "type": "雷鸣" }] }
-          ]
-        }]
-      }]
-    },
-    "XPHB:德鲁伊:月辉形态:14": {
-      "name": "月辉形态",
-      "automation": "full",
-      "text": "月耀炽光：每回合一次，荒野形态下的攻击命中时额外造成 2d10 光耀伤害。",
-      "triggers": [{
-        "id": "lunar-radiance", "label": "月辉形态：月耀炽光（+2d10 光耀）", "on": "attackHit", "role": "actor", "window": "before",
-        "optional": true, "limit": "oncePerTurn",
-        "when": "!attack.spell && self.hasEffect('荒野形态')",
-        "do": [{ "kind": "addDamage", "dice": "2d10", "type": "光耀" }]
-      }]
-    },
-    "XPHB:游侠:原初伴侣:3": {
-      "name": "原初伴侣",
-      "automation": "full",
-      "text": "召唤原初野兽（大地野兽 / 天空野兽 / 海洋野兽），与你共用先攻并在你之后行动。你的回合可以用附赠动作或牺牲一次攻击命令它行动。",
-      "actions": [
-        {
-          "id": "summon", "name": "原初伴侣：呼唤原初野兽", "activation": "free",
-          "root": [{
-            "kind": "choose", "prompt": "选择原初野兽形态",
-            "options": [
-              {
-                "label": "大地野兽（中型，AC 13+PB，HP 5+5×游侠等级）",
-                "do": [{
-                  "kind": "summon", "name": "大地野兽", "size": "M", "creatureType": "beast",
-                  "ac": "13 + self.pb", "hp": "5 + 5 * self.levelOf('游侠')", "speed": 40,
-                  "score": { "str": 14, "dex": 14, "con": 15, "int": 8, "wis": 14, "cha": 11 },
-                  "attacksPerAction": "cond(self.levelOf('游侠') >= 11, 2, 1)", "link": false,
-                  "attacks": [{ "name": "野兽打击（撕裂）", "damage": "1d8 + 2 + self.pb", "damageType": "挥砍" }],
-                  "notes": ["冲锋：攻击前直线移动至少 20 尺命中时额外 1d6 挥砍伤害且大型或更小目标陷入倒地"]
-                }]
-              },
-              {
-                "label": "天空野兽（小型，AC 13+PB，HP 4+4×游侠等级，飞行 60 尺）",
-                "do": [{
-                  "kind": "summon", "name": "天空野兽", "size": "S", "creatureType": "beast",
-                  "ac": "13 + self.pb", "hp": "4 + 4 * self.levelOf('游侠')", "speed": 60,
-                  "score": { "str": 6, "dex": 16, "con": 13, "int": 8, "wis": 14, "cha": 11 },
-                  "attacksPerAction": "cond(self.levelOf('游侠') >= 11, 2, 1)", "link": false,
-                  "attacks": [{ "name": "野兽打击（撕裂）", "damage": "1d4 + 3 + self.pb", "damageType": "挥砍" }],
-                  "notes": ["飞掠：飞行离开敌人触及范围时不引发借机攻击"]
-                }]
-              },
-              {
-                "label": "海洋野兽（中型，AC 13+PB，HP 5+5×游侠等级，游泳 60 尺）",
-                "do": [{
-                  "kind": "summon", "name": "海洋野兽", "size": "M", "creatureType": "beast",
-                  "ac": "13 + self.pb", "hp": "5 + 5 * self.levelOf('游侠')", "speed": 30,
-                  "score": { "str": 14, "dex": 14, "con": 15, "int": 8, "wis": 14, "cha": 11 },
-                  "attacksPerAction": "cond(self.levelOf('游侠') >= 11, 2, 1)", "link": false,
-                  "attacks": [{ "name": "野兽打击（束缚）", "damage": "1d6 + 2 + self.pb", "damageType": "钝击" }],
-                  "notes": ["水陆两栖；命中时目标陷入受擒（逃脱 DC 同你的法术豁免 DC）"]
-                }]
-              }
-            ]
-          }]
-        },
-        {
-          "id": "command", "name": "原初伴侣：命令野兽", "activation": "bonus", "requires": "turn.isMine",
-          "root": [{ "kind": "note", "text": "原初伴侣：以附赠动作命令原初野兽在本轮执行动作" }]
-        },
-        {
-          "id": "strike", "name": "原初伴侣：牺牲攻击命令野兽打击", "activation": "none", "requires": "turn.isMine",
-          "cost": [{ "economy": "attack" }],
-          "root": [{ "kind": "note", "text": "原初伴侣：牺牲一次攻击命令原初野兽执行野兽打击" }]
-        },
-        {
-          "id": "revive", "name": "原初伴侣：复活野兽", "activation": "action", "tags": ["magical"],
-          "cost": [{ "slot": { "min": 1 } }],
-          "root": [{ "kind": "note", "text": "原初伴侣：消耗法术位复活死亡不超过 1 小时的原初野兽" }]
-        }
-      ]
+     ]
     }
+   ]
+  },
+  "XPHB:游荡者:直觉闪避:5": {
+   "name": "直觉闪避",
+   "automation": "full",
+   "triggers": [
+    {
+     "id": "uncanny",
+     "label": "直觉闪避",
+     "on": "attackHit",
+     "role": "target",
+     "window": "before",
+     "deferTo": "damageIncoming",
+     "optional": true,
+     "cost": [
+      {
+       "economy": "reaction"
+      }
+     ],
+     "when": "canSee(self, attacker)",
+     "modify": [
+      {
+       "op": "halveDamage"
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:野蛮人:狂暴:1": {
+   "name": "狂暴",
+   "automation": "full",
+   "actions": [
+    {
+     "id": "enter",
+     "name": "进入狂暴",
+     "activation": "bonus",
+     "cost": [
+      {
+       "resource": "狂暴"
+      }
+     ],
+     "requires": "!self.wearing('HA') && !self.hasEffect('狂暴')",
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "狂暴"
+      }
+     ]
+    },
+    {
+     "id": "extend",
+     "name": "延长狂暴",
+     "activation": "bonus",
+     "requires": "self.hasEffect('狂暴') && turn.isMine",
+     "root": [
+      {
+       "kind": "extendEffect",
+       "template": "狂暴"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "狂暴": {
+     "text": "钝击/穿刺/挥砍抗性；力量检定与力量豁免优势；力量攻击伤害加值；无法专注或施法。持续到你的下一回合结束，可逐轮延长，至多 10 分钟。",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 1
+      },
+      "max": {
+       "minutes": 10
+      },
+      "endsOn": [
+       {
+        "event": "effectApplied",
+        "when": "event.bearer == self.id && self.has('失能')"
+       }
+      ]
+     },
+     "statics": [
+      {
+       "kind": "resist",
+       "values": [
+        "钝击",
+        "穿刺",
+        "挥砍"
+       ]
+      }
+     ],
+     "rollMods": [
+      {
+       "on": {
+        "kind": [
+         "check",
+         "save"
+        ],
+        "ability": "str"
+       },
+       "who": "bearer",
+       "op": "adv",
+       "label": "狂暴"
+      },
+      {
+       "on": {
+        "kind": "damage"
+       },
+       "who": "bearer",
+       "when": "attack.ability == 'str'",
+       "op": "add",
+       "value": "classTable('狂暴伤害')",
+       "label": "狂暴伤害"
+      }
+     ],
+     "flags": {
+      "cannot": [
+       "concentrate",
+       "castSpells"
+      ]
+     },
+     "triggers": [
+      {
+       "id": "ext-atk",
+       "label": "狂暴延长（攻击敌人）",
+       "on": "d20Rolled",
+       "role": "actor",
+       "window": "after",
+       "when": "roll.kind == 'attack' && turn.isMine && target.isEnemyOf(self)",
+       "do": [
+        {
+         "kind": "extendEffect",
+         "template": "狂暴"
+        }
+       ]
+      },
+      {
+       "id": "ext-save",
+       "label": "狂暴延长（迫使敌人豁免）",
+       "on": "saveForced",
+       "role": "actor",
+       "window": "after",
+       "when": "turn.isMine && target.isEnemyOf(self)",
+       "do": [
+        {
+         "kind": "extendEffect",
+         "template": "狂暴"
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "XPHB:野蛮人:鲁莽攻击:2": {
+   "name": "鲁莽攻击",
+   "automation": "full",
+   "actions": [
+    {
+     "id": "use",
+     "name": "鲁莽攻击",
+     "activation": "free",
+     "requires": "turn.isMine && !self.hasEffect('鲁莽攻击')",
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "鲁莽攻击"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "鲁莽攻击": {
+     "rollMods": [
+      {
+       "on": {
+        "kind": "attack"
+       },
+       "who": "bearer",
+       "when": "attack.ability == 'str' && turn.isMine",
+       "op": "adv",
+       "label": "鲁莽攻击"
+      },
+      {
+       "on": {
+        "kind": "attack"
+       },
+       "who": "against",
+       "op": "adv",
+       "label": "目标鲁莽攻击"
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "bearer",
+       "nth": 1
+      }
+     }
+    }
+   }
+  },
+  "XPHB:战士:精通重击:3": {
+   "name": "精通重击",
+   "automation": "full",
+   "rollMods": [
+    {
+     "on": {
+      "kind": "attack",
+      "attack": {
+       "weapon": true
+      }
+     },
+     "who": "bearer",
+     "op": "critRange",
+     "value": 19,
+     "label": "精通重击"
+    }
+   ]
+  },
+  "XPHB:圣武士:守护灵光:6": {
+   "name": "守护灵光",
+   "automation": "full",
+   "text": "圣武士自己的加值已经在人物卡的豁免里（静态层 saveBonus），灵光只给范围内的盟友；圣武士失能时自己那份不会自动去掉（已知限制）。",
+   "auras": [
+    {
+     "id": "protection",
+     "radius": 10,
+     "affects": "allies",
+     "includeSelf": false,
+     "requires": "!self.has('失能')",
+     "stackKey": "守护灵光",
+     "grant": {
+      "rollMods": [
+       {
+        "on": {
+         "kind": "save"
+        },
+        "who": "bearer",
+        "op": "add",
+        "value": "max(1, source.mod.cha)",
+        "label": "守护灵光"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "XPHB:rule:英雄激励": {
+   "name": "英雄激励",
+   "global": true,
+   "automation": "full",
+   "text": "拥有英雄激励时，可以在掷出任何 D20 后消耗它重骰，必须采用新结果。",
+   "triggers": [
+    {
+     "id": "reroll",
+     "label": "英雄激励：重骰",
+     "on": "d20Rolled",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "cost": [
+      {
+       "resource": "英雄激励"
+      }
+     ],
+     "modify": [
+      {
+       "op": "reroll",
+       "die": "d20",
+       "keep": "new"
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:战士:回气:1": {
+   "name": "回气",
+   "automation": "full",
+   "actions": [
+    {
+     "id": "use",
+     "name": "回气",
+     "activation": "bonus",
+     "cost": [
+      {
+       "resource": "回气"
+      }
+     ],
+     "root": [
+      {
+       "kind": "heal",
+       "to": "self",
+       "amount": "1d10 + self.levelOf('战士')"
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:战士:战术思维:2": {
+   "name": "战术思维",
+   "automation": "full",
+   "text": "属性检定失败时，可以消耗一次回气，在检定上加 1d10；加完仍然失败则不消耗。",
+   "triggers": [
+    {
+     "id": "tm",
+     "label": "战术思维（+1d10）",
+     "on": "d20Rolled",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "when": "roll.kind == 'check' && roll.failing",
+     "cost": [
+      {
+       "resource": "回气"
+      }
+     ],
+     "modify": [
+      {
+       "op": "addToRoll",
+       "value": "1d10"
+      }
+     ],
+     "do": [
+      {
+       "kind": "if",
+       "when": "roll.failing",
+       "then": [
+        {
+         "kind": "resource",
+         "id": "回气",
+         "delta": 1
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:战士:动作如潮:2": {
+   "name": "动作如潮",
+   "automation": "full",
+   "actions": [
+    {
+     "id": "use",
+     "name": "动作如潮",
+     "activation": "free",
+     "text": "本回合多一个动作（不能用来执行魔法动作）。每回合至多一次。",
+     "cost": [
+      {
+       "resource": "动作如潮"
+      }
+     ],
+     "requires": "turn.isMine && round > 0 && !self.hasEffect('动作如潮')",
+     "root": [
+      {
+       "kind": "economy",
+       "action": 1
+      },
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "动作如潮"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "动作如潮": {
+     "text": "本回合已经用过动作如潮。额外的动作不能用来执行魔法动作。",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      }
+     }
+    }
+   }
+  },
+  "XPHB:游荡者:灵巧动作:2": {
+   "name": "灵巧动作",
+   "automation": "full",
+   "actions": [
+    {
+     "id": "dash",
+     "name": "疾走（灵巧动作）",
+     "activation": "bonus",
+     "requires": "turn.isMine",
+     "root": [
+      {
+       "kind": "economy",
+       "move": "self.speed"
+      }
+     ]
+    },
+    {
+     "id": "disengage",
+     "name": "撤离（灵巧动作）",
+     "activation": "bonus",
+     "requires": "turn.isMine",
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "XPHB:action:撤离#撤离"
+      }
+     ]
+    },
+    {
+     "id": "hide",
+     "name": "躲藏（灵巧动作）",
+     "activation": "bonus",
+     "requires": "turn.isMine",
+     "text": "需要处于重度遮蔽或至少四分之三掩护之后、且不在敌人视线内（由 DM 判断）。",
+     "root": [
+      {
+       "kind": "check",
+       "ability": "dex",
+       "skill": "隐匿",
+       "dc": 15,
+       "onSuccess": [
+        {
+         "kind": "applyEffect",
+         "to": "self",
+         "template": "XPHB:condition:隐形",
+         "duration": {
+          "manual": true
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:游荡者:稳定瞄准:3": {
+   "name": "稳定瞄准",
+   "automation": "full",
+   "actions": [
+    {
+     "id": "use",
+     "name": "稳定瞄准",
+     "activation": "bonus",
+     "text": "只能在本回合还没移动时使用（由人判断）。本回合下一次攻击具有优势，速度归 0。",
+     "requires": "turn.isMine && !self.hasEffect('稳定瞄准')",
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "稳定瞄准"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "稳定瞄准": {
+     "statics": [
+      {
+       "kind": "speedSet",
+       "value": 0
+      }
+     ],
+     "rollMods": [
+      {
+       "on": {
+        "kind": "attack"
+       },
+       "who": "bearer",
+       "op": "adv",
+       "label": "稳定瞄准"
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      },
+      "endsOn": [
+       {
+        "event": "d20Rolled",
+        "when": "event.kind == 'attack' && event.roller == self.id"
+       }
+      ]
+     }
+    }
+   }
+  },
+  "XPHB:野蛮人:危机感应:2": {
+   "name": "危机感应",
+   "automation": "full",
+   "rollMods": [
+    {
+     "on": {
+      "kind": "save",
+      "ability": "dex"
+     },
+     "who": "bearer",
+     "when": "!self.has('失能')",
+     "op": "adv",
+     "label": "危机感应"
+    }
+   ]
+  },
+  "XPHB:圣武士:圣疗:1": {
+   "name": "圣疗",
+   "automation": "full",
+   "actions": [
+    {
+     "id": "use",
+     "name": "圣疗",
+     "activation": "bonus",
+     "text": "触碰一个生物（可以是自己），从治疗能量池里取任意点数为它恢复生命值；或者用 5 点移除中毒状态。",
+     "requires": "self.resource('layOnHands') > 0",
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": "touch"
+     },
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "圣疗：恢复生命值，还是移除中毒？",
+       "options": [
+        {
+         "label": "恢复生命值",
+         "when": "target.hp < target.hpMax",
+         "do": [
+          {
+           "kind": "number",
+           "prompt": "用多少点治疗量？",
+           "var": "n",
+           "min": 1,
+           "max": "min(self.resource('layOnHands'), target.hpMax - target.hp)"
+          },
+          {
+           "kind": "heal",
+           "amount": "vars.n"
+          },
+          {
+           "kind": "resource",
+           "id": "layOnHands",
+           "delta": "-vars.n"
+          }
+         ]
+        },
+        {
+         "label": "移除中毒（消耗 5 点）",
+         "when": "target.has('中毒') && self.resource('layOnHands') >= 5",
+         "do": [
+          {
+           "kind": "removeEffect",
+           "match": {
+            "key": "XPHB:condition:中毒"
+           }
+          },
+          {
+           "kind": "resource",
+           "id": "layOnHands",
+           "delta": -5
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:圣武士:圣武斩:2": {
+   "name": "圣武斩",
+   "automation": "full",
+   "text": "始终准备着至圣斩；每次长休可以不消耗法术位施展一次。",
+   "actions": [
+    {
+     "id": "free",
+     "name": "至圣斩（不消耗法术位）",
+     "activation": "bonus",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "trigger": {
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "attack.melee && (attack.weapon || attack.unarmed)"
+     },
+     "requires": "turn.isMine",
+     "cost": [
+      {
+       "resource": "free-smite"
+      }
+     ],
+     "root": [
+      {
+       "kind": "addDamage",
+       "dice": "2d8",
+       "type": "光耀"
+      },
+      {
+       "kind": "if",
+       "when": "target.type == '邪魔' || target.type == '不死生物'",
+       "then": [
+        {
+         "kind": "addDamage",
+         "dice": "1d8",
+         "type": "光耀"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:圣武士:神圣武器:3": {
+   "name": "神圣武器",
+   "automation": "full",
+   "actions": [
+    {
+     "id": "use",
+     "name": "神圣武器",
+     "activation": "free",
+     "text": "执行攻击动作时，消耗一次引导神力：10 分钟内近战武器攻击加魅力调整值（至少 +1）。",
+     "requires": "turn.isMine",
+     "cost": [
+      {
+       "resource": "channel-divinity"
+      }
+     ],
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "神圣武器"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "神圣武器": {
+     "duration": {
+      "minutes": 10
+     },
+     "rollMods": [
+      {
+       "on": {
+        "kind": "attack",
+        "attack": {
+         "weapon": true,
+         "melee": true
+        }
+       },
+       "who": "bearer",
+       "op": "add",
+       "value": "max(1, self.mod.cha)",
+       "label": "神圣武器"
+      }
+     ]
+    }
+   }
+  },
+  "XPHB:武僧:武艺:1": {
+   "name": "武艺",
+   "automation": "full",
+   "text": "徒手打击用武艺骰，可以用敏捷代替力量；附赠动作可以再进行一次徒手打击。",
+   "actions": [
+    {
+     "id": "unarmed",
+     "name": "徒手打击",
+     "activation": "none",
+     "cost": [
+      {
+       "economy": "attack"
+      }
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": "reach"
+     },
+     "tags": [
+      "weapon"
+     ],
+     "root": [
+      {
+       "kind": "attack",
+       "bonus": "self.pb + max(self.mod.str, self.mod.dex)",
+       "attack": {
+        "melee": true,
+        "unarmed": true,
+        "ability": "dex",
+        "damageType": "钝击",
+        "item": "徒手打击"
+       },
+       "onHit": [
+        {
+         "kind": "damage",
+         "dice": "classTable('武艺') + max(self.mod.str, self.mod.dex)",
+         "type": "钝击"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "bonus",
+     "name": "附赠徒手打击",
+     "activation": "bonus",
+     "requires": "turn.isMine",
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": "reach"
+     },
+     "tags": [
+      "weapon"
+     ],
+     "root": [
+      {
+       "kind": "attack",
+       "bonus": "self.pb + max(self.mod.str, self.mod.dex)",
+       "attack": {
+        "melee": true,
+        "unarmed": true,
+        "ability": "dex",
+        "damageType": "钝击",
+        "item": "徒手打击"
+       },
+       "onHit": [
+        {
+         "kind": "damage",
+         "dice": "classTable('武艺') + max(self.mod.str, self.mod.dex)",
+         "type": "钝击"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:武僧:疾风连击:2": {
+   "name": "疾风连击",
+   "automation": "full",
+   "actions": [
+    {
+     "id": "use",
+     "name": "疾风连击",
+     "activation": "bonus",
+     "text": "消耗 1 点功力，以附赠动作进行两次徒手打击（10 级起三次），都打选中的那个目标。要分给两个目标时，第二下请手动处理。",
+     "requires": "turn.isMine",
+     "cost": [
+      {
+       "resource": "功力"
+      }
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": "reach"
+     },
+     "tags": [
+      "weapon"
+     ],
+     "root": [
+      {
+       "kind": "repeat",
+       "n": "2 + min(1, floor(self.levelOf('武僧') / 10))",
+       "do": [
+        {
+         "kind": "attack",
+         "bonus": "self.pb + max(self.mod.str, self.mod.dex)",
+         "attack": {
+          "melee": true,
+          "unarmed": true,
+          "ability": "dex",
+          "damageType": "钝击",
+          "item": "徒手打击"
+         },
+         "onHit": [
+          {
+           "kind": "damage",
+           "dice": "classTable('武艺') + max(self.mod.str, self.mod.dex)",
+           "type": "钝击"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:武僧:震慑拳:5": {
+   "name": "震慑拳",
+   "automation": "full",
+   "text": "武僧武器按「近战武器」近似判断。",
+   "triggers": [
+    {
+     "id": "stun",
+     "label": "震慑拳",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "after",
+     "optional": true,
+     "limit": "oncePerTurn",
+     "when": "(attack.unarmed || (attack.weapon && attack.melee)) && !target.dead",
+     "cost": [
+      {
+       "resource": "功力"
+      }
+     ],
+     "do": [
+      {
+       "kind": "save",
+       "ability": "con",
+       "dc": "8 + self.mod.wis + self.pb",
+       "onFail": [
+        {
+         "kind": "applyEffect",
+         "template": "XPHB:condition:震慑",
+         "duration": {
+          "until": {
+           "at": "turnStart",
+           "of": "source",
+           "nth": 1
+          }
+         }
+        }
+       ],
+       "onSuccess": [
+        {
+         "kind": "applyEffect",
+         "template": "震慑拳：减速"
+        },
+        {
+         "kind": "applyEffect",
+         "template": "震慑拳：破绽"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "震慑拳：减速": {
+     "statics": [
+      {
+       "kind": "speed",
+       "bonus": "-floor(self.speed / 2)"
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "source",
+       "nth": 1
+      }
+     }
+    },
+    "震慑拳：破绽": {
+     "rollMods": [
+      {
+       "on": {
+        "kind": "attack"
+       },
+       "who": "against",
+       "op": "adv",
+       "label": "震慑拳：下一次攻击具有优势"
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "source",
+       "nth": 1
+      },
+      "endsOn": [
+       {
+        "event": "d20Rolled",
+        "when": "event.kind == 'attack' && event.target == self.id"
+       }
+      ]
+     }
+    }
+   }
+  },
+  "XPHB:吟游诗人:吟游诗人激励:1": {
+   "name": "吟游诗人激励",
+   "automation": "full",
+   "actions": [
+    {
+     "id": "give",
+     "name": "诗人激励",
+     "activation": "bonus",
+     "cost": [
+      {
+       "resource": "诗人激励"
+      }
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 60,
+      "filter": "target.id != self.id"
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "template": "诗人激励",
+       "duration": {
+        "hours": 1
+       },
+       "state": {
+        "die": "classTable('诗人骰')"
+       }
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "诗人激励": {
+     "stackKey": "诗人激励",
+     "text": "1 小时内，D20 检定失败时可以掷这颗骰子加到结果上，可能把失败变成成功。用掉即消失。",
+     "triggers": [
+      {
+       "id": "use",
+       "label": "诗人激励",
+       "on": "d20Rolled",
+       "role": "actor",
+       "window": "before",
+       "optional": true,
+       "when": "roll.failing",
+       "modify": [
+        {
+         "op": "addToRoll",
+         "value": "effect.state.die"
+        }
+       ],
+       "do": [
+        {
+         "kind": "removeEffect",
+         "match": {
+          "name": "诗人激励"
+         },
+         "from": "self"
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "XPHB:幸运": {
+   "name": "幸运",
+   "automation": "full",
+   "text": "只在会改变结果时询问：自己的检定要失败时问「给自己优势」，别人对你的攻击要命中时问「施加劣势」。已有劣势时再给优势按「多掷一颗取高」近似。",
+   "triggers": [
+    {
+     "id": "adv",
+     "label": "幸运：给自己优势",
+     "on": "d20Rolled",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "when": "roll.failing && !roll.adv",
+     "cost": [
+      {
+       "resource": "luck-points"
+      }
+     ],
+     "modify": [
+      {
+       "op": "reroll",
+       "die": "d20",
+       "keep": "higher"
+      }
+     ]
+    },
+    {
+     "id": "disadv",
+     "label": "幸运：对这次攻击施加劣势",
+     "on": "d20Rolled",
+     "role": "target",
+     "window": "before",
+     "optional": true,
+     "when": "roll.kind == 'attack' && !roll.failing && !roll.disadv",
+     "cost": [
+      {
+       "resource": "luck-points"
+      }
+     ],
+     "modify": [
+      {
+       "op": "reroll",
+       "die": "d20",
+       "keep": "lower"
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:术士:先天术法:1": {
+   "name": "先天术法",
+   "automation": "full",
+   "text": "「术士法术」按所有法术近似（多职业时由人判断）。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "先天术法",
+     "activation": "bonus",
+     "cost": [
+      {
+       "resource": "先天术法"
+      }
+     ],
+     "requires": "!self.hasEffect('先天术法')",
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "先天术法"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "先天术法": {
+     "duration": {
+      "minutes": 1
+     },
+     "statics": [
+      {
+       "kind": "spellDc",
+       "bonus": 1
+      }
+     ],
+     "rollMods": [
+      {
+       "on": {
+        "kind": "attack",
+        "attack": {
+         "spell": true
+        }
+       },
+       "who": "bearer",
+       "op": "adv",
+       "label": "先天术法"
+      }
+     ]
+    }
+   }
+  },
+  "XPHB:瞬发法术": {
+   "name": "瞬发法术",
+   "automation": "full",
+   "text": "超魔法：消耗 2 术法点，本回合下一道施法时间为动作的法术改用附赠动作施放。先声明（不占动作），再照常施法。2024：一回合只能消耗一个法术位施法，引擎照常限制。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "瞬发法术",
+     "activation": "free",
+     "cost": [
+      {
+       "resource": "sorcery_points",
+       "n": 2
+      }
+     ],
+     "requires": "!self.hasEffect('瞬发法术')",
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "瞬发法术",
+       "duration": {
+        "until": {
+         "at": "turnEnd",
+         "of": "bearer",
+         "nth": 0
+        }
+       }
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "瞬发法术": {
+     "text": "本回合下一道施法时间为动作的法术改用附赠动作施放。",
+     "flags": {
+      "quicken": true
+     }
+    }
+   }
+  },
+  "XPHB:德鲁伊:荒野形态:2": {
+   "name": "荒野形态",
+   "automation": "full",
+   "text": "附赠动作消耗一次荒野形态次数，变形为所选野兽：保留生命值、智力/感知/魅力、熟练加值与职业特性，替换体型、速度、力量/敏捷/体质、AC 与天生攻击；获得等于德鲁伊等级（月亮结社为 3 倍等级）的临时生命值；无法施法（月亮结社法术与 18 级兽形施法除外，不打断专注）；陷入失能或死亡时自动解除。",
+   "actions": [
+    {
+     "id": "enter",
+     "name": "荒野形态",
+     "activation": "bonus",
+     "tags": [
+      "wildshape"
+     ],
+     "cost": [
+      {
+       "resource": "wildshape-uses"
+      }
+     ],
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "荒野形态"
+      },
+      {
+       "kind": "tempHp",
+       "to": "self",
+       "amount": "cond(self.hasSource('结社形态'), 3 * self.levelOf('德鲁伊'), self.levelOf('德鲁伊'))"
+      }
+     ]
+    },
+    {
+     "id": "end",
+     "name": "结束荒野形态",
+     "activation": "bonus",
+     "requires": "self.hasEffect('荒野形态')",
+     "root": [
+      {
+       "kind": "removeEffect",
+       "from": "self",
+       "match": {
+        "tag": "wildshape"
+       }
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "荒野形态": {
+     "tags": [
+      "wildshape"
+     ],
+     "text": "变形为野兽：保留智力/感知/魅力与生命值，使用野兽的力量/敏捷/体质、AC、速度与天生攻击；无法施法（月亮结社法术与兽形施法除外，不打断专注）。陷入失能时自动结束。",
+     "duration": {
+      "manual": true,
+      "endsOn": [
+       {
+        "event": "effectApplied",
+        "when": "event.bearer == self.id && self.has('失能')"
+       }
+      ]
+     },
+     "flags": {
+      "cannot": [
+       "castSpells"
+      ]
+     }
+    }
+   }
+  },
+  "XPHB:德鲁伊:荒野伙伴:2": {
+   "name": "荒野伙伴",
+   "automation": "full",
+   "text": "以魔法动作消耗一次荒野形态次数或一个法术位施展寻获魔宠（魔宠生物类型为妖精，随你先攻行动）。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "荒野伙伴（消耗荒野形态次数）",
+     "activation": "action",
+     "tags": [
+      "familiar"
+     ],
+     "cost": [
+      {
+       "resource": "wildshape-uses"
+      }
+     ],
+     "root": [
+      {
+       "kind": "summon",
+       "name": "荒野魔宠",
+       "size": "T",
+       "creatureType": "fey",
+       "ac": 12,
+       "hp": 3,
+       "speed": 40,
+       "score": {
+        "str": 3,
+        "dex": 15,
+        "con": 10,
+        "int": 3,
+        "wis": 12,
+        "cha": 7
+       },
+       "link": false,
+       "attacks": [
+        {
+         "name": "爪抓",
+         "bonus": 4,
+         "damage": "1",
+         "damageType": "挥砍"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "slot",
+     "name": "荒野伙伴（消耗法术位）",
+     "activation": "action",
+     "tags": [
+      "familiar"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 1
+       }
+      }
+     ],
+     "root": [
+      {
+       "kind": "summon",
+       "name": "荒野魔宠",
+       "size": "T",
+       "creatureType": "fey",
+       "ac": 12,
+       "hp": 3,
+       "speed": 40,
+       "score": {
+        "str": 3,
+        "dex": 15,
+        "con": 10,
+        "int": 3,
+        "wis": 12,
+        "cha": 7
+       },
+       "link": false,
+       "attacks": [
+        {
+         "name": "爪抓",
+         "bonus": 4,
+         "damage": "1",
+         "damageType": "挥砍"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:德鲁伊:原力蛮击:7": {
+   "name": "原力蛮击",
+   "automation": "full",
+   "text": "每个你的回合内一次，武器攻击或荒野形态下野兽的攻击命中时，额外造成 1d8（15 级元素狂怒起为 2d8）寒冷 / 火焰 / 闪电 / 雷鸣伤害。",
+   "triggers": [
+    {
+     "id": "primal-strike",
+     "label": "原力蛮击",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "limit": "oncePerTurn",
+     "when": "turn.isMine && !attack.spell && (attack.weapon || self.hasEffect('荒野形态'))",
+     "do": [
+      {
+       "kind": "choose",
+       "prompt": "原力蛮击：选择额外伤害的类型",
+       "options": [
+        {
+         "label": "寒冷",
+         "do": [
+          {
+           "kind": "addDamage",
+           "dice": "cond(self.levelOf('德鲁伊') >= 15, 2d8, 1d8)",
+           "type": "寒冷"
+          }
+         ]
+        },
+        {
+         "label": "火焰",
+         "do": [
+          {
+           "kind": "addDamage",
+           "dice": "cond(self.levelOf('德鲁伊') >= 15, 2d8, 1d8)",
+           "type": "火焰"
+          }
+         ]
+        },
+        {
+         "label": "闪电",
+         "do": [
+          {
+           "kind": "addDamage",
+           "dice": "cond(self.levelOf('德鲁伊') >= 15, 2d8, 1d8)",
+           "type": "闪电"
+          }
+         ]
+        },
+        {
+         "label": "雷鸣",
+         "do": [
+          {
+           "kind": "addDamage",
+           "dice": "cond(self.levelOf('德鲁伊') >= 15, 2d8, 1d8)",
+           "type": "雷鸣"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:德鲁伊:月辉形态:14": {
+   "name": "月辉形态",
+   "automation": "full",
+   "text": "月耀炽光：每回合一次，荒野形态下的攻击命中时额外造成 2d10 光耀伤害。",
+   "triggers": [
+    {
+     "id": "lunar-radiance",
+     "label": "月辉形态：月耀炽光（+2d10 光耀）",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "limit": "oncePerTurn",
+     "when": "!attack.spell && self.hasEffect('荒野形态')",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "2d10",
+       "type": "光耀"
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:游侠:原初伴侣:3": {
+   "name": "原初伴侣",
+   "automation": "full",
+   "text": "召唤原初野兽（大地野兽 / 天空野兽 / 海洋野兽），与你共用先攻并在你之后行动。你的回合可以用附赠动作或牺牲一次攻击命令它行动。",
+   "actions": [
+    {
+     "id": "summon",
+     "name": "原初伴侣：呼唤原初野兽",
+     "activation": "free",
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "选择原初野兽形态",
+       "options": [
+        {
+         "label": "大地野兽（中型，AC 13+PB，HP 5+5×游侠等级）",
+         "do": [
+          {
+           "kind": "summon",
+           "name": "大地野兽",
+           "size": "M",
+           "creatureType": "beast",
+           "ac": "13 + self.pb",
+           "hp": "5 + 5 * self.levelOf('游侠')",
+           "speed": 40,
+           "score": {
+            "str": 14,
+            "dex": 14,
+            "con": 15,
+            "int": 8,
+            "wis": 14,
+            "cha": 11
+           },
+           "attacksPerAction": "cond(self.levelOf('游侠') >= 11, 2, 1)",
+           "link": false,
+           "attacks": [
+            {
+             "name": "野兽打击（撕裂）",
+             "damage": "1d8 + 2 + self.pb",
+             "damageType": "挥砍"
+            }
+           ],
+           "notes": [
+            "冲锋：攻击前直线移动至少 20 尺命中时额外 1d6 挥砍伤害且大型或更小目标陷入倒地"
+           ]
+          }
+         ]
+        },
+        {
+         "label": "天空野兽（小型，AC 13+PB，HP 4+4×游侠等级，飞行 60 尺）",
+         "do": [
+          {
+           "kind": "summon",
+           "name": "天空野兽",
+           "size": "S",
+           "creatureType": "beast",
+           "ac": "13 + self.pb",
+           "hp": "4 + 4 * self.levelOf('游侠')",
+           "speed": 60,
+           "score": {
+            "str": 6,
+            "dex": 16,
+            "con": 13,
+            "int": 8,
+            "wis": 14,
+            "cha": 11
+           },
+           "attacksPerAction": "cond(self.levelOf('游侠') >= 11, 2, 1)",
+           "link": false,
+           "attacks": [
+            {
+             "name": "野兽打击（撕裂）",
+             "damage": "1d4 + 3 + self.pb",
+             "damageType": "挥砍"
+            }
+           ],
+           "notes": [
+            "飞掠：飞行离开敌人触及范围时不引发借机攻击"
+           ]
+          }
+         ]
+        },
+        {
+         "label": "海洋野兽（中型，AC 13+PB，HP 5+5×游侠等级，游泳 60 尺）",
+         "do": [
+          {
+           "kind": "summon",
+           "name": "海洋野兽",
+           "size": "M",
+           "creatureType": "beast",
+           "ac": "13 + self.pb",
+           "hp": "5 + 5 * self.levelOf('游侠')",
+           "speed": 30,
+           "score": {
+            "str": 14,
+            "dex": 14,
+            "con": 15,
+            "int": 8,
+            "wis": 14,
+            "cha": 11
+           },
+           "attacksPerAction": "cond(self.levelOf('游侠') >= 11, 2, 1)",
+           "link": false,
+           "attacks": [
+            {
+             "name": "野兽打击（束缚）",
+             "damage": "1d6 + 2 + self.pb",
+             "damageType": "钝击"
+            }
+           ],
+           "notes": [
+            "水陆两栖；命中时目标陷入受擒（逃脱 DC 同你的法术豁免 DC）"
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "command",
+     "name": "原初伴侣：命令野兽",
+     "activation": "bonus",
+     "requires": "turn.isMine",
+     "root": [
+      {
+       "kind": "note",
+       "text": "原初伴侣：以附赠动作命令原初野兽在本轮执行动作"
+      }
+     ]
+    },
+    {
+     "id": "strike",
+     "name": "原初伴侣：牺牲攻击命令野兽打击",
+     "activation": "none",
+     "requires": "turn.isMine",
+     "cost": [
+      {
+       "economy": "attack"
+      }
+     ],
+     "root": [
+      {
+       "kind": "note",
+       "text": "原初伴侣：牺牲一次攻击命令原初野兽执行野兽打击"
+      }
+     ]
+    },
+    {
+     "id": "revive",
+     "name": "原初伴侣：复活野兽",
+     "activation": "action",
+     "tags": [
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 1
+       }
+      }
+     ],
+     "root": [
+      {
+       "kind": "note",
+       "text": "原初伴侣：消耗法术位复活死亡不超过 1 小时的原初野兽"
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:星移步法": {
+   "name": "星移步法",
+   "automation": "full",
+   "text": "可以不消耗法术位对自己施放浮空术。点上面那个动作，它会临时给你一个「浮空术（免法术位）」动作（只能选自己，专注照常）；这回合结束前用掉它。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "星移步法：浮空术（免法术位，对自己）",
+     "activation": "action",
+     "tags": [
+      "magical"
+     ],
+     "root": [
+      {
+       "kind": "grantAction",
+       "key": "grant:XPHB:星移步法",
+       "from": "XPHB:spell:浮空术#cast",
+       "cost": [],
+       "activation": "free",
+       "targeting": {
+        "type": "self"
+       },
+       "until": "turnEnd"
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:幽影护甲": {
+   "name": "幽影护甲",
+   "automation": "full",
+   "text": "可以不消耗法术位对自己施放法师护甲。点上面那个动作，它会临时给你一个「法师护甲（免法术位）」动作（只能选自己）；这回合结束前用掉它。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "幽影护甲：法师护甲（免法术位，对自己）",
+     "activation": "action",
+     "tags": [
+      "magical"
+     ],
+     "root": [
+      {
+       "kind": "grantAction",
+       "key": "grant:XPHB:幽影护甲",
+       "from": "XPHB:spell:法师护甲#cast",
+       "cost": [],
+       "activation": "free",
+       "targeting": {
+        "type": "self"
+       },
+       "until": "turnEnd"
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:游侠:精宸所与:11": {
+   "name": "精宸所与",
+   "automation": "full",
+   "text": "你始终准备妖精召唤术，并且可以免费施展它一次（扣「免费施展该法术」次数，长休恢复）。点上面那个动作会临时给你一个免法术位的妖精召唤术；「这次不要专注（持续 1 分钟）」引擎改不了正在施放的法术，请施放后手动移除专注并记下 1 分钟。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "精宸所与：妖精召唤术（免法术位，1 次）",
+     "activation": "action",
+     "tags": [
+      "magical"
+     ],
+     "root": [
+      {
+       "kind": "grantAction",
+       "key": "grant:XPHB:游侠:精宸所与:11",
+       "from": "XPHB:spell:妖精召唤术#cast",
+       "cost": [
+        {
+         "resource": "free_cast"
+        }
+       ],
+       "activation": "free",
+       "until": "turnEnd"
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:术士:龙伴:18": {
+   "name": "龙伴",
+   "automation": "full",
+   "text": "你始终准备龙类召唤术，并且可以免法术位施展它一次（扣「无需法术位施展」次数，长休恢复）。点上面那个动作会临时给你一个免法术位的龙类召唤术；「这次不要专注（持续 1 分钟）」引擎改不了正在施放的法术，请施放后手动移除专注。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "龙伴：龙类召唤术（免法术位，1 次）",
+     "activation": "action",
+     "tags": [
+      "magical"
+     ],
+     "root": [
+      {
+       "kind": "grantAction",
+       "key": "grant:XPHB:术士:龙伴:18",
+       "from": "XPHB:spell:龙类召唤术#cast",
+       "cost": [
+        {
+         "resource": "dragonCompanionFreeCast"
+        }
+       ],
+       "activation": "free",
+       "until": "turnEnd"
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:吟游诗人:威仪作锦:6": {
+   "name": "威仪作锦",
+   "automation": "full",
+   "text": "你可以用附赠动作免法术位施展命令术（扣「威仪作锦」次数，长休恢复）。点上面那个动作会临时给你一个消耗也一样、但算附赠动作的命令术；魅惑你的生物对这道命令术豁免自动失败，这条引擎判不了，请手动裁定。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "威仪作锦：命令术（免法术位，附赠动作）",
+     "activation": "bonus",
+     "tags": [
+      "magical"
+     ],
+     "root": [
+      {
+       "kind": "grantAction",
+       "key": "grant:XPHB:吟游诗人:威仪作锦:6",
+       "from": "XPHB:spell:命令术#cast",
+       "cost": [
+        {
+         "resource": "majesty"
+        }
+       ],
+       "activation": "free",
+       "until": "turnEnd"
+      }
+     ]
+    }
+   ]
   }
+ }
 }

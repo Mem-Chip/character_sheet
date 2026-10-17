@@ -278,7 +278,7 @@ export type Node =
    */
   | {
       kind: 'grantAction'; key?: string; from?: string; action?: Action; name?: string; text?: string;
-      cost?: Cost[]; activation?: 'action' | 'bonus' | 'reaction' | 'free' | 'none'; until?: 'turnEnd';
+      cost?: Cost[]; activation?: 'action' | 'bonus' | 'reaction' | 'free' | 'none'; targeting?: Targeting; until?: 'turnEnd';
     }
   /** 收回一条临时授予的条目 */
   | { kind: 'removeGrant'; key: string }

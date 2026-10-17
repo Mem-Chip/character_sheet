@@ -375,6 +375,8 @@ const SUMMON_TYPE_CN: Record<string, string> = {
 function grantActionNode(tx: Tx, n: Extract<Node, { kind: 'grantAction' }>, ctx: ExecCtx): void {
   let action: Action | undefined;
   let srcName: string | undefined;
+  let srcKey: string | undefined;
+  let srcActionId: string | undefined;
   try {
     if (n.action) {
       action = structuredClone(n.action);
@@ -382,6 +384,8 @@ function grantActionNode(tx: Tx, n: Extract<Node, { kind: 'grantAction' }>, ctx:
       const found = findAction(tx, ctx.self, n.from);
       action = structuredClone(found.action);
       srcName = found.action.name;
+      srcKey = found.key;
+      srcActionId = found.action.id;
     }
   } catch (e) {
     tx.emit('note', { text: `${ctx.actionName}：授予动作失败（${(e as Error).message}）`, owner: ctx.self }, ctx.cause);
@@ -391,8 +395,19 @@ function grantActionNode(tx: Tx, n: Extract<Node, { kind: 'grantAction' }>, ctx:
     tx.emit('note', { text: `${ctx.actionName}：没有可授予的动作（from / action 至少写一个）`, owner: ctx.self }, ctx.cause);
     return;
   }
+  // 复制来的动作里，效应模板是**相对来源条目**写的（`template: '法师护甲'`）—— 换成绝对键，
+  // 否则结算时按授予条目的键去找，找不到模板
+  if (srcKey) absolutizeTemplates(tx, action, srcKey);
   if (n.cost) action.cost = structuredClone(n.cost);
+  // 免位施放：原动作按法术位算的地方（`slot.level`）按**基础环阶**定下来，
+  // 否则结算时没有 slot 上下文会报「当前上下文没有 slot（不是施法）」
+  if (n.cost && !n.cost.some((k) => 'slot' in k)) {
+    const base = srcKey ? slotBaseOf(tx.rules.entry(srcKey)?.actions, srcActionId) : undefined;
+    if (base !== undefined) substituteSlotLevel(action, base);
+  }
   if (n.activation) action.activation = n.activation;
+  // 改写射程 / 目标类型：「只对自己施放」这类免位施法要靠它，不然复制来的法术能放别人身上
+  if (n.targeting) action.targeting = structuredClone(n.targeting);
   const key = n.key ?? `grant:${n.from ?? action.id}`;
   const entry: Entry = {
     name: n.name ?? srcName ?? action.name,
@@ -400,6 +415,43 @@ function grantActionNode(tx: Tx, n: Extract<Node, { kind: 'grantAction' }>, ctx:
     ...(n.text ? { text: n.text } : {}),
   };
   tx.emit('entryGranted', { id: ctx.self, key, entry, untilTurn: n.until === 'turnEnd' ? tx.turnKey() : null }, ctx.cause);
+}
+
+/** 来源动作的法术位基础环阶（`cost: [{slot:{min}}]` 的 min） */
+function slotBaseOf(actions: Action[] | undefined, id: string | undefined): number | undefined {
+  const a = (actions ?? []).find((x) => x.id === id) ?? (actions ?? [])[0];
+  const slotCost = (a?.cost ?? []).find((k): k is Extract<Cost, { slot: unknown }> => 'slot' in k);
+  return slotCost ? slotCost.slot.min : undefined;
+}
+
+/** 把动作里所有 `slot.level` 换成固定环阶（免位施放时按基础环阶算） */
+function substituteSlotLevel(action: Action, level: number): void {
+  const walk = (x: unknown): void => {
+    if (Array.isArray(x)) { for (const y of x) walk(y); return; }
+    if (!x || typeof x !== 'object') return;
+    const o = x as Record<string, unknown>;
+    for (const [k, v] of Object.entries(o)) {
+      if (typeof v === 'string' && v.includes('slot.level')) o[k] = v.replace(/slot\.level/g, String(level));
+      else walk(v);
+    }
+  };
+  walk(action);
+}
+
+/**
+ * 把复制来的动作里的「相对模板名」换成绝对键：`applyEffect.template: '法师护甲'` → `XPHB:spell:法师护甲#法师护甲`。
+ * 只在来源条目里确实有这个模板时才换（原本就是绝对键的、或者模板在别处的，不动）。
+ */function absolutizeTemplates(tx: Tx, action: Action, base: string): void {
+  const own = tx.rules.entry(base)?.effects ?? {};
+  const walk = (x: unknown): void => {
+    if (Array.isArray(x)) { for (const y of x) walk(y); return; }
+    if (!x || typeof x !== 'object') return;
+    const o = x as Record<string, unknown>;
+    const tpl = o.template;
+    if (typeof tpl === 'string' && !tpl.includes('#') && own[tpl]) o.template = `${base}#${tpl}`;
+    for (const v of Object.values(o)) walk(v);
+  };
+  walk(action);
 }
 
 /** 回合结束时收回「只活到本回合」的临时动作 */
@@ -1069,10 +1121,13 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
     concentrationId = startConcentration(tx, actor, action.name, action.concentration, entryKey, seq).id;
   }
   const form = o.options?.form as CombatantView | undefined;
+  // 「只对自己」的动作（免位施放护盾类：targeting.type = 'self'）没点目标也当成选了自己，
+  // 否则复制来的法术 root 里 `to: 'target'` 会报「需要目标」
+  const targets = o.targets.length ? o.targets.slice() : action.targeting?.type === 'self' ? [actor] : [];
   const ctx: ExecCtx = {
     self: actor,
-    targets: o.targets.slice(),
-    target: o.targets.length === 1 ? o.targets[0] : undefined,
+    targets,
+    target: targets.length === 1 ? targets[0] : undefined,
     slot,
     entryKey,
     actionName: action.name,
