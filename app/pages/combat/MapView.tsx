@@ -637,8 +637,8 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
                     </>
                   )}
                   <circle className="body" r={bodyR} style={av ? { fill: 'none' } : undefined} />
-                  {!av && <text dy="0.35em" fontSize={Math.max(10, r * 0.62)}>{c.name.slice(0, n > 1 ? 4 : 2)}</text>}
-                  <text className={'tok-hp ' + woundCls} y={bodyR + Math.max(10, r * 0.34)} fontSize={Math.max(9.5, r * 0.32)}>{wound}</text>
+                  {!av && <text dy="0.35em" fontSize={Math.max(10 / view.k, r * 0.62)}>{c.name.slice(0, n > 1 ? 4 : 2)}</text>}
+                  <text className={'tok-hp ' + woundCls} y={bodyR + Math.max(10 / view.k, r * 0.34)} fontSize={Math.max(9.5 / view.k, r * 0.32)}>{wound}</text>
                   {prone && (
                     <g
                       className="prone-badge"
@@ -647,8 +647,8 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
                       onMouseLeave={leaveTerm}
                     >
                       <title>{down ? (c.live.stable ? '倒地（稳定）' : '倒地（濒死）') : '倒地'}</title>
-                      <circle r={Math.max(7, r * 0.28)} />
-                      <text dy="0.35em" fontSize={Math.max(9, r * 0.28)}>倒</text>
+                      <circle r={Math.max(7 / view.k, r * 0.28)} />
+                      <text dy="0.35em" fontSize={Math.max(9 / view.k, r * 0.28)}>倒</text>
                     </g>
                   )}
                   {conc && (
@@ -659,8 +659,8 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
                       onMouseLeave={leaveTerm}
                     >
                       <title>专注：{conc.name}</title>
-                      <circle r={Math.max(7, r * 0.28)} />
-                      <text dy="0.35em" fontSize={Math.max(9, r * 0.28)}>专</text>
+                      <circle r={Math.max(7 / view.k, r * 0.28)} />
+                      <text dy="0.35em" fontSize={Math.max(9 / view.k, r * 0.28)}>专</text>
                     </g>
                   )}
                   {effOf[id]?.length > 0 && (
@@ -671,14 +671,14 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
                       onMouseLeave={leaveTerm}
                     >
                       <title>{effOf[id].join('、')}</title>
-                      <circle r={Math.max(7, r * 0.28)} />
-                      <text dy="0.35em" fontSize={Math.max(9, r * 0.3)}>{effOf[id].length}</text>
+                      <circle r={Math.max(7 / view.k, r * 0.28)} />
+                      <text dy="0.35em" fontSize={Math.max(9 / view.k, r * 0.3)}>{effOf[id].length}</text>
                     </g>
                   )}
                   {aimed[id] && (
                     <g className="aim-badge" transform={`translate(${r * 0.62} ${-r * 0.62})`}>
-                      <circle r={Math.max(7, r * 0.3)} />
-                      <text dy="0.35em" fontSize={Math.max(9, r * 0.32)}>{aimed[id] > 1 ? aimed[id] : '✓'}</text>
+                      <circle r={Math.max(7 / view.k, r * 0.3)} />
+                      <text dy="0.35em" fontSize={Math.max(9 / view.k, r * 0.32)}>{aimed[id] > 1 ? aimed[id] : '✓'}</text>
                     </g>
                   )}
                 </g>

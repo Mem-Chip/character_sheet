@@ -22,10 +22,12 @@ export const RESOURCE_PICKS: Record<string, { n: number; hint: string }> = {
 export const COUNT_ONLY = new Set(['祈唤', ...Object.keys(RESOURCE_PICKS)]);
 
 export class Resources {
-  readonly SPENDABLE = /^(狂暴次数|引导神力|荒野形态|回气|功力|术法点|宿敌|祈唤|已知方案|魔法物品)$/;
+  // 只有**能用掉、会恢复**的才算资源池。注意别把「已知祈唤 / 已知戏法」这种**已知数量上限**加进来 ——
+  // 那是「最多能知道几个」，不是次数池（加了会多出一个永远用不掉的池子）
+  readonly SPENDABLE = /^(狂暴次数|引导神力|荒野形态|回气|功力|术法点|宿敌|已知方案|魔法物品)$/;
   readonly RECOVERY: Record<string, string> = {
     狂暴次数: 'long', 引导神力: 'long', 荒野形态: 'long', 回气: 'long',
-    功力: 'short', 术法点: 'long', 宿敌: 'long', 祈唤: 'long',
+    功力: 'short', 术法点: 'long', 宿敌: 'long',
     已知方案: 'long', 魔法物品: 'long',
   };
   /** 2024：这几种短休只恢复一次，长休全部恢复 */

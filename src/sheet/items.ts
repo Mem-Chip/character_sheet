@@ -415,7 +415,15 @@ export class FeatureOptions {
 
   forClass(k: Json): Json[] {
     const out = this.env.optional.forClass(k);
-    for (const f of k.features || []) out.push(...this.choicesFor(f, k.cls.name));
+    // 站点会给「魔能祈唤」这类可选特性再生成一条同级的「……选项」特性，正文就是一串 refOptionalfeature。
+    // 那些选项已经由上面的 optionalfeature 进度接管了（数量按等级表 2/3/5…），再给它生成一个「选 1 项」的框，
+    // 玩家怎么选都填不满 —— 跳过它。
+    const coveredGroups = out.filter((o) => o.pool === 'optionalfeature').map((o) => String(o.label || ''));
+    for (const f of k.features || []) {
+      const nm = String(f.name || '');
+      if (nm.endsWith('选项') && coveredGroups.includes(nm.slice(0, -2))) continue;
+      out.push(...this.choicesFor(f, k.cls.name));
+    }
     return out;
   }
 
