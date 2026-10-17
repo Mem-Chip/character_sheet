@@ -636,7 +636,7 @@ export function createRules(): Pipeline {
     const notes: Json[] = [];
     for (const e of ctx.pluck('note')) {
       const text = String(e.text ?? '').trim();
-      if (text) notes.push({ name: String(e.source || '备注'), level: 0, entries: [text], _note: true });
+      if (text) notes.push({ name: String(e.source || '备注'), level: 0, entries: [text], _note: true, _cls: '备注' });
     }
     list.sort((a, b) => (a.level || 0) - (b.level || 0) || String(a._cls || '').localeCompare(String(b._cls || '')));
     ctx.set('features', [...list, ...notes], 'computed');

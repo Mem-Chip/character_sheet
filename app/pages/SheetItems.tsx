@@ -40,6 +40,8 @@ function rollText(d: string): number {
 
 export function SheetItems({ engine, id, char, sheet }: { engine: Engine; id: string; char: Json; sheet: Json }) {
   const env = engine.env;
+  /** 一类物品（赌局 / 奥术法器 / 德鲁伊法器…）：物品行里让玩家挑一件具体的 */
+  const groups = env.items.groups();
   const eq: Json[] = char.equipment || [];
   const resolved: Json[] = char._resolved?.equipment || [];
   const purse = char.purse || {};
@@ -99,7 +101,24 @@ export function SheetItems({ engine, id, char, sheet }: { engine: Engine; id: st
                 {e.bonus ? <b className="tiny"> +{e.bonus}</b> : null}
                 {rarity && <span className="tag">{rarity}</span>}
                 {needAttune && <span className={'tag' + (e.attuned ? ' on' : '')} title={typeof ent.reqAttune === 'string' ? `需要同调（${ent.reqAttune}）` : '需要同调才生效'}>{e.attuned ? '已同调' : '需同调'}</span>}
-                {!ent && !e.custom && <span className="warnline tiny"> 数据里找不到</span>}
+                {!ent && !e.custom && (() => {
+                  // 一类物品（赌局 / 奥术法器 / 德鲁伊法器…）：让玩家当场挑一件具体的，挑完这行就正常生效
+                  const grp = groups.get(e.name);
+                  if (!grp?.items.length) return <span className="warnline tiny"> 数据里找不到</span>;
+                  return (
+                    <span className="tiny" style={{ marginLeft: 6 }}>
+                      <span className="warnline">是一类物品</span>
+                      <select
+                        value=""
+                        onChange={(ev) => { const nm = ev.target.value; if (!nm) return; upd(id, (c) => { c.equipment[i].name = nm; c.equipment[i].custom = undefined; }); }}
+                        style={{ marginLeft: 4 }}
+                      >
+                        <option value="">选一件…</option>
+                        {grp.items.map((nm) => <option key={nm} value={nm}>{nm}</option>)}
+                      </select>
+                    </span>
+                  );
+                })()}
                 {Number(ent?.charges) > 0 && (() => {
                   const max = Number(ent.charges), used = Math.min(max, Number(e.chargesUsed) || 0);
                   const set = (u: number) => upd(id, (c) => { c.equipment[i].chargesUsed = Math.max(0, Math.min(max, u)); });
@@ -220,20 +239,44 @@ function AddItem({ engine, id }: { engine: Engine; id: string }) {
   const hits = t ? all.filter((x) => x.name.includes(t) || String(x.ent.ENG_name ?? '').toLowerCase().includes(t)).slice(0, 40) : [];
   const add = (name: string, extra: Json = {}) => upd(id, (c) => {
     const eq = c.equipment || [];
-    const has = !extra.custom && eq.find((x: Json) => x.name === name && !x.bonus);
-    if (has) has.qty = (has.qty || 1) + 1; else eq.push({ name, qty: 1, equipped: false, ...extra });
+    const put = (nm: string, qty: number) => {
+      const has = !extra.custom && eq.find((x: Json) => x.name === nm && !x.bonus);
+      if (has) has.qty = (has.qty || 1) + qty;
+      else eq.push({ name: nm, qty, equipped: false, ...(nm === name ? extra : {}) });
+    };
+    // 套组（探索者套组…）：数据里有 packContents，直接拆成里面那几件，别留一个空的「套组」条目
+    const pack = extra.custom ? null : env.items.expand(name);
+    if (pack) for (const it of pack) put(it.name, it.qty);
+    else put(name, 1);
     c.equipment = eq;
   });
+  /** 一类物品（赌局 / 奥术法器 / 德鲁伊法器…）：先让玩家挑一件具体的再放进去 */
+  const [pickGroup, setPickGroup] = useState<{ name: string; items: string[] } | null>(null);
   return (
     <Panel title="加物品">
       <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="搜索：长剑、背包、治疗药水、防护斗篷…（中文或英文）" style={{ width: '100%' }} />
       {hits.length > 0 && (
         <div className="row" style={{ marginTop: 6, flexWrap: 'wrap', gap: 4 }}>
           {hits.map((x) => (
-            <button key={x.name} className="chip" onClick={() => add(x.name)} title="点击加进背包">
+            <button key={x.name} className="chip" onClick={() => {
+              const grp = env.items.groupOf(x.name);
+              if (grp?.items.length) { setPickGroup({ name: x.name, items: grp.items }); return; }
+              add(x.name);
+            }} title="点击加进背包">
               <Term kind="item" name={x.name} inButton>{x.name}</Term><small className="faint"> {x.label}</small>
             </button>
           ))}
+        </div>
+      )}
+      {pickGroup && (
+        <div className="row" style={{ marginTop: 6, flexWrap: 'wrap', gap: 4 }}>
+          <span className="small faint">「{pickGroup.name}」是一类物品，选具体哪一件：</span>
+          {pickGroup.items.map((nm) => (
+            <button key={nm} className="chip" onClick={() => { add(nm); setPickGroup(null); }}>
+              <Term kind="item" name={nm} inButton>{nm}</Term>
+            </button>
+          ))}
+          <button className="btn ghost sm" onClick={() => setPickGroup(null)}>取消</button>
         </div>
       )}
       <details style={{ marginTop: 8 }}>
