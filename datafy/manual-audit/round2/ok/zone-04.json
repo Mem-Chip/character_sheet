@@ -1,0 +1,569 @@
+{
+ "version": 1,
+ "note": "重新数据化（zone）：用上 zone 机制",
+ "entries": {
+  "XPHB:spell:昼明术": {
+   "name": "昼明术",
+   "automation": "manual",
+   "text": "持续 1 小时（无需专注）。在 60 尺内一点扩散 60 尺半径球状明亮日光并额外散发 60 尺微光，或附于未被着装或携带的物件上散发 60 尺光环。法术区域与 3 环或更低环阶的造暗法术重叠时会解除那些法术。引擎没有光照层，也拿不到别的法术留下的黑暗区域，光照范围与解除造暗法术都请你在地图上手动处理（区域只作为标记放在地图上）。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "昼明术",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 3
+       }
+      }
+     ],
+     "targeting": {
+      "type": "area",
+      "range": 60,
+      "area": {
+       "shape": "sphere",
+       "radius": 60
+      }
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "昼明术：日光充满 60 尺半径球状区域（明亮光照），并额外散发 60 尺微光；或者附加在未被着装或携带的物件上，以它为中心散发 60 尺光环。引擎没有光照层，请在地图上人工处理。"
+      },
+      {
+       "kind": "note",
+       "text": "昼明术：若区域与任何 3 环或更低环阶法术创造的黑暗区域重叠，那些造暗法术被解除 —— 引擎看不到别的法术留下的黑暗区域，请人工解除。"
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter"
+       ],
+       "affects": "all",
+       "oncePerTurn": false,
+       "rounds": 600,
+       "do": [
+        {
+         "kind": "note",
+         "text": "昼明术：这里是一片 60 尺半径的明亮日光（外加 60 尺微光）。引擎没有光照层，请人工结算遮蔽与造暗法术的重叠。"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:植物滋长": {
+   "name": "植物滋长",
+   "automation": "partial",
+   "text": "【繁茂】1 动作施法：指定 150 尺内一点，100 尺半径球状区域内的普通植物变得粗壮繁茂，穿过区域的生物每移动 1 尺必须花费 4 尺移动力（你可以在范围内空出任意多块区域排除在外）。区域留在地图上。引擎不处理地形与移动力，这一条请人工按 4 倍消耗结算。【丰产】改为 8 小时施法：距该点半里内的植物在 365 日内产量翻倍，纯探索期效应，人工记录。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "植物滋长",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 3
+       }
+      }
+     ],
+     "targeting": {
+      "type": "area",
+      "range": 150,
+      "area": {
+       "shape": "sphere",
+       "radius": 100
+      }
+     },
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "植物滋长：选择效应",
+       "options": [
+        {
+         "label": "繁茂（1 动作）",
+         "do": [
+          {
+           "kind": "zone",
+           "on": [
+            "enter"
+           ],
+           "affects": "all",
+           "oncePerTurn": false,
+           "do": [
+            {
+             "kind": "note",
+             "text": "植物滋长（繁茂）：穿过这片区域的生物每移动 1 尺要花费 4 尺移动力。引擎不处理地形与移动力，请人工按 4 倍消耗结算（选区域时可以把不想影响的地方空出来）。"
+            }
+           ]
+          },
+          {
+           "kind": "note",
+           "text": "植物滋长（繁茂）：区域内的普通植物变得粗壮繁茂；穿过区域的生物移动力消耗为 4 倍，请在移动时人工扣减。"
+          }
+         ]
+        },
+        {
+         "label": "丰产（8 小时施法）",
+         "do": [
+          {
+           "kind": "note",
+           "text": "植物滋长（丰产）：距指定点半里内的植物在 365 日内产出双倍作物（这些植物每年只能从一道植物滋长中获益）。这是探索期效应，请人工记录；注意它的施法时间是 8 小时，不在战斗里使用。"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:死云术": {
+   "name": "死云术",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 120 尺内指定一点创造半径 20 尺球状剧毒浓雾（视为重度遮蔽，浓雾与遮蔽需人工处理）。区域内的生物进行体质豁免，失败受 (slot.level)d8 毒素伤害（5 环 5d8，每高一环 +1d8），成功半数；区域移动到生物空间、生物进入区域或在其中结束回合时同样须进行该豁免（每名生物每回合限一次）。在你的每个回合开始时，球状区域会往远离你的方向移动 10 尺 —— 引擎的区域不会自己动，请手动在地图上挪动区域。浓雾被强风（比如造风术）吹散时法术解除，请人工删掉区域并结束专注。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "死云术",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 5
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 10
+     },
+     "targeting": {
+      "type": "area",
+      "range": 120,
+      "area": {
+       "shape": "sphere",
+       "radius": 20
+      }
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "死云术：这片球状区域视为重度遮蔽；在你的每个回合开始时它往远离你的方向移动 10 尺 —— 请手动在地图上把区域挪走；被强风吹散时法术解除（手动删掉区域）。"
+      },
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "con",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "cloud",
+           "dice": "(slot.level)d8",
+           "type": "毒素"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "cloud",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "con",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "cloud",
+           "dice": "(slot.level)d8",
+           "type": "毒素"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "cloud",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:火墙术": {
+   "name": "火墙术",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。在 120 尺内创造一条长 60 尺、高 20 尺、厚 1 尺的直线火墙，或直径 20 尺、高 20 尺、厚 1 尺的环形火墙（选直线还是环形由你在界面上选形状）。火墙不透明。火墙出现时，位于火墙所占据区域内的生物进行敏捷豁免，失败受 (1 + slot.level)d8 火焰伤害（4 环 5d8，每高一环 +1d8），成功半数。生物在一回合内首次进入火墙、或在火墙占据区域内结束回合时受到同样的伤害。施法时选择的「哪一侧造成伤害」以及该侧 10 尺内的伤害引擎不判断几何朝向，请人工确认（区域只覆盖火墙本身占的格子）；另一侧不受伤害。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "火墙术",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 4
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 120,
+      "area": {
+       "shape": "line",
+       "length": 60,
+       "width": 1
+      }
+     },
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "火墙术：哪一侧造成伤害？（记下来，之后人工判断谁站在那一侧）",
+       "options": [
+        {
+         "label": "东 / 北侧",
+         "value": "side-a"
+        },
+        {
+         "label": "西 / 南侧",
+         "value": "side-b"
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "火墙术：只有你选择的那一侧会造成伤害。站在另一侧的生物即使在火墙占据的区域内结束回合、或是一回合内首次进入火墙，也都不会受到伤害（引擎不判断几何朝向，请在结算前人工确认目标站在哪一侧）。"
+      },
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "dex",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "fire",
+           "dice": "(1 + slot.level)d8",
+           "type": "火焰"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "fire",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "if",
+         "when": "ask('火墙术：这个生物位于你选择的伤害侧（或火墙区域内）吗？另一侧不受伤害，选否就不结算。')",
+         "then": [
+          {
+           "kind": "save",
+           "ability": "dex",
+           "dc": "self.spell.dc",
+           "onFail": [
+            {
+             "kind": "damage",
+             "id": "fire",
+             "dice": "(1 + slot.level)d8",
+             "type": "火焰"
+            }
+           ],
+           "onSuccess": [
+            {
+             "kind": "damage",
+             "ref": "fire",
+             "scale": 0.5
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:油腻术": {
+   "name": "油腻术",
+   "automation": "partial",
+   "text": "无需专注，持续 1 分钟（10 轮）。指定 60 尺内一点覆盖 10 尺方状区域，区域为困难地形（引擎不处理地形，移动消耗请人工按半速结算）。油脂出现时站在范围内的每个生物进行敏捷豁免，失败陷入倒地状态。进入该区域或在其中结束其回合的生物也必须进行该敏捷豁免，失败则陷入倒地（每名生物每回合限一次）。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "油腻术",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 1
+       }
+      }
+     ],
+     "targeting": {
+      "type": "area",
+      "range": 60,
+      "area": {
+       "shape": "cube",
+       "size": 10
+      }
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "油腻术：这片区域是困难地形 —— 引擎不处理地形，穿过它时请人工按双倍移动力消耗结算。"
+      },
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "dex",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "XPHB:condition:倒地"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": false,
+       "rounds": 10,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "dex",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "XPHB:condition:倒地"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "油腻术：这个法术不需要专注，区域会在 10 轮后自动消失；提前清掉（比如被点燃）请手动删除区域。"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:月华之光": {
+   "name": "月华之光",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。指定 120 尺内一点，产生半径 5 尺、高 40 尺的柱状微光区域。光柱出现时区域内的生物进行体质豁免，失败受 (slot.level)d10 光耀伤害（2 环 2d10，每高一环 +1d10），成功半数。生物进入光柱或在其中结束回合时同样须进行该豁免（每名生物每回合限一次）。已变形的生物豁免失败会变回真实形态、且在离开光柱前无法变形 —— 引擎不判断变形状态，这一条请人工处理。用「月华之光：移动光柱」把区域挪到新位置（区域不会自己动，最多 60 尺，请手动拖）。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "月华之光",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 2
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 120,
+      "area": {
+       "shape": "cylinder",
+       "radius": 5
+      }
+     },
+     "root": [
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "con",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "moon",
+           "dice": "(slot.level)d10",
+           "type": "光耀"
+          },
+          {
+           "kind": "note",
+           "text": "月华之光：若目标正在变形（例如受变形术影响），它变回真实形态且离开光柱前无法再次变形（引擎不追踪变形状态，请人工结束那个变形效应并记下限制）。"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "moon",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "con",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "moon",
+           "dice": "(slot.level)d10",
+           "type": "光耀"
+          },
+          {
+           "kind": "note",
+           "text": "月华之光：若目标正在变形，它变回真实形态且离开光柱前无法再次变形（人工处理）。"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "moon",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "move",
+     "name": "月华之光：移动光柱",
+     "activation": "action",
+     "requires": "turn.isMine",
+     "text": "用魔法动作把光柱移动到 60 尺内的新位置。区域是钉在格子上的，请手动把地图上的区域拖过去（移动不超过 60 尺由你把握）。",
+     "root": [
+      {
+       "kind": "note",
+       "text": "月华之光：请把地图上的柱状区域移动到 60 尺内的新位置；光柱移动后进入它空间的生物会在引擎里按「进入」结算。"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  }
+ }
+}
