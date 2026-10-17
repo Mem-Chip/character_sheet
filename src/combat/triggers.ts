@@ -1,8 +1,10 @@
-import { Unknown, runBool, type Question, type Value } from '../expr';
+import { ABIL_CN, Unknown, runBool, runInt, type Question, type Value } from '../expr';
+import { d20Test } from './d20';
 import { triggeredActionsOf, triggersOf } from './collect';
 import { activeTemplates, effectiveView } from './effects';
 import { actionCosts, canPay, describeCost, executeAction, payCosts, runNodes, triggeredActionUsable, type ExecCtx } from './exec';
 import type { DamagePacket } from './damage';
+import type { CastPlan } from './castplan';
 import { makeEnv, nameOf, type ScopeData } from './scope';
 import type { Tx } from './tx';
 import type { Action, ActiveEffect, Cost, Id, Modify, Trigger, TriggerSpec } from './types';
@@ -43,6 +45,8 @@ export interface WindowSpec {
   /** 修改之后刷新 roll 作用域（重骰窗口循环用） */
   refresh?: () => Record<string, Value>;
   packet?: DamagePacket;
+  /** 这个窗口属于哪次施法（窗口里的能力改的就是这份计划书） */
+  plan?: CastPlan;
   cause: number | null;
 }
 
@@ -172,6 +176,7 @@ function fire(tx: Tx, spec: WindowSpec, c: TriggerCand): void {
       actor: c.owner, actionKey: `${c.from}#${c.action.id}`, action: c.action,
       targets: aimed && tx.state.combatants[aimed] ? [aimed] : [c.owner],
       cause: seq, viaReaction: true,
+      interrupting: spec.plan,
       window: {
         packet: spec.packet, attack: spec.scope.attack, attacker: spec.scope.attacker ?? spec.actor,
         roll: spec.refresh ? spec.refresh() : spec.scope.roll, damage: spec.scope.damage, event: spec.scope.event, modify,
@@ -185,7 +190,7 @@ function fire(tx: Tx, spec: WindowSpec, c: TriggerCand): void {
     if (!spec.modify) {
       tx.emit('ruleError', { where: `触发器「${c.label}」`, message: `「${spec.event}」窗口不接受修改（modify）` }, seq);
     } else {
-      for (const m of t.modify) spec.modify(m, c);
+      for (const m of t.modify) applyModify(tx, spec, c, m);
     }
   }
   if (t.do?.length) {
@@ -211,7 +216,9 @@ function fire(tx: Tx, spec: WindowSpec, c: TriggerCand): void {
       originKind: c.from.includes(':spell:') ? 'spell' : 'feature',
       modify,
     };
-    runNodes(tx, t.do, ctx);
+    const outerPlan = tx.windowPlan;
+    tx.windowPlan = spec.plan ?? outerPlan;
+    try { runNodes(tx, t.do, ctx); } finally { tx.windowPlan = outerPlan; }
   }
 }
 
@@ -322,5 +329,31 @@ function windowPrompt(tx: Tx, spec: WindowSpec): string {
 export function economyAvailable(tx: Tx, id: Id, kind: 'action' | 'bonus' | 'reaction'): boolean {
   if (blockedEconomy(tx, id).has(kind)) return false;
   const c = tx.state.combatants[id];
+  if (!c) return false;
   return tx.state.round === null || c.economy[kind] > 0;
+}
+/**
+ * 应用一条窗口修改。大部分 op 直接交给窗口的处理函数；
+ * `cancelUnlessSave` 由**引擎**先替那个生物掷一次豁免，失败了才发 cancel ——
+ * 「先豁免、失败了才打断」这类规则靠它（窗口里 `do` 的执行时机不一定在结算之前）。
+ */
+function applyModify(tx: Tx, spec: WindowSpec, c: TriggerCand, m: Modify): void {
+  if (!spec.modify) return;
+  if (m.op !== 'cancelUnlessSave') { spec.modify(m, c); return; }
+  const who = m.against === 'self' ? c.owner : (spec.scope.attacker ?? spec.actor);
+  if (!who || !tx.state.combatants[who]) { spec.modify({ op: 'cancel', refundSlot: m.refundSlot }, c); return; }
+  const tv = effectiveView(tx, who);
+  const env = makeEnv(tx, { self: c.owner, target: who });
+  const dcRaw = runInt(m.dc, env);
+  const dc = dcRaw instanceof Unknown ? 0 : dcRaw;
+  const r = d20Test(tx, {
+    roller: who, kind: 'save', ability: m.ability, bonus: tv.save[m.ability], vs: dc,
+    label: `${c.label}：${ABIL_CN[m.ability]}豁免`, cause: spec.cause,
+  });
+  tx.emit(r.outcome === 'success' ? 'saveSucceeded' : 'saveFailed', { actor: c.owner, target: who, ability: m.ability, dc, label: c.label }, r.seq);
+  if (r.outcome === 'success') {
+    tx.emit('note', { text: `${nameOf(tx, who)} 豁免成功，「${c.label}」没能打断它` }, r.seq);
+    return;
+  }
+  spec.modify({ op: 'cancel', refundSlot: m.refundSlot !== false }, c);
 }

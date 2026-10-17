@@ -154,6 +154,11 @@ export type Modify =
    *   - spellCast：打断施法，法术消散、动作浪费；refundSlot 缺省 true（2024 法术反制：返还法术位），false = 法术位照常消耗。
    */
   | { op: 'cancel'; refundSlot?: boolean }
+  /**
+   * 打断但**先让那个生物掷一次豁免**：`against` 默认是这次施法的施法者（attacker）。
+   * 值在窗口里就掷（同步），失败了才真的 cancel —— 法术反制这类「先豁免再决定」用它。
+   */
+  | { op: 'cancelUnlessSave'; ability: Ability; dc: ExprSrc; against?: 'self' | 'attacker'; refundSlot?: boolean }
   /** 把这次豁免 / 检定 / 攻击改成成功或命中（传奇抗性、现世传说） */
   | { op: 'succeed' }
   /** 反射闪避：「豁免成功只受一半伤害」的效果 —— 成功改为不受伤害，失败改为只受一半（别的伤害不管） */
@@ -282,6 +287,15 @@ export type Node =
     }
   /** 收回一条临时授予的条目 */
   | { kind: 'removeGrant'; key: string }
+  /**
+   * **改正在施展的那道法术**（只能在 `spellCast` 的窗口里用得上）：改的是这次施法的「计划书」（CastPlan），
+   * 窗口关掉后引擎照它结算 —— 所以「先掷豁免、失败了才打断 / 才改」这种过程式判断也能写。
+   * `dc` / `attackBonus` 是覆盖值（可以写表达式）；`cancel` 等价于窗口里的 `modify: [{ op: 'cancel' }]`。
+   */
+  | {
+      kind: 'modifyCast'; cancel?: boolean; refundSlot?: boolean;
+      dc?: ExprSrc; attackBonus?: ExprSrc; damageType?: string; note?: string;
+    }
   | { kind: 'resource'; id: string; delta: ExprSrc }
   | { kind: 'economy'; action?: number; bonus?: number; reaction?: number; attacks?: number; move?: ExprSrc }
   /** var：把选中项的 value（没写就是 label）放进 `vars.<var>`，后面的节点可以用（伤害类型 `type: 'vars.elem'`） */

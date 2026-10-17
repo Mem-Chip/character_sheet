@@ -2133,6 +2133,39 @@
      }
     }
    }
+  },
+  "XPHB:spell:法术反制": {
+   "name": "法术反制",
+   "automation": "full",
+   "text": "1 反应（当你看见 60 尺内一名生物施展一道带言语 / 姿势 / 材料成分的法术时）：迫使那个施法者做一次体质豁免（DC = 你的法术豁免 DC）。失败则那道法术消散、毫无效果 —— 施展它的动作 / 附赠动作 / 反应照旧浪费，但**法术位不消耗**（引擎会退回去）；成功则它照常结算。用不用反制由你决定；法术成分是哪种需要自己判断（引擎不查）。",
+   "triggers": [
+    {
+     "id": "counter",
+     "label": "法术反制（它先做体质豁免，失败才被打断）",
+     "on": "spellCast",
+     "role": "any",
+     "when": "attacker != null && attacker.id != self.id && within(self, attacker, 60)",
+     "cost": [
+      {
+       "economy": "reaction"
+      },
+      {
+       "slot": {
+        "min": 3
+       }
+      }
+     ],
+     "modify": [
+      {
+       "op": "cancelUnlessSave",
+       "ability": "con",
+       "dc": "self.spell.dc",
+       "refundSlot": true
+      }
+     ],
+     "window": "before"
+    }
+   ]
   }
  }
 }

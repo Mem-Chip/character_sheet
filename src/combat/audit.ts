@@ -29,11 +29,11 @@ export const EMITTED_EVENTS = new Set([
 ]);
 
 const NODE_KINDS = new Set([
-  'attack', 'save', 'check', 'damage', 'addDamage', 'heal', 'tempHp', 'applyEffect', 'removeEffect', 'extendEffect', 'endConcentration', 'grantAction', 'removeGrant', 'castFrom',
+  'attack', 'save', 'check', 'damage', 'addDamage', 'heal', 'tempHp', 'applyEffect', 'removeEffect', 'extendEffect', 'endConcentration', 'grantAction', 'removeGrant', 'castFrom', 'modifyCast',
   'resource', 'economy', 'choose', 'if', 'forEach', 'repeat', 'move', 'note', 'number', 'modify', 'zone', 'summon',
 ]);
 const ROLL_OPS = new Set(['adv', 'disadv', 'noAdv', 'add', 'addDice', 'autoFail', 'autoSucceed', 'critRange', 'autoCritOnHit', 'minD20', 'minDie', 'targetAdd', 'maxDice']);
-const MODIFY_OPS = new Set(['reroll', 'addToRoll', 'reduceDamage', 'halveDamage', 'doubleDamage', 'setHp', 'cancel', 'evasion', 'succeed', 'redirect', 'absorb', 'clearAdv']);
+const MODIFY_OPS = new Set(['reroll', 'addToRoll', 'reduceDamage', 'halveDamage', 'doubleDamage', 'setHp', 'cancel', 'evasion', 'succeed', 'redirect', 'absorb', 'clearAdv', 'cancelUnlessSave']);
 const STATIC_KINDS = new Set(['ac', 'speed', 'speedSet', 'spellDc', 'resist', 'resistAll', 'immune', 'vuln', 'conditionImmune']);
 
 const NUM = T.num;
@@ -125,6 +125,11 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
         break;
       case 'removeGrant':
         if (!n.key) out.push(`${where(at)}：removeGrant 缺少 key`);
+        break;
+      case 'modifyCast':
+        if (n.dc !== undefined) expr(n.dc, 'node', NUM, `${at}.dc`);
+        if (n.attackBonus !== undefined) expr(n.attackBonus, 'node', NUM, `${at}.attackBonus`);
+        if (!n.cancel && n.dc === undefined && n.attackBonus === undefined && !n.damageType) out.push(`${where(at)}：modifyCast 什么也没改（cancel / dc / attackBonus / damageType 至少写一个）`);
         break;
       case 'castFrom':
         if (!n.from && !n.fromVar) out.push(`${where(at)}：castFrom 要写 from 或 fromVar（施展哪一条动作）`);
@@ -223,6 +228,7 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
     }
     nodes(t.do, `${at}.do`);
     for (const m of t.modify ?? []) {
+      if (m.op === 'cancelUnlessSave') expr(m.dc, 'trigger', NUM, `${at}.modify`);
       if (!MODIFY_OPS.has(m.op)) out.push(`${where(at)}：未知修改「${m.op}」`);
       if ('value' in m) expr(m.value, 'trigger', m.op === 'addToRoll' || m.op === 'reduceDamage' ? DICE : NUM, `${at}.modify`);
     }

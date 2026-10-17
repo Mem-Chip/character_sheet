@@ -1,6 +1,7 @@
 import { ABIL_CN, Dice, Unknown, run, runBool, runDice, runInt, type ExprSrc, type Question, type Value } from '../expr';
 import { applyDamagePacket, applyHeal, grantTempHp, maxDiceFor, normType, rollComponent, type DamageComponent, type DamagePacket } from './damage';
 import { controllerOf, d20Test, rollValue } from './d20';
+import { newCastPlan, type CastPlan } from './castplan';
 import { activeTemplates, applyEffect, effectiveView, effectsOf, endConcentration, endEffect, skillBonus, startConcentration } from './effects';
 import { makeEnv, nameOf, type ScopeData } from './scope';
 import { entryOf } from './collect';
@@ -25,6 +26,8 @@ export interface RolledDamage {
 }
 
 export interface ExecCtx {
+  /** 窗口触发器正在打断 / 改写的那次施法（`modifyCast` 改它） */
+  interrupting?: CastPlan;
   self: Id;
   source?: Id | null;
   targets: Id[];
@@ -45,6 +48,8 @@ export interface ExecCtx {
   roll?: Record<string, Value>;
   damage?: Record<string, Value>;
   event?: Record<string, unknown>;
+  /** 这次动作所属的施法计划书（法术才有；save / attack / damage 会读它上面的改写） */
+  cast?: CastPlan;
   /** attackHit 窗口里：addDamage 往这里加 */
   packet?: DamagePacket;
   /** 最近一次豁免的 DC（saveEnds 缺省用它） */
@@ -94,6 +99,7 @@ function dice(tx: Tx, ctx: ExecCtx, e: ExprSrc, what: string): Dice {
 
 /** 伤害类型字段：含「.」的当表达式（`attack.damageType`），否则是字面类型名 */
 function typeOf(tx: Tx, ctx: ExecCtx, t: string | undefined): string {
+  if (ctx.cast?.damageType) return ctx.cast.damageType;
   if (!t) return ctx.attack?.damageType ?? '';
   if (/^[a-z]+\./.test(t)) return normType(String(run(t, env(tx, ctx)) ?? ''));
   return normType(t);
@@ -227,6 +233,20 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
     }
     case 'removeGrant': {
       tx.emit('entryRevoked', { id: ctx.self, key: n.key }, ctx.cause);
+      return;
+    }
+    case 'modifyCast': {
+      // 改「正在施展的那道法术」的计划书：取消 / 改 DC / 改攻击加值 / 改伤害类型
+      const plan = ctx.interrupting ?? tx.windowPlan;
+      if (!plan) {
+        tx.emit('note', { text: `${ctx.actionName}：这里没有正在施展的法术可改`, owner: ctx.self }, ctx.cause);
+        return;
+      }
+      if (n.cancel) plan.canceled = { by: ctx.actionName, refundSlot: n.refundSlot !== false };
+      if (n.dc !== undefined) plan.dc = num(tx, ctx, n.dc, '改写后的豁免 DC');
+      if (n.attackBonus !== undefined) plan.attackBonus = num(tx, ctx, n.attackBonus, '改写后的攻击加值');
+      if (n.damageType) plan.damageType = normType(n.damageType);
+      if (n.note) plan.notes.push(String(n.note));
       return;
     }
     case 'castFrom': {
@@ -688,7 +708,7 @@ const DEFAULT_ATTACK: AttackInfo = {
 function runAttack(tx: Tx, n: Extract<Node, { kind: 'attack' }>, ctx: ExecCtx): void {
   let target = ctx.target!;
   const attack: AttackInfo = { ...DEFAULT_ATTACK, ...(n.attack ?? {}) };
-  const bonus = num(tx, ctx, n.bonus ?? 'self.spell.atk', '攻击加值');
+  const bonus = ctx.cast?.attackBonus ?? num(tx, ctx, n.bonus ?? 'self.spell.atk', '攻击加值');
   const acBefore = effectiveView(tx, target).ac;
   const r = d20Test(tx, {
     roller: ctx.self, kind: 'attack', attack, target, bonus, vs: acBefore,
@@ -791,7 +811,8 @@ function runAttack(tx: Tx, n: Extract<Node, { kind: 'attack' }>, ctx: ExecCtx): 
 
 function runSave(tx: Tx, n: Extract<Node, { kind: 'save' }>, ctx: ExecCtx): void {
   const target = ctx.target!;
-  const dc = num(tx, ctx, n.dc, '豁免 DC');
+  // 计划书被改过（篡改类 / 反制）就以它为准
+  const dc = ctx.cast?.dc ?? num(tx, ctx, n.dc, '豁免 DC');
   const tv = effectiveView(tx, target);
   // 由目标选择属性时，替目标选加值高的那个
   const ability = Array.isArray(n.ability) ? n.ability.reduce((best, a) => (tv.save[a] > tv.save[best] ? a : best)) : n.ability;
@@ -985,6 +1006,8 @@ export function findAction(tx: Tx, actor: Id, ref: string): { key: string; actio
 }
 
 export interface ExecuteOpts {
+  /** 这个动作是在「某个正在施展的法术」的窗口里执行的：它下面 modifyCast 改的就是这份计划书 */
+  interrupting?: CastPlan;
   actor: Id;
   actionKey: string;
   action: Action;
@@ -1162,22 +1185,39 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
   const slot = payCosts(tx, actor, costs, action.name, seq, slotLevel);
   if (quick) endEffect(tx, quick.id, `用在了「${action.name}」上（附赠动作施放）`, seq);
   if (slot !== undefined && inCombat(tx) && isSpell) tx.emit('economyChanged', { id: actor, patch: { slotSpellCast: true } }, seq);
+  let castPlan: CastPlan | null = null;
   if (isSpell) {
     // 窗口里能读到这次施法的目标（role: 'target' 就是「被打的那个」；范围法术读 event.targets）
     const castTargets = o.targets.slice();
     const evScope = { actor, spell: action.name, key: entryKey, slotLevel: slot ?? 0, targets: castTargets };
     const castTarget = castTargets.length === 1 ? castTargets[0] : undefined;
-    let countered: { by: string; refundSlot: boolean } | null = null;
-    fireWindow(tx, {
-      event: 'spellCast', window: 'before', actor, target: castTarget,
-      scope: { slot, event: evScope },
-      cause: seq,
-      modify: (m, by) => {
-        if (m.op === 'cancel') countered = { by: by.label, refundSlot: m.refundSlot !== false };
-      },
+    // 这次施法的**计划书**：窗口里的能力改它，窗口关掉之后照它结算（法术反制「先豁免再打断」靠这个）
+    const view0 = effectiveView(tx, actor);
+    const plan = newCastPlan({
+      seq, caster: actor, spell: action.name, key: entryKey, level: slot ?? 0, targets: castTargets,
+      dc: view0.spell?.dc ?? null, attackBonus: view0.spell?.atk ?? null,
     });
-    if (countered !== null) {
-      const { by, refundSlot } = countered as { by: string; refundSlot: boolean };
+    tx.casts.set(seq, plan);
+    castPlan = plan;
+    const outerPlan = tx.windowPlan;
+    tx.windowPlan = plan;
+    try {
+      fireWindow(tx, {
+        event: 'spellCast', window: 'before', actor, target: castTarget, plan,
+        scope: { slot, event: evScope },
+        cause: seq,
+        modify: (m, by) => {
+          if (m.op === 'cancel') plan.canceled = { by: by.label, refundSlot: m.refundSlot !== false };
+        },
+      });
+      if (plan.canceled === null && tx.windowPlan !== plan) {
+        // 窗口里的节点已经改过计划书（比如 `modifyCast` 写了 cancel）——保留它
+      }
+    } finally {
+      tx.windowPlan = outerPlan;
+    }
+    if (plan.canceled !== null) {
+      const { by, refundSlot } = plan.canceled;
       if (slot !== undefined && refundSlot) {
         tx.emit('slotUsed', { id: actor, level: slot, used: Math.max(0, (c.live.slotsUsed[slot] ?? 1) - 1) }, seq);
         if (inCombat(tx)) tx.emit('economyChanged', { id: actor, patch: { slotSpellCast: false } }, seq);
@@ -1186,11 +1226,13 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
         text: `「${action.name}」被「${by}」打断，法术失效${slot !== undefined ? (refundSlot ? '（法术位不消耗）' : '（法术位已消耗）') : ''}`,
         owner: actor,
       }, seq);
+      tx.casts.delete(seq);
       tx.emit('actionDone', { actor, action: action.name }, seq);
       return;
     }
+    for (const n of plan.notes) tx.emit('note', { text: n, owner: actor }, seq);
     const cast = tx.emit('spellCast', { actor, spell: action.name, key: entryKey, slotLevel: slot ?? null, targets: castTargets }, seq);
-    fireWindow(tx, { event: 'spellCast', window: 'after', actor, target: castTarget, scope: { slot, event: evScope }, cause: cast });
+    fireWindow(tx, { event: 'spellCast', window: 'after', actor, target: castTarget, plan, scope: { slot, event: evScope }, cause: cast });
   }
 
   let concentrationId: EffectId | undefined;
@@ -1213,6 +1255,8 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
     concentrationId,
     concentrationDuration: action.concentration,
     damageDefs: collectDamageDefs(action.root),
+    ...(castPlan ? { cast: castPlan } : {}),
+    ...(o.interrupting ? { interrupting: o.interrupting } : {}),
     originKind: isSpell ? 'spell' : (action.tags ?? []).includes('weapon') ? 'item' : 'feature',
     vars: {},
     ...(o.area ? { area: o.area } : {}),
@@ -1222,3 +1266,10 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
   runNodes(tx, action.root, ctx);
   tx.emit('actionDone', { actor, action: action.name }, seq);
 }
+
+
+
+
+
+
+

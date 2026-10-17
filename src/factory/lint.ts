@@ -45,7 +45,7 @@ const NODE_KEYS: Record<string, readonly string[]> = {
   heal: ['amount', 'to'],
   tempHp: ['amount', 'to'],
   applyEffect: ['template', 'inline', 'name', 'to', 'duration', 'link', 'potency', 'state'],
-  removeEffect: ['match', 'from'],  extendEffect: ['template'], endConcentration: [], grantAction: ['key', 'from', 'fromVar', 'action', 'name', 'text', 'cost', 'activation', 'targeting', 'until'], removeGrant: ['key'], castFrom: ['from', 'fromVar', 'to', 'cost', 'activation'],
+  removeEffect: ['match', 'from'],  extendEffect: ['template'], endConcentration: [], grantAction: ['key', 'from', 'fromVar', 'action', 'name', 'text', 'cost', 'activation', 'targeting', 'until'], removeGrant: ['key'], castFrom: ['from', 'fromVar', 'to', 'cost', 'activation'], modifyCast: ['cancel', 'refundSlot', 'dc', 'attackBonus', 'damageType', 'note'],
   resource: ['id', 'delta'],
   economy: ['action', 'bonus', 'reaction', 'attacks', 'move'],
   choose: ['prompt', 'var', 'options', 'pool', 'count'],

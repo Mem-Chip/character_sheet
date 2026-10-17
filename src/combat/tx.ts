@@ -1,5 +1,6 @@
 import { diceSig, type DiceRequest, type DiceSource, type RollKind } from './dice';
 import { applyEvent } from './reducer';
+import type { CastPlan } from './castplan';
 import type { RuleBook } from './rulebook';
 import type { Command, Decision, DecisionKind, EncounterState, GameEvent, OverridePatch, UserId } from './types';
 
@@ -104,6 +105,10 @@ export class Tx {
   /** 第几次 D20 检定 / 第几次伤害结算 —— 一次性裁定按它定位 */
   rollIdx = 0;
   damageIdx = 0;
+  /** 这一趟里每一次施法的计划书（CastPlan），按 actionUsed 的 seq 索引 */
+  casts = new Map<number, CastPlan>();
+  /** 当前正开着的窗口属于哪次施法（窗口里的能力改的就是它） */
+  windowPlan: CastPlan | null = null;
 
   constructor(
     readonly state: EncounterState,
@@ -258,3 +263,4 @@ export function gridSpatial(pos: Positions, state: EncounterState, diagonal: Dia
 export function footprint(size: string | undefined): number {
   return size === '大型' ? 2 : size === '巨型' ? 3 : size === '超巨型' ? 4 : 1;
 }
+
