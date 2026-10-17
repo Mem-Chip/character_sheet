@@ -60,7 +60,7 @@
   - 测试：`tests/combat/zone-data.test.ts`、`tests/combat/summon-data.test.ts`（真数据跑遭遇）。
   - **剩下几个大类也做了一轮**（[round6/README.md](datafy/manual-audit/round6/README.md)）：92 条里合并 55 条（10 条升到 full）；
     顺手修了「`damageTaken` 只开窗口不发事件」——效应的 `endsOn: [{ event: 'damageTaken' }]` 以前从来没生效过（数据里约 26 处）。
-  - **还缓着 35 条**：[round6/suspects.md](datafy/manual-audit/round6/suspects.md)（每条都写了哪不对：`when` 少条件、DC 属性写错、把做不到的写成 manual 说明）。
+  - **还缓着 25 条**：[round6/suspects.md](datafy/manual-audit/round6/suspects.md)（35 条里已修 10 条，剩下的每条都写了哪不对：`when` 少条件、DC 属性写错、把做不到的写成 manual 说明、静态层池子记不下次数）。
   - 检查器已经补上：`reach` / `melee` / `ranged` / `finesse` 写数字会报（`src/combat/audit.ts` 的 `flagsOf`）。
   - 数据侧的引擎知识（代理实测出来的，写数据时照着办）：`aura.grant.triggers` **不过** `auraGate`，灵光授予的触发器要自己写 `within(source, self, 半径)`；
     `before` 窗口里重新施加同效果会重新收集候选（最多 5 轮），用「重新施加效应记剩余次数」要加短命标记，否则同一笔伤害算两次。
