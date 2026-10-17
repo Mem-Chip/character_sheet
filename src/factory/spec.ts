@@ -211,6 +211,9 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
 10. **法术**的动作 \`tags: ['spell', 'magical']\`，动作 id 一般是 \`cast\`。
 11. **名字**：动作 \`name\`、触发器 \`label\`、检定修正 \`label\` 都以能力的中文名开头（可以加「：说明」）。回执和弹窗上显示的就是它。
 12. **让人选**：几个选项选一个 → \`choose\` 节点（选项可以带 \`when\`，条件不满足就不列）；选一个数 → \`number\` 节点，结果在 \`vars.<var>\`。
+    - 选项**可以由引擎现算**：\`{ kind: 'choose', pool: { from: 'ownSpells' }, var: 'pick' }\` ——
+      从参与者自己身上带施法动作的法术里列（\`ownCantrips\` 只要戏法，\`maxLevel\` / \`minLevel\` 可以卡环阶），
+      选项的 value 就是法术键，配合 \`grantAction.fromVar\` 施展（战地施法者那种「用一道法术代替借机攻击」）。
    \`choose\` 也可以写 \`var\`：选中项的 \`value\`（没写就是 \`label\`）放进 \`vars.<var>\`，后面的节点能用 —— 伤害类型 \`type: 'vars.elem'\`；
    要让效应记住（防护能量伤害），\`applyEffect\` 上写 \`state: { type: 'vars.elem' }\`，效应里 \`statics: [{ kind: 'resist', values: ['effect.state.type'] }]\`（抗性 / 免疫 / 易伤的类型可以写成表达式）。
 13. **引擎做不到的**（传送、视线、光照）→ \`move\` / \`note\` 节点，或在 \`when\` 里用 \`ask('…')\` 问人。**没把握就整条写成 \`{ "automation": "manual", "text": "…" }\`**：不自动化，比写错强。
