@@ -1,6 +1,7 @@
 /** 人物卡页：抬头 + 「卡面 / 建卡」两个视图 */
 import { useState } from 'react';
 import type { Json } from '../../src/sheet';
+import { openChoiceItems } from '../components/Choices';
 import { Tag } from '../components/ui';
 import type { Engine } from '../lib/engine';
 import { actions, useApp } from '../lib/store';
@@ -32,8 +33,14 @@ export function SheetPage({ engine }: { engine: Engine }) {
   if (!computed) return <div className="page"><div className="empty">正在计算…</div></div>;
 
   const { char, sheet } = computed;
-  const pendingList: Json[] = (sheet._pending || []).filter((c: Json) => !c.decided);
+  const pendingList = openChoiceItems(engine.env, char, sheet);
   const pending = pendingList.length;
+  const goToChoices = () => {
+    if (tab !== 'view' && tab !== 'levelup') setTab('view');
+    setTimeout(() => {
+      document.getElementById('sheet-choices-panel')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
+  };
   return (
     <div className="page sheet-page">
       <SheetHero
@@ -41,16 +48,16 @@ export function SheetPage({ engine }: { engine: Engine }) {
         tags={<>
           <Tag>{sheet.level || 0} 级</Tag>
           {pending > 0 && (
-            <button className="pendingtag" onClick={() => setTab('levelup')} title={pendingList.map((c) => c.label || c.id).join('\n')}>
+            <button className="pendingtag" onClick={goToChoices} title={pendingList.map((c) => c.label).join('\n')}>
               <Tag tone="warn">待决定 {pending} 项</Tag>
             </button>
           )}
         </>}
       />
       <div className="tabs" role="tablist">
-        <button role="tab" aria-selected={tab === 'view'} onClick={() => setTab('view')}>卡面</button>
+        <button role="tab" aria-selected={tab === 'view'} onClick={() => setTab('view')}>卡面{pending > 0 && tab !== 'view' && <span className="count">●{pending}</span>}</button>
         <button role="tab" aria-selected={tab === 'items'} onClick={() => setTab('items')}>物品</button>
-        <button role="tab" aria-selected={tab === 'levelup'} onClick={() => setTab('levelup')}>升级{pending > 0 && <span className="count">●{pending}</span>}</button>
+        <button role="tab" aria-selected={tab === 'levelup'} onClick={() => setTab('levelup')}>升级</button>
         <button role="tab" aria-selected={tab === 'build'} onClick={() => setTab('build')}>建卡 / 编辑</button>
         <button role="tab" aria-selected={tab === 'data'} onClick={() => setTab('data')}>数据</button>
         <span style={{ flex: 1 }} />

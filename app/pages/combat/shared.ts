@@ -1,4 +1,6 @@
 import type { Session } from '../../../src/combat';
+import type { CombatUi } from '../../lib/combat';
+import { getApp } from '../../lib/store';
 
 export type Namer = (id: unknown) => string;
 
@@ -40,3 +42,33 @@ export function effectLabel(name: string): { cond: string | null; text: string; 
   if (CONDITIONS.includes(name)) return { cond: name, text: name, from: null };
   return { cond: null, text: name, from: null };
 }
+
+/** 参与者立绘：优先地图上临时覆盖的立绘，其次角色/怪物的 base.avatar，再次关联人物卡的 portrait */
+export function avatarOf(s: Session, ui: CombatUi, id: string): string | null {
+  const mapAv = ui.remote?.map.avatars?.[id];
+  if (mapAv) return mapAv;
+  const c = s.state.combatants[id];
+  if (c?.base.avatar) return c.base.avatar;
+  const cardId = ui.links[id];
+  if (cardId) {
+    const p = getApp().cards[cardId]?.char.profile?.portrait;
+    if (typeof p === 'string' && p) return p;
+  }
+  return null;
+}
+
+/** 将上传的图片居中裁切成正方形缩略图（默认 160×160 WebP dataURL），体积约 5~15KB */
+export async function cropAvatarFile(file: File, size = 160): Promise<string> {
+  const img = await createImageBitmap(file);
+  const side = Math.min(img.width, img.height);
+  const sx = Math.floor((img.width - side) / 2);
+  const sy = Math.floor((img.height - side) / 2);
+  const cv = document.createElement('canvas');
+  cv.width = size;
+  cv.height = size;
+  cv.getContext('2d')!.drawImage(img, sx, sy, side, side, 0, 0, size, size);
+  let dataUrl = cv.toDataURL('image/webp', 0.85);
+  if (!dataUrl.startsWith('data:image/webp')) dataUrl = cv.toDataURL('image/jpeg', 0.85);
+  return dataUrl;
+}
+

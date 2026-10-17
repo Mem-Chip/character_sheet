@@ -2,9 +2,9 @@
 import { setResHidden, useHiddenRes } from '../../lib/hotres';
 import { useMemo, useState } from 'react';
 import { ABIL_CN, ABILS, type Ability } from '../../../src/expr';
-import type { Json } from '../../../src/sheet';
+import { SKILLS, type Json } from '../../../src/sheet';
 import {
-  actionCosts, canPay, concentrationOf, describeCost, effectiveAction, maxTargets, weaponAction,
+  actionCosts, canPay, concentrationOf, describeCost, effectiveAction, maxTargets, skillBonus, weaponAction,
   type Action, type Command, type ActiveEffect, type Cost, type Duration, type RuleBook, type Session,
 } from '../../../src/combat';
 import { Clip, NumInput, Panel, Pips, Stat, Tag, sgn } from '../../components/ui';
@@ -350,10 +350,18 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
           <select value={roll.ability} onChange={(e) => setRoll({ ...roll, ability: e.target.value as Ability })} aria-label="属性">
             {ABILS.map((a) => <option key={a} value={a}>{ABIL_CN[a]} {sgn(roll.kind === 'save' ? v.save[a] : v.mod[a])}</option>)}
           </select>
-          {roll.kind === 'check' && Object.keys(v.skill).length > 0 && (
-            <select value={roll.skill} onChange={(e) => setRoll({ ...roll, skill: e.target.value })} aria-label="技能">
+          {roll.kind === 'check' && c.kind === 'pc' && (
+            <select
+              value={roll.skill}
+              onChange={(e) => {
+                const sk = e.target.value;
+                const found = SKILLS.find(([, cn]) => cn === sk);
+                setRoll({ ...roll, skill: sk, ability: found ? found[2] : roll.ability });
+              }}
+              aria-label="技能"
+            >
               <option value="">（不用技能）</option>
-              {Object.entries(v.skill).map(([k, n]) => <option key={k} value={k}>{k} {sgn(n)}</option>)}
+              {SKILLS.map(([, cn, ab]) => <option key={cn} value={cn}>{cn} {sgn(skillBonus(v, cn, ab))}</option>)}
             </select>
           )}
           <input type="number" placeholder="DC" value={roll.dc} onChange={(e) => setRoll({ ...roll, dc: e.target.value })} aria-label="DC" />

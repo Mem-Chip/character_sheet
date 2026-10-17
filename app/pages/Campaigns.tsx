@@ -108,14 +108,27 @@ function CampaignPanel({ c, act }: { c: Campaign; act: (fn: () => Promise<unknow
           <div className="small faint" style={{ marginBottom: 4 }}>团里的角色</div>
           {!c.cards.length ? <div className="small muted">还没有人把卡带进来。</div> : (
             <div className="stack" style={{ gap: 4 }}>
-              {c.cards.map((k) => (
-                <div key={k.id} className="row small">
-                  <span className="serif" style={{ minWidth: 90 }}>{k.name}</span>
-                  <span className="muted" style={{ flex: 1 }}>{k.summary || '—'} · {k.ownerName}</span>
-                  {(c.role === 'dm' || k.ownerId === me.id) && app.cards[k.id] && <button className="btn ghost sm" onClick={() => actions.open(k.id)}>打开</button>}
-                  {k.ownerId === me.id && <button className="btn ghost sm" onClick={() => void act(() => api('PUT', `cards/${k.id}/campaign`, { campaignId: null }))}>移出</button>}
-                </div>
-              ))}
+              {c.cards.map((k) => {
+                const dmBound = !!(app.cards[k.id]?.char.dmControlled ?? k.dmControlled);
+                return (
+                  <div key={k.id} className="row small">
+                    <span className="serif" style={{ minWidth: 90 }}>{k.name}</span>
+                    <span className="muted" style={{ flex: 1 }}>{k.summary || '—'} · {k.ownerName}</span>
+                    {dmBound && <Tag tone="accent">已绑定 DM</Tag>}
+                    {(c.role === 'dm' || k.ownerId === me.id) && app.cards[k.id] && (
+                      <button
+                        className="btn ghost sm"
+                        title="开启后，该角色在战役遭遇中默认归 DM 控制，无需每次点 DM 代答"
+                        onClick={() => actions.update(k.id, (ch) => { ch.dmControlled = !ch.dmControlled; })}
+                      >
+                        {dmBound ? '解绑 DM' : '绑定 DM'}
+                      </button>
+                    )}
+                    {(c.role === 'dm' || k.ownerId === me.id) && app.cards[k.id] && <button className="btn ghost sm" onClick={() => actions.open(k.id)}>打开</button>}
+                    {k.ownerId === me.id && <button className="btn ghost sm" onClick={() => void act(() => api('PUT', `cards/${k.id}/campaign`, { campaignId: null }))}>移出</button>}
+                  </div>
+                );
+              })}
             </div>
           )}
           {c.role === 'dm' && c.cards.length > 0 && (

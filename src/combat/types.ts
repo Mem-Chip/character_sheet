@@ -411,6 +411,8 @@ export interface CombatantView {
   entries?: Record<string, Entry>;
   /** 引擎不处理、要人看着办的能力原文（怪物的特性、施法、附带效果）：只给界面显示 */
   notes?: Array<{ group: string; name: string; text: string }>;
+  /** 棋子 / 先攻条立绘头像（dataURL） */
+  avatar?: string;
 }
 
 export interface LiveState {

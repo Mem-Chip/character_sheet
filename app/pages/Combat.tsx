@@ -137,6 +137,16 @@ export function CombatPage({ engine }: { engine: Engine }) {
         等{name(s.pending.decision.to)}{s.pending.decision.kind === 'physicalDice' ? '掷骰' : '决定'}：{s.pending.decision.prompt}
         {s.pending.decision.options.length > 0 && <span className="faint">（可选：{s.pending.decision.options.map((o) => o.label).join('、')}）</span>}
         {dm && <button className="btn sm" style={{ marginLeft: 8 }} onClick={() => setProxy(pendingKey)}>DM 代答</button>}
+        {dm && remote && s.pending.decision.to !== 'dm' && remote.owners[s.pending.decision.to] != null && (
+          <button
+            className="btn sm"
+            style={{ marginLeft: 6 }}
+            title="将该角色绑定给 DM 常驻控制，后续无需每次点 DM 代答"
+            onClick={() => combat.setOwner(s.pending!.decision.to, null)}
+          >
+            绑定 DM 接管
+          </button>
+        )}
       </div>
     )}
     {s.pending && combat.isMyDecision() && <DecisionDialog key={pendingKey} s={s} name={name} docked={battle} />}

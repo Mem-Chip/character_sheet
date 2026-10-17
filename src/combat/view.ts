@@ -57,6 +57,7 @@ export function makeView(init: ViewInit): CombatantView {
     wearing: init.wearing ?? [],
     ...(init.entries ? { entries: init.entries } : {}),
     ...(init.notes?.length ? { notes: init.notes } : {}),
+    ...(init.avatar ? { avatar: init.avatar } : {}),
   };
 }
 

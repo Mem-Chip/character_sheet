@@ -5,7 +5,7 @@
 import { tokenMenu } from './TokenMenu';
 import type { Session } from '../../../src/combat';
 import { combat, type CombatUi } from '../../lib/combat';
-import { rosterOrder, type Namer } from './shared';
+import { avatarOf, rosterOrder, type Namer } from './shared';
 
 /** 不给玩家看具体数字时的伤势说法（2024 规则里「浴血」= 生命值不到一半） */
 export function woundOf(hp: number, max: number): string {
@@ -49,6 +49,7 @@ export function Initiative({ s, ui, name }: { s: Session; ui: CombatUi; name: Na
           const secret = combat.isSecret(id);
           const hp = secret ? woundOf(c.live.hp, c.base.hpMax) : `${c.live.hp}/${c.base.hpMax}`;
           const bloodied = c.live.hp > 0 && c.live.hp * 2 <= c.base.hpMax;
+          const av = avatarOf(s, ui, id);
           const cls = ['ini-chip', c.side === 'party' ? 'party' : c.side === 'enemy' ? 'enemy' : 'other',
             id === current && 'cur', i === 1 && inCombat && 'next', id === ui.selected && 'sel', ui.targets.includes(id) && 'tgt',
             c.live.dead && 'dead', bloodied && 'bloodied', r?.role === 'dm' && r.hidden.includes(id) && 'hid'].filter(Boolean).join(' ');
@@ -58,7 +59,7 @@ export function Initiative({ s, ui, name }: { s: Session; ui: CombatUi; name: Na
               onClick={() => combat.clickCombatant(id)}
               onContextMenu={(e) => tokenMenu(e, id, ui)}
             >
-              <span className="ini-dot">{c.name.slice(0, 1)}</span>
+              <span className="ini-dot">{av ? <img src={av} alt="" /> : c.name.slice(0, 1)}</span>
               <span className="ini-name">{c.name}<small>{c.live.dead ? '死亡' : hp}</small></span>
             </button>
           );
@@ -67,3 +68,4 @@ export function Initiative({ s, ui, name }: { s: Session; ui: CombatUi; name: Na
     </div>
   );
 }
+

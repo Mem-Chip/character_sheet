@@ -1,7 +1,7 @@
 /** 人物卡「卡面」：跑团时看的那一面 */
 import { useState } from 'react';
 import { ABILS, ABIL_CN, SCHOOL_CN, classSpells, type CharData, type Json } from '../../src/sheet';
-import { Choices } from '../components/Choices';
+import { Choices, openChoiceItems } from '../components/Choices';
 import { Term } from '../components/Term';
 import { SpellBrowser } from '../components/SpellBrowser';
 import { SpellPicker } from '../components/SpellPicker';
@@ -18,6 +18,7 @@ import {
   removeSpellFromBook,
   togglePrepareFromBook,
 } from '../../src/sheet/spellbook';
+import { cropAvatarFile } from './combat/shared';
 
 const ABBR: Record<string, string> = { str: '力', dex: '敏', con: '体', int: '智', wis: '感', cha: '魅' };
 const RECOVERY_CN: Record<string, string> = { short: '短休', long: '长休', initiative: '先攻', none: '特殊', '?': '按规则' };
@@ -76,7 +77,7 @@ function SavesSkills({ sheet }: Props) {
 }
 
 /**
- * 人物卡顶上那一条：左边名字、种族职业、等级和待决定；右边一排关键数值（AC 突出，生命值带加减）。
+ * 人物卡顶上那一条：左边立绘、名字、种族职业、等级和待决定；右边一排关键数值（AC 突出，生命值带加减）。
  * 卡面、升级、建卡、数据四页共用。
  */
 export function SheetHero({ id, char, sheet, tags, tools }: Omit<Props, 'engine'> & { tags?: React.ReactNode; tools?: React.ReactNode }) {
@@ -90,19 +91,51 @@ export function SheetHero({ id, char, sheet, tags, tools }: Omit<Props, 'engine'
   const n = Math.max(0, Math.round(Number(amt) || 0));
   const ds = char.deathSaves || { success: 0, failure: 0 };
   const classes = (char.classes || []).filter((k: Json) => k.name).map((k: Json) => `${k.name} ${k.level}${k.subclass ? `（${k.subclass}）` : ''}`).join(' / ');
+  const portrait = typeof char.profile?.portrait === 'string' && char.profile.portrait ? char.profile.portrait : null;
+  const onUploadAvatar = async (file: File) => {
+    try {
+      const dataUrl = await cropAvatarFile(file);
+      actions.update(id, (c) => { c.profile = { ...(c.profile || {}), portrait: dataUrl }; });
+    } catch { /* 忽略无法读取的图片 */ }
+  };
   return (
     <section className="hero panel">
-      <div className="hero-id">
-        <h1>{char.name || '未命名'}</h1>
-        <div className="sub">
-          {[
-            char.race ? <Term key="race" kind="race" name={char.race}>{char.race}</Term> : null,
-            char.background ? <Term key="bg" kind="background" name={char.background}>{char.background}</Term> : null,
-            classes || null,
-          ].filter(Boolean).map((node, idx) => <span key={idx}>{idx > 0 && ' · '}{node}</span>)}
-          {!char.race && !char.background && !classes && '还没选种族、背景、职业'}
+      <div className="hero-id-wrap">
+        <label
+          className={'hero-avatar' + (portrait ? ' has-img' : '')}
+          title={portrait ? '点击更换立绘 · 右键清除立绘' : '点击上传角色立绘（自动裁剪为方形头像，战斗棋子与先攻栏同步使用）'}
+          onContextMenu={(e) => {
+            if (!portrait) return;
+            e.preventDefault();
+            if (confirm('清除角色立绘？')) actions.update(id, (c) => { if (c.profile) delete c.profile.portrait; });
+          }}
+        >
+          {portrait ? <img src={portrait} alt={char.name || '立绘'} /> : <span>{(char.name || '角').slice(0, 1)}</span>}
+          <input type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void onUploadAvatar(f); }} />
+        </label>
+        <div className="hero-id">
+          <h1>{char.name || '未命名'}</h1>
+          <div className="sub">
+            {[
+              char.race ? <Term key="race" kind="race" name={char.race}>{char.race}</Term> : null,
+              char.background ? <Term key="bg" kind="background" name={char.background}>{char.background}</Term> : null,
+              classes || null,
+            ].filter(Boolean).map((node, idx) => <span key={idx}>{idx > 0 && ' · '}{node}</span>)}
+            {!char.race && !char.background && !classes && '还没选种族、背景、职业'}
+          </div>
+          <div className="row hero-tags">
+            {tags}
+            <button
+              type="button"
+              className={'tag' + (char.dmControlled ? ' accent' : '')}
+              style={{ cursor: 'pointer' }}
+              title="开启后，该角色在战役遭遇中默认绑定给 DM 操控，无需每次点「DM 代答」"
+              onClick={() => actions.update(id, (c) => { c.dmControlled = !c.dmControlled; })}
+            >
+              {char.dmControlled ? '已绑定 DM 操控' : '绑定 DM'}
+            </button>
+          </div>
         </div>
-        <div className="row hero-tags">{tags}</div>
       </div>
       <div className="hero-vitals">
         <div className="vt vt-ac" title={sheet.acNote}>
@@ -631,7 +664,6 @@ export function SheetView(p: Props) {
       <div className="stack">
         <AbilitiesPanel {...p} />
         <SavesSkills {...p} />
-        <Profs {...p} />
       </div>
       <div className="stack">
         <Attacks {...p} />
@@ -639,11 +671,12 @@ export function SheetView(p: Props) {
         <Features {...p} />
       </div>
       <div className="stack">
-        {(sheet._pending || []).some((c: Json) => !c.decided) && <Choices {...p} />}
+        {openChoiceItems(p.engine.env, p.char, sheet).length > 0 && <Choices {...p} />}
         {warnings.length > 0 && (
           <Panel title="提示">{warnings.map((w, i) => <div key={i} className="warnline">{w}</div>)}</Panel>
         )}
         <Resources {...p} />
+        <Profs {...p} />
       </div>
     </div>
   );

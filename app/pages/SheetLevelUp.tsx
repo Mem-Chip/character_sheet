@@ -8,7 +8,7 @@
  */
 import { useEffect, useState } from 'react';
 import { CLASS_SLUG_BY_NAME, type CharData, type Json } from '../../src/sheet';
-import { Choices } from '../components/Choices';
+import { Choices, openChoiceItems } from '../components/Choices';
 import { Entries } from '../components/Entries';
 import { SpellBrowser } from '../components/SpellBrowser';
 import { NumInput, Panel, Tag } from '../components/ui';
@@ -75,8 +75,9 @@ export function SheetLevelUp({ engine, id, char, sheet }: Props) {
 
   const before = new Set((sheet.features || []).map(featKey));
   const gained: Json[] = preview ? (preview.sheet.features || []).filter((f: Json) => !before.has(featKey(f))) : [];
-  const pendBefore = new Set((sheet._pending || []).map((c: Json) => c.key));
-  const newChoices: Json[] = preview ? (preview.sheet._pending || []).filter((c: Json) => !c.decided && !pendBefore.has(c.key)) : [];
+  const openNow = openChoiceItems(engine.env, char, sheet);
+  const pendBefore = new Set(openNow.map((c) => c.key));
+  const newChoices = preview ? openChoiceItems(engine.env, preview.char, preview.sheet).filter((c) => !pendBefore.has(c.key)) : [];
   const diff = (label: string, a: unknown, b: unknown) => (a !== b && b != null ? <div className="spread small"><span className="faint">{label}</span><span>{String(a ?? '—')} → <b>{String(b)}</b></span></div> : null);
   const slotStr = (s: Json) => (s?.spell?.slots || []).map((v: number, i: number) => (v ? `${i + 1}环×${v}` : '')).filter(Boolean).join(' ') || '—';
   const avg = hd ? Math.floor(hd / 2) + 1 : null;
@@ -144,7 +145,7 @@ export function SheetLevelUp({ engine, id, char, sheet }: Props) {
               {newChoices.length > 0 && (
                 <div>
                   <div className="small faint">升级后要决定</div>
-                  <div className="row" style={{ gap: 4 }}>{newChoices.map((c) => <Tag key={c.key} tone="warn">{c.label || c.id}</Tag>)}</div>
+                  <div className="row" style={{ gap: 4 }}>{newChoices.map((c) => <Tag key={c.key} tone="warn">{c.label}</Tag>)}</div>
                 </div>
               )}
             </div>
@@ -152,7 +153,7 @@ export function SheetLevelUp({ engine, id, char, sheet }: Props) {
         )}
       </div>
       <div className="stack">
-        {(sheet._pending || []).some((c: Json) => !c.decided)
+        {openNow.length > 0
           ? <Choices engine={engine} id={id} char={char} sheet={sheet} title="待决定" />
           : <Panel title="待决定"><div className="small muted">没有要决定的事。</div></Panel>}
       </div>

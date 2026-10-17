@@ -117,6 +117,8 @@ export interface MapState {
   bg: { img: string; w: number; h: number } | null;
   strokes: Stroke[];
   tokens: Record<string, { x: number; y: number }>;
+  /** 参与者 id → 自定义立绘头像 dataURL */
+  avatars?: Record<string, string>;
   /** 测量用的形状（大家都看得到） */
   shapes?: Array<{ id: string; by: number; color: string; tpl: Tpl }>;
   /** 当前回合的人这一回合走过的格子；key = 轮次:先攻位置 */
@@ -146,7 +148,7 @@ function set(next: Partial<CombatUi>, persistNow = true): void {
 
 /* ───── 战斗 → 人物卡：自动写回 ─────
  * 关联了人物卡的参与者，记账字段（生命值、临时生命值、法术位、资源、死亡豁免）一变就写回卡上。
- * 只在这台电脑「管」这张卡时写：本地遭遇都写；战役遭遇里只写自己的卡（DM 不替玩家写，免得两边打架）。
+ * 只在这台电脑「管」这张卡时写：本地遭遇都写；战役遭遇里写自己的卡，或绑定给 DM 管控的卡。
  * 第一次看到某个参与者时只记下现状、不写 —— 打开一场旧遭遇不应该把卡上的血量改回去。 */
 const lastLive = new Map<string, string>();
 let autoTimer: ReturnType<typeof setTimeout> | undefined;
@@ -165,7 +167,8 @@ function autoWrite(): void {
     const c = s.state.combatants[id];
     const card = getApp().cards[cardId];
     if (!c || !card) continue;
-    if (r && !(card.owner ? card.owner.id === r.me : r.owners[c.controller] === r.me)) continue;
+    const dmControlledHere = r && r.role === 'dm' && r.owners[c.controller] == null;
+    if (r && !dmControlledHere && !(card.owner ? card.owner.id === r.me : r.owners[c.controller] === r.me)) continue;
     const k = `${r?.id ?? 'local'}:${id}`;
     const now = liveKey(c);
     const prev = lastLive.get(k);
@@ -192,12 +195,12 @@ function ctxFor(engine: Engine): EngineCtx {
     // 读档重跑时磁带里有骰面，不会走到这里；只有新掷的骰子按当前设置取来源。
     // 战役遭遇：骰子只由服务器掷。服务器那边正停着等骰面时，本地重放也必须停在同一处，不能自己补一颗
     // 战役遭遇：客户端从不自己掷（骰面都在服务器的磁带里）；没掷的就停下来等。
-    // 停下来的样子要和服务器一致：按这个人的骰子设置（DM 代操作时按 DM 的），实体骰 → 填骰面，其余 → 确认
+    // 停下来的样子要和服务器一致：按这个人的骰子设置（DM 代操作或绑定 DM 时按 DM 的），实体骰 → 填骰面，其余 → 确认
     diceFor: (user) => {
       const r = ui.remote;
       if (!r) return diceSourceFor(ui.dice[user] ?? ui.dice['*'] ?? defaultDiceMode(user));
-      const who = r.actingAs === user ? 'dm' : user;
-      const mode = r.dice[who] ?? r.dice['*'] ?? defaultDiceMode(who);
+      const who = r.actingAs === user || r.owners[user] == null ? 'dm' : user;
+      const mode = r.dice[user] ?? r.dice[who] ?? r.dice['*'] ?? defaultDiceMode(who);
       return mode === 'physical' ? physicalDice : { id: 'confirm', roll: () => null };
     },
   };
@@ -331,7 +334,7 @@ export const combat = {
     const c = ui.session?.state.combatants[combatantId];
     return r.owners[c?.controller ?? combatantId] === r.me;
   },
-  /** 等待中的决定是不是问我的（DM：没有归属玩家的都问 DM；问玩家的 DM 可以代答，见战斗页） */
+  /** 等待中的决定是不是问我的（DM：没有归属非 DM 玩家的都问 DM；问玩家的 DM 可以代答或直接绑定接管） */
   isMyDecision(): boolean {
     const r = ui.remote;
     const p = ui.session?.pending;
@@ -340,7 +343,7 @@ export const combat = {
     const owner = r.owners[p.decision.to];
     // DM 替玩家操作时，这一笔里问那个角色的事归 DM
     if (r.actingAs === p.decision.to) return r.role === 'dm';
-    return r.role === 'dm' ? owner === undefined : owner === r.me;
+    return r.role === 'dm' ? (owner === undefined || owner === r.me) : owner === r.me;
   },
   /** 玩家视角下藏起来的参与者（DM 和本地遭遇：没有） */
   isHidden(id: string | null | undefined): boolean {
@@ -358,6 +361,35 @@ export const combat = {
   /** DM 藏 / 亮出一个参与者 */
   setHidden(id: string, hidden: boolean): void {
     if (ui.remote) act({ op: 'setHidden', id, hidden });
+  },
+  /** DM 更改角色的控制权（owner = null 表示绑定给 DM 常驻接管；owner = 用户 id 表示交还给该玩家） */
+  setOwner(controller: string, owner: number | null): void {
+    if (ui.remote) act({ op: 'setOwner', controller, owner });
+  },
+  /** 设置或清除参与者的棋子立绘（同时同步到战役地图与关联的本地人物卡） */
+  setAvatar(id: string, dataUrl: string | null): void {
+    const s = ui.session;
+    const c = s?.state.combatants[id];
+    if (c) {
+      if (dataUrl) c.base.avatar = dataUrl;
+      else delete c.base.avatar;
+    }
+    const cardId = ui.links[id];
+    if (cardId && getApp().cards[cardId]) {
+      cardActions.update(cardId, (ch) => {
+        ch.profile = { ...(ch.profile || {}), portrait: dataUrl || '' };
+      });
+    }
+    if (ui.remote) {
+      combat.patchMap((m) => {
+        m.avatars ??= {};
+        if (dataUrl) m.avatars[id] = dataUrl;
+        else delete m.avatars[id];
+      });
+      void combat.map({ action: 'avatar', id, dataUrl });
+    } else {
+      set({}, true);
+    }
   },
   /** 地图操作（只在战役遭遇里） */
   map(body: Record<string, unknown>): Promise<boolean> {
@@ -579,8 +611,12 @@ export const combat = {
     const id = uniqueId('pc');
     const c = combatantFromSheet(engine.env, work, sheet, { id, controller: id, side: 'party' });
     if (!c.name) c.name = card.char.name || '未命名';
-    // 战役遭遇：交给服务器；DM 替玩家加的卡，控制权归卡主
-    if (ui.remote) { act({ op: 'dispatch', cmd: { type: 'addCombatant', combatant: c }, cardId, owner: card.owner?.id }); return; }
+    // 战役遭遇：交给服务器；若卡上标记了 dmControlled 或卡主就是当前 DM，则直接归 DM 控制（owner: null）
+    if (ui.remote) {
+      const dmBound = !!card.char.dmControlled || (ui.remote.role === 'dm' && (!card.owner || card.owner.id === ui.remote.me));
+      act({ op: 'dispatch', cmd: { type: 'addCombatant', combatant: c }, cardId, owner: dmBound ? null : card.owner?.id });
+      return;
+    }
     const r = ui.session!.dispatch({ type: 'addCombatant', combatant: c });
     if (r.status === 'done') ui = { ...ui, links: { ...ui.links, [id]: cardId } };
     after(r);

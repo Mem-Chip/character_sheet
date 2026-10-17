@@ -50,6 +50,8 @@ export interface MapState {
   strokes: Stroke[];
   /** 参与者 id → 格子坐标（占的左上角那一格） */
   tokens: Record<string, { x: number; y: number }>;
+  /** 参与者 id → 自定义立绘头像 dataURL */
+  avatars?: Record<string, string>;
   shapes: Shape[];
   trail: Trail | null;
 }
@@ -131,8 +133,12 @@ export function createEncounters(d: Deps) {
     return b;
   }
 
-  function ctxOf(e: { dice: Live['dice']; map: MapState; session?: Session; actingAs?: string | null; rules?: HouseRule[]; ownerRules?: Live['ownerRules'] }): EngineCtx {
-    const modeOf = (user: string) => e.dice[user] ?? e.dice['*'] ?? defaultDiceMode(user);
+  function ctxOf(e: { dice: Live['dice']; map: MapState; session?: Session; actingAs?: string | null; owners?: Record<string, number>; rules?: HouseRule[]; ownerRules?: Live['ownerRules'] }): EngineCtx {
+    const modeOf = (user: string) => {
+      if (e.dice[user]) return e.dice[user];
+      const who = e.actingAs === user || (e.owners && e.owners[user] == null) ? 'dm' : user;
+      return e.dice[who] ?? e.dice['*'] ?? defaultDiceMode(who);
+    };
     return {
       rules: bookOf(encounterLayers(e.rules, e.ownerRules)),
       diceFor: (user) => diceSourceFor(e.actingAs === user ? modeOf('dm') : modeOf(user)),
@@ -208,6 +214,11 @@ export function createEncounters(d: Deps) {
     e.seq++;
     for (const id of Object.keys(e.map.tokens)) {
       if (!e.session.state.combatants[id]) delete e.map.tokens[id];
+    }
+    if (e.map.avatars) {
+      for (const id of Object.keys(e.map.avatars)) {
+        if (!e.session.state.combatants[id]) delete e.map.avatars[id];
+      }
     }
     // 怪物、NPC 死了：在玩家那边藏起来（DM 那边变淡，可以再亮出来；玩家自己的角色与召唤物不藏）
     for (const c of Object.values(e.session.state.combatants)) {
@@ -407,6 +418,22 @@ export function createEncounters(d: Deps) {
         m.grid = { ...m.grid, ox: 0, oy: 0, cols: Math.ceil(m.bg.w / m.grid.size), rows: Math.ceil(m.bg.h / m.grid.size) };
         return null;
       }
+      case 'avatar': {
+        const id = String(b.id ?? '');
+        if (!e.session.state.combatants[id]) return '没有这个参与者';
+        if (!dm && ownerOf(e, id) !== u.id) return '只能修改自己角色的立绘';
+        m.avatars ??= {};
+        if (b.dataUrl == null || b.dataUrl === '') {
+          delete m.avatars[id];
+          return null;
+        }
+        const s = String(b.dataUrl);
+        if (!/^data:image\/(?:png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(s) || s.length > 512 * 1024) {
+          return '立绘图片格式不对或太大了';
+        }
+        m.avatars[id] = s;
+        return null;
+      }
       default: return '不认识的地图操作';
     }
   }
@@ -500,9 +527,10 @@ export function createEncounters(d: Deps) {
         applyMoves(e, r);
         if (r.status !== 'rejected' && cmd.type === 'addCombatant') {
           const ctl = cmd.combatant.controller ?? cmd.combatant.id;
-          // 玩家加的归自己；DM 替玩家加（带了卡主）就归卡主；DM 自己的怪不登记
-          const owner = role === 'player' ? u.id : typeof b.owner === 'number' ? b.owner : null;
-          if (owner != null) e.owners[ctl] = owner;
+          // 玩家加的归自己；DM 替玩家加（带了非 DM 的卡主）就归卡主；绑定 DM 或 DM 自己的卡/怪不登记，直接归 DM
+          const rawOwner = role === 'player' ? u.id : typeof b.owner === 'number' ? b.owner : null;
+          const ownerRole = rawOwner != null ? d.roleIn({ id: rawOwner, name: '' }, e.campaignId) : null;
+          if (rawOwner != null && ownerRole !== 'dm') e.owners[ctl] = rawOwner;
           if (typeof b.cardId === 'string') {
             e.cards[cmd.combatant.id] = b.cardId;
             // 卡主自己的资料库（自定义战斗数据）从进场就生效
@@ -512,6 +540,7 @@ export function createEncounters(d: Deps) {
         }
         if (r.status !== 'rejected' && cmd.type === 'removeCombatant') {
           delete e.map.tokens[cmd.id];
+          if (e.map.avatars) delete e.map.avatars[cmd.id];
           e.hidden = e.hidden.filter((x) => x !== cmd.id);
         }
       } else if (op === 'decide' || op === 'cancelPending') {
@@ -549,7 +578,7 @@ export function createEncounters(d: Deps) {
           e.reveal = Object.fromEntries(Object.entries(e.reveal).filter(([k]) => Number(k.split(':')[1]) < n));
         }
         else if (op === 'override') r = s.override(Number(b.txIndex), b.patch as OverridePatch);
-        else { e.owners = {}; e.cards = {}; e.hidden = []; e.chat = []; e.reveal = {}; e.autoHid = []; e.map.tokens = {}; e.map.trail = null; e.session = new Session(createEncounter(e.id), e.ctx); }
+        else { e.owners = {}; e.cards = {}; e.hidden = []; e.chat = []; e.reveal = {}; e.autoHid = []; e.map.tokens = {}; e.map.avatars = {}; e.map.trail = null; e.session = new Session(createEncounter(e.id), e.ctx); }
       } else if (op === 'setDice') {
         // 玩家只能改自己控制的；DM 什么都能改（包括默认 '*' 和怪物 'dm'）
         const who = String(b.user ?? '');
@@ -595,6 +624,12 @@ export function createEncounters(d: Deps) {
         const id = String(b.id ?? '');
         e.hidden = e.hidden.filter((x) => x !== id);
         if (b.hidden) e.hidden.push(id);
+      } else if (op === 'setOwner') {
+        if (role !== 'dm') return reject('只有 DM 能更改角色控制权');
+        const ctl = String(b.controller ?? '');
+        if (!ctl) throw d.fail(400, '缺 controller');
+        if (b.owner == null) delete e.owners[ctl];
+        else e.owners[ctl] = Number(b.owner);
       } else if (op === 'ping') {
         // 标点 / 分享测距：只广播，不存（客户端过一会儿淡出）
         const n = (v: unknown) => { const x = Math.round(Number(v) * 10) / 10; return Number.isFinite(x) && Math.abs(x) < 1e6 ? x : 0; };

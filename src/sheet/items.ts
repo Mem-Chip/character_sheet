@@ -284,6 +284,19 @@ export class OptionalFeatureRules {
     return out;
   }
 
+  meetsLevelPrereq(opt: Json, clsName: string, clsLevel: number, totalLvl = clsLevel): boolean {
+    const pre = opt?.prerequisite;
+    if (!Array.isArray(pre) || !pre.length) return true;
+    return pre.some((p: Json) => {
+      if (p?.level == null) return true;
+      if (typeof p.level === 'number') return totalLvl >= p.level;
+      const need = Number(p.level.level) || 0;
+      const wantCls = p.level.class?.name;
+      if (wantCls && clsName && wantCls !== clsName) return false;
+      return clsLevel >= need;
+    });
+  }
+
   options(choice: Json): Json[] {
     const all = this.env.store.data.optionalfeatures?.optionalfeature || [];
     if (choice.pool === 'whitelist') {
