@@ -1,0 +1,811 @@
+{
+ "batch": "batch-030",
+ "count": 20,
+ "entries": [
+  {
+   "key": "XPHB:术士:驯服浪涌:18",
+   "name": "驯服浪涌",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "施展术士法术（用法术位）后，可以用狂野魔法浪涌表中除最后一行外的任一效应代替掷骰；所选效应若含掷骰则必须掷骰。每次长休一次。引擎没有狂野魔法浪涌表的数据，整条由人处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少狂野魔法浪涌表格数据支持及自由挑选指定表项效应执行的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:术士:元素亲和:6",
+   "name": "元素亲和",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "选择强酸、寒冷、火焰、闪电或毒素之一：你获得该伤害类型的抗性；施展造成该类型伤害的法术时，你可以把魅力调整值加到那个法术的其中一次伤害掷骰中。已自动化：用「元素亲和」动作选定类型后抗性立刻生效（所选类型记在效应里，选过就不能再选），此后你的法术攻击命中、伤害类型与你所选一致时会问你要不要加魅力调整值。要人处理的：①只有带攻击检定的法术走引擎的「命中」窗口，需要豁免的法术（火球术这类）引擎没有能加伤害的时机（伤害窗口里不能加伤害、damageRolled 的修正只在带攻击的伤害包里生效），请在豁免伤害出来后手动加上魅力调整值（详情抽屉里改总值）；②原文限制是「那个法术的其中一次伤害掷骰」，引擎按「每回合一次」近似 —— 同一回合里先后施展了两个同类法术、想给第二个也加时请手动加；③魅力调整值不大于 0 时不问也不加。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "元素亲和",
+      "activation": "free",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "!self.hasEffect('元素亲和')",
+      "root": [
+       "choose",
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "元素亲和",
+      "statics": [
+       "resist"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": {
+       "manual": true
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少法术造成伤害或豁免伤害掷骰时的加伤触发窗口（addDamage仅支持attackHit）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:术士:掌控混沌:14",
+   "name": "掌控混沌",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "每次掷狂野魔法浪涌表可以掷两次并取任一结果。浪涌表由人掷骰，引擎没有掷表事件，整条不自动化。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少狂野魔法浪涌表掷骰事件及双骰选一的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:双持客",
+   "name": "双持客",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "【强化双持】你在自己的回合里执行了攻击动作、并用具有轻型词条的武器发动过一次攻击后，可以在同一回合里用一个附赠动作，再用另一把不具有两手持握（2H）词条的近战武器攻击一次；这次额外攻击的伤害不能加你的属性调整值（除非该调整值为负数）。已自动化：这是一个附赠动作的攻击动作——选目标、掷攻击检定、掷伤害都由引擎做（弹窗里按副手武器选伤害骰与伤害类型），伤害里没有属性调整值。要人处理：①引擎读不到「本回合用过轻型武器攻击」「副手是哪一把」，所以用之前会问一句，副手必须是另一把、单手近战，由你判断；②调整值为负数时请手动补上那点伤害。【快速拔刀】拔出或入鞘武器时可以同时处理两把——纯物件交互，不在战斗结算里，手动即可。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "offhand",
+      "name": "双持客：副手攻击",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "reach"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && ask('你本回合已经执行过攻击动作，并用具有轻型词条的武器攻击过一次了吗？')",
+      "root": [
+       "choose",
+       "attack"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少读取角色副手装备武器并动态生成不带属性加值的副手近战攻击动作的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:提夫林",
+   "name": "提夫林",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "这个种族的动态层没有可自动结算的部分：黑暗视觉 60 尺、邪魔遗赠 1 级好处的伤害抗性（毒素 / 黯蚀 / 火焰，看遗赠）与戏法（毒气喷涌 / 颤栗之触 / 火焰箭）都是恒定的东西，人物卡的静态层已经带上；异界存在的奇术是戏法，也不占次数。真正要人守的只有一件事：3 级和 5 级各学会一道遗赠法术，各自可以不消耗法术位施展一次、长休后重获 —— 引擎的施法动作不支持用种族自带的免费资源池顶替法术位，所以请照常选那道法术手动施放，然后在这个池子（不消耗法术位施展习得法术，1 次 / 长休）上扣一次；用相应环阶的法术位正常施展则不用扣。（引擎的池子上限只有 1：两道法术合计只能免一次，另一道请按法术位施放或手动扣一次池子，并自己记住哪一道还没用过。）",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "施法动作不支持改用种族自带的免费施法资源池（如tiefling_innate_spell）抵扣法术位",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:徒手战斗",
+   "name": "徒手战斗",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "徒手打击命中时可改为造成 1d6（未持握武器与盾牌时为 1d8）+ 力量调整值钝击伤害；回合开始时可对一个被你擒抱的生物造成 1d4 钝击伤害。引擎不支持替换伤害与选择擒抱目标，需人工处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "受擒状态缺少绑定施加者与承受者的归属关系，且缺少动态替换徒手打击基础伤害骰的能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:无敌攻势之恩惠",
+   "name": "无敌攻势之恩惠",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "无阻打击（攻击检定的 d20 掷出 20 时，额外造成等于所提升属性属性值的伤害，类型与本次攻击相同）已写，提升的属性（力量或敏捷）由人选择。摧坚破甲（钝击、挥砍、穿刺伤害无视抗性）引擎不支持忽略抗性，需人工处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "unstoppable-crit",
+      "label": "无敌攻势之恩惠：无阻打击",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "roll.natural == 20",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "choose"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少伤害结算时无视/穿透目标特定伤害类型抗性（ignore resistance）的能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:暗影步:6",
+   "name": "暗影步",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "完全身处微光光照或黑暗中时，可用附赠动作传送到 60 尺内另一处你可见的未占据空间（落点同样需在微光光照或黑暗中）；随后当前回合结束前的下一次近战攻击具有优势。光照与落点条件由人确认。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "暗影步",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && ask('你完全身处微光光照或黑暗中吗？')",
+      "root": [
+       "move",
+       "note",
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "暗影步",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 1,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "缺少地图环境光照等级（微光/黑暗）的自动检测与空间落点有效性校验",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:拨挡攻击:3",
+   "name": "拨挡攻击",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "当你被一次伤害中包含钝击、穿刺或挥砍伤害的攻击检定命中时，你可以用反应把这次攻击对你造成的伤害减少 1d10 + 你的敏捷调整值 + 你的武僧等级。已自动化：反应减伤（只减钝击 / 穿刺 / 挥砍那部分；混了火焰之类的攻击，别的类型不减 —— 原文是减「总值」，这点请按 DM 判断要不要手动补）；减伤结算完会问你「伤害被减到 0 了吗」，答是且还有功力时提示你去用「拨挡攻击：重新定向」。要人处理的：①引擎拿不到「这次伤害来自哪个攻击」，只按「不是豁免带来的伤害 + 伤害类型」判断，所以坠落、陷阱那种非攻击的钝击伤害也会问你要不要用 —— 那不是攻击，答否即可；②重新定向要另选一个生物（近战 5 尺内 / 远程 60 尺内、不在掩护后、你可见），引擎在反应的结算里没法让你另选目标，所以另做了免费动作「拨挡攻击：重新定向」：它花 1 点功力、问一次原攻击的伤害类型，让目标做敏捷豁免（DC 8 + 敏捷调整值 + 熟练加值），失败受 2 个武艺骰 + 敏捷调整值的同类型伤害。用法：反应把伤害减到 0 之后点它。掩护与视线引擎不管，由你在选目标时判断；失能 / 没有反应时引擎会自己拦。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "redirect",
+      "name": "拨挡攻击：重新定向",
+      "activation": "free",
+      "cost": [
+       {
+        "resource": "功力"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "target.id != self.id && canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.resource('功力') >= 1 && ask('拨挡攻击：刚刚用反应把一次攻击的伤害减到了 0，现在花 1 点功力重新定向吗？')",
+      "root": [
+       "choose",
+       "save"
+      ]
+     }
+    ],
+    "triggers": [
+     {
+      "id": "deflect",
+      "label": "拨挡攻击",
+      "on": "damageIncoming",
+      "role": "target",
+      "window": "before",
+      "when": "damage.save == '' && (damage.type == '钝击' || damage.type == '穿刺' || damage.type == '挥砍')",
+      "cost": [
+       {
+        "economy": "reaction"
+       }
+      ],
+      "modify": [
+       "reduceDamage"
+      ],
+      "do": [
+       "if"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "反应减伤至0后无法在同一次触发流程中发起重定向反击（迫使豁免并造成伤害）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:反射闪避:7",
+   "name": "反射闪避",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "受到允许敏捷豁免以只承受一半伤害的效应影响时：豁免成功不受伤害，豁免失败只承受一半伤害；失能状态下无效。引擎无法从效应的豁免结果里分辨伤害来源，也不能替换其伤害，需要由人处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少敏捷豁免成功受半伤改为0伤、失败受全伤改为半伤的伤害结算修改机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:返本还元:10",
+   "name": "返本还元",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "每次自己的回合结束时，可以移除魅惑、恐慌或中毒之一。不吃不喝不再提升力竭等级属于探索 / 休息时的规则，由人手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "clear",
+      "label": "返本还元：移除魅惑、恐慌或中毒",
+      "on": "turnEnded",
+      "role": "actor",
+      "window": "after",
+      "when": "self.has('魅惑') || self.has('恐慌') || self.has('中毒')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "choose"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "不吃不喝免除力竭等级属于野外生存与饮食追踪规则，引擎不管理饮食需求",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:飞檐走壁:9",
+   "name": "飞檐走壁",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "未着装任何护甲且未持用盾牌时，可在自己的回合中于垂直表面和液体表面上移动而不坠落。引擎不处理地形与攀爬移动，由人处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少在垂直墙面攀爬与液体表面移动的3D地形规则与防坠落支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:黑暗术:3",
+   "name": "黑暗术",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "消耗 1 点功力，无需任何法术成分施展黑暗术：在 60 尺内指定一点放下半径 15 尺的球状魔法黑暗区域，随专注 10 分钟存在、专注结束区域消失，生物进入时日志会提示它处在魔法黑暗中。你可以看穿以这个特性施展的黑暗区域（引擎不处理视线，请人工裁定）。法术持续期间，你每个回合开始时可以把区域移动到你 60 尺范围内的任意一处空间 —— 引擎不能移动已放下的区域，请手动删掉再在目标位置放一个。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "ki",
+      "name": "黑暗术（功力施展）",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "功力"
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 60,
+       "area": {
+        "shape": "sphere",
+        "radius": 15
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "note",
+       "zone"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少地图持续区域实体（可每回合移动源点）及自身透视魔法黑暗的交互能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:疾步如风:2",
+   "name": "疾步如风",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "跳跃距离翻倍：引擎没有跳跃距离，由人处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "dash",
+      "name": "疾步如风：疾走",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "economy"
+      ]
+     },
+     {
+      "id": "disengage-dash",
+      "name": "疾步如风：撤离与疾走",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "功力"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "applyEffect",
+       "economy",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "引擎没有跳跃距离属性及翻倍计算机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:流星步:11",
+   "name": "流星步",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "当你使用一个附赠动作而非疾步如风时，你可以在该附赠动作后立即使用疾步如风。引擎不知道你刚花掉的是哪个附赠动作、也没有「附赠动作之后」这个时机，所以把疾步如风的用法写成不要动作的三个免费条目：疾走、撤离、撤离与疾走（后者要花 1 点功力，和疾步如风一样）。用法：先点掉那个别的附赠动作，再点这里，提问里确认「刚用过一个不是疾步如风的附赠动作」。要人处理的：①引擎不会替你扣那个附赠动作（按钮本身不花动作），也不检查你是不是真用过一个别的附赠动作 —— 靠那句提问和你自己记得；②一回合里只用一次（原文是「立即使用疾步如风」，一个附赠动作换一次）；③跳跃距离翻倍那类与移动、地形有关的规则引擎不管。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "dash",
+      "name": "流星步：疾走",
+      "activation": "free",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && ask('流星步：你这个回合刚用过一个附赠动作，而且不是疾步如风吗？')",
+      "root": [
+       "economy"
+      ]
+     },
+     {
+      "id": "both",
+      "name": "流星步：撤离与疾走",
+      "activation": "free",
+      "cost": [
+       {
+        "resource": "功力"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && ask('流星步：你这个回合刚用过一个附赠动作，而且不是疾步如风吗？')",
+      "root": [
+       "applyEffect",
+       "economy"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少在执行附赠动作后触发免费使用另一项动作能力（免附赠动作与功力）的联动机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:敏捷攻击:1",
+   "name": "敏捷攻击",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "徒手打击与武僧武器（按近战武器近似判断）的攻击检定与伤害，改用敏捷替代力量的部分已自动化。擒抱 / 推撞的豁免 DC 改用敏捷属于那两个基础动作本身，引擎不能替换，需要人处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "基础动作（擒抱/推撞）的豁免DC不支持被角色的特性动态替换关键属性（力量改为敏捷）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:命极之手:17",
+   "name": "命极之手",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "魔法动作，消耗 5 点功力，触碰死亡不超过 24 小时的生物尸体：以 4d10 + 感知调整值的生命值复活，并移除目盲、耳聋、麻痹、中毒、震慑。每次长休一次。引擎是否会自动取消死亡状态不确定，必要时请手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "命极之手",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "功力",
+        "n": 5
+       },
+       {
+        "resource": "handOfUltimateMercy"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note",
+       "heal",
+       "removeEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少复活死亡生物实体（清除dead状态并赋予生命值）的执行节点",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:轻身坠:4",
+   "name": "轻身坠",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "要承受坠落伤害时，用反应把伤害减少 5 × 武僧等级。引擎没有专门标记坠落伤害，所以对钝击伤害用提问判断是不是坠落。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "slowfall",
+      "label": "轻身坠",
+      "on": "damageIncoming",
+      "role": "target",
+      "window": "before",
+      "when": "damage.type == '钝击' && ask('这是坠落伤害吗？')",
+      "cost": [
+       {
+        "economy": "reaction"
+       }
+      ],
+      "modify": [
+       "reduceDamage"
+      ],
+      "do": []
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "伤害来源缺少「坠落（falling）」标签，无法自动识别坠落伤害而必须通过ask弹窗询问",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:散打技巧:3",
+   "name": "散打技巧",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "每当你疾风连击中的一次攻击命中一个生物时，可以迫使它承受下列效应之一（可选，弹窗里选）：【慌神】直到它的下个回合开始不能使用借机攻击——引擎没有「禁止发动借机攻击」的标志，效应会在它被问到借机攻击之前提醒你选「不攻击」；【推离】力量豁免（原文没写 DC，按武艺豁免 DC = 8 + 感知调整值 + 熟练加值），失败则被推离 15 尺（有地图就真的移动棋子）；【失衡】敏捷豁免（同上），失败则陷入倒地。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "open-hand",
+      "label": "散打技巧（疾风连击命中）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.unarmed",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "choose"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "散打技巧：慌神",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "bearer",
+        "nth": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少借机攻击的自动化触发与通过状态禁止借机攻击的约束标志",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:渗透劲:17",
+   "name": "渗透劲",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "暗劲的持续时间（相当于武僧等级的天数）无法自动计时，需手动结束；同一时间只能有一名生物处于暗劲中，需人手动确认。结束暗劲时的体质豁免 DC 按功力豁免 DC 计算。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "渗透劲：结束暗劲",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "filter": "target.hasEffect('暗劲')"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save",
+       "removeEffect"
+      ]
+     },
+     {
+      "id": "attack",
+      "name": "渗透劲：以一次攻击结束暗劲",
+      "activation": "none",
+      "cost": [
+       {
+        "economy": "attack"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "filter": "target.hasEffect('暗劲')"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "if"
+      ]
+     },
+     {
+      "id": "release",
+      "name": "渗透劲：结束暗劲（不造成伤害）",
+      "activation": "free",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "filter": "target.hasEffect('暗劲')"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "removeEffect"
+      ]
+     }
+    ],
+    "triggers": [
+     {
+      "id": "strike",
+      "label": "渗透劲：打入暗劲",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.unarmed",
+      "cost": [
+       {
+        "resource": "功力",
+        "n": 4
+       }
+      ],
+      "modify": [],
+      "do": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "暗劲",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "manual": true
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "Duration不支持天数（days）计时且缺少全局只允许单个目标存在的唯一性约束",
+    "now": false
+   }
+  }
+ ]
+}

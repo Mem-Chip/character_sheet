@@ -1,0 +1,771 @@
+{
+ "batch": "batch-031",
+ "count": 20,
+ "entries": [
+  {
+   "key": "XPHB:武僧:升阶专注:10",
+   "name": "升阶专注",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "你的疾风连击、坚强防御、疾步如风获得增益。疾风连击的三次徒手打击已由基础条目 XPHB:武僧:疾风连击:2 按等级写入（次数 = 2 + min(1, floor(武僧等级 / 10))），此处不重复。剩下两条引擎没有挂接点（它不知道「你消耗功力使用了坚强防御 / 疾步如风」），需要人工处理：消耗功力使用坚强防御时，自己加上两个武艺骰的临时生命值；消耗功力使用疾步如风时，选一个 5 尺内体型大型或更小的自愿生物随你移动直至你回合结束，并让这次移动不引发借机攻击。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少携带5尺内自愿生物随同自身一起移动且免除借机攻击的协同移动机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:生杀予夺:11",
+   "name": "生杀予夺",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "次数等于感知调整值（最少一次），长休后全部恢复。自动部分：疾风连击命中后可免费使用一次夺命之手（不耗功力，走本条的次数）。需人工处理：疾风连击中把每一次徒手打击替换为予命之手且免费的部分（需在疾风连击条目里处理）；「每回合只能用一次夺命之手」无法与夺命之手（XPHB:武僧:夺命之手:3）联动，同一下命中若两者都选了，需人工注意。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "free-harm",
+      "label": "生杀予夺：免费夺命之手",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "attack.unarmed",
+      "cost": [
+       {
+        "resource": "life-death-gift"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "addDamage"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "缺少将攻击流程中的单次徒手打击动作动态替换为施加予命之手治疗的动作替换机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:生死之触:6",
+   "name": "生死之触",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "夺命之手：对生物使用夺命之手时，可使其中毒，直至你的下个回合结束。予命之手：使用予命之手时，可结束被治疗生物身上的目盲、耳聋、麻痹、中毒或震慑之一。这两点是对夺命之手（XPHB:武僧:夺命之手:3）和予命之手（XPHB:武僧:予命之手:3）动作的追加，需要挂在那两个条目上，目前手动处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少跨特性向已有动作（夺命之手/予命之手）动态追加状态施加与状态解除效果的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:四象遁术:11",
+   "name": "四象遁术",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "元素同调特性激活期间，获得相当于你速度的飞行速度与游泳速度。（引擎没有飞行 / 游泳速度的静态类型，人工处理。）",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "StaticMod和效应缺少赋予飞行速度与游泳速度的静态类型支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:四象神通:17",
+   "name": "四象神通",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "元素同调期间：伤害抗性（强酸/寒冷/火焰/闪电/雷鸣之一，每回合开始可改，自动）；破灭奔行（疾步如风时速度 +20 尺已算入静态；进入生物 5 尺范围时造成武艺骰伤害，每个生物每回合一次，进入距离的判断需人工）；真力注拳（每回合一次，徒手打击命中时额外造成一个武艺骰的同类型伤害，自动）。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "elemental-choice",
+      "label": "四象神通：选择伤害抗性",
+      "on": "turnStarted",
+      "role": "actor",
+      "window": "after",
+      "when": "turn.isMine && self.hasEffect('元素同调')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "choose"
+      ]
+     },
+     {
+      "id": "true-force",
+      "label": "四象神通：真力注拳（每回合一次）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "attack.unarmed && self.hasEffect('元素同调')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "addDamage"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少棋盘移动经过生物5尺范围内时触发伤害及每生物每回合一次的判定机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:无影步:11",
+   "name": "无影步",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "使用暗影步时可消耗 1 点功力，移除开始与结束时对微光光照或黑暗的要求；此外，作为同一个附赠动作的一部分，传送后可立即进行一次徒手打击。本条目是消耗功力的版本（普通暗影步见「暗影步」条目）。传送后的徒手打击需人工选目标并结算（命中 = 熟练 + max(力量, 敏捷)，伤害 = 武艺骰 + max(力量, 敏捷) 钝击）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "ki",
+      "name": "无影步：暗影步（消耗 1 点功力）",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "功力"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "move",
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "暗影步",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 1,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "附赠动作传送后无法自动无缝衔接一次附赠动作内含的徒手打击动作",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:武艺骰:1",
+   "name": "武艺骰",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "可以选择用武艺骰代替徒手打击或武僧武器的伤害。徒手打击的武艺骰已在 XPHB:武僧:武艺:1 的徒手打击伤害里自动计算；武僧武器上选择用武艺骰还是武器本身的伤害骰，由人处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "武器系统缺少在持用武僧武器时自动比较并取武器骰与武艺骰较大者的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:幽影斗篷:17",
+   "name": "幽影斗篷",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "完全身处微光或黑暗中时，以魔法动作消耗 3 点功力，周身环绕幽影 1 分钟，直至失能或在明亮光照中结束回合。获得隐形；可如通过困难地形般穿过已占据空间（回合结束仍在其中则排出到最近的未占据空间，需人工处理）；疾风连击不再消耗功力（本条目提供这一版本）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "幽影斗篷",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "功力",
+        "n": 3
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "!self.hasEffect('幽影斗篷') && ask('你完全身处微光光照或黑暗中吗？')",
+      "root": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "flurry",
+      "name": "幽影斗篷：疾风连击（不耗功力）",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "reach"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && self.hasEffect('幽影斗篷')",
+      "root": [
+       "repeat"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "幽影斗篷",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1,
+       "endsOn": [
+        {
+         "event": "effectApplied",
+         "when": "event.bearer == self.id && self.has('失能')"
+        },
+        {
+         "event": "turnEnded",
+         "when": "turn.isMine && ask('你的回合结束时是否处于明亮光照中？')"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少移动时穿过敌对生物所占空间并在回合结束时挤出到最近未占空格的网格移动支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:予命之手:3",
+   "name": "予命之手",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "魔法动作：消耗 1 点功力接触一个生物（可以是自己），恢复其一枚武艺骰 + 感知调整值的生命值。疾风连击中把一次徒手打击改为予命之手且不额外消耗功力的部分，需在疾风连击条目里处理（人工）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "予命之手",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "功力"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "heal"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "缺少在疾风连击流程中将一次徒手打击替换为予命之手且不额外消耗功力的动作替换机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:元素同调:3",
+   "name": "元素同调",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "回合开始时可消耗 1 点功力，让元素能量浸润己身，持续 10 分钟或直至失能。触及 +10 尺（徒手打击的触及，需人工处理）。元素注拳：徒手打击命中时可改用强酸/寒冷/火焰/闪电/雷鸣伤害（伤害类型需人工改）；以此类伤害命中时可迫使目标进行力量豁免（DC 原文未写，暂按功力 DC：8 + 感知 + 熟练，请核对），失败则推离或拉近 10 尺。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "infuse",
+      "label": "元素同调（回合开始：消耗 1 点功力）",
+      "on": "turnStarted",
+      "role": "actor",
+      "window": "after",
+      "when": "turn.isMine && !self.hasEffect('元素同调')",
+      "cost": [
+       {
+        "resource": "功力"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "元素同调",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": {
+       "minutes": 10,
+       "endsOn": [
+        {
+         "event": "effectApplied",
+         "when": "event.bearer == self.id && self.has('失能')"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "缺少攻击命中时动态选择替换伤害类型的机制，且StaticMod缺少徒手打击触及加值（reach bonus）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:武僧:真力注拳:6",
+   "name": "真力注拳",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "使用徒手打击造成伤害时，可以选择造成力场伤害或原伤害类型。徒手打击的伤害类型在 XPHB:武僧:武艺:1 中写为钝击，改选力场需要由人处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "伤害结算时缺少将徒手打击伤害类型由钝击切换为力场伤害的交互选择机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:凶蛮打手",
+   "name": "凶蛮打手",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "每回合一次，当你用武器命中目标时，可以掷两次这把武器的伤害骰，并自选其中一次应用在目标上。引擎没有「重掷伤害骰」这个操作（窗口里的 reroll 只认 d20），所以不自动化：命中后请自己再掷一遍这次攻击的武器伤害骰，在「事后裁定」里把这次伤害改成你选的那一组；每回合一次也请自己记。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少在武器伤害掷骰时掷两次取较高者（重掷伤害骰）的modify操作支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:延效法术",
+   "name": "延效法术",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "超魔法：施展持续时间为 1 分钟或更长的法术时，消耗 1 术法点使其持续时间翻倍，最多 24 小时。若该法术需要专注，施法者维持专注的豁免具有优势。引擎不改写持续时间，由人处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "超魔法缺少在施法时动态将法术持续时间翻倍（至多24小时）的改写机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:演员",
+   "name": "演员",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "伪装的优势已写：仅当你伪装成某个个体、为使人相信而进行的欺瞒或表演魅力检定，由人确认后给优势。拟声的 DC（8 + 魅力调整值 + 熟练加值）以及听者须通过洞悉检定才能识破，引擎无法让听者掷骰，需要人手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "拟声与个体伪装对听众的洞悉对抗检定属于社交探索叙事机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:妖精触碰",
+   "name": "妖精触碰",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "妖精魔法中的迷踪步已写：可以无需法术位施展（附赠动作，传送 30 尺），消耗资源池 fey-touched-spells。注意：原文是「每道法术各一次」（迷踪步与所选的那道预言或惑控一环法术各一次），而人物卡的池子上限为 1，两者不一致，需人核对。所选的那道一环法术可以无需法术位施展，但它的内容由人选定，无法在此写出，需人手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "misty",
+      "name": "妖精魔法：迷踪步",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "fey-touched-spells"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "move"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "缺少在角色构筑时自选一道一环法术并动态生成免法术位施法动作的能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:野蛮人:报偿:10",
+   "name": "报偿",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "受到伤害后，如果伤害来源在你 5 尺内，可以用反应对它发动一次近战攻击（用武器或徒手打击）。已自动化：反应挂在受伤之后，目标自动确定为伤害你的那个生物（aim: 'actor'），不用自己选；徒手打击那一支连攻击检定和伤害（1 + 力量调整值，狂暴伤害加值照常生效）都由引擎结算。要人处理：用武器反击 —— 引擎没法从数据里调出武器行，请选「近战武器攻击（手动）」，再在武器行手动发起这次近战攻击（反应已经在这里付过了，别再付）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "报偿",
+      "activation": "reaction",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "reach"
+      },
+      "trigger": {
+       "on": "damageTaken",
+       "role": "target",
+       "window": "after",
+       "aim": "actor",
+       "when": "damage.amount > 0 && attacker != null && attacker.id != self.id && within(self, attacker, 5)"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "source",
+    "need": "在承受伤害的反应动作中无法自动获取伤害来源并直接调用装备的近战武器发动反击",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:野蛮人:持久狂暴:15",
+   "name": "持久狂暴",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "投掷先攻时可以重获所有已用的狂暴次数（长休前只能一次）。狂暴持续 10 分钟：每个回合开始时自动延长。尚未实现的部分：持久狂暴只在昏迷或穿重甲时提前结束，而狂暴效应本身在失能时就会结束，这一点需要人处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "regain",
+      "label": "持久狂暴：先攻时重获全部狂暴次数",
+      "on": "initiativeRolled",
+      "role": "actor",
+      "window": "after",
+      "when": "self.resource('狂暴') < classTable('狂暴次数')",
+      "cost": [
+       {
+        "resource": "持久狂暴"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "resource"
+      ]
+     },
+     {
+      "id": "extend",
+      "label": "持久狂暴：自动延长狂暴",
+      "on": "turnStarted",
+      "role": "actor",
+      "window": "after",
+      "when": "self.hasEffect('狂暴')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "extendEffect"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "狂暴（Rage）效应的提前结束条件无法被高阶特性动态修改（将失能结束改为仅昏迷或着装重甲才结束）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:野蛮人:根击千钧:10",
+   "name": "根击千钧",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "回合内武器触及增加 10 尺：引擎没有武器触及修正，需人手动处理。推离与失衡的额外激活已写，靠询问确认该武器是重型或多用武器。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "push",
+      "label": "根击千钧：推离",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "turn.isMine && attack.weapon && attack.melee && attack.mastery != '推离' && target.size != '巨型' && target.size != '超巨型' && ask('根击千钧：这把武器是重型或多用武器吗？')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "move"
+      ]
+     },
+     {
+      "id": "topple",
+      "label": "根击千钧：失衡",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "turn.isMine && attack.weapon && attack.melee && attack.mastery != '失衡' && ask('根击千钧：这把武器是重型或多用武器吗？')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "save"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少临时增加武器攻击触及距离（reach +10ft）的修正能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:野蛮人:灵树枝杈:6",
+   "name": "灵树枝杈",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "自动部分：狂暴期间，你可见且在你 30 尺内的生物回合开始时，以反应令其力量豁免（DC 8 + 力量调整值 + 熟练），失败则被传送，之后可令其速度降为 0 至当前回合结束。传送的落点（你 5 尺内你可见的未占据空间，或最近的那个）由人在地图上摆放。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "灵树枝杈",
+      "activation": "reaction",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30,
+       "filter": "target.id != self.id"
+      },
+      "trigger": {
+       "on": "turnStarted",
+       "role": "any",
+       "window": "after",
+       "when": "!turn.isMine && within(self, turn.of, 30) && canSee(self, turn.of)"
+      },
+      "concentration": null,
+      "requires": "self.hasEffect('狂暴')",
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "灵树枝杈：定住",
+      "statics": [
+       "speedSet"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "move节点只提示文本，缺少将敌人强制传送到自身5尺内未占据空间的地图网格执行支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:野蛮人:莽驰:7",
+   "name": "莽驰",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "进入狂暴的附赠动作的一部分：可以移动至多一半速度。引擎无法把它挂在「进入狂暴」那个动作上，所以做成一个免费动作，只应在刚进入狂暴时使用（由人判断），每回合至多一次。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "莽驰",
+      "activation": "free",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && self.hasEffect('狂暴') && !self.hasEffect('莽驰')",
+      "root": [
+       "economy",
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "莽驰",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少在激活狂暴动作的同时作为动作一部分执行移动（至多半速）的动作复合执行机制",
+    "now": false
+   }
+  }
+ ]
+}

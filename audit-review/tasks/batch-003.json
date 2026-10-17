@@ -1,0 +1,615 @@
+{
+ "batch": "batch-003",
+ "count": 20,
+ "entries": [
+  {
+   "key": "XPHB:condition:震慑",
+   "name": "震慑",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "你陷入失能状态。力量与敏捷豁免自动失败。以你为目标的攻击检定具有优势。",
+   "data": {
+    "automation": "?",
+    "actions": [],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "震慑",
+      "statics": [],
+      "flags": null,
+      "rollMods": 2,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:condition:昏迷",
+   "name": "昏迷",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "你陷入失能与倒地状态，掉落手持物；此状态结束时倒地不会随之结束。速度为 0。以你为目标的攻击检定具有优势。力量与敏捷豁免自动失败。5 尺内命中你的攻击即重击。你无法感知周遭。",
+   "data": {
+    "automation": "?",
+    "actions": [],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "昏迷",
+      "statics": [
+       "speedSet"
+      ],
+      "flags": {
+       "cannot": [
+        "perceive"
+       ]
+      },
+      "rollMods": 3,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少生物陷入昏迷状态时自动掉落/丢弃手持物品的装备交互接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:action:疾走",
+   "name": "疾走",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "",
+   "data": {
+    "automation": "?",
+    "actions": [
+     {
+      "id": "use",
+      "name": "疾走",
+      "activation": "action",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "economy"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:action:撤离",
+   "name": "撤离",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "",
+   "data": {
+    "automation": "?",
+    "actions": [
+     {
+      "id": "use",
+      "name": "撤离",
+      "activation": "action",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "撤离",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:action:回避",
+   "name": "回避",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "",
+   "data": {
+    "automation": "?",
+    "actions": [
+     {
+      "id": "use",
+      "name": "回避",
+      "activation": "action",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "回避",
+      "statics": [],
+      "flags": null,
+      "rollMods": 2,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "bearer",
+        "nth": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:action:协助",
+   "name": "协助",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "",
+   "data": {
+    "automation": "?",
+    "actions": [
+     {
+      "id": "use",
+      "name": "协助",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "协助攻击",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "source",
+        "nth": 1
+       },
+       "endsOn": [
+        {
+         "event": "d20Rolled",
+         "when": "event.kind == 'attack' && event.target == self.id && source != null && combatant(event.roller).isAllyOf(source)"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "缺少让玩家在技能/工具列表中选择一项并赋予下次检定优势的交互支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:action:起立",
+   "name": "起立",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "消耗你速度一半数值（向下取整）的移动力起立，并由此终止倒地。速度为 0 时无法起立。",
+   "data": {
+    "automation": "?",
+    "actions": [
+     {
+      "id": "use",
+      "name": "起立",
+      "activation": "free",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.has('倒地') && self.speed > 0",
+      "root": [
+       "economy",
+       "removeEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:action:擒抱",
+   "name": "擒抱",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "徒手打击的选项：目标进行力量或敏捷豁免（由目标选择），DC = 8 + 你的力量调整值 + 熟练加值；失败则陷入受擒状态。需要一只空手，目标体型至多比你大一级。",
+   "data": {
+    "automation": "?",
+    "actions": [
+     {
+      "id": "use",
+      "name": "擒抱",
+      "activation": "none",
+      "cost": [
+       {
+        "economy": "attack"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "reach"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:action:推撞",
+   "name": "推撞",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "徒手打击的选项：目标进行力量或敏捷豁免，DC = 8 + 你的力量调整值 + 熟练加值；失败则你将其推离 5 尺或令其倒地。",
+   "data": {
+    "automation": "?",
+    "actions": [
+     {
+      "id": "use",
+      "name": "推撞",
+      "activation": "none",
+      "cost": [
+       {
+        "economy": "attack"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "reach"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:action:结束擒抱",
+   "name": "结束擒抱",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "",
+   "data": {
+    "automation": "?",
+    "actions": [
+     {
+      "id": "use",
+      "name": "结束擒抱",
+      "activation": "action",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.has('受擒')",
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:action:终止专注",
+   "name": "终止专注",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "",
+   "data": {
+    "automation": "?",
+    "actions": [
+     {
+      "id": "use",
+      "name": "终止专注",
+      "activation": "free",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating",
+      "root": [
+       "removeEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:action:借机攻击",
+   "name": "借机攻击",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "你可见的生物离开你的触及范围时，你可以执行反应，用武器或徒手打击对其发动一次近战攻击。（在地图上走时引擎会问；撤离了的不会被打。不在地图上的，用武器攻击并选择「作为反应」发起。）",
+   "data": {
+    "automation": "?",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少敌方生物离开触及范围（移动离开格子）时的反应触发时机（窗口）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:action:躲藏",
+   "name": "躲藏",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "需要处于重度遮蔽或至少四分之三掩护之后、且不在敌人视线内（由 DM 判断）。进行一次 DC 15 的敏捷（隐匿）检定，成功则获得隐形状态，直到被发现、发出声响、攻击或施法（由 DM 移除）。",
+   "data": {
+    "automation": "?",
+    "actions": [
+     {
+      "id": "use",
+      "name": "躲藏",
+      "activation": "action",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "check"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "缺少地图视线、遮蔽程度与掩护状态的自动检测判定机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:action:搜索",
+   "name": "搜索",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "manual",
+   "text": "进行一次感知检定（洞悉 / 医药 / 察觉 / 求生）。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "属于开放式感知/探索检定，目标与DC由DM裁定，无需战斗自动化",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:action:研究",
+   "name": "研究",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "manual",
+   "text": "进行一次智力检定（奥秘 / 历史 / 调查 / 自然 / 宗教）。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "属于开放式智力/知识检定，由DM根据场景信息交互裁定，无需战斗自动化",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:action:影响",
+   "name": "影响",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "manual",
+   "text": "进行一次魅力或感知检定以改变他人的态度。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "属于开放式社交态度改变检定，由DM裁定NPC态度与DC，无需战斗自动化",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:action:操作",
+   "name": "操作",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "manual",
+   "text": "使用一件非魔法物件。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "场景非魔法物件（如开门、拉拉杆）缺乏通用实体与交互规范",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:action:魔法",
+   "name": "魔法",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "manual",
+   "text": "施展一个法术、使用一件魔法物品或一项魔法特性。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "规则总括性动作定义，具体法术与魔法特性已有独立动作，无需独立自动化",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:action:预备",
+   "name": "预备",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "manual",
+   "text": "准备在某个可感知的触发条件发生时，用反应执行一个动作。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少准备动作并在满足自定义触发条件时用反应执行的延迟触发机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:mastery:擦掠",
+   "name": "擦掠",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "以这把武器的攻击检定失手时，仍对目标造成等同于该攻击所用属性调整值的伤害（类型与武器一致）。",
+   "data": {
+    "automation": "?",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "graze",
+      "label": "擦掠",
+      "on": "attackMissed",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.mastery == '擦掠' && abilityMod(attack.ability) > 0",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "damage"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  }
+ ]
+}

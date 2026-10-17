@@ -1,0 +1,487 @@
+{
+ "batch": "batch-059",
+ "count": 7,
+ "entries": [
+  {
+   "key": "XPHB:spell:咒唤妖精",
+   "name": "咒唤妖精",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 60 尺内可见未占据空间召唤中型妖精精魂，显现时可对精魂 5 尺内一名生物进行近战法术攻击，命中造成 3d12 + 施法属性调整值的心灵伤害（升环每高一环 +1d12），且目标陷入恐慌直至你的下个回合开始（你与精魂均为恐惧源）。后续回合可以附赠动作传送精魂至多 30 尺并重复该攻击。精魂位置、传送与恐惧源距离限制需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "咒唤妖精",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 6
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "attack"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "咒唤妖精：传送并攻击",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating && self.hasEffect('咒唤妖精') && turn.isMine",
+      "root": [
+       "attack"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "咒唤妖精",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     },
+     {
+      "name": "咒唤妖精：恐慌",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "source",
+        "nth": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:咒唤元素",
+   "name": "咒唤元素",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 60 尺内一处未占据空间咒唤出大型虚幻精魂，施放时选定元素类别、决定伤害类型（气/闪电、土/雷鸣、火/火焰、水/寒冷），精魂占 10 尺立方（地图上的区域就是它）。每当一个你能看见的生物进入精魂的空间、或在精魂 5 尺内开始其回合时，如果精魂没有束缚着生物，你可以迫使它做敏捷豁免（引擎每次都会先问你；「精魂正束缚着另一个生物」请人工判断）：失败受 (slot.level + 3)d8 对应类型伤害并陷入束缚直到法术结束；被束缚的生物在自己每个回合开始时重复这次豁免，失败再受 (slot.level - 1)d8 伤害，成功则摆脱。升环时伤害各 +1d8。「在精魂 5 尺内但不在精魂空间里开始回合」的生物区域覆盖不到，请用「咒唤元素：元素攫抓」手动结算；束缚按 10 分钟到期近似处理，法术提前结束时请手动移除。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "咒唤元素",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 60,
+       "area": {
+        "shape": "cube",
+        "size": 10
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "choose",
+       "applyEffect",
+       "zone",
+       "note"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "咒唤元素：元素攫抓",
+      "activation": "free",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('咒唤元素（激活）')",
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "咒唤元素",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     },
+     {
+      "name": "元素束缚",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": {
+       "minutes": 10
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少地图持续精魂区域（进入空间或5尺内开始回合触发豁免束缚与伤害）及自由选择元素伤害类型的支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:昼明术",
+   "name": "昼明术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "manual",
+   "text": "持续 1 小时（无需专注）。在 60 尺内一点扩散 60 尺半径球状明亮日光并额外散发 60 尺微光，或附于未被着装或携带的物件上散发 60 尺光环。法术区域与 3 环或更低环阶的造暗法术重叠时会解除那些法术。引擎没有光照层，也拿不到别的法术留下的黑暗区域，光照范围与解除造暗法术都请你在地图上手动处理（区域只作为标记放在地图上）。",
+   "data": {
+    "automation": "manual",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "昼明术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 60,
+       "area": {
+        "shape": "sphere",
+        "radius": 60
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note",
+       "zone"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "地图缺少明亮日光与微光照明系统，以及与3环及以下魔法黑暗区域重叠时自动解除黑暗的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:蛛网术",
+   "name": "蛛网术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 小时。在 60 尺内指定一点召唤 20 尺立方蛛网。一回合中首次进入蛛网、或在蛛网中开始其回合的生物进行敏捷豁免，失败陷入束缚状态直到离开蛛网或挣脱（引擎按区域自动结算）。施法当时已经在区域里的生物不会立刻豁免，要等它进入、或在自己的回合开始时才豁免（原文如此）。「离开蛛网就解除束缚」引擎不追踪，需人工解除；被束缚者用动作进行力量（运动）检定挣脱、蛛网坍塌（未固定时在你的下一回合开始时终止）以及易燃燃烧都需人工处理；区域内的困难地形与轻度遮蔽同样需人工处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "蛛网术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 60,
+       "area": {
+        "shape": "cube",
+        "size": 20
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "zone",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "蛛网束缚",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少地图持续立方蛛网区域（困难地形、轻度遮蔽、进入或回合开始豁免束缚）以及易燃燃烧的环境交互机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:蛛行术",
+   "name": "蛛行术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "触碰至多 (slot.level - 1) 个自愿生物，使其在至多 1 小时内（专注）获得等同于步行速度的攀爬速度，且无需双手即可在垂直表面或天花板上倒挂移动。攀爬速度与特殊移动需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "蛛行术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": "slot.level - 1",
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "蛛行术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少赋予攀爬速度（climbSpeed）以及在垂直表面和天花板倒挂移动的特殊移动模式支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:注目术",
+   "name": "注目术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "指定 60 尺内可见生物进行感知豁免，若你或同伴正与其战斗则自动成功。豁免失败其感知（察觉）检定与被动察觉值获得 -10 减值，持续至法术终止（专注至多 1 分钟）。战斗中自动成功与被动察觉需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "注目术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "注目分心",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少被动察觉值（passive perception）的属性修正机制以及检定目标是否处于战斗状态的上下文判定",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:灼热金属",
+   "name": "灼热金属",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。指定 60 尺内一件你能看见的人造金属物件（金属武器、金属中甲 / 重甲之类），引擎让你选与物件有物理接触的生物来结算 —— 好几个生物同时接触同一个物件时，请逐个再用一次。施放时：接触者受到 (施法环阶)d8 点火焰伤害（2 环 2d8，每高一环 +1d8），若因此受伤则须进行体质豁免，失败且没能丢下物件者，直到你的下一回合开始为止攻击检定与属性检定具有劣势。之后每个回合可以用附赠动作「灼热金属：再次灼烧」重新造成这次伤害与豁免（同一回合刚施放就用附赠动作再烧一次原文不允许，引擎不拦）。手动部分：① 物件与接触它的生物要自己判断；② 「只要能丢下就必须丢下」引擎不管物品，请自己处理掉落；③ 好几名生物同时接触时另开一次。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "灼热金属",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "damage",
+       "save"
+      ]
+     },
+     {
+      "id": "burn",
+      "name": "灼热金属：再次灼烧",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('灼热金属：炽热物件')",
+      "root": [
+       "damage",
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "灼热金属：炽热物件",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     },
+     {
+      "name": "灼热灼伤",
+      "statics": [],
+      "flags": null,
+      "rollMods": 2,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "source",
+        "nth": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少绑定金属物件/装备、迫使丢弃物品以及后续回合以附赠动作再次造成伤害并继承施法环阶的机制",
+    "now": false
+   }
+  }
+ ]
+}

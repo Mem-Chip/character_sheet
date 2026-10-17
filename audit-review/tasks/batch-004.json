@@ -1,0 +1,791 @@
+{
+ "batch": "batch-004",
+ "count": 20,
+ "entries": [
+  {
+   "key": "XPHB:mastery:削弱",
+   "name": "削弱",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "命中一个生物时，直到你的下一回合开始前，该生物的下一次攻击检定具有劣势。",
+   "data": {
+    "automation": "?",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "sap",
+      "label": "削弱",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.mastery == '削弱'",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "削弱",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "source",
+        "nth": 1
+       },
+       "endsOn": [
+        {
+         "event": "d20Rolled",
+         "when": "event.kind == 'attack' && event.roller == self.id"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:mastery:缓速",
+   "name": "缓速",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "命中并造成伤害时，可以将其速度减少 10 尺直到你的下一回合开始；同类效果不超过 10 尺。",
+   "data": {
+    "automation": "?",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "slow",
+      "label": "缓速",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.mastery == '缓速' && damage.amount > 0",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "缓速",
+      "statics": [
+       "speed"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "source",
+        "nth": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:mastery:失衡",
+   "name": "失衡",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "命中时可以迫使目标进行体质豁免（DC = 8 + 攻击所用属性调整值 + 熟练加值），失败则倒地。",
+   "data": {
+    "automation": "?",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "topple",
+      "label": "失衡",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.mastery == '失衡'",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "save"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:mastery:侵扰",
+   "name": "侵扰",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "命中并造成伤害时，直到你的下一回合结束前，你对该生物的下一次攻击检定具有优势。",
+   "data": {
+    "automation": "?",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "vex",
+      "label": "侵扰",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.mastery == '侵扰' && damage.amount > 0",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "侵扰",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 1
+       },
+       "endsOn": [
+        {
+         "event": "d20Rolled",
+         "when": "event.kind == 'attack' && event.roller == self.id && event.target == effect.state.target"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:mastery:推离",
+   "name": "推离",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "?",
+   "text": "命中时，如果目标体型不超过大型，可以将其直线推离至多 10 尺。",
+   "data": {
+    "automation": "?",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "push",
+      "label": "推离",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.mastery == '推离' && target.size != '巨型' && target.size != '超巨型'",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "move"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:mastery:横扫",
+   "name": "横扫",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "manual",
+   "text": "近战命中时，可以对第一个目标 5 尺内、同样在你触及范围内的另一生物再进行一次近战攻击；命中时伤害不加属性调整值（除非为负）。每回合一次。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少近战命中后在触发器中选择5尺内另一副目标并发动额外攻击的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:mastery:迅击",
+   "name": "迅击",
+   "kind": "feature",
+   "from": "data/rules-2024.json",
+   "automation": "manual",
+   "text": "轻型属性的额外攻击可以作为攻击动作的一部分进行，而不是附赠动作。每回合一次。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少将轻武器副手额外攻击融入攻击动作内（不消耗附赠动作）的规则支持",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:奥法殡葬师",
+   "name": "奥法殡葬师",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "习得死灵学派戏法属于人物卡静态层授予。【源死之识】进行智力（历史）或感知（医药）检定时加 1d4。【晓亡之理】执行协助动作稳定一名 0 生命值生物的伤势时，获得英雄激励（需手动记录）。长休恢复 1 次。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少执行协助动作稳定伤势时的触发挂钩，以及英雄激励资源的自动获得",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:奥法超负荷",
+   "name": "奥法超负荷",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "习得火焰箭属于人物卡静态层授予。能量如潮：施展塑能法术并造成伤害时，可将熟练加值加入其中一枚伤害骰。法术攻击命中时已自动化；需要豁免的法术引擎无法在伤害窗口直接加值，需手动处理。长休恢复 1 次。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "energy-surge",
+      "label": "奥法超负荷：能量如潮",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "attack.spell && ask('这次伤害来自塑能学派法术吗？')",
+      "cost": [
+       {
+        "resource": "energy-surge"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "addDamage"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "需要豁免的法术在造成伤害前缺少施法者侧的触发时机（如 damageRolled/damageDealing 窗口）以注入额外伤害",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:奥法护佑者",
+   "name": "奥法护佑者",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "习得抵抗术戏法（静态）。能以附赠动作施展抵抗术戏法，次数等同于熟练加值，长休恢复。【庇护之援】当你执行协助动作辅助盟友的属性检定时，那名盟友获得等同于你熟练加值的临时生命值（需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "奥法护佑者：附赠施展抵抗术",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "arcane-warder"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少执行协助动作辅助盟友时的触发窗口（actionUsed: Help）以对受协助目标赋予临时生命值",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:奥法艺术家",
+   "name": "奥法艺术家",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "习得戏法属于人物卡静态层授予。激励魔法：施展幻术法术后，可选 30 尺内一名能看见你的盟友获得英雄激励。长休恢复 1 次。英雄激励需在人物卡上手动记录。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "奥法艺术家：激励魔法",
+      "activation": "free",
+      "cost": [
+       {
+        "resource": "inspiring-magic"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30,
+       "filter": "target.isAllyOf(self) && canSee(target, self)"
+      },
+      "trigger": {
+       "on": "spellCast",
+       "role": "actor",
+       "window": "after",
+       "when": "ask('刚施展的是幻术学派法术吗？')"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少英雄激励（Heroic Inspiration）资源的获得、追踪与向指定盟友授予的接口",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:爆裂弹",
+   "name": "爆裂弹",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "远程武器攻击命中生物并造成伤害时，消耗一次奥术射击使用次数（短休恢复）：目标额外受到两枚奥术射击骰的力场伤害；目标周围 10 尺范围内的每名生物受到同等力场伤害需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "bursting",
+      "label": "爆裂弹",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "attack.ranged && attack.weapon",
+      "cost": [
+       {
+        "resource": "arcaneShot"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "addDamage",
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "触发器 do 中缺少以事件目标为中心选取范围并对周围生物造成溅射伤害的能力",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:变化专家",
+   "name": "变化专家",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "额外法术属于人物卡静态层授予。魔法增幅：在你的回合内，当你使用法术位施展变化学派法术时，以 free 动作触发，速度提升等于所消耗法术位环阶五倍的尺数，持续至该回合结束。速度提升与战棋移动由玩家手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "魔法增幅",
+      "activation": "free",
+      "cost": [],
+      "targeting": null,
+      "trigger": {
+       "on": "spellCast",
+       "role": "actor",
+       "window": "after",
+       "when": "turn.isMine && ask('刚才是用法术位施展变化学派法术吗？')"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "remember",
+    "need": "spellCast 触发事件载荷缺少所消耗法术位的环阶信息，无法据此计算并赋予相应的速度加值",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:缠绕弹",
+   "name": "缠绕弹",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "远程武器攻击命中生物时，消耗一次奥术射击使用次数（短休恢复）：目标额外受到一枚奥术射击骰的挥砍伤害，且必须通过力量豁免，否则陷入束缚状态至多 1 分钟。生物花费动作进行力量（运动）检定挣脱或再次使用时解除需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "grasping",
+      "label": "缠绕弹",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "attack.ranged && attack.weapon",
+      "cost": [
+       {
+        "resource": "arcaneShot"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "addDamage",
+       "save"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "荆棘缠绕",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "状态效应（EffectTemplate）缺少由承受者或其他生物花费动作进行属性检定以提前挣脱/结束效应的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:穿梭弹",
+   "name": "穿梭弹",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "替换一次远程武器攻击（每回合一次，须用具有弹药属性的武器），消耗一次奥术射击使用次数（短休恢复）：不用攻击检定，以你为源点射出 1 尺宽、30 尺长的线状区域（可以穿过固体障碍，所以无视掩护），区域内每名生物做敏捷豁免（DC = 8 + 熟练加值 + 智力调整值），失败受到「这次攻击命中时的伤害 + 两枚奥术射击骰」的穿刺伤害，成功受半伤。已自动化：在地图上选线状范围、逐目标掷敏捷豁免、伤害与半伤（两枚奥术射击骰按战士等级 3/10/15/18 级为 2d6/2d8/2d10/2d12，已写进骰子表达式）。要人处理：引擎读不到你手上那把武器的伤害骰，这里按「1d8 + 敏捷调整值」（长弓）写死 —— 用短弓 / 手弩（1d6）、重弩（1d10）、投掷武器（力量加值）或其他武器时，结算后手动把伤害改对。「每回合一次」引擎不记账，由你记得本回合是否已经用过奥术射击。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "穿梭弹",
+      "activation": "none",
+      "cost": [
+       {
+        "economy": "attack"
+       },
+       {
+        "resource": "arcaneShot"
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "area": {
+        "shape": "line",
+        "length": 30,
+        "width": 1
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "动作根节点中无法动态读取当前装备远程武器的伤害骰（需写死 1d8）",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:法师:变化宗师:14",
+   "name": "变化宗师",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "携带着变化师之石时，以一个魔法动作耗尽石头里的变化魔力，从四项增益里选一项（两个按钮结算的都是这个魔法动作本身）。【万灵秘药】已自动化：触碰一名生物，它恢复等于生命值上限一半（向下取整）的生命值，中毒与石化立刻终止；它身上的魔法疫病与诅咒（包括与诅咒魔法物品的同调）引擎没有对应的东西，请手动移除。【返老还童】已自动化：触碰一名自愿生物，力竭等级降为 0；外表永久年轻 3d10 岁，请自己骰一下记在卡上。【起死回生】无需法术位与材料成分施展死者复活 —— 法术与材料都在别处，请手动施展。【高等转化】触碰一件非魔法物件 10 分钟后换成另一件**价值等同或更低**的非魔法物件（体积不超过 10 尺立方、或 8 个相连的 5 尺立方） —— 纯探索内容，手动处理。石头：用过之后崩解为灰尘，引擎不追踪物品，请自己在物品栏里划掉变化师之石；如果这次魔法动作里消耗了一个七环或更高环阶的法术位，石头不崩解 —— 用下面那个带「七环法术位」的按钮，它会照常扣掉法术位（效果与另一个按钮相同）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "变化宗师",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     },
+     {
+      "id": "use-slot",
+      "name": "变化宗师（消耗七环法术位，石头不崩解）",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 7
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少物品状态追踪（变化师之石崩解）、高环法术位动态可选消耗以防止崩解及解除诅咒机制",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:法师:变形生物:10",
+   "name": "变形生物",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "始终准备变形术（静态）。每日可无需法术位施展一次变形术，长休恢复。施展变形术指定自身为目标时，可调整该法术（长休恢复1次）：保留记忆、沟通能力、智力/感知/魅力属性值、熟练项、职业特性和专长，且处于变形期间可如常施展无昂贵或消耗材料成分的变化法术。变形后属性保留与施法由玩家手动处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少变形/变身机制（替换野兽属性卡并有选择性地保留施法能力、心智属性与职业特性）",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:法师:分裂惑控:6",
+   "name": "分裂惑控",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "当你消耗法术位施展一道惑控法术时，若该法术能通过升环施法额外指定一个生物为目标，你可以使该法术的有效环阶提升一环。可用次数等于智力调整值，长休恢复。额外的目标选择与法术结算由玩家手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "分裂惑控",
+      "activation": "free",
+      "cost": [
+       {
+        "resource": "split-enchantment"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [
+     {
+      "id": "split-enchantment",
+      "label": "分裂惑控：提升有效环阶",
+      "on": "spellCast",
+      "role": "actor",
+      "window": "after",
+      "when": "ask('刚才是消耗法术位施展了可通过升环额外指定目标的惑控法术吗？')",
+      "cost": [
+       {
+        "resource": "split-enchantment"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "施法时缺少拦截并增加目标数量或提升有效法术位环阶的修改接口",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:法师:坟冢之力:6",
+   "name": "坟冢之力",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "在持有自身法术书期间：【思坟之韧】当你使用奥术回想时，你的力竭等级（若有）降低1级；【朽坏之威】你的法师法术和法师特性的伤害无视对暗蚀伤害的抗性。力竭等级与无视伤害抗性由玩家手动处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少攻击与法术造成伤害时无视特定伤害类型抗性（无视暗蚀抗性）的结算机制",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:法师:裂分召唤:14",
+   "name": "裂分召唤",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "用法术位施展一道会召唤「数据卡写在法术描述里的灵魄」的咒法法术（例如异怪召唤术）时，可以修改该法术，改为召唤两个生物而非一个：同种类、用同一张数据卡、分别出现在施法距离内你选的不同未占据空间，但每个的生命值上限与当前生命值都减半。引擎的召唤节点是在法术结算里按数据生成召唤物的，不能替别的法术改数量、更不能把生成出来的召唤物生命值减半，所以这一条只提示人类处理（手动召唤第二只、手动把两只的生命值上限与当前生命值改成一半）。能用的是次数：每长休一次；也可以用一枚五环或更高环阶的法术位（无需动作）重置使用权，这部分已自动化。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "reset",
+      "name": "裂分召唤：用法术位重置",
+      "activation": "free",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.resource('split-summons') == 0",
+      "root": [
+       "resource"
+      ]
+     }
+    ],
+    "triggers": [
+     {
+      "id": "split-summons",
+      "label": "裂分召唤：本该召两个灵魄",
+      "on": "spellCast",
+      "role": "actor",
+      "window": "after",
+      "when": "ask('刚才是用法术位施展一道会召唤「数据卡写在法术描述里的灵魄」的咒法法术吗？')",
+      "cost": [
+       {
+        "resource": "split-summons"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少召唤生物入场、复制实体数据卡及动态调整其生命值上限的机制",
+    "now": false
+   }
+  }
+ ]
+}

@@ -1,0 +1,857 @@
+{
+ "batch": "batch-043",
+ "count": 20,
+ "entries": [
+  {
+   "key": "XDMG:item:鸟鸣法杖",
+   "name": "鸟鸣法杖",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "持握此法杖期间，你可以执行魔法动作来消耗1充能，使其创造出周围120尺范围内都能听到的鸟鸣声之一。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "鸟鸣法杖：发出鸟鸣",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "物品充能:鸟鸣法杖",
+        "n": 1
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XDMG:item:攀爬药水",
+   "name": "攀爬药水",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "以附赠动作饮用此药水，获得等同于自身速度的攀爬速度，持续 1 小时。在此期间，为攀爬进行的力量（运动）检定具有优势。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "饮用攀爬药水",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "物品:攀爬药水"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "攀爬药水",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": {
+       "hours": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XDMG:item:喷嚏粉",
+   "name": "喷嚏粉",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "用操作动作将粉末洒向空中，使你及30尺光环内的生物进行DC 15体质豁免（构装、元素、泥怪、植物和亡灵自动成功，需手动处理）。失败陷入失能与窒息，其回合结束时可重复豁免以终止。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "撒布喷嚏粉",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "area",
+       "range": "self",
+       "area": {
+        "shape": "emanation",
+        "radius": 30
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save",
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "喷嚏与窒息",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "saveEnds": {
+        "ability": "con",
+        "dc": 15,
+        "at": "turnEnd"
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XDMG:item:辟矢夺箭手套",
+   "name": "辟矢夺箭手套",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "当你被远程或投掷武器命中且至少空着一只手时，可以用反应减少 1d10 + 敏捷调整值的伤害。若伤害减少到 0，可选择抓住抛掷物（手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "deflect",
+      "label": "辟矢夺箭",
+      "on": "damageIncoming",
+      "role": "target",
+      "window": "before",
+      "when": null,
+      "cost": [
+       {
+        "economy": "reaction"
+       }
+      ],
+      "modify": [
+       "reduceDamage"
+      ],
+      "do": [
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XDMG:item:祈神蜡烛",
+   "name": "祈神蜡烛",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "以一个魔法动作点燃蜡烛（至多燃烧 4 小时，可提前吹灭）。在 30 尺微光光照内进行的 D20 检定具有优势，牧师和德鲁伊施展准备的 1 环法术无需消耗法术位。首次点亮时可用其施展一次异界之门并立刻摧毁蜡烛。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "祈神蜡烛：点燃",
+      "activation": "action",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "gate",
+      "name": "祈神蜡烛：异界之门",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "物品:祈神蜡烛"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XDMG:item:骑士之盾",
+   "name": "骑士之盾",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "持握这面盾牌期间AC获得额外+2加值（人物卡已处理）。\n【强力猛击】：执行攻击动作时可用这面盾牌进行一次攻击（5尺近战），命中造成 2d6+2+力量调整值 的力场伤害，并可将生物推离至多10尺；若体型不大于自身还可将其击倒陷入倒地状态。\n【庇护力场】：以反应制造以自身为源点的5尺庇护力场，维持专注至多1分钟，触发的攻击或区域效应无法影响内部，且内外阻隔任何进出与伤害。次日黎明前无法再次使用。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "bash",
+      "name": "强力猛击",
+      "activation": "none",
+      "cost": [],
+      "targeting": {
+       "type": "target",
+       "range": 5
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "attack"
+      ]
+     },
+     {
+      "id": "shelter",
+      "name": "庇护力场",
+      "activation": "reaction",
+      "cost": [
+       {
+        "resource": "物品次数:骑士之盾"
+       }
+      ],
+      "targeting": null,
+      "trigger": {
+       "on": [
+        "attackHit",
+        "saveForced"
+       ],
+       "role": "any"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": [
+     {
+      "id": "物品次数:骑士之盾",
+      "name": "骑士之盾",
+      "formula": 1,
+      "recovery": "long"
+     }
+    ]
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XDMG:item:气化形体药水",
+   "name": "气化形体药水",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "饮下后获得法术气化形体的效应，持续 1 小时（无需专注）或以附赠动作提前结束。转化为云雾形体：拥有钝击/穿刺/挥砍抗性，免疫倒地，力量/敏捷/体质豁免具有优势；不能攻击、施法、言语或操作物件；仅有 10 尺悬浮飞行速度；穿过狭隙与占据已有生物空间需手动处理；生命值降至 0 时结束。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "饮用气化形体药水",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "物品:气化形体药水"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "dismiss",
+      "name": "解除气化形体",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "removeEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "气化形体",
+      "statics": [
+       "resist",
+       "conditionImmune",
+       "speedSet"
+      ],
+      "flags": {
+       "cannot": [
+        "speak",
+        "castSpells"
+       ]
+      },
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": {
+       "hours": 1,
+       "endsOn": [
+        {
+         "event": "reducedTo0"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XDMG:item:强酸抗性药水",
+   "name": "强酸抗性药水",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "?",
+   "text": "",
+   "data": {
+    "automation": "?",
+    "actions": [
+     {
+      "id": "use",
+      "name": "饮用强酸抗性药水",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "物品:强酸抗性药水"
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XDMG:item:强效治疗药水",
+   "name": "强效治疗药水",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "?",
+   "text": "",
+   "data": {
+    "automation": "?",
+    "actions": [
+     {
+      "id": "use",
+      "name": "饮用强效治疗药水",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "物品:强效治疗药水"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "heal"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XDMG:item:锐锋之油",
+   "name": "锐锋之油",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "消耗品。花费1分钟将油涂抹在一把非魔法挥砍/穿刺近战武器或20发弹药上，使其变为+3武器或+3弹药，持续1小时。武器属性加值需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "涂抹锐锋之油",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "物品:锐锋之油"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XDMG:item:三愿戒指",
+   "name": "三愿戒指",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "这枚戒指具有 3 充能。着装此戒指期间，你可以消耗 1 充能从中施展祈愿术。充能耗尽时，此戒指变为非魔法物品。总充能消耗与祈愿术效果需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "三愿戒指：祈愿术",
+      "activation": "action",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XDMG:item:山丘巨人之力药水",
+   "name": "山丘巨人之力药水",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "饮用后 1 小时内力量属性值变为 21（若原本大于等于 21 则无效）。临时力量属性值改变需手动调整人物卡。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "饮用山丘巨人之力药水",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "物品:山丘巨人之力药水"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "山丘巨人之力",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "hours": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XDMG:item:闪电标枪",
+   "name": "闪电标枪",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "用该武器攻击命中时可转为闪电伤害（需人手动调整）。投掷时可用动作化为闪电束，形成 120 尺长、5 尺宽的线状区域，除你之外的生物进行 DC 13 敏捷豁免，失败受 4d6 闪电伤害，成功减半；造成伤害后标枪立即飞回手中。每日黎明前限用一次。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "lightningBolt",
+      "name": "闪电束",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "物品次数:闪电标枪"
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": "self",
+       "area": {
+        "shape": "line",
+        "length": 120,
+        "width": 5
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": [
+     {
+      "id": "物品次数:闪电标枪",
+      "name": "闪电标枪",
+      "formula": 1,
+      "recovery": "long"
+     }
+    ]
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XDMG:item:闪电抗性药水",
+   "name": "闪电抗性药水",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "?",
+   "text": "",
+   "data": {
+    "automation": "?",
+    "actions": [
+     {
+      "id": "use",
+      "name": "饮用闪电抗性药水",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "物品:闪电抗性药水"
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XDMG:item:圣洁之书",
+   "name": "圣洁之书",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "共鸣并花费80小时研读后获得增益：属性值提升已在人物卡处理；免疫魅惑和恐慌，获得心灵伤害抗性；施法时消耗的法术位视为高一阶（需手动调整）；附赠动作开启或解除神光（10尺明亮光照+10尺微光），神光开启时游说检定优势，10尺内恶魔与亡灵对你攻击检定劣势。恶魔、亡灵或下层位面神仆阅读受24d6光耀伤害（不可减少或避免）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "halo",
+      "name": "圣洁之书：神光",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XDMG:item:石巨人之力药水",
+   "name": "石巨人之力药水",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "饮用后 1 小时内力量属性值变为 23（若原本大于等于 23 则无效）。临时力量属性值改变需手动调整人物卡。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "饮用石巨人之力药水",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "物品:石巨人之力药水"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "石巨人之力",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "hours": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XDMG:item:适应项链",
+   "name": "适应项链",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "能在任何环境中正常呼吸。为避免或结束中毒状态的豁免具有优势（由人确认触发）。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XDMG:item:收妖瓶",
+   "name": "收妖瓶",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "持握收妖瓶期间，可以魔法动作指定 60 尺内一名可见的来自其他位面的生物进行 DC 17 感知豁免，失败则被困入瓶中（曾被困过的生物豁免有优势）。也可以魔法动作拔掉瓶塞释放瓶中生物，该生物服从你的命令持续 1 小时。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "收妖瓶：困入瓶中",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     },
+     {
+      "id": "release",
+      "name": "收妖瓶：释放生物",
+      "activation": "action",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XDMG:item:守护卷轴（不死生物）",
+   "name": "守护卷轴（不死生物）",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "以一个动作阅读卷轴，在自身周围创造一个5尺的发散隐形屏障，持续5分钟。不死生物生物无法进入屏障，也无法对屏障内的任何事物造成影响。屏障空间阻挡需手动裁决。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "使用守护卷轴（不死生物）",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "物品:守护卷轴（不死生物）"
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "守护屏障（不死生物）",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 5
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XDMG:item:守护卷轴（怪兽）",
+   "name": "守护卷轴（怪兽）",
+   "kind": "item",
+   "from": "data/dyn/ai/items.json",
+   "automation": "partial",
+   "text": "以一个动作阅读卷轴，在自身周围创造一个5尺的发散隐形屏障，持续5分钟。怪兽生物无法进入屏障，也无法对屏障内的任何事物造成影响。屏障空间阻挡需手动裁决。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "使用守护卷轴（怪兽）",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "物品:守护卷轴（怪兽）"
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "守护屏障（怪兽）",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 5
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  }
+ ]
+}

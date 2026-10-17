@@ -1,0 +1,1084 @@
+{
+ "batch": "batch-014",
+ "count": 20,
+ "entries": [
+  {
+   "key": "TCE:武僧:命极之手:17",
+   "name": "命极之手",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个动作消耗 5 点功力触碰一个死亡不超过 24 小时的生物尸体，使其起死回生并恢复 4d10 + 感知调整值点生命值，并移除其死前所具有的目盲、耳聋、麻痹、中毒和震慑状态。长休恢复。手动在界面上复活目标并处理相应状态。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "命极之手",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "hand-of-ultimate-mercy"
+       },
+       {
+        "resource": "功力",
+        "n": 5
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "heal",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "目标起死回生机制（清除 dead 状态恢复生命）及批量移除特定状态",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:武僧:生杀予夺:11",
+   "name": "生杀予夺",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "使用疾风连击时，每一次徒手打击都可以替换为使用予命之手（无需额外消耗功力）。另外，在疾风连击中发动的徒手打击命中时，可使用夺命之手而无需额外消耗功力（每回合限一次）。疾风连击中替换予命之手需手动处理；与普通夺命之手共用每回合一次限制需人工注意。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "free-harm",
+      "label": "生杀予夺：免费夺命之手",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "attack.unarmed && ask('这次徒手打击来自疾风连击吗？')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "addDamage"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "疾风连击中单次攻击子节点替换为予命之手且不耗功力，或附赠触发夺命之手",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:武僧:生死之触:6",
+   "name": "生死之触",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "使用予命之手时，还可结束目标身上的一种疾病或以下状态之一：目盲、耳聋、麻痹、中毒、震慑。使用夺命之手时，可使目标陷入中毒状态，持续到你的下一回合结束。由于此特性追加于予命之手和夺命之手，状态的施加与移除由人手动处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "予命之手额外结束目标目盲/耳聋/麻痹/中毒/震慑之一，以及夺命之手追加中毒状态",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:武僧:星我觉醒:17",
+   "name": "星我觉醒",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个附赠动作花费 5 点功力，同时召唤星我之臂、星我之容与星我之躯并使它们觉醒，持续 10 分钟；陷入失能或死亡时提前结束。已自动化：觉醒期间你的 AC 获得 +2（精魂护甲）；星我之臂与星我之容的效应同时挂上（星我之臂的效应里只有「力量检定用感知代替」，力场伤害的徒手打击与触及 +5 没有实现，需要时手动处理）；星之连击做成了一个不占动作的「星之连击（+1 次攻击）」按钮——本回合用攻击动作时点它，会多出一次攻击机会（每回合至多一次），三次攻击都要用星我之臂这一点由你自己遵守。【要人处理】①17 级这次召唤不带「召唤星我之臂」时那一下对周围 10 尺内所选生物的 2 颗武艺骰力场伤害（敏捷豁免），需要的话用「召唤星我之臂」条目或手动结算。②星我之躯的拨挡能量、猛力之臂在它自己的条目里，已经按「身上有星我觉醒」认这个状态。③星之连击给的是一次攻击次数，若本回合先用别的武器打了，它会被那次攻击用掉。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "星我觉醒",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "功力",
+        "n": 5
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "note"
+      ]
+     },
+     {
+      "id": "barrage",
+      "name": "星之连击（+1 次攻击）",
+      "activation": "free",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && self.hasEffect('星我觉醒') && !self.hasEffect('星之连击：已用')",
+      "root": [
+       "economy",
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "星我觉醒",
+      "statics": [
+       "ac"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 10,
+       "endsOn": [
+        {
+         "event": "effectApplied",
+         "when": "event.bearer == self.id && self.has('失能')"
+        },
+        {
+         "event": "died",
+         "when": "event.id == self.id"
+        }
+       ]
+      }
+     },
+     {
+      "name": "星之连击：已用",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "条件性增加攻击动作内的额外攻击次数并限定使用的武器/天生武器种类",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:武僧:星我之臂:3",
+   "name": "星我之臂",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "附赠动作消耗 1 点功力召唤星我之臂，对周围 10 尺内由你选择的生物造成 2 颗武艺骰力场伤害（敏捷豁免）。持续 10 分钟，失能或死亡提前结束。期间力量检定/豁免可用感知调整值代替；徒手打击触及加 5 尺，可使用感知调整值且造成力场伤害。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "召唤星我之臂",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "功力"
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": "self",
+       "area": {
+        "shape": "sphere",
+        "radius": 10
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "forEach",
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "星我之臂",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": {
+       "minutes": 10,
+       "endsOn": [
+        {
+         "event": "effectApplied",
+         "when": "event.bearer == self.id && self.has('失能')"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "动态修改徒手打击的触及范围、攻击属性与伤害类型",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:武僧:星我之容:6",
+   "name": "星我之容",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个附赠动作花费 1 点功力召唤星我之容（亦可作为召唤星我之臂的附赠动作一部分同时召唤），持续 10 分钟，失能或死亡提前消失。期间获得 120 尺魔法/非魔法黑暗视觉，感知（洞悉）和魅力（威吓）检定具有优势，并可定向传音或放大声音至 600 尺。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "召唤星我之容",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "功力"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "星我之容",
+      "statics": [],
+      "flags": null,
+      "rollMods": 2,
+      "triggers": 0,
+      "duration": {
+       "minutes": 10,
+       "endsOn": [
+        {
+         "event": "effectApplied",
+         "when": "event.bearer == self.id && self.has('失能')"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "赋予 120 尺穿透魔法黑暗的黑暗视觉",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:武僧:予命之手:3",
+   "name": "予命之手",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个动作消耗 1 点功力接触一个生物，为其恢复一枚武艺骰 + 感知调整值点生命值。使用疾风连击时可将其中一次徒手打击替换为此特性（无需额外消耗功力），疾风连击中的替换由人手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "予命之手",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "功力"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "heal"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "允许在疾风连击的单次攻击替换为使用予命之手",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:野蛮人:感染之怒:10",
+   "name": "感染之怒",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "你在狂暴中用天生武器命中一个敌人时（会问你这次命中的是不是天生武器），可以消耗一次「感染之怒」次数，迫使目标做一次感知豁免（DC = 8 + 你的体质调整值 + 熟练加值）。豁免失败时由你选择：①目标受到 2d12 心灵伤害（已自动化）；②目标用反应对一个由你选择、且你能看见的生物发动一次近战攻击。【要人处理】第 ② 项引擎不能让一个生物「代你」发动攻击：选这一项之后会给出提示，请手动让那个目标用反应打一次（发起攻击时选「作为反应」），并自己核对目标的选择合法（你选的、你能看见的）。次数上限等于你的熟练加值，长休恢复。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "infectious-fury",
+      "label": "感染之怒：诅咒目标",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "self.hasEffect('狂暴') && attack.melee && ask('这次命中的武器是天生武器（咬击 / 爪击 / 尾击之类）吗？')",
+      "cost": [
+       {
+        "resource": "infectious-fury"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "save"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": [
+     {
+      "id": "infectious-fury",
+      "name": "感染之怒",
+      "formula": "pb",
+      "recovery": "long"
+     }
+    ]
+   },
+   "old_audit": {
+    "gap": "source",
+    "need": "迫使敌方生物消耗其反应对指定目标发动近战武器攻击",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:野蛮人:狂野浪潮:3",
+   "name": "狂野浪潮",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "进入狂暴时，投掷 1d8 决定狂野魔法效应（豁免 DC = 8 + 熟练加值 + 体质调整值）。表中包含传送、精魂爆炸、武器变质为力场投掷武器、被击中时力场反击、自身与盟友 AC+1、15 尺敌方困难地形、附赠动作目盲射线等。引擎没有「掷表并按结果分支」的机制，效应也涉及空间网格传送、地形改变与武器属性的动态改写，整条由人手动掷表并结算对应效果。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "随机抽取 1d8 狂野魔法结果并自动执行包含传送、区域困难地形、武器附魔等复合效应",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:野蛮人:无常反冲:10",
+   "name": "无常反冲",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "狂暴期间，每当你受到伤害或豁免失败后，均可以立刻使用反应重骰狂野魔法表，产生新的魔法效应替代当前效应。由于狂野魔法表由人手动处理，本反应及重骰效应由玩家手动执行。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "豁免失败或受伤害后反应重新掷表并替换当前激活的狂野魔法效应",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:野蛮人:野兽之形:3",
+   "name": "野兽之形",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "进入狂暴时长出一种天生武器，直到狂暴结束：啃咬 1d8 穿刺、爪击 1d6 挥砍、尾击 1d8 穿刺（触及 10 尺），都被视为简易近战武器、用力量。三个攻击条目只点你本次狂暴选的那一个（引擎不会隐藏另外两个）；命中伤害已含力量调整值，狂暴伤害由「狂暴」效应自动加，不要重复写。爪击：用爪击进行攻击检定时自动多给 1 次攻击机会（每回合一次，会问你用不用）。啃咬：用啃咬命中且生命值低于一半时恢复熟练加值点生命（每回合一次，会问）。尾击：被 10 尺内你能看见的生物的攻击命中时，可以用反应把 d8 加到 AC 上 —— 引擎没有「掷一颗骰当作数值」的写法，用这条反应时请自己掷 d8，把点数填进弹窗。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "bite",
+      "name": "野兽之形：啃咬",
+      "activation": "none",
+      "cost": [
+       {
+        "economy": "attack"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 5
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('狂暴')",
+      "root": [
+       "attack"
+      ]
+     },
+     {
+      "id": "claw",
+      "name": "野兽之形：爪击",
+      "activation": "none",
+      "cost": [
+       {
+        "economy": "attack"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 5
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('狂暴')",
+      "root": [
+       "attack"
+      ]
+     },
+     {
+      "id": "tail",
+      "name": "野兽之形：尾击",
+      "activation": "none",
+      "cost": [
+       {
+        "economy": "attack"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 10
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('狂暴')",
+      "root": [
+       "attack"
+      ]
+     },
+     {
+      "id": "tail-guard",
+      "name": "野兽之形：尾击防御",
+      "activation": "reaction",
+      "cost": [],
+      "targeting": null,
+      "trigger": {
+       "on": "attackHit",
+       "role": "target",
+       "window": "before",
+       "when": "self.hasEffect('狂暴') && attacker != null && within(self, attacker, 10) && canSee(self, attacker) && ask('本次狂暴你选的是野兽之形·尾击吗？')"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "number",
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [
+     {
+      "id": "bite-heal",
+      "label": "野兽之形：啃咬回血",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "self.hasEffect('狂暴') && attack.item == '野兽之形·啃咬' && self.hp * 2 < self.hpMax",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "heal"
+      ]
+     },
+     {
+      "id": "claw-extra",
+      "label": "野兽之形：追加爪击",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "after",
+      "when": "turn.isMine && self.hasEffect('狂暴') && roll.kind == 'attack' && attack.item == '野兽之形·爪击'",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "economy",
+       "note"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "尾击防御",
+      "statics": [
+       "ac"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "rounds": 1,
+       "endsOn": [
+        {
+         "event": "attackMissed"
+        },
+        {
+         "event": "damageIncoming"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "动态向角色装备行添加天生武器并绑定啃咬回血/尾击反应加 AC 触发器",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:野蛮人:振奋魔法:6",
+   "name": "振奋魔法",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个动作触碰一个生物（可为自己），提供以下增益之一：①10分钟内，该生物攻击检定或属性检定可额外加 1d3；②掷 1d3，目标恢复一个环数小于等于掷骰结果的法术位（目标自选环阶，该生物直到长休前无法再次享受恢复法术位，需手动调整法术位）。长休恢复，次数等于熟练加值。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "振奋魔法",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "bolstering-magic"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "振奋检定",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "掷骰判定并为目标恢复指定环阶法术位，及记录目标长休前不可重复享受该恢复",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:吟游诗人:不竭鼓舞:6",
+   "name": "不竭鼓舞",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "当一个生物使用了你的诗人激励骰，将结果加入到攻击检定、属性检定或豁免检定中，但仍然失败了，他可以保留这个诗人激励骰而不消耗（由玩家手动保留该生物身上的诗人激励效果）。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "检定结算后若仍失败则保留/返还盟友身上的诗人激励骰",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:吟游诗人:传播鼓舞:14",
+   "name": "传播鼓舞",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "当 60 尺内一个生物使用你的诗人激励骰增益攻击、属性检定或豁免成功后，你可以用反应鼓励另一个 60 尺内能听见你的生物（除你外），使其获得一个诗人激励骰而不消耗你的诗人激励次数。可用次数等于魅力调整值（至少 1 次），长休恢复。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "传播鼓舞",
+      "activation": "reaction",
+      "cost": [
+       {
+        "resource": "infectious-inspiration"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "target.id != self.id"
+      },
+      "trigger": {
+       "on": "d20Rolled",
+       "role": "any",
+       "window": "after",
+       "when": "ask('60尺内有生物使用你的诗人激励骰增益检定成功了吗？')"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "诗人激励",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "监听盟友消耗激励骰且检定成功的事件窗口，以反应将激励骰扩散给另一生物",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:吟游诗人:活化表演:6",
+   "name": "活化表演",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个动作活化 30 尺内你可见的、未被着装或携带的大型或更小非魔法物品，持续 1 小时，使用舞空物品的数据：大型（或更小）构装生物，AC 16，HP 10 + 5 × 你的吟游诗人等级，速度 30 尺、飞行 30 尺（悬浮），力量 18 / 敏捷 14 / 体质 16 / 智力 4 / 感知 10 / 魅力 6，力场动能猛击（法术攻击，触及 5 尺，1d10 + 熟练加值 力场伤害），免疫毒素与心灵伤害，免疫魅惑、力竭、中毒、恐慌。它与你共用先攻、在你回合后立即行动，可以自行移动和执行反应，但你只有用附赠动作命令它，它才会执行动作（引擎让召唤物自己行动，这一条请用「舞空物品：命令行动」记录）；使用诗人激励时，这道命令可以作为同一个附赠动作的一部分发出。同一时间只能有一件：再次使用会替换掉旧的（引擎已自动替换）。它生命值降为 0 时直接消失；1 小时后失活、你死亡时失活、以及「不变形态」「难抑舞动」两项特性需要人手动处理。长休前只能使用一次，可以消耗一个 3 环或更高法术位重置使用次数。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "活化表演",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "animating-performance"
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": 30
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "summon"
+      ]
+     },
+     {
+      "id": "command",
+      "name": "舞空物品：命令行动",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "reset",
+      "name": "活化表演：消耗法术位重置",
+      "activation": "free",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.resource('animating-performance') == 0",
+      "root": [
+       "resource"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": [
+     {
+      "id": "animating-performance",
+      "name": "活化表演",
+      "formula": 1,
+      "recovery": "long"
+     }
+    ]
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "活化非生物物件为随从生物入场并协同先攻与附赠动作指挥",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:吟游诗人:潜能微尘:3",
+   "name": "潜能微尘",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "给予诗人激励时创造一团潜能微尘。当承受者将该激励骰用于属性检定、攻击检定或豁免检定时产生额外效果（属性检定可重掷激励骰取其一；攻击检定使目标及5尺内生物过体质豁免受雷鸣伤害；豁免检定获得激励骰加魅力调整值的临时生命值）。分支效果由人工判定结算。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "潜能微尘：赋予激励",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "诗人激励"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "target.id != self.id"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "潜能微尘",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "诗人激励骰在属性检定/攻击/豁免使用时附加微尘次级联动效应",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:吟游诗人:造物表演:3",
+   "name": "造物表演",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个动作在 10 尺内未被占据空间创造一个非魔法物品，价值不超等级×20gp，初始为中型或更小（6级大型，14级巨型），持续等同于熟练加值小时。每长休免费使用一次；之后可消耗 2 环或更高法术位重置。物品详情与尺寸限制由人手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "造物表演",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "performance-of-creation"
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": 10
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "reset",
+      "name": "造物表演：消耗法术位重置",
+      "activation": "free",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.resource('performance-of-creation') == 0",
+      "root": [
+       "resource"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "凭空创造指定尺寸与价值上限的非魔法物品并在时长后消失",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:游荡者:灵能面纱:13",
+   "name": "灵能面纱",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个动作，你连同你所穿或携带的任何东西可以魔法性地隐形至多1小时。若你主动解除隐形（无需动作）、发动攻击、或迫使一个生物进行豁免检定，此隐形状态将会提前结束。长休恢复1次免费使用；没有使用次数时可消耗一枚灵能骰使用。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "灵能面纱",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "灵能面纱"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "use-psionic",
+      "name": "灵能面纱（消耗灵能骰）",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "灵能力量"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "灵能面纱",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "隐形效应在主动攻击或迫使豁免时自动解除（endsOn 复合判定）",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:游荡者:撕裂心智:17",
+   "name": "撕裂心智",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "当你使用心灵之刃对一个生物造成偷袭攻击伤害时，可迫使其进行感知豁免（DC = 8 + 熟练加值 + 敏捷调整值）。豁免失败则陷入震慑 1 分钟，目标每回合结束时可重复豁免。长休恢复 1 次免费使用；没有使用次数时可消耗三枚灵能骰使用。是否为心灵之刃造成的偷袭伤害由人判断。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "rend-mind",
+      "label": "撕裂心智",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "ask('此次攻击是使用心灵之刃且造成了偷袭攻击伤害吗？')",
+      "cost": [
+       {
+        "resource": "撕裂心智"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "save"
+      ]
+     },
+     {
+      "id": "rend-mind-psionic",
+      "label": "撕裂心智（消耗3枚灵能骰）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "ask('此次攻击是使用心灵之刃且造成了偷袭攻击伤害吗？')",
+      "cost": [
+       {
+        "resource": "灵能力量",
+        "n": 3
+       }
+      ],
+      "modify": [],
+      "do": [
+       "save"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "撕裂心智",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "自动判定攻击是否同时满足心灵之刃与偷袭伤害条件以触发震慑豁免",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:游荡者:心灵传送:9",
+   "name": "心灵传送",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个附赠动作，你塑造一把心灵之刃，消耗并投掷一枚灵能骰，传送到至多距离灵能骰结果数字十倍尺数的一处可见的未被占据的空间内。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "心灵传送",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "灵能力量"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "number",
+       "move"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "投掷灵能骰并传送至 10×骰值 尺内的可见未占据空间",
+    "now": false
+   }
+  }
+ ]
+}

@@ -1,0 +1,862 @@
+{
+ "batch": "batch-026",
+ "count": 20,
+ "entries": [
+  {
+   "key": "XPHB:敏锐心灵",
+   "name": "敏锐心灵",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "快速研究已写成附赠动作；研究本身的智力检定（奥秘/历史/调查/自然/宗教）需人手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "research",
+      "name": "快速研究：研究",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少执行研究（Study）动作时自动发起对应智力检定（奥秘/历史/调查/自然/宗教）的流程支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔法学徒",
+   "name": "魔法学徒",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "起源专长：从牧师 / 德鲁伊 / 法师法术列表里选一个，习得两道戏法（建卡时选定，静态）；再从该列表选一道一环法术始终准备，它可以不用法术位施展一次，长休恢复（资源池「魔法学徒 · 免费施放 1 环法术」freeCast），也可以照常用任意法术位施展。免法术位那一次引擎做不到：法术条目按法术位扣费，没有「这次改扣 freeCast」的写法。手动做法：照常施放那道一环法术（**没有任何可用法术位时这一步会被拒**，那种情况请手动结算效果），结算完在角色抽屉里把该环法术位的「已用」减 1，并把 freeCast 的「已用」改成 1（长休自动恢复）；用过之后就只能按法术位施展。每升一级可替换一道法术、可重复选本专长（每次选不同列表）都是建卡 / 升级时的选择，不在战斗里发生。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少将特定法术的消耗重定向至专长固有免费池（freeCast）或任意可用法术位的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔能长枪",
+   "name": "魔能长枪",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "施展所选的魔契师戏法时，射程增加 30 × 魔契师等级 尺。这是对其他法术射程的修改，引擎无法自动化，需手动加上。可多次选择，每次须选不同的戏法（选择在建卡时完成）。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少跨条目动态增加特定戏法施法距离（30×魔契师等级）的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔契师:创造奴仆:14",
+   "name": "创造奴仆",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "（旧日支配者宗主）你施展异怪召唤术时可以修改它使其无需专注：这样施法时持续时间变为 1 分钟，并且召唤来的异怪获得等于你魔契师等级 + 魅力调整值的临时生命值；此外该异怪每回合第一次命中受你的脆弱诅咒影响的生物时，额外造成等于该法术附加伤害的心灵伤害。这两条都要改写另一个法术（异怪召唤术）召唤出来的生物，引擎做不到，请手动处理：先照常施展异怪召唤术，不接受专注提示并把持续时间记为 1 分钟，给异怪手动加临时生命值（数值 = 魔契师等级 + 魅力调整值），它命中被脆弱诅咒的目标时在日志里手动补一次等价的心灵伤害（该法术当前的附加伤害）。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少改写召唤法术专注需求与持续时间、强化召唤物生命值以及协同触发诅咒伤害的随从修饰机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔契师:斗转星移:10",
+   "name": "斗转星移",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "反应（长休前一次，次数记在资源池「斗转星移」）：一个你能看见的敌人的攻击检定命中你后，那次攻击的伤害减半，然后迫使攻击者做一次感知豁免（DC = 你的法术豁免 DC），失败则受到等同于你本次实际承受伤害的心灵伤害。引擎在你被命中时问要不要用，选「用」之后伤害减半，并在伤害掷出后自动完成攻击者的豁免与反击（心灵伤害 = 掷出的伤害 ÷ 2）。反应在命中那一刻问、不等伤害掷出：只有那时才分得出「这是一次攻击命中」——挂到伤害窗口的话，法术的豁免伤害也会来问。日志里「获得 / 结束『斗转星移：反击』」那两行是串起这两步用的临时标记，不用管。要人处理的：①若你对这次伤害还有抗性 / 免疫 / 其他减伤，或伤害被别人代受，实际承受的更少，请手动把攻击者受到的心灵伤害改小；②魅惑免疫在人物卡数据里只是一条说明，战斗里不会自动拦下魅惑状态。反应被用掉后，可以消耗一个契约魔法法术位（无需动作）重置使用权。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "斗转星移：消耗契约魔法法术位重置",
+      "activation": "free",
+      "cost": [
+       {
+        "slot": {
+         "min": 1,
+         "max": 5
+        }
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.resource('beguiling-defenses') < 1",
+      "root": [
+       "resource"
+      ]
+     }
+    ],
+    "triggers": [
+     {
+      "id": "bewilder",
+      "label": "斗转星移：伤害减半并反击攻击者",
+      "on": "attackHit",
+      "role": "target",
+      "window": "before",
+      "when": "attacker.isEnemyOf(self) && canSee(self, attacker)",
+      "cost": [
+       {
+        "economy": "reaction"
+       },
+       {
+        "resource": "beguiling-defenses"
+       }
+      ],
+      "modify": [
+       "halveDamage"
+      ],
+      "do": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "斗转星移：反击",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       },
+       "endsOn": [
+        {
+         "event": "damageApplied"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "source",
+    "need": "缺少在受击/减伤后对攻击者（attacker）迫使豁免并反弹等额心灵伤害的能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔契师:光耀之魂:6",
+   "name": "光耀之魂",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "获得光耀伤害抗性（人物卡已算）。每回合一次，当你施展的法术造成光耀伤害或火焰伤害时，可以把魅力调整值加到该法术对其中一个目标造成的伤害上。引擎没有法术伤害结算前的修改窗口，此加伤需要人手动处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少法术造成特定类型（光耀/火焰）伤害时向其中一个目标的伤害包增加魅力调整值的修改窗口",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔契师:骇异恶咒:10",
+   "name": "骇异恶咒",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "你始终准备着脆弱诅咒法术（静态层已经在人物卡上准备好这道法术）。当你施展脆弱诅咒、并为它选择了一项属性时，目标在法术持续时间内还会在以这项属性进行的豁免上具有劣势。已自动化：施法完成时会弹出一次「脆弱诅咒选了哪项属性」的选择，选中后自动给被诅咒的目标挂上「骇异恶咒」，把所选属性记在效应里，此后它用这项属性做的任何豁免检定都会自动带劣势（其他属性的豁免不受影响）；再施展一次脆弱诅咒换到别的生物身上时，会重新问一次、挂到新目标上，旧目标身上的自动移除。要人处理的一件事：效应结束的时间 —— 引擎没有「随另一个法术的专注一起结束」的写法，这里是每到一个回合边界先检查施法者身上还有没有脆弱诅咒，没有就移除；如果专注在别人的回合里提前断掉，这个劣势最多多留到本回合结束，请在目标身上手动删除「骇异恶咒」。另：脆弱诅咒自己那条「所选属性的属性检定具有劣势」仍归法术那边（未自动化），不在本条目里。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "eldritchHex",
+      "label": "骇异恶咒",
+      "on": "spellCast",
+      "role": "actor",
+      "window": "after",
+      "when": "event.key == 'XPHB:spell:脆弱诅咒'",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "choose",
+       "applyEffect"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "remember",
+    "need": "缺少施法时选定属性并记录进效应状态（state）、令目标该属性豁免具有劣势的记忆机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔契师:唤醒心灵:3",
+   "name": "唤醒心灵",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "以附赠动作与 30 尺内一个你可见的生物建立心灵连结；交流距离上限为魅力调整值（里，至少 1 里），双方需通晓同一语言。持续时间为魔契师等级（分钟），由人手动结束；建立新连结时旧连结自动结束。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "唤醒心灵",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "removeEffect",
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "唤醒心灵：链接",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "manual": true
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少心灵感应通信连结（跨距离心电感应交流）的系统支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔契师:锐眼斗士:6",
+   "name": "锐眼斗士",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "用唤醒心灵与生物形成连结时，可迫使其进行感知豁免（DC 为你的法术豁免 DC）；失败则连结期间它对你的攻击检定具有劣势，你对它的攻击检定具有优势。使用后直到短休或长休前不能再用，除非消耗一个契约魔法法术位（无需动作）复原使用次数。只能紧接唤醒心灵使用、连结结束时移除效果，由人处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "锐眼斗士",
+      "activation": "free",
+      "cost": [
+       {
+        "resource": "use"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     },
+     {
+      "id": "reset",
+      "name": "锐眼斗士：复原使用次数",
+      "activation": "free",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.resource('use') < 1",
+      "root": [
+       "resource"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "锐眼斗士：连结",
+      "statics": [],
+      "flags": null,
+      "rollMods": 2,
+      "triggers": 0,
+      "duration": {
+       "manual": true
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少与另一特性效应（唤醒心灵连结）生命周期绑定的联动机制及在前置特性使用时附带触发的能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔契师:思维之盾:10",
+   "name": "思维之盾",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "心灵抗性已在人物卡（静态）。思维不可被心灵感应阅读属于纯叙事，不处理。每当一个生物对你造成心灵伤害，该生物受到等同于你所承受伤害的伤害：反射对象是伤害来源，引擎的伤害节点无法指定来源，需人工处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "source",
+    "need": "缺少受到伤害后将伤害反射/施加给伤害来源（source/attacker）的节点目标支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔契师:天界韧性:10",
+   "name": "天界韧性",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "完成一次短休或长休后，获得临时生命值，数值为魔契师等级 + 魅力调整值；可以同时选择至多 5 个你可见的生物，各获得魔契师等级的一半 + 魅力调整值的临时生命值。引擎自动处理自己的那份（休息完成时）；选择盟友、以及秘法回流时额外获得的那一次，由人处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "celestial-resilience",
+      "label": "天界韧性：临时生命值",
+      "on": "restCompleted",
+      "role": "actor",
+      "window": "after",
+      "when": null,
+      "cost": [],
+      "modify": [],
+      "do": [
+       "tempHp",
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少在休息完成（restCompleted）触发器中交互式多选至多5名可见盟友赋予临时生命值的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔契师:雾隐遁行:6",
+   "name": "雾隐遁行",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "受到伤害后可以用反应施展迷踪步（施法用的法术位或妖精步伐次数请手动扣除）；迷踪步（无论怎么施展）另有「无踪步伐」「惊惧步伐」两个选项。非反应施展迷踪步时选「惊惧步伐」只能提示，豁免与伤害需要手动结算：传送前或传送后的空间（你选）5 尺内的生物进行感知豁免（DC = 你的法术豁免 DC），失败受到 2d10 心灵伤害。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "雾隐遁行：反应施展迷踪步",
+      "activation": "reaction",
+      "cost": [],
+      "targeting": null,
+      "trigger": {
+       "on": "damageTaken",
+       "role": "target",
+       "window": "after"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "move",
+       "choose"
+      ]
+     },
+     {
+      "id": "dreadful",
+      "name": "雾隐遁行：反应施展迷踪步（惊惧步伐）",
+      "activation": "reaction",
+      "cost": [],
+      "targeting": {
+       "type": "area",
+       "range": 30,
+       "area": {
+        "shape": "sphere",
+        "radius": 5
+       }
+      },
+      "trigger": {
+       "on": "damageTaken",
+       "role": "target",
+       "window": "after"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "move",
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [
+     {
+      "id": "fey-options",
+      "label": "雾隐遁行：迷踪步的额外选项",
+      "on": "spellCast",
+      "role": "actor",
+      "window": "after",
+      "when": "event.spell == '迷踪步' || event.key == 'XPHB:spell:迷踪步'",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "choose"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "无踪步伐",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 3,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "bearer",
+        "nth": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少在受到伤害时以反应施展迷踪步并在传送起点/落点5尺范围内自动迫使豁免并造成伤害的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔契师:心灵法术:3",
+   "name": "心灵法术",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "施放造成伤害的魔契师法术时，可以把伤害类型改为心灵（引擎不能改写法术的伤害类型，需人工处理）。施放惑控或幻术类魔契师法术时，可以不需要言语与姿势成分（引擎不计施法成分，无需处理）。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "缺少施展法术时自由选择/转换法术伤害类型为心灵伤害的修改机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔契师:玄奥秘法:11",
+   "name": "玄奥秘法",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "魔契师 11 级：选一道六环魔契师法术作为秘法，可以不用法术位施展它；长休前只能用一次（第 13 / 15 / 17 级分别再加一道七 / 八 / 九环法术；引擎的池子上限只有 1，多出来的那几次请手动记）。这条引擎做不到：法术条目是按法术位扣费的，数据里没有「这次施法改扣某个资源池」或「免法术位」的写法，本条目无法替换那道法术的代价。手动做法：在角色抽屉里把「玄奥秘法」的已用次数改成 1（长休自动恢复），再按那道法术的原文手动结算效果（伤害 / 豁免用界面的手动掷骰与手动伤害）；纯魔契师没有六环法术位，直接点法术条目会因「代价付不起」被拒，别硬点。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少将高环特定法术施法消耗重定向为「玄奥秘法」资源池（免法术位施展）的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔契师:妖精步伐:3",
+   "name": "妖精步伐",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "无需法术位地施展迷踪步，次数等于魅力调整值（最少 1），长休恢复。施展迷踪步时可选一项额外效应。引擎自动处理传送与复苏步伐的自身临时生命值；复苏步伐选盟友、嘲弄步伐的豁免需要由人结算。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "妖精步伐：迷踪步",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "妖精步伐"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "choose",
+       "move"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少在传送起点与落点空间周围自动选取目标进行豁免或赋予临时生命值的空间联动机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔契师:直坠噩梦:14",
+   "name": "直坠噩梦",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "每回合一次，以攻击检定命中一个生物后可以发动：目标进行魅力豁免（DC 为你的法术豁免 DC），失败则被送入下层位面并失能，直至你的下一回合结束；若目标并非邪魔，还受到 8d10 点心灵伤害。目标返回的位置（先前空间或最近的空位）需人工处理。每次长休可用一次；可消耗一个契约魔法法术位（无需动作）重置使用权。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "reset",
+      "name": "直坠噩梦：重置使用权",
+      "activation": "free",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.resource('直坠噩梦') < 1",
+      "root": [
+       "resource"
+      ]
+     }
+    ],
+    "triggers": [
+     {
+      "id": "hurl",
+      "label": "直坠噩梦",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": null,
+      "cost": [
+       {
+        "resource": "直坠噩梦"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "save"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "直坠噩梦：下层位面",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "source",
+        "nth": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少将目标暂时移出战斗地图并在其返回时自动放置于先前空间或邻近空格的位面放逐机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔契师:灼光复仇:14",
+   "name": "灼光复仇",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "在你或 60 尺内的盟友将要进行死亡豁免时使用。恢复生命值一半与结束倒地：对自己自动处理，对盟友需要在其角色上手动处理；范围选在那名生物周围 30 尺，选择受影响的生物时请排除被救者本人和你不想伤害的人。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "灼光复仇",
+      "activation": "free",
+      "cost": [
+       {
+        "resource": "searing-vengeance"
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 60,
+       "area": {
+        "shape": "sphere",
+        "radius": 30
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "choose",
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少在盟友进行死亡豁免时触发并对该盟友恢复半数生命值、解除倒地及以其为中心结算范围伤害的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:魔契师:醉心魔法:14",
+   "name": "醉心魔法",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "以一个动作消耗法术位施展幻术或惑控法术后，可无需法术位，立即施展迷踪步作为该动作的一部分。是否为幻术或惑控、是否为动作施放并消耗了法术位由人确认。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "bewitch",
+      "label": "醉心魔法：免法术位迷踪步",
+      "on": "spellCast",
+      "role": "actor",
+      "window": "after",
+      "when": "ask('这次施法是以动作、消耗法术位施展的幻术或惑控法术吗？')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "move"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少施法事件中识别法术学派、动作消耗类型及是否消耗法术位的上下文属性，以及自动执行传送的能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:牧师:光冕:17",
+   "name": "光冕",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "以一个魔法动作散发出日光组成的灵光：半径 60 尺明亮光照 + 额外 30 尺微光，持续 1 分钟或直到你解除（解除不用动作）。身处明亮光照里的敌人，在抵抗你的黎明曙光特性以及任何造成火焰 / 光耀伤害的法术而做的豁免检定上具有劣势。已自动：用一个动作、扣一次「光冕」使用次数（等于你的感知调整值，至少 1 次，长休恢复）、挂 1 分钟的「光冕」效应，并给 60 尺内的敌人一个豁免劣势（只对他们自己的豁免生效，对别人打他们不管）。要人处理的两件事：① 地图上没有光照 —— 60 尺明亮光照请自己按距离判断（灵光只按 60 尺半径算，黑暗 / 遮挡这类光照细节引擎不看）；② 引擎分不出这次豁免是不是来自黎明曙光或一道火焰 / 光耀伤害的法术，每次范围里的敌人掷豁免时会问你一句，答「否」就不加劣势。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "光冕",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "光冕"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "note"
+      ]
+     },
+     {
+      "id": "dismiss",
+      "name": "光冕（熄灭）",
+      "activation": "free",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('光冕')",
+      "root": [
+       "removeEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "光冕",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     }
+    ],
+    "resources": [
+     {
+      "id": "光冕",
+      "name": "光冕使用次数",
+      "formula": "max(1, wis)",
+      "recovery": "long"
+     }
+    ]
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少跨静态层对接自定义资源池扣除次数的能力，以及针对特定伤害类型法术豁免的自动筛选机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:牧师:诡术祝福:3",
+   "name": "诡术祝福",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "被祝福的生物（你自己或 30 尺内一个自愿生物）的敏捷（隐匿）检定具有优势；自愿与否由你确认。祝福持续到你完成一次长休或再次使用本特性，这两种结束都需手动处理，再次使用时旧祝福不会自动结束。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "诡术祝福",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "诡术祝福",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": {
+       "manual": true
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少限定同一施加者全局只能存在一个生效实例（对新目标生效时自动移除旧目标身上的效应）的互斥机制",
+    "now": false
+   }
+  }
+ ]
+}

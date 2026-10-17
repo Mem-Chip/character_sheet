@@ -1,0 +1,834 @@
+{
+ "batch": "batch-001",
+ "count": 20,
+ "entries": [
+  {
+   "key": "XPHB:瞬发法术",
+   "name": "瞬发法术",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "超魔法：施展施法时间为动作的法术时，消耗 2 术法点将其施法时间改为附赠动作。若本回合已施展过一环或更高环法术，则不能使用；使用瞬发法术后，本回合也不能再施展一环或更高环法术。引擎不改写施法时间，由人处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少将动作法术改为附赠动作施展的时机改写机制及同回合一环以上法术施放限制的校验",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:德鲁伊:荒野形态:2",
+   "name": "荒野形态",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "附赠动作消耗一次荒野形态次数，变形为已学会的野兽形态：获得等于德鲁伊等级的临时生命值；无法施法（不打断专注）；陷入失能或死亡时结束；可再次使用荒野形态换形，也可用附赠动作提前结束。持续时间（德鲁伊等级一半的小时）、野兽数据卡替换、装备处理需要人处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "enter",
+      "name": "荒野形态",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "wildshape-uses"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "tempHp",
+       "note"
+      ]
+     },
+     {
+      "id": "end",
+      "name": "结束荒野形态",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('荒野形态')",
+      "root": [
+       "removeEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "荒野形态",
+      "statics": [],
+      "flags": {
+       "cannot": [
+        "castSpells"
+       ]
+      },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "manual": true,
+       "endsOn": [
+        {
+         "event": "effectApplied",
+         "when": "event.bearer == self.id && self.has('失能')"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少变形成野兽并替换部分角色数据卡（力量/敏捷/体质、AC、速度与野兽动作）的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:德鲁伊:荒野伙伴:2",
+   "name": "荒野伙伴",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "以魔法动作消耗一个法术位或一次荒野形态次数来施展寻获魔宠（无需材料），魔宠为妖精，长休后消失。这里只处理资源消耗，魔宠本身由人处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "荒野伙伴（消耗荒野形态次数）",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "wildshape-uses"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "slot",
+      "name": "荒野伙伴（消耗法术位）",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少召唤魔宠入场并在战斗中作为独立参战随从行动的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:德鲁伊:原力蛮击:7",
+   "name": "原力蛮击",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "每个你的回合内一次，武器攻击或荒野变形野兽形态的攻击命中时，额外造成 1d8 寒冷 / 火焰 / 闪电 / 雷鸣伤害（命中时选择）。是否为野兽形态的攻击由人回答。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "primal-strike",
+      "label": "原力蛮击",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "turn.isMine && !attack.spell && (attack.weapon || ask('这是荒野变形中野兽形态的攻击吗？'))",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "choose"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少攻击检定来源是否为野兽形态攻击的自动判定标识",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:德鲁伊:月辉形态:14",
+   "name": "月辉形态",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "月耀炽光：一回合一次，荒野形态下的攻击命中时额外 2d10 光耀伤害（是否为荒野形态的攻击由人回答）。月辉同行：使用月光飞步时可一并传送一名 10 尺内的自愿生物（落点在你出现点 10 尺内）——位置引擎不处理，手动。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "lunar-radiance",
+      "label": "月辉形态：月耀炽光（+2d10 光耀）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "!attack.spell && ask('这次攻击是荒野形态下进行的吗？')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "addDamage"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少在使用传送能力时携同一名邻近自愿生物一同传送的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游侠:原初伴侣:3",
+   "name": "原初伴侣",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "原初野兽本身（数据卡、行动、生命值、死亡）手动处理。这里只记录命令野兽和复活消耗的行动经济：野兽默认只执行回避；你的回合以附赠动作命令它，或牺牲你的一次攻击命令它执行野兽打击；你失能时野兽自主行动；野兽死亡不超过一小时，可以用魔法动作消耗一个法术位使它复活（一分钟后恢复全部生命值）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "command",
+      "name": "原初伴侣：命令野兽",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "strike",
+      "name": "原初伴侣：牺牲攻击命令野兽打击",
+      "activation": "none",
+      "cost": [
+       {
+        "economy": "attack"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "revive",
+      "name": "原初伴侣：复活野兽",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少原初野兽伴侣的数据实体生成、入场召唤、行动经济代理与阵亡复活管理系统",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:星移步法",
+   "name": "星移步法",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "可以不消耗法术位对自己施放浮空术。引擎的施法动作会扣法术位，且没有「免位施放」的写法，需人工施放且不扣法术位；法术效果按浮空术本身处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少不消耗法术位施放特定法术（免位施法/免费施展）的动作封装机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:幽影护甲",
+   "name": "幽影护甲",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "可以不消耗法术位对自己施放法师护甲。引擎的施法动作会扣法术位，且没有「免位施放」的写法，需人工施放且不扣法术位；法术效果按法师护甲本身处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少将特定法术（法师护甲）封装为无需法术位无限次对自己施展的动作定义能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:游侠:精宸所与:11",
+   "name": "精宸所与",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "（妖精漫游者）你无需材料成分地施展妖精召唤术，并且可以免费施展它一次而不消耗法术位（长休后重获；这个池子由人物卡上的「免费施展该法术」记录）。此外，你每次开始施展该法术时都可以让它本次施展与维持无需专注，这样施展时持续时间变为 1 分钟。法术本身在妖精召唤术的条目里（妖精灵魄由 summon 节点召唤）。「无需专注」是改写另一个法术的施法，引擎做不到：请照常在法术面板消耗法术位（免费的那次点人物卡上的池子）施展妖精召唤术，然后手动不接受专注提示、把持续时间记为 1 分钟；如果这次免除了专注，召来的精灵魄不会随专注退场，需要时手动移除。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": [
+     {
+      "id": "free_cast",
+      "name": "免费施展该法术",
+      "formula": 1,
+      "recovery": "long"
+     }
+    ]
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少跨条目改写指定法术（妖精召唤术）消耗（免费施展）与豁免专注要求的规则机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:术士:龙伴:18",
+   "name": "龙伴",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "你可以无需材料成分施展龙类召唤术，并可以无需法术位施展它一次（消耗资源「无需法术位施展」，长休恢复）。开始施展时可以选择让它无需专注，此时持续时间变为 1 分钟。龙类召唤术本身的施放请在法术列表里处理：引擎目前无法让这条特性改写那个法术的消耗和专注，需要手动扣「无需法术位施展」次数、手动去掉专注。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少跨条目改写特定法术消耗（免法术位）及免除专注要求的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:吟游诗人:威仪作锦:6",
+   "name": "威仪作锦",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "始终准备命令术属于人物卡静态层授予，此处不写。附赠动作无需法术位施展命令术的结算，以及魅惑你的生物在对抗此命令术时豁免自动失败，需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "威仪作锦",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "majesty"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "note",
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "command",
+      "name": "威仪作锦：附赠动作施展命令术",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('威仪作锦')",
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "reset",
+      "name": "威仪作锦：重置",
+      "activation": "free",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.resource('majesty') < 1",
+      "root": [
+       "resource"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "威仪作锦",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少将一动作法术（命令术）改为附赠动作免法术位施展且使特定目标（魅惑源）豁免自动失败的复合机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:战地施法者",
+   "name": "战地施法者",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "【专注】你为维持专注所做的体质豁免具有优势（自动）。【响应法术】当一个生物因离开你的触及范围而引发你的借机攻击时，你能使用你的反应来对这个生物施展一道法术，而非发动一次借机攻击：引擎在问你要不要借机攻击之前会先把这条列出来，选它就花掉你的反应、引擎不再问借机攻击；法术本身引擎施展不了（别人的回合里它不允许施放施法时间为动作的法术），请手动结算——施法时间为动作、且只把该生物选为唯一目标，这两点自己确认（它若因别的效果本来就不引发借机攻击，这条仍会列出来，选之前先看一眼日志里有没有问过借机攻击）。【姿势成分】手上有武器 / 盾牌也能满足姿势成分，纯叙事。注意：引擎只为「有近战攻击、能借机攻击」的人打开离开触及范围的时机，你完全没有近战攻击时它不会提示，这时请自己按反应处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "reactiveSpell",
+      "label": "战地施法者：响应法术",
+      "on": "leftReach",
+      "role": "target",
+      "window": "after",
+      "when": "!attacker.hasEffect('撤离')",
+      "cost": [
+       {
+        "economy": "reaction"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少敌对生物离开自身触及范围时的借机触发窗口（opportunityTrigger），及将借机攻击替换为施法反应的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:暗影寿衣",
+   "name": "暗影寿衣",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "可以随意施展隐形术，且无需消耗法术位。引擎的施法动作会扣法术位，且没有「免位施放」的写法，需人工施放且不扣法术位；法术效果按隐形术本身处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "支持不消耗法术位（at will）施展特定已知法术（隐形术）",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:永恒奴役",
+   "name": "永恒奴役",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "你可以在不消耗法术位的情况下施展一次活化死尸，长休恢复（资源「永恒奴役」）。引擎不改写法术消耗，需人工施展且不扣法术位；法术效果及仆从控制按活化死尸本身处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "允许不消耗法术位施展活化死尸法术",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:诡术师的逃脱术",
+   "name": "诡术师的逃脱术",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "你可以以自己为目标施展一次行动自如法术，无需消耗法术位。长休恢复（资源「诡术师的逃脱术」）。引擎不改写法术消耗，需人工施展且不扣法术位；法术效果按行动自如本身处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "允许无需法术位每日免费施展一次行动自如",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:点点星芒",
+   "name": "点点星芒",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "远程法术攻击。命中造成 1d8（随等级增长）光耀伤害，直到施法者下个回合结束前散发出 10 尺微光光照，且无法受益于隐形状态（微光与无法受益于隐形状态需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "点点星芒",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "attack"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "点点星芒",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "source",
+        "nth": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "缺少动态光源光照范围渲染以及压制/禁止隐形状态受益的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:猎人印记",
+   "name": "猎人印记",
+   "kind": "spell",
+   "from": "data/dyn/spells.json",
+   "automation": "partial",
+   "text": "附赠动作，专注至多 1 小时，指定 90 尺内一个你能看见的生物。法术持续期间：① 你以任何攻击命中该目标时额外造成 1d6 点力场伤害（已自动）；② 你为寻找它而进行的感知（察觉或求生）检定具有优势（会问你一句这次检定是不是为了找它）。目标生命值降到 0 后，你可以用附赠动作「猎人印记：转移标记」把标记移到 90 尺内另一个你能看见的生物身上（引擎靠重新开启专注来换标记，所以转移后剩余时长按 1 小时重新算；目标是否真的降到 0 引擎不拦，请自己看）。手动部分：升环施法的时长（3~4 环 8 小时、5 环以上 24 小时）要自己延长专注；游侠 20 级的「伤害骰改 d10」也要手动改。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "猎人印记",
+      "activation": "bonus",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 90
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "transfer",
+      "name": "猎人印记：转移标记",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 90
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": "self.hasEffect('猎人印记')",
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "猎人印记",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 1,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少专注持续期间以附赠动作重定向/转移标记目标（更新效应状态）的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:野兽召唤术",
+   "name": "野兽召唤术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 小时。在 90 尺内召唤一个野兽灵魄（天空、大地或海洋），使用对应环阶的野兽灵魄数据块。灵魄共用先攻并在施法者回合后立即行动，遵从口头指令；生命值降至 0 或法术结束时消失（召唤物实体与战斗行动由人手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "野兽召唤术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": 90
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少召唤独立野兽灵魄实体（陆地/空中/水生）入场参战并跟随施法者行动的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:妖精召唤术",
+   "name": "妖精召唤术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "在 90 尺内召唤一个妖精灵魄（愤怒/欢欣/诡诈），持续至多 1 小时（专注）。妖精灵魄拥有独立数据卡，使用施法者的先攻并在施法者回合后行动，生命降为 0 或法术结束时消失；升环提升灵魄属性。灵魄的具体属性、移动与行动需在战斗中由玩家手动操控。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "妖精召唤术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": 90
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "妖精召唤术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少召唤独立妖精灵魄实体入场参战并跟随施法者先攻行动的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:亡灵召唤术",
+   "name": "亡灵召唤术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "在 90 尺内可见未占据空间唤来亡灵灵魄（幽体/腐尸/骷髅），持续 1 小时（专注）；亡灵灵魄作为独立参战生物入场（使用对应法术位环阶数据块）需人手动在战斗中添加与操控。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "亡灵召唤术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": 90
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少召唤独立亡灵灵魄生物入场参战并跟随施法者先攻行动的机制",
+    "now": false
+   }
+  }
+ ]
+}

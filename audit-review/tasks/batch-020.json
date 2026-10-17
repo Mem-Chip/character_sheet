@@ -1,0 +1,1122 @@
+{
+ "batch": "batch-020",
+ "count": 20,
+ "entries": [
+  {
+   "key": "XGE:战士:雅臣:7",
+   "name": "雅臣",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "?",
+   "text": "当你进行魅力（游说）检定时，本次检定获得等同于你感知调整值的加值。此外获得感知（或智力/魅力）豁免熟练项（由人物卡静态层处理）。",
+   "data": {
+    "automation": "?",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XGE:战士:燕返:15",
+   "name": "燕返",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "自己回合里，你对抗某个目标的攻击检定具有优势时可以放弃这项优势，换取对同一目标的一次额外攻击。用法：在这颗 d20 的弹窗里选「燕返」—— 这次检定改为无优势的单颗骰结算（引擎按**第一颗**骰判，弹窗里显示的是较高的那颗，结果对不上时以第一颗为准）（放弃那一优势），并且你的剩余攻击次数 +1，照常在动作栏再点一次武器攻击即可。每回合一次由引擎限制。引擎分不出「这一下是不是攻击动作给的攻击」、也不会限制额外那一次只能打同一个目标，这两点请自行遵守。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "rapid-strike",
+      "label": "燕返：放弃优势换一次额外攻击",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "when": "roll.kind == 'attack' && roll.adv && turn.isMine",
+      "cost": [],
+      "modify": [
+       "clearAdv"
+      ],
+      "do": [
+       "economy"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少在拥有优势的攻击检定中主动放弃优势以置换一次额外武器攻击配额的置换机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:碧水法球",
+   "name": "碧水法球",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。在 90 尺内创造半径 5 尺的水球：出现时位于水球空间内的生物做力量豁免（巨型及以上体型自动成功，已按体型跳过），失败陷入束缚并被水淹没；生物进入水球时同样须做这次豁免。被束缚者在自己每个回合结束时重复豁免，成功即摆脱法术对自己的效果。水球的容纳上限（4 个中型或 1 个大型）、把豁免成功者排出到水球周围、水球离地不超过 10 尺、以及法术结束时水球落地熄灭 30 尺内非魔法火焰并让被束缚者倒地出现，都要人处理；大型及以下可以主动在豁免中失败也由人决定。水球留在地图上，随专注消失。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "碧水法球",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 90,
+       "area": {
+        "shape": "sphere",
+        "radius": 5
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "forEach",
+       "zone",
+       "note"
+      ]
+     },
+     {
+      "id": "moveSphere",
+      "name": "碧水法球：移动撞击",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "area",
+       "range": 30,
+       "area": {
+        "shape": "sphere",
+        "radius": 5
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('碧水法球（激活）')",
+      "root": [
+       "note",
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "碧水法球",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     },
+     {
+      "name": "碧水法球：束缚",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "saveEnds": {
+        "ability": "str",
+        "dc": "self.spell.dc",
+        "at": "turnEnd"
+       },
+       "max": {
+        "minutes": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少可移动的持续性地图实体区域（Zone），以及附带容纳体型上限、随区域移动携带生物的控制逻辑",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:操控风力",
+   "name": "操控风力",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 1 小时。控制 300 尺内 100 尺立方的空气并留在地图上；施放时选择一种效果（之后可用动作切换）。【狂风】大风或强风时进入 / 离开区域或穿过其中的远程武器攻击有劣势，强风下逆风移动每尺多花 1 尺移动力。【下沉气流】穿过区域或对区域内生物发起的远程攻击有劣势；飞行生物每回合首次飞入或在其中开始回合须力量豁免，失败摔落倒地（原文只有「俯卧」，本法术任何一项效果都不造成伤害）。【上升气流】区域内的坠落伤害减半、垂直跳跃高出 10 尺。降落、坠落、跳跃、飞行状态与逆风消耗都需人工处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "操控风力",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 300,
+       "area": {
+        "shape": "cube",
+        "size": 100
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "choose",
+       "zone"
+      ]
+     },
+     {
+      "id": "shift",
+      "name": "操控风力：切换效果",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少大型地图持续区域（Zone）对穿过区域的远程攻击施加检定劣势及对进入/在其中开始回合的飞行生物进行环境判定",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:潮涌",
+   "name": "潮涌",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "在 120 尺内召唤长至多 30 尺、宽至多 10 尺、高至多 10 尺的浪潮。区域内生物进行敏捷豁免，失败受到 4d8 钝击伤害并倒地，成功半伤且不倒地。随后浪潮向四周流散，熄灭区域及周围 30 尺内未受保护的火焰（灭火环境效果需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "潮涌",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "line",
+        "length": 30,
+        "width": 10
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "熄灭未受保护的非魔法火焰属于环境互动效果，引擎无需自动化，手动处理即可",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:炽焰赋权",
+   "name": "炽焰赋权",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "火焰环绕躯体，照亮 30 尺明亮+30 尺微光，持续至多 10 分钟（专注）。获得火焰免疫与寒冷抗性；任何生物在回合中首次进入你周围 5 尺内或在你周围 5 尺内结束回合，受到 1d10 火焰伤害；你可以用动作创造一条 15 尺长、5 尺宽的火线，线中生物须进行敏捷豁免，失败受到 4d8 火焰伤害，成功半伤（火线与近身灼烧可通过次要动作触发）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "炽焰赋权",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 6
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "fireLine",
+      "name": "炽焰赋权：火线",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "area",
+       "range": "self",
+       "area": {
+        "shape": "line",
+        "length": 15,
+        "width": 5
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "forEach"
+      ]
+     },
+     {
+      "id": "proximityBurn",
+      "name": "炽焰赋权：近身灼烧",
+      "activation": "none",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 5
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "damage"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "炽焰赋权",
+      "statics": [
+       "immune",
+       "resist"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XGE:spell:虫群孳生",
+   "name": "虫群孳生",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "迫使 30 尺内你能看见的一名生物进行体质豁免，失败受到 1d6 毒素伤害（5 级 2d6、11 级 3d6、17 级 4d6）。原文还要求目标「可以移动并且有至少 5 尺的速度」才会朝随机方向移动 5 尺：引擎按目标的当前速度判断、并问一句它能不能移动；真的移动时它会得到「免借机」标记，请你掷 1d4 定方向（1 北 2 南 3 东 4 西）手动把棋子移动 5 尺，若该方向被阻挡则不移动（引擎不做随机方向的移动）。这次移动不引发借机攻击——标记在目标移动一次后消失，以防手动拖棋子时误触发借机攻击。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "虫群孳生",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "虫群孳生：乱窜",
+      "statics": [],
+      "flags": {
+       "cannot": [
+        "provoke"
+       ]
+      },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       },
+       "endsOn": [
+        {
+         "event": "moved",
+         "when": "event.id == self.id"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少掷骰决定随机方向并在战棋地图上强制移动目标5尺且不引发借机攻击的位移能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:创造篝火",
+   "name": "创造篝火",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。在 60 尺内燃起一堆占满 5 尺立方的魔法篝火；施放时空间内的生物敏捷豁免，失败受 (1 + floor((self.level + 1) / 6))d8 火焰伤害。篝火留在地图上：生物在其回合中第一次进入、或在其中结束回合时同样进行该豁免（每回合限一次），随专注结束消失。点燃未着装可燃物需人工处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "创造篝火",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "area",
+       "range": 60,
+       "area": {
+        "shape": "cube",
+        "size": 5
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "forEach",
+       "note",
+       "zone"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少持续存在的地图地面区域（Zone）在生物进入或在其中结束回合时自动触发豁免结算伤害的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:大漩涡",
+   "name": "大漩涡",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。在 120 尺内地面或水面指定一点，出现深达 5 尺、半径 30 尺的大漩涡并留在地图上。在该区域开始其回合的生物进行力量豁免，失败受 6d6 钝击伤害并被拉向中心 10 尺。这次「拉向中心」引擎做不到：它的拉近是朝施法者的方向拉，而漩涡中心是地图上那个点（不等于施法者所在位置），所以请人工把棋子朝漩涡中心挪 10 尺。区域内的困难地形与「必须选地面或水面」也需人工处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "大漩涡",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "cylinder",
+        "radius": 30
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "note",
+       "zone"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少持续地图区域（Zone）的困难地形判定、回合开始触发豁免及将生物向区域中心强制拉近的位移联动",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:弹射术",
+   "name": "弹射术",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "选择 60 尺内重 1~5 磅（每升一环 +5 磅）的未着装物件向选定方向直线飞出至多 90 尺。即将撞击生物时，该生物须进行敏捷豁免，失败受到 3d8（每升一环 +1d8）钝击伤害且物件停止运动；弹射物本身受到同等伤害（沿直线顺序判定由人手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "弹射术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 90
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少物体沿直线轨迹飞行并依次对轨迹上的生物判定碰撞豁免（撞击成功即停，成功豁免则穿过继续判定后方生物）的弹道碰撞逻辑",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:地颤",
+   "name": "地颤",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以你为中心 10 尺半径内引发地面颤动，区域内除你以外的生物敏捷豁免，失败受 slot.level d6 钝击伤害并倒地（1 环 1d6，每高一环 +1d6）。若地表为松软土壤或石头，被清理前成为困难地形——引擎不处理地形，需人工。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "地颤",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 10,
+       "area": {
+        "shape": "sphere",
+        "radius": 10
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "forEach",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少在法术影响范围内将地面动态修改为持续性困难地形的地图区域接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:地缚",
+   "name": "地缚",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "选择 300 尺内一名可见生物进行力量豁免。豁免失败则在持续时间内（专注至多 1 分钟）其飞行速度降为 0 尺；飞行中的受术生物以每轮 60 尺的速度安全降落，直至落地或法术结束（飞行速度与降落需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "地缚",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 300
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "地缚",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少对飞行生物赋予独立飞行速度锁定为0以及每轮自动安全垂直降落直至落地的三维移动处理机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:地狱呼唤",
+   "name": "地狱呼唤",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "施法 1 分钟，在 90 尺内你可见的未占据空间召唤一只挑战等级 6 或更低的魔鬼（种类由你选择，例如猬魔或须魔），专注至多 1 小时；用六环或更高法术位施展时每比五环高一环，挑战等级上限 +1（五环 6、六环 7、七环 8、八环 9、九环 10）。引擎做不了的部分：魔鬼对你和同伴不友好、由 DM 控制、单独掷先攻并按其本性行动（DM 掌握这个生物的数据），请人工把它作为 NPC 加进遭遇，不要用召唤节点（引擎的召唤物归你控制、和你同阵营）。你每个回合都可以尝试向它发出口头命令（不占任何动作）：命令与它的愿望一致时它会遵从，否则你要进行魅力（欺瞒、威吓或游说）检定对抗它的感知（洞悉）检定，说出真名则本次检定具有优势；失败后它在法术余下的时间里免疫你的口头命令（但仍可以选择照做），成功后它执行命令直到完成再回来向你报告。这套对抗检定、真名与免疫状态都由人工记录。如果你持有这个魔鬼的邪符、且它的挑战等级在法术允许的范围 +1 之内，你可以召唤那一只，它会遵从你的命令而无需任何魅力检定（也由人工处理）。若你的专注在法术达到完整持续时间之前中断、且魔鬼已经免疫了你的口头命令，它不会立即消失，而是在消失前以它选择的任何方式活动 3d6 分钟 —— 请人工掷骰并保留它的棋子。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "地狱呼唤",
+      "activation": {
+       "minutes": 1
+      },
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": 90
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少召唤敌对独立先攻生物入场、动态读取怪物卡数据及跨回合维持对抗命令判定的召唤物控制系统",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:地之骨",
+   "name": "地之骨",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "在120尺内升起至多6根石柱（升环每高一环+2根）。若在生物脚下升起，该生物须进行敏捷豁免，失败则被顶起。若被天花板或其他障碍阻挡未能达到最大高度，受到6d6钝击伤害并陷入束缚（未被阻挡则仅顶起无伤害，需手动处理）。被束缚生物可用动作通过力量或敏捷检定（对抗法术DC）脱离。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "地之骨",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 6
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 6,
+       "range": 120
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "地之骨：束缚",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XGE:spell:敌群环绕",
+   "name": "敌群环绕",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "迫使 120 尺内一名可见生物进行智力豁免（免疫恐慌者自动通过）。豁免失败则在持续时间内（专注至多 1 分钟）将所有可见生物视作敌人，攻击或施法目标必须从有效范围内可见生物中随机选择，且必须进行可用的借机攻击。每次受伤害时目标可重复智力豁免以结束效应（恐慌免疫检测、随机选敌与受伤害重复豁免需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "敌群环绕",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 120
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "敌群环绕",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少强制生物视所有生物为敌并随机选取目标的行为控制状态，以及受到伤害时触发重复豁免尝试结束效应的事件监听",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:风暴法球",
+   "name": "风暴法球",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。150 尺内一点为中心出现半径 20 尺的强风球体：出现时位于其中的生物做力量豁免，失败受 (slot.level - 2)d6 钝击伤害；在球体内结束回合的生物也要做这次力量豁免（区域留在地图上、随专注消失，同一生物每回合最多结算一次）。升环时所有伤害各 +1d6。球体内部的空间是困难地形，球体周围 30 尺内的生物为聆听所做的感知（察觉）检定具有劣势 —— 地形、光照与这类范围外的检定引擎不处理，请人工判定。持续期间你可以在每个你的回合中用附赠动作令球心射出闪电：60 尺内远程法术攻击（若攻击目标在球体内，这次攻击检定具有优势，引擎会问你），命中受 4d6（升环每环 +1d6）闪电伤害。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "风暴法球",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 150,
+       "area": {
+        "shape": "sphere",
+        "radius": 20
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "forEach",
+       "zone",
+       "note"
+      ]
+     },
+     {
+      "id": "lightning",
+      "name": "风暴法球：闪电射击",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('风暴法球（激活）')",
+      "root": [
+       "attack"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "风暴法球",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少持续地图区域（Zone）的困难地形管理、回合结束触发豁免，以及从区域中心发射闪电且根据目标是否处于区域内赋予攻击优势的联动机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:疯狂之暗",
+   "name": "疯狂之暗",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。150 尺内指定一点延伸出半径 60 尺球形魔法黑暗。黑暗蔓延拐角，生物的黑暗视觉无法看穿，非魔法光源及 ≤8 环法术创造的光亮无法照亮该区域。每当生物在范围内开始其回合，必须进行一次感知豁免，失败受到 8d8 心灵伤害，成功受到一半伤害。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "疯狂之暗",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 8
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 150,
+       "area": {
+        "shape": "sphere",
+        "radius": 60
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "save",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XGE:spell:拂晓",
+   "name": "拂晓",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。在 60 尺内指定一点升起 30 尺半径、40 尺高的阳光光柱并留在地图上：出现时处于其中的生物体质豁免，失败受 4d10 光耀伤害，成功半伤；在光柱中结束回合的生物也须再次进行该豁免（每回合限一次）。随专注结束消失。光柱的阳光性质、40 尺高度与「附赠动作把光柱移动 60 尺」（引擎不移动区域）需人工处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "拂晓",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 60,
+       "area": {
+        "shape": "cylinder",
+        "radius": 30
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "forEach",
+       "note",
+       "zone"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少在地图上创建可附赠动作位移的持续光照区域（Zone）并在生物结束回合时自动判定豁免伤害的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:高阶恶魔召唤术",
+   "name": "高阶恶魔召唤术",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "在 60 尺内你可见的未占据空间召唤一只挑战等级 5 或更低的恶魔（种类由你选择，例如幽影恶魔或恶猿魔），专注至多 1 小时；用五环或更高法术位施展时每高一环挑战等级上限 +1。引擎做不了的部分：恶魔数据块要人工添加、它拥有自己的回合并由 DM 掷先攻；它每个回合结束时的魅力豁免（说出真名则本次豁免具有劣势）、豁免成功后你永久失去对它的控制且它转而追逐攻击最近的非恶魔生物、以及失去控制的恶魔在专注中断后仍残留 1d6 轮 —— 这些豁免、控制权转移与残留时间都要人工处理。你在召唤它时以及之后你的每个回合都可以向它发布口头命令（不需要你的动作），告诉它下个回合必须做什么；没有发布命令时它会用回合攻击任何在触及内攻击它的生物。作为施法的一部分，你还可以用施法材料的血液在地上画一个法阵（大到能容纳你的空间），法术持续期间恶魔不能穿过或伤害法阵、也不能以法阵中的人为目标，材料在法术结束时被消耗。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "高阶恶魔召唤术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少召唤恶魔入场、管理其独立先攻与行为控制、以及每回合结束魅力豁免判定脱控自主攻击的完整召唤物生命周期系统",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:spell:光墙术",
+   "name": "光墙术",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 120 尺内升起至多长 60 尺、高 10 尺、厚 5 尺的光墙，出现时区域内生物体质豁免，失败受 (slot.level - 1)d8 光耀伤害并目盲（每回合结束可重豁免），成功半伤。墙留在地图上：生物进入或在墙内结束回合时同样进行该豁免（每回合限一次），随专注结束消失。后续可用动作从墙上发射光辉射线（远程法术攻击，命中 (slot.level - 1)d8 光耀）；墙体阻挡视线、发光、每次发射缩短 10 尺需人工处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "光墙术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "line",
+        "length": 60,
+        "width": 5
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "note",
+       "forEach",
+       "zone"
+      ]
+     },
+     {
+      "id": "ray",
+      "name": "光墙术：光辉射线",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "attack",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "光墙术：目盲",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 10,
+       "saveEnds": {
+        "ability": "con",
+        "dc": "source.spell.dc",
+        "at": "turnEnd"
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少持续墙体障碍（Zone）、视线阻挡，以及每次发射光束动态削减墙体长度并在长度归零时终止法术的动态区域机制",
+    "now": false
+   }
+  }
+ ]
+}

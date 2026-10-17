@@ -1,0 +1,1190 @@
+{
+ "batch": "batch-007",
+ "count": 20,
+ "entries": [
+  {
+   "key": "AU:spell:步履维艰",
+   "name": "步履维艰",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。选择 120 尺内至多三名可见生物进行智力豁免。豁免失败则目标速度减半且无法执行疾走动作。一名被妨碍的目标在其每个回合结束时重复此豁免，成功则终止法术（疾走限制需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "步履维艰",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 3,
+       "range": 120
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "步履维艰",
+      "statics": [
+       "speed"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1,
+       "saveEnds": {
+        "ability": "int",
+        "dc": "self.spell.dc",
+        "at": "turnEnd"
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "状态效应（EffectTemplate.flags）缺少禁止执行特定通用动作（如疾走 Dash）的标记控制",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:spell:沉鱼落雁",
+   "name": "沉鱼落雁",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。选择 60 尺内可见生物进行魅力豁免，失败则陷入魅惑与失能状态。若距你超过 5 尺，其回合内将径直向你移动；若在其回合结束时处于你 5 尺内，受到 4d8（每升一环 +1d8）心灵伤害。进入伤害地形可重掷豁免；后续回合可使用动作指定新目标（移动轨迹与升环伤害需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "沉鱼落雁",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 7
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     },
+     {
+      "id": "retarget",
+      "name": "沉鱼落雁：指定新目标",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating",
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "沉鱼落雁",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "AU:spell:负能量洪流",
+   "name": "负能量洪流",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "向 60 尺内一个你可见的生物射出负能量。目标不是亡灵：体质豁免，失败受 3d10+25 黯蚀伤害（法术位每比五环高一环，伤害 +1d10），成功则伤害减半。被这次伤害杀死的类人生物，会在你的下一回合开始时变成一只受你语言指令控制的丧尸，持续 24 小时（之后依自己的本性行动）——引擎认不出「死于这次伤害」、也不会在下一回合开始时凭空放进一个新生物，这一步请手动处理。目标若是亡灵：改为获得 3d10 临时生命值。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "负能量洪流",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "if"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少被法术杀死后延迟生成受控丧尸随从并加入战斗的召唤机制",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:spell:改写命运",
+   "name": "改写命运",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "1 反应（60 尺内可见生物 d20 检定失败时执行）。该生物以优势重新进行该检定并必须使用新结果；若最终成功，则获得 6d10 临时生命值（重骰与临时生命值需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "改写命运",
+      "activation": "reaction",
+      "cost": [
+       {
+        "slot": {
+         "min": 7
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": {
+       "on": "d20Rolled",
+       "role": "any",
+       "window": "before",
+       "when": "roll.failing && within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "AU:spell:钢铁之躯",
+   "name": "钢铁之躯",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 1 小时。触碰一名自愿生物化作活着的钢铁。法术结束前，目标力竭等级不会提升；具有对钝击、火焰、穿刺和挥砍伤害的抗性；免疫毒素伤害以及麻痹、石化和中毒状态。施法时目标身上的麻痹、石化或中毒状态立即结束（力竭与状态解除需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "钢铁之躯",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 8
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "钢铁之躯",
+      "statics": [
+       "resist",
+       "immune",
+       "conditionImmune"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "hours": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "AU:spell:幻影巨龙",
+   "name": "幻影巨龙",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。在 120 尺内可见未占据空间创造巨型阴影巨龙幻象，免疫所有伤害和状态。出现时可见幻象的敌人须通过 DC 感知豁免，否则丢下持握物并陷入恐慌；回合结束若看不到幻象可重投豁免。以附赠动作可令巨龙移动至多 60 尺并喷吐 60 尺锥状区域，区域内生物须通过 DC 智力豁免，失败受 6d6 强酸/寒冷/火焰/闪电/暗蚀/毒素伤害（施法时选择），成功受半伤。生物通过智力（调查）检定可看穿幻象，其对抗恐慌与吐息的豁免具有优势（巨龙实体、移动、看穿检定与视线豁免由人判定）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "幻影巨龙",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 8
+        }
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": 120
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "breath",
+      "name": "幻影巨龙：阴影吐息",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "cone",
+        "size": 60
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating",
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "幻影巨龙：恐慌",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "AU:spell:魂灵提灯",
+   "name": "魂灵提灯",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "持续 10 分钟。上方悬浮一盏幽灵般的黑色提灯，散发 60 尺微光光照。敌人在光照内死亡时飞入提灯一枚灵魂碎片（容量上限为施法属性调整值，法术结束时消散）。可用附赠动作消耗一枚灵魂碎片对 60 尺内可见目标产生效应：【汲取生命】体质豁免，失败受 4d8 + 施法属性调整值暗蚀伤害，成功减半；【修复亡灵】亡灵目标恢复 4d8 + 施法属性调整值生命值；【护佑盟友】其他生物对其攻击检定劣势至你下回合开始。引擎没有「光照范围内死亡」这个时机（死亡不开窗口），灵魂碎片的收集与计数需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "魂灵提灯",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "lantern-power",
+      "name": "魂灵提灯：释放碎片",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('魂灵提灯')",
+      "root": [
+       "choose",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "魂灵提灯",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 10
+      }
+     },
+     {
+      "name": "魂灵护佑",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "source",
+        "nth": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少光照区域内敌人死亡时自动收集充能点数（临时专属资源池）并在后续回合附赠动作消耗的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:spell:汲能术",
+   "name": "汲能术",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。汲取 60 尺内一名可见生物的生命。目标进行敏捷豁免，失败受 (1 + slot.level)d8 暗蚀伤害并受汲能触须连接；成功受半伤且法术结束。造成伤害时你恢复等同于伤害一半的生命值。法术持续期间在你的每个回合可用附赠动作自动对目标造成 2d8 暗蚀伤害并恢复一半数值生命值。目标超出 60 尺或具有掩护时法术结束（恢复生命值、距离与掩护需手动判定）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "汲能术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     },
+     {
+      "id": "drain",
+      "name": "汲能术：汲取",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('汲能术') && turn.isMine",
+      "root": [
+       "damage",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "汲能术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "healByDamage",
+    "need": "缺少按实际造成伤害的一半自动为施法者治疗生命值（吸血）的结算机制",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:spell:假寐术",
+   "name": "假寐术",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "选择 30 尺内至多 (slot.level) 名可见自愿生物，使其在 10 分钟持续时间内陷入昏迷状态。若目标受到伤害或有其他生物用动作摇醒，则法术提前终止。若目标完整处于昏迷状态达 10 分钟，则获得完成一次短休的增益，且在完成一次长休前不能再受此法术影响（短休结算与摇醒需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "假寐术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": "slot.level",
+       "range": 30
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "假寐",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 10
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少法术持续满指定时间后自动为目标触发完成短休结算并施加长休前免疫标记的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:spell:距离失真",
+   "name": "距离失真",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 120 尺内以一点为中心的 60 尺球状区域创造空间膨胀幻象。对区域内可见生物可选择：【天旋地转】智力豁免，失败受 2d10 心灵伤害且区域对其视为困难地形至其回合结束；【缩地成寸】速度增加 20 尺至其下一回合结束。法术持续期间，生物进入区域或在其中结束回合时可使其受其中一道效应（每回合限一次）。进入/结束回合触发与困难地形需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "距离失真",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "sphere",
+        "radius": 60
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "缩地成寸",
+      "statics": [
+       "speed"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少地图上持续区域、生物进入或在区域内结束回合时的触发判定以及困难地形机制",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:spell:恐龙召唤术",
+   "name": "恐龙召唤术",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 1 小时。在 90 尺内召唤一个恐龙灵魄（甲龙、三角龙或霸王龙），使用对应环阶的恐龙灵魄数据块。灵魄共用先攻并在施法者回合后立即行动，遵从口头指令；生命值降至 0 或法术结束时消失（召唤物实体与战斗行动由人手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "恐龙召唤术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 6
+        }
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": 90
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "AU:spell:力竭波",
+   "name": "力竭波",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。以附赠动作呼唤灰色光环笼罩周身。持续时间内可执行魔法动作投射 60 尺锥状光幕，区域内生物须进行体质豁免，失败获得一层力竭（该法术无法将力竭提升至 4 级以上）。法术结束时移除其造成的所有力竭等级（力竭上限与法术结束移除需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "力竭波",
+      "activation": "bonus",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "wave",
+      "name": "力竭波：投射光幕",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "area",
+       "range": "self",
+       "area": {
+        "shape": "cone",
+        "length": 60
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('力竭波')",
+      "root": [
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "力竭波",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     },
+     {
+      "name": "力竭波：力竭",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少限制力竭最高叠加层数以及在法术结束时追踪并统一移除该法术所施加力竭等级的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:spell:律令痛苦",
+   "name": "律令痛苦",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "选择 60 尺内一名可见生物造成 6d8 力场伤害。若目标生命值为 100 点或更少，则在持续时间内陷入魅惑状态：其速度上限变为 10 尺，除体质豁免外进行的 d20 检定具有劣势；试图施法时须通过体质豁免否则法术消散且动作浪费（法术位不消耗，需手动处理）。目标在每个回合结束时可进行体质豁免，成功则法术对其结束。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "律令痛苦",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 7
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "damage",
+       "if"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "律令痛苦",
+      "statics": [
+       "speedSet"
+      ],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1,
+       "saveEnds": {
+        "ability": "con",
+        "dc": "self.spell.dc",
+        "at": "turnEnd"
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "AU:spell:埋骨墓地",
+   "name": "埋骨墓地",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。在 120 尺内由至多四个相互连接的 10 尺方格组成骸骨之手区域，对敌人视为困难地形。骸骨之手出现时，区域内的每个敌人进行力量豁免，失败受 (1 + slot.level)d6 黯蚀伤害，且在其所有伤害掷骰中受 1d6 减值直至其下一回合结束。敌人进入区域或在区域内结束回合时同样须进行该豁免（每回合限一次）。区域会留在地图上、随专注结束消失；困难地形与多方格拼合需人工处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "埋骨墓地",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "cube",
+        "size": 20
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "note",
+       "forEach",
+       "zone"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "埋骨墓地",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少由自定义多方格拼合的地图持续区域、敌方困难地形以及进入/结束回合的区域触发结算",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:spell:迷魂魔镜",
+   "name": "迷魂魔镜",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。迷惑 90 尺内至多三名可见生物，各进行一次智力豁免。失败受 7d6 心灵伤害并陷入震慑，震慑期间速度减半；成功受半伤。目标在每个回合结束时可重复智力豁免，成功则结束该效应（速度减半需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "迷魂魔镜",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 8
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 3,
+       "range": 90,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "迷魂魔镜",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1,
+       "saveEnds": {
+        "ability": "int",
+        "dc": "self.spell.dc",
+        "at": "turnEnd"
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "AU:spell:靡叶生华",
+   "name": "靡叶生华",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "在 60 尺内以一点为中心的 10 尺半径球状区域内唤起死气与生机。区域内由你选择的每个生物进行体质豁免，失败受 (1 + slot.level)d6 暗蚀伤害，成功受半伤。此外，区域内一个由你选择的生物能消耗并投掷一枚其未使用的生命值骰（升环施法时每高一环可多消耗投掷 1 颗），恢复等于骰值总和加你的施法属性调整值的生命值（生命骰消耗与恢复需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "靡叶生华",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 60,
+       "area": {
+        "shape": "sphere",
+        "radius": 10
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "forEach",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少在法术结算中允许目标生物消耗自身生命骰（Hit Dice）并结合施法者属性进行治疗的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:spell:魔邓肯冥思术",
+   "name": "魔邓肯冥思术",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "你恢复至多两枚已消耗的二环或更低环阶的法术位。升环施法：以六至七环施展时最高可恢复三环法术位；以八至九环施展时最高可恢复四环法术位（法术位恢复由玩家手动在人物卡处理）。",
+   "data": {
+    "automation": "manual",
+    "actions": [
+     {
+      "id": "use",
+      "name": "魔邓肯冥思术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少恢复指定环阶已消耗法术位的动作节点（restoreSlot 接口）",
+    "now": false
+   }
+  },
+  {
+   "key": "AU:spell:女妖之嚎",
+   "name": "女妖之嚎",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "发出一阵惊怖尖啸，选择 60 尺内至多 10 名生物（听不到你的生物不受影响）。生命值为 50 或更低的目标直接死亡；生命值大于 50 的目标进行体质豁免，失败受 12d10 心灵伤害并陷入耳聋 1 小时，成功受半伤（听觉判定与直接致死由人手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "女妖之嚎",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 9
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 10,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "if"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "女妖之嚎：耳聋",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "hours": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "AU:spell:瞥见亘古一瞬",
+   "name": "瞥见亘古一瞬",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "持续 1 分钟。欺骗 120 尺内一名可见生物，目标必须进行一次智力豁免。豁免失败受到 10d12 心灵伤害并陷入麻痹状态。被麻痹期间，目标可在每个回合结束时重复此豁免；失败获得一层力竭，成功则法术结束。5 尺内生物可用动作将其摇醒以提前结束法术（力竭与摇醒需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "瞥见亘古一瞬",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 9
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 120,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "瞥见亘古一瞬",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1,
+       "saveEnds": {
+        "ability": "int",
+        "dc": "self.spell.dc",
+        "at": "turnEnd"
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "AU:spell:刹时预知",
+   "name": "刹时预知",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "1 反应（在你失败于一次 d20 检定或一名生物以攻击检定命中你时执行）。你将你失败的 d20 检定改为掷出 20，或将触发该法术的攻击检定改为掷出 1（结果修改需由人手动处理）。",
+   "data": {
+    "automation": "manual",
+    "actions": [
+     {
+      "id": "use",
+      "name": "刹时预知",
+      "activation": "reaction",
+      "cost": [
+       {
+        "slot": {
+         "min": 8
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": {
+       "on": "d20Rolled",
+       "role": "any",
+       "window": "before",
+       "when": "ask('是你失败于一次 d20 检定，或一名生物以攻击检定命中你吗？')"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  }
+ ]
+}

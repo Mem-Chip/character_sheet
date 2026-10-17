@@ -1,0 +1,918 @@
+{
+ "batch": "batch-019",
+ "count": 20,
+ "entries": [
+  {
+   "key": "XGE:游荡者:梦幻舞步:3",
+   "name": "梦幻舞步",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "在你的回合中，如果你对某一生物发动了一次近战攻击（命中与否都算），那个生物在你本回合的剩余时间内无法对你进行借机攻击。攻击目标与效应的时机、持续时间引擎自动处理（效应在你回合结束时消失）；「它不能对你借机攻击」引擎没有开关（借机攻击由被离开触及范围的那个人自己决定，引擎照常问它），所以只能在它真要对你借机攻击时先弹一条提醒——请在那一刻的询问里选「不攻击」。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "fancyFootwork",
+      "label": "梦幻舞步：它不能对你借机攻击",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "after",
+      "when": "turn.isMine && roll.kind == 'attack' && attack.melee && target != null && !target.hasEffect('梦幻舞步')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "梦幻舞步",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "source",
+        "nth": 0
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少移动离开触及时触发借机攻击的事件窗口，以及对特定目标免除借机攻击的规则限制",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:游荡者:散兵战术:3",
+   "name": "散兵战术",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "当一个敌人在你 5 尺内结束其回合时，你可以用一个反应移动至多你速度一半的距离，这段移动不引发借机攻击。触发时机与反应代价引擎自动处理（它会问你要不要用，用了自动扣反应）；移动本身要人手动——引擎的移动流程只跑当前回合那个棋子，别人回合里的移动是把棋子拖过去，引擎看不到借机攻击。这里给你挂上「散兵战术移动」效应当提醒：它到你的下一回合开始、或你走完一次引擎的移动后消失。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "散兵战术",
+      "activation": "reaction",
+      "cost": [],
+      "targeting": null,
+      "trigger": {
+       "on": "turnEnded",
+       "role": "enemy",
+       "when": "within(self, target, 5)"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "散兵战术移动",
+      "statics": [],
+      "flags": {
+       "cannot": [
+        "provoke"
+       ]
+      },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "bearer",
+        "nth": 1
+       },
+       "endsOn": [
+        {
+         "event": "moved",
+         "when": "event.id == self.id"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少反应触发后在战棋地图上执行不引发借机攻击的半速移动能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:游荡者:瞬息打击:17",
+   "name": "瞬息打击",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "若你在自己回合中执行了攻击动作，可以用附赠动作发起一次额外的攻击。即使本回合已使用过偷袭，这次攻击同样可以受益于偷袭，但无法在同一回合对同一目标偷袭两次。额外的武器攻击与偷袭由人手动发起与判定。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "瞬息打击",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少偷袭等'每回合一次'特性对不同目标允许二次触发的资源限制豁免与关联武器攻击机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:游荡者:误导:13",
+   "name": "误导",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "当你周围 5 尺范围内有另一个生物为你提供掩护且你成为攻击目标被命中时，可以用反应将该攻击转嫁到掩护你的生物身上。引擎取消对你的命中，对掩护生物的攻击由人手动判定结算。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "misdirection",
+      "label": "误导：转嫁攻击",
+      "on": "attackHit",
+      "role": "target",
+      "window": "before",
+      "when": "ask('5尺内是否有生物为你提供了掩护？')",
+      "cost": [
+       {
+        "economy": "reaction"
+       }
+      ],
+      "modify": [
+       "cancel"
+      ],
+      "do": [
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少在反应中将已被命中的攻击重定向给掩护生物并重新对比AC结算伤害的转嫁机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:游荡者:潇洒气质:9",
+   "name": "潇洒气质",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个动作进行魅力（游说）对抗目标感知（洞悉）检定（目标须能听见你且共享语言）。检定对抗由人手动判定。检定成功时，若敌对则施加嘲讽效果（对其除你之外的目标攻击有劣势且不能对其借机攻击，持续1分钟，队友攻击/法术影响或距离超60尺提前结束）；若非敌对则魅惑1分钟（视为友好熟人，受到伤害或有害行为提前结束）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "潇洒气质",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "挑衅",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少双方技能对抗检定（Contested Check，如游说对抗洞悉）的双向掷骰与结果对比判定节点",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:游荡者:战术洞悉:3",
+   "name": "战术洞悉",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以附赠动作与周围一个可见且未失能的生物进行对抗（你的洞悉对抗目标的欺瞒）。若对抗成功，持续 1 分钟内，即使你对其攻击没有优势也能造成偷袭伤害（但攻击有劣势时依旧无法偷袭）。若对另一目标成功使用此特性，前一次增益提前结束。17级时（伺隙锐瞳），偷袭伤害额外增加 3d6。对抗检定由人手动判定。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "战术洞悉",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "战术洞悉",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少双方技能对抗检定（Contested Check，洞悉对抗欺瞒）的判定接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:游侠:猎手感知:3",
+   "name": "猎手感知",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个动作选择 60 尺内可见的一名生物，获知其伤害免疫、抗性与易伤信息（若被预言系魔法隐瞒则视为无），由 DM 手动告知。长休恢复（次数等于感知调整值，至少 1 次）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "猎手感知",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "猎手感知"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少直接读取目标生物的数据卡抗性/免疫/易伤并在聊天窗向玩家公开展示的信息查询接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:游侠:灵体防御:15",
+   "name": "灵体防御",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "当你因一次攻击受到伤害时，可用反应使本次伤害减半（模拟获得该攻击所有伤害类型的抗性）。持续至当前回合结束，期间该攻击包含的伤害类型的抗性需人工确认处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "spectral-defense",
+      "label": "灵体防御：伤害减半",
+      "on": "attackHit",
+      "role": "target",
+      "window": "before",
+      "when": null,
+      "cost": [
+       {
+        "economy": "reaction"
+       }
+      ],
+      "modify": [
+       "halveDamage"
+      ],
+      "do": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "灵体防御",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "endsOn": [
+        {
+         "event": "turnEnded"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少在反应中提取本次受击包含的伤害类型并赋予直到回合结束的对应抗性的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:游侠:魔法使的克星:11",
+   "name": "魔法使的克星",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "当你看见周围 60 尺内有生物施展法术或传送时，可以用反应迫使其进行感知豁免（DC 等于你的法术豁免 DC），豁免失败其法术或传送失败并浪费。短休或长休恢复 1 次。法术或传送的中断与浪费需由 DM / 人工处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "魔法使的克星",
+      "activation": "reaction",
+      "cost": [
+       {
+        "resource": "magic-users-nemesis"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": {
+       "on": "spellCast",
+       "role": "any",
+       "window": "before",
+       "when": "ask('周围60尺内有你可见的生物施展法术或传送吗？')"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少在生物施法或传送前插入反应豁免并在失败时打断施法/取消动作并消耗其资源的拦截接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:游侠:杀手反制:15",
+   "name": "杀手反制",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "当你的狩猎开始特性目标迫使你进行一次豁免检定时，你可以在进行豁免检定前用反应对它进行一次武器攻击；一旦命中，除攻击的正常效果外，你这次豁免自动成功。【已自动化】时机与目标 —— 必须是你身上挂着「狩猎开始」、并且是别人迫使你豁免时才提示（弹窗里会问是不是你的狩猎开始目标干的）；反应代价；动作自动瞄准迫使你豁免的那个生物。【要人处理】武器攻击本身，以及「命中后本次豁免自动成功」：引擎在豁免掷骰前虽然有个窗口（saveForced），但它不接受改写结果，也没有替你掷武器攻击的写法。请自己掷这次攻击，命中就手动把这次豁免按成功结算（DM 可以改判这次豁免的结果）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "杀手反制",
+      "activation": "reaction",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1
+      },
+      "trigger": {
+       "on": "saveForced",
+       "role": "target",
+       "window": "after",
+       "aim": "actor",
+       "when": "self.hasEffect('狩猎开始') && ask('这次豁免是你的狩猎开始目标迫使的吗？')"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少在迫使豁免窗口插入反应武器攻击、并在命中后将原豁免结果直接改写为自动成功（autoSucceed）的联动修改接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:游侠:闪现打击:11",
+   "name": "闪现打击",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "执行攻击动作时，每次攻击前可传送最多 10 尺至可见未占据空间。若在同一攻击动作中攻击了至少两个不同生物，可获得额外 1 次攻击机会以攻击第三个生物。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "teleport-before-attack",
+      "label": "闪现打击：攻击前传送 10 尺",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "when": "turn.isMine && roll.kind == 'attack' && attack.weapon && ask('这次攻击是否属于攻击动作，且需要在攻击前传送最多 10 尺？')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "move"
+      ]
+     },
+     {
+      "id": "extra-attack-third",
+      "label": "闪现打击：额外攻击第三个生物",
+      "on": [
+       "attackHit",
+       "attackMissed"
+      ],
+      "role": "actor",
+      "window": "after",
+      "when": "turn.isMine && attack.weapon && ask('你在本次攻击动作中是否已经攻击了至少两个不同的生物？')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "economy",
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少在每次攻击前自动执行短距离传送以及在攻击动作中达成条件时奖励额外攻击次数的能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:游侠:位面战士:3",
+   "name": "位面战士",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "附赠动作指定 30 尺内可见的一名生物，本回合对其下一次武器攻击命中造成额外 1d8（11级 2d8）力场伤害。引擎无法自动将武器的基础伤害类型转为力场伤害，需人工处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "位面战士",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "位面战士",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少在攻击命中结算时将武器攻击的基础伤害类型全部转写为力场伤害的修改机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:游侠:以太漫步:7",
+   "name": "以太漫步",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个附赠动作无需消耗法术位施展法术以太化，持续至当前回合结束。以太位面的交互与移动等细节需人工处理。每次短休或长休恢复 1 次。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "以太漫步",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "以太漫步"
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "以太漫步",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少以太化状态穿透实体障碍与脱离物质位面物理碰撞的移动规则支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:游侠:阴影视野:3",
+   "name": "阴影视野",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "黑暗视觉增加属于静态感官属性不在此处理。在黑暗中，对于依赖黑暗视觉观察你的生物而言你视为隐形（攻击你具有劣势，你攻击对方具有优势），由人确认光照与对方视觉情况。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "缺少基于环境光照（黑暗）与观察者感官类型（依赖黑暗视觉）动态判定隐形状态的视觉光照系统",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:战士:不懈:10",
+   "name": "不懈",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "?",
+   "text": "当你投掷先攻时，若你斗战之魂的使用次数已被用尽时，你将重获一次使用次数。",
+   "data": {
+    "automation": "?",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "tirelessSpirit",
+      "label": "不懈：重获一次斗战之魂",
+      "on": "initiativeRolled",
+      "role": "actor",
+      "window": "after",
+      "when": "self.resource('fightingSpirit') == 0",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "resource"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XGE:战士:斗战之魂:3",
+   "name": "斗战之魂",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "?",
+   "text": "在你的回合中，你可以用附赠动作为你本回合发动的任何武器攻击提供优势。此外，使用这一附赠动作时，你还能获得5点临时生命值（10级10点，15级15点）。完成长休后重获全部3次使用次数。",
+   "data": {
+    "automation": "?",
+    "actions": [
+     {
+      "id": "use",
+      "name": "斗战之魂",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "fightingSpirit"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "tempHp",
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XGE:战士:坚守战线:10",
+   "name": "坚守战线",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "【在触及范围内移动也引发借机攻击】生物在你触及范围内移动 5 尺或更多即引发你的借机攻击——引擎只认「离开触及范围」（那时它自己会问你要不要借机攻击），「在触及范围内走动」这个时机没有，请人工判断并手动发起。【借机攻击命中定身】你以借机攻击命中生物时，该生物速度降为 0 直至本回合结束。有人离开你的触及范围时引擎会连问两次：先问「坚守战线：借机攻击的时机」用不用（可以拒绝，拒绝就不挂蓄势），再问借机攻击打不打（那一次才真正花掉反应）。两次务必答成一致：只有确实要打才选「要用」；如果选了「要用」后来又没打，请手动删掉「坚守战线：蓄势」这个效应，否则你在这个回合里接下来的任意一次近战命中都会误把目标定身。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "hold-line-ready",
+      "label": "坚守战线：借机攻击的时机",
+      "on": "leftReach",
+      "role": "target",
+      "window": "after",
+      "when": null,
+      "cost": [],
+      "modify": [],
+      "do": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "hold-line",
+      "label": "坚守战线：借机攻击命中定身",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.melee && self.hasEffect('坚守战线：蓄势')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "applyEffect",
+       "removeEffect"
+      ]
+     },
+     {
+      "id": "hold-line-miss",
+      "label": "坚守战线：借机攻击失手",
+      "on": "attackMissed",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.melee && self.hasEffect('坚守战线：蓄势')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "removeEffect"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "name": "坚守战线：蓄势",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "bearer",
+        "nth": 1
+       }
+      }
+     },
+     {
+      "name": "坚守战线：定身",
+      "statics": [
+       "speedSet"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少生物在触及范围内移动（即使未离开触及）时触发借机攻击的事件窗口",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:战士:警戒守卫:18",
+   "name": "警戒守卫",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "战斗中你在每个其他生物的回合里可以额外做一次特殊反应，这个反应只能用于发动借机攻击，且同一回合里不能既用特殊反应又用你原本的反应。引擎的一次反应就是一个反应槽（有人离开你的触及范围时引擎会自己问要不要借机攻击），没有「只在别人的回合生效、且只能用于借机攻击」的额外反应槽，也表达不了「两者同回合不能并用」——这条只能由玩家与 DM 手动记账；加了额外的反应槽会让这个角色凭空多出一次能用在别处的反应，所以这里不写自动化。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少每回合（而非每轮）单独刷新的专属借机攻击特殊反应动作配额",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:战士:生死流转:18",
+   "name": "生死流转",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "如果你受到会将生命值降到0且不会立即杀死你的伤害，可以用反应延缓陷入昏迷并立刻插入一个额外回合。额外回合结束时若生命值仍为0则陷入昏迷。长休恢复。（引擎未实现打断当前回合插入额外回合的流程，需手动处理）",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少打断当前行动顺序并立即插入一个完整额外先攻回合（Extra Turn）的流程控制机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:战士:守护战技:7",
+   "name": "守护战技",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "只要你持用着一把近战武器或一面盾牌，当你或你周围 5 尺内你可见的生物被一次攻击命中时，你能以一个反应消耗一次使用次数（上限 = 你的体质调整值，至少 1 次，长休恢复全部），掷 1d8 加进被攻击者的 AC：如果加上后 AC 超过攻击检定的总值，这次攻击改为未命中；如果仍然命中，被攻击目标对本次攻击的伤害具有抗性（伤害减半）。【已自动化】次数池与反应代价、以及两个结果各自的效果 —— 弹窗里会给出两条互斥的选项，请先自己掷 1d8，按结果选其中一条：「改为未命中」会把这次命中作废（不进伤害），「仍然命中」会把本次伤害减半。【要人处理】1d8 加进 AC 这一步 —— 引擎没有「把一次掷骰加进 AC」的写法（AC 加值只能是定值），所以每条攻击都要你自己掷这 1d8 并挑选项。另外两处小事：目标本来就对该伤害类型有抗性时，减半会被连减两次，请手动补回一半；「持用近战武器或盾牌」引擎看不出来，弹窗里会问你一次。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "wardingManeuverMiss",
+      "label": "守护战技：1d8 加 AC 后改为未命中",
+      "on": "attackHit",
+      "role": "any",
+      "window": "before",
+      "when": "(target.id == self.id || (within(self, target, 5) && canSee(self, target))) && (self.wearing('S') || ask('持用近战武器吗？'))",
+      "cost": [
+       {
+        "economy": "reaction"
+       },
+       {
+        "resource": "warding-maneuver"
+       }
+      ],
+      "modify": [
+       "cancel"
+      ],
+      "do": []
+     },
+     {
+      "id": "wardingManeuverHalve",
+      "label": "守护战技：1d8 后仍然命中则伤害减半",
+      "on": "attackHit",
+      "role": "any",
+      "window": "before",
+      "when": "(target.id == self.id || (within(self, target, 5) && canSee(self, target))) && (self.wearing('S') || ask('持用近战武器吗？'))",
+      "cost": [
+       {
+        "economy": "reaction"
+       },
+       {
+        "resource": "warding-maneuver"
+       }
+      ],
+      "modify": [
+       "halveDamage"
+      ],
+      "do": [
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": [
+     {
+      "id": "warding-maneuver",
+      "name": "守护战技",
+      "formula": "max(1, con)",
+      "recovery": "long"
+     }
+    ]
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少在反应中动态投掷AC加值并根据重新判定是否命中的结果实行条件分支减半伤害（分支式修改）的机制",
+    "now": false
+   }
+  }
+ ]
+}

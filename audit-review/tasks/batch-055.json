@@ -1,0 +1,1178 @@
+{
+ "batch": "batch-055",
+ "count": 20,
+ "entries": [
+  {
+   "key": "XPHB:spell:强令对决",
+   "name": "强令对决",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "目标感知豁免失败陷入强令对决：对施法者之外的目标进行攻击检定时具有劣势。目标不能自主移动到距离施法者超过 30 尺（需在地图上手动限制）。施法者攻击其他生物、施法者盟友伤害目标、或回合结束相距超过 30 尺时法术提前终止。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "强令对决",
+      "activation": "bonus",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30,
+       "filter": "target.id != self.id && canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "强令对决",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少限制生物自主移动范围不得超过与施法者相距30尺的移动阻挡判定",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:强迫术",
+   "name": "强迫术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。30 尺内可见所选生物进行感知豁免，失败陷入魅惑状态直至法术结束。施法者后续可用附赠动作「强迫术：指定方向」命令被魅惑生物沿指定方向移动；强制移动及移动后的再次感知豁免需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "强迫术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": "self",
+       "area": {
+        "shape": "emanation",
+        "radius": 30
+       },
+       "filter": "target.id != self.id && canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "forEach"
+      ]
+     },
+     {
+      "id": "direct",
+      "name": "强迫术：指定方向",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating",
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "强迫术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少以附赠动作指定方向并强制受魅惑目标在其回合按该方向移动的路径控制机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:擒抱藤",
+   "name": "擒抱藤",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "附赠动作，专注至多 1 分钟。藤蔓从 60 尺内你指定的未占据空间破土而出（位置请自己在地图上标一个标记，引擎不记藤蔓本身）。对一个距藤蔓 30 尺内的生物进行一次近战法术攻击：命中受到 4d8 点钝击伤害，并被朝藤蔓方向拉近 30 尺；体型不超过巨型则同时陷入受擒（逃脱 DC 等同于你的法术豁免 DC）。之后每个回合可以用附赠动作「擒抱藤：藤蔓攻击」再打一次。手动部分：① 引擎把距离算成「你到目标」而不是「藤蔓到目标」，藤蔓放得远时要自己判断够不够得到；② 拉近的方向是朝你而不是朝藤蔓（有地图时会真的移动棋子）；③ 升环施法「每高一环多擒抱一名生物」引擎记不住，请自己盯住受擒的目标数量。「同一时间只能擒抱一名生物」已自动：再打中一名新目标时，旧的那个会被放开（引擎用重新开启专注来实现，所以每次藤蔓攻击都会让法术的剩余时长重新计 1 分钟）。受擒可用「擒抱藤：放开受擒的生物」随时解除（无需动作）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "擒抱藤",
+      "activation": "bonus",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "note",
+       "attack"
+      ]
+     },
+     {
+      "id": "strike",
+      "name": "擒抱藤：藤蔓攻击",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": "self.concentrating",
+      "root": [
+       "attack"
+      ]
+     },
+     {
+      "id": "release",
+      "name": "擒抱藤：放开受擒的生物",
+      "activation": "free",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "filter": "target.hasEffect('擒抱藤：受擒')"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating",
+      "root": [
+       "removeEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "擒抱藤：受擒",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少地图藤蔓实体与附赠动作将30尺内生物朝其拉近20尺的强制位移机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:驱逐善恶",
+   "name": "驱逐善恶",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "法术持续时间内（至多 1 分钟，专注），天界生物、元素生物、精类、邪魔和不死生物对你的攻击检定具有劣势。你可以以一个魔法动作使用破除惑控（触碰生物解除上述生物造成的附身、魅惑或恐慌）或驱逐（5尺内上述类型生物进行魅力豁免，失败遣送回家园位面；亡灵遣返堕影冥界，精类遣返妖精荒野）。使用任一特性都会提前结束本法术。位面遣返与解除附身需由 DM 与玩家手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "驱逐善恶",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "驱逐善恶：破除惑控或驱逐",
+      "activation": "action",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating && self.hasEffect('驱逐善恶')",
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "驱逐善恶",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少驱逐异界生物回原生位面（永久移出战斗）与解除附身状态的规则接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:群体暗示术",
+   "name": "群体暗示术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "以魔法影响 60 尺内至多 12 个可见生物，施以行动暗示（至多 25 字，必须听起来可行且不涉及伤害目标或其盟友）。每个目标进行感知豁免，失败陷入魅惑状态持续 24 小时（7 环 10 日，8 环 30 日，9 环 366 日；无需专注），尽其所能从事暗示行为。施法者或其盟友对其造成伤害时该生物的法术提前终止。暗示理解与行为执行需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "群体暗示术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 6
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 12,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "群体暗示术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "hours": 24,
+       "endsOn": [
+        {
+         "event": "damageApplied",
+         "when": "event.target == self.id && event.total > 0 && (event.source == source.id || (event.source != null && combatant(event.source).isAllyOf(source)))"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:群体医疗术",
+   "name": "群体医疗术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "选择 60 尺内任意数量可见生物，总计恢复至多 700 点生命值，由施法者随意分配（需手动调整生命值）。受治疗生物身上的目盲、耳聋与中毒状态一并被移除。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "群体医疗术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 9
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "removeEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:燃火术",
+   "name": "燃火术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "附赠动作施展，手中产生火焰持续 10 分钟并提供照明（照明手动处理）。持续期间可用动作将火焰掷出，进行远程法术攻击，造成 1d8（随等级成长）火焰伤害，投掷后法术终止。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "燃火术",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "燃火术：投掷火焰",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('燃火术')",
+      "root": [
+       "attack",
+       "removeEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "燃火术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 10
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "缺少手中持续产生光照（10尺明亮+10尺微光）并随生物移动的光源机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:任意门",
+   "name": "任意门",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "将自己传送至多 500 尺到指定位置，并可携带 5 尺内一名自愿生物一同传送。若落点已被生物或物体占据，各受到 4d6 点力场伤害且传送失败。具体传送位置与同行生物需在地图上手动操作。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "任意门",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "move",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少长距离（500尺）双人协同传送及落点空间占用碰撞判定",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:闪电箭矢",
+   "name": "闪电箭矢",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "使用武器发动远程攻击命中或失手后立即以附赠动作施展。替代该次攻击的原有伤害与效果，命中时目标受到 4d8（每升一环 +1d8）闪电伤害，失手时受到半数伤害；无论命中与否，目标周围 10 尺内的每个生物须进行敏捷豁免，失败受到 2d8（每升一环 +1d8）闪电伤害，成功半数。原攻击伤害替代与周围生物溅射豁免伤害需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "闪电箭矢",
+      "activation": "bonus",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": null,
+      "trigger": {
+       "on": [
+        "attackHit",
+        "attackMissed"
+       ],
+       "role": "actor",
+       "when": "attack.ranged && attack.weapon"
+      },
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "if",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少替换下次远程武器攻击伤害并将命中/未命中目标作为中心点对周围10尺内生物触发敏捷豁免溅射伤害的链式机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:闪现术",
+   "name": "闪现术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "在法术持续时间内每次自己回合结束时掷 1d6，4~6 消失前往以太位面（原位面生物无法观测或影响你）；下一回合开始时返回原先位置 10 尺内未被占据空间。位面转移与空间位移需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "闪现术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "闪现术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": {
+       "minutes": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少回合结束掷骰暂时脱离当前位面（隐藏不可选）并在下回合开始返回10尺内空间的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:闪耀斩",
+   "name": "闪耀斩",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "使用近战武器或徒手打击命中生物后以附赠动作施展。此次攻击额外受到 2d6（每升一环 +1d6）光耀伤害；专注至多 1 分钟，目标发出半径 5 尺明亮光照，对其进行的攻击检定具有优势，且其无法受益于隐形状态（光照与隐形失效需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "闪耀斩",
+      "activation": "bonus",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": null,
+      "trigger": {
+       "on": "attackHit",
+       "role": "actor",
+       "window": "before",
+       "when": "attack.melee && (attack.weapon || attack.unarmed)"
+      },
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": "turn.isMine",
+      "root": [
+       "addDamage",
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "闪耀斩",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "缺少目标身上持续散发动态光照以及禁用隐形状态收益的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:摄心目光",
+   "name": "摄心目光",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。双眼变为虚空，指定 60 尺内可见的一名生物进行感知豁免，失败承受所选效应之一（沉睡/惊慌/患病）直至法术结束。专注期间每回合可用动作指定另一名生物（不能指定已豁免成功的生物）。疾走逃离、脱离视线距离及摇晃唤醒需手动配合处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "摄心目光",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 6
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "摄心目光：凝视",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating && turn.isMine",
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "摄心目光：沉睡",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1,
+       "endsOn": [
+        {
+         "event": "damageApplied",
+         "when": "event.target == self.id && event.total > 0"
+        }
+       ]
+      }
+     },
+     {
+      "name": "摄心目光：惊慌",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     },
+     {
+      "name": "摄心目光：患病",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:神莓术",
+   "name": "神莓术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "消耗 1 环法术位在手中创造 10 颗魔法浆果，持续 24 小时。生物可用附赠动作吃下一颗浆果恢复 1 点生命值，并满足一整天的营养需求。浆果数量、分发与食用需由玩家手动记录处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "神莓术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少生成持续24小时的多份消耗品物品（魔法浆果）及食用回血的物品交互机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:生命灵光",
+   "name": "生命灵光",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。以自身为中心 30 尺光环内，你与盟友获得暗蚀伤害抗性；0 生命值的盟友在灵光范围内开始其回合时恢复 1 点生命值。生命值上限无法被降低需由玩家手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "生命灵光",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "生命灵光",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少防止生命值上限被削减（cannot be reduced）的保护性静态修正标记",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:圣火术",
+   "name": "圣火术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "目标进行敏捷豁免，失败受到 1d8（随等级成长）光耀伤害。目标无法从半掩护或四分之三掩护中获得好处（掩护需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "圣火术",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "豁免检定缺少忽略半掩护与四分之三掩护加值的豁免修正配置",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:圣洁灵光",
+   "name": "圣洁灵光",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "以自身为中心散发半径 30 尺光环（专注至多 1 分钟）。灵光内受选生物的所有豁免具有优势，对其发起的攻击检定具有劣势；邪魔或亡灵以近战攻击命中受影响生物时须通过体质豁免否则陷入目盲直至其下回合结束（反制目盲需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "圣洁灵光",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 8
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "圣洁灵光",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:圣言术",
+   "name": "圣言术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "附赠动作使 30 尺内指定的生物进行魅力豁免。豁免失败且生命值低于 50 时按当前生命值承受效应：0-20 点直接死亡（需手动处理）；21-30 点陷入目盲、耳聋和震慑 1 小时；31-40 点陷入目盲和耳聋 10 分钟；41-50 点陷入耳聋 1 分钟。无论生命值如何，豁免失败的天界生物、元素生物、精类、邪魔均被遣送回其起源位面（需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "圣言术",
+      "activation": "bonus",
+      "cost": [
+       {
+        "slot": {
+         "min": 7
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "range": 30
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "圣言术：目盲耳聋震慑",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "hours": 1
+      }
+     },
+     {
+      "name": "圣言术：目盲耳聋",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 10
+      }
+     },
+     {
+      "name": "圣言术：耳聋",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:石化术",
+   "name": "石化术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。60 尺内可见一名生物进行体质豁免（构装生物自动成功）。豁免成功，其速度直至施法者下个回合开始前变为 0；豁免失败，目标陷入束缚状态并在其每回合结束时重复体质豁免。累计 3 次成功则法术终止；累计 3 次失败则被转化为石头并陷入石化状态。若专注维持满 1 分钟，石化状态持续至被高等复原术移除（豁免次数累计与最终石化状态需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "石化术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 6
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "石化术：逐步石化",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     },
+     {
+      "name": "石化术：僵直",
+      "statics": [
+       "speedSet"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "source",
+        "nth": 1
+       }
+      }
+     },
+     {
+      "name": "石化术：石化",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:石墙术",
+   "name": "石墙术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟（持续至满则变为永久）。在 120 尺内指定一点创造非魔法石墙（由十块 10×10 尺厚 6 寸或十块 10×20 尺厚 3 寸板块相连组成）。每块板块 AC 15，每 1 寸厚度具 30 点生命值，免疫毒素和心灵伤害。穿过生物空间时推至一侧；若即将被完全包围，目标可进行敏捷豁免，成功可用反应移动至多等于其速度的距离以避免被围（石墙具体塑形、推移与豁免反应需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "石墙术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "point",
+       "range": 120
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少可自由塑形的地形石墙实体、占据空间推开判定及被围生物通过敏捷豁免消耗反应逃离的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:时间停止",
+   "name": "时间停止",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "你使时间暂时停止流动，一次性连续进行 1d4 + 1 个回合。期间除你之外时间静止，你可正常移动和使用动作；若你的动作或创造的效应影响到其他生物或其着装携带物件，或移动超过施法点 1000 尺，法术提前终止（连续回合与终止条件需人工处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "时间停止",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 9
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "时间停止",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  }
+ ]
+}

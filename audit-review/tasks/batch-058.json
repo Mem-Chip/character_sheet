@@ -1,0 +1,1195 @@
+{
+ "batch": "batch-058",
+ "count": 20,
+ "entries": [
+  {
+   "key": "XPHB:spell:元素武器",
+   "name": "元素武器",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "触碰一把非魔法武器，使其变为魔法武器并赋予所选元素类型（强酸、寒冷、火焰、闪电、雷鸣）。持续时间内武器攻击检定获得加值（3-4环+1，5-6环+2，7环+3），命中时造成额外伤害（3-4环1d4，5-6环2d4，7环3d4）。非魔法武器限制与指定单把武器需手动判定。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "元素武器",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "元素武器",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 1,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少直接为武器对象附魔（攻击加值与元素伤害附加）并在施法时自选伤害类型的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:原力法阵",
+   "name": "原力法阵",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。以你为中心 30 尺灵光内的你与你的盟友（灵光随你移动，有地图时按地图算距离，没有地图时按「都在范围内」处理）：① 为对抗法术或其他魔法效应而进行的豁免检定具有优势 —— 引擎分不出这次豁免是不是对抗法术 / 魔法效应，会问你一句；② 对抗「豁免成功只受半数伤害」的法术或魔法效应并豁免成功时完全不受伤害（已自动：豁免成功的那次伤害直接归零；这不是原文里的反射闪避，所以失败时照常受全额伤害；灵光范围外的盟友不该受这条保护，引擎会在没有地图时问一句他在不在范围内）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "原力法阵",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "原力法阵",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少对抗法术豁免成功时将半数伤害降为0（反射闪避/免伤结算）的修改能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:援助术",
+   "name": "援助术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "选择 30 尺内至多三个生物，其生命值上限和当前生命值在 8 小时内提高 5 点（每升 1 环 +5）。生命值上限与当前生命值的提升需手动调整。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "援助术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 3,
+       "range": 30
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "援助术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "hours": 8
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "缺少临时提升生物生命值上限（hpMax）并同步增加当前生命值的静态修正或效果节点",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:月光涌泉",
+   "name": "月光涌泉",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "散发 20 尺明亮光照与 20 尺微光光照（光照需手动处理）。获得光耀伤害抗性，近战攻击命中时额外造成 2d6 点光耀伤害。受到 60 尺内可见生物伤害后，可以反应迫使其进行体质豁免，失败则目盲至你的下个回合结束。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "月光涌泉",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "月光涌泉：致盲反击",
+      "activation": "reaction",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": {
+       "on": "damageTaken",
+       "role": "target",
+       "window": "after",
+       "when": "damage.amount > 0 && attacker != null && attacker.id != self.id && within(self, attacker, 60) && canSee(self, attacker)"
+      },
+      "concentration": null,
+      "requires": "self.hasEffect('月光涌泉')",
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "月光涌泉",
+      "statics": [
+       "resist"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "地图缺少动态散发20尺明亮光照与20尺微光光照的照明系统支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:月华之光",
+   "name": "月华之光",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。指定 120 尺内一点，产生半径 5 尺、高 40 尺的柱状微光区域。光柱出现时区域内的生物进行体质豁免，失败受 (slot.level)d10 光耀伤害（2 环 2d10，每高一环 +1d10），成功半数。生物进入光柱或在其中结束回合时同样须进行该豁免（每名生物每回合限一次）。已变形的生物豁免失败会变回真实形态、且在离开光柱前无法变形 —— 引擎不判断变形状态，这一条请人工处理。用「月华之光：移动光柱」把区域挪到新位置（区域不会自己动，最多 60 尺，请手动拖）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "月华之光",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "cylinder",
+        "radius": 5
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "forEach",
+       "zone"
+      ]
+     },
+     {
+      "id": "move",
+      "name": "月华之光：移动光柱",
+      "activation": "action",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "地图缺少持续区域（进入或在其中结束回合触发豁免判定）以及后续以动作移动区域位置的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:云雾术",
+   "name": "云雾术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 小时。以 120 尺内一点为中心创造半径 20 尺的球状浓雾，区域被重度遮蔽，留在地图上、随专注消失（使用的法术位每比 1 环高 1 环，半径增加 20 尺 —— 选范围时请手动选大些）。重度遮蔽（视线、攻击与察觉的判断）和被强风吹散引擎不处理，请人工判定；被吹散时法术提前结束，请手动删掉地图上的区域。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "云雾术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "sphere",
+        "radius": 20
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "zone",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少地图持续浓雾区域（提供重度遮蔽并阻挡视线）以及受强风吹散的环境交互机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:再生术",
+   "name": "再生术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "施法耗时 1 分钟。触碰一名生物使其立即恢复 4d8 + 15 点生命值。在接下来的 1 小时内，目标在其每回合开始时恢复 1 点生命值，且失去的身体部位将在 2 分钟后重新长出（断肢再生需叙事处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "再生术",
+      "activation": {
+       "minutes": 1
+      },
+      "cost": [
+       {
+        "slot": {
+         "min": 7
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "heal",
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "再生术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": {
+       "hours": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:造风术",
+   "name": "造风术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。从自身向指定方向吹出长 60 尺、宽 10 尺的线状强风。区域内的生物进行力量豁免，失败被推离你 15 尺；在风线内结束其回合也要进行同样的豁免（引擎按区域自动结算；有地图时 push 会真的移动棋子）。迎风移动每 1 尺花 2 尺移动力、吹散毒气蒸汽、吹灭火焰、以及用附赠动作改变风道方向都需人工处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "造风术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": "self",
+       "area": {
+        "shape": "line",
+        "length": 60,
+        "width": 10
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "forEach",
+       "zone",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少地图持续线状风场区域（逆风移动消耗加倍、回合结束触发推离）以及附赠动作改变方向的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:召雷术",
+   "name": "召雷术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "召唤半径 60 尺风暴云，持续至多 10 分钟（专注）。施法时及后续可用动作降下闪电，指定点 5 尺内生物进行敏捷豁免，失败受 3d10（升环每比三环高一环+1d10）闪电伤害，成功受半数伤害；室外暴风雨天气伤害+1d10、风暴云覆盖范围及后续动作升环伤害需手动调整判定。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "召雷术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "cylinder",
+        "radius": 5
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "forEach"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "召雷术：降下闪电",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "area",
+       "range": 120,
+       "area": {
+        "shape": "cylinder",
+        "radius": 5
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating",
+      "root": [
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "召雷术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "remember",
+    "need": "持续法术后续以动作激活降雷时无法继承施法时的法术位环阶（缺少跨动作记忆施法环阶机制）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:真知术",
+   "name": "真知术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "持续 1 小时。触碰一个自愿生物，使其获得 120 尺真实视觉：看穿普通与魔法黑暗，看见隐形生物与物件，自动看穿视觉幻象且对抗幻象的豁免自动成功，辨析变形生物或变形魔法的原本形态，看入以太位面（真实视觉的视线判定需在询问时确认或手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "真知术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 6
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "touch"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "真知术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "hours": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:支配怪物",
+   "name": "支配怪物",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "选择 60 尺内你可见的一名生物（若正在与其战斗豁免具优势，由人判定）。目标感知豁免失败陷入被支配的魅惑状态，专注至多 1 小时（9 环至多 8 小时）。目标每次受到伤害时可重复豁免，成功则法术终止。心灵感应指挥与 9 环专注时长需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "支配怪物",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 8
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": {
+       "hours": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "支配怪物",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:支配类人",
+   "name": "支配类人",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "对 60 尺内可见类人生物施展（若正在与其战斗豁免具优势，由人判定）。目标感知豁免失败陷入被支配的魅惑状态，专注至多 1 分钟（升环 6 环 10 分钟、7 环 1 小时、8 环+ 8 小时）。目标每次受到伤害时可重复豁免，成功则法术终止。心灵感应指挥与升环专注时长需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "支配类人",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 5
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "target.type == '类人生物'"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "支配类人",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少对被支配生物进行完全行动控制（心电感应指挥目标行动）的状态规则，以及专注时长动态升环支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:支配野兽",
+   "name": "支配野兽",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "对 60 尺内可见野兽施展（若正在与其战斗豁免具优势，由人判定）。目标感知豁免失败陷入被支配的魅惑状态，专注至多 1 分钟（升环 5 环 10 分钟、6 环 1 小时、7 环+ 8 小时）。目标每次受到伤害时可重复豁免，成功则法术终止。心灵感应指挥与升环专注时长需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "支配野兽",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "target.type == '野兽'"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "支配野兽",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少对被支配野兽进行完全行动控制（心电感应指挥目标行动）的状态规则，以及专注时长动态升环支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:植物滋长",
+   "name": "植物滋长",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "【繁茂】1 动作施法：指定 150 尺内一点，100 尺半径球状区域内的普通植物变得粗壮繁茂，穿过区域的生物每移动 1 尺必须花费 4 尺移动力（你可以在范围内空出任意多块区域排除在外）。区域留在地图上。引擎不处理地形与移动力，这一条请人工按 4 倍消耗结算。【丰产】改为 8 小时施法：距该点半里内的植物在 365 日内产量翻倍，纯探索期效应，人工记录。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "植物滋长",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 150,
+       "area": {
+        "shape": "sphere",
+        "radius": 100
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少地图持续植物繁茂区域（穿过时每移动1尺需花费4尺移动力）以及施法者指定排除子区域的能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:治疗祷言",
+   "name": "治疗祷言",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "施法 10 分钟。30 尺内至多 5 个生物获得短休增益并恢复 (slot.level)d8 生命值。生物直到完成长休前无法再次受此法术影响（短休增益与长休前不可再次受影响需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "治疗祷言",
+      "activation": {
+       "minutes": 10
+      },
+      "cost": [
+       {
+        "slot": {
+         "min": 2
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 5,
+       "range": 30
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "heal"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "缺少法术赋予短休收益以及在完成长休前限制再次受此法术影响的冷却跟踪",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:重伤术",
+   "name": "重伤术",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "指定 60 尺内可见的一个生物进行体质豁免。豁免失败受到 14d6 点暗蚀伤害，且生命值上限降低等同所受暗蚀伤害点数（不能降至 1 以下，持续至完成长休）；豁免成功受到半数伤害。生命值上限降低需手动调整。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "重伤术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 6
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "重伤术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "endsOn": [
+        {
+         "event": "restCompleted",
+         "when": "event.kind == 'long'"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:咒唤林地卫士",
+   "name": "咒唤林地卫士",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。你身周 10 尺光环由自然精魂缭绕：施放时已在光环里的生物立刻进行一次感知豁免；此后每有一名生物在光环里结束其回合，同样进行一次感知豁免 —— 失败受 (1 + 施放环阶)d8 力场伤害（4 环 5d8，每高一环 +1d8），成功受半数。同一生物一回合只需要进行一次该豁免。持续时间内你还可以用附赠动作执行撤离动作。引擎自动处理的：施放当下在光环里的那次豁免、以及在光环里结束回合的那次（灵光跟着你走，用你身上的效应 + 距离条件结算，不画在地图上）。要人处理的：①「一名生物进入光环」和「光环移入一名生物所在的空间」这两个时机引擎没有窗口 —— 用「自然精魂冲击」手动补（自动按施放环阶掷骰）；② 这两次都是「你都可以迫使」，引擎每次都会问你要不要生效，不要就答「否」；③ 看不见的生物引擎会跳过（用 canSee 判断；没有地图时问 DM）；④「一名生物一回合只需要进行一次」引擎不替你合并：如果你已经用「自然精魂冲击」给某生物结算过本回合的那次，它结束回合时的自动结算要人工略过（撤销那笔）；⑤没有地图时，谁在光环里靠「要不要生效」的提问判断（每名生物回合结束时问一次）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "咒唤林地卫士",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": "self",
+       "area": {
+        "shape": "emanation",
+        "radius": 10
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "note",
+       "forEach"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "咒唤林地卫士：撤离",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('咒唤林地卫士（光环）') && turn.isMine",
+      "root": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "strike",
+      "name": "咒唤林地卫士：自然精魂冲击",
+      "activation": "free",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 10
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('咒唤林地卫士（光环）')",
+      "root": [
+       "if"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "咒唤林地卫士",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少随施法者移动的光环在进入生物空间或生物进出/结束回合时自动结算伤害（每回合限一次）的区域触发机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:咒唤圣光",
+   "name": "咒唤圣光",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 90 尺内召唤半径 10 尺、高 40 尺的光之立柱。对区域内可见生物，分别选择【治愈之光】恢复等于 4d12 + 施法属性调整值生命值（每高一环 +1d12），或【灼热之光】敏捷豁免，失败受 6d12 光耀伤害（半数，每高一环 +1d12）。柱状区域移动及生物进出与回合结束照耀由玩家手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "咒唤圣光",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 7
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 90,
+       "area": {
+        "shape": "cylinder",
+        "radius": 10
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "XPHB:spell:咒唤兽群",
+   "name": "咒唤兽群",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 60 尺内一处你可见的未占据空间咒唤出大型虚幻兽群（形态例如狼群、蛇群或鸟群，只是外观）。你位于兽群 5 尺内期间，你的力量豁免检定具有优势（引擎会问你）。每当兽群在移动中进入一名你可见的生物 10 尺内、一名你可见的生物进入兽群 10 尺内、或在该空间结束其回合时，你都可以迫使该生物做敏捷豁免，失败受 (slot.level)d10 挥砍伤害（每比 3 环高 1 环 +1d10）；同一名生物一回合只需要做一次该豁免。地图上的区域画的就是「兽群 10 尺内」的范围：兽群本身占 10 尺立方，所以请选 30 尺立方（兽群 10 尺 + 四周各 10 尺），会随专注消失。「兽群移动」和「兽群移动中进入生物 10 尺内」这两条引擎做不到（区域不能被移动），请在地图上手动删掉旧区域、在新位置重画一个 30 尺立方，并用「咒唤兽群：兽群践踏」补算那一次豁免。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "咒唤兽群",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 60,
+       "area": {
+        "shape": "cube",
+        "size": 30
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "zone",
+       "note"
+      ]
+     },
+     {
+      "id": "use",
+      "name": "咒唤兽群：兽群践踏",
+      "activation": "free",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('咒唤兽群（激活）')",
+      "root": [
+       "save"
+      ]
+     },
+     {
+      "id": "moveHerd",
+      "name": "咒唤兽群：移动兽群",
+      "activation": "free",
+      "cost": [],
+      "targeting": {
+       "type": "area",
+       "range": 30,
+       "area": {
+        "shape": "cube",
+        "size": 30
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('咒唤兽群（激活）') && turn.isMine",
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "咒唤兽群",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少可在地图上由施法者操控移动并在靠近/进入/结束回合时触发豁免伤害的持续虚幻区域实体",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:spell:咒唤微元素群",
+   "name": "咒唤微元素群",
+   "kind": "spell",
+   "from": "data/dyn/ai/spells.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在自身身周 15 尺光环内咒唤微元素群。你进行的任何攻击检定命中光环内的生物时，额外造成 2d8 点（升环每高一环 +1d8）强酸、寒冷、火焰或闪电伤害（攻击时自选）；光环内地面视为敌人的困难地形（困难地形及升环加骰需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "cast",
+      "name": "咒唤微元素群",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "咒唤微元素群",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少随身移动的光环将地面变为敌人困难地形的机制，以及效应触发器中读取施法环阶进行加伤缩放的能力",
+    "now": false
+   }
+  }
+ ]
+}

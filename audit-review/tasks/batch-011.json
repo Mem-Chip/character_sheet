@@ -1,0 +1,998 @@
+{
+ "batch": "batch-011",
+ "count": 20,
+ "entries": [
+  {
+   "key": "FRHoF:spell:伊尔明斯特的绚丽光球",
+   "name": "伊尔明斯特的绚丽光球",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "持续 1 小时。创造 6 枚彩色光球环绕自身。光球存在期间可消耗光球：【吸收能量】受到强酸/寒冷/火焰/闪电/雷鸣伤害时以反应消耗 1 枚光球，获得对该伤害类型的抗性直至你的下个回合开始；【光能爆】以附赠动作消耗 1 枚光球对 120 尺内目标发动远程法术攻击，命中造成 3d6 点强酸、寒冷、火焰、闪电或雷鸣伤害（由你选择）。升环施法时法术位每高一环多创造 1 枚光球。消耗完全部光球后法术提前结束（光球计数、伤害类型选择与法术提前结束需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "伊尔明斯特的绚丽光球",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 6
+        }
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "blast",
+      "name": "伊尔明斯特的绚丽光球：光能爆",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 120
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "attack",
+       "note"
+      ]
+     },
+     {
+      "id": "absorb",
+      "name": "伊尔明斯特的绚丽光球：吸收能量",
+      "activation": "reaction",
+      "cost": [],
+      "targeting": null,
+      "trigger": {
+       "on": "damageIncoming",
+       "role": "target",
+       "window": "before"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "伊尔明斯特的绚丽光球",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "hours": 1
+      }
+     },
+     {
+      "name": "绚丽光球：元素抗性",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "bearer",
+        "nth": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "FRHoF:spell:灾厄之刃",
+   "name": "灾厄之刃",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。在 60 尺内一处空间创造形如剑刃的位面裂隙，并立即对其 5 尺内目标发动两次近战法术攻击。命中造成 10d6 力场伤害，且 d20 投出 18 或更高即算作重击。后续回合中可以附赠动作令裂隙移动至多 60 尺并再次发动两次攻击。剑刃可无害穿过任何屏障（包括力场墙；裂隙移动与屏障穿透需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "灾厄之刃",
+      "activation": "bonus",
+      "cost": [
+       {
+        "slot": {
+         "min": 9
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "repeat"
+      ]
+     },
+     {
+      "id": "attack",
+      "name": "灾厄之刃：移动并攻击",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating",
+      "root": [
+       "repeat"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": null
+  },
+  {
+   "key": "FRHoF:spell:噪鸣护盾",
+   "name": "噪鸣护盾",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。获得雷鸣伤害抗性，且对你发动的远程攻击检定具有劣势。源自你的半径 10 尺光环内，每当生物进入光环或在其中结束回合时，该生物须进行体质豁免，失败受 3d6 雷鸣伤害（每升一环 +1d6）且陷入耳聋直至你的下回合开始，成功受半伤（每名生物每回合限一次）。光环是画在地图上的区域：它不会跟着你走，也不会「移入」生物空间（这两条请人工处理）；施法时指定不受影响的生物同样需人工处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "噪鸣护盾",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": "self",
+       "area": {
+        "shape": "emanation",
+        "radius": 10
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "forEach",
+       "zone"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "噪鸣护盾",
+      "statics": [
+       "resist"
+      ],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": null
+     },
+     {
+      "name": "噪鸣护盾：耳聋",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "source",
+        "nth": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少跟随施法者移动的光环在移入生物空间或生物进入时自动触发豁免结算的动态区域机制",
+    "now": false
+   }
+  },
+  {
+   "key": "FRHoF:spell:制敌术",
+   "name": "制敌术",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "掷出令目标晕眩的魔法力场，目标进行体质豁免（构装和亡灵自动成功）。豁免失败受 2d4 力场伤害（每升一环 +2d4），速度减半至你的下回合开始，且在其下回合中仅可执行一个动作或一个附赠动作（不能同时执行二者）。豁免成功受半伤（构装/亡灵判定、速度减半与行动限制由人手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "制敌术",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "制敌术",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "source",
+        "nth": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少「下回合动作与附赠动作二选一不可兼得」的复合动作经济限制状态标记",
+    "now": false
+   }
+  },
+  {
+   "key": "FRHoF:spell:咒唤机群",
+   "name": "咒唤机群",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 60 尺内未占据空间咒唤中型机群。施法时或后续以魔法动作（动作），令机群指定其 5 尺内目标生效：【机关之力】目标敏捷豁免，失败受 3d6 力场伤害，成功半伤；【秩序守护】目标获得 1d6 + 施法属性调整值点临时生命。你在回合移动时可令机群移动至多 30 尺（升环每高一环伤害与临时生命各 +1d6；机群移动与升环需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "咒唤机群",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 3
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 10
+      },
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     },
+     {
+      "id": "command",
+      "name": "咒唤机群：驱策机群",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.concentrating",
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少咒唤无生命实体棋子在地图上位移并以此实体为源点释放效果的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "FRHoF:spell:咒火风暴",
+   "name": "咒火风暴",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。以 60 尺内一点为中心咒唤半径 20 尺、高 20 尺柱状明亮咒火光柱。出现时位于其中的生物进行体质豁免，失败受 4d10 光耀伤害（每升一环 +1d10），成功减半。生物进入区域或在其中结束回合同样须进行豁免（每回合限一次）。此外，区域内生物施法时须通过体质豁免，否则法术消散、动作浪费（法术位不消耗）——引擎没法在区域里挂施法时机，这条请人工判定。施法时指定不受影响的生物、明亮光照与结阵施法也需人工处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "咒火风暴",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 4
+        }
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 60,
+       "area": {
+        "shape": "cylinder",
+        "radius": 20
+       }
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "note",
+       "forEach",
+       "zone"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少持续地形区域监听内部生物进入、回合结束以及施法时触发打断豁免的区域控制机制",
+    "now": false
+   }
+  },
+  {
+   "key": "FRHoF:spell:咒火闪焰",
+   "name": "咒火闪焰",
+   "kind": "spell",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "对 60 尺内一个目标发动一次远程法术攻击，目标无法从掩护中获益；命中造成 2d10 光耀伤害。【升环施法】每比 1 环高 1 环，可额外发射一道焰能爆，可瞄准同一或不同目标，每道分别进行攻击（忽略掩护与升环额外攻击需手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "咒火闪焰",
+      "activation": "action",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "attack"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "攻击与判定缺少忽略目标半掩护与四分之三掩护加值的机制（此外升环可改用 count: slot.level, repeat: true 实现）",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:奥能动力甲",
+   "name": "奥能动力甲",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "步行速度增加 5 尺与代替缺失肢体属于装备静态与叙事属性。未持握物品的手套作为魔法近战/投掷武器（熟练，1d8 力场伤害，投掷 20/60 尺且投掷后立即飞回重新连接），由玩家在武器攻击中发起并手动处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少将盔甲手套赋予为特殊魔法近战/投掷武器并自动生成武器攻击行的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:超魔导师",
+   "name": "超魔导师",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "超魔法选项由角色建卡与升级时选定，并在各超魔法条目中生效。获得 2 点术法点专门用于超魔法（资源「术法点（超魔法）」，长休恢复）。使用超魔法与扣除术法点由玩家手动处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "人物卡静态构建层应支持配置专享术法点与超魔法选项，动态层缺少超魔法跨条目资源消耗接口",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:德鲁伊:孢子环绕:2",
+   "name": "孢子环绕",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "当一个生物进入你周围10尺范围内或在其中开始其回合时，你可以使用反应迫使其进行一次对抗你法术豁免DC的体质豁免，豁免失败受到 1d4 暗蚀伤害（6级 1d6，10级 1d8，14级 1d10）。移动进入10尺空间由玩家手动触发反应。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "孢子环绕",
+      "activation": "reaction",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "range": 10,
+       "filter": "target.id != self.id"
+      },
+      "trigger": {
+       "on": "turnStarted",
+       "role": "any",
+       "window": "after",
+       "when": "ask('有生物进入你周围10尺空间或在其中开始其回合吗？')"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少敌方生物移动进入自身10尺范围或在其中开始回合时的反应触发时机（creatureEnteredRange / turnStartedInRange）",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:德鲁伊:炽烈回生:14",
+   "name": "炽烈回生",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "当你生命值降至 0 且因此陷入昏迷时，若野火灵魄与你相距不超过 120 尺，你可以令灵魄降至 0 生命值，你改为恢复一半最大生命值并立刻站起来。引擎问不了距离，弹出这个触发器时请人回答「灵魄在 120 尺内且存活吗」；灵魄降为 0 并消失也要手动处理。必须完成一次长休才能再次使用。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "blazing-revival",
+      "label": "炽烈回生：免于死亡",
+      "on": "reducedTo0",
+      "role": "target",
+      "window": "before",
+      "when": "ask('野火灵魄在 120 尺内且存活吗？')",
+      "cost": [
+       {
+        "resource": "blazing-revival"
+       }
+      ],
+      "modify": [
+       "setHp"
+      ],
+      "do": [
+       "removeEffect",
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": [
+     {
+      "id": "blazing-revival",
+      "name": "炽烈回生",
+      "formula": 1,
+      "recovery": "long"
+     }
+    ]
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少自身降为0生命值（reducedTo0 before）时牺牲指定召唤物灵魄（令其降为0血）以恢复半数生命值并站起的接口",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:德鲁伊:扩散孢子:10",
+   "name": "扩散孢子",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "处于一体共生状态下，可以用附赠动作将真菌孢子投向至多 30 尺远，在地图上留下一片 10 尺立方的孢子区域，持续 1 分钟（10 轮）。生物移动进入该区域或在该处开始回合时，须进行对抗你法术豁免 DC 的体质豁免，失败受到孢子环绕的伤害（每名生物每回合至多一次）。只要孢子存在，你就不能使用孢子环绕的反应能力。提前消失（再次使用、附赠动作取消、一体共生结束）需要在界面上手动删掉区域。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "扩散孢子",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "area",
+       "range": 30,
+       "area": {
+        "shape": "cube",
+        "size": 10
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('一体共生')",
+      "root": [
+       "applyEffect",
+       "zone",
+       "note"
+      ]
+     },
+     {
+      "id": "dismiss",
+      "name": "取消扩散孢子",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('扩散孢子')",
+      "root": [
+       "removeEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "扩散孢子",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "缺少在指定点创建持续存在的10尺立方区域并在生物进入或开始回合时自动触发体质豁免结算的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:德鲁伊:强化链接:6",
+   "name": "强化链接",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "在你的野火灵魄存在期间，你施展一个造成火焰伤害或回复生命值的法术时，骰一枚 d8，你在该法术的一次伤害掷骰或治疗掷骰中获得等同于骰出数值的加值。引擎只能自动处理「法术攻击命中后的那次伤害掷骰」：修正挂在法术攻击的伤害包上，每次命中都会问一句「野火灵魄存在，且这个法术造成火焰伤害吗？」，答是就加 1d8（与被加骰的伤害同类型）。引擎做不到、要人工加的部分：① 豁免型法术的伤害掷骰（火球术、燃烧之手这类没有攻击检定的，引擎只在有攻击检定时读施法者的伤害加骰修正）；② 治疗掷骰的加值（治疗结算只读「取最大值」那一类修正，不读加骰）；③ 原文限「该法术的一次」掷骰，引擎每包伤害都会加，多包（灼热射线三束）时只算一次。此外，你施展施法范围非自身的法术时，可以自由选择以你或野火灵魄为发出点 —— 引擎不管位置，请手动判定距离与视线。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "缺少施法时以在场召唤随从为法术源点进行射程检查与释放的机制，以及对法术治疗掷骰追加 1d8 的触发接口",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:德鲁伊:闪耀星座:10",
+   "name": "闪耀星座",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "每个你的回合开始时，若处于星耀形态，可以更换身上闪耀的星座。射手座与圣杯座的数值提升已在2级对应条目中通过等级判断实现；巨龙座的飞行速度由人物卡静态层体现。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "swap",
+      "label": "闪耀星座：更换星座",
+      "on": "turnStarted",
+      "role": "actor",
+      "window": "after",
+      "when": "self.hasEffect('星耀形态')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "choose"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "巨龙座激活时缺少赋予 20 尺飞行速度与悬浮（flying & hover）的动态能力",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:德鲁伊:一体共生:2",
+   "name": "一体共生",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个动作消耗一次荒野形态使用次数，立刻获得等同于德鲁伊等级 4 倍的临时生命值，并进入「一体共生」状态，持续 10 分钟。已自动化：状态期间你的近战武器攻击命中时自动加 1d6 黯蚀伤害；失去全部临时生命值（临时生命值降到 0）或再次使用荒野形态时，状态与这项加伤一起结束。【要人处理】①「当你的孢子环绕造成伤害时，可以再骰一枚伤害骰并加入伤害」这一条引擎做不到：孢子环绕是豁免伤害、不是攻击，引擎没有「给别的条目造成的伤害补骰」的钩子。那一次孢子环绕的伤害掷完后，请用「事后裁定」把多掷的那一枚补进伤害总量。②结束条件是按「受到伤害结算时临时生命值被吃光」判定的；如果是 DM 在详情抽屉里手改临时生命值 / 手动移除，请自己把「一体共生」效应删掉。③临时生命值取较高者：如果你身上本来就有更高的临时生命值，这次不会顶掉它，「失去全部临时生命值」也以那个更高的数为准（只是计数高一些，规则结果一致）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "一体共生",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "wildshape-uses"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "tempHp",
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "一体共生",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": {
+       "minutes": 10,
+       "endsOn": [
+        {
+         "event": "damageApplied",
+         "when": "event.target == self.id && self.tempHp > 0 && event.tempAbsorbed >= self.tempHp"
+        },
+        {
+         "event": "effectApplied",
+         "when": "event.bearer == self.id && event.key == 'XPHB:德鲁伊:荒野形态:2#荒野形态'"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少临时生命值耗尽时自动终止效应的事件监听，以及为特性豁免伤害（孢子环绕）注入额外伤害骰的触发/修正机制",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:德鲁伊:召唤野火精魂:2",
+   "name": "召唤野火精魂",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个动作消耗一次荒野形态使用次数，召唤出与你灵魂连接的野火灵魄 —— 它以你选择的、30 尺内一处你可见的未被占据空间出现；它出现时，它 10 尺范围内除你之外的每个生物都要通过一次对抗你法术豁免 DC 的敏捷豁免，失败受 2d6 火焰伤害。数据（TCE 野火精魂数据卡）：小型元素生物，AC 13，HP 5 + 5 × 你的德鲁伊等级，速度 30 尺另有飞行 30 尺（悬浮），力量 10 / 敏捷 14 / 体质 14 / 智力 13 / 感知 15 / 魅力 11，黑暗视觉 60 尺，免疫火焰，免疫魅惑 / 恐慌 / 受擒 / 倒地 / 束缚；火种（远程法术攻击，射程 60 尺，1d6 + 熟练加值 火焰伤害）、烈焰传送。它对你和同伴友善、遵从你的命令，与你共用先攻并在你回合后立即行动；可以自行移动和执行反应，但你只有用附赠动作命令它，它才会执行动作（否则只能回避；你失能时它可以自行选择任何动作）。已自动：灵魄实体与数值、出现时的 2d6 火焰伤害（施法时选中那 10 尺范围内的生物就行）、火种、烈焰传送的爆炸。灵魄的生命值降为 0 时消失（引擎只把它标成死亡、棋子还留在遭遇里，请手动从地图上移除）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "召唤野火精魂",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "wildshape-uses"
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": 30,
+       "area": {
+        "shape": "sphere",
+        "radius": 10
+       },
+       "filter": "target.id != self.id"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "summon",
+       "forEach",
+       "note"
+      ]
+     },
+     {
+      "id": "command",
+      "name": "命令野火精魂",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine",
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "召唤具有独立属性块的随从生物入场并支持附赠动作指挥行动",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:德鲁伊:真菌感染:6",
+   "name": "真菌感染",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "你周围 10 尺内一个生物降到 0 生命值时，如果它是小型或中型的野兽或类人生物，你可以用反应（并消耗一次「真菌感染」次数）把它的尸体活化成丧尸：生命值 1 点、AC 8、速度 20 尺、猛击 +3 命中 1d8+1 钝击，毒素免疫、力竭和中毒状态免疫，先攻紧接在你的回合之后（引擎把召唤物排在你后面）。类型和体型按怪物数据判断；数据里认不出类型 / 体型的怪会问你一句。活化状态持续 1 小时，到点自动退场（引擎用一份 1 小时的「真菌感染」记录把丧尸链接住，时间流逝满 1 小时就一起消失）。丧尸降到 0 生命值时会问你要不要用「不死坚韧」（体质豁免 DC 5 + 所受伤害，光耀伤害或重击不适用），成功就改成 1 点生命值。次数上限等于你的感知调整值（至少 1 次），长休恢复。【要人处理】①原文说丧尸「唯一能执行的动作只有攻击动作并进行一次近战攻击」——引擎不知道这个限制，它的动作栏里也有疾走等通用动作，请只用攻击动作做一次猛击。②丧尸的黑暗视觉 60 尺没有写进战斗数据。③多只丧尸同时存在时，用来计时的那份「真菌感染」记录在界面上只有最新那份显示为生效、其余标「被压制」，但每只丧尸的 1 小时各自计时，不影响结算。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "infest",
+      "label": "真菌感染：活化尸体",
+      "on": "reducedTo0",
+      "role": "any",
+      "window": "before",
+      "when": "within(self, target, 10) && ((target.type == '野兽' || target.type == '类人生物') && (target.size == '小型' || target.size == '中型') || ((target.type == '' || target.size == '') && ask('死者的类型 / 体型不在数据里：它是小型或中型的野兽或类人生物吗？')))",
+      "cost": [
+       {
+        "economy": "reaction"
+       },
+       {
+        "resource": "fungal-infestation"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": [
+     {
+      "id": "fungal-infestation",
+      "name": "真菌感染",
+      "formula": "max(1, wis)",
+      "recovery": "long"
+     }
+    ]
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "生物死亡时反应活化为丧尸并在施法者回合后协同行动",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:德鲁伊:灼烧烈焰:10",
+   "name": "灼烧烈焰",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "当小型或更大生物在你或野火灵魄30尺内死亡时涌现幽火，持续1分钟。可见生物进入该空间时，你可以用反应熄灭幽火，对该生物造成 2d10+感知调整值 点火焰伤害或恢复等量生命值。幽火位置与进入时机由人工判定，进入时以自由动作（消耗反应与资源）结算。次数等于熟练加值，长休恢复。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "灼烧烈焰",
+      "activation": "free",
+      "cost": [
+       {
+        "economy": "reaction"
+       },
+       {
+        "resource": "cauterizing-flames"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "range": 30
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "生物死后在格子生成持续幽火区域，并在生物进入格子时触发反应造成伤害或治疗",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:法师:大书士:10",
+   "name": "大书士",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "每次长休完成时，可用法师笔触碰空白纸张将觉醒魔典中一个施法时间为1动作的1环或2环法术抄成强化卷轴（视为高1环阶）。你可以以动作阅读卷轴施展该法术（仅你自己可用，施展后或下次长休后消失）。长休恢复1次。此外制造法术卷轴的时间与金币减半。卷轴制作与具体法术施展由人手动处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [
+     {
+      "id": "use",
+      "name": "施展卷轴法术",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "master-scrivener"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "长休制作升环专属法术卷轴并在战斗中阅读施展",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:法师:觉醒魔典:2",
+   "name": "觉醒魔典",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "法术书可作为施法法器。消耗法术位施展法师法术时，可将伤害类型替换为法术书中同环阶另一法术的伤害类型（由人手动替换伤害类型）。能以法术正常施法时间进行仪式施法而无需额外花费10分钟，长休恢复1次。短休时可用法师笔将魔典转移至新书。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "觉醒魔典：快速仪式",
+      "activation": "none",
+      "cost": [
+       {
+        "resource": "awakened-spellbook-ritual"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "施放法术造成伤害时自由将伤害类型替换为法术书中同环阶法术的伤害类型",
+    "now": false
+   }
+  }
+ ]
+}

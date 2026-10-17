@@ -1,0 +1,895 @@
+{
+ "batch": "batch-032",
+ "count": 20,
+ "entries": [
+  {
+   "key": "XPHB:野蛮人:神之狂暴:14",
+   "name": "神之狂暴",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "激活狂暴时可以呈现圣斗士姿态（1 分钟，生命值降至 0 时提前结束，每次长休一次）。已自动处理：暗蚀/心灵/光耀抗性、回春（反应 + 一次狂暴次数）。飞行速度（等于速度）与悬浮需要人处理；「必须在激活狂暴时使用」由人判断。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "神之狂暴",
+      "activation": "free",
+      "cost": [
+       {
+        "resource": "神之狂暴"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && self.hasEffect('狂暴') && !self.hasEffect('圣斗士姿态')",
+      "root": [
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "圣斗士姿态",
+      "statics": [
+       "resist"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": {
+       "minutes": 1,
+       "endsOn": [
+        {
+         "event": "damageTaken",
+         "when": "self.hp <= 0"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "StaticMod和效应缺少赋予飞行速度与悬浮（hover）能力的静态属性支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:野蛮人:神之勇者:3",
+   "name": "神之勇者",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "附赠动作消耗治疗池里任意枚 d12 恢复自身生命值：引擎会问用几枚、掷骰、把总和加上去并扣池，长休由人物卡的治疗池恢复。要人处理：治疗池的上限（6 级 5 枚、12 级 6 枚、17 级 7 枚）—— 人物卡上这个池是静态层写死的 4（data/abilities-2024.json 里 formula 就是 4，条目里再声明同名池会被战斗跳过），引擎没法按等级改。到了这些等级请自己记着多出来的骰子（或者去改那条能力的次数池数据）。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "神之勇者：治疗",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.resource('healing-pool') > 0",
+      "root": [
+       "number",
+       "heal",
+       "resource"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "人物卡自带的资源池上限无法随职业等级成长动态计算（需支持表达式上限）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:野蛮人:圣树活力:3",
+   "name": "圣树活力",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "活力之涌（激活狂暴时获得等于野蛮人等级的临时生命值）：引擎没有激活狂暴的时机，需人手动加。赐命之源：已写为动作，需人在你的回合开始时使用（每回合一次靠人判断）。狂暴结束时剩余临时生命值消失：需人手动移除。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "圣树活力：赐命之源",
+      "activation": "free",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 10,
+       "filter": "target.id != self.id"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && self.hasEffect('狂暴')",
+      "root": [
+       "tempHp"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少狂暴激活（rageStarted）与狂暴结束事件，无法在进入狂暴时获得临时生命值并在狂暴结束时清除",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:野蛮人:世界树之奇旅:14",
+   "name": "世界树之奇旅",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "狂暴期间以附赠动作传送至多 60 尺已写。激活狂暴时的免费传送：引擎没有激活狂暴的时机，需人手动处理。每次狂暴一次的 150 尺传送并带上至多 6 个自愿生物：引擎没有每次狂暴的次数限制，需人手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "世界树之奇旅：传送",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('狂暴')",
+      "root": [
+       "move"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少携带多个自愿生物群体传送的机制，且缺少「每次狂暴期间限一次」的频率限制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:野蛮人:兽力威能:14",
+   "name": "兽力威能",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "雄狮与角羊的狂暴期间效果已写，靠询问确认本次选的是哪一项；雄狮的例外（以另一名雄狮野蛮人为目标时不生效）未写，需人手动。猎鹰（未着护甲时飞行速度等于速度）：引擎没有飞行速度，需人手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "goat",
+      "label": "兽力威能：角羊（倒地）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.melee && target.size != '巨型' && target.size != '超巨型' && self.hasEffect('狂暴') && ask('兽力威能：本次狂暴选的是角羊吗？')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "效应缺少提供等同于步行速度的飞行速度支持，且缺少特定图腾特性的例外豁免判定",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:野蛮人:兽性狂暴:3",
+   "name": "兽性狂暴",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "每当你激活狂暴时，从熊 / 鹰 / 狼里选一项。引擎不知道你这次选了哪一项，第一次用到时会问，每次受伤都会问一次（引擎的询问按每次结算记，不按回合记，答一样的即可）。【熊】狂暴期间，你具有除力场、心灵、黯蚀、光耀外所有伤害类型的抗性（钝击、穿刺、挥砍、火焰、寒冷、闪电、雷鸣、强酸、毒素）。引擎没有「某种状态下才生效的抗性」，只能用伤害窗口的减半来实现：单类型的伤害包算得对；钝击 / 穿刺 / 挥砍由狂暴本身的抗性负责，这里不重复减半；一个伤害包同时带着被抵抗和未被抵抗的类型（例如挥砍 + 火焰）时只按主类型判断，混合伤害请手动核对；如果你另有同类抗性（火焰抗性之类）会多减一次，也请手动补回。【狼】狂暴期间，你的盟友对位于你 5 尺内的敌人进行的攻击检定具有优势。已写成半径 5 尺的灵光：敌人站在你 5 尺内时，任何针对它的攻击检定都带优势（原文只给盟友，若第三方也向它攻击，多出来的优势请忽略）。你自己不算自己的盟友，所以你攻击同一个敌人不会获得这个优势。【鹰】狂暴期间，你能以一个附赠动作同时执行撤离与疾走动作：下面那个附赠动作条目会加出等于你速度的移动力、并施加撤离。「当你激活狂暴时，作为进入狂暴那个附赠动作的一部分」这一半引擎没有时机可挂（狂暴的开始在另一条数据里），需人手动：进入狂暴那一下同时撤离 / 疾走时，请直接用下面那条附赠动作条目（或手动移动并口头说明已撤离），别再把这次附赠动作算进下一轮。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "兽性狂暴：鹰（撤离与疾走）",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('狂暴') && ask('兽性狂暴：本次狂暴选的是鹰吗？')",
+      "root": [
+       "economy",
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [
+     {
+      "id": "bear",
+      "label": "兽性狂暴：熊（抗性）",
+      "on": "damageIncoming",
+      "role": "target",
+      "window": "before",
+      "when": "damage.type != '力场' && damage.type != '心灵' && damage.type != '黯蚀' && damage.type != '光耀' && damage.type != '钝击' && damage.type != '穿刺' && damage.type != '挥砍' && self.hasEffect('狂暴') && ask('兽性狂暴：本次狂暴选的是熊吗？')",
+      "cost": [],
+      "modify": [
+       "halveDamage"
+      ],
+      "do": []
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "Aura/灵光无法表达针对自身5尺内敌人的攻击检定为任意盟友赋予优势的复杂目标条件",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:野蛮人:无我狂暴:6",
+   "name": "无我狂暴",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "狂暴激活期间对魅惑与恐慌免疫已写。进入狂暴时已陷入的魅惑或恐慌立即结束：引擎没有进入狂暴的时机，需人手动移除。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少进入狂暴（rageStarted）时机以触发清除身上已有的魅惑与恐慌状态",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:野蛮人:凶蛮打击:9",
+   "name": "凶蛮打击",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "如果你使用了鲁莽攻击，你可以放弃本回合你选择的一次基于力量的攻击检定具有的所有优势（不可选择具有劣势的攻击检定）：命中的话额外 1d10（17 级起 2d10）伤害，伤害类型与此次攻击相同，并附带一种你所选的凶蛮打击效应（13 级起多出震撼猛击、破势猛击；17 级起可同时选两种不同的效应，强化凶蛮打击 13 / 17 级的内容都已按等级并在这里）。做法：宣告后，本回合第一次力量攻击会被加上一个劣势来抵消优势（有优势又有劣势则平掷）；命中则加伤害并选效应，未命中也算用掉。【巨力猛击】推离之后，引擎给出半速移动预算，并让这一次移动不引发借机攻击。【震撼猛击】的「不能借机攻击」引擎没有禁止标志：它被问到借机攻击时请选「不攻击」，效应里带了提醒。仍需人工判断：不能选已经具有劣势的攻击检定。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "凶蛮打击",
+      "activation": "free",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && self.hasEffect('鲁莽攻击') && !self.hasEffect('凶蛮打击')",
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "凶蛮打击",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 3,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       }
+      }
+     },
+     {
+      "name": "凶蛮打击：已选",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       }
+      }
+     },
+     {
+      "name": "凶蛮打击：已结算",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       }
+      }
+     },
+     {
+      "name": "断筋猛击",
+      "statics": [
+       "speed"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "source",
+        "nth": 1
+       }
+      }
+     },
+     {
+      "name": "震撼猛击",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 1,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "source",
+        "nth": 1
+       },
+       "endsOn": [
+        {
+         "event": "d20Rolled",
+         "when": "event.kind == 'save' && event.roller == self.id"
+        }
+       ]
+      }
+     },
+     {
+      "name": "破势猛击",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "source",
+        "nth": 1
+       },
+       "endsOn": [
+        {
+         "event": "d20Rolled",
+         "when": "event.kind == 'attack' && event.target == self.id && source != null && event.roller != source.id"
+        }
+       ]
+      }
+     },
+     {
+      "name": "凶蛮打击：追击移动",
+      "statics": [],
+      "flags": {
+       "cannot": [
+        "provoke"
+       ]
+      },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       },
+       "endsOn": [
+        {
+         "event": "moved",
+         "when": "event.id == self.id"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少命中后向目标移动半速的追击移动节点，且缺少禁止目标借机攻击的规则约束机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:医疗师",
+   "name": "医疗师",
+   "kind": "feature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "【战地医师】你带着医疗包时，用一个操作动作消耗它的一次使用次数，救治一个位于你 5 尺内的生物：该生物消耗一枚生命骰，由你掷它，恢复「所掷点数 + 你的熟练加值」。生命骰掷出的点数在弹出的框里填，治疗量自动加上熟练加值；医疗包的使用次数与目标消耗的那枚生命骰引擎不跟踪，请人工记账（中文本条写作「消耗生命值骰的一次使用次数」，英文原文是「消耗医疗包的一次使用次数」，这里按英文理解：花掉医疗包一次）。【治疗重掷】掷骰决定法术或战地医师所恢复的生命值时，掷出的 1 可以重掷，且必须用新结果：引擎掷出的治疗骰（治疗术这类法术）改不了，请自己重掷，再在详情抽屉里手动把治疗量改成新值（「事后裁定」只认 d20 结果与伤害，改不了治疗量）；战地医师这一项因为点数是手输的，重掷后再填即可。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "医疗师：战地医师",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 5
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "ask('你带着医疗包、且这次要消耗它的一次使用次数吗？')",
+      "root": [
+       "number",
+       "heal"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "Modify仅支持d20重掷，缺少治疗骰/伤害骰上掷出1时重掷的modify操作，且缺少生命骰消耗机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:吟游诗人:不破威仪:14",
+   "name": "不破威仪",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "附赠动作呈现威仪姿态，持续 1 分钟或失能时结束。在此期间，每个生物在一回合中首次命中你的攻击，须通过对抗你法术豁免 DC 的魅力豁免，否则该次攻击失手。魅力豁免由攻击者掷，引擎无法替其掷，改为询问人。完成短休或长休后才能再次使用。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "不破威仪",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "不破威仪"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "不破威仪",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 1,
+      "duration": {
+       "minutes": 1,
+       "endsOn": [
+        {
+         "event": "effectApplied",
+         "when": "event.bearer == self.id && self.has('失能')"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "被攻击命中窗口中缺少迫使攻击者进行豁免并将命中结果改写为失手的防守判定流",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:吟游诗人:创生圣言:20",
+   "name": "创生圣言",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "律令医疗、律令死亡的法术授予已在人物卡静态层。施展这两道法术时可以再选一个第二目标（须位于第一个目标 10 尺内），引擎无法为法术追加目标，需手动处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "施展指定单目标法术时无法为其动态追加一个次要目标（须在首目标10尺内）",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:吟游诗人:额外攻击:6",
+   "name": "额外攻击",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "manual",
+   "text": "执行攻击动作时可以发动两次攻击而非一次；其中一次可以替换为施法时间为一动作的戏法。攻击次数的增加与戏法替换由人手动处理（引擎不自动管理攻击动作的次数）。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "攻击动作中缺少将其中一次武器攻击替换为施展戏法的动作替换机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:吟游诗人:鼓舞之移:6",
+   "name": "鼓舞之移",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "当一名你可见的敌人位于你 5 尺内结束它的回合时，你可以用反应并消耗一次诗人激励使用次数，移动至多等于你速度一半的距离；随后位于你 30 尺内的一名盟友（由你选择）可以用他的反应移动至多等于他速度一半的距离。这两段移动都不引发借机攻击。触发时机、反应与诗人激励代价引擎自动处理；两段移动都要人手动（引擎的移动流程只跑当前回合那个棋子），你这边挂上「鼓舞之移之步」效应当提醒，盟友那一段请人手动移动，并让该玩家自己扣反应。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "鼓舞之移",
+      "activation": "reaction",
+      "cost": [
+       {
+        "resource": "诗人激励"
+       }
+      ],
+      "targeting": null,
+      "trigger": {
+       "on": "turnEnded",
+       "role": "enemy",
+       "when": "within(self, target, 5) && canSee(self, target)"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "鼓舞之移之步",
+      "statics": [],
+      "flags": {
+       "cannot": [
+        "provoke"
+       ]
+      },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "bearer",
+        "nth": 1
+       },
+       "endsOn": [
+        {
+         "event": "moved",
+         "when": "event.id == self.id"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少敌方在其自身回合结束且位于特定距离（5尺）时触发反应移动的事件窗口与无借机攻击移动支持",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:吟游诗人:灵感织衣:3",
+   "name": "灵感织衣",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "以一个附赠动作消耗一次诗人激励并掷诗人激励骰，从你 60 尺内的其他生物中选择至多等于你魅力调整值（至少 1 名）的生物，每个被选中的生物获得等于两倍该诗人骰骰值的临时生命值，然后每名生物都可以用自己的反应立即移动至多等于自己速度的距离，这次移动不会引发借机攻击。选择目标、临时生命值与效应都会自动加上。原文是掷一次诗人骰、所有目标共用两倍该骰值；引擎按每名目标各掷一次（掷的是两颗骰，分布和两倍单颗骰略有不同），想严格按原规则就在掷完后按第一名的值口头统一、其余目标在详情抽屉里改。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "灵感织衣",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "诗人激励"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": "max(1, mod.cha)",
+       "range": 60,
+       "filter": "target.id != self.id"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "tempHp",
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "灵感织衣之步",
+      "statics": [],
+      "flags": {
+       "cannot": [
+        "provoke"
+       ]
+      },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "bearer",
+        "nth": 1
+       },
+       "endsOn": [
+        {
+         "event": "moved",
+         "when": "event.id == self.id"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少在动作结算中指挥多名选定盟友各自消耗反应进行即时移动且免除借机攻击的协同机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:吟游诗人:灵巧打击:3",
+   "name": "灵巧打击",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "当你在一次动作、附赠动作或反应中消耗了诗人激励使用次数后，作为那个动作的一部分，你可以发动一次徒手打击 —— 不额外花动作 / 附赠动作 / 反应，所以写成「不占动作」的按钮。引擎读不到「刚刚消耗过诗人激励」（没有资源消耗的触发窗口），这一条只能人守：只在你确实刚花掉一次诗人激励的那个动作里点它，别凭空点。徒手打击的命中与伤害按「力量或敏捷取高」近似；舞蹈学院的诗人痛击允许改用「诗人激励骰 + 敏捷调整值」的钝击伤害，要那样打请照「诗人痛击」那条手动改伤害。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "灵巧打击",
+      "activation": "free",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "reach"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "attack"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "缺少在动作/附赠/反应中消耗特定资源（诗人激励）后追加执行一次徒手打击的后置触发窗口",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:吟游诗人:诗人痛击:3",
+   "name": "诗人痛击",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "用敏捷代替力量的徒手打击攻击检定已自动（敏捷高于力量时把差值加到攻击检定上，且须未着装护甲、未持盾，见炫目舞步）。以徒手打击造成伤害时改用「诗人激励骰 + 敏捷调整值」的钝击伤害、且不消耗诗人激励次数，需手动处理（引擎不能替换徒手打击自身的伤害）。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "缺少将徒手打击的基础伤害公式动态替换为诗人激励骰加敏捷调整值的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:吟游诗人:协同舞步:6",
+   "name": "协同舞步",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "自己的先攻加值已自动：投先攻时可选花一次诗人激励，加上诗人骰。30 尺内能听见或看见你的盟友，其先攻同样加上该骰值，需手动处理（引擎不能把同一骰值分享给其他人的先攻）。未失能时才可用。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "coordinated-steps",
+      "label": "协同舞步：先攻加诗人骰",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "when": "(roll.kind == 'initiative' || roll.sub == 'initiative') && !self.has('失能')",
+      "cost": [
+       {
+        "resource": "诗人激励"
+       }
+      ],
+      "modify": [
+       "addToRoll"
+      ],
+      "do": [
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "remember",
+    "need": "缺少将先攻掷骰时掷出的诗人激励骰值同步共享给周围多名盟友并加到其各自先攻上的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:吟游诗人:引导闪避:14",
+   "name": "引导闪避",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "你受到一个「允许敏捷豁免来只承受一半伤害」的效应影响时：豁免成功则完全不受伤害，豁免失败只受一半伤害。位于你 5 尺内、同样要做这次敏捷豁免的其他生物也可以享受。已自动化：这类伤害一进来就把结果改成「成功 0 伤害 / 失败一半」；5 尺内的盟友身上也会挂上同一套判定（引擎会确认「他在吟游诗人 5 尺内吗」——有地图时直接算距离）。你失能时不起作用。要人处理：法术得把「豁免成功只受一半」写成减半的伤害节点，引擎才认得出是这一类效应；写成别的形式（比如成功分支里另写一份伤害）就改不了，请手动按一半结算。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "evasion",
+      "label": "引导闪避",
+      "on": "damageIncoming",
+      "role": "target",
+      "window": "before",
+      "when": "damage.save == 'dex' && !self.has('失能')",
+      "cost": [],
+      "modify": [
+       "evasion"
+      ],
+      "do": []
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少反射闪避（敏捷豁免半伤变0伤、全伤变半伤）并向5尺内盟友共享此减伤判定的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:吟游诗人:战斗激励:3",
+   "name": "战斗激励",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "拥有你的诗人激励骰的生物（身上挂着「诗人激励」效应）可以改用它来做两件事：【防御】被一次攻击检定命中时，用反应掷诗人激励骰、把点数加到对抗这次攻击的 AC 上，可能让它变成失手；【进攻】以攻击检定命中一个目标后，立即掷诗人激励骰、把点数加到这次攻击造成的伤害里。已自动化：只要那个生物身上还有你的诗人激励效应，命中 / 被命中时就会弹出这两个用法，用完把诗人激励消耗掉；【进攻】自动掷点、按这次攻击的伤害类型加伤害，【防御】弹窗让你输入掷出的点数（引擎的 AC 加值只能是定数），按新 AC 重新判定这次攻击，这一次攻击结束就撤掉那份 AC 加值。要人处理：①诗人激励骰的面数随你的吟游诗人等级变（d6 / d8 / d10 / d12），【进攻】自动按等级取；【防御】弹窗上下限按 d12 给，低等级时按实际点数填；②「用不用、给谁用」由你决定，引擎没法限制只有你点名的那个生物能用；③法术攻击的伤害类型引擎常常没记下（会记成无类型），这类攻击的激励骰伤害请按实际类型核对抗性。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "source",
+    "need": "缺少将赋予他人的激励资源及其专属反应（改AC）和攻击加伤触发器动态注入到盟友身上的分发机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XPHB:吟游诗人:战斗魔法:14",
+   "name": "战斗魔法",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/features.json",
+   "automation": "partial",
+   "text": "在你施展一道施法时间为一动作的法术后，你能够以一个附赠动作，使用一把武器发动一次攻击。已自动化：这是一个附赠动作的武器攻击动作——选目标、掷攻击检定、掷伤害都由引擎做（弹窗里按你用的武器选伤害骰和伤害类型），伤害里含属性调整值。要人处理：引擎读不到「你本回合刚施展完一道施法时间为一动作的法术」，所以每次用之前会问一句；武器是哪一把、够不够得着由你判断；用远程武器时这次攻击在引擎里仍按近战攻击标记，少数按「近战 / 远程」区分的加值可能记错，介意的话直接用那把武器自己的动作手动打。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "weapon",
+      "name": "战斗魔法：附赠动作武器攻击",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && ask('你本回合刚施展完一道施法时间为一动作的法术吗？')",
+      "root": [
+       "choose",
+       "attack"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "施法后缺少自动调取装备武器并发起一次附赠动作武器攻击的动作生成能力",
+    "now": false
+   }
+  }
+ ]
+}

@@ -1,0 +1,931 @@
+{
+ "batch": "batch-018",
+ "count": 20,
+ "entries": [
+  {
+   "key": "XGE:武僧:热能袭:6",
+   "name": "热能袭",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "在你的回合中执行攻击动作后，可以消耗 2 点功力以附赠动作施放燃烧之手；可消耗额外功力升环（每消耗 1 点上升 1 环，总消耗最多为武僧等级的一半）。是否刚执行攻击动作由人确认。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "热能袭：燃烧之手",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "功力",
+        "n": 2
+       }
+      ],
+      "targeting": {
+       "type": "area",
+       "range": "self",
+       "area": {
+        "shape": "cone",
+        "size": 15
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && ask('你在本回合中执行了攻击动作吗？')",
+      "root": [
+       "number",
+       "if",
+       "forEach"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "判定本回合是否已执行攻击动作以解锁附赠动作施法，及通过功力点动态升环",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:武僧:人剑合一:6",
+   "name": "人剑合一",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "【巧劲】已自动化：每个你的回合一次，用剑圣武器命中时可以消耗 1 点功力，追加一枚武艺骰的额外伤害（伤害类型跟武器相同）。弹窗里会问这次攻击用的是不是剑圣武器。【剑气】要人处理：持用剑圣武器攻击对「非魔法攻击」有抗性 / 免疫的目标时，你的攻击视为魔法攻击 —— 引擎没有「这次攻击视为魔法」这个开关，遇到这类目标请自己按魔法攻击结算（不减伤 / 不免疫）。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "deftStrike",
+      "label": "人剑合一：巧劲",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "turn.isMine && attack.weapon && ask('这次攻击是否使用的是剑圣武器？')",
+      "cost": [
+       {
+        "resource": "功力"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "addDamage"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "装备系统支持将特定武器绑定为剑圣武器并在命中时自动识别触发追加伤害",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:武僧:太阳盾:17",
+   "name": "太阳盾",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "发散 30 尺明亮光照与额外 30 尺微光光照（可用附赠动作熄灭或恢复）。光照未熄灭时，若有生物对你发动近战攻击并击中你，可用反应对其造成 5 + 感知调整值点光耀伤害。光照开关与反击目标由人选择。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "太阳盾",
+      "activation": "reaction",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": "reach"
+      },
+      "trigger": {
+       "on": "attackHit",
+       "role": "target",
+       "window": "after",
+       "when": "attack.melee && ask('太阳盾的光照未被熄灭吗？')"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "damage"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "source",
+    "need": "反应反击动作中直接获取近战攻击者（attacker）造成光耀伤害，及光照开关状态",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:武僧:焰阳爆:11",
+   "name": "焰阳爆",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个动作在 150 尺内你选择的一点创造出光球并瞬间引爆：以该点为中心半径 20 尺内的所有生物立即做体质豁免（DC = 8 + 熟练加值 + 感知调整值），失败受 2d6 光耀伤害。你可以花费气提高威力，每消耗 1 点气伤害上升 2d6，至多消耗 3 点（引擎会问你用几点）。若生物处于不透光的掩护下则不需要进行这次豁免 —— 掩护与视线引擎不处理，请人工判断（必要时把那个生物的豁免手动作废）。爆炸是瞬时的，不留下区域。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "焰阳爆",
+      "activation": "action",
+      "cost": [],
+      "targeting": {
+       "type": "area",
+       "range": 150,
+       "area": {
+        "shape": "sphere",
+        "radius": 20
+       }
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "number",
+       "if",
+       "forEach",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "地图视线与不透光掩护对区域法术豁免的自动判定",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:武僧:耀阳箭:3",
+   "name": "耀阳箭",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "可以在攻击动作中发动特殊远程法术攻击（射程 30 尺，伤害为武艺骰 + 敏捷调整值点光耀伤害）。本回合在攻击动作中使用耀阳箭后，可消耗 1 点功力以附赠动作进行两次额外的耀阳箭攻击。若要将附赠动作的两次攻击分给不同目标，需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "耀阳箭",
+      "activation": "none",
+      "cost": [
+       {
+        "economy": "attack"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "attack",
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "bonus",
+      "name": "耀阳箭（附赠额外攻击）",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "功力"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && self.hasEffect('耀阳箭：已使用')",
+      "root": [
+       "repeat"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "耀阳箭：已使用",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "附赠动作多次远程攻击的独立多目标选择与分别结算",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:武僧:醉拳技巧:3",
+   "name": "醉拳技巧",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "每当你使用疾风连击时，你都将获得执行了撤离动作的好处，且你的步行速度增加 10 尺，持续直至当前回合结束。使用疾风连击时请开启此特性获得撤离和速度加值。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "醉拳技巧",
+      "activation": "free",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && !self.hasEffect('醉拳技巧')",
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "醉拳技巧",
+      "statics": [
+       "speed"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "监听使用特定能力/动作（疾风连击）的事件窗口以联动触发撤离与速度增益",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:野蛮人:冻原:14",
+   "name": "冻原",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "每当激活风暴灵光时，可选灵光内一名可见生物进行力量豁免（DC 8 + 熟练 + 体质调整值），失败速度降为 0 直至你的下个回合开始。由于伴随进入狂暴或附赠动作激活灵光时一并触发，写为 free 动作，由人在激活灵光时使用。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "狂怒风暴：冻原",
+      "activation": "free",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 10,
+       "filter": "target.id != self.id && canSee(self, target)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "turn.isMine && self.hasEffect('狂暴')",
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "冻结",
+      "statics": [
+       "speedSet"
+      ],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "source",
+        "nth": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "监听进入狂暴或激活灵光事件以联动触发次要单体控制豁免",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:野蛮人:风暴之盾:10",
+   "name": "风暴之盾",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "在狂暴期间，处于你风暴灵光（10尺）内的、由你选择的生物，同样获得你风暴之魂特性所赋予的伤害抗性（荒漠：火焰；海洋：闪电；冻原：寒冷）。具体抗性类型取决于所选环境，由人工在盟友承受伤害时确认处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "缺少特性子选项/环境选择（荒漠/海洋/冻原）的持久化存储与在灵光（aura）中动态匹配授予对应抗性的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:野蛮人:精魂之盾:6",
+   "name": "精魂之盾",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "狂暴期间，你周围 30 尺内你能看到的其他生物受到伤害时，可以用反应为其降低 2d6 点伤害（10 级起 3d6，14 级起 4d6）。【已自动化】反应时机、狂暴条件、30 尺与可见的判断、以及按职业等级自动选 2d6 / 3d6 / 4d6 的减伤。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "spiritShield",
+      "label": "精魂之盾：降低伤害",
+      "on": "damageIncoming",
+      "role": "any",
+      "window": "before",
+      "when": "self.hasEffect('狂暴') && target.id != self.id && within(self, target, 30) && canSee(self, target)",
+      "cost": [
+       {
+        "economy": "reaction"
+       }
+      ],
+      "modify": [
+       "reduceDamage"
+      ],
+      "do": []
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少在反应减伤后将抵消的伤害数值反弹回击给攻击者（反弹伤害）的能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:野蛮人:怒不畏死:14",
+   "name": "怒不畏死",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "狂暴期间 0 生命值不会使你陷入昏迷；死亡豁免累积失败 3 次在狂暴期间不会死亡；若狂暴结束时仍处于 0 生命值则死亡。引擎目前无法阻止 0 生命值陷入昏迷或拦截死亡豁免致死，需人手动处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少允许生物在0生命值下免除昏迷状态、并在效应结束前暂缓死亡判定的生命与死亡状态控制接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:吟游诗人:不破威仪:14",
+   "name": "不破威仪",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以附赠动作展现威严存在，持续 1 分钟（陷入失能时提前结束）。持续时间内，任何生物在每回合中首次试图攻击你时，必须通过一次对抗你的法术豁免 DC 的魅力豁免。豁免失败时，该生物在该回合内无法攻击你，且必须为本次攻击选定新目标或放弃攻击；豁免成功时能正常攻击，但在你的下个回合中对抗你的法术豁免具有劣势。攻击判定、豁免与改选目标由人手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "不破威仪",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "不破威仪"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "不破威仪",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1,
+       "endsOn": [
+        {
+         "event": "effectApplied",
+         "when": "self.has('失能')"
+        }
+       ]
+      }
+     },
+     {
+      "name": "不破威仪：豁免劣势",
+      "statics": [],
+      "flags": null,
+      "rollMods": 1,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "source",
+        "nth": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少在生物宣告攻击目标时触发豁免并强制改选目标或放弃攻击（圣域术/威仪机制）的拦截接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:吟游诗人:灵感织衣:3",
+   "name": "灵感织衣",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "附赠动作消耗一次诗人激励：选择你周围 60 尺内至多等同于你魅力调整值（至少 1 个）个你可见且能看见你的生物，每个获得临时生命值（3 级 5 点，5 级 8 点，10 级 11 点，15 级 14 点）。临时生命值自动加上；获得临时生命值的生物可以立刻用其反应移动至多等同于其速度的距离，这次移动不引发借机攻击——引擎给每个目标挂一个「免借机」标记，移动一次即消失（或到你的回合结束），反应与移动本身请手动执行。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "灵感织衣",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "诗人激励"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": "max(1, mod.cha)",
+       "range": 60,
+       "filter": "canSee(self, target) && canSee(target, self)"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "tempHp",
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "灵感织衣：免借机",
+      "statics": [],
+      "flags": {
+       "cannot": [
+        "provoke"
+       ]
+      },
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "source",
+        "nth": 0
+       },
+       "endsOn": [
+        {
+         "event": "moved",
+         "when": "event.id == self.id"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少让受影响生物立即消耗反应进行不引发借机攻击的战棋位移接口",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:吟游诗人:乱击剑舞:3",
+   "name": "乱击剑舞",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "在你的回合内以攻击动作进行武器攻击命中时，可以消耗一次诗人激励（每回合限一次剑舞）。对命中的目标造成等同于激励骰结果的额外同类型伤害，且你周围 5 尺内由你选择的另一名可见生物也受到等同于该激励骰结果的伤害（次要目标的伤害需手动扣除）。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "slashing-flourish",
+      "label": "乱击剑舞：消耗激励横扫加伤",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "turn.isMine && attack.weapon",
+      "cost": [
+       {
+        "resource": "诗人激励"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "number",
+       "addDamage",
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "remember",
+    "need": "缺少记录本次激励骰投出的具体点数并将其同等伤害应用至周围第二目标的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:吟游诗人:推击剑舞:3",
+   "name": "推击剑舞",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "在你的回合内以攻击动作进行武器攻击命中时，可以消耗一次诗人激励（每回合限一次剑舞）。造成等同于激励骰结果的额外同类型伤害，并将目标推离你至多 5 + 激励骰结果尺；之后可立即用反应移动至多自身步行速度距离来到目标 5 尺内未占据空间（战棋移动与反应由人手动处理）。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "mobile-flourish",
+      "label": "推击剑舞：消耗激励加伤并击退",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "turn.isMine && attack.weapon",
+      "cost": [
+       {
+        "resource": "诗人激励"
+       }
+      ],
+      "modify": [],
+      "do": [
+       "number",
+       "addDamage",
+       "move",
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "缺少命中后强制推移目标并在命中结算后消耗反应进行战棋跟进位移的能力",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:吟游诗人:威仪作锦:6",
+   "name": "威仪作锦",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以附赠动作施展命令术（无需法术位），同时获得超凡美貌并进入专注（至多 1 分钟）。持续时间内，每个你的回合都能以附赠动作再次施展命令术（无需法术位）。被你魅惑的生物对抗此特性施放的命令术时自动豁免失败。具体命令指令及效果由人手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "威仪作锦",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "majesty"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "target.id != self.id"
+      },
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "if",
+       "applyEffect"
+      ]
+     },
+     {
+      "id": "command",
+      "name": "威仪作锦：命令术",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 60,
+       "filter": "target.id != self.id"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "self.hasEffect('威仪作锦') && turn.isMine",
+      "root": [
+       "if"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "威仪作锦",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "condition",
+    "need": "缺少命令术等强制行动/限制行为状态的执行控制逻辑",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:吟游诗人:阴暗学识:14",
+   "name": "阴暗学识",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个动作对 30 尺内能听见声音的生物发出低语，感知豁免失败则被魅惑 8 小时（受攻击、伤害或被迫豁免时提前结束）。共通语言要求与非战斗秘密恐吓角色扮演效果由人工处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "阴暗学识",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "shadowLore"
+       }
+      ],
+      "targeting": {
+       "type": "creature",
+       "count": 1,
+       "range": 30,
+       "filter": "target.id != self.id"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "save"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "阴暗学识",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": null
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "长达8小时的非战斗秘密恐吓与社交角色扮演效果无需引擎自动化，手动处理即可",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:永生者赠礼",
+   "name": "永生者赠礼",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "当你被恢复生命值时，只要此时你的魔宠与你之间的距离不超过 100 尺，所有决定你恢复生命值点数的骰都视为骰出了最大值。引擎在治疗结算时会把「被治疗者身上」这类取最大值的修正算进去（不论治疗来自法术、药水还是特性），但它不知道你的魔宠站在哪里 —— 魔宠不在 100 尺内（或已消失、不在身边）时，这次治疗请让 DM 手动把多恢复的部分扣回去（手动伤害同数值，或直接改成掷骰结果）。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "缺少在承受治疗时将治疗骰点数最大化的拦截/修正机制（以及魔宠距离判定）",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:幽魂凝视",
+   "name": "幽魂凝视",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个动作开启幽魂凝视，持续至多 1 分钟（专注）。看穿 30 尺固态物件及黑暗视觉感官属于探索与视觉效果，由玩家手动处理。短休或长休恢复 1 次。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "幽魂凝视",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "ghostlyGaze"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": {
+       "minutes": 1
+      },
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "幽魂凝视",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 1
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "看穿固态障碍物（透视）属于探索层感官与地图视线剔除机制，战斗引擎无需处理",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:游荡者:火眼金睛:13",
+   "name": "火眼金睛",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "只要你未处于目盲或耳聋状态，可以一个动作感知周围 30 尺内幻术的存在、非原本形态下的变形生物以及其他欺瞒感官的魔法。可用次数等于感知调整值（至少 1 次），长休恢复。你能感知到欺瞒效果的存在但无法得知真相，细节由 DM 手动告知。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "火眼金睛",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "unerring-eye"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": "!self.has('目盲') && !self.has('耳聋')",
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "探测周围幻术与变形生物属于叙事探索侦测能力，由DM告知即可",
+    "now": false
+   }
+  },
+  {
+   "key": "XGE:游荡者:鉴识之眼:3",
+   "name": "鉴识之眼",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "可以使用附赠动作进行一次感知（察觉）检定来侦测隐藏的生物或物体，或者进行一次智力（调查）检定来揭示和破译线索。线索与隐匿生物由 DM 手动告知判定。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "鉴识之眼",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "choose"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "vision",
+    "need": "通过察觉/调查侦测隐匿生物与破译线索属于探索判定，由DM告知结果",
+    "now": false
+   }
+  }
+ ]
+}

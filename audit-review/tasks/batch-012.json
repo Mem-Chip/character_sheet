@@ -1,0 +1,875 @@
+{
+ "batch": "batch-012",
+ "count": 20,
+ "entries": [
+  {
+   "key": "TCE:法师:思维具现:6",
+   "name": "思维具现",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "以附赠动作使觉醒魔典中的灵体意识显现在60尺内未占据空间，发出10尺微光，具60尺黑暗视觉并与你心灵感应共享感官。在你回合内施放法师法术时可如同身处其空间施法（PB次/长休）。可以附赠动作令其移动至多30尺或将其驱散。显现后长休或消耗任意环位法术位重置显现次数。灵体意识位置与施法源点由人手动处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [
+     {
+      "id": "use",
+      "name": "思维具现",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "manifest-mind"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "slotReset",
+      "name": "思维具现：消耗法术位显现",
+      "activation": "bonus",
+      "cost": [
+       {
+        "slot": {
+         "min": 1
+        }
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "moveMind",
+      "name": "移动灵体意识",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     },
+     {
+      "id": "castThroughMind",
+      "name": "通过灵体意识施法",
+      "activation": "none",
+      "cost": [
+       {
+        "resource": "manifest-mind-cast"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "summon",
+    "need": "显现具有独立坐标与感官的灵体意识作为施法源点并在附赠动作移动",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:法师:一字同心:14",
+   "name": "一字同心",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "携带法术书时，你在任何智力（奥秘）检定中具有优势。此外，法术书的意识处于显现状态时受到伤害，你可以用反应驱散意识并避免所有对你的伤害，之后掷 3d6 暂时失去环阶之和大于等于骰值的法术，持续 1d6 次长休；使用该反应后完成长休才能再次使用。法术失去与长休恢复需人手动记录。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "dismiss-mind",
+      "label": "一字同心：避免伤害",
+      "on": "damageIncoming",
+      "role": "target",
+      "window": "before",
+      "when": "ask('法术书的意识当前处于显现状态吗？')",
+      "cost": [
+       {
+        "economy": "reaction"
+       },
+       {
+        "resource": "one_with_the_word"
+       }
+      ],
+      "modify": [
+       "cancel"
+      ],
+      "do": [
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "resource",
+    "need": "以暂时失去环阶总和等于骰值的法术（持续 1d6 次长休）为代价完全免疫当前伤害",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:风暴符文",
+   "name": "风暴符文",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "穿着或携带着铭刻此符文的物品时：你进行的智力（奥秘）检定具有优势；只要你未处于失能状态就不会被突袭（引擎不结算突袭，请人工处理）。附赠动作激活符文进入先知形态，持续 1 分钟，陷入失能会提前结束；激活次数见资源池，短休或长休后恢复。形态期间，每当你或你周围 60 尺内可见的另一生物进行攻击检定、豁免检定或属性检定时，你可以用反应让这次检定获得优势或劣势——引擎不支持在别人的掷骰上直接打优势/劣势标记，这里用「再掷一颗 d20 取高 / 取低」近似（已经有优势或劣势的那次不再提供，因为叠加结果会失真）。为了不打扰，只在会改变结果时问：自己或盟友的检定按现在会失败时问「给优势」，敌人的检定按现在会成功时问「给劣势」；先攻掷骰不提示，要调整请手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "风暴符文：先知形态",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "风暴符文"
+       }
+      ],
+      "targeting": {
+       "type": "self"
+      },
+      "trigger": null,
+      "concentration": null,
+      "requires": "!self.hasEffect('先知形态')",
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "先知形态",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 2,
+      "duration": {
+       "minutes": 1,
+       "endsOn": [
+        {
+         "event": "effectApplied",
+         "when": "event.bearer == self.id && self.has('失能')"
+        }
+       ]
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "反应在生物进行攻击、豁免或属性检定时赋予该次检定优势或劣势",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:符令责斥",
+   "name": "符令责斥",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "当护身符的佩戴者被一个位于你 30 尺以内、你能看见的攻击者命中时，你可以用反应对该攻击者造成等同于你熟练加值的心灵伤害，并把它推离佩戴者至多 10 尺。已自动化：被命中的是护符佩戴者时给出这个反应选项，选中后伤害自动打向攻击者（不用再选目标）、并在地图上把攻击者沿直线推离 10 尺（推的是「远离你」的方向，佩戴者就是你时方向正确）。【要人处理】①护符交给盟友戴时引擎不知道现在戴在谁身上，被命中的人是你或你的盟友时都会问一句「这是佩戴者吗」。②佩戴者不是你时，推离方向应当「远离佩戴者」而不是远离你，方向不对请手动拖动。③10 尺只推一次，撞到别的棋子就停下。④「30 尺以内」「你能看见」没有地图时会问你。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "符令责斥",
+      "activation": "reaction",
+      "cost": [],
+      "targeting": null,
+      "trigger": {
+       "on": "attackHit",
+       "role": "any",
+       "window": "after",
+       "aim": "actor",
+       "when": "(target.id == self.id || target.isAllyOf(self)) && within(self, attacker, 30) && canSee(self, attacker) && ask('被命中的是佩戴你护身符的那位（你，或你交给的盟友）吗？')"
+      },
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "damage",
+       "move",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "source",
+    "need": "跨生物监听护符佩戴者被命中并反击攻击者（取到命中佩戴者的 attacker 并造成伤害与推离）",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:符之魔契",
+   "name": "符之魔契",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "佩戴者在一次属性检定中失败时，可以掷 1d4 加在这次检定的结果上（引擎在「按现在的结果会失败」时问你要不要用；没有 DC 的检定判断不了失没失败，会直接问；先攻掷骰不算会失败的检定，不提示）。次数等于你的熟练加值，长休恢复。护身符可以转交给盟友佩戴：引擎只把它绑在你自己的检定上，盟友戴着时请由你手动给那次检定加 1d4。转交、遗失后 1 小时的仪式重铸、死亡时化为灰烬都要手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "talisman-check",
+      "label": "符之魔契：属性检定加 1d4",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "when": "roll.kind == 'check' && roll.sub != 'initiative' && (roll.failing || roll.vs == null)",
+      "cost": [
+       {
+        "resource": "符之魔契"
+       }
+      ],
+      "modify": [
+       "addToRoll"
+      ],
+      "do": []
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "护身符转移给盟友佩戴并在佩戴者属性检定失败时触发加骰",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:护符庇佑",
+   "name": "护符庇佑",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "佩戴者在一次豁免检定中失败时，可以在掷骰结果上加一个 d4，这可能把结果变成成功；次数等于你的熟练加值，长休恢复。已写成：佩戴者（你，或者你已经把护符交给的那位盟友）豁免失败时会提供这个选项，答应用就在结果上加 1d4，并从「护符庇佑」池里扣掉 1 次 —— 次数池算在持有这条祈唤的人（你）身上，符合「这一能力可使用的次数等于你的熟练加值」。引擎不知道护符现在戴在谁身上，所以会问一句「这次是佩戴者做的豁免吗」；选项只在掷骰者是你或你的盟友时出现，敌人的豁免不会问。加 1d4 之后仍然失败时不退次数（原文没有这个宽松写法，重骰前的选择已经花掉了）。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "protection",
+      "label": "护符庇佑：豁免失败时加 1d4",
+      "on": "d20Rolled",
+      "role": "any",
+      "window": "before",
+      "when": "roll.kind == 'save' && roll.failing && (combatant(roll.roller).id == self.id || combatant(roll.roller).isAllyOf(self)) && ask('这次豁免是佩戴护符的那位（你或你交给的盟友）做的吗？')",
+      "cost": [
+       {
+        "resource": "protectionOfTalisman"
+       }
+      ],
+      "modify": [
+       "addToRoll"
+      ],
+      "do": []
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "护身符转移给盟友佩戴并在佩戴者豁免检定失败时触发加骰",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:护符牵绊",
+   "name": "护符牵绊",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "当其他人佩戴你的护身符且与你身处同一位面时，你可以用动作传送到其周围未被占据的空间，佩戴者也能用动作传送到你身边。使用次数等同于熟练加值，长休恢复。同位面远距离传送与落点由玩家手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "护符牵绊",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "bondOfTalisman"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "跨越同位面远距离传送到护身符佩戴者身边或由佩戴者传送至施法者身边",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:警戒",
+   "name": "警戒",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "当可见生物移动进入你持握近战武器的触及范围时，可用反应消耗一枚卓越骰对其发起一次武器攻击；若命中，将消耗的卓越骰加入伤害掷骰中。敌方进入触及由人判断；使用本动作扣除反应与卓越骰，并为下一次攻击附加强化伤害。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "警戒",
+      "activation": "none",
+      "cost": [
+       {
+        "economy": "reaction"
+       },
+       {
+        "resource": "卓越骰"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "警戒",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 2,
+      "duration": {
+       "until": {
+        "at": "turnStart",
+        "of": "bearer",
+        "nth": 1
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "生物移动进入近战武器触及范围事件的反应触发时机以发动借机式攻击",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:快手投掷",
+   "name": "快手投掷",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "以一个附赠动作消耗一枚卓越骰，拔出一件具有投掷属性的武器投出去（作为攻击的一部分拔出）。做法：先点这个动作（扣附赠动作与卓越骰），它会给你一次额外的攻击次数、并挂上「快手投掷」效应；然后用那把投掷武器的武器行发动一次远程武器攻击（这次攻击不消耗你的动作，因为攻击次数已经给出），命中时卓越骰会自动加进这次伤害（伤害类型跟武器一致，重击时同样加倍）。攻击结算完（命中或失手）效应自动消失。卓越骰大小按战士等级：3 级 d8、10 级 d10、18 级 d12。【要人处理】①引擎会把投掷武器的攻击认成近战（人物卡里手斧 / 标枪是近战武器），所以命中时会问你「这次是投掷吗」，答是才把卓越骰加进伤害。②在那次远程武器攻击之前，如果你先用别的武器打了，那次攻击会吃掉这次额外的攻击次数，请按顺序做。③拔武器这个附带动作不占经济，由你口头处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "快手投掷",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "卓越骰"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "economy",
+       "applyEffect",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "快手投掷",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 2,
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       }
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "item",
+    "need": "附赠动作动态读取并拔出角色装备中的投掷武器发动攻击并追加伤害",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:魔法力量护甲",
+   "name": "魔法力量护甲",
+   "kind": "feature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "盔甲有 6 发充能（人物卡资源池，长休恢复；原文是每天黎明恢复 1d6 发，引擎按长休回满，多回的点数请手动点掉）。进行力量检定或力量豁免、按掷出来的结果仍会失败时，会问你要不要花 1 发充能，把智力调整值加到这次投掷上。将被撞倒时的反应（花 1 发充能避免倒地）引擎没有拦截时机：请手动处理 —— 别加倒地状态，自己在资源上点掉 1 发。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "add-int-to-str",
+      "label": "魔法力量护甲：加智力调整值",
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "when": "(roll.kind == 'check' || roll.kind == 'save') && roll.ability == 'str' && roll.failing",
+      "cost": [
+       {
+        "resource": "armorOfMagicalStrengthCharges"
+       }
+      ],
+      "modify": [
+       "addToRoll"
+      ],
+      "do": []
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "即将陷入倒地状态时（before 窗口）消耗充能并取消倒地的反应时机",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:魔契师:海渊传送:14",
+   "name": "海渊传送",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "以一个动作，你可以传送自己和最多五个30尺范围内的可见自愿生物至至多1英里以内你曾见过的水域或其周围30尺范围内的未占据空间。短休或长休恢复。传送落点与多生物位移由人手动处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [
+     {
+      "id": "use",
+      "name": "海渊传送",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "grasping-slipstream"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "大范围群体传送（1英里内曾见水域周围）及多目标落点选择",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:魔契师:瓶中小憩:1",
+   "name": "瓶中小憩",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "以一个动作，你可以消失并进入你的巨灵器皿内，器皿留在原地。你在器皿内可停留至多 2×熟练加值 小时。使用附赠动作可离开器皿，出现在距离器皿最近的未占据空间。长休恢复。出入器皿与超维度空间由人手动处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [
+     {
+      "id": "use",
+      "name": "进入器皿",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "bottled-respite"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "角色脱离地图进入随身容器异空间及附赠动作离开容器的机制",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:魔契师:器皿庇护所:10",
+   "name": "器皿庇护所",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "使用瓶中小憩进入巨灵器皿时，可选择30尺内最多5个可见自愿生物一同进入。以附赠动作可将任意数量生物逐出器皿；自身离开或器皿被摧毁时所有人均被逐出。在器皿内停留至少10分钟的生物视为完成一次短休，且消耗生命骰恢复生命值时增加你的熟练加值。由人手动处理带入生物、驱逐与短休结算。",
+   "data": {
+    "automation": "manual",
+    "actions": [
+     {
+      "id": "use",
+      "name": "逐出生物",
+      "activation": "bonus",
+      "cost": [],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "other",
+    "need": "携带多名盟友进入异空间容器并集体完成加速短休",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:魔契师:擒握触手:10",
+   "name": "擒握触手",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "习得法术艾伐黑触手（魔契师法术且不计入已知上限）。每次长休可无需法术位施展一次。每当你施展艾伐黑触手时，获得等同于魔契师等级的临时生命值；对你造成的伤害无法破坏你对该法术的专注。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "擒握触手：免法术位施展艾伐黑触手",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "grasping-tentacles"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "tempHp",
+       "note"
+      ]
+     }
+    ],
+    "triggers": [
+     {
+      "id": "grasping-tentacles-cast",
+      "label": "擒握触手：施展艾伐黑触手获得临时生命值",
+      "on": "spellCast",
+      "role": "actor",
+      "window": "after",
+      "when": "event.spell == '艾伐黑触手' || event.key == 'XPHB:spell:艾伐黑触手'",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "tempHp"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "zone",
+    "need": "艾伐黑触手法术的困难地形与进入/在内开始回合时的触手攻击受擒结算",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:魔契师:有限祈愿术:14",
+   "name": "有限祈愿术",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "以一个动作向巨灵器皿祈求，实现一个任意职业、施法时间为1个动作的6环或以下法术的效应，无需法术材料成分。使用后需完成 1d4 次长休才能再次使用。法术具体效果与 1d4 次长休恢复由人手动处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [
+     {
+      "id": "use",
+      "name": "有限祈愿术",
+      "activation": "action",
+      "cost": [
+       {
+        "resource": "limited-wish"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "choice",
+    "need": "动态调取并施展全法术库中 6 环及以下任意 1 动作法术并掷 1d4 次长休冷却",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:魔契师:元素赐福:6",
+   "name": "元素赐福",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "对宗主类型决定的伤害类型（土巨灵-钝击、气巨灵-雷鸣、火巨灵-火焰、水巨灵-寒冷）具有抗性。以附赠动作获得30尺飞行速度并可悬浮，持续10分钟。可用次数等同于熟练加值，长休恢复。三维移动与飞行高度由人手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [
+     {
+      "id": "use",
+      "name": "元素赐福：飞行",
+      "activation": "bonus",
+      "cost": [
+       {
+        "resource": "elemental-gift"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "applyEffect"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [
+     {
+      "name": "元素赐福",
+      "statics": [],
+      "flags": null,
+      "rollMods": 0,
+      "triggers": 0,
+      "duration": {
+       "minutes": 10
+      }
+     }
+    ],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "move",
+    "need": "地图战棋系统支持三维飞行高度与悬浮移动",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:牧师:保护联结:6",
+   "name": "保护联结",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "受到勇气联结影响的生物即将受到伤害时，其30尺（17级增强联结后为60尺）内的另一名联结生物可以用反应传送到第一个生物周围5尺内的未占据空间，并代替其承受所有伤害。由于涉及两名被联结生物之间的反应判定、战棋网格传送与伤害转移，整条由人手动处理。",
+   "data": {
+    "automation": "manual",
+    "actions": [],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "reactModify",
+    "need": "联结盟友即将受伤害时反应传送到其身旁并接替承受所有伤害",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:牧师:律法化身:6",
+   "name": "律法化身",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "manual",
+   "text": "消耗1环或更高环阶法术位施展施法时间为1动作的惑控学派法术时，可改为1附赠动作施展。使用次数等同于感知调整值（至少1次），长休恢复。引擎不改写法术施法时间与动作经济，需由玩家手动调整。",
+   "data": {
+    "automation": "manual",
+    "actions": [
+     {
+      "id": "use",
+      "name": "律法化身",
+      "activation": "none",
+      "cost": [
+       {
+        "resource": "embodiment-of-the-law"
+       }
+      ],
+      "targeting": null,
+      "trigger": null,
+      "concentration": null,
+      "requires": null,
+      "root": [
+       "note"
+      ]
+     }
+    ],
+    "triggers": [],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "动态修改特定学派（惑控）法术的施法时间（1 动作改为 1 附赠动作）",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:牧师:权威之音:1",
+   "name": "权威之音",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "当你消耗法术位施展1环或更高环阶法术且指定盟友为目标时，该盟友（若有多名则由你选择其中一名）可以立即使用反应对你指定且能看见的目标发动一次武器攻击。盟友使用反应发动武器攻击需在场外由盟友角色卡执行。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "voice-of-authority",
+      "label": "权威之音：驱使盟友反击",
+      "on": "spellCast",
+      "role": "actor",
+      "window": "after",
+      "when": "ask('刚才施展的法术消耗了1环或更高环阶法术位，且指定了盟友为目标吗？')",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "note"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "施法指定盟友时触发并命令受法盟友消耗其反应进行一次武器攻击",
+    "now": false
+   }
+  },
+  {
+   "key": "TCE:牧师:受祝击:8",
+   "name": "受祝击",
+   "kind": "classFeature",
+   "from": "data/dyn/ai/books.json",
+   "automation": "partial",
+   "text": "通过戏法或武器攻击伤害一个生物时，可造成额外1d8光耀伤害。每次造成此伤害后直到自己的下一个回合开始前无法再次使用。武器或法术攻击命中时可触发；豁免类戏法造成的伤害需手动处理。",
+   "data": {
+    "automation": "partial",
+    "actions": [],
+    "triggers": [
+     {
+      "id": "blessed-strikes",
+      "label": "受祝击：额外 1d8 光耀伤害",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "attack.weapon || (attack.spell && ask('这次法术攻击来自戏法吗？'))",
+      "cost": [],
+      "modify": [],
+      "do": [
+       "addDamage"
+      ]
+     }
+    ],
+    "effects": [],
+    "resources": []
+   },
+   "old_audit": {
+    "gap": "timing",
+    "need": "豁免类戏法造成伤害时的触发时机以追加 1d8 光耀伤害（当前 addDamage 仅支持 attackHit）",
+    "now": false
+   }
+  }
+ ]
+}
