@@ -178,8 +178,15 @@ export function createRules(): Pipeline {
     }
     const base: Record<string, number> = { ...(c.abilities || {}) };
     const score: Record<string, number> = { ...base };
+    const activePendingKeys = new Set((c._derived?.pending || []).map((p: Json) => p.key));
+    const activeGrantedFeats: Set<string> = c._derived?.feats || new Set();
     for (const [key, val] of Object.entries(c.decisions || {})) {
       if (!val || typeof val !== 'object' || Array.isArray(val)) continue;
+      if (!ctx.env.abilities.isDecisionKeyActive(c, key)) continue;
+      if (c._derived) {
+        const isExpandedActive = key.startsWith('expanded:') && activeGrantedFeats.has(key.slice(9, key.indexOf('#')));
+        if (!activePendingKeys.has(key) && !isExpandedActive) continue;
+      }
       const set: Record<string, number> = {};
       for (const [ab, n] of Object.entries(val as Record<string, unknown>)) {
         if ((ABILS as readonly string[]).includes(ab) && typeof n === 'number' && n) set[ab] = n;
@@ -606,7 +613,8 @@ export function createRules(): Pipeline {
     const list: Json[] = [];
     const opts = ctx.env.abilities.optionFeatureNames(ctx.char);
     const chosen = new Set<string>();
-    for (const v of Object.values(ctx.char.decisions || {})) {
+    for (const [k, v] of Object.entries(ctx.char.decisions || {})) {
+      if (!ctx.env.abilities.isDecisionKeyActive(ctx.char, k)) continue;
       for (const x of Array.isArray(v) ? v : [v]) if (typeof x === 'string' && x) chosen.add(x);
     }
     const active = (f: Json) => !opts.has(f.name) || chosen.has(f.name);

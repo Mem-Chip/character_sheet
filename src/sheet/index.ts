@@ -1,7 +1,7 @@
 export { SheetEnv, type SheetEnvOptions, type CampaignData } from './env';
 export { DataStore, type DataProvider, type Json } from './store';
 export { Source, subclassCandidates, subclassLabel, classSlug, CLASS_SLUG_BY_NAME, BASE_URL } from './source';
-export { blankCharacter, featNames, resolveCharacter, computeCharacter, applyOriginFeatDefault, totalLevel, type CharData } from './character';
+export { blankCharacter, featNames, pruneCharByLevel, resolveCharacter, computeCharacter, applyOriginFeatDefault, totalLevel, type CharData } from './character';
 export { AbilityBook, HR_SOURCE, sourceKeyOf, type SourceSpec, decisionComplete, abilityPlans, applyChoiceGrant, parseAcFormula, resolveNum, type HomeRuleEntry, type Derived } from './abilities';
 export { MOD_KIND_DOC, GRANT_KINDS, CHOICE_POOLS } from './abilities';
 export { Pipeline, CalcCtx, Chooser, buildOrigins, createRules } from './pipeline';

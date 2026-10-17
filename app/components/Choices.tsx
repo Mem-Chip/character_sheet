@@ -1,9 +1,9 @@
 /**
- * 待决定项：能力数据里的 choices + 结构性选项（祈唤 / 战技 / 原初职能…）+ 种族「再选一项起源专长」。
- * 决策写进 char.decisions[key]；子职选择直接写 classes[i].subclass。
+ * 待决定项：能力数据里的 choices + 结构性选项（祈唤 / 战技 / 原初职能…）+ 种族「再选一项起源专长」+ 职业专长槽。
+ * 决策写进 char.decisions[key]；子职选择直接写 classes[i].subclass；专长槽写进 char.feats。
  */
 import { useState } from 'react';
-import { ABILS, ABIL_CN, abilityPlans, choiceOptions, type CharData, type Json } from '../../src/sheet';
+import { ABILS, ABIL_CN, abilityPlans, choiceOptions, featNames, type CharData, type FeatSlot, type Json, type SheetEnv } from '../../src/sheet';
 import type { Engine } from '../lib/engine';
 import { actions } from '../lib/store';
 import { canLookup } from '../lib/terms';
@@ -20,8 +20,100 @@ function asList(v: unknown): string[] {
   return (Array.isArray(v) ? v : [v]).filter((x): x is string => typeof x === 'string' && !!x);
 }
 
+/** 汇总所有尚未决定的事项（未填专长槽 + 未完成的能力/结构选择） */
+export function openChoiceItems(env: SheetEnv, char: CharData, sheet: Json): Array<{ key: string; label: string }> {
+  const slots = env.feats.slots(char, char._resolved);
+  const { bySlot } = env.feats.assign(char.feats || [], slots);
+  const openSlots = bySlot
+    .filter((b) => !b.name)
+    .map((b) => ({ key: `featSlot:${b.slot.id}`, label: `${b.slot.label}（${b.slot.from}）` }));
+  const openPending = ((sheet._pending || []) as Json[])
+    .filter((c) => !c.decided)
+    .map((c) => ({ key: String(c.key), label: String(c.label || c.id) }));
+  return [...openSlots, ...openPending];
+}
+
+function FeatSlotChoice(p: { engine: Engine; id: string; char: CharData; sheet: Json; slot: FeatSlot; name: string | null }) {
+  const { engine, id, char, sheet, slot, name } = p;
+  const env = engine.env;
+  const owned = featNames(char);
+  const rawCands = env.feats.candidates(slot.category, sheet, char, slot);
+  const cands = [...rawCands].sort((a, b) => {
+    if (slot.label === '属性值提升') {
+      if (a.feat.name === '属性值提升') return -1;
+      if (b.feat.name === '属性值提升') return 1;
+    }
+    const aAvail = a.ok && (!owned.includes(a.feat.name) || a.feat.name === name || !!a.feat.repeatable);
+    const bAvail = b.ok && (!owned.includes(b.feat.name) || b.feat.name === name || !!b.feat.repeatable);
+    if (aAvail !== bAvail) return aAvail ? -1 : 1;
+    return String(a.feat.name).localeCompare(String(b.feat.name), 'zh');
+  });
+
+  const selectFeat = (nextFeat: string | null) => actions.update(id, (c) => {
+    const list: string[] = [...(c.feats || [])];
+    const curSlots = env.feats.slots(c, c._resolved);
+    const { bySlot } = env.feats.assign(list, curSlots);
+    const hit = bySlot.find((b) => b.slot.id === slot.id);
+    const oldName = hit?.name ?? name;
+    const at = hit && hit.index >= 0 ? hit.index : (oldName ? list.indexOf(oldName) : -1);
+    if (at >= 0) {
+      if (nextFeat) list[at] = nextFeat;
+      else list.splice(at, 1);
+    } else if (nextFeat) {
+      list.push(nextFeat);
+    }
+    c.feats = list;
+    if (oldName && oldName !== nextFeat && c.decisions) {
+      const remain = list.filter((n) => n === oldName).length;
+      for (const k of Object.keys(c.decisions)) {
+        if (remain === 0 && (k.startsWith(`XPHB:${oldName}#`) || k.startsWith(`expanded:${oldName}#`) || k.startsWith(`XPHB:${oldName}:`))) {
+          delete c.decisions[k];
+        } else if (remain > 0) {
+          const m = new RegExp(`^XPHB:${oldName}:(\\d+)#`).exec(k);
+          if (m && Number(m[1]) > remain) delete c.decisions[k];
+        }
+      }
+    }
+  });
+
+  const catLabel = env.feats.CAT[slot.category] || slot.category;
+  return (
+    <div className="choice">
+      <div className="spread">
+        <div className="t">
+          {slot.label}：选择一项{catLabel}专长 <Tag>专长</Tag>
+          {name && <Tag tone="accent">已决定：{name}</Tag>}
+        </div>
+        {name && <button className="btn ghost sm" onClick={() => selectFeat(null)}>重选</button>}
+      </div>
+      <div className="from">来自 {slot.from}</div>
+      <div className="opts">
+        {cands.map((x) => {
+          const on = name === x.feat.name;
+          const had = !on && owned.includes(x.feat.name) && !x.feat.repeatable;
+          const disabled = (!on && !x.ok) || had;
+          const reason = !x.ok ? x.reasons.join('；') : had ? `${x.feat.name}：别处已经有了` : undefined;
+          return (
+            <button
+              key={x.feat.name}
+              className={'chip' + (on ? ' on' : '')}
+              disabled={disabled}
+              title={reason}
+              onClick={() => selectFeat(on ? null : x.feat.name)}
+            >
+              <Term kind="feat" name={x.feat.name} inButton>{x.feat.name}</Term>
+              {had && <span className="faint">（已有）</span>}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function Choice(p: { engine: Engine; id: string; char: CharData; sheet: Json; ch: Json }) {
   const { engine, id, char, sheet, ch } = p;
+  const [modeCount, setModeCount] = useState<number | null>(null);
   const need = ch.count || 1;
   const isSub = ch.pool === 'subclass';
   const subIdx = isSub ? (char.classes || []).findIndex((c: Json) => {
@@ -53,14 +145,23 @@ function Choice(p: { engine: Engine; id: string; char: CharData; sheet: Json; ch
     const pool: string[] = Array.isArray(ch.from) ? ch.from : [...ABILS];
     const val = (cur && typeof cur === 'object' && !Array.isArray(cur) ? cur : {}) as Record<string, number>;
     const picked = Object.keys(val);
-    const plan = plans.find((pl) => pl.count === picked.length && picked.every((k) => val[k] === pl.amount)) ?? plans[0];
+    const matchedPlan = plans.find((pl) => picked.length > 0 && picked.every((k) => val[k] === pl.amount) && picked.length <= pl.count);
+    const plan = (modeCount != null ? plans.find((pl) => pl.count === modeCount) : null) ?? matchedPlan ?? plans[0];
     return (
       <div className="choice">
-        {head}{from}
+        {head}
+        <div className="from">来自 {ch.from || ch.ability}{plan.count > 1 ? ` · 已选 ${picked.length} / ${plan.count} 项` : ''}</div>
         {plans.length > 1 && (
-          <div className="opts">
+          <div className="opts" style={{ marginBottom: 6 }}>
             {plans.map((pl) => (
-              <button key={pl.count} className={'chip' + (pl === plan ? ' on' : '')} onClick={() => write(null)}>
+              <button
+                key={pl.count}
+                className={'chip' + (pl.count === plan.count ? ' on' : '')}
+                onClick={() => {
+                  setModeCount(pl.count);
+                  if (picked.length > 0) write(null);
+                }}
+              >
                 {pl.count === 1 ? `一项 +${pl.amount}` : `${pl.count} 项各 +${pl.amount}`}
               </button>
             ))}
@@ -69,18 +170,22 @@ function Choice(p: { engine: Engine; id: string; char: CharData; sheet: Json; ch
         <div className="opts">
           {pool.map((a) => {
             const on = picked.includes(a);
+            const full = !on && picked.length >= plan.count;
             return (
               <button
                 key={a}
                 className={'chip' + (on ? ' on' : '')}
+                disabled={full && plan.count > 1}
                 onClick={() => {
                   const next = { ...val };
                   if (on) delete next[a];
                   else {
-                    const target = plans.find((pl) => pl.count === Object.keys(next).length + 1) ?? plans[0];
-                    if (Object.keys(next).length >= Math.max(...plans.map((x) => x.count))) return;
-                    next[a] = target.amount;
-                    for (const k of Object.keys(next)) next[k] = target.amount;
+                    if (plan.count === 1) {
+                      for (const k of Object.keys(next)) delete next[k];
+                    } else if (Object.keys(next).length >= plan.count) {
+                      return;
+                    }
+                    next[a] = plan.amount;
                   }
                   write(Object.keys(next).length ? next : null);
                 }}
@@ -94,19 +199,19 @@ function Choice(p: { engine: Engine; id: string; char: CharData; sheet: Json; ch
     );
   }
 
-function termForChoiceOption(ch: Json, o: { value: string; label: string }): { kind: string; name: string } | null {
-  const kind = String(ch.kind ?? '');
-  const pool = String(ch.pool ?? '');
-  if (kind === 'feat' || pool.includes('feat')) return { kind: 'feat', name: o.value };
-  if (kind === 'skill' || kind === 'expertise') return { kind: 'skill', name: o.label };
-  if (kind === 'language' || pool === 'language') return { kind: 'language', name: o.value };
-  if (kind === 'itemMastery' || pool === 'mastery') return { kind: 'itemMastery', name: o.value };
-  if (kind === 'tool' || pool.includes('tool') || pool === 'artisan' || pool === 'instrument') return { kind: 'item', name: o.value };
-  if (kind === 'spell' || kind === 'cantrip') return { kind: 'spell', name: o.value };
-  if (pool === 'subclass') return { kind: 'subclassFeature', name: o.value };
-  if (o.value && canLookup('auto')) return { kind: 'auto', name: o.value };
-  return null;
-}
+  function termForChoiceOption(ch: Json, o: { value: string; label: string }): { kind: string; name: string } | null {
+    const kind = String(ch.kind ?? '');
+    const pool = String(ch.pool ?? '');
+    if (kind === 'feat' || pool.includes('feat')) return { kind: 'feat', name: o.value };
+    if (kind === 'skill' || kind === 'expertise') return { kind: 'skill', name: o.label };
+    if (kind === 'language' || pool === 'language') return { kind: 'language', name: o.value };
+    if (kind === 'itemMastery' || pool === 'mastery') return { kind: 'itemMastery', name: o.value };
+    if (kind === 'tool' || pool.includes('tool') || pool === 'artisan' || pool === 'instrument') return { kind: 'item', name: o.value };
+    if (kind === 'spell' || kind === 'cantrip') return { kind: 'spell', name: o.value };
+    if (pool === 'subclass') return { kind: 'subclassFeature', name: o.value };
+    if (o.value && canLookup('auto')) return { kind: 'auto', name: o.value };
+    return null;
+  }
 
   const res = choiceOptions(engine.env, char, sheet, ch);
   const vals = asList(cur);
@@ -159,20 +264,34 @@ function takenElsewhere(sheet: Json, ch: Json, own: string[]): Set<string> {
 
 export function Choices(p: { engine: Engine; id: string; char: CharData; sheet: Json; title?: string }) {
   const [showDone, setShowDone] = useState(false);
+  const slots = p.engine.env.feats.slots(p.char, p.char._resolved);
+  const { bySlot } = p.engine.env.feats.assign(p.char.feats || [], slots);
+  const openSlots = bySlot.filter((b) => !b.name);
+  const doneSlots = bySlot.filter((b) => !!b.name);
   const pending: Json[] = p.sheet._pending || [];
   const open = pending.filter((c) => !c.decided);
   const done = pending.filter((c) => c.decided);
+  const slotList = showDone ? [...openSlots, ...doneSlots] : openSlots;
   const list = showDone ? [...open, ...done] : open;
+  const totalOpen = openSlots.length + open.length;
+  const totalDone = doneSlots.length + done.length;
   return (
-    <Panel
-      title={p.title ?? '待决定'}
-      aside={<>
-        <span>{open.length} 项待定</span>
-        {done.length > 0 && <button className="btn ghost sm" onClick={() => setShowDone(!showDone)}>{showDone ? '隐藏已决定' : `显示已决定（${done.length}）`}</button>}
-      </>}
-      flush
-    >
-      {list.length ? list.map((ch) => <Choice key={ch.key} {...p} ch={ch} />) : <div className="empty">没有需要决定的事。</div>}
-    </Panel>
+    <div id="sheet-choices-panel">
+      <Panel
+        title={p.title ?? '待决定'}
+        aside={<>
+          <span>{totalOpen} 项待定</span>
+          {totalDone > 0 && <button className="btn ghost sm" onClick={() => setShowDone(!showDone)}>{showDone ? '隐藏已决定' : `显示已决定（${totalDone}）`}</button>}
+        </>}
+        flush
+      >
+        {(slotList.length || list.length) ? (
+          <>
+            {slotList.map(({ slot, name }) => <FeatSlotChoice key={`featSlot:${slot.id}`} {...p} slot={slot} name={name} />)}
+            {list.map((ch) => <Choice key={ch.key} {...p} ch={ch} />)}
+          </>
+        ) : <div className="empty">没有需要决定的事。</div>}
+      </Panel>
+    </div>
   );
 }

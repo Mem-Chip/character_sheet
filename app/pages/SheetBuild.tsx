@@ -2,7 +2,7 @@
 import { useMemo, useState } from 'react';
 import {
   ABILS, ABIL_CN, CLASS_SLUG_BY_NAME, SKILLS, STANDARD_ARRAY, backgroundBonusFrom, backgroundOriginFeat, featNames,
-  pointBuyCost, subclassCandidates, subclassLabel, type CharData, type Json,
+  pointBuyCost, pruneCharByLevel, subclassCandidates, subclassLabel, type CharData, type Json,
 } from '../../src/sheet';
 import { Field, NumInput, Panel, Tag, sgn } from '../components/ui';
 import { Term } from '../components/Term';
@@ -127,7 +127,7 @@ function Abilities({ id, char, sheet }: Props) {
   );
 }
 
-function Classes({ id, char }: Props) {
+function Classes({ engine, id, char }: Props) {
   const resolved: Json[] = char._resolved?.classes || [];
   const starting = char.startingClass || char.classes?.[0]?.name;
   return (
@@ -146,16 +146,24 @@ function Classes({ id, char }: Props) {
                     const old = c.classes[i].name;
                     c.classes[i] = { name: e.target.value, level: c.classes[i].level, subclass: '' };
                     if (!c.startingClass || c.startingClass === old) c.startingClass = i === 0 ? e.target.value : c.startingClass;
+                    pruneCharByLevel(engine.env, c);
                   })}>
                     <option value="">—</option>
                     {CORE_CLASSES.map((n) => <option key={n} value={n} disabled={n !== k.name && char.classes.some((x: Json) => x.name === n)}>{n}</option>)}
                   </select>
                 </Field>
                 <Field label="等级">
-                  <NumInput min={1} max={20} value={k.level} onChange={(n) => upd(id, (c) => { c.classes[i].level = n; })} />
+                  <NumInput min={1} max={20} value={k.level} onChange={(n) => upd(id, (c) => {
+                    const prev = +c.classes[i].level || 1;
+                    c.classes[i].level = n;
+                    if (n < prev) pruneCharByLevel(engine.env, c);
+                  })} />
                 </Field>
                 <Field label={k.level >= 3 ? '子职' : '子职（3 级）'}>
-                  <select value={k.subclass || ''} disabled={k.level < 3 || !subs.length} onChange={(e) => upd(id, (c) => { c.classes[i].subclass = e.target.value; })}>
+                  <select value={k.subclass || ''} disabled={k.level < 3 || !subs.length} onChange={(e) => upd(id, (c) => {
+                    c.classes[i].subclass = e.target.value;
+                    pruneCharByLevel(engine.env, c);
+                  })}>
                     <option value="">—</option>
                     {subs.map((s: Json) => <option key={s.name + s.source} value={s.name}>{subclassLabel(s)}</option>)}
                   </select>
@@ -163,7 +171,10 @@ function Classes({ id, char }: Props) {
                 <label className="row small" style={{ gap: 4 }}>
                   <input type="radio" name="starting" checked={starting === k.name} onChange={() => upd(id, (c) => { c.startingClass = k.name; })} /> 起始职业
                 </label>
-                {char.classes.length > 1 && <button className="btn ghost sm danger" onClick={() => upd(id, (c) => { c.classes.splice(i, 1); })}>移除</button>}
+                {char.classes.length > 1 && <button className="btn ghost sm danger" onClick={() => upd(id, (c) => {
+                  c.classes.splice(i, 1);
+                  pruneCharByLevel(engine.env, c);
+                })}>移除</button>}
               </div>
               {hd && k.level > (starting === k.name ? 1 : 0) && (
                 <div className="row small" style={{ marginTop: 6 }}>
@@ -198,17 +209,29 @@ function Feats({ engine, id, char, sheet }: Props) {
   return (
     <Panel title="专长槽" aside={<span>来自职业等级表</span>}>
       <div className="stack">
-        {bySlot.map(({ slot, name }) => {
+        {bySlot.map(({ slot, name, index }) => {
           const cands = env.feats.candidates(slot.category, sheet, char, slot);
           return (
             <div key={slot.id} className="row">
               <span className="small" style={{ minWidth: 150 }}>{slot.label} <span className="faint tiny">{slot.from}</span></span>
               <select value={name || ''} style={{ flex: 1 }} onChange={(e) => upd(id, (c) => {
-                const list: string[] = c.feats || [];
-                const at = name ? list.indexOf(name) : -1;
-                if (at >= 0) { if (e.target.value) list[at] = e.target.value; else list.splice(at, 1); }
-                else if (e.target.value) list.push(e.target.value);
+                const list: string[] = [...(c.feats || [])];
+                const at = index >= 0 ? index : (name ? list.indexOf(name) : -1);
+                const nextVal = e.target.value;
+                if (at >= 0) { if (nextVal) list[at] = nextVal; else list.splice(at, 1); }
+                else if (nextVal) list.push(nextVal);
                 c.feats = list;
+                if (name && name !== nextVal && c.decisions) {
+                  const remain = list.filter((n) => n === name).length;
+                  for (const k of Object.keys(c.decisions)) {
+                    if (remain === 0 && (k.startsWith(`XPHB:${name}#`) || k.startsWith(`expanded:${name}#`) || k.startsWith(`XPHB:${name}:`))) {
+                      delete c.decisions[k];
+                    } else if (remain > 0) {
+                      const m = new RegExp(`^XPHB:${name}:(\\d+)#`).exec(k);
+                      if (m && Number(m[1]) > remain) delete c.decisions[k];
+                    }
+                  }
+                }
               })}>
                 <option value="">— 未选 —</option>
                 {cands.map((x) => (

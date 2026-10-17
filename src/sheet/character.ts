@@ -52,12 +52,105 @@ export { totalLevel };
 
 /** 这个角色实际拥有哪些专长：char.feats ∪「再选一项起源专长」那类决策里选的值 */
 export function featNames(c: CharData): string[] {
-  const out = new Set<string>((c.feats || []).filter((x: unknown) => typeof x === 'string' && x));
+  const out: string[] = (c.feats || []).filter((x: unknown): x is string => typeof x === 'string' && !!x);
   for (const [k, v] of Object.entries(c.decisions || {})) {
     if (!/originFeat/i.test(k)) continue;
-    for (const x of Array.isArray(v) ? v : [v]) if (typeof x === 'string' && x) out.add(x);
+    for (const x of Array.isArray(v) ? v : [v]) {
+      if (typeof x === 'string' && x && !out.includes(x)) out.push(x);
+    }
   }
-  return [...out];
+  return out;
+}
+
+/** 降级或移除职业时，清理超出新等级槽位的专长、高阶决策、多余武器精通与生命骰记录 */
+export function pruneCharByLevel(env: SheetEnv, char: CharData): void {
+  const classes: Json[] = (char.classes || []).filter((c: Json) => c && c.name);
+  if (char.hpRolls && typeof char.hpRolls === 'object') {
+    for (const [clsName, arr] of Object.entries(char.hpRolls)) {
+      const spec = classes.find((c) => c.name === clsName);
+      if (!spec) delete char.hpRolls[clsName];
+      else if (Array.isArray(arr) && arr.length > (+spec.level || 1)) {
+        char.hpRolls[clsName] = arr.slice(0, +spec.level || 1);
+      }
+    }
+  }
+  if (char.decisions && typeof char.decisions === 'object') {
+    for (const key of Object.keys(char.decisions)) {
+      const owner = key.split('#')[0];
+      const parts = owner.split(':');
+      if (parts.length >= 4) {
+        const [, clsLabel, , lvStr] = parts;
+        const baseCls = clsLabel.split('·')[0];
+        const subCls = clsLabel.includes('·') ? clsLabel.split('·')[1] : null;
+        const spec = classes.find((x) => x.name === baseCls);
+        const lv = Number(lvStr);
+        if (!spec || (subCls && ((+spec.level || 1) < 3 || (spec.subclass && spec.subclass !== subCls))) || (Number.isFinite(lv) && lv > (+spec.level || 1))) {
+          delete char.decisions[key];
+        }
+      }
+    }
+  }
+  if (char._resolved?.classes) {
+    const nextResClasses = classes.map((spec: Json) => {
+      const old = (char._resolved.classes || []).find((x: Json) => x.cls?.name === spec.name);
+      if (!old) return null;
+      const lv = +spec.level || 1;
+      return {
+        ...old,
+        level: lv,
+        features: (old.features || []).filter((f: Json) => f.level <= lv),
+        subFeatures: lv >= 3 ? (old.subFeatures || []).filter((f: Json) => f.level <= lv) : [],
+      };
+    }).filter(Boolean);
+    const slots = env.feats.slots(char, { ...char._resolved, classes: nextResClasses });
+    const rawFeats: string[] = (char.feats || []).filter((x: unknown): x is string => typeof x === 'string' && !!x);
+    const { bySlot, unmatched } = env.feats.assign(rawFeats, slots);
+    const keepIdx = new Set<number>(bySlot.filter((b) => b.index >= 0).map((b) => b.index));
+    let originKept = false;
+    for (const u of unmatched) {
+      if (!u.f || (!originKept && u.cats.includes('O'))) {
+        if (u.f) originKept = true;
+        keepIdx.add(u.i);
+      }
+    }
+    const nextFeats = rawFeats.filter((_, i) => keepIdx.has(i));
+    const removedFeats = rawFeats.filter((_, i) => !keepIdx.has(i));
+    char.feats = nextFeats;
+    if (removedFeats.length && char.decisions) {
+      for (const rf of removedFeats) {
+        const remainCount = nextFeats.filter((n) => n === rf).length;
+        for (const k of Object.keys(char.decisions)) {
+          if (remainCount === 0 && (k.startsWith(`XPHB:${rf}#`) || k.startsWith(`expanded:${rf}#`) || k.startsWith(`XPHB:${rf}:`))) {
+            delete char.decisions[k];
+          } else if (remainCount > 0) {
+            const m = new RegExp(`^XPHB:${rf}:(\\d+)#`).exec(k);
+            if (m && Number(m[1]) > remainCount) delete char.decisions[k];
+          }
+        }
+      }
+    }
+    const optData: Json[] = env.store.data.optionalfeatures?.optionalfeature || [];
+    const totLv = totalLevel(char);
+    for (const k of nextResClasses) {
+      for (const c of [...env.options.forClass(k), ...env.options.forSubclass(k)]) {
+        if (c.kind !== 'optfeature' || !char.decisions) continue;
+        const oKey = env.options.optionKey({ _resolved: { classes: nextResClasses } }, c);
+        const v = char.decisions[oKey];
+        if (!Array.isArray(v)) continue;
+        let nextV = v.filter((nm: string) => {
+          const opt = optData.find((o) => o.name === nm && o.source === 'XPHB') ?? optData.find((o) => o.name === nm);
+          return !opt || env.optional.meetsLevelPrereq(opt, k.cls.name, k.level, totLv);
+        });
+        if (c.count && nextV.length > c.count) nextV = nextV.slice(0, c.count);
+        if (nextV.length) char.decisions[oKey] = nextV;
+        else delete char.decisions[oKey];
+      }
+    }
+  }
+  const maxMasteries = env.mastery.allowance(char).total;
+  if (Array.isArray(char.masteries) && char.masteries.length > maxMasteries) {
+    char.masteries = char.masteries.slice(0, maxMasteries);
+  }
 }
 
 /** 名称 → 实体。子职不足 3 级会被摘掉（记进 subclassArchive，升回 3 级自动恢复） */
@@ -70,6 +163,10 @@ export async function resolveCharacter(env: SheetEnv, char: CharData): Promise<J
 
   if (char.race) res.race = (d.races.race || []).find((r: Json) => r.name === char.race && Source.is2024(r)) || null;
   if (char.background) res.background = (d.backgrounds.background || []).find((b: Json) => b.name === char.background && Source.is2024(b)) || null;
+  for (const f of featNames(char)) {
+    const e = (d.feats.feat || []).find((x: Json) => x.name === f && Source.is2024(x));
+    if (!e) res.warnings.push('找不到专长：' + f);
+  }
 
   const baseItems = d.itemsBase?.baseitem || [];
   const items = d.items?.item || [];
@@ -96,11 +193,6 @@ export async function resolveCharacter(env: SheetEnv, char: CharData): Promise<J
     return { ...(typeof eq === 'string' ? { name: n, qty: 1, equipped: true } : eq), name: n, _ent: ent };
   });
   res.props = env.store.props || {};
-
-  for (const f of featNames(char)) {
-    const e = (d.feats.feat || []).find((x: Json) => x.name === f && Source.is2024(x));
-    if (e) res.feats.push(e); else res.warnings.push('找不到专长：' + f);
-  }
 
   res.languagesGranted = [];
   res.languageChoices = [];
@@ -186,6 +278,36 @@ export async function resolveCharacter(env: SheetEnv, char: CharData): Promise<J
       }
     }
     res.classes.push({ cls, level: lvl, subclassName: spec.subclass, subclass, features, subFeatures, optPool, allSubclasses });
+  }
+
+  // 解析已生效的专长：只认匹配到当前等级专长槽的专长 + 至多 1 项背景起源专长 + 当前种族决策授予的起源专长
+  {
+    const slots = env.feats.slots(char, res);
+    const rawFeats: string[] = (char.feats || []).filter((x: unknown): x is string => typeof x === 'string' && !!x);
+    const { bySlot, unmatched } = env.feats.assign(rawFeats, slots);
+    const activeIndices = new Set<number>(bySlot.filter((b) => b.index >= 0).map((b) => b.index));
+    let originKept = false;
+    for (const u of unmatched) {
+      if (!u.f) {
+        activeIndices.add(u.i);
+      } else if (!originKept && u.cats.includes('O')) {
+        originKept = true;
+        activeIndices.add(u.i);
+      }
+    }
+    const activeFeatList: string[] = rawFeats.filter((_, i) => activeIndices.has(i));
+    for (const [k, v] of Object.entries(char.decisions || {})) {
+      if (!/originFeat/i.test(k)) continue;
+      const racePart = k.split('#')[0]?.split(':')[1];
+      if (racePart && char.race && racePart !== char.race) continue;
+      for (const x of Array.isArray(v) ? v : [v]) {
+        if (typeof x === 'string' && x && !activeFeatList.includes(x)) activeFeatList.push(x);
+      }
+    }
+    for (const f of activeFeatList) {
+      const e = (d.feats.feat || []).find((x: Json) => x.name === f && Source.is2024(x));
+      if (e) res.feats.push(e);
+    }
   }
 
   // 职业/子职特殊语言（德鲁伊语、盗贼黑话…）只能从正文识别

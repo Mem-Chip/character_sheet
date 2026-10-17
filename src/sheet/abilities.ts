@@ -44,7 +44,16 @@ export function decisionComplete(ch: Json, dec: unknown): boolean {
     const need = (ch && (ch.count || (Array.isArray(ch.from) && ch.from.length))) || 1;
     return vals.length >= need;
   }
-  if (typeof dec === 'object') return Object.keys(dec as object).length > 0;
+  if (typeof dec === 'object') {
+    const obj = dec as Record<string, unknown>;
+    const keys = Object.keys(obj);
+    if (!keys.length) return false;
+    if (ch && ch.kind === 'ability' && !ch.pick) {
+      const plans = abilityPlans(ch);
+      return plans.some((pl) => pl.count === keys.length && keys.every((k) => obj[k] === pl.amount));
+    }
+    return true;
+  }
   return true;
 }
 
@@ -553,6 +562,8 @@ export class AbilityBook {
 
   /* ---------------- 查表 ---------------- */
 
+  private static readonly FEAT_SLOT_FEATURES = new Set(['属性值提升', '传奇恩惠', '战斗风格', '额外战斗风格']);
+
   /** 精确键：`<source>:<职业>:<名字>:<等级>` → `<source>:<职业>:<名字>` → `<source>:<名字>`；家规表优先 */
   get(source: string, name: string, className?: string, level?: number | null): Json {
     const hr = this.hrTable[`${source}:${name}`];
@@ -565,6 +576,7 @@ export class AbilityBook {
     if (className) {
       const k = `${source}:${className}:${name}`;
       if (E[k]) return E[k];
+      if (AbilityBook.FEAT_SLOT_FEATURES.has(name) || this.featByName(name)) return null;
     }
     return E[`${source}:${name}`] || null;
   }
@@ -576,17 +588,44 @@ export class AbilityBook {
       if (a && (a.displayName === name || a._hrId === name)) return a;
     }
     const E = this.data.entries;
+    if (className && level != null) {
+      for (const k of Object.keys(E)) {
+        if (k.slice(k.indexOf(':') + 1) === `${className}:${name}:${level}`) return E[k];
+      }
+    }
+    if (className) {
+      for (const k of Object.keys(E)) {
+        if (k.slice(k.indexOf(':') + 1) === `${className}:${name}`) return E[k];
+      }
+      if (AbilityBook.FEAT_SLOT_FEATURES.has(name) || this.featByName(name)) return null;
+    }
     for (const k of Object.keys(E)) {
       const tail = k.slice(k.indexOf(':') + 1);
       if (tail === name) return E[k];
-      if (className && tail === `${className}:${name}`) return E[k];
-      if (className && level != null && tail === `${className}:${name}:${level}`) return E[k];
     }
     return null;
   }
 
   resolve(s: SourceSpec): Json {
+    if (s.kind === 'feat') return this.get(s.source, s.name) || this.getAny(s.name);
     return this.get(s.source, s.name, s.cls, s.level) || this.getAny(s.name, s.cls, s.level);
+  }
+
+  /** 判断一条决策键是否仍属于当前角色已激活的职业与等级范围 */
+  isDecisionKeyActive(char: Json, key: string): boolean {
+    const owner = String(key || '').split('#')[0];
+    const parts = owner.split(':');
+    if (parts.length >= 4) {
+      const [, clsLabel, , lvStr] = parts;
+      const baseCls = clsLabel.split('·')[0];
+      const subCls = clsLabel.includes('·') ? clsLabel.split('·')[1] : null;
+      const k = (char?._resolved?.classes || []).find((x: Json) => x.cls?.name === baseCls);
+      if (!k) return false;
+      if (subCls && (k.subclassName !== subCls || k.level < 3)) return false;
+      const lv = Number(lvStr);
+      if (Number.isFinite(lv) && lv > k.level) return false;
+    }
+    return true;
   }
 
   /** 正文里「选所选技能专精」被抽取漏掉时补上 */
@@ -686,10 +725,16 @@ export class AbilityBook {
     const res = char._resolved || {};
     if (res.race) out.push({ source: res.race.source, name: res.race.name, kind: 'race' });
     if (res.background) out.push({ source: res.background.source, name: res.background.name, kind: 'background' });
-    for (const f of res.feats || []) out.push({ source: f.source, name: f.name, kind: 'feat' });
+    const featCounts = new Map<string, number>();
+    for (const f of res.feats || []) {
+      const cnt = (featCounts.get(f.name) || 0) + 1;
+      featCounts.set(f.name, cnt);
+      out.push({ source: f.source, name: f.name, kind: 'feat', ...(cnt > 1 ? { level: cnt } : {}) });
+    }
     const opts = this.optionFeatureNames(char);
     const chosen = new Set<string>();
-    for (const v of Object.values(char.decisions || {})) {
+    for (const [k, v] of Object.entries(char.decisions || {})) {
+      if (!this.isDecisionKeyActive(char, k)) continue;
       for (const x of Array.isArray(v) ? v : [v]) if (typeof x === 'string' && x) chosen.add(x);
     }
     for (const k of res.classes || []) {
@@ -704,14 +749,21 @@ export class AbilityBook {
     }
     // 选出来的可选特性（魔能祈唤、战技、超魔法…）和专长一样是能力来源：静态 mods / 授予生效，战斗引擎也认得
     const optData: Json[] = this.env.store.data.optionalfeatures?.optionalfeature || [];
+    const totLv = totalLevel(char);
     for (const k of res.classes || []) {
       for (const c of [...this.env.options.forClass(k), ...this.env.options.forSubclass(k)]) {
         if (c.kind !== 'optfeature') continue;
         const v = (char.decisions || {})[this.env.options.optionKey(char, c)];
-        for (const name of Array.isArray(v) ? v : v ? [v] : []) {
-          if (typeof name !== 'string' || !name || out.some((x) => x.name === name)) continue;
-          // 同名的 2014 / 2024 两版都在数据里：选项值只有名字，优先 2024 版
-          const src = (optData.find((o) => o.name === name && o.source === 'XPHB') ?? optData.find((o) => o.name === name))?.source || 'XPHB';
+        const rawVals = (Array.isArray(v) ? v : v ? [v] : []).filter((x): x is string => typeof x === 'string' && !!x);
+        const limit = c.count || rawVals.length;
+        let pickedCount = 0;
+        for (const name of rawVals) {
+          if (pickedCount >= limit) break;
+          const opt = optData.find((o) => o.name === name && o.source === 'XPHB') ?? optData.find((o) => o.name === name);
+          if (opt && !this.env.optional.meetsLevelPrereq(opt, k.cls.name, k.level, totLv)) continue;
+          pickedCount++;
+          if (out.some((x) => x.name === name)) continue;
+          const src = opt?.source || 'XPHB';
           out.push({ source: src, name, kind: 'optfeature' });
         }
       }
@@ -814,7 +866,8 @@ export class AbilityBook {
       let a = this.resolve(s);
       if (!a) continue;
       a = this.applyProseComplement(a, this.findFeatureEntity(s.name, char));
-      const label = a.displayName || s.name;
+      const baseLabel = a.displayName || s.name;
+      const label = s.kind === 'feat' && s.level && s.level > 1 ? `${baseLabel}（第 ${s.level} 次）` : baseLabel;
       const srcName = s.name;
       const hrSeen = (out.hrSeen ||= new Set());
       const markHr = () => { if (s.source === HR_SOURCE) hrSeen.add(s.name); };
@@ -897,13 +950,27 @@ export class AbilityBook {
     }
     {
       const dec = char.decisions || {};
+      const optData: Json[] = this.env.store.data.optionalfeatures?.optionalfeature || [];
+      const totLv = totalLevel(char);
       for (const p of out.pending) {
         if (p.key === undefined) continue;
         const v = dec[p.key];
-        const undecided = !decisionComplete(p, v);
+        let vals = Array.isArray(v) ? v : v != null ? [v] : [];
+        if (p.kind === 'optfeature' && p.pool !== 'inline') {
+          const baseCls = String(p.cls || '').split('·')[0];
+          const k = (char._resolved?.classes || []).find((x: Json) => x.cls?.name === baseCls);
+          if (k) {
+            vals = vals.filter((nm) => {
+              const opt = optData.find((o) => o.name === nm && o.source === 'XPHB') ?? optData.find((o) => o.name === nm);
+              return !opt || this.env.optional.meetsLevelPrereq(opt, k.cls.name, k.level, totLv);
+            });
+          }
+        }
+        if (p.count && vals.length > p.count) vals = vals.slice(0, p.count);
+        const effDec = Array.isArray(v) ? vals : (vals[0] ?? v);
+        const undecided = !decisionComplete(p, effDec);
         p.decided = !undecided;
         if (undecided) continue;
-        const vals = Array.isArray(v) ? v : [v];
         applyChoiceGrant(p, vals, out, p.from || p.ability || '');
         if (p.kind === 'classFeature' || p.kind === 'optfeature') {
           for (const nm of vals) out.entries.push(this.featureEntry(nm, p.from, char));
