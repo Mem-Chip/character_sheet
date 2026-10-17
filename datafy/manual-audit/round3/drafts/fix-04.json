@@ -1,0 +1,510 @@
+{
+ "version": 1,
+ "note": "fix-04：按 round2/suspects.md「缓一轮（27 条）」里的证据修 6 条（基线草稿是 .oracle/drafts/ 里含这些键的那几份，因为 round2/drafts 里没有它们——那批是已合并/待复核的 62 条）。① 蛛网术：删掉 root 里施法瞬间的全员豁免（原文只有「首次进入 / 在网中开始回合」才豁免），保留 zone；② 至圣光轮、迅捷灵光：aura 授予的触发器引擎不查半径（缺口 1），数据侧补 when: dist(source, self) <= 30 / 10 兜；③ 自然庇护：原文让 DM「拖动区域」，界面只能删了重画，改成「移动区域」动作在新位置放一个新区域 + 手动删旧区域；④ 战术转进：改掉纯 manual，照同批「半速移动预算 + cannot: ['provoke']」写法做成按钮（用 ask 问「刚用附赠动作回气了吗」兜住时机）；⑤ 换位诈术：text 里「手动对调不触发借机攻击」与事实不符（拖动棋子就是 move 命令，会扣移动力、会弹借机攻击），改成如实说明，并点明「至少 5 尺移动力」引擎不检查。",
+ "entries": {
+  "XPHB:spell:蛛网术": {
+   "name": "蛛网术",
+   "automation": "partial",
+   "text": "专注至多 1 小时。在 60 尺内指定一点召唤 20 尺立方蛛网。一回合中首次进入蛛网、或在蛛网中开始其回合的生物进行敏捷豁免，失败陷入束缚状态直到离开蛛网或挣脱（引擎按区域自动结算）。施法当时已经在区域里的生物不会立刻豁免，要等它进入、或在自己的回合开始时才豁免（原文如此）。「离开蛛网就解除束缚」引擎不追踪，需人工解除；被束缚者用动作进行力量（运动）检定挣脱、蛛网坍塌（未固定时在你的下一回合开始时终止）以及易燃燃烧都需人工处理；区域内的困难地形与轻度遮蔽同样需人工处理。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "蛛网术",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 2
+       }
+      }
+     ],
+     "concentration": {
+      "hours": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 60,
+      "area": {
+       "shape": "cube",
+       "size": 20
+      }
+     },
+     "root": [
+      {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnStart"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "dex",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "蛛网束缚"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "蛛网范围内是困难地形并造成轻度遮蔽（需人工处理）；蛛网未固定在两个固体之间时会坍塌，法术在你的下一回合开始时终止（需人工处理）；蛛网可燃，遇火焰会在一轮内烧尽并对在其中开始回合的生物造成 2d4 火焰伤害（需人工处理）"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "蛛网束缚": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "implies": [
+      "XPHB:condition:束缚"
+     ],
+     "text": "陷入束缚状态，直到离开蛛网或挣脱。可用动作进行对抗法术豁免 DC 的力量（运动）检定，成功则不再被束缚（离开蛛网、挣脱动作都需人工处理）。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:圣武士:至圣光轮:20": {
+   "name": "至圣光轮",
+   "automation": "partial",
+   "text": "附赠动作盈满守护灵光，持续 10 分钟，每次长休一次；可随时（无需动作）提前结束，也可消耗一个五环法术位重置使用权。至圣守护：被邪魔 / 不死生物迫使的豁免具有优势（靠提问判断来源）。光耀伤害：敌人在灵光（30 尺）内开始回合时受到 魅力调整值 + 熟练加值 的光耀伤害 —— 灵光跟着你走，用 aura 结算，不画在地图上（灵光授予的触发器引擎不自动查半径，这里补了距离条件：没有地图时会问你一次）。灵光内为明亮光照、视为阳光：引擎不处理光照，请人工。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "至圣光轮",
+     "activation": "bonus",
+     "cost": [
+      {
+       "resource": "holyNimbus"
+      }
+     ],
+     "requires": "!self.hasEffect('至圣光轮')",
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "至圣光轮"
+      }
+     ]
+    },
+    {
+     "id": "end",
+     "name": "结束至圣光轮",
+     "activation": "free",
+     "requires": "self.hasEffect('至圣光轮')",
+     "root": [
+      {
+       "kind": "removeEffect",
+       "from": "self",
+       "match": {
+        "name": "至圣光轮"
+       }
+      }
+     ]
+    },
+    {
+     "id": "reset",
+     "name": "至圣光轮：重置使用权（五环法术位）",
+     "activation": "free",
+     "cost": [
+      {
+       "slot": {
+        "min": 5,
+        "max": 5
+       }
+      }
+     ],
+     "requires": "self.resource('holyNimbus') < 1",
+     "root": [
+      {
+       "kind": "resource",
+       "id": "holyNimbus",
+       "delta": 1
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "至圣光轮": {
+     "text": "10 分钟内：被邪魔或不死生物迫使的豁免具有优势；敌人在你的守护灵光（30 尺）内开始回合时受到 魅力调整值 + 熟练加值 的光耀伤害；灵光内为明亮光照、视为阳光（引擎不处理光照，请人工）。",
+     "duration": {
+      "minutes": 10
+     },
+     "rollMods": [
+      {
+       "on": {
+        "kind": "save"
+       },
+       "who": "bearer",
+       "when": "ask('迫使这次豁免的是邪魔或不死生物吗？')",
+       "op": "adv",
+       "label": "至圣光轮：至圣守护"
+      }
+     ],
+     "aura": {
+      "id": "nimbus",
+      "radius": 30,
+      "affects": "enemies",
+      "includeSelf": false,
+      "requires": "!self.has('失能')",
+      "stackKey": "至圣光轮",
+      "grant": {
+       "triggers": [
+        {
+         "id": "radiance",
+         "label": "至圣光轮：光耀伤害",
+         "on": "turnStarted",
+         "role": "actor",
+         "window": "after",
+         "when": "dist(source, self) <= 30",
+         "do": [
+          {
+           "kind": "damage",
+           "dice": "source.mod.cha + source.pb",
+           "type": "光耀",
+           "to": "self"
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:圣武士:迅捷灵光:7": {
+   "name": "迅捷灵光",
+   "automation": "partial",
+   "text": "自身速度 +10 尺已在静态层。守护灵光（10 尺，跟着你走）内的盟友在自己回合开始时获得 +10 尺速度，直到其下个回合结束 —— 这条用 aura 自动结算（灵光授予的触发器引擎不自动查半径，这里补了距离条件：没有地图时会问你一次）。盟友在自己回合里「第一次走进」灵光的那一次（进入时机）引擎处理不了：这是被动灵光，没有施放动作可以在地图上放下固定区域（zone 需要施放时选的格子），请人工给该盟友加 +10 尺速度直到其下个回合结束。",
+   "auras": [
+    {
+     "id": "alacrity",
+     "radius": 10,
+     "affects": "allies",
+     "includeSelf": false,
+     "requires": "!self.has('失能')",
+     "stackKey": "迅捷灵光",
+     "grant": {
+      "triggers": [
+       {
+        "id": "alacrity-start",
+        "label": "迅捷灵光：速度",
+        "on": "turnStarted",
+        "role": "actor",
+        "when": "dist(source, self) <= 10",
+        "do": [
+         {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "迅捷灵光"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "effects": {
+    "迅捷灵光": {
+     "stackKey": "迅捷灵光",
+     "statics": [
+      {
+       "kind": "speed",
+       "bonus": 10
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 1
+      }
+     },
+     "text": "速度增加 10 尺，直到其下个回合结束。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:德鲁伊:自然庇护:14": {
+   "name": "自然庇护",
+   "automation": "partial",
+   "text": "魔法动作，消耗一次荒野形态：在自身 120 尺内地面上的 15 尺立方区域里唤出灵体树木与藤蔓，区域会画在地图上、持续 1 分钟（10 轮）；若你提前失能或死亡，请在它到期前手动删掉区域。生物进入区域时日志会提示：区域内你和盟友拥有掩护，你的盟友还获得你自然之护的当前抗性 —— 引擎不处理掩护，也读不到「自然之护的当前抗性」，这两条请人工裁定。附赠动作可以移动区域，但引擎不会移动已经放下的区域：那个动作会在你新选的位置上放一个新区域，旧的请手动删掉（地图上的区域只有 DM 点得掉）；新旧位置的距离（最多 60 尺、仍在你 120 尺内）引擎不检查，请自己遵守；新区域也不会自己到期（引擎不知道还剩多少时间），1 分钟到时请手动删掉它。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "自然庇护",
+     "activation": "action",
+     "cost": [
+      {
+       "resource": "wildshape-uses"
+      }
+     ],
+     "targeting": {
+      "type": "area",
+      "range": 120,
+      "area": {
+       "shape": "cube",
+       "size": 15
+      }
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "自然庇护"
+      },
+      {
+       "kind": "note",
+       "text": "自然庇护：灵体树木与藤蔓覆盖这片 15 尺立方区域，持续 1 分钟，或者直到你失能 / 死亡（提前结束时请手动删掉地图上的区域）。你和盟友在区域内拥有掩护、盟友获得你自然之护的当前抗性（引擎不处理掩护与动态抗性，请人工裁定）。"
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter"
+       ],
+       "affects": "allies",
+       "oncePerTurn": true,
+       "rounds": 10,
+       "do": [
+        {
+         "kind": "note",
+         "text": "自然庇护：该生物进入了灵体树木区域 —— 它拥有掩护；若是你的盟友，还获得你自然之护的当前抗性（引擎不处理掩护与动态抗性，请人工加值）。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "move",
+     "name": "自然庇护：移动区域",
+     "activation": "bonus",
+     "requires": "turn.isMine && self.hasEffect('自然庇护')",
+     "targeting": {
+      "type": "area",
+      "range": 120,
+      "area": {
+       "shape": "cube",
+       "size": 15
+      }
+     },
+     "root": [
+      {
+       "kind": "zone",
+       "on": [
+        "enter"
+       ],
+       "affects": "allies",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "note",
+         "text": "自然庇护：该生物进入了灵体树木区域 —— 它拥有掩护；若是你的盟友，还获得你自然之护的当前抗性（引擎不处理掩护与动态抗性，请人工加值）。"
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "自然庇护：新区域已经放在你选的位置上。引擎不能移动已经放下的区域，请手动删掉地图上的旧区域（只有 DM 点得掉）；引擎不检查新旧位置的距离（最多 60 尺、仍须在你的 120 尺内），这个新区域也不会自己到期，1 分钟到时请手动删掉。"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "自然庇护": {
+     "text": "标记：灵体树木与藤蔓形成的 15 尺立方区域已经放好，持续 1 分钟，直到你失能或死亡。区域内你和盟友拥有掩护，盟友获得你自然之护的当前抗性（引擎不处理掩护与动态抗性，请人工）。",
+     "duration": {
+      "minutes": 1,
+      "endsOn": [
+       {
+        "event": "effectApplied",
+        "when": "event.bearer == self.id && self.has('失能')"
+       },
+       {
+        "event": "died",
+        "when": "self.dead"
+       }
+      ]
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:战士:战术转进:5": {
+   "name": "战术转进",
+   "automation": "partial",
+   "text": "每当你使用附赠动作进行回气时，你可以移动至多相当于你速度一半的距离，且这次移动不会引发借机攻击。引擎挂不上「使用了回气」这个时机，所以做成一个不占动作的按钮：用完附赠动作回气之后点「战术转进」，它会先问你「刚刚是不是用附赠动作进行了回气」（回答否就不生效），确认后引擎给出半速移动预算，并让接下来这一次移动不引发借机攻击（动过一次或你的回合结束就失效）。因为分几次拖动算好几次移动，请一次性把这段路程拖完，否则后面几次会照常引发借机攻击。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "战术转进",
+     "activation": "free",
+     "requires": "turn.isMine && !self.hasEffect('战术转进') && ask('你刚刚用附赠动作进行了回气吗？')",
+     "root": [
+      {
+       "kind": "economy",
+       "move": "floor(self.speed / 2)"
+      },
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "战术转进"
+      },
+      {
+       "kind": "note",
+       "text": "战术转进：你可以移动至多一半速度，这次移动不引发借机攻击（请一次性拖完）。"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "战术转进": {
+     "text": "回气之后的这次移动不引发借机攻击；动过一次或你的回合结束就失效。",
+     "flags": {
+      "cannot": [
+       "provoke"
+      ]
+     },
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      },
+      "endsOn": [
+       {
+        "event": "moved",
+        "when": "event.id == self.id"
+       }
+      ]
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:换位诈术": {
+   "name": "换位诈术",
+   "automation": "partial",
+   "text": "你的回合中，若你处于某个生物 5 尺范围内，可以消耗一枚卓越骰与至少 5 尺移动力与之互换位置（该生物须自愿且未处于失能状态）。引擎没有「对调两个棋子」的功能，位置互换请人工处理：由 DM 直接拖动两个棋子对调，或者只在日志里宣布对调 —— 注意战役遭遇里拖棋子走的就是一次「移动」，会扣移动力、还会弹出借机攻击（选「不攻击」即可），所以「这次移动不引发借机攻击」这句话在引擎里并不成立，请人工忽略那次借机攻击提示。另外「至少 5 尺移动力」引擎不检查（代价里的那 5 尺移动只是提醒），请自己扣掉。投掷被消耗的卓越骰并把结果填进弹窗：你或被换位者的 AC 获得等于该结果的加值，直到你的下个回合开始。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "换位诈术",
+     "activation": "free",
+     "requires": "turn.isMine",
+     "cost": [
+      {
+       "resource": "卓越骰"
+      },
+      {
+       "economy": "move",
+       "n": 5
+      }
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 5,
+      "filter": "target.id != self.id && !target.has('失能')"
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "与目标互换位置（目标须自愿；这次移动不引发借机攻击）。引擎不会对调棋子，请人工处理：DM 拖动棋子会被当成一次移动（扣移动力、并可能弹出借机攻击，请选「不攻击」）；代价里那 5 尺移动力引擎不检查，请自己扣。"
+      },
+      {
+       "kind": "number",
+       "prompt": "换位诈术：投掷被消耗的卓越骰（d8 / d10 / d12），填入结果",
+       "var": "r",
+       "min": 1,
+       "max": "cond(self.levelOf('战士') >= 18, 12, cond(self.levelOf('战士') >= 10, 10, 8))"
+      },
+      {
+       "kind": "choose",
+       "prompt": "换位诈术：谁获得 AC 加值？",
+       "options": [
+        {
+         "label": "你自己",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "self",
+           "template": "换位诈术",
+           "state": {
+            "bonus": "vars.r"
+           }
+          }
+         ]
+        },
+        {
+         "label": "被换位的生物",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "换位诈术",
+           "state": {
+            "bonus": "vars.r"
+           }
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "换位诈术": {
+     "text": "AC 获得等于卓越骰结果的加值，直到施加者的下个回合开始前。",
+     "statics": [
+      {
+       "kind": "ac",
+       "bonus": "effect.state.bonus"
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "source",
+       "nth": 1
+      }
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  }
+ }
+}

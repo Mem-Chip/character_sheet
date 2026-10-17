@@ -1,0 +1,824 @@
+{
+ "version": 1,
+ "note": "sum-03 草稿：召唤 / 伙伴 / 魔宠（8 条）",
+ "entries": {
+  "AU:魔契师:拟态生命:14": {
+   "name": "拟态生命",
+   "automation": "manual",
+   "text": "以魔法动作，令 90 尺内的契灵变形 1 小时，变为与契灵类型对应的灵魄：天族契灵 → 天界灵魄、邪魔契灵 → 邪魔灵魄、亡灵契灵 → 亡灵灵魄（灵魄见玩家手册的天界召唤术 / 邪魔召唤术 / 亡灵召唤术，灵魄的法术环阶 = 你的魔契师等级的一半，向下取整，最高九环）。契灵的游戏数据被灵魄数据卡替换，但它保留自身的人格、神圣之力附赠动作、生命值以及生命值骰；它获得等于该灵魄形态生命值的临时生命值，临时生命值耗尽则变形提前结束（1 小时后仍有剩余则消失）。引擎换不掉随从的数据卡，也读不出灵魄数据卡的生命值，所以变形、数据替换与临时生命值全部由人手动处理；这个动作只负责消耗「拟态生命」次数并留下记录，长休后恢复。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "拟态生命",
+     "activation": "action",
+     "tags": [
+      "magical"
+     ],
+     "cost": [
+      {
+       "resource": "mimic-life"
+      }
+     ],
+     "root": [
+      {
+       "kind": "note",
+       "text": "契灵变形为对应类型的灵魄（环阶 = floor(魔契师等级 / 2)，最高九环），持续 1 小时：请手动把它的 AC / 生命值 / 速度 / 攻击换成灵魄数据卡（保留它自身的生命值、生命值骰与神圣之力附赠动作），并手动加上等于该灵魄生命值的临时生命值；临时生命值耗尽或 1 小时到期时变形结束。"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "AU:魔宠密友": {
+   "name": "魔宠密友",
+   "automation": "partial",
+   "text": "【忠实伙伴】你始终准备着寻获魔宠（施法属性建卡时选定）；可以不用法术位、不用材料成分施展一次，长休后恢复（资源「忠实伙伴」），也能用任意法术位施展。【强韧魔宠】你施展寻获魔宠时，魔宠的生命值上限与当前生命值提升 2 × 你的角色等级——本条目的两个施展动作已经把这份加值算进召唤数据（角色等级 5 时是 3 + 10 = 13）。【得力助手】用你熟练的技能做属性检定、且魔宠在你 5 尺内时，该检定具有优势，次数等于熟练加值，长休后恢复。引擎查不了「该技能你是否熟练」「魔宠是否在你 5 尺内」，所以只在检定将要失败时问你一句；引擎也没有在掷骰窗口里直接给优势的写法，用「重掷取高」近似（效果等同优势）。魔宠的具体形态（图鉴里的 CR 0 野兽）仍按寻获魔宠由人挑选，召唤出来的默认数据与寻获魔宠条目一致。",
+   "actions": [
+    {
+     "id": "free",
+     "name": "忠实伙伴：免费施展寻获魔宠",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical",
+      "familiar"
+     ],
+     "cost": [
+      {
+       "resource": "faithful-companion"
+      }
+     ],
+     "root": [
+      {
+       "kind": "summon",
+       "name": "魔宠",
+       "size": "T",
+       "creatureType": "fey",
+       "ac": 12,
+       "hp": "3 + 2 * level",
+       "speed": 40,
+       "score": {
+        "str": 3,
+        "dex": 15,
+        "con": 10,
+        "int": 3,
+        "wis": 12,
+        "cha": 7
+       },
+       "link": false,
+       "attacks": [
+        {
+         "name": "爪抓",
+         "bonus": 4,
+         "damage": "1",
+         "damageType": "挥砍"
+        }
+       ],
+       "notes": [
+        "生物类型为天族 / 妖精 / 邪魔之一（由你选择），这里按妖精生成；形态（蝙蝠 / 猫 / 青蛙 / 隼 / 蜥蜴 / 章鱼 / 猫头鹰 / 老鼠 / 渡鸦 / 蜘蛛 / 鼬或其他 CR 0 野兽）由人挑选后手动改数据",
+        "强韧魔宠：生命值上限与当前生命值已按 3 + 2 × 角色等级计算"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "slot",
+     "name": "魔宠密友：用法术位施展寻获魔宠",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical",
+      "familiar"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 1
+       }
+      }
+     ],
+     "root": [
+      {
+       "kind": "summon",
+       "name": "魔宠",
+       "size": "T",
+       "creatureType": "fey",
+       "ac": 12,
+       "hp": "3 + 2 * level",
+       "speed": 40,
+       "score": {
+        "str": 3,
+        "dex": 15,
+        "con": 10,
+        "int": 3,
+        "wis": 12,
+        "cha": 7
+       },
+       "link": false,
+       "attacks": [
+        {
+         "name": "爪抓",
+         "bonus": 4,
+         "damage": "1",
+         "damageType": "挥砍"
+        }
+       ],
+       "notes": [
+        "生物类型为天族 / 妖精 / 邪魔之一（由你选择），这里按妖精生成；形态由人挑选后手动改数据",
+        "强韧魔宠：生命值上限与当前生命值已按 3 + 2 × 角色等级计算"
+       ]
+      }
+     ]
+    }
+   ],
+   "triggers": [
+    {
+     "id": "helpful-friend",
+     "label": "得力助手：技能检定优势",
+     "on": "d20Rolled",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "when": "roll.kind == 'check' && roll.failing && ask('这次检定用的是你熟练的技能，且你的魔宠在你 5 尺内吗？')",
+     "cost": [
+      {
+       "resource": "helpful-friend"
+      }
+     ],
+     "modify": [
+      {
+       "op": "reroll",
+       "die": "d20",
+       "keep": "higher"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "TCE:spell:暗影衍体召唤术": {
+   "name": "暗影衍体召唤术",
+   "automation": "full",
+   "text": "专注至多 1 小时。在 90 尺内一处可见的未占据空间召唤一个暗影灵魄，施法时从暴怒 / 绝望 / 恐惧中选一种情感，它决定灵魄的特性。数据按暗影灵魄数据卡：AC 11 + 法术环阶，HP 35 + 15 ×（法术环阶 − 3），速度 40 尺，力量 13 / 敏捷 16 / 体质 15 / 智力 4 / 感知 10 / 魅力 16，抗性黯蚀，免疫恐慌，每动作攻击次数 = 法术环阶的一半（向下取整），冻寒撕裂 1d12 + 3 + 法术环阶 寒冷伤害；升环时数据里的环数随之提高。它对你和同伴友善，与你共用先攻并在你回合结束后行动，听从你的口头指令（无需动作），不发令时执行回避；生命值降至 0 或法术结束时消失（专注结束时引擎会自动移除它）。灵魄的恐惧尖叫列为它自己的动作（1/日，由牌桌保证）；绝望的「哀伤之重」和恐惧的「暗影潜藏」写在特性里，需要人手动处理。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "暗影衍体召唤术",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 3
+       }
+      }
+     ],
+     "concentration": {
+      "hours": 1
+     },
+     "targeting": {
+      "type": "point",
+      "range": 90
+     },
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "选择暗影灵魄的情感形态",
+       "options": [
+        {
+         "label": "暴怒（惧怖狂怒：对恐慌的生物攻击具有优势）",
+         "do": [
+          {
+           "kind": "summon",
+           "name": "暗影灵魄（暴怒）",
+           "size": "M",
+           "creatureType": "怪兽",
+           "ac": "11 + slot.level",
+           "hp": "35 + 15 * (slot.level - 3)",
+           "speed": 40,
+           "score": {
+            "str": 13,
+            "dex": 16,
+            "con": 15,
+            "int": 4,
+            "wis": 10,
+            "cha": 16
+           },
+           "resist": [
+            "黯蚀"
+           ],
+           "conditionImmune": [
+            "恐慌"
+           ],
+           "attacksPerAction": "floor(slot.level / 2)",
+           "attacks": [
+            {
+             "name": "冻寒撕裂",
+             "damage": "1d12 + 3 + slot.level",
+             "damageType": "寒冷"
+            }
+           ],
+           "rollMods": [
+            {
+             "on": {
+              "kind": "attack"
+             },
+             "who": "bearer",
+             "when": "target != null && target.has('恐慌')",
+             "op": "adv",
+             "label": "惧怖狂怒"
+            }
+           ],
+           "actions": [
+            {
+             "id": "scream",
+             "name": "恐惧尖叫（1/日）",
+             "activation": "action",
+             "targeting": {
+              "type": "area",
+              "range": 0,
+              "area": {
+               "shape": "emanation",
+               "radius": 10
+              }
+             },
+             "root": [
+              {
+               "kind": "save",
+               "ability": "wis",
+               "dc": "self.spell.dc",
+               "onFail": [
+                {
+                 "kind": "applyEffect",
+                 "to": "target",
+                 "template": "XPHB:condition:恐慌",
+                 "duration": {
+                  "minutes": 1,
+                  "saveEnds": {
+                   "ability": "wis",
+                   "at": "turnEnd"
+                  }
+                 }
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "绝望（哀伤之重：5 尺内开始回合的生物速度 −20 尺）",
+         "do": [
+          {
+           "kind": "summon",
+           "name": "暗影灵魄（绝望）",
+           "size": "M",
+           "creatureType": "怪兽",
+           "ac": "11 + slot.level",
+           "hp": "35 + 15 * (slot.level - 3)",
+           "speed": 40,
+           "score": {
+            "str": 13,
+            "dex": 16,
+            "con": 15,
+            "int": 4,
+            "wis": 10,
+            "cha": 16
+           },
+           "resist": [
+            "黯蚀"
+           ],
+           "conditionImmune": [
+            "恐慌"
+           ],
+           "attacksPerAction": "floor(slot.level / 2)",
+           "attacks": [
+            {
+             "name": "冻寒撕裂",
+             "damage": "1d12 + 3 + slot.level",
+             "damageType": "寒冷"
+            }
+           ],
+           "actions": [
+            {
+             "id": "scream",
+             "name": "恐惧尖叫（1/日）",
+             "activation": "action",
+             "targeting": {
+              "type": "area",
+              "range": 0,
+              "area": {
+               "shape": "emanation",
+               "radius": 10
+              }
+             },
+             "root": [
+              {
+               "kind": "save",
+               "ability": "wis",
+               "dc": "self.spell.dc",
+               "onFail": [
+                {
+                 "kind": "applyEffect",
+                 "to": "target",
+                 "template": "XPHB:condition:恐慌",
+                 "duration": {
+                  "minutes": 1,
+                  "saveEnds": {
+                   "ability": "wis",
+                   "at": "turnEnd"
+                  }
+                 }
+                }
+               ]
+              }
+             ]
+            }
+           ],
+           "notes": [
+            "哀伤之重：除你之外，在它 5 尺内开始回合的生物速度降低 20 尺，直到该生物的下回合开始（引擎没有范围减速度的写法，请手动处理）"
+           ]
+          }
+         ]
+        },
+        {
+         "label": "恐惧（暗影潜藏：微光或黑暗中可以躲藏）",
+         "do": [
+          {
+           "kind": "summon",
+           "name": "暗影灵魄（恐惧）",
+           "size": "M",
+           "creatureType": "怪兽",
+           "ac": "11 + slot.level",
+           "hp": "35 + 15 * (slot.level - 3)",
+           "speed": 40,
+           "score": {
+            "str": 13,
+            "dex": 16,
+            "con": 15,
+            "int": 4,
+            "wis": 10,
+            "cha": 16
+           },
+           "resist": [
+            "黯蚀"
+           ],
+           "conditionImmune": [
+            "恐慌"
+           ],
+           "attacksPerAction": "floor(slot.level / 2)",
+           "attacks": [
+            {
+             "name": "冻寒撕裂",
+             "damage": "1d12 + 3 + slot.level",
+             "damageType": "寒冷"
+            }
+           ],
+           "actions": [
+            {
+             "id": "scream",
+             "name": "恐惧尖叫（1/日）",
+             "activation": "action",
+             "targeting": {
+              "type": "area",
+              "range": 0,
+              "area": {
+               "shape": "emanation",
+               "radius": 10
+              }
+             },
+             "root": [
+              {
+               "kind": "save",
+               "ability": "wis",
+               "dc": "self.spell.dc",
+               "onFail": [
+                {
+                 "kind": "applyEffect",
+                 "to": "target",
+                 "template": "XPHB:condition:恐慌",
+                 "duration": {
+                  "minutes": 1,
+                  "saveEnds": {
+                   "ability": "wis",
+                   "at": "turnEnd"
+                  }
+                 }
+                }
+               ]
+              }
+             ]
+            }
+           ],
+           "notes": [
+            "暗影潜藏（附赠动作）：在微光光照或黑暗中，它可以执行躲藏动作（光照引擎不管，请人工判定）"
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "TCE:人工生命仆从": {
+   "name": "人工生命仆从",
+   "automation": "partial",
+   "text": "注法造出的人工生命仆从（注法时用一颗价值至少 100gp 的宝石或水晶作它的心脏）：微型构装生物，AC 13，HP = 1 + 你的智力调整值 + 你的奇械师等级（生命骰数量同奇械师等级），速度 20 尺、飞行 30 尺，力量 4 / 敏捷 15 / 体质 12 / 智力 10 / 感知 10 / 魅力 7，力场打击（法术攻击，射程 30 尺，1d4 + 熟练加值 力场伤害），免疫毒素与力竭、中毒状态；它对你和同伴友善、服从你的命令，与你共用先攻并在你回合后立即行动。它可以自行移动和执行反应，但你只有用一个附赠动作命令它，它才会执行数据中的动作或其他动作（否则只能回避；你失能时它可以自行选择任何动作）——引擎让召唤物自己行动、管不了这条附赠动作，请用「人工生命仆从：命令行动」记录。反射闪避已经自动化；生命骰、对它施展修复术恢复 2d6、以及你或它死亡时它消失（只留心脏）都要人手动处理。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "人工生命仆从：唤出仆从",
+     "activation": "free",
+     "tags": [
+      "magical"
+     ],
+     "root": [
+      {
+       "kind": "summon",
+       "name": "人工生命仆从",
+       "size": "T",
+       "creatureType": "construct",
+       "ac": 13,
+       "hp": "1 + mod.int + self.levelOf('奇械师')",
+       "speed": 20,
+       "score": {
+        "str": 4,
+        "dex": 15,
+        "con": 12,
+        "int": 10,
+        "wis": 10,
+        "cha": 7
+       },
+       "immune": [
+        "毒素"
+       ],
+       "conditionImmune": [
+        "力竭",
+        "中毒"
+       ],
+       "attacksPerAction": 1,
+       "attacks": [
+        {
+         "name": "力场打击",
+         "melee": false,
+         "ranged": true,
+         "range": 30,
+         "damage": "1d4 + pb",
+         "damageType": "力场"
+        }
+       ],
+       "link": false,
+       "triggers": [
+        {
+         "id": "evasion",
+         "label": "反射闪避",
+         "on": "damageIncoming",
+         "role": "target",
+         "window": "before",
+         "when": "damage.save == 'dex' && !self.has('失能')",
+         "modify": [
+          {
+           "op": "evasion"
+          }
+         ]
+        }
+       ],
+       "notes": [
+        "反射闪避已自动化：需要通过敏捷豁免减半的伤害，成功时不受伤害、失败时只受一半；它失能时这个特性不生效",
+        "传递法术（反应）：你施展施法距离为触碰的法术时，只要它在 120 尺内就能替你传递",
+        "速度 20 尺，另有飞行 30 尺（引擎只记一个速度，飞行请手动处理）",
+        "对它施展修复术时它恢复 2d6 生命值；你或它死亡时它消失，只留下心脏"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "command",
+     "name": "人工生命仆从：命令行动",
+     "activation": "bonus",
+     "requires": "turn.isMine",
+     "root": [
+      {
+       "kind": "note",
+       "text": "以附赠动作命令人工生命仆从执行它数据中的动作或其他动作（它自行移动与执行反应不需要命令；你失能时它可以自行选择任何动作）。引擎不检查这条附赠动作，请手动记录。"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "TCE:吟游诗人:活化表演:6": {
+   "name": "活化表演",
+   "automation": "partial",
+   "text": "以一个动作活化 30 尺内你可见的、未被着装或携带的大型或更小非魔法物品，持续 1 小时，使用舞空物品的数据：大型（或更小）构装生物，AC 16，HP 10 + 5 × 你的吟游诗人等级，速度 30 尺、飞行 30 尺（悬浮），力量 18 / 敏捷 14 / 体质 16 / 智力 4 / 感知 10 / 魅力 6，力场动能猛击（法术攻击，触及 5 尺，1d10 + 熟练加值 力场伤害），免疫毒素与心灵伤害，免疫魅惑、力竭、中毒、恐慌。它与你共用先攻、在你回合后立即行动，可以自行移动和执行反应，但你只有用附赠动作命令它，它才会执行动作（引擎让召唤物自己行动，这一条请用「舞空物品：命令行动」记录）；使用诗人激励时，这道命令可以作为同一个附赠动作的一部分发出。同一时间只能有一件：再次使用会替换掉旧的（引擎已自动替换）。它生命值降为 0 时直接消失；1 小时后失活、你死亡时失活、以及「不变形态」「难抑舞动」两项特性需要人手动处理。长休前只能使用一次，可以消耗一个 3 环或更高法术位重置使用次数。",
+   "resources": [
+    {
+     "id": "animating-performance",
+     "name": "活化表演",
+     "formula": 1,
+     "recovery": "long"
+    }
+   ],
+   "actions": [
+    {
+     "id": "use",
+     "name": "活化表演",
+     "activation": "action",
+     "tags": [
+      "magical"
+     ],
+     "cost": [
+      {
+       "resource": "animating-performance"
+      }
+     ],
+     "targeting": {
+      "type": "point",
+      "range": 30
+     },
+     "root": [
+      {
+       "kind": "summon",
+       "name": "舞空物品",
+       "size": "L",
+       "creatureType": "construct",
+       "ac": 16,
+       "hp": "10 + 5 * self.levelOf('吟游诗人')",
+       "speed": 30,
+       "score": {
+        "str": 18,
+        "dex": 14,
+        "con": 16,
+        "int": 4,
+        "wis": 10,
+        "cha": 6
+       },
+       "immune": [
+        "毒素",
+        "心灵"
+       ],
+       "conditionImmune": [
+        "魅惑",
+        "力竭",
+        "中毒",
+        "恐慌"
+       ],
+       "attacksPerAction": 1,
+       "attacks": [
+        {
+         "name": "力场动能猛击",
+         "damage": "1d10 + pb",
+         "damageType": "力场"
+        }
+       ],
+       "link": false,
+       "notes": [
+        "体型与被活化的物品相同（大型或更小），需要时手动改棋子体型",
+        "速度 30 尺，另有飞行 30 尺（悬浮），引擎只记一个速度",
+        "不变形态：不受任何改变它形态的法术或效应影响",
+        "难抑舞动：10 尺内开始回合的生物，其步行速度可以由你增加或减少 10 尺，直到该生物的下回合结束（需它未失能；引擎没有这个写法，请手动处理）"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "command",
+     "name": "舞空物品：命令行动",
+     "activation": "bonus",
+     "requires": "turn.isMine",
+     "root": [
+      {
+       "kind": "note",
+       "text": "以附赠动作命令舞空物品执行它动作列表中的动作或其他动作（它自行移动与执行反应不需要命令；你失能时它可以自行选择任何动作）。使用诗人激励时，这道命令可以作为同一个附赠动作的一部分发出。引擎不检查这条附赠动作，请手动记录。"
+      }
+     ]
+    },
+    {
+     "id": "reset",
+     "name": "活化表演：消耗法术位重置",
+     "activation": "free",
+     "requires": "self.resource('animating-performance') == 0",
+     "cost": [
+      {
+       "slot": {
+        "min": 3
+       }
+      }
+     ],
+     "root": [
+      {
+       "kind": "resource",
+       "id": "animating-performance",
+       "delta": 1
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "TCE:德鲁伊:召唤野火精魂:2": {
+   "name": "召唤野火精魂",
+   "automation": "partial",
+   "text": "以一个动作消耗一次荒野形态使用次数，召唤出与你灵魂连接的野火灵魄——它以你选择的、30 尺内一处你可见的未被占据空间出现；它出现时，它 10 尺范围内除你之外的每个生物都要通过一次对抗你法术豁免 DC 的敏捷豁免，失败受 2d6 火焰伤害。数据：小型元素生物，AC 13，HP 5 + 5 × 你的德鲁伊等级，速度 30 尺、飞行 30 尺（悬浮），力量 10 / 敏捷 14 / 体质 14 / 智力 13 / 感知 15 / 魅力 11，免疫火焰，免疫魅惑、恐慌、受擒、倒地、束缚；火种（法术攻击，射程 60 尺，1d6 + 熟练加值 火焰伤害）。它对你和同伴友善、遵从你的命令，与你共用先攻并在你回合后立即行动；可以自行移动和执行反应，但你只有用附赠动作命令它，它才会执行动作（否则只能回避；你失能时它可以自行选择任何动作）——引擎让召唤物自己行动、管不了这条，请用「命令野火灵魄」记录。它持续存在 1 小时：生命值降为 0 会直接消失，再次使用此特性会替换掉旧的那只（引擎已自动替换）；1 小时后到期、你死亡时消失、以及「烈焰传送」的传送部分需要人手动处理。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "召唤野火精魂",
+     "activation": "action",
+     "tags": [
+      "magical"
+     ],
+     "cost": [
+      {
+       "resource": "wildshape-uses"
+      }
+     ],
+     "targeting": {
+      "type": "area",
+      "range": 30,
+      "area": {
+       "shape": "sphere",
+       "radius": 10
+      },
+      "filter": "target.id != self.id"
+     },
+     "root": [
+      {
+       "kind": "summon",
+       "name": "野火灵魄",
+       "size": "S",
+       "creatureType": "elemental",
+       "ac": 13,
+       "hp": "5 + 5 * self.levelOf('德鲁伊')",
+       "speed": 30,
+       "score": {
+        "str": 10,
+        "dex": 14,
+        "con": 14,
+        "int": 13,
+        "wis": 15,
+        "cha": 11
+       },
+       "immune": [
+        "火焰"
+       ],
+       "conditionImmune": [
+        "魅惑",
+        "恐慌",
+        "受擒",
+        "倒地",
+        "束缚"
+       ],
+       "attacksPerAction": 1,
+       "attacks": [
+        {
+         "name": "火种",
+         "melee": false,
+         "ranged": true,
+         "range": 60,
+         "damage": "1d6 + pb",
+         "damageType": "火焰"
+        }
+       ],
+       "link": false,
+       "notes": [
+        "速度 30 尺，另有飞行 30 尺（悬浮），引擎只记一个速度",
+        "烈焰传送：灵魄与它 5 尺内你选择的自愿生物传送到至多 15 尺远的你可见的未被占据空间；随后原本位于它 5 尺内的每个生物进行一次对抗你法术豁免 DC 的敏捷豁免，失败受 1d6 + 熟练加值 火焰伤害（传送请手动拖棋子，爆炸伤害再手动结算）"
+       ]
+      },
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "dex",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "dice": "2d6",
+           "type": "火焰"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "command",
+     "name": "命令野火精魂",
+     "activation": "bonus",
+     "requires": "turn.isMine",
+     "root": [
+      {
+       "kind": "note",
+       "text": "以附赠动作命令野火灵魄执行动作（火种、烈焰传送或其他动作）。引擎不检查这条附赠动作，请手动记录。"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "TCE:德鲁伊:强化链接:6": {
+   "name": "强化链接",
+   "automation": "partial",
+   "text": "野火灵魄存在期间，你施展造成火焰伤害或回复生命值的法术时，骰一枚 d8，该法术的一次伤害掷骰或治疗掷骰获得等同于骰出数值的加值。引擎只会在「法术的攻击检定命中后的伤害包」上自动加这 1d8（每次伤害掷骰都会问你一句，是否属于那个造成火焰伤害的法术）；豁免型法术的伤害（例如火球术）、以及治疗掷骰的加值引擎没有写法，请手动加 1d8——而且原文限「该法术的一次」掷骰，引擎每包伤害都会加，多包时请自行只算一次。此外，你施展施法范围非自身的法术时，可以自由选择以你或野火灵魄为发出点；引擎不管位置，请手动判定。",
+   "rollMods": [
+    {
+     "on": {
+      "kind": "damage"
+     },
+     "who": "bearer",
+     "when": "(attack == null || attack.spell) && ask('野火灵魄存在，且这是那个造成火焰伤害的法术的一次伤害掷骰吗？')",
+     "op": "add",
+     "value": "1d8",
+     "label": "强化链接：火焰伤害 +1d8"
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "TCE:德鲁伊:炽烈回生:14": {
+   "name": "炽烈回生",
+   "automation": "partial",
+   "text": "当你生命值降至 0 且因此陷入昏迷时，若野火灵魄与你相距不超过 120 尺，你可以令灵魄降至 0 生命值，你改为恢复一半最大生命值并立刻站起来。引擎问不了距离，弹出这个触发器时请人回答「灵魄在 120 尺内且存活吗」；灵魄降为 0 并消失也要手动处理。必须完成一次长休才能再次使用。",
+   "resources": [
+    {
+     "id": "blazing-revival",
+     "name": "炽烈回生",
+     "formula": 1,
+     "recovery": "long"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "blazing-revival",
+     "label": "炽烈回生：免于死亡",
+     "on": "reducedTo0",
+     "role": "target",
+     "window": "before",
+     "optional": true,
+     "cost": [
+      {
+       "resource": "blazing-revival"
+      }
+     ],
+     "when": "ask('野火灵魄在 120 尺内且存活吗？')",
+     "modify": [
+      {
+       "op": "setHp",
+       "value": "floor(self.hpMax / 2)"
+      }
+     ],
+     "do": [
+      {
+       "kind": "removeEffect",
+       "match": {
+        "name": "倒地"
+       },
+       "from": "self"
+      },
+      {
+       "kind": "note",
+       "text": "野火灵魄降至 0 生命值并消失；你恢复一半最大生命值并立刻站起来。"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  }
+ }
+}

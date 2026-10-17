@@ -1,0 +1,815 @@
+{
+ "version": 1,
+ "note": "fix-02：按 round2/suspects.md「缓一轮（27 条）」里的证据修 7 条（基线草稿是 .oracle/drafts/ 里含这些键的那几份——round2/drafts 里没有它们，那批是复核通过的）。① 圈套术：体型判定写成 'S'/'M'/'L' 恒假（引擎里是「小型/中型/大型」），改成中文；② 大漩涡：「拉向中心 10 尺」引擎做不到（move pull 是朝施法者拉，不是朝漩涡中心），删掉自动 move 改成 note + text 说明手动拖；③ 守护之风：区域不随施法者移动（zone 钉死在格子上），text 不再写「始终以你为中心」，改成「移动后删掉重画」，并说明重画的 DM 区域不会自动施加耳聋；④ 操控风力：下沉气流失败原文只是「俯卧」，删掉凭空多出的 4d6 钝击伤害（全条不再有任何伤害）；⑤ 虫群孳生：补上原文前置条件「能移动且速度 ≥ 5 尺」（target.speed >= 5 + ask 问「能不能移动」），不满足就不走那 5 尺、也不挂「免借机」标记；⑥ 坚守战线：leftReach 触发器改成 optional（拒绝借机攻击就不再挂「蓄势」），反应仍由引擎自己的借机攻击询问扣（这里写 cost 反而会让引擎以为反应已用、不给借机攻击），text 要求两次询问答成一致；⑦ 咒唤兽群：触发范围是「兽群 10 尺内」，大型兽群占 10 尺立方 → 区域 20 尺立方改成 30 尺立方。仍然做不到、保持 partial 的：②④⑤的站位 / 飞行 / 随机方向，③的区域随人移动，⑦的兽群移动，⑥的「在触及范围内走动」这个时机。",
+ "entries": {
+  "XGE:spell:圈套术": {
+   "name": "圈套术",
+   "automation": "partial",
+   "text": "耗时 1 分钟在触及地面创造一个 5 尺半径的隐形魔法陷阱（法术持续 8 小时，不专注）。小型 / 中型 / 大型生物移动进入时触发陷阱：陷阱留在地图上，生物进入时敏捷豁免，失败被魔法性地倒吊在半空中并被束缚（在其每个回合结束时可重复敏捷豁免，成功则结束束缚）。陷阱的隐蔽（智力（调查）检定才能发现）、「其他触及生物可用智力（奥秘）检定解除」与「无生物被它束缚时法术结束」引擎处理不了，需人工。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "圈套术",
+     "activation": {
+      "minutes": 1
+     },
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 1
+       }
+      }
+     ],
+     "targeting": {
+      "type": "point",
+      "range": "touch"
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "在触及内的地面或地板上画出 5 尺半径的圆圈，化为几乎隐形的魔法陷阱。要找到它需要一次对抗你的法术豁免 DC 的智力（调查）检定；陷阱触发前不在地图留下区域，请人工记录位置。"
+      }
+     ]
+    },
+    {
+     "id": "trigger-snare",
+     "name": "圈套术：陷阱触发",
+     "activation": "none",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "targeting": {
+      "type": "area",
+      "range": 5,
+      "area": {
+       "shape": "sphere",
+       "radius": 5
+      }
+     },
+     "root": [
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "if",
+         "when": "target.size == '小型' || target.size == '中型' || target.size == '大型'",
+         "then": [
+          {
+           "kind": "save",
+           "ability": "dex",
+           "dc": "self.spell.dc",
+           "onFail": [
+            {
+             "kind": "applyEffect",
+             "to": "target",
+             "template": "圈套倒吊"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "if",
+         "when": "target.size == '小型' || target.size == '中型' || target.size == '大型'",
+         "then": [
+          {
+           "kind": "save",
+           "ability": "dex",
+           "dc": "self.spell.dc",
+           "onFail": [
+            {
+             "kind": "applyEffect",
+             "to": "target",
+             "template": "圈套倒吊"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "圈套术：陷阱触发后当没有生物被它束缚时法术结束——引擎不会自动结束，请人工移除区域。"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "圈套倒吊": {
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "duration": {
+      "hours": 8,
+      "saveEnds": {
+       "ability": "dex",
+       "dc": "source.spell.dc",
+       "at": "turnEnd"
+      }
+     },
+     "implies": [
+      "XPHB:condition:束缚"
+     ],
+     "text": "被魔法性地倒吊在半空中，头下脚上地悬于地面或地板上方 3 尺，处于束缚状态直到法术结束。每个自己回合结束时可重复敏捷豁免以结束；其他能触及它的生物也可以做一次对抗法术豁免 DC 的智力（奥秘）检定来解除（该检定需人工处理）。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:spell:大漩涡": {
+   "name": "大漩涡",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。在 120 尺内地面或水面指定一点，出现深达 5 尺、半径 30 尺的大漩涡并留在地图上。在该区域开始其回合的生物进行力量豁免，失败受 6d6 钝击伤害并被拉向中心 10 尺。这次「拉向中心」引擎做不到：它的拉近是朝施法者的方向拉，而漩涡中心是地图上那个点（不等于施法者所在位置），所以请人工把棋子朝漩涡中心挪 10 尺。区域内的困难地形与「必须选地面或水面」也需人工处理。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "大漩涡",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 5
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 120,
+      "area": {
+       "shape": "cylinder",
+       "radius": 30
+      }
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "大漩涡：直到法术结束前该区域成为困难地形（引擎不处理地形，请人工按半速移动结算）；指定的点必须处于地面或水体表面，请人工确认。"
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "turnStart"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "str",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "dice": "6d6",
+           "type": "钝击"
+          },
+          {
+           "kind": "note",
+           "text": "大漩涡：把这块棋子朝漩涡中心拉 10 尺 —— 请手动拖（引擎的拉近是朝施法者方向拉，不是朝漩涡中心，所以这里不自动拉）。"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:spell:守护之风": {
+   "name": "守护之风",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。以自身为中心 10 尺半径的强风留在地图上：进入或在其中结束回合的生物耳聋，除你之外该区域是困难地形，未受保护的火焰被吹熄，可被强风吹散的毒气与雾气被隔开。原文里这个区域随你移动、始终以你为中心，但引擎的区域放下后就固定在地图的格子上、不会跟着你走：你每移动一次，请删掉旧区域、在新位置重画一个（覆盖你周围 10 尺）—— DM 手画的区域不会自动施加本条目的耳聋，重画后谁在风里请人工记着。远程武器攻击进入或离开风区时具有劣势——引擎判断不了「攻击线穿过区域」，需人工。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "守护之风",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 2
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 10
+     },
+     "targeting": {
+      "type": "area",
+      "range": "self",
+      "area": {
+       "shape": "emanation",
+       "radius": 10
+      }
+     },
+     "root": [
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "applyEffect",
+         "to": "target",
+         "template": "守护之风：耳聋"
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "守护之风：区域对除你之外的生物是困难地形；它熄灭区域内火把大小的未受保护火焰、隔开可被强风吹散的毒气与雾气；远程武器攻击进入或离开风区时其攻击检定具有劣势。这些都需人工处理。"
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "if",
+         "when": "!target.has('耳聋')",
+         "then": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "守护之风：耳聋"
+          }
+         ]
+        },
+        {
+         "kind": "note",
+         "text": "守护之风：区域除你之外是困难地形，请人工按半速结算移动。"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "守护之风：耳聋": {
+     "tags": [
+      "magical",
+      "spell",
+      "debuff"
+     ],
+     "implies": [
+      "XPHB:condition:耳聋"
+     ],
+     "text": "处于守护之风的强风中，陷入耳聋状态；离开区域或法术结束时结束（引擎不会自动结束，请人工移除）。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:spell:操控风力": {
+   "name": "操控风力",
+   "automation": "partial",
+   "text": "专注至多 1 小时。控制 300 尺内 100 尺立方的空气并留在地图上；施放时选择一种效果（之后可用动作切换）。【狂风】大风或强风时进入 / 离开区域或穿过其中的远程武器攻击有劣势，强风下逆风移动每尺多花 1 尺移动力。【下沉气流】穿过区域或对区域内生物发起的远程攻击有劣势；飞行生物每回合首次飞入或在其中开始回合须力量豁免，失败摔落倒地（原文只有「俯卧」，本法术任何一项效果都不造成伤害）。【上升气流】区域内的坠落伤害减半、垂直跳跃高出 10 尺。降落、坠落、跳跃、飞行状态与逆风消耗都需人工处理。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "操控风力",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 5
+       }
+      }
+     ],
+     "concentration": {
+      "hours": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 300,
+      "area": {
+       "shape": "cube",
+       "size": 100
+      }
+     },
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "选择操控风力的效果",
+       "options": [
+        {
+         "label": "狂风",
+         "do": [
+          {
+           "kind": "note",
+           "text": "操控风力：狂风。进入或离开区域、或穿过其中的远程武器攻击在大风或强风下具有劣势；强风下逆风而行的生物每移动 1 尺额外消耗 1 尺移动力。请人工结算。"
+          }
+         ]
+        },
+        {
+         "label": "下沉气流",
+         "do": [
+          {
+           "kind": "forEach",
+           "in": "area",
+           "do": [
+            {
+             "kind": "if",
+             "when": "ask('这个生物正以飞行状态处于该空间吗？')",
+             "then": [
+              {
+               "kind": "save",
+               "ability": "str",
+               "dc": "self.spell.dc",
+               "onFail": [
+                {
+                 "kind": "applyEffect",
+                 "to": "target",
+                 "template": "XPHB:condition:倒地"
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "kind": "note",
+           "text": "操控风力：下沉气流。穿过其中、或对处于其中的生物进行的远程武器攻击具有劣势；飞行生物每回合第一次飞进该空间、或在飞行状态下于其中开始其回合时，须进行力量豁免，失败摔落倒地。请人工判定飞行与劣势。"
+          }
+         ]
+        },
+        {
+         "label": "上升气流",
+         "do": [
+          {
+           "kind": "note",
+           "text": "操控风力：上升气流。在该空间内结束摔落的生物只因该摔落受到一半伤害；处于其中的生物垂直跳跃时能比正常高出 10 尺。请人工结算。"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnStart"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "if",
+         "when": "ask('当前是下沉气流，且这个生物正以飞行状态飞入或在飞行状态下开始其回合吗？')",
+         "then": [
+          {
+           "kind": "save",
+           "ability": "str",
+           "dc": "self.spell.dc",
+           "onFail": [
+            {
+             "kind": "applyEffect",
+             "to": "target",
+             "template": "XPHB:condition:倒地"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "shift",
+     "name": "操控风力：切换效果",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "targeting": {
+      "type": "self"
+     },
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "把操控风力切换成哪种效果（也可以暂停 / 重启一个效应）",
+       "options": [
+        {
+         "label": "狂风",
+         "do": [
+          {
+           "kind": "note",
+           "text": "操控风力切换为狂风：大风或强风时进出 / 穿过区域的远程攻击有劣势，强风逆风移动消耗加倍。"
+          }
+         ]
+        },
+        {
+         "label": "下沉气流",
+         "do": [
+          {
+           "kind": "note",
+           "text": "操控风力切换为下沉气流：区域内的远程攻击有劣势；飞行生物飞入或在其中开始回合须力量豁免失败摔落倒地。"
+          }
+         ]
+        },
+        {
+         "label": "上升气流",
+         "do": [
+          {
+           "kind": "note",
+           "text": "操控风力切换为上升气流：区域内坠落伤害减半、垂直跳跃高度 +10 尺。"
+          }
+         ]
+        },
+        {
+         "label": "暂停 / 重启效应",
+         "do": [
+          {
+           "kind": "note",
+           "text": "操控风力：可以用动作暂停或重启一个被暂停的效应（请人工标记）。"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:spell:虫群孳生": {
+   "name": "虫群孳生",
+   "automation": "partial",
+   "text": "迫使 30 尺内你能看见的一名生物进行体质豁免，失败受到 1d6 毒素伤害（5 级 2d6、11 级 3d6、17 级 4d6）。原文还要求目标「可以移动并且有至少 5 尺的速度」才会朝随机方向移动 5 尺：引擎按目标的当前速度判断、并问一句它能不能移动；真的移动时它会得到「免借机」标记，请你掷 1d4 定方向（1 北 2 南 3 东 4 西）手动把棋子移动 5 尺，若该方向被阻挡则不移动（引擎不做随机方向的移动）。这次移动不引发借机攻击——标记在目标移动一次后消失，以防手动拖棋子时误触发借机攻击。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "虫群孳生",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 30
+     },
+     "root": [
+      {
+       "kind": "save",
+       "ability": "con",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "dice": "(1 + floor((self.level + 1) / 6))d6",
+         "type": "毒素"
+        },
+        {
+         "kind": "if",
+         "when": "target.speed >= 5 && ask('这个目标现在能移动吗？（被擒抱、失能、速度被降为 0 等都不能移动）')",
+         "then": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "虫群孳生：乱窜"
+          },
+          {
+           "kind": "note",
+           "text": "掷 1d4 决定随机方向（1 北 2 南 3 东 4 西），把目标棋子移动 5 尺；若该方向被阻挡则不移动（请手动移动）。"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "虫群孳生：乱窜": {
+     "text": "虫群孳生：这次被寄生虫推着走的移动不会引发借机攻击（移动一次后消失，或到其本回合结束）。",
+     "flags": {
+      "cannot": [
+       "provoke"
+      ]
+     },
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      },
+      "endsOn": [
+       {
+        "event": "moved",
+        "when": "event.id == self.id"
+       }
+      ]
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:战士:坚守战线:10": {
+   "name": "坚守战线",
+   "automation": "partial",
+   "text": "【在触及范围内移动也引发借机攻击】生物在你触及范围内移动 5 尺或更多即引发你的借机攻击——引擎只认「离开触及范围」（那时它自己会问你要不要借机攻击），「在触及范围内走动」这个时机没有，请人工判断并手动发起。【借机攻击命中定身】你以借机攻击命中生物时，该生物速度降为 0 直至本回合结束。有人离开你的触及范围时引擎会连问两次：先问「坚守战线：借机攻击的时机」用不用（可以拒绝，拒绝就不挂蓄势），再问借机攻击打不打（那一次才真正花掉反应）。两次务必答成一致：只有确实要打才选「要用」；如果选了「要用」后来又没打，请手动删掉「坚守战线：蓄势」这个效应，否则你在这个回合里接下来的任意一次近战命中都会误把目标定身。",
+   "triggers": [
+    {
+     "id": "hold-line-ready",
+     "label": "坚守战线：借机攻击的时机",
+     "on": "leftReach",
+     "role": "target",
+     "window": "after",
+     "do": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "坚守战线：蓄势"
+      }
+     ],
+     "optional": true
+    },
+    {
+     "id": "hold-line",
+     "label": "坚守战线：借机攻击命中定身",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "after",
+     "when": "attack.melee && self.hasEffect('坚守战线：蓄势')",
+     "do": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "坚守战线：定身"
+      },
+      {
+       "kind": "removeEffect",
+       "from": "self",
+       "match": {
+        "name": "坚守战线：蓄势"
+       }
+      }
+     ]
+    },
+    {
+     "id": "hold-line-miss",
+     "label": "坚守战线：借机攻击失手",
+     "on": "attackMissed",
+     "role": "actor",
+     "window": "after",
+     "when": "attack.melee && self.hasEffect('坚守战线：蓄势')",
+     "do": [
+      {
+       "kind": "removeEffect",
+       "from": "self",
+       "match": {
+        "name": "坚守战线：蓄势"
+       }
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "坚守战线：蓄势": {
+     "text": "坚守战线：有人离开了你的触及范围（引擎正在问你要不要借机攻击）。若这次借机攻击命中，目标速度降为 0 直至本回合结束。",
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "bearer",
+       "nth": 1
+      }
+     }
+    },
+    "坚守战线：定身": {
+     "text": "被坚守战线的借机攻击命中：速度降为 0 直至本回合结束。",
+     "statics": [
+      {
+       "kind": "speedSet",
+       "value": 0
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      }
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:咒唤兽群": {
+   "name": "咒唤兽群",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 60 尺内一处你可见的未占据空间咒唤出大型虚幻兽群（形态例如狼群、蛇群或鸟群，只是外观）。你位于兽群 5 尺内期间，你的力量豁免检定具有优势（引擎会问你）。每当兽群在移动中进入一名你可见的生物 10 尺内、一名你可见的生物进入兽群 10 尺内、或在该空间结束其回合时，你都可以迫使该生物做敏捷豁免，失败受 (slot.level)d10 挥砍伤害（每比 3 环高 1 环 +1d10）；同一名生物一回合只需要做一次该豁免。地图上的区域画的就是「兽群 10 尺内」的范围：兽群本身占 10 尺立方，所以请选 30 尺立方（兽群 10 尺 + 四周各 10 尺），会随专注消失。「兽群移动」和「兽群移动中进入生物 10 尺内」这两条引擎做不到（区域不能被移动），请在地图上手动删掉旧区域、在新位置重画一个 30 尺立方，并用「咒唤兽群：兽群践踏」补算那一次豁免。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "咒唤兽群",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 3
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 10
+     },
+     "targeting": {
+      "type": "area",
+      "range": 60,
+      "area": {
+       "shape": "cube",
+       "size": 30
+      }
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "咒唤兽群",
+       "state": {
+        "die": "(slot.level)d10"
+       }
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "if",
+         "when": "ask('咒唤兽群：要迫使这个生物进行一次敏捷豁免吗？')",
+         "then": [
+          {
+           "kind": "save",
+           "ability": "dex",
+           "dc": "self.spell.dc",
+           "onFail": [
+            {
+             "kind": "damage",
+             "dice": "(slot.level)d10",
+             "type": "挥砍"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "地图上的区域画的是「兽群 10 尺内」的范围（兽群本身占 10 尺立方，所以区域是 30 尺立方）；兽群移动至多 30 尺请用「咒唤兽群：移动兽群」并在地图上手动处理，引擎不能移动区域。"
+      }
+     ]
+    },
+    {
+     "id": "use",
+     "name": "咒唤兽群：兽群践踏",
+     "activation": "free",
+     "requires": "self.hasEffect('咒唤兽群（激活）')",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": 60,
+      "filter": "canSee(self, target)"
+     },
+     "root": [
+      {
+       "kind": "save",
+       "ability": "dex",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "dice": "self.effect('咒唤兽群（激活）').state.die",
+         "type": "挥砍"
+        }
+       ]
+      }
+     ],
+     "text": "兽群在移动中进入某名你可见生物 10 尺内时用它手动结算（区域不能跟着兽群走，所以这一条只能手动补）；同一名生物一回合只需要做一次。"
+    },
+    {
+     "id": "moveHerd",
+     "name": "咒唤兽群：移动兽群",
+     "activation": "free",
+     "requires": "self.hasEffect('咒唤兽群（激活）') && turn.isMine",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "targeting": {
+      "type": "area",
+      "range": 30,
+      "area": {
+       "shape": "cube",
+       "size": 30
+      }
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "把兽群（地图上的区域）挪到 30 尺内一处你可见的未被占据的空间：引擎不会移动区域，请删掉旧区域后在新位置放一个同样的区域（覆盖兽群周围 10 尺）。它不占动作，随你的移动一起做。"
+      }
+     ],
+     "text": "当你在你的回合移动时，可以令兽群也移动至多 30 尺到一处你可见的未被占据的空间（区域需要在地图上手动挪动）。"
+    }
+   ],
+   "effects": {
+    "咒唤兽群": {
+     "name": "咒唤兽群（激活）",
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "rollMods": [
+      {
+       "on": {
+        "kind": "save",
+        "ability": "str"
+       },
+       "who": "bearer",
+       "when": "ask('你是否位于兽群 5 尺内？（在兽群 5 尺内则力量豁免具有优势）')",
+       "op": "adv",
+       "label": "咒唤兽群：位于兽群 5 尺内，力量豁免具有优势"
+      }
+     ],
+     "text": "维持大型虚幻兽群。施法者位于兽群 5 尺内期间力量豁免检定具有优势；可以随自己的移动让兽群移动至多 30 尺。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  }
+ }
+}

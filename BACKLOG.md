@@ -50,15 +50,24 @@
   它现在主要用于伤害包；施法窗口只有 after、没有 before，得先加一个施法前的拦截窗口。
   在哪：`src/combat/audit.ts`（窗口表）、`src/combat/exec.ts`（施法流程）、`src/factory/spec.ts`（补说明书）。
 - **按手动审查报告重新数据化**：`datafy/manual-audit/` 那次审查（830 条：21 条当年就能写、50 条本来就不用自动化、760 条卡在接口上）已经过时 —— 之后引擎补了 `summon`、`zone`、`leftReach`、反应里的 `modify`、`evasion` / `halveDamage` / `cancel`、`redirect` / `absorb`、`maxDice` 等，那批里约 250 条现在能写了。
-  - **区域 + 借机攻击已经做了一轮**（见 [datafy/manual-audit/round2/README.md](datafy/manual-audit/round2/README.md)）：9 个子代理写草稿、另 9 个逐条复核，**合并了 53 条**进 `data/dyn/ai/*.json`（复核通过 44 + 我修掉 9 条确定性错误）；新增 [tests/combat/zone-data.test.ts](tests/combat/zone-data.test.ts)（拿真数据跑一场遭遇：匕首之云走进区域 4d4、臭云术回合开始豁免中毒）。
-  - **下一轮先收拾 36 条**：[round2/suspects.md](datafy/manual-audit/round2/suspects.md) 里 27 条有复核证据（多数一行就能改：骰子公式、`on` 时机写多/写错、`oncePerTurn` 用错、`within(self,…)` 在区域里语义不对），草稿在 `round2/drafts/`；另有 `oa-02` 那 9 条整批重做。
-  - 之后做**召唤**（56 条；agy 已把 9 个 2024 召唤法术做完，剩下的多卡在「指挥随从花反应 / 动态改写召唤物数值 / 复活」上），逐条的 `key` / `gap` / `need` 在 `datafy/manual-audit/answers/*.json`。
+  - **区域 + 借机攻击做完了第一轮**（[round2/README.md](datafy/manual-audit/round2/README.md)）：合并 53 条；**第三轮又修掉 40 条**（[round3/README.md](datafy/manual-audit/round3/README.md)：按 round2 的复核证据改 + 召唤类 46 条重写，其中 8 条用上了 `summon`）。
+  - **还缓着 35 条**：[round3/suspects-keys.txt](datafy/manual-audit/round3/suspects-keys.txt)（草稿在 `round3/drafts/`）—— 26 条有复核证据照改，`oa2-01` 那 9 条连着两轮「通过数 + 可疑数 ≠ 条目数」，下一轮改成**一条一个代理**逐个键交代。
+  - 测试：`tests/combat/zone-data.test.ts`（匕首之云走进区域 / 臭云术回合开始豁免）、`tests/combat/summon-data.test.ts`（2 环寻获坐骑召唤出 AC 12 / HP 25 的坐骑、归我控制、先攻紧随、不占专注）。
+  - 之后：审查报告里剩下的类别（重骰 / 加骰 / 改判定 38、反应里改结算 20、免伤 15、物品消耗 12、次数池 12、改目标 / 替盟友挨打 9、推拉 7、骰子取最大 6），逐条在 `datafy/manual-audit/answers/*.json`。
 - **灵光（aura）的两个引擎缺口**（第二轮复核实测出来的）：① aura 授予的触发器**不检查半径**（`src/combat/triggers.ts` 没走 auraGate）—— 至圣光轮 30 尺、迅捷灵光 10 尺，实测 60 尺 / 20 尺外照样生效；数据侧暂时可以补 `when: 'dist(source, self) <= N'` 兜。
   ② `aura.grant.statics` **根本没被读取**（`effectiveView` 只看 rollMods / triggers）—— 勇气灵光授予的「免疫恐慌」是死数据，实测照样被恐慌。在哪：`src/combat/triggers.ts`、`src/combat/effects.ts`。
 - **区域（zone）拿不到 `vars`**：`src/combat/space.ts` 传给区域的是 `vars: {}`，施法时 `choose` 选出来的东西（伤害类型等）在区域里丢了（哈达之欲的升环加骰永远落在强酸上）。在哪：`space.ts` 的 `runZone` / `Zone`（把创建时的 vars 存进 zone）。
 - **触发窗口里正规地花反应**：`leftReach` 这类窗口里数据写 `cost: [{ economy: 'reaction' }]` 不扣反应（实测反应 0 也能用、还能反复花）；另外 `flags.cannot: ['provoke']` 的效应活到**回合结束**而不是「这次移动结束」，数据要配 `endsOn: moved` 才对（散兵战术踩过）。在哪：`src/combat/tx.ts`（payCosts / canPay）、`src/combat/effects.ts`（disengaged）、`triggers.ts`。
 - **移动已经放下的区域**：zone 只有创建 / 删除，没有「把区域挪到别处」，原文里的「区域移入生物空间」触发也没实现（月华之光、炽焰法球、自然庇护卡这条）。在哪：`src/combat/session.ts`（`createZone`）、`space.ts`、`app/pages/combat/MapView.tsx`（拖动）。
 - **检查器补一条：`target.size` 的字面量**：数据写 `target.size == 'S'`（引擎里是「小型」，见 `src/sheet/constants.ts` 的 `SIZE_CN`）恒假，`npm run check:data` 不报。在哪：`src/combat/audit.ts`、`src/factory/lint.ts`。
+- **第三轮复核又挖出的引擎语义缺口**（写召唤数据时踩到的，按危险程度排）：
+  1. **召唤时 `link: false` 的旧召唤物会被下一次召唤删掉**：替换逻辑不区分「跟着专注退场」和「独立存续」（`exec.ts` 的 summon）；同一施法者第二次召唤会误踢掉第一只独立坐骑 / 魔宠。
+  2. **`spellCast` 窗口拿不到 `target`**：触发时没有目标，凡是要读「刚施展的那个法术打的是谁」的规则都写不了（例如「目标被打中时以反应施展迷踪步」）。
+  3. **`modify.maxDice` 挂在掷骰者身上**：治疗骰的场景里施法者与承受者不是同一个，`maximize` 取不到那包骰子（永生者赠礼这类写不出来）。
+  4. **`reducedTo0` 窗口里 `self` 是「动作的持有者」而不是被打倒的那个**：写 `self.hpMax` / `self.hp` 会读到错的人（TCE 炽烈回生踩到）。
+  5. **区域里的 `applyEffect` 会每个触发点挂一份**：同一个生物多次触发会叠出多个同名效应（该去重或用 `stackKey`）。
+  6. **条目顶层 `resources` 声明的池子不进战斗**：`cost: [{ resource: '<id>' }]` 会被判成「没有这个资源」，得写在动作能碰到的地方。
+  在哪：`src/combat/exec.ts`（summon / applyEffect）、`src/combat/triggers.ts` / `d20.ts`（窗口与 modify）、`src/combat/types.ts`、`src/bridge/from-sheet.ts`（资源进战斗）。
 - **自定义整个职业 / 自定义种族「建卡时能选到」**：账户资料库（[LIBRARY.md](LIBRARY.md)）现在支持特性、法术、物品、专长、可选特性、子职的数据化；整个职业（等级表、特性表、施法进度）和自定义种族要接静态层的职业表 / 种族候选，工程量大，先搁着。
   在哪：`src/sheet/`（`class-state.ts` 的职业表、`source.ts` 的候选过滤）、`app/lib/library.ts` 的 `pickable`。
 - **易伤（vulnerability）在卡面数据里表达不出来**：`mods` 里只有 `resist` 和 `immune`（`immune` 是这轮补的），

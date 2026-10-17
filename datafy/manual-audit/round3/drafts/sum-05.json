@@ -1,0 +1,801 @@
+{
+  "entries": {
+    "XGE:永生者赠礼": {
+      "name": "永生者赠礼",
+      "automation": "partial",
+      "text": "你被恢复生命值时，只要魔宠距你不超过 100 尺，所有决定恢复量的骰子取最大值。引擎已在治疗掷骰时自动把法术治疗骰取满（魔宠位置本身不追踪）；如果魔宠不在 100 尺内（或已消失 / 不在身边），请在效应面板里手动关掉这条「永生者赠礼」，或让 DM 手动改回掷骰结果。",
+      "rollMods": [
+        {
+          "on": { "kind": "heal", "spell": true },
+          "who": "bearer",
+          "op": "maxDice",
+          "label": "永生者赠礼",
+          "when": "self.hasSource('XGE:永生者赠礼')"
+        }
+      ],
+      "tags": ["ai", "未审"]
+    },
+
+    "XGE:魔契师:咒缚幽灵:6": {
+      "name": "咒缚幽灵",
+      "automation": "partial",
+      "text": "杀死类人生物时，用一次本特性（每长休一次）把它的灵魂变成恶灵：恶灵随你先攻入场（原文是独立掷先攻，需 DM 手动把它调到自己的先攻位置），对你和你盟友是盟友，服从你的口头命令，服务到你完成下一次长休（不随专注结束）。恶灵数据见怪物图鉴《恶灵》：AC 12、HP 22（5d8）、速度 30 尺飞行 50 尺（悬浮）、力量 1 敏捷 14 体质 11 智力 10 感知 10 魅力 11；抗性强酸/钝击/寒冷/火焰/闪电/穿刺/挥砍/雷鸣，免疫暗蚀/毒素，免疫魅惑/力竭/受擒/麻痹/石化/中毒/倒地/束缚/昏迷；吸取生命：近战法术？不，是 +4 命中、2d6 暗蚀并降低目标生命上限。以下需人处理：①「杀死类人生物」这个触发时机引擎不认，请在杀死的当下自己点「唤醒恶灵」；②恶灵出现时立刻获得的临时生命值（等于你魔契师等级一半，向下取整）= 请在它的棋子菜单里手动加临时生命值；③虚体移动与日照敏感、吸取生命降低生命上限 —— 手动处理。",
+      "actions": [
+        {
+          "id": "use",
+          "name": "咒缚幽灵：唤醒恶灵",
+          "activation": "free",
+          "cost": [{ "resource": "accursed-specter" }],
+          "targeting": { "type": "self" },
+          "root": [
+            {
+              "kind": "summon",
+              "name": "恶灵",
+              "size": "M",
+              "type": "undead",
+              "ac": 12,
+              "hp": 22,
+              "speed": 30,
+              "pb": "self.pb",
+              "score": { "str": 1, "dex": 14, "con": 11, "int": 10, "wis": 10, "cha": 11 },
+              "attacksPerAction": 1,
+              "attacks": [
+                {
+                  "id": "drain",
+                  "name": "吸取生命",
+                  "bonus": 4,
+                  "damage": "2d6",
+                  "damageType": "黯蚀"
+                }
+              ],
+              "rollMods": [
+                {
+                  "on": { "kind": "attack" },
+                  "who": "bearer",
+                  "op": "add",
+                  "value": "max(0, self.mod.cha)",
+                  "label": "咒缚幽灵：攻击检定特殊加值（等于你的魅力调整值，最低 +0）"
+                }
+              ],
+              "conditionImmune": ["魅惑", "力竭", "受擒", "麻痹", "石化", "中毒", "倒地", "束缚", "昏迷"],
+              "resist": ["强酸", "钝击", "寒冷", "火焰", "闪电", "穿刺", "挥砍", "雷鸣"],
+              "immune": ["黯蚀", "毒素"],
+              "notes": [
+                { "group": "特性", "name": "虚体移动", "text": "恶灵可以穿过其他生物或物件（如同困难地形）；若回合结束时还在物件内，受 1d10 力场伤害。需手动处理。" },
+                { "group": "特性", "name": "日照敏感", "text": "在阳光下，恶灵的属性检定与攻击检定具有劣势。引擎不判断光照，请手动处理。" },
+                { "group": "特性", "name": "临时生命值", "text": "出现时立刻获得「你的魔契师等级一半（向下取整）」点临时生命值 —— 引擎不会给召唤物加临时生命值，请在棋子菜单手动加。" },
+                { "group": "特性", "name": "吸取生命（生命上限）", "text": "吸取生命命中的生物，生命值上限减少等于所受伤值的数值 —— 引擎不改生命上限，请手动记录。" },
+                { "group": "特性", "name": "独立先攻", "text": "原文要求恶灵独立掷先攻；引擎把召唤物排在召唤者之后，请 DM 手动调整先攻顺序。" }
+              ],
+              "link": false
+            }
+          ]
+        }
+      ],
+      "resources": [
+        { "id": "accursed-specter", "name": "咒缚幽灵", "formula": 1, "recovery": "long" }
+      ],
+      "tags": ["ai", "未审"]
+    },
+
+    "XPHB:spell:寻获坐骑": {
+      "name": "寻获坐骑",
+      "automation": "partial",
+      "text": "以动作在 30 尺内的未占据空间召唤异界坐骑（天族 / 妖精 / 邪魔，你施法时选择），数据按施展用的法术位环阶：AC 10 + 环阶，HP 5 + 每环阶 10，速度 60 尺，力量 18 敏捷 12 体质 14 智力 6 感知 12 魅力 8；异界猛击：近战法术攻击，1d8 + 环阶的光耀（天族）/ 心灵（妖精）/ 黯蚀（邪魔）伤害；每只坐骑还有一个长休充能的附加动作（天族：治愈之触 2d8 + 环阶；妖精：妖精步伐传送 60 尺；邪魔：堕落凝视，感知豁免否则恐慌）。坐骑是你与盟友的盟友，共用你的先攻。需人处理：①骑乘时为受控坐骑、你失能时它独立行动（引擎只在你的回合后让它行动）；②四环及以上才有的 60 尺飞行；③附加动作里的传送 / 恐慌 / 治疗（传送引擎只能提示手动；治疗可用「治愈之触」手动结算）；④坐骑降到 0 生命值或你死亡时它消失（引擎按召唤物 0 生命值自动移除），再次施法替换旧坐骑（引擎自动替换无专注的召唤物）；⑤坐骑留下的物品。",
+      "actions": [
+        {
+          "id": "cast",
+          "name": "寻获坐骑",
+          "activation": "action",
+          "tags": ["spell", "magical"],
+          "cost": [{ "slot": { "min": 2 } }],
+          "targeting": { "type": "point", "range": 30 },
+          "root": [
+            {
+              "kind": "choose",
+              "prompt": "选择坐骑的生物类型",
+              "options": [
+                {
+                  "label": "天族（异界猛击造成光耀伤害；长休充能：治愈之触）",
+                  "do": [
+                    {
+                      "kind": "summon",
+                      "name": "异界坐骑（天族）",
+                      "size": "L",
+                      "type": "celestial",
+                      "ac": "10 + slot.level",
+                      "hp": "5 + 10 * slot.level",
+                      "speed": 60,
+                      "pb": "self.pb",
+                      "score": { "str": 18, "dex": 12, "con": 14, "int": 6, "wis": 12, "cha": 8 },
+                      "attacksPerAction": 1,
+                      "attacks": [
+                        { "id": "slam", "name": "异界猛击", "melee": true, "reach": true, "damage": "1d8 + slot.level", "damageType": "光耀" }
+                      ],
+                      "actions": [
+                        {
+                          "id": "touch",
+                          "name": "治愈之触（长休充能）",
+                          "activation": "bonus",
+                          "targeting": { "type": "creature", "count": 1, "range": 5 },
+                          "root": [{ "kind": "heal", "amount": "2d8 + slot.level" }]
+                        }
+                      ],
+                      "notes": [
+                        { "group": "特性", "name": "生命连接", "text": "你从一环或更高环的法术中恢复生命值时，若你位于坐骑 5 尺内，坐骑也恢复等量生命值 —— 引擎不追踪，请手动同步。" },
+                        { "group": "特性", "name": "心灵感应", "text": "坐骑能与你进行 1 里内的心灵感应。" }
+                      ],
+                      "link": false
+                    }
+                  ]
+                },
+                {
+                  "label": "妖精（异界猛击造成心灵伤害；长休充能：妖精步伐）",
+                  "do": [
+                    {
+                      "kind": "summon",
+                      "name": "异界坐骑（妖精）",
+                      "size": "L",
+                      "type": "fey",
+                      "ac": "10 + slot.level",
+                      "hp": "5 + 10 * slot.level",
+                      "speed": 60,
+                      "pb": "self.pb",
+                      "score": { "str": 18, "dex": 12, "con": 14, "int": 6, "wis": 12, "cha": 8 },
+                      "attacksPerAction": 1,
+                      "attacks": [
+                        { "id": "slam", "name": "异界猛击", "melee": true, "reach": true, "damage": "1d8 + slot.level", "damageType": "心灵" }
+                      ],
+                      "notes": [
+                        { "group": "特性", "name": "妖精步伐（长休充能）", "text": "坐骑连同骑手传送至 60 尺内的未占据空间 —— 传送请手动拖动棋子。" },
+                        { "group": "特性", "name": "生命连接", "text": "你从一环或更高环的法术中恢复生命值时，若你位于坐骑 5 尺内，坐骑也恢复等量生命值 —— 请手动同步。" }
+                      ],
+                      "link": false
+                    }
+                  ]
+                },
+                {
+                  "label": "邪魔（异界猛击造成黯蚀伤害；长休充能：堕落凝视）",
+                  "do": [
+                    {
+                      "kind": "summon",
+                      "name": "异界坐骑（邪魔）",
+                      "size": "L",
+                      "type": "fiend",
+                      "ac": "10 + slot.level",
+                      "hp": "5 + 10 * slot.level",
+                      "speed": 60,
+                      "pb": "self.pb",
+                      "score": { "str": 18, "dex": 12, "con": 14, "int": 6, "wis": 12, "cha": 8 },
+                      "attacksPerAction": 1,
+                      "attacks": [
+                        { "id": "slam", "name": "异界猛击", "melee": true, "reach": true, "damage": "1d8 + slot.level", "damageType": "黯蚀" }
+                      ],
+                      "actions": [
+                        {
+                          "id": "glare",
+                          "name": "堕落凝视（长休充能）",
+                          "activation": "bonus",
+                          "targeting": { "type": "creature", "count": 1, "range": 60 },
+                          "root": [
+                            {
+                              "kind": "save",
+                              "ability": "wis",
+                              "dc": "self.spell.dc",
+                              "onFail": [
+                                {
+                                  "kind": "applyEffect",
+                                  "to": "target",
+                                  "name": "堕落凝视：恐慌",
+                                  "duration": { "until": { "at": "turnEnd", "of": "source", "nth": 1 }, "manual": true },
+                                  "inline": { "name": "堕落凝视：恐慌", "implies": ["XPHB:condition:恐慌"], "text": "陷入恐慌状态，直到你的下个回合结束。" }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "notes": [
+                        { "group": "特性", "name": "生命连接", "text": "你从一环或更高环的法术中恢复生命值时，若你位于坐骑 5 尺内，坐骑也恢复等量生命值 —— 请手动同步。" }
+                      ],
+                      "link": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "text": "召唤异界坐骑（天族 / 妖精 / 邪魔）。四环及以上施放时坐骑获得 60 尺飞行 —— 引擎不自动加飞行速度，请手动调整。"
+        }
+      ],
+      "tags": ["ai", "未审"]
+    },
+
+    "XPHB:spell:巨虫术": {
+      "name": "巨虫术",
+      "automation": "partial",
+      "text": "专注至多 10 分钟。以动作在 60 尺内召唤一只巨虫（蜈蚣 / 蜘蛛 / 黄蜂，施法时选择），数据按施展用的法术位环阶：AC 11 + 环阶，HP 30 + 每比四环高一环 10，速度 40 尺（蜈蚣有攀爬 40 尺、黄蜂有飞行 40 尺），力量 17 敏捷 13 体质 15 智力 4 感知 14 魅力 3，黑暗视觉 60 尺，能听懂你说的语言；多重攻击：每回合攻击 floor(环阶 / 2) 次；猛毒刺：近战法术攻击，1d6 + 3 + 环阶穿刺外加 1d4 毒素。它是你与盟友的盟友，共用你的先攻并在你的回合结束后立即行动，遵从口头指令。需人处理：①它在你回合结束后立即行动（引擎把召唤物排在你的回合之后，照此行动）；②你不发令时它执行回避并远离危险；③蛛网箭造成的速度归零、剧毒喷涌的中毒、蛛行攀爬（已写在特性里）；④法术结束时消失（专注结束引擎自动移除召唤物）。",
+      "actions": [
+        {
+          "id": "cast",
+          "name": "巨虫术",
+          "activation": "action",
+          "tags": ["spell", "magical"],
+          "cost": [{ "slot": { "min": 4 } }],
+          "concentration": { "minutes": 10 },
+          "targeting": { "type": "point", "range": 60 },
+          "text": "环阶决定巨虫的 AC / HP / 攻击次数与伤害（写在召唤数据里）。",
+          "root": [
+            {
+              "kind": "choose",
+              "prompt": "选择巨虫的形态",
+              "options": [
+                {
+                  "label": "蜈蚣（攀爬 40 尺；附赠动作：剧毒喷涌令 10 尺内目标中毒）",
+                  "do": [
+                    {
+                      "kind": "summon",
+                      "name": "巨虫（蜈蚣）",
+                      "size": "L",
+                      "type": "beast",
+                      "ac": "11 + slot.level",
+                      "hp": "30 + 10 * (slot.level - 4)",
+                      "speed": 40,
+                      "pb": "self.pb",
+                      "score": { "str": 17, "dex": 13, "con": 15, "int": 4, "wis": 14, "cha": 3 },
+                      "attacksPerAction": "floor(slot.level / 2)",
+                      "attacks": [
+                        { "id": "jab", "name": "猛毒刺", "melee": true, "reach": true, "damage": "1d6 + 3 + slot.level", "damageType": "穿刺", "extra": [{ "dice": "1d4", "type": "毒素" }] }
+                      ],
+                      "actions": [
+                        {
+                          "id": "spew",
+                          "name": "剧毒喷涌（仅蜈蚣）",
+                          "activation": "bonus",
+                          "targeting": { "type": "creature", "count": 1, "range": 10 },
+                          "root": [
+                            {
+                              "kind": "save",
+                              "ability": "con",
+                              "dc": "self.spell.dc",
+                              "onFail": [
+                                {
+                                  "kind": "applyEffect",
+                                  "to": "target",
+                                  "name": "剧毒喷涌：中毒",
+                                  "duration": { "until": { "at": "turnStart", "of": "bearer", "nth": 1 }, "manual": true },
+                                  "inline": { "name": "剧毒喷涌：中毒", "implies": ["XPHB:condition:中毒"], "text": "陷入中毒状态，直到巨虫的下个回合开始。" }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "notes": [
+                        { "group": "特性", "name": "蛛行", "text": "可以在难以攀爬的表面上攀爬（包括天花板）而无需属性检定。" }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "蜘蛛（攀爬 40 尺；远程：蛛网箭）",
+                  "do": [
+                    {
+                      "kind": "summon",
+                      "name": "巨虫（蜘蛛）",
+                      "size": "L",
+                      "type": "beast",
+                      "ac": "11 + slot.level",
+                      "hp": "30 + 10 * (slot.level - 4)",
+                      "speed": 40,
+                      "pb": "self.pb",
+                      "score": { "str": 17, "dex": 13, "con": 15, "int": 4, "wis": 14, "cha": 3 },
+                      "attacksPerAction": "floor(slot.level / 2)",
+                      "attacks": [
+                        { "id": "jab", "name": "猛毒刺", "melee": true, "reach": true, "damage": "1d6 + 3 + slot.level", "damageType": "穿刺", "extra": [{ "dice": "1d4", "type": "毒素" }] },
+                        { "id": "web", "name": "蛛网箭", "ranged": true, "range": 60, "damage": "1d10 + 3 + slot.level", "damageType": "钝击" }
+                      ],
+                      "notes": [
+                        { "group": "特性", "name": "蛛网箭（减速）", "text": "被蛛网箭命中的目标速度降为 0，直到巨虫的下个回合开始 —— 引擎不改速度，请手动处理。" },
+                        { "group": "特性", "name": "蛛行", "text": "可以在难以攀爬的表面上攀爬（包括天花板）而无需属性检定。" }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "黄蜂（攀爬 40 尺、飞行 40 尺）",
+                  "do": [
+                    {
+                      "kind": "summon",
+                      "name": "巨虫（黄蜂）",
+                      "size": "L",
+                      "type": "beast",
+                      "ac": "11 + slot.level",
+                      "hp": "30 + 10 * (slot.level - 4)",
+                      "speed": 40,
+                      "pb": "self.pb",
+                      "score": { "str": 17, "dex": 13, "con": 15, "int": 4, "wis": 14, "cha": 3 },
+                      "attacksPerAction": "floor(slot.level / 2)",
+                      "attacks": [
+                        { "id": "jab", "name": "猛毒刺", "melee": true, "reach": true, "damage": "1d6 + 3 + slot.level", "damageType": "穿刺", "extra": [{ "dice": "1d4", "type": "毒素" }] }
+                      ],
+                      "notes": [
+                        { "group": "特性", "name": "飞行", "text": "黄蜂有 40 尺飞行速度 —— 召唤数据只写了一个速度值（40 尺步行），飞行请手动处理。" },
+                        { "group": "特性", "name": "蛛行", "text": "可以在难以攀爬的表面上攀爬（包括天花板）而无需属性检定。" }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "tags": ["ai", "未审"]
+    },
+
+    "XPHB:spell:毕格比之手": {
+      "name": "毕格比之手",
+      "automation": "partial",
+      "text": "专注至多 1 分钟。在 120 尺内一处你可见的未占据空间创造一只大型魔法手掌：它是一个物件（不占空间），AC 20，生命值等于你的生命值上限（引擎不改物件生命值，请在效应面板手动记：巨手生命值 = 你的生命值上限）。施放时可以用它施展一次下列效应之一，之后每个你的回合可以用附赠动作再用一次：金刚拳（近战法术攻击，5d8 力场，每高一环 +2d8）、飞击掌（力量豁免失败则推离 5 + 5×施法属性调整值尺）、擒拿掌（敏捷豁免失败则受擒，之后可用附赠动作挤压 4d6 + 施法属性调整值钝击，每高一环 +2d6）、护身掌（为你提供半身掩护）。需人处理：①巨手不占空间、不阻挡移动（引擎只把它记成效应）；②半身掩护（AC 与敏捷豁免 +2）与它所在空间对敌人的困难地形；③巨手随目标移动保持 5 尺（飞击掌）；④巨手降至 0 生命值时法术提前结束 —— 请手动结束专注；⑤指挥巨手时升环伤害（金刚拳每高一环 +2d8、挤压每高一环 +2d6）引擎按 5 环固定算，自行升环施放的话请手动改这次伤害（施法环阶记在只读的「毕格比之手（施法环阶）」池里）。",
+      "actions": [
+        {
+          "id": "cast",
+          "name": "毕格比之手",
+          "activation": "action",
+          "tags": ["spell", "magical"],
+          "cost": [{ "slot": { "min": 5 } }],
+          "concentration": { "minutes": 1 },
+          "targeting": { "type": "point", "range": 120 },
+          "root": [
+            {
+              "kind": "applyEffect",
+              "to": "self",
+              "template": "毕格比之手",
+              "state": { "hp": "self.hpMax" }
+            },
+            { "kind": "resource", "id": "bigby-slot", "delta": "slot.level" },
+            {
+              "kind": "note",
+              "text": "巨手出现：AC 20，生命值等于你的生命值上限。施放当下可以立刻用它施展一次效应（用附赠动作条目，本回合的附赠动作视作未花）。"
+            }
+          ]
+        },
+        {
+          "id": "use",
+          "name": "毕格比之手：指挥巨手",
+          "activation": "bonus",
+          "tags": ["spell", "magical"],
+          "requires": "self.hasEffect('毕格比之手')",
+          "targeting": { "type": "creature", "count": 1, "range": 120 },
+          "text": "每回合一次（施放的那回合可以免费再用一次）：选择金刚拳 / 飞击掌 / 擒拿掌 / 挤压 / 护身掌。",
+          "root": [
+            {
+              "kind": "choose",
+              "prompt": "毕格比之手：选择效应",
+              "options": [
+                {
+                  "label": "金刚拳（近战法术攻击，5d8 力场伤害；每高一环 +2d8）",
+                  "do": [
+                    {
+                      "kind": "attack",
+                      "attack": { "melee": true, "spell": true },
+                      "onHit": [
+                        { "kind": "damage", "dice": "max(5, 5 + 2 * (self.resource('bigby-slot') - 5))d8", "type": "力场" }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "飞击掌（力量豁免，失败则推离 5 + 5×施法属性调整值尺）",
+                  "when": "target.size != '超巨型'",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "str",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        { "kind": "move", "mode": "push", "ft": "5 + 5 * self.spell.mod" }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "擒拿掌（敏捷豁免，失败则受擒，逃脱 DC = 你的法术豁免 DC）",
+                  "when": "target.size != '超巨型'",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "dex",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        { "kind": "applyEffect", "to": "target", "template": "毕格比之手：受擒" }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "挤压（对被擒拿的目标造成 4d6 + 施法属性调整值钝击伤害；每高一环 +2d6）",
+                  "do": [
+                    { "kind": "damage", "dice": "max(3, 3 + 2 * (self.resource('bigby-slot') - 5))d6 + self.spell.mod", "type": "钝击" }
+                  ]
+                },
+                {
+                  "label": "护身掌（只做记录：为你提供半身掩护，所在空间对敌人是困难地形）",
+                  "do": [
+                    {
+                      "kind": "note",
+                      "text": "护身掌：你获得来自巨手所在空间 / 穿过其空间的攻击与效应的半身掩护（AC 与敏捷豁免 +2），且巨手所在空间对你的敌人视为困难地形 —— 引擎不做掩护与困难地形，请手动处理。"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": {
+        "毕格比之手": {
+          "tags": ["magical", "spell"],
+          "text": "一只大型魔法手掌（物件，AC 20，生命值等于你的生命值上限，不占空间）。每回合可用附赠动作指挥它：金刚拳 / 飞击掌 / 擒拿掌 / 挤压 / 护身掌。生命值降至 0 时法术提前结束。"
+        },
+        "毕格比之手：受擒": {
+          "tags": ["magical", "spell"],
+          "implies": ["XPHB:condition:受擒"],
+          "text": "被巨手擒抱：陷入受擒状态，逃脱 DC 等于施法者的法术豁免 DC。"
+        }
+      },
+      "resources": [
+        { "id": "bigby-slot", "name": "毕格比之手（施法环阶）", "formula": 0, "recovery": "long" }
+      ],
+      "tags": ["ai", "未审"]
+    },
+
+    "XPHB:spell:火焰刀": {
+      "name": "火焰刀",
+      "automation": "partial",
+      "text": "附赠动作，专注至多 10 分钟：在一只空手上召出火焰刀（近似弯刀）。你可以用魔法动作用它发动一次近战法术攻击，命中造成 3d6 + 施法属性调整值的火焰伤害，每比二环高一环多 1d6（召出时用的环阶记在只读的「火焰刀（施法环阶）」池里，攻击伤害自动按它算）。它提供 10 尺明亮光照与额外 10 尺微光光照。需人处理：①光照（引擎不管光照）；②放下刀刃即消失、可以用附赠动作重新唤出（重新唤出请再施放一次本法术，或让 DM 手动恢复效应）；③需要一只空手。",
+      "actions": [
+        {
+          "id": "cast",
+          "name": "火焰刀",
+          "activation": "bonus",
+          "tags": ["spell", "magical"],
+          "cost": [{ "slot": { "min": 2 } }],
+          "concentration": { "minutes": 10 },
+          "targeting": { "type": "self" },
+          "text": "召出（或重新唤出）火焰刀，提供 10 尺明亮光照 + 10 尺微光光照。",
+          "root": [
+            { "kind": "applyEffect", "to": "self", "template": "火焰刀", "state": { "slot": "slot.level" } },
+            { "kind": "resource", "id": "flame-blade-slot", "delta": "slot.level" },
+            { "kind": "note", "text": "火焰刀提供半径 10 尺明亮光照与额外 10 尺微光光照（请手动标记）。" }
+          ]
+        },
+        {
+          "id": "use",
+          "name": "火焰刀：攻击",
+          "activation": "action",
+          "tags": ["spell", "magical"],
+          "requires": "self.hasEffect('火焰刀') && turn.isMine",
+          "targeting": { "type": "creature", "count": 1, "range": "reach" },
+          "root": [
+            {
+              "kind": "attack",
+              "attack": { "melee": true, "spell": true },
+              "onHit": [
+                { "kind": "damage", "dice": "max(3, self.resource('flame-blade-slot'))d6 + self.spell.mod", "type": "火焰" }
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": {
+        "火焰刀": {
+          "tags": ["magical", "spell"],
+          "text": "手握一把火焰刀（近似弯刀）：可用魔法动作发动近战法术攻击，命中造成 3d6 + 施法属性调整值火焰伤害（每高一环 +1d6）；提供 10 尺明亮光照与 10 尺微光光照；放下刀刃即消失。"
+        }
+      },
+      "resources": [
+        { "id": "flame-blade-slot", "name": "火焰刀（施法环阶）", "formula": 0, "recovery": "long" }
+      ],
+      "tags": ["ai", "未审"]
+    },
+
+    "XPHB:圣武士:信实坐骑:5": {
+      "name": "信实坐骑",
+      "automation": "partial",
+      "text": "你始终准备着「寻获坐骑」（静态授予）。此外，你可以不消耗法术位地施展该法术一次，之后必须完成一次长休才能再次这么做：用下面的动作免法术位施放，召唤出的坐骑与「寻获坐骑」完全相同（数据按二环计：AC 12、HP 25、异界猛击 1d8 + 2），只是不花法术位。坐骑实体与骑乘、失能后的独立行动仍需人处理。",
+      "actions": [
+        {
+          "id": "steed",
+          "name": "信实坐骑：免法术位施展寻获坐骑",
+          "activation": "action",
+          "tags": ["spell", "magical"],
+          "cost": [{ "resource": "faithful-steed" }],
+          "targeting": { "type": "point", "range": 30 },
+          "root": [
+            {
+              "kind": "choose",
+              "prompt": "选择坐骑的生物类型",
+              "options": [
+                {
+                  "label": "天族（异界猛击造成光耀伤害）",
+                  "do": [
+                    {
+                      "kind": "summon",
+                      "name": "异界坐骑（天族）",
+                      "size": "L",
+                      "type": "celestial",
+                      "ac": 12,
+                      "hp": 25,
+                      "speed": 60,
+                      "pb": "self.pb",
+                      "score": { "str": 18, "dex": 12, "con": 14, "int": 6, "wis": 12, "cha": 8 },
+                      "attacksPerAction": 1,
+                      "attacks": [
+                        { "id": "slam", "name": "异界猛击", "melee": true, "reach": true, "damage": "1d8 + 2", "damageType": "光耀" }
+                      ],
+                      "notes": [
+                        { "group": "特性", "name": "生命连接", "text": "你从一环或更高环的法术中恢复生命值时，若你位于坐骑 5 尺内，坐骑也恢复等量生命值 —— 请手动同步。" },
+                        { "group": "特性", "name": "长休充能动作", "text": "治愈之触：5 尺内一名生物恢复 2d8 + 2 生命值，长休后充能。" }
+                      ],
+                      "link": false
+                    }
+                  ]
+                },
+                {
+                  "label": "妖精（异界猛击造成心灵伤害）",
+                  "do": [
+                    {
+                      "kind": "summon",
+                      "name": "异界坐骑（妖精）",
+                      "size": "L",
+                      "type": "fey",
+                      "ac": 12,
+                      "hp": 25,
+                      "speed": 60,
+                      "pb": "self.pb",
+                      "score": { "str": 18, "dex": 12, "con": 14, "int": 6, "wis": 12, "cha": 8 },
+                      "attacksPerAction": 1,
+                      "attacks": [
+                        { "id": "slam", "name": "异界猛击", "melee": true, "reach": true, "damage": "1d8 + 2", "damageType": "心灵" }
+                      ],
+                      "notes": [
+                        { "group": "特性", "name": "长休充能动作", "text": "妖精步伐：坐骑连同骑手传送至 60 尺内未占据空间（请手动拖动棋子）。" },
+                        { "group": "特性", "name": "生命连接", "text": "你从一环或更高环的法术中恢复生命值时，若你位于坐骑 5 尺内，坐骑也恢复等量生命值 —— 请手动同步。" }
+                      ],
+                      "link": false
+                    }
+                  ]
+                },
+                {
+                  "label": "邪魔（异界猛击造成黯蚀伤害）",
+                  "do": [
+                    {
+                      "kind": "summon",
+                      "name": "异界坐骑（邪魔）",
+                      "size": "L",
+                      "type": "fiend",
+                      "ac": 12,
+                      "hp": 25,
+                      "speed": 60,
+                      "pb": "self.pb",
+                      "score": { "str": 18, "dex": 12, "con": 14, "int": 6, "wis": 12, "cha": 8 },
+                      "attacksPerAction": 1,
+                      "attacks": [
+                        { "id": "slam", "name": "异界猛击", "melee": true, "reach": true, "damage": "1d8 + 2", "damageType": "黯蚀" }
+                      ],
+                      "notes": [
+                        { "group": "特性", "name": "长休充能动作", "text": "堕落凝视：60 尺内一名可见生物感知豁免（DC = 你的法术豁免 DC），失败则恐慌直到你下个回合结束。" },
+                        { "group": "特性", "name": "生命连接", "text": "你从一环或更高环的法术中恢复生命值时，若你位于坐骑 5 尺内，坐骑也恢复等量生命值 —— 请手动同步。" }
+                      ],
+                      "link": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "tags": ["ai", "未审"]
+    },
+
+    "XPHB:法师:魅影生物:6": {
+      "name": "魅影生物",
+      "automation": "partial",
+      "text": "你始终准备着「野兽召唤术」与「妖精召唤术」（静态授予）。施展其中任意一道时，你可以把它的学派改成幻术学派（不必改数据，只是叙事）。此外，这两道法术的幻术版本各可以不消耗法术位施展一次（各一份长休恢复的次数池）：这样施展时，召唤出的生物只有一半生命值 —— 用下面的两个动作免法术位施放，生命值已按半血写好。其余部分（专注、共用先攻、随专注结束消失）与正常的召唤法术一致。",
+      "actions": [
+        {
+          "id": "beast",
+          "name": "魅影生物：免法术位施展野兽召唤术（半血）",
+          "activation": "action",
+          "tags": ["spell", "magical"],
+          "requires": "self.hasSource('XPHB:spell:野兽召唤术')",
+          "cost": [{ "resource": "phantom-beast" }],
+          "concentration": { "hours": 1 },
+          "targeting": { "type": "point", "range": 90 },
+          "root": [
+            {
+              "kind": "choose",
+              "prompt": "选择野兽灵魄的环境形态（幻术版本，生命值减半）",
+              "options": [
+                {
+                  "label": "天空野兽灵魄（飞行 60 尺）",
+                  "do": [
+                    {
+                      "kind": "summon",
+                      "name": "幻影天空野兽灵魄",
+                      "size": "S",
+                      "type": "beast",
+                      "ac": 13,
+                      "hp": 10,
+                      "speed": 60,
+                      "pb": "self.pb",
+                      "score": { "str": 18, "dex": 11, "con": 16, "int": 4, "wis": 14, "cha": 5 },
+                      "attacksPerAction": 1,
+                      "attacks": [{ "id": "rend", "name": "撕裂", "melee": true, "damage": "1d8 + 6", "damageType": "穿刺" }],
+                      "notes": [
+                        { "group": "特性", "name": "召唤环阶", "text": "免法术位施展没有法术位环阶：AC / 伤害 / 攻击次数按最低环（二环）计算 —— 若你的 DM 另有裁定请手动调整数值。" }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "大地野兽灵魄（攀爬 30 尺、群体战术）",
+                  "do": [
+                    {
+                      "kind": "summon",
+                      "name": "幻影大地野兽灵魄",
+                      "size": "S",
+                      "type": "beast",
+                      "ac": 13,
+                      "hp": 15,
+                      "speed": 30,
+                      "pb": "self.pb",
+                      "score": { "str": 18, "dex": 11, "con": 16, "int": 4, "wis": 14, "cha": 5 },
+                      "attacksPerAction": 1,
+                      "attacks": [{ "id": "rend", "name": "撕裂", "melee": true, "damage": "1d8 + 6", "damageType": "穿刺" }],
+                      "rollMods": [
+                        {
+                          "on": { "kind": "attack" },
+                          "who": "bearer",
+                          "when": "allyWithin(target, 5, { exclude: [self], notCond: '失能' })",
+                          "op": "adv",
+                          "label": "群体战术"
+                        }
+                      ],
+                      "notes": [
+                        { "group": "特性", "name": "召唤环阶", "text": "免法术位施展按最低环（二环）计算 AC / 伤害 / 攻击次数。" }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "海洋野兽灵魄（游泳 30 尺、水陆两栖）",
+                  "do": [
+                    {
+                      "kind": "summon",
+                      "name": "幻影海洋野兽灵魄",
+                      "size": "S",
+                      "type": "beast",
+                      "ac": 13,
+                      "hp": 15,
+                      "speed": 30,
+                      "pb": "self.pb",
+                      "score": { "str": 18, "dex": 11, "con": 16, "int": 4, "wis": 14, "cha": 5 },
+                      "attacksPerAction": 1,
+                      "attacks": [{ "id": "rend", "name": "撕裂", "melee": true, "damage": "1d8 + 6", "damageType": "穿刺" }],
+                      "notes": [
+                        { "group": "特性", "name": "水陆两栖", "text": "可在空气与水中呼吸。" },
+                        { "group": "特性", "name": "召唤环阶", "text": "免法术位施展按最低环（二环）计算 AC / 伤害 / 攻击次数。" }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "fey",
+          "name": "魅影生物：免法术位施展妖精召唤术（半血）",
+          "activation": "action",
+          "tags": ["spell", "magical"],
+          "requires": "self.hasSource('XPHB:spell:妖精召唤术')",
+          "cost": [{ "resource": "phantom-fey" }],
+          "concentration": { "hours": 1 },
+          "targeting": { "type": "point", "range": 90 },
+          "root": [
+            {
+              "kind": "choose",
+              "prompt": "选择妖精灵魄的情绪形态（幻术版本，生命值减半）",
+              "options": [
+                {
+                  "label": "愤怒妖精灵魄",
+                  "do": [
+                    {
+                      "kind": "summon",
+                      "name": "幻影愤怒妖精灵魄",
+                      "size": "S",
+                      "type": "fey",
+                      "ac": 14,
+                      "hp": 15,
+                      "speed": 30,
+                      "pb": "self.pb",
+                      "score": { "str": 13, "dex": 16, "con": 14, "int": 14, "wis": 11, "cha": 16 },
+                      "conditionImmune": ["魅惑"],
+                      "attacksPerAction": 1,
+                      "attacks": [
+                        { "id": "blade", "name": "妖精之刃", "melee": true, "damage": "1d6 + 8", "damageType": "穿刺", "extra": [{ "dice": "1d6", "type": "力场" }] }
+                      ],
+                      "notes": [
+                        { "group": "特性", "name": "召唤环阶", "text": "免法术位施展按最低环（三环）计算 AC / 伤害 / 攻击次数。" },
+                        { "group": "特性", "name": "妖精步伐与愤怒", "text": "附赠动作传送至多 30 尺（手动拖动）；传送后本回合下次攻击检定具有优势。" }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "欢欣妖精灵魄",
+                  "do": [
+                    {
+                      "kind": "summon",
+                      "name": "幻影欢欣妖精灵魄",
+                      "size": "S",
+                      "type": "fey",
+                      "ac": 14,
+                      "hp": 15,
+                      "speed": 30,
+                      "pb": "self.pb",
+                      "score": { "str": 13, "dex": 16, "con": 14, "int": 14, "wis": 11, "cha": 16 },
+                      "conditionImmune": ["魅惑"],
+                      "attacksPerAction": 1,
+                      "attacks": [
+                        { "id": "blade", "name": "妖精之刃", "melee": true, "damage": "1d6 + 8", "damageType": "穿刺", "extra": [{ "dice": "1d6", "type": "力场" }] }
+                      ],
+                      "notes": [
+                        { "group": "特性", "name": "召唤环阶", "text": "免法术位施展按最低环（三环）计算 AC / 伤害 / 攻击次数。" },
+                        { "group": "特性", "name": "妖精步伐与欢欣", "text": "附赠动作传送至多 30 尺（手动拖动）；传送后 10 尺内一名生物感知豁免，失败陷入魅惑。" }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "诡诈妖精灵魄",
+                  "do": [
+                    {
+                      "kind": "summon",
+                      "name": "幻影诡诈妖精灵魄",
+                      "size": "S",
+                      "type": "fey",
+                      "ac": 14,
+                      "hp": 15,
+                      "speed": 30,
+                      "pb": "self.pb",
+                      "score": { "str": 13, "dex": 16, "con": 14, "int": 14, "wis": 11, "cha": 16 },
+                      "conditionImmune": ["魅惑"],
+                      "attacksPerAction": 1,
+                      "attacks": [
+                        { "id": "blade", "name": "妖精之刃", "melee": true, "damage": "1d6 + 8", "damageType": "穿刺", "extra": [{ "dice": "1d6", "type": "力场" }] }
+                      ],
+                      "notes": [
+                        { "group": "特性", "name": "召唤环阶", "text": "免法术位施展按最低环（三环）计算 AC / 伤害 / 攻击次数。" },
+                        { "group": "特性", "name": "妖精步伐与诡诈", "text": "附赠动作传送至多 30 尺（手动拖动）；传送后制造 5 尺魔法黑暗。" }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "resources": [
+        { "id": "phantom-beast", "name": "幻术版野兽召唤术（免法术位）", "formula": 1, "recovery": "long" },
+        { "id": "phantom-fey", "name": "幻术版妖精召唤术（免法术位）", "formula": 1, "recovery": "long" }
+      ],
+      "tags": ["ai", "未审"]
+    }
+  }
+}

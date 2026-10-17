@@ -1,0 +1,562 @@
+{
+ "version": 1,
+ "note": "借机攻击一批（oa2-01）：逐条按原文重新判断",
+ "entries": {
+  "XGE:游荡者:散兵战术:3": {
+   "name": "散兵战术",
+   "automation": "partial",
+   "text": "当一个敌人在你周围 5 尺内结束其回合时，你可以用一个反应移动至多你速度一半的距离。此移动不会引发借机攻击。触发时机与反应代价引擎自动处理；移动本身要人处理（引擎的移动 / 借机攻击流程只跑当前回合的那个棋子，别人回合里的移动是拖动棋子，引擎看不到），所以这里给移动期间的你挂上「散兵战术移动」效应：只要你还没移动，这段移动就一直不引发借机攻击，直到这次移动结束（走了引擎的移动流程时）或你的回合结束。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "散兵战术",
+     "activation": "reaction",
+     "trigger": {
+      "on": "turnEnded",
+      "role": "any",
+      "when": "!turn.isMine && turn.of.isEnemyOf(self) && within(self, turn.of, 5)"
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "散兵战术移动"
+      },
+      {
+       "kind": "note",
+       "text": "散兵战术：以反应移动至多你速度一半的距离（这段移动不引发借机攻击）——请手动在战图上移动；没走引擎的移动流程时，「散兵战术移动」效应会一直留到你的回合结束。"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "散兵战术移动": {
+     "text": "这次由散兵战术带来的移动不引发借机攻击；移动结束（moved）或你的下一回合开始时消失。",
+     "flags": {
+      "cannot": [
+       "provoke"
+      ]
+     },
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "bearer",
+       "nth": 1
+      },
+      "endsOn": [
+       {
+        "event": "moved",
+        "when": "event.id == self.id"
+       }
+      ]
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XGE:游荡者:梦幻舞步:3": {
+   "name": "梦幻舞步",
+   "automation": "partial",
+   "text": "在你的回合中，如果你对某一生物发动了一次近战攻击（无论命中与否），那个生物在你本回合的剩余时间内将无法对你进行借机攻击。引擎没有「某生物不能发动借机攻击」的开关（借机攻击由被离开触及范围的那个人自己决定，引擎照常问他）：这里在那个生物身上挂「梦幻舞步」效应并在本回合结束时消失；他真要对你借机攻击时，引擎只会提醒一句，请在那次询问里选「不攻击」。",
+   "triggers": [
+    {
+     "id": "fancyFootwork",
+     "label": "梦幻舞步：它不能对你借机攻击",
+     "on": "d20Rolled",
+     "role": "actor",
+     "window": "after",
+     "when": "turn.isMine && roll.kind == 'attack' && attack.melee && target != null",
+     "do": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "梦幻舞步"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "梦幻舞步": {
+     "text": "本回合剩余时间内，该生物不能对来源发动借机攻击（引擎不会替你拦下借机攻击询问，需在那次询问里选「不攻击」）。",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "source",
+       "nth": 0
+      }
+     },
+     "triggers": [
+      {
+       "id": "fancyFootworkWarn",
+       "label": "梦幻舞步：不能对你借机攻击",
+       "on": "leftReach",
+       "role": "target",
+       "when": "source != null && attacker.id == source.id",
+       "do": [
+        {
+         "kind": "note",
+         "text": "梦幻舞步：该生物在本回合剩余时间内不能对你发动借机攻击——请在这次借机攻击询问里选「不攻击」。"
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:电爪": {
+   "name": "电爪",
+   "automation": "partial",
+   "text": "近战法术攻击，命中造成 1d8 闪电伤害（5 级 2d8、11 级 3d8、17 级 4d8），并且目标在其下一回合开始前不能执行借机攻击。伤害与持续时间引擎自动处理；「不能执行借机攻击」引擎没有开关（借机攻击由他自己决定，引擎照常问他），只能在他离开别人的触及范围、引擎正要问他时提醒一句，请在那次询问里选「不攻击」。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "电爪",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1,
+      "range": "touch"
+     },
+     "root": [
+      {
+       "kind": "attack",
+       "attack": {
+        "melee": true,
+        "spell": true
+       },
+       "onHit": [
+        {
+         "kind": "damage",
+         "dice": "(1 + floor((self.level + 1) / 6))d8",
+         "type": "闪电"
+        },
+        {
+         "kind": "applyEffect",
+         "template": "电爪",
+         "to": "target"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "电爪": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "bearer",
+       "nth": 1
+      }
+     },
+     "text": "在其下一回合开始前不能执行借机攻击（引擎不会替你拦下借机攻击询问，需在那次询问里选「不攻击」）。",
+     "triggers": [
+      {
+       "id": "noOpportunity",
+       "label": "电爪：不能借机攻击",
+       "on": "leftReach",
+       "role": "target",
+       "do": [
+        {
+         "kind": "note",
+         "text": "电爪：该生物在其下一回合开始前不能执行借机攻击——请在这次借机攻击询问里选「不攻击」。"
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:吟游诗人:灵感织衣:3": {
+   "name": "灵感织衣",
+   "automation": "partial",
+   "text": "以一个附赠动作消耗一次诗人激励并掷诗人骰，从你 60 尺内的其他生物中选择至多等于你魅力调整值（至少 1 名）的生物，每个被选中的生物获得等于两倍该诗人骰骰值的临时生命值，然后每名生物都可以用自己的反应立即移动至多等于自己速度的距离，这次移动不会引发借机攻击。临时生命值与效应都会自动加上；原文是掷一次骰子给所有人共用，引擎的临时生命值按每名目标各掷一次近似（请按第一次的结果口头统一）；移动是别人的反应、又跑不到引擎的移动流程里，由人手动移动（每名被选中的生物身上带着「灵感织衣之步」效应，这段移动不引发借机攻击）。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "灵感织衣",
+     "activation": "bonus",
+     "cost": [
+      {
+       "resource": "诗人激励"
+      }
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": "max(1, mod.cha)",
+      "range": 60,
+      "filter": "target.id != self.id"
+     },
+     "root": [
+      {
+       "kind": "tempHp",
+       "amount": "classTable('诗人骰') + classTable('诗人骰')"
+      },
+      {
+       "kind": "applyEffect",
+       "to": "each",
+       "template": "灵感织衣之步"
+      },
+      {
+       "kind": "note",
+       "text": "灵感织衣：每名被选中的生物可以立即用自己的反应移动至多等于自己速度的距离（不引发借机攻击）——请手动在战图上移动，并让该玩家自己扣掉反应；临时生命值按各目标掷出的骰值近似，请按第一次的结果口头统一。"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "灵感织衣之步": {
+     "text": "这次由灵感织衣带来的移动不引发借机攻击；移动结束（moved）或该生物的下一回合开始时消失。",
+     "flags": {
+      "cannot": [
+       "provoke"
+      ]
+     },
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "bearer",
+       "nth": 1
+      },
+      "endsOn": [
+       {
+        "event": "moved",
+        "when": "event.id == self.id"
+       }
+      ]
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:吟游诗人:鼓舞之移:6": {
+   "name": "鼓舞之移",
+   "automation": "partial",
+   "text": "当一名你可见的敌人位于你 5 尺内结束它的回合时，你能够以反应消耗一次诗人激励使用次数，移动至多等于你速度一半的距离；此时位于你 30 尺内的一名盟友（由你选择）也可以使用他的反应移动至多等于他速度一半的距离。此特性进行的移动不会引发借机攻击。触发时机与反应 / 诗人激励代价引擎自动处理；两次移动都要人处理（引擎的移动流程只跑当前回合的那个棋子），这里给移动期间的你挂上「鼓舞之移之步」效应，盟友那一次请人手动移动并让他自己扣反应。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "鼓舞之移",
+     "activation": "reaction",
+     "trigger": {
+      "on": "turnEnded",
+      "role": "any",
+      "when": "!turn.isMine && turn.of.isEnemyOf(self) && within(self, turn.of, 5) && canSee(self, turn.of)"
+     },
+     "cost": [
+      {
+       "resource": "诗人激励"
+      }
+     ],
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "鼓舞之移之步"
+      },
+      {
+       "kind": "note",
+       "text": "鼓舞之移：你移动至多速度的一半（不引发借机攻击）——请手动在战图上移动。"
+      },
+      {
+       "kind": "note",
+       "text": "鼓舞之移：你 30 尺内选择的一名盟友可以用自己的反应移动至多其速度的一半（不引发借机攻击）——请手动移动，并让该盟友自己扣掉反应。"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "鼓舞之移之步": {
+     "text": "这次由鼓舞之移带来的移动不引发借机攻击；移动结束（moved）或你的下一回合开始时消失。",
+     "flags": {
+      "cannot": [
+       "provoke"
+      ]
+     },
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "bearer",
+       "nth": 1
+      },
+      "endsOn": [
+       {
+        "event": "moved",
+        "when": "event.id == self.id"
+       }
+      ]
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:哨兵": {
+   "name": "哨兵",
+   "automation": "partial",
+   "text": "【阻拦】你的借机攻击命中一名生物时，该生物的速度在当前回合剩余时间内变为 0：引擎正常问你要不要借机攻击时，会自动认出「此刻算借机攻击」并施加；若这次命中是 DM 手动发起的借机攻击（引擎没问过），弹窗会问你一句「这次命中的是借机攻击吗」，是就选「是」。【守护者】位于你 5 尺范围内的生物执行撤离动作后、或它的攻击命中了除你以外的目标后，你可以立刻对该生物进行一次借机攻击：这两个时机引擎认得出来，但「用你的武器打一下」引擎发起不了（它不知道你拿的是什么武器），所以只提醒，请用「用反应攻击（借机攻击）」手动发起这一下。",
+   "triggers": [
+    {
+     "id": "oaMarker",
+     "label": "哨兵：借机攻击时机",
+     "on": "leftReach",
+     "role": "target",
+     "do": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "借机攻击时机"
+      }
+     ]
+    },
+    {
+     "id": "block",
+     "label": "哨兵：阻拦",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "after",
+     "when": "attack.melee && (self.hasEffect('借机攻击时机') || ask('这次命中的是借机攻击吗？'))",
+     "do": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "阻拦"
+      }
+     ]
+    },
+    {
+     "id": "guardianDisengage",
+     "label": "哨兵：守护者（它撤离了）",
+     "on": "leftReach",
+     "role": "target",
+     "optional": true,
+     "when": "attacker.id == target.id && (attacker.hasEffect('撤离') || ask('它刚刚是执行撤离动作离开你 5 尺范围的吗？'))",
+     "do": [
+      {
+       "kind": "note",
+       "text": "哨兵·守护者：这个生物执行了撤离动作、离开你的触及范围，你可以立刻对它进行一次借机攻击——请用「用反应攻击（借机攻击）」发起（引擎不会自动打这一下）。"
+      }
+     ]
+    },
+    {
+     "id": "guardianOtherTarget",
+     "label": "哨兵：守护者（它打了别人）",
+     "on": "attackHit",
+     "role": "any",
+     "window": "after",
+     "optional": true,
+     "when": "attacker.id != self.id && target.id != self.id && attacker.isEnemyOf(self) && within(self, attacker, 5)",
+     "do": [
+      {
+       "kind": "note",
+       "text": "哨兵·守护者：这个生物在你 5 尺内的攻击命中了除你以外的目标，你可以立刻对它进行一次借机攻击——请用「用反应攻击（借机攻击）」发起（引擎不会自动打这一下）。"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "借机攻击时机": {
+     "text": "此刻算作借机攻击的时机（哨兵：阻拦因此生效）；你的下一回合开始时消失。",
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "bearer",
+       "nth": 1
+      }
+     }
+    },
+    "阻拦": {
+     "text": "本回合剩余时间内速度为 0。",
+     "statics": [
+      {
+       "kind": "speedSet",
+       "value": 0
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      }
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:圣武士:坚韧复仇:7": {
+   "name": "坚韧复仇",
+   "automation": "partial",
+   "text": "你以借机攻击命中一个生物时，可以将其速度降为 0，直到当前回合结束，并在该攻击后立刻移动至多相当于你速度一半的距离（本次移动是原反应的一部分，不引发借机攻击）。引擎正常问你要不要借机攻击时，会自动认出「此刻算借机攻击」并处理速度降为 0；若这次命中是 DM 手动发起的借机攻击（引擎没问过），弹窗会问你一句「这次命中的是借机攻击吗」；攻击后那段移动要人处理（引擎的移动流程只跑当前回合的那个棋子），移动期间你带着「坚韧复仇之步」效应。",
+   "triggers": [
+    {
+     "id": "oaMarker",
+     "label": "坚韧复仇：借机攻击时机",
+     "on": "leftReach",
+     "role": "target",
+     "do": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "借机攻击时机"
+      }
+     ]
+    },
+    {
+     "id": "relentless",
+     "label": "坚韧复仇",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "after",
+     "optional": true,
+     "when": "attack.melee && (self.hasEffect('借机攻击时机') || ask('这次命中的是借机攻击吗？'))",
+     "do": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "坚韧复仇"
+      },
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "坚韧复仇之步"
+      },
+      {
+       "kind": "note",
+       "text": "坚韧复仇：你立刻移动至多你速度的一半（属于原反应、不引发借机攻击）——请手动在战图上移动。"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "借机攻击时机": {
+     "text": "此刻算作借机攻击的时机（坚韧复仇因此生效）；你的下一回合开始时消失。",
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "bearer",
+       "nth": 1
+      }
+     }
+    },
+    "坚韧复仇": {
+     "text": "速度降为 0，直到当前回合结束。",
+     "statics": [
+      {
+       "kind": "speedSet",
+       "value": 0
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      }
+     }
+    },
+    "坚韧复仇之步": {
+     "text": "这段来自坚韧复仇的移动不引发借机攻击；移动结束（moved）或你的下一回合开始时消失。",
+     "flags": {
+      "cannot": [
+       "provoke"
+      ]
+     },
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "bearer",
+       "nth": 1
+      },
+      "endsOn": [
+       {
+        "event": "moved",
+        "when": "event.id == self.id"
+       }
+      ]
+     }
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:德鲁伊:风暴降生:10": {
+   "name": "风暴降生",
+   "automation": "manual",
+   "text": "你的瀚海之怒特性在激活时获得两项额外增益：飞行速度等于你的速度；对寒冷、闪电和雷鸣伤害的抗性。这两项要挂在「瀚海之怒」激活期间的效应上，本条钩不进那条特性（它不在本条的键里），请在激活瀚海之怒时手动加上；飞行的移动力与三维高度引擎也不处理，需要人工处理。",
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:战地施法者": {
+   "name": "战地施法者",
+   "automation": "partial",
+   "text": "【专注】你为维持专注所做的体质豁免具有优势（自动）。【响应法术】当一个生物因离开你的触及范围而引发你的借机攻击时，你能使用你的反应来对这个生物施展一道法术，而非发动一次借机攻击：引擎在地图上问借机攻击前会弹出这条，接受就花掉反应、引擎不再问你要不要借机攻击（不接受就照常问）；法术本身引擎无法替你施展，请手动，并自己确认它施法时间为动作、且只以这个生物为唯一目标。【姿势成分】手上有武器 / 盾牌也能满足姿势成分，纯叙事。注意：引擎只为「有近战攻击、能借机攻击」的人打开离开触及范围的时机，你没有近战攻击时它不会问你，这时请手动按反应处理。",
+   "triggers": [
+    {
+     "id": "reactiveSpell",
+     "label": "战地施法者：响应法术",
+     "on": "leftReach",
+     "role": "target",
+     "optional": true,
+     "cost": [
+      {
+       "economy": "reaction"
+      }
+     ],
+     "when": "self.hasEffect('借机攻击时机') || ask('有人离开你的触及范围、引发了你的借机攻击吗？')",
+     "do": [
+      {
+       "kind": "note",
+       "text": "战地施法者·响应法术：对这个生物施展一道施法时间为动作、且只以它为唯一目标的法术（请手动施展；反应已经用掉，引擎不会再问你要不要借机攻击）。"
+      }
+     ]
+    }
+   ],
+   "rollMods": [
+    {
+     "on": {
+      "kind": "concentration"
+     },
+     "who": "bearer",
+     "op": "adv",
+     "label": "战地施法者：专注（体质豁免优势）"
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  }
+ }
+}
