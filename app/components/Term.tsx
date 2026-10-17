@@ -75,6 +75,12 @@ export function openTerm(ref: TermRef): void {
   popups.pin(ref, { left: x, top: y, bottom: y, right: x }, { x, y });
 }
 
+/** SVG 等非 <Term> 元素也能触发术语悬浮窗 */
+export function hoverTerm(ref: TermRef | null | undefined, el: Element): void {
+  if (ref && canLookup(ref.kind) && ref.name) popups.hoverSoon(ref, el);
+}
+export function leaveTerm(): void { popups.leaveSoon(); }
+
 /**
  * 一个术语。点击不做任何事（交给外面的按钮）；固定靠 Ctrl。`inButton` 只影响样式。
  * 查不到的类别不加效果，只渲染文字。

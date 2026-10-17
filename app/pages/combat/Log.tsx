@@ -50,10 +50,27 @@ export function Log({ s, name, onCollapse }: { s: Session; name: Namer; onCollap
       flush
       aside={<>
         <span className="tiny">{txs.length} 笔</span>
+        <button
+          className={'btn sm' + (ui.replay !== null ? ' on' : '')}
+          disabled={!txs.length && ui.replay === null}
+          onClick={() => combat.setReplay(ui.replay === null ? txs.length : null)}
+          title="回放历史记录：点任意一笔跳到那一刻，或一步一步前后翻看"
+        >{ui.replay !== null ? '退出回放' : '回放'}</button>
         {dm && <button className="btn sm" disabled={!txs.length} onClick={() => combat.undo()} title="撤销最后一笔（从起点重放其余的）">撤销</button>}
         {onCollapse && <button className="btn ghost sm" onClick={onCollapse} title="收起日志">收起</button>}
       </>}
     >
+      {ui.replay !== null && (
+        <div className="replay-bar">
+          <span className="small">
+            <b>回放</b>：{ui.replay === 0 ? '起点（第 1 笔前）' : `第 #${ui.replay} / ${txs.length} 笔`}
+          </span>
+          <span style={{ flex: 1 }} />
+          <button className="btn sm" disabled={ui.replay <= 0} onClick={() => combat.setReplay(0)} title="回到起点（第 1 笔之前）">⏮</button>
+          <button className="btn sm" disabled={ui.replay <= 0} onClick={() => combat.setReplay(ui.replay! - 1)} title="上一笔">◀</button>
+          <button className="btn sm" disabled={ui.replay >= txs.length} onClick={() => combat.setReplay(ui.replay! + 1)} title="下一笔">▶</button>
+        </div>
+      )}
       <div className="log">
         {!txs.length && !chat.length && <div className="empty">还没有发生任何事。</div>}
         {chatAt(txs.length).map((c) => <ChatLine key={c.id} c={c} mine={c.by === me} dm={dm} />)}
@@ -73,13 +90,21 @@ export function Log({ s, name, onCollapse }: { s: Session; name: Namer; onCollap
             .filter((e) => e.type === 'combatStarted' || !mentionsHidden(e.payload))
             .map((e) => describe(e, name, secret, darkSeq.has(e.seq) ? !dm && darkSeq.get(e.seq) : undefined)).filter((x): x is Line => !!x);
           const overridden = t.input.overrides.length > 0;
+          const isReplayAt = ui.replay === i + 1;
+          const isFuture = ui.replay !== null && i + 1 > ui.replay;
           return (
             <div key={i}>
-            <div className={'tx' + (i === txs.length - 1 ? ' latest' : '')}>
+            <div
+              className={'tx' + (ui.replay === null && i === txs.length - 1 ? ' latest' : '') + (isReplayAt ? ' replaying' : '') + (isFuture ? ' future' : '')}
+              onClick={ui.replay !== null ? () => combat.setReplay(i + 1) : undefined}
+              style={ui.replay !== null ? { cursor: 'pointer' } : undefined}
+              title={ui.replay !== null ? `跳到第 #${i + 1} 笔之后` : undefined}
+            >
               <div className="hd">
                 <span className="tiny faint num">#{i + 1}</span>
                 <span className="who">{txTitle(t.input.cmd as never, name)}</span>
                 {overridden && <span className="tag warn">已裁定</span>}
+                {isReplayAt && <span className="tag accent">当前位置</span>}
               </div>
               {lines.map((l) => (
                 <LineView

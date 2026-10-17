@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react';
 import type { Json } from '../../../src/sheet';
 import type { Session } from '../../../src/combat';
 import { Term } from '../../components/Term';
-import { termOfKey } from '../../lib/terms';
+import { termOfEffect } from '../../lib/terms';
 import { combat, type CombatUi } from '../../lib/combat';
 import { setResHidden, useHiddenRes } from '../../lib/hotres';
 import { Clip } from '../../components/ui';
@@ -102,11 +102,11 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
   const effTags = effects.length > 0 && (
     <div className="hot-effects">
       {effects.map((e) => {
-        const t = termOfKey(String(e.key ?? ''));
+        const t = termOfEffect(e);
         if (e.key === 'concentration') {
           return (
             <span key={e.id} className="tag accent">
-              专注·{e.name}
+              {t ? <Term {...t}>专注·{e.name}</Term> : `专注·${e.name}`}
               {combat.canControl(id) && <button className="tag-x" title="结束专注" onClick={() => combat.dispatch({ type: 'endConcentration', id })}>✕</button>}
             </span>
           );
@@ -114,14 +114,14 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
         if (e.form) {
           return (
             <span key={e.id} className="tag accent">
-              {e.name}·{e.form.name}
+              {t ? <Term {...t}>{e.name}·{e.form.name}</Term> : `${e.name}·${e.form.name}`}
               {combat.canControl(id) && <button className="tag-x" title="解除变形" onClick={() => combat.dispatch({ type: 'removeEffect', id: e.id })}>✕</button>}
             </span>
           );
         }
-        // 「睡眠术：失能」显示成失能（悬停看状态原文），来源小字
+        // 「睡眠术：失能」显示成失能（悬停看状态原文），来源小字（悬停看来源法术原文）
         const lb = effectLabel(e.name);
-        if (lb.cond) return <span key={e.id} className="tag"><Term kind="condition" name={lb.cond}>{lb.text}</Term>{lb.from && <small className="faint"> · {lb.from}</small>}</span>;
+        if (lb.cond) return <span key={e.id} className="tag"><Term kind="condition" name={lb.cond}>{lb.text}</Term>{lb.from && <small className="faint"> · {t ? <Term {...t}>{lb.from}</Term> : lb.from}</small>}</span>;
         return <span key={e.id} className="tag">{t ? <Term {...t}>{e.name}</Term> : e.name}</span>;
       })}
     </div>

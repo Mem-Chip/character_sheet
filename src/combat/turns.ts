@@ -212,11 +212,27 @@ export function rest(tx: Tx, kind: 'short' | 'long', ids: Id[] | undefined, caus
   for (const id of who) {
     const c = tx.state.combatants[id];
     if (!c || c.live.dead) continue;
-    if (kind === 'long') {
-      tx.emit('hpChanged', { id, hp: effectiveView(tx, id).hpMax, tempHp: 0 }, seq);
+    const v = effectiveView(tx, id);
+    if (kind === 'short') {
+      for (const [r, rule] of Object.entries(v.shortRest?.resources ?? c.base.shortRest?.resources ?? {})) {
+        const cur = c.live.resourcesUsed[r] ?? 0;
+        if (!cur) continue;
+        const next = rule === 'all' ? 0 : Math.max(0, cur - rule);
+        if (next !== cur) tx.emit('resourceUsed', { id, resource: r, used: next }, seq);
+      }
+      const pact = v.shortRest?.pact ?? c.base.shortRest?.pact;
+      if (pact) {
+        const cur = c.live.slotsUsed[pact.level] ?? 0;
+        if (cur > 0) tx.emit('slotUsed', { id, level: pact.level, used: Math.max(0, cur - pact.count) }, seq);
+      }
+    } else if (kind === 'long') {
+      tx.emit('hpChanged', { id, hp: v.hpMax, tempHp: 0 }, seq);
       tx.emit('deathSavesChanged', { id, s: 0, f: 0 }, seq);
       for (const lvl of Object.keys(c.live.slotsUsed)) tx.emit('slotUsed', { id, level: Number(lvl), used: 0 }, seq);
       for (const r of Object.keys(c.live.resourcesUsed)) tx.emit('resourceUsed', { id, resource: r, used: 0 }, seq);
+      for (const f of Object.keys(c.live.hitDiceUsed ?? {})) {
+        if (c.live.hitDiceUsed?.[Number(f)]) tx.emit('hitDieUsed', { id, faces: Number(f), used: 0 }, seq);
+      }
       const ex = effectsOf(tx, id).find((e) => e.name === '力竭');
       if (ex) {
         const level = Number(ex.state.level ?? 1) - 1;

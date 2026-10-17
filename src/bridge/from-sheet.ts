@@ -80,6 +80,8 @@ export interface ResourceMap {
   max: Record<string, number>;
   used: Record<string, number>;
   name: Record<string, string>;
+  /** 短休恢复：'all' = 全恢复，数字 = 恢复几 */
+  shortRest: Record<string, number | 'all'>;
 }
 
 /**
@@ -87,7 +89,7 @@ export interface ResourceMap {
  * 职业表的池和能力声明的池在人物卡那边已经合并过了，这里把合并后的池挂回能力的 id 上。
  */
 export function resourceMap(char: CharData, sheet: Json): ResourceMap {
-  const out: ResourceMap = { toSheetKey: {}, max: {}, used: {}, name: {} };
+  const out: ResourceMap = { toSheetKey: {}, max: {}, used: {}, name: {}, shortRest: {} };
   const declared = (char._derived?.resources || []) as Json[];
   for (const r of sheet._resources || []) {
     if (r.max == null || COUNT_ONLY.has(r.name)) continue;
@@ -97,6 +99,13 @@ export function resourceMap(char: CharData, sheet: Json): ResourceMap {
     out.max[id] = r.max;
     out.used[id] = r.used || 0;
     out.name[id] = String(r.name ?? id);
+    if (r.recovery === 'short') {
+      out.shortRest[id] = 'all';
+    } else if (Array.isArray(r.regain)) {
+      let back = 0;
+      for (const g of r.regain) if (g?.on === 'short') back = Math.max(back, Number(g.amount) || 0);
+      if (back > 0) out.shortRest[id] = back;
+    }
   }
   return out;
 }
@@ -231,6 +240,16 @@ export function viewFromSheet(env: SheetEnv, char: CharData, sheet: Json): Comba
   // 消耗品（药水之类）：数量记成资源「物品:名字」，用掉一次 = 资源用掉一次；各自一个动作
   const items = itemsForCombat(char);
   const ctype = char._resolved?.race?.creatureTypes?.[0];
+  const hitDice: Record<number, number> = {};
+  for (const h of sheet.hitDice || []) {
+    if (h?.faces && h?.level) hitDice[h.faces] = (hitDice[h.faces] ?? 0) + h.level;
+  }
+  const shortRest = (Object.keys(res.shortRest).length || sc.pact)
+    ? {
+        ...(Object.keys(res.shortRest).length ? { resources: res.shortRest } : {}),
+        ...(sc.pact ? { pact: { level: Number(sc.pact.level), count: Number(sc.pact.count) } } : {}),
+      }
+    : undefined;
   return {
     name: char.name || '未命名',
     size: SIZE_CN[sheet.size] || sheet.size || '中型',
@@ -260,6 +279,8 @@ export function viewFromSheet(env: SheetEnv, char: CharData, sheet: Json): Comba
     slots,
     classTable: classTableRow(char),
     wearing,
+    ...(Object.keys(hitDice).length ? { hitDice } : {}),
+    ...(shortRest ? { shortRest } : {}),
   };
 }
 
@@ -278,12 +299,20 @@ export function combatantFromSheet(env: SheetEnv, char: CharData, sheet: Json, o
     const used = (st as Json)?.used ?? 0;
     if (used) slotsUsed[Number(lvl)] = used;
   }
+  const hitDiceUsed: Record<number, number> = {};
+  for (const [faces, n] of Object.entries(char.hitDiceSpent || {})) {
+    const f = Number(faces);
+    const max = view.hitDice?.[f] ?? 0;
+    const u = Math.min(max, Number(n) || 0);
+    if (u > 0) hitDiceUsed[f] = u;
+  }
   const live: LiveState = {
     hp: char.hp?.current ?? view.hpMax,
     tempHp: char.hp?.temp ?? 0,
     deathSaves: { s: char.deathSaves?.success ?? 0, f: char.deathSaves?.failure ?? 0 },
     resourcesUsed: { ...res.used, ...Object.fromEntries(Object.entries(itemsForCombat(char).used).filter(([, n]) => n > 0)) },
     slotsUsed,
+    hitDiceUsed,
     heroicInspiration: false,
     stable: false,
     dead: false,
@@ -302,7 +331,7 @@ export function combatantFromSheet(env: SheetEnv, char: CharData, sheet: Json, o
 }
 
 /**
- * 战斗结果写回人物卡（LiveSink）：HP、临时生命值、法术位、资源、死亡豁免。
+ * 战斗结果写回人物卡（LiveSink）：HP、临时生命值、法术位、资源、生命骰、死亡豁免。
  * 只写记账字段；build 半边（属性、职业、装备…）一概不碰。
  */
 export function syncLiveToChar(char: CharData, sheet: Json, c: Combatant): void {
@@ -334,6 +363,14 @@ export function syncLiveToChar(char: CharData, sheet: Json, c: Combatant): void 
   const slots: Record<string, { used: number }> = {};
   for (const [lvl, used] of Object.entries(c.live.slotsUsed)) if (used) slots[lvl] = { used };
   char.slots = slots;
+  if (view.hitDice && Object.keys(view.hitDice).length) {
+    const spent: Record<string, number> = {};
+    for (const [faces, max] of Object.entries(view.hitDice)) {
+      const u = Math.min(max, c.live.hitDiceUsed?.[Number(faces)] ?? 0);
+      if (u > 0) spent[faces] = u;
+    }
+    char.hitDiceSpent = spent;
+  }
   const res = resourceMap(char, sheet);
   char.resources = char.resources || {};
   for (const [id, used] of Object.entries(c.live.resourcesUsed)) {

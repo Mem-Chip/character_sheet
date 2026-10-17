@@ -111,12 +111,13 @@ export function provokers(tx: Tx, mover: Id, from: Cell, to: Cell): Id[] {
   return out;
 }
 
-/** 能不能用反应来借机攻击（有反应、没失能、有近战武器） */
+/** 能不能用反应来借机攻击（有反应、没失能、没被禁止借机攻击、有近战武器） */
 function canReact(tx: Tx, id: Id): boolean {
   const c = tx.state.combatants[id];
   if (!c || c.live.dead || c.live.hp <= 0) return false;
   if (tx.state.round !== null && c.economy.reaction <= 0) return false;
-  return !blockedEconomy(tx, id).has('reaction');
+  if (blockedEconomy(tx, id).has('reaction')) return false;
+  return !activeTemplates(tx, id).some((a) => a.tpl.flags?.cannot?.includes('opportunityAttack'));
 }
 
 /** 撤离了（或者有别的「移动不引发借机攻击」） */

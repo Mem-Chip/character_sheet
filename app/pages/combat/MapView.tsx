@@ -19,6 +19,8 @@ import { cellHit, coveredCells, directional, snapHalf, snapLen, spellTpl, tplLab
 import { PING_LIFE } from '../../lib/combat';
 import { tokenMenu } from './TokenMenu';
 import { effectLabel } from './shared';
+import { hoverTerm, leaveTerm } from '../../components/Term';
+import { termOfEffect } from '../../lib/terms';
 import { NumInput } from '../../components/ui';
 import { combat, type CombatUi, type MapState, type Remote } from '../../lib/combat';
 import type { Namer } from './shared';
@@ -411,9 +413,19 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
     if (drag?.kind === 'shapeRot' && drag.id === x.id && 'dir' in x.tpl) return { ...x.tpl, dir: drag.dir };
     return x.tpl;
   };
-  /** 每个人身上的状态名（棋子角标用；专注不算） */
+  /** 每个人身上的状态（棋子角标与悬浮窗用） */
   const effOf: Record<string, string[]> = {};
-  for (const e of Object.values(st.effects)) if (e.key !== 'concentration') (effOf[e.bearer] ??= []).push(effectLabel(e.name).text);
+  const rawEffOf: Record<string, Array<(typeof st.effects)[string]>> = {};
+  const concOf: Record<string, (typeof st.effects)[string]> = {};
+  const proneOf: Record<string, boolean> = {};
+  for (const e of Object.values(st.effects)) {
+    if (e.suppressed) continue;
+    if (e.key === 'concentration') { concOf[e.bearer] = e; continue; }
+    const lb = effectLabel(e.name);
+    if (lb.cond === '倒地' || e.key === 'XPHB:condition:倒地' || e.origin?.ref === 'XPHB:condition:倒地') proneOf[e.bearer] = true;
+    (effOf[e.bearer] ??= []).push(lb.text);
+    (rawEffOf[e.bearer] ??= []).push(e);
+  }
   // 当前回合的人这一回合走过的路（服务器记的；换人 / 换轮作废）
   const trail = (() => {
     const tr = map.trail;
@@ -582,8 +594,21 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
               const at = moving?.id === id ? moving.at : t;
               const n = footprint(s.view(id).size);
               const r = (n * g) / 2;
+              const conc = concOf[id];
+              const down = !c.live.dead && c.live.hp <= 0;
+              const prone = !c.live.dead && (proneOf[id] || down);
+              const effs = rawEffOf[id] ?? [];
+              const firstTerm = effs.map((e) => {
+                const lb = effectLabel(e.name);
+                return lb.cond ? { kind: 'condition', name: lb.cond } : termOfEffect(e);
+              }).find(Boolean);
+              const tipParts = [
+                conc ? `专注·${conc.name}` : '',
+                down && !proneOf[id] ? (c.live.stable ? '倒地（稳定）' : '倒地（濒死）') : '',
+                ...(effOf[id] ?? []),
+              ].filter(Boolean);
               const cls = ['token', c.side === 'party' ? 'party' : c.side === 'enemy' ? 'enemy' : 'other', id === ui.selected && 'sel', id === current && 'turn',
-                ui.targets.includes(id) && 'tgt', c.live.dead && 'dead', remote.hidden.includes(id) && 'hid', combat.canControl(id) && 'mine'].filter(Boolean).join(' ');
+                ui.targets.includes(id) && 'tgt', c.live.dead && 'dead', prone && 'prone', conc && 'conc', remote.hidden.includes(id) && 'hid', combat.canControl(id) && 'mine'].filter(Boolean).join(' ');
               return (
                 <g
                   key={id} data-token={id} className={cls}
@@ -591,13 +616,43 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
                   onPointerDown={(e) => tokenDown(e, id)}
                   onContextMenu={(e) => tokenMenu(e, id, ui)}
                 >
-                  <title>{c.name}{effOf[id]?.length ? `：${effOf[id].join('、')}` : ''}</title>
+                  <title>{c.name}{tipParts.length ? `：${tipParts.join('、')}` : ''}</title>
                   {id === ui.selected && <circle className="ring-sel" r={r * 0.86 + 5} />}
                   {ui.targets.includes(id) && <circle className="ring-tgt" r={r * 0.86 + (id === ui.selected ? 10 : 5)} />}
+                  {conc && <circle className="ring-conc" r={r * 0.86 + 2.5} />}
                   <circle className="body" r={r * 0.86} />
                   <text dy="0.35em" fontSize={Math.max(10, r * 0.62)}>{c.name.slice(0, n > 1 ? 4 : 2)}</text>
+                  {prone && (
+                    <g
+                      className="prone-badge"
+                      transform={`translate(${-r * 0.62} ${-r * 0.62})`}
+                      onMouseEnter={(ev) => hoverTerm({ kind: 'condition', name: down && !proneOf[id] ? '昏迷' : '倒地' }, ev.currentTarget)}
+                      onMouseLeave={leaveTerm}
+                    >
+                      <title>{down ? (c.live.stable ? '倒地（稳定）' : '倒地（濒死）') : '倒地'}</title>
+                      <circle r={Math.max(7, r * 0.28)} />
+                      <text dy="0.35em" fontSize={Math.max(9, r * 0.28)}>倒</text>
+                    </g>
+                  )}
+                  {conc && (
+                    <g
+                      className="conc-badge"
+                      transform={`translate(${-r * 0.62} ${r * 0.62})`}
+                      onMouseEnter={(ev) => hoverTerm(termOfEffect(conc), ev.currentTarget)}
+                      onMouseLeave={leaveTerm}
+                    >
+                      <title>专注：{conc.name}</title>
+                      <circle r={Math.max(7, r * 0.28)} />
+                      <text dy="0.35em" fontSize={Math.max(9, r * 0.28)}>专</text>
+                    </g>
+                  )}
                   {effOf[id]?.length > 0 && (
-                    <g className="eff-badge" transform={`translate(${r * 0.62} ${r * 0.62})`}>
+                    <g
+                      className="eff-badge"
+                      transform={`translate(${r * 0.62} ${r * 0.62})`}
+                      onMouseEnter={(ev) => hoverTerm(firstTerm, ev.currentTarget)}
+                      onMouseLeave={leaveTerm}
+                    >
                       <title>{effOf[id].join('、')}</title>
                       <circle r={Math.max(7, r * 0.28)} />
                       <text dy="0.35em" fontSize={Math.max(9, r * 0.3)}>{effOf[id].length}</text>

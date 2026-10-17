@@ -2,9 +2,11 @@
 import { tokenMenu } from './TokenMenu';
 import type { Session } from '../../../src/combat';
 import { Panel, Tag } from '../../components/ui';
+import { Term } from '../../components/Term';
+import { termOfEffect } from '../../lib/terms';
 import { combat, type CombatUi } from '../../lib/combat';
 import { woundOf } from './Initiative';
-import { rosterOrder } from './shared';
+import { effectLabel, rosterOrder } from './shared';
 
 export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: CombatUi; onAddPc: () => void; onAddMonster: () => void }) {
   const st = s.state;
@@ -57,11 +59,20 @@ export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: Comba
               {hiddenNow && <Tag tone="warn">玩家看不到</Tag>}
               {c.live.dead && <Tag tone="danger">死亡</Tag>}
               {down && <Tag tone="danger">{c.live.stable ? '稳定' : `濒死 ${c.live.deathSaves.s}✓ ${c.live.deathSaves.f}✗`}</Tag>}
-              {effects.map((e) => (
-                <Tag key={e.id} tone={e.key === 'concentration' || e.form ? 'accent' : undefined} title={e.suppressed ? '被同名效应压制' : undefined}>
-                  <span style={e.suppressed ? { opacity: 0.5 } : undefined}>{e.key === 'concentration' ? `专注·${e.name}` : e.form ? `${e.name}·${e.form.name}` : e.name}</span>
-                </Tag>
-              ))}
+              {effects.map((e) => {
+                const t = termOfEffect(e);
+                const lb = effectLabel(e.name);
+                const txt = e.key === 'concentration' ? `专注·${e.name}` : e.form ? `${e.name}·${e.form.name}` : e.name;
+                return (
+                  <Tag key={e.id} tone={e.key === 'concentration' || e.form ? 'accent' : undefined} title={e.suppressed ? '被同名效应压制' : undefined}>
+                    <span style={e.suppressed ? { opacity: 0.5 } : undefined}>
+                      {lb.cond
+                        ? <><Term kind="condition" name={lb.cond}>{lb.text}</Term>{lb.from && <small className="faint"> · {t ? <Term {...t}>{lb.from}</Term> : lb.from}</small>}</>
+                        : t ? <Term {...t}>{txt}</Term> : txt}
+                    </span>
+                  </Tag>
+                );
+              })}
               <span style={{ flex: 1 }} />
               {dmRemote && (
                 <button className="btn ghost sm" onClick={(ev) => { ev.stopPropagation(); combat.setHidden(id, !hiddenNow); }} title={hiddenNow ? '让玩家看到它' : '对玩家藏起来（列表、地图、日志里都不显示）'}>

@@ -57,6 +57,8 @@ export function makeView(init: ViewInit): CombatantView {
     wearing: init.wearing ?? [],
     ...(init.entries ? { entries: init.entries } : {}),
     ...(init.notes?.length ? { notes: init.notes } : {}),
+    ...(init.hitDice ? { hitDice: init.hitDice } : {}),
+    ...(init.shortRest ? { shortRest: init.shortRest } : {}),
   };
 }
 
@@ -71,6 +73,7 @@ export function freshLive(view: CombatantView): LiveState {
     deathSaves: { s: 0, f: 0 },
     resourcesUsed: {},
     slotsUsed: {},
+    hitDiceUsed: {},
     heroicInspiration: false,
     stable: false,
     dead: false,

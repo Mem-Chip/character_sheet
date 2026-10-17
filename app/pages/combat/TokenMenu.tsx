@@ -6,7 +6,7 @@ import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } fr
 import type { Session } from '../../../src/combat';
 import { combat, type CombatUi } from '../../lib/combat';
 import type { Engine } from '../../lib/engine';
-import { termOfKey } from '../../lib/terms';
+import { termOfEffect, termOfKey } from '../../lib/terms';
 import { Term } from '../../components/Term';
 import { effectLabel, type Namer } from './shared';
 
@@ -63,17 +63,39 @@ export function TokenMenu({ s, ui, engine, name }: { s: Session; ui: CombatUi; e
 
   return (
     <div ref={el} className="panel menu-pop ctx-menu" style={{ left: pos?.x ?? m.x, top: pos?.y ?? m.y, visibility: pos ? 'visible' : 'hidden' }} onContextMenu={(e) => e.preventDefault()}>
-      <div className="menu-head"><b className="serif">{name(m.id)}</b></div>
+      <div className="menu-head">
+        <b className="serif">{name(m.id)}</b>
+        {effects.length > 0 && (
+          <div className="ctx-effs">
+            {effects.map((e) => {
+              const t = termOfEffect(e);
+              const lb = effectLabel(e.name);
+              const txt = e.key === 'concentration' ? `专注·${e.name}` : e.form ? `${e.name}·${e.form.name}` : e.name;
+              return (
+                <span key={e.id} className={'tag' + (e.key === 'concentration' || e.form ? ' accent' : '')}>
+                  {lb.cond
+                    ? <><Term kind="condition" name={lb.cond}>{lb.text}</Term>{lb.from && <small className="faint"> · {t ? <Term {...t}>{lb.from}</Term> : lb.from}</small>}</>
+                    : t ? <Term {...t}>{txt}</Term> : txt}
+                </span>
+              );
+            })}
+          </div>
+        )}
+      </div>
       <button onClick={act(() => combat.select(m.id))}>选中</button>
       <button onClick={act(() => combat.toggleTarget(m.id))}>{ui.targets.includes(m.id) ? '取消目标' : '设为目标'}</button>
       {dm && <button onClick={() => setConds(!conds)}>状态{effects.length ? `（${effects.length}）` : ''} {conds ? '▴' : '▾'}</button>}
       {dm && conds && (
         <div className="ctx-conds">
-          {effects.filter((e) => !isCond(e)).map((e) => (
-            <button key={e.id} className="on" title="移除" onClick={() => combat.dispatch(e.key === 'concentration' ? { type: 'endConcentration', id: m.id } : { type: 'removeEffect', id: e.id })}>
-              {e.key === 'concentration' ? `专注·${e.name}` : e.name} ✕
-            </button>
-          ))}
+          {effects.filter((e) => !isCond(e)).map((e) => {
+            const t = termOfEffect(e);
+            const txt = e.key === 'concentration' ? `专注·${e.name}` : e.name;
+            return (
+              <button key={e.id} className="on" title="移除" onClick={() => combat.dispatch(e.key === 'concentration' ? { type: 'endConcentration', id: m.id } : { type: 'removeEffect', id: e.id })}>
+                {t ? <Term {...t} inButton>{txt}</Term> : txt} ✕
+              </button>
+            );
+          })}
           {conditions.map((k) => {
             const e = has(k);
             const t = termOfKey(k);

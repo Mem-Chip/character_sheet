@@ -6,7 +6,7 @@
  *   参与者列表和完整的角色详情是从左边拉出来的抽屉；要做的决定是贴在行动栏上面的卡片，不挡地图。
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { combat, initCombat, useCombat } from '../lib/combat';
+import { combat, initCombat, replayedView, useCombat } from '../lib/combat';
 import type { Engine } from '../lib/engine';
 import { Actor } from './combat/Actor';
 import { AddMonsterDialog, AddPcDialog, DecisionDialog, SettingsDialog, SummonDialog, WildShapeDialog } from './combat/Dialogs';
@@ -46,6 +46,7 @@ export function CombatPage({ engine }: { engine: Engine }) {
     const esc = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (uiRef.current.aim) { combat.aimCancel(); return; }
+      if (uiRef.current.replay !== null) { combat.setReplay(null); return; }
       combat.select(null);
       if (uiRef.current.targets.length) combat.clearTargets();
       // 能收起的面板都收起（行动栏除外）
@@ -60,7 +61,7 @@ export function CombatPage({ engine }: { engine: Engine }) {
   const turnKey = ui.session && ui.session.state.round !== null ? `${ui.session.state.round}:${ui.session.state.turnIndex}` : '';
   useEffect(() => {
     const st = ui.session?.state;
-    if (!st || st.round === null) return;
+    if (!st || st.round === null || ui.replay !== null) return;
     const cur = st.order[st.turnIndex];
     if (cur && combat.canControl(cur) && !combat.isHidden(cur)) combat.select(cur);
   }, [turnKey]);
@@ -69,7 +70,7 @@ export function CombatPage({ engine }: { engine: Engine }) {
     const ss = ui.session;
     const r = ui.remote;
     // 战役遭遇：服务器的状态到了再扫（不然先记下的是空的历史，状态一到就把旧骰子全播一遍）
-    if (!ss || (r && !r.connected)) return;
+    if (!ss || (r && !r.connected) || ui.replay !== null) return;
     const enc = r ? r.id : 'local';
     const phys = r ? r.dicePhys : diceLocalPhys();
     const colors: Record<string, string> = r ? r.diceColors : { 0: diceLocalColor() ?? '', dm: diceLocalColor() ?? '' };
@@ -108,46 +109,50 @@ export function CombatPage({ engine }: { engine: Engine }) {
     scanChat(enc, r ? r.chat : ui.chat, r ? r.me : 0, phys, colors);
   });
 
-  const s = ui.session;
-  if (!s) return <div className="page empty">正在准备遭遇…</div>;
+  const fullS = ui.session;
+  if (!fullS) return <div className="page empty">正在准备遭遇…</div>;
+  const { s: viewS, remote: viewRemote } = replayedView(ui);
+  const s = viewS!;
   const st = s.state;
-  const name = namer(s);
+  const name = namer(fullS);
   const inCombat = st.round !== null;
   const current = inCombat ? st.order[st.turnIndex] : null;
   const count = Object.keys(st.combatants).length;
-  const remote = ui.remote;
+  const remote = viewRemote;
   const dm = !remote || remote.role === 'dm';
   const myTurn = !!current && combat.canControl(current);
-  const pendingKey = s.pending ? `${s.transactions.length}:${s.pending.decision.id}:${Object.keys(s.pending.input.answers).length}:${s.pending.input.tape.length}` : '';
+  const pendingKey = fullS.pending ? `${fullS.transactions.length}:${fullS.pending.decision.id}:${Object.keys(fullS.pending.input.answers).length}:${fullS.pending.input.tape.length}` : '';
   const curName = combat.isHidden(current) ? '？？？' : name(current);
   const battle = !!remote && showMap;
 
   const confirmReset = () => {
     if (confirm('清空这场遭遇，开一场新的？日志和撤销记录都会丢掉（人物卡不受影响：生命值、法术位这些已经自动写回卡上了）。')) combat.reset(engine);
   };
-  const turnButton = !inCombat
-    ? (dm ? <button className="btn primary" disabled={!count} onClick={() => combat.dispatch({ type: 'startCombat' })} title="所有人掷先攻">开始战斗</button> : null)
-    : dm
-      ? <button className="btn primary" onClick={() => combat.dispatch({ type: 'nextTurn' })}>下一回合</button>
-      : <button className="btn primary" disabled={!myTurn} onClick={() => combat.dispatch({ type: 'nextTurn' })} title={myTurn ? '' : '还没轮到你'}>结束我的回合</button>;
+  const turnButton = ui.replay !== null
+    ? <button className="btn primary" onClick={() => combat.setReplay(null)}>退出回放</button>
+    : !inCombat
+      ? (dm ? <button className="btn primary" disabled={!count} onClick={() => combat.dispatch({ type: 'startCombat' })} title="所有人掷先攻">开始战斗</button> : null)
+      : dm
+        ? <button className="btn primary" onClick={() => combat.dispatch({ type: 'nextTurn' })}>下一回合</button>
+        : <button className="btn primary" disabled={!myTurn} onClick={() => combat.dispatch({ type: 'nextTurn' })} title={myTurn ? '' : '还没轮到你'}>结束我的回合</button>;
 
-  const prompts = <>
-    {s.pending && !combat.isMyDecision() && proxy !== pendingKey && (
+  const prompts = ui.replay === null && <>
+    {fullS.pending && !combat.isMyDecision() && proxy !== pendingKey && (
       <div className={battle ? 'prompt-wait panel' : 'toast'} role="status">
-        等{name(s.pending.decision.to)}{s.pending.decision.kind === 'physicalDice' ? '掷骰' : '决定'}：{s.pending.decision.prompt}
-        {s.pending.decision.options.length > 0 && <span className="faint">（可选：{s.pending.decision.options.map((o) => o.label).join('、')}）</span>}
+        等{name(fullS.pending.decision.to)}{fullS.pending.decision.kind === 'physicalDice' ? '掷骰' : '决定'}：{fullS.pending.decision.prompt}
+        {fullS.pending.decision.options.length > 0 && <span className="faint">（可选：{fullS.pending.decision.options.map((o) => o.label).join('、')}）</span>}
         {dm && <button className="btn sm" style={{ marginLeft: 8 }} onClick={() => setProxy(pendingKey)}>DM 代答</button>}
       </div>
     )}
-    {s.pending && combat.isMyDecision() && <DecisionDialog key={pendingKey} s={s} name={name} docked={battle} />}
-    {s.pending && !combat.isMyDecision() && dm && proxy === pendingKey && <DecisionDialog key={pendingKey} s={s} name={name} docked={battle} onClose={() => setProxy(null)} />}
+    {fullS.pending && combat.isMyDecision() && <DecisionDialog key={pendingKey} s={fullS} name={name} docked={battle} />}
+    {fullS.pending && !combat.isMyDecision() && dm && proxy === pendingKey && <DecisionDialog key={pendingKey} s={fullS} name={name} docked={battle} onClose={() => setProxy(null)} />}
   </>;
 
   const dialogs = <>
     {dlg === 'pc' && <AddPcDialog engine={engine} ui={ui} onClose={() => setDlg(null)} />}
     {dlg === 'monster' && <AddMonsterDialog canHide={!!remote && dm} loadMonsters={() => loadMonsters(engine, remote?.campaignId)} onClose={() => setDlg(null)} />}
     {dlg === 'online' && <OnlineDialog engine={engine} onClose={() => setDlg(null)} />}
-    {dlg === 'settings' && <SettingsDialog s={s} ui={ui} onClose={() => setDlg(null)} />}
+    {dlg === 'settings' && <SettingsDialog s={fullS} ui={ui} onClose={() => setDlg(null)} />}
     {ui.formPick && <WildShapeDialog s={s} pick={ui.formPick} loadMonsters={() => loadMonsters(engine, remote?.campaignId)} onClose={() => combat.cancelFormPick()} />}
     {ui.summonFor && s.state.combatants[ui.summonFor] && <SummonDialog s={s} summonerId={ui.summonFor} loadMonsters={() => loadMonsters(engine, remote?.campaignId)} onClose={() => combat.openSummon(null)} />}
     {ui.toast && <div className={'toast ' + ui.toast.tone} role="status">{ui.toast.text}</div>}
@@ -169,12 +174,15 @@ export function CombatPage({ engine }: { engine: Engine }) {
             <button onClick={() => setDrawer('roster')}>参与者列表</button>
             <button onClick={() => setDlg('settings')}>{dm ? '遭遇设置与骰子' : '我的骰子'}</button>
             <button onClick={() => setShowMap(false)}>切到列表布局</button>
+            {dm && !inCombat && count > 0 && <button onClick={() => combat.dispatch({ type: 'rest', kind: 'short' })}>全队短休</button>}
+            {dm && !inCombat && count > 0 && <button onClick={() => combat.dispatch({ type: 'rest', kind: 'long' })}>全队长休</button>}
             {dm && inCombat && <button onClick={() => { if (confirm('结束战斗？')) combat.dispatch({ type: 'endCombat' }); }}>结束战斗</button>}
             {dm && <button onClick={() => { if (confirm('把战役资料（本团家规、补的战斗数据）现在的样子用到这场遭遇？整场会按新规则重算一遍。')) combat.refreshRules(); }} title="开遭遇时抄了一份战役资料；之后改了资料，点这个才生效">更新本团规则</button>}
             {dm && <button className="danger" onClick={confirmReset}>清空遭遇</button>}
             <button onClick={() => combat.leave(engine)}>回到本地遭遇</button>
           </Menu>
           <Initiative s={s} ui={ui} name={name} />
+          {ui.replay !== null && <Tag tone="accent">回放 #{ui.replay}/{fullS.transactions.length}</Tag>}
           {!remote!.connected && <Tag tone="warn">重连中</Tag>}
           <button className={'btn sm' + (drawer === 'roster' ? ' on' : '')} onClick={() => setDrawer(drawer === 'roster' ? null : 'roster')}>参与者</button>
         </div>
@@ -196,8 +204,8 @@ export function CombatPage({ engine }: { engine: Engine }) {
         )}
 
         {logOpen
-          ? <div className="hud hud-log"><Log s={s} name={name} onCollapse={toggleLog} /></div>
-          : <button className="btn sm hud-log-open" onClick={toggleLog}>日志 · {s.transactions.length}</button>}
+          ? <div className="hud hud-log"><Log s={fullS} name={name} onCollapse={toggleLog} /></div>
+          : <button className="btn sm hud-log-open" onClick={toggleLog}>日志 · {fullS.transactions.length}</button>}
 
         <div className="hud hud-hot">
           <Hotbar s={s} ui={ui} engine={engine} name={name} onDetail={() => setDrawer(drawer === 'detail' ? null : 'detail')} turnButton={turnButton} collapsed={!hotShown} onToggle={toggleHot} />
@@ -220,11 +228,18 @@ export function CombatPage({ engine }: { engine: Engine }) {
             {!remote.connected && <Tag tone="warn">连接断开，正在重连…</Tag>}
           </>
           : <Tag>本地</Tag>}
+        {ui.replay !== null && <Tag tone="accent">回放 #{ui.replay}/{fullS.transactions.length}</Tag>}
         <span className="muted small">
           {inCombat ? <>第 <b className="num">{st.round}</b> 轮 · {curName} 的回合</> : count ? `${count} 名参与者，战斗未开始` : '空的遭遇'}
         </span>
         <span style={{ flex: 1 }} />
         {turnButton}
+        {!inCombat && dm && count > 0 && ui.replay === null && (
+          <>
+            <button className="btn" onClick={() => combat.dispatch({ type: 'rest', kind: 'short' })}>短休</button>
+            <button className="btn" onClick={() => combat.dispatch({ type: 'rest', kind: 'long' })}>长休</button>
+          </>
+        )}
         {inCombat && dm && <button className="btn" onClick={() => { if (confirm('结束战斗？')) combat.dispatch({ type: 'endCombat' }); }}>结束战斗</button>}
         {remote && <button className="btn" onClick={() => setShowMap(true)}>地图布局</button>}
         <button className="btn" onClick={() => setDlg('settings')}>{dm ? '设置' : '我的骰子'}</button>
@@ -236,7 +251,7 @@ export function CombatPage({ engine }: { engine: Engine }) {
       <div className="combat-grid">
         <Roster s={s} ui={ui} onAddPc={() => setDlg('pc')} onAddMonster={() => setDlg('monster')} />
         <Actor s={s} ui={ui} engine={engine} name={name} />
-        <Log s={s} name={name} />
+        <Log s={fullS} name={name} />
       </div>
       {prompts}
       {dialogs}

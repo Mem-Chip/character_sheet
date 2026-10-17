@@ -411,6 +411,10 @@ export interface CombatantView {
   entries?: Record<string, Entry>;
   /** 引擎不处理、要人看着办的能力原文（怪物的特性、施法、附带效果）：只给界面显示 */
   notes?: Array<{ group: string; name: string; text: string }>;
+  /** 生命骰池：骰面（6/8/10/12）→ 最大颗数 */
+  hitDice?: Record<number, number>;
+  /** 短休恢复规则：哪些资源恢复多少（'all' = 全恢复，数字 = 恢复几）、契约法术位环阶与数量 */
+  shortRest?: { resources?: Record<string, number | 'all'>; pact?: { level: number; count: number } };
 }
 
 export interface LiveState {
@@ -419,6 +423,8 @@ export interface LiveState {
   deathSaves: { s: number; f: number };
   resourcesUsed: Record<string, number>;
   slotsUsed: Record<number, number>;
+  /** 已用生命骰：骰面 → 已用颗数 */
+  hitDiceUsed?: Record<number, number>;
   heroicInspiration: boolean;
   stable: boolean;
   dead: boolean;
@@ -544,8 +550,10 @@ export type Command =
       type: 'manualCast'; actor: Id; spell: string; slotLevel?: number;
       activation?: 'action' | 'bonus' | 'reaction' | 'none'; concentration?: boolean; targets?: Id[]; force?: boolean;
     }
-  /** 手动改次数：资源或某一环法术位「已用」多少 */
-  | { type: 'setUsage'; id: Id; resource?: string; slot?: number; used: number }
+  /** 手动改次数：资源、某一环法术位或某一种生命骰「已用」多少 */
+  | { type: 'setUsage'; id: Id; resource?: string; slot?: number; hitDie?: number; used: number }
+  /** 花生命骰回血（1d<faces> + 体质调整值，至少 1 点） */
+  | { type: 'spendHitDie'; id: Id; faces: number; count?: number }
   /** 手动改动作经济（DM 裁定、规则没覆盖到的额外动作）：给的那几项改成这个数 */
   | { type: 'setEconomy'; id: Id; patch: { action?: number; bonus?: number; reaction?: number; move?: number } }
   | { type: 'endConcentration'; id: Id }
