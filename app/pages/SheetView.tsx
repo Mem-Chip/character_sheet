@@ -235,8 +235,11 @@ function Spells({ engine, id, char, sheet }: Props) {
   const prepared = (char.spells || []).filter((s: Json) => s.prepared !== false && (ent(s.name)?.level ?? 1) > 0).length;
 
   // 当前法术书收录的法术（按环阶、名字排序）
-  const bookSpellsOrder = [...curBook.spells]
-    .map((name) => ({ name, e: ent(name), lv: ent(name)?.level ?? 1 }))
+  // 子职免费给的（法师学派子职那两道）：算在法术书里，可以准备，但不能「擦除」
+  const freeAdds = new Map(((sc.spellbookAdds || []) as Json[]).map((g) => [String(g.name), String(g.from ?? '子职')]));
+  const bookNames = [...new Set([...curBook.spells, ...freeAdds.keys()])];
+  const bookSpellsOrder = bookNames
+    .map((name) => ({ name, e: ent(name), lv: ent(name)?.level ?? 1, free: freeAdds.has(name), from: freeAdds.get(name) }))
     .sort((a, b) => a.lv - b.lv || String(a.name).localeCompare(String(b.name), 'zh'));
 
   // 创建新法术书
@@ -357,15 +360,7 @@ function Spells({ engine, id, char, sheet }: Props) {
       {isWizard && (
         <div style={{ marginTop: 12, padding: '10px 10px 8px', background: 'var(--panel-2)', borderRadius: 'var(--r)', border: '1px solid var(--line)' }}>
           {/* 名额与抄写追踪：升级免费名额 = 6 + 2×(等级-1)；抄写不限名额，但要花时间和钱 */}
-          {sc.spellbookMax ? (
-            <div className="small muted" style={{ marginBottom: 6 }}>
-              法术书 {curBook.spells.length} / {sc.spellbookMax} 道（升级时免费学的名额）
-              {sc.spellbookMax - curBook.spells.length > 0
-                ? <span style={{ color: 'var(--warn, #c60)' }}> · 还有 {sc.spellbookMax - curBook.spells.length} 道没填</span>
-                : <span> · 免费名额已满，再往书里加法术就是抄写</span>}
-              {' · '}抄写：每环 2 小时 + 50 gp（不限名额）
-            </div>
-          ) : null}
+        
           {/* 法术书切换与管理条 */}
           <div className="row spread" style={{ alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
             <div className="row" style={{ alignItems: 'center', gap: 6 }}>
@@ -485,17 +480,6 @@ function Spells({ engine, id, char, sheet }: Props) {
           )}
 
           {/* 法术书中记载的法术表格 */}
-          {/* 子职免费给的（法师学派子职选的那两道）：直接算在法术书里，不进「已准备」 */}
-          {((sc.spellbookAdds || []) as Json[]).length > 0 && (
-            <div className="small" style={{ marginBottom: 6 }}>
-              <span className="muted">子职免费给的（已在法术书里）：</span>
-              {((sc.spellbookAdds || []) as Json[]).map((g: Json) => (
-                <span key={String(g.name)} className="tag" style={{ marginRight: 4 }} title={`来自 ${String(g.from ?? '子职')}`}>
-                  <Term kind="spell" name={String(g.name)}>{String(g.name)}</Term>
-                </span>
-              ))}
-            </div>
-          )}
           {bookSpellsOrder.length === 0 ? (
             <div className="empty" style={{ padding: '12px 0' }}>
               此法术书尚未抄录任何法术。展开下方「抄录新法术入书」开始添加。
@@ -503,7 +487,7 @@ function Spells({ engine, id, char, sheet }: Props) {
           ) : (
             <table className="rows">
               <tbody>
-                {bookSpellsOrder.map(({ name, e, lv }) => {
+                {bookSpellsOrder.map(({ name, e, lv, free, from }) => {
                   const isPrep = (char.spells || []).some((s: Json) => s.name === name && s.prepared !== false);
                   const isRitual = !!e?.meta?.ritual;
                   const isConc = JSON.stringify(e?.duration || '').includes('concentration');
@@ -513,6 +497,7 @@ function Spells({ engine, id, char, sheet }: Props) {
                         <Term kind="spell" name={name} />
                         {isConc && <span style={{ marginLeft: 4 }}><Tag>专注</Tag></span>}
                         {isRitual && <span style={{ marginLeft: 4 }}><Tag tone="accent">仪式可用</Tag></span>}
+                        {free && <span style={{ marginLeft: 4 }} title={`${from}：免费抄进法术书，不用擦除`}><Tag>子职免费</Tag></span>}
                       </td>
                       <td className="small muted">
                         {lv ? `${lv} 环` : '戏法'} · {e ? (SCHOOL_CN[e.school] ?? '') : ''}
@@ -525,14 +510,16 @@ function Spells({ engine, id, char, sheet }: Props) {
                         >
                           {isPrep ? '已准备' : '准备'}
                         </button>
-                        <button
-                          type="button"
-                          className="btn ghost sm"
-                          aria-label={`从法术书中擦除${name}`}
-                          onClick={() => actions.update(id, (c) => removeSpellFromBook(c, curBook.id, name))}
-                        >
-                          擦除
-                        </button>
+                        {!free && (
+                          <button
+                            type="button"
+                            className="btn ghost sm"
+                            aria-label={`从法术书中擦除${name}`}
+                            onClick={() => actions.update(id, (c) => removeSpellFromBook(c, curBook.id, name))}
+                          >
+                            擦除
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );
