@@ -79,16 +79,41 @@ function localFull(v: DiceLocal): DiceOptions {
 type Mod = typeof import('./dice3d');
 let mod: Promise<Mod> | null = null;
 let applied = '';
+/** 自动整页刷新过没有（每个标签页只自动刷一次，避免死循环） */
+const RELOAD_KEY = 'dnd2024-engine:dice3d:reloaded';
 function load(): Promise<Mod> {
   if (!mod) {
-    mod = import('./dice3d').then((m) => {
-      m.mountDice(document.body, { ...localFull(diceLocal()), theme: themeNow() });
-      // 跟着页面的深浅色走
-      new MutationObserver(() => m.configureDice({ theme: themeNow() })).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-      return m;
-    });
+    mod = import('./dice3d')
+      .then((m) => {
+        m.mountDice(document.body, { ...localFull(diceLocal()), theme: themeNow() });
+        // 跟着页面的深浅色走
+        new MutationObserver(() => m.configureDice({ theme: themeNow() })).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+        return m;
+      })
+      .catch((err: unknown) => {
+        // ⚠️ 别把失败的 promise 缓存住：以前这里一失败就永久静默（掷骰什么都不播，也没有任何提示）
+        mod = null;
+        console.warn('[3D 骰子] 加载失败：', err);
+        // 部署换了文件名、浏览器还缓存着旧的主包时，这个动态分块会 404。
+        // 自动整页刷新一次通常就好了；只自动刷一次，避免死循环。
+        try {
+          if (!sessionStorage.getItem(RELOAD_KEY)) {
+            sessionStorage.setItem(RELOAD_KEY, '1');
+            console.warn('[3D 骰子] 自动刷新一次页面再试');
+            location.reload();
+          } else {
+            console.error('[3D 骰子] 刷新后还是加载不了：把上面这行错误发给我（或者先 Ctrl+F5 强刷一次）');
+          }
+        } catch { /* 无所谓 */ }
+        throw err;
+      });
   }
   return mod;
+}
+
+/** 提前把分块拉下来（战斗页一打开就调），失败也能早点在控制台看到 */
+export function warmDice(): void {
+  void load().catch(() => { /* 上面的 catch 已经提示过了 */ });
 }
 const themeNow = (): 'light' | 'dark' => (document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
 

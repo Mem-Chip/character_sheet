@@ -16,7 +16,7 @@ import { Log } from './combat/Log';
 import { MapView } from './combat/MapView';
 import { OnlineDialog } from './combat/Online';
 import { TokenMenu } from './combat/TokenMenu';
-import { diceColor, diceLocalColor, diceLocalPhys, scanChat, scanTape } from '../lib/dicefx';
+import { diceColor, diceLocalColor, diceLocalPhys, scanChat, scanTape, warmDice } from '../lib/dicefx';
 import { describe, txTitle } from '../lib/events';
 import type { GameEvent } from '../../src/combat';
 import { DiceCaption } from './combat/DiceCaption';
@@ -41,6 +41,8 @@ export function CombatPage({ engine }: { engine: Engine }) {
   const [hotOpen, setHotOpen] = useState(() => { try { return localStorage.getItem('dnd2024-engine:dock:hot') !== '0'; } catch { return true; } });
   // session 为空就（重新）初始化 —— 开发时热更新会把 combat.ts 的模块状态清掉
   useEffect(() => { if (!ui.session) initCombat(engine); }, [engine, ui.session]);
+  // 一进战斗页就把 3D 骰子的分块拉下来：失败能早点在控制台看到，别等到第一次掷骰才发现
+  useEffect(() => { warmDice(); }, []);
   // Esc：在选目标就取消选目标，否则取消选中的人和标的目标
   useEffect(() => {
     const esc = (e: KeyboardEvent) => {
@@ -292,3 +294,4 @@ function Menu({ label, children }: { label: string; children: ReactNode }) {
     </div>
   );
 }
+
