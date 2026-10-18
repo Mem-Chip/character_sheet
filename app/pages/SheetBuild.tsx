@@ -5,6 +5,7 @@ import {
   pointBuyCost, pruneCharByLevel, subclassCandidates, subclassLabel, type CharData, type Json,
 } from '../../src/sheet';
 import { Field, NumInput, Panel, Tag, sgn } from '../components/ui';
+import { Entries } from '../components/Entries';
 import { Term } from '../components/Term';
 import { StartingEquipmentDialog } from '../components/StartingEquipmentDialog';
 import type { Engine } from '../lib/engine';
@@ -442,6 +443,18 @@ function WildShapePanel({ engine, id, char }: Props) {
           </select>
         </Field>
         {cur ? <span className="tiny">HP {cur.hpNow ?? cur.hp} ｜ AC {cur.ac} ｜ {String(cur.size)} 体型{cur.flying ? " ｜ 能飞" : ""}</span> : <span className="tiny faint">没变形</span>}
+      {/* 当前形态的动作：野兽的「动作」原文（引擎只把攻击做成按钮，其余是说明） */}
+      {cur?.actions?.length ? (
+        <div className="prose small" style={{ marginTop: 6, borderTop: "1px solid var(--line)", paddingTop: 6 }}>
+          <div className="tiny faint">这个形态的动作：</div>
+          {(cur.actions as Json[]).map((a, i) => (
+            <div key={i} style={{ marginTop: 4 }}>
+              <b>{String(a.name ?? "")}</b>{" "}
+              <Entries entries={(a.entries ?? []) as Json[]} />
+            </div>
+          ))}
+        </div>
+      ) : null}
       </div>
       <div className="row" style={{ marginTop: 6, gap: 6 }}>
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="搜索野兽（中文名）" style={{ flex: 1 }} />

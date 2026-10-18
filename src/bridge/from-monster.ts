@@ -184,6 +184,15 @@ export function parseMonster(m: Json): ParsedMonster {
           continue;
         }
       }
+      // 纯文本的攻击写法（粘贴别人写的怪物卡时最常见）：「近战攻击：+4，触及 5 尺…命中：5（1d6 + 2）穿刺」
+      const textAtk = group === '动作' ? plainAttack(plain(raw), bare) : null;
+      if (textAtk) {
+        attacks.push(textAtk);
+        auto.push(`攻击：${bare}`);
+        const tail = tailAfterHit(plain(raw));
+        if (tail) notes.push({ group, name: `${bare}（命中后的附带效果）`, text: tail });
+        continue;
+      }
       // 豁免类动作（吐息武器之类）
       const sv = /\{@actSave (\w+)\}\s*\{@dc (\d+)\}/.exec(raw);
       if (sv && /\{@actSaveFail\}/.test(raw) && (group === '动作' || group === '附赠动作')) {
@@ -272,4 +281,40 @@ export function parseMonster(m: Json): ParsedMonster {
     ...(notes.length ? { notes } : {}),
   };
   return { key, view, auto, notes, ...(tokenUrl ? { tokenUrl, tokenUrls } : {}) };
+}
+
+
+/** 文本攻击解析：命中加值 + 伤害骰 + 伤害类型 + 近战/远程 + 触及/射程；不是攻击就返回 null */
+function plainAttack(text: string, name: string): AttackRow | null {
+  const hit = /(?:近战|远程|法术)?\s*攻击[：:]\s*([+-]\d+)/.exec(text);
+  const bonusSrc = hit?.[1] ?? /命中[：:]/i.test(text) ? hit?.[1] : undefined;
+  const hitPart = /命中[：:]\s*(.+)$/.exec(text)?.[1] ?? '';
+  if (!hitPart) return null;
+  const dice = /(\d+\s*d\s*\d+(?:\s*[+-]\s*\d+)?)/.exec(hitPart);
+  if (!dice) return null;
+  const bonus = Number(bonusSrc ?? /([+-]\d+)/.exec(text)?.[1] ?? 0);
+  const typeRaw = new RegExp(dice[1].replace(/[+]/g, '\\+') + '\\s*[）)]?\\s*([^，,。；;]{1,6})').exec(hitPart)?.[1] ?? '';
+  const type = String(typeRaw).replace(/伤害.*$/, '').trim();
+  const ranged = /远程攻击|射程/.test(text) && !/近战攻击/.test(text);
+  const melee = !ranged;
+  const reach = Number(/触及\s*(\d+)\s*(?:英)?尺/.exec(text)?.[1] ?? 5);
+  const rng = /射程\s*(\d+)(?:\s*\/\s*(\d+))?\s*(?:英)?尺/.exec(text);
+  return {
+    id: name.replace(/\s/g, '-') || 'atk',
+    name, bonus: Number.isFinite(bonus) ? bonus : 0,
+    damage: dice[1].replace(/\s+/g, ' '), damageType: type || '钝击',
+    melee, ranged, finesse: false, ability: ranged && !melee ? 'dex' : 'str', reach: melee && reach >= 10,
+    ...(rng ? { range: Number(rng[1]), ...(rng[2] ? { long: Number(rng[2]) } : {}) } : {}),
+  };
+}
+
+/** 命中之后剩下的那句话（附加效果） */
+function tailAfterHit(text: string): string {
+  const i = text.search(/命中[：:]/);
+  if (i < 0) return '';
+  const rest = text.slice(i).replace(/^命中[：:]\s*/, '');
+  const m = /（[^）]*）\s*[^，,。；;]*伤害/.exec(rest);
+  if (!m) return rest.trim().length > 24 ? rest.trim() : '';
+  const tail = rest.slice(m.index + m[0].length).replace(/^[，,。；;\s]+/, '').trim();
+  return tail.length >= 4 ? tail : '';
 }

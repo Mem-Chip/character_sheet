@@ -572,7 +572,9 @@ export function WildShapeDialog({ s, pick, loadMonsters, onClose }: { s: Session
         <div className="row" style={{ gap: 4, flexWrap: 'wrap', marginBottom: 8 }}>
           <span className="tiny faint">已知形态（卡上选的）：</span>
           {(v.knownForms ?? []).map((nm) => {
-            const hit = (monsters ?? []).find((m) => String(m.name) === nm);
+            // 名字匹配放宽：中文名 / 英文原名 / 去空白都算（以前要求完全相等，图鉴里带英文的会 match 不到）
+            const norm = (x: unknown) => String(x ?? '').replace(/\s/g, '').toLowerCase();
+            const hit = (monsters ?? []).find((m) => norm(m.name) === norm(nm) || norm(m.ENG_name) === norm(nm));
             const on = selectedMonster && String(selectedMonster.name) === nm;
             return (
               <button
