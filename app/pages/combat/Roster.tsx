@@ -86,6 +86,17 @@ export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: Comba
                 onClick={(ev) => { ev.stopPropagation(); combat.toggleTarget(id); }}
                 title="把它设为 / 取消为当前动作的目标"
               >{isTarget ? '已选为目标' : '目标'}</button>
+              {dmRemote && (
+                <button
+                  className="btn ghost sm"
+                  onClick={(ev) => {
+                    ev.stopPropagation();
+                    if (!confirm(`把「${s.state.combatants[id]?.name ?? id}」从这场遭遇里删掉？（先攻、状态、地图上的棋子一起去掉）`)) return;
+                    combat.dispatch({ type: 'removeCombatant', id });
+                  }}
+                  title="从遭遇里移除（不是「拿下地图」：那个只是从地图上拿开）"
+                >移除</button>
+              )}
             </div>
           </div>
         );
@@ -93,4 +104,5 @@ export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: Comba
     </Panel>
   );
 }
+
 

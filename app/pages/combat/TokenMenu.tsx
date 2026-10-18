@@ -163,6 +163,16 @@ export function TokenMenu({ s, ui, engine, name }: { s: Session; ui: CombatUi; e
         })}>拿下地图</button>
       )}
       {r && dm && <button onClick={act(() => combat.setHidden(m.id, !r.hidden.includes(m.id)))}>{r.hidden.includes(m.id) ? '亮出来（玩家看得到）' : '藏起来（玩家看不到）'}</button>}
+      {/* 彻底从这场遭遇里删掉（不是「拿下地图」：那个只是从地图上拿开，人还在先攻里） */}
+      {dm && (
+        <button
+          className="danger"
+          onClick={act(() => {
+            if (!confirm(`把 ${name(m.id)} 从这场遭遇里删掉？（先攻、状态、地图上的棋子一起去掉，不能撤销之外恢复）`)) return;
+            combat.dispatch({ type: 'removeCombatant', id: m.id });
+          })}
+        >从遭遇里移除</button>
+      )}
     </div>
   );
 }

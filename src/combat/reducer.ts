@@ -95,6 +95,10 @@ export function applyEvent(s: EncounterState, ev: GameEvent): void {
       s.turnIndex = p.turnIndex as number;
       break;
     case 'combatEnded':
+      // 这场结束：先攻顺位和每人的先攻值都清掉，下一场重新掷
+      // （以前 order 和 initiative 会留着，下一次战斗直接沿用上一场的顺位）
+      for (const id of Object.keys(s.combatants)) s.combatants[id].initiative = null;
+      s.order = [];
       s.round = null;
       s.turnIndex = 0;
       break;
