@@ -1,7 +1,7 @@
 import { ABIL_CN } from '../expr';
 import { applyDamagePacket, applyHeal, grantTempHp } from './damage';
 import { d20Test } from './d20';
-import { applyEffect, checkEndsOn, effectiveView, endConcentration, endEffect, skillBonus } from './effects';
+import { applyEffect, checkEndsOn, concentrationOf, effectiveView, endConcentration, endEffect, skillBonus } from './effects';
 import { Dice } from '../expr';
 import { engineDice } from './dice';
 import { executeAction, findAction } from './exec';
@@ -89,9 +89,15 @@ function handle(tx: Tx, cmd: Command): void {
     case 'nextTurn':
       nextTurn(tx, null);
       return;
-    case 'endCombat':
+    case 'endCombat': {
+      // 战斗结束：所有专注先结束 —— 它链接的区域（匕首之云这类）会跟着一起清掉。
+      // 不这么做的话：区域留在场上还能挪、专注也还占着，下一次战斗里那道法术再也放不出来。
+      for (const id of Object.keys(tx.state.combatants)) {
+        if (concentrationOf(tx, id)) endConcentration(tx, id, '战斗结束', null);
+      }
       tx.emit('combatEnded', {});
       return;
+    }
     case 'useAction': {
       const { key, action } = findAction(tx, cmd.actor, cmd.action);
       executeAction(tx, {
@@ -437,3 +443,4 @@ function revive(tx: Tx, id: string, cause: number): void {
   tx.emit('deathSavesChanged', { id, s: 0, f: 0 }, cause);
   tx.emit('note', { text: `${tx.state.combatants[id].name} 被 DM 复活`, owner: id }, cause);
 }
+
