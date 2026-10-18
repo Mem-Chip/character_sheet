@@ -251,6 +251,22 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
     - 简写：\`{ op: 'cancelUnlessSave', ability: 'con', dc: 'self.spell.dc', refundSlot: true }\` = 豁免失败就打断（法术反制就这么写）；
     - 无条件改的话用 \`modifyCast\` 节点（同样只在窗口里生效）。
 
+29. **借一道动作当场结算**（战地施法者、咒剑、借机法术）：\`{ kind: 'castFrom', from: 'XPHB:spell:<法术>#cast', to: 'attacker' }\`。
+    - \`from\` 写条目键；或者 \`fromVar\` —— 用前面 \`choose\` 挑中的那一项（\`value\` 就是法术键）；
+    - \`to\`：\`target\`（当前目标，默认）/ \`attacker\`（发起这次窗口的进攻者，战地施法者就是这个）/ \`self\` / \`each\`（全部目标）；
+    - 代价默认**沿用那道动作自己的**（法术位照付）；反应已经在外层付过的（战地施法者），\`activation\` 留空就是 \`free\`，不会再扣一次动作经济；
+    - 和 \`grantAction\` 的区别：\`grantAction\` 是**给他挂一个能用一阵子的动作**，\`castFrom\` 是**当场结算完什么都不留** ——
+      「用反应代替一个动作」「借别人一次攻击顺手打一发」这种选 \`castFrom\`。
+30. **\`choose\` 的现算池还能过滤**（战地施法者要求「施法时间是动作 + 只以那个生物为唯一目标」）：
+    \`{ kind: 'choose', pool: { from: 'ownSpells', castTime: 'action', singleTarget: true }, var: 'pick' }\`
+    - \`from\`：\`ownSpells\`（自己身上带施法动作的法术）/ \`ownCantrips\`（只要戏法）；
+    - \`castTime: 'action'\` 只列施法时间为动作的；\`singleTarget: true\` 只列单体目标的；\`maxLevel\` / \`minLevel\` 卡环阶。
+31. **移动 / 传送**：\`{ kind: 'move', mode: 'teleport', maxFt: '30' }\` —— 引擎会提示玩家**在地图上点落点**（超出 \`maxFt\` 会被拒）；
+    \`mode: 'push' | 'pull'\` 是强制位移（\`ft\`，\`origin: 'source'\`），会自己算方向和距离，不用写坐标。
+32. **区域（\`zone\`）现在不能移动**：区域固定在施法时选的那几格上，引擎没有「把区域挪走」的命令。
+    原文说能挪的（匕首之云那种「用一个动作把立方传送到 30 尺内」）：区域那块照常写 \`zone\`，
+    另外给一个 \`note\` 写明「挪动请在图上手动处理」，或者做成一个「重新放置」的动作（重新选区域 = 新的一块区域）。
+
 ## 6. 引擎怎么执行（容易想错的地方）
 
 1. **攻击节点的 \`bonus\` 缺省是 \`self.spell.atk\`（法术攻击）。** 武器攻击、徒手打击一定要自己写命中加值（\`self.pb + max(self.mod.str, self.mod.dex)\` 这类）；伤害骰里也要自己写属性调整值，引擎不会替你加。
