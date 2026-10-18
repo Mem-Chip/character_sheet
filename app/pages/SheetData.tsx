@@ -105,7 +105,19 @@ export function SheetData(p: Props) {
 
   return (
     <div className="stack">
-      <Panel title="这张卡的能力" aside={<span>{sources.length} 项</span>} flush>
+      <Panel
+        title="这张卡的能力"
+        aside={<>
+          <span>{sources.length} 项</span>
+          {/* 从零建一条家规能力（不走「覆盖官方」也不走「从规则库导入」） */}
+          <button
+            className="btn sm"
+            onClick={() => setEditing({ ...engine.env.abilities.hrBlank(), name: '新家规能力' })}
+            title="建一条只属于这张卡的能力：名字、说明、加值、次数池都在弹窗里填"
+          >＋ 新建</button>
+        </>}
+        flush
+      >
         <table className="rows datatable">
           <thead><tr><th>能力</th><th>类别</th><th>卡面数据</th><th>战斗数据</th><th /></tr></thead>
           <tbody>

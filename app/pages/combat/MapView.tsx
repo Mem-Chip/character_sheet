@@ -501,6 +501,21 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
           <button className="btn sm" onClick={() => setZoneOf(selShape)} title="变成持续的区域：进入、在里面开始 / 结束回合时受伤害或状态">设为区域…</button>
         </div>
       )}
+      {/* 地图上的持续区域：名字标签太小/可能被挡住，这里给一份清单，点「删除」就能清掉 */}
+      {dm && Object.keys(st.zones ?? {}).length > 0 && (
+        <div className="hud map-bar" style={{ flexWrap: 'wrap' }}>
+          <span className="tiny faint">区域：</span>
+          {Object.values(st.zones ?? {}).map((z) => (
+            <span key={z.id} className="row" style={{ gap: 4, alignItems: 'center' }}>
+              <span className="tiny">{z.name}</span>
+              <button
+                className="btn ghost sm danger"
+                onClick={() => { if (confirm(`删除区域「${z.name}」？`)) combat.dispatch({ type: 'removeZone', id: z.id }); }}
+              >删除</button>
+            </span>
+          ))}
+        </div>
+      )}
       {zoneOf && (() => {
         const sh = (map.shapes ?? []).find((x) => x.id === zoneOf);
         if (!sh) return null;

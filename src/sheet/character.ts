@@ -415,9 +415,11 @@ export async function resolveCharacter(env: SheetEnv, char: CharData): Promise<J
  * 顺序要紧：能力的 mods 必须在管线之前进 ctx，否则 AC / HP 那些阶段读不到。
  */
 export async function computeCharacter(env: SheetEnv, char: CharData): Promise<Record<string, any>> {
-  env.abilities.ensureHomerules(char);
+  // 家规条目 id 不合法的会被丢掉（以前只往内部日志里写一句，卡上看不出为什么「加了却没生效」）
+  const hrBad = env.abilities.ensureHomerules(char);
   env.abilities.augmentFromFeatData();
   const res = await resolveCharacter(env, char);
+  if (hrBad?.length) (res.warnings as string[]).push(...hrBad);
   char._resolved = res;
   const derived = env.abilities.derive(char);
   char._derived = derived;
