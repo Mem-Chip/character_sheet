@@ -253,7 +253,6 @@ function takenElsewhere(sheet: Json, ch: Json, own: string[]): Set<string> {
 }
 
 export function Choices(p: { engine: Engine; id: string; char: CharData; sheet: Json; title?: string }) {
-  const [showDone, setShowDone] = useState(false);
   const slots = p.engine.env.feats.slots(p.char, p.char._resolved);
   const { bySlot } = p.engine.env.feats.assign(p.char.feats || [], slots);
   const openSlots = bySlot.filter((b) => !b.name);
@@ -261,28 +260,36 @@ export function Choices(p: { engine: Engine; id: string; char: CharData; sheet: 
   const pending: Json[] = p.sheet._pending || [];
   const open = pending.filter((c) => !c.decided);
   const done = pending.filter((c) => c.decided);
-  const slotList = showDone ? [...openSlots, ...doneSlots] : openSlots;
-  const list = showDone ? [...open, ...done] : open;
   const totalOpen = openSlots.length + open.length;
   const totalDone = doneSlots.length + done.length;
+  const title = p.title ?? '待决定';
   return (
     <div id="sheet-choices-panel">
-      <Panel
-        title={p.title ?? '待决定'}
-        aside={<>
-          <span>{totalOpen} 项待定</span>
-          {totalDone > 0 && <button className="btn ghost sm" onClick={() => setShowDone(!showDone)}>{showDone ? '隐藏已决定' : `显示已决定（${totalDone}）`}</button>}
-        </>}
-        flush
-      >
-        {(slotList.length || list.length) ? (
-          <>
-            {slotList.map(({ slot, name }) => <FeatSlotChoice key={`featSlot:${slot.id}`} {...p} slot={slot} name={name} />)}
-            {list.map((ch) => <Choice key={ch.key} {...p} ch={ch} />)}
-          </>
-        ) : <div className="empty">没有需要决定的事。</div>}
-      </Panel>
+      {totalOpen > 0 && (
+        <Panel title={title} aside={<span>{totalOpen} 项待定</span>} flush>
+          <div className="stack">
+            {openSlots.map(({ slot, name }) => <FeatSlotChoice key={`featSlot:${slot.id}`} {...p} slot={slot} name={name} />)}
+            {open.map((ch) => <Choice key={ch.key} {...p} ch={ch} />)}
+          </div>
+        </Panel>
+      )}
+      {totalDone > 0 && (
+        <Panel title={totalOpen > 0 ? '已决定' : title} aside={<span className="tiny faint">{totalOpen > 0 ? `已决定 ${totalDone} 项` : '都选完了'}</span>} flush>
+          {/* 全选完时默认折起来，只留一行；点开可以改 */}
+          <details open={false}>
+            <summary className="small" style={{ cursor: 'pointer', padding: '6px 10px' }}>
+              已决定 {totalDone} 项 —— 点开可以重选
+            </summary>
+            <div className="stack" style={{ paddingTop: 6 }}>
+              {doneSlots.map(({ slot, name }) => <FeatSlotChoice key={`featSlot:${slot.id}`} {...p} slot={slot} name={name} />)}
+              {done.map((ch) => <Choice key={ch.key} {...p} ch={ch} />)}
+            </div>
+          </details>
+        </Panel>
+      )}
+      {totalOpen === 0 && totalDone === 0 && (
+        <Panel title={title} flush><div className="empty">没有需要决定的事。</div></Panel>
+      )}
     </div>
   );
 }
-
