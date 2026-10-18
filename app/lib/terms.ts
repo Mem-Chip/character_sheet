@@ -246,3 +246,26 @@ export async function searchTerms(engine: Engine, q: string, limit = 12): Promis
   part.sort((a, b) => a.name.length - b.name.length);
   return [...exact, ...part].slice(0, limit);
 }
+
+/**
+ * 选择框里的一个选项 → 术语类别（悬停看原文用）。
+ *
+ * ⚠️ 别用 `pool.includes('feat')` 判断专长：可选特性的池子叫 `optionalfeature`，里面也含 "feat"，
+ * 会把超魔法 / 魔能祈唤的选项当成专长去查（查不到 → 悬浮窗显示「没查到」）。
+ */
+export function choiceTerm(p: { kind?: string; pool?: string; value: string; label?: string }): TermRef | null {
+  const kind = String(p.kind ?? '');
+  const pool = String(p.pool ?? '');
+  const name = p.value;
+  if (kind === 'optfeature' || pool === 'optionalfeature' || pool === 'optfeature') return { kind: 'optfeature', name };
+  if (kind === 'classFeature' || pool === 'classFeature') return { kind: 'classFeature', name };
+  if (kind === 'feat' || pool === 'feat' || pool === 'originFeat' || pool === 'fightingStyle') return { kind: 'feat', name };
+  if (kind === 'skill' || kind === 'expertise' || pool === 'skill' || pool.startsWith('skill')) return { kind: 'skill', name: p.label ?? name };
+  if (kind === 'language' || pool === 'language') return { kind: 'language', name };
+  if (kind === 'itemMastery' || pool === 'mastery') return { kind: 'itemMastery', name };
+  if (kind === 'tool' || pool.includes('tool') || pool === 'artisan' || pool === 'instrument') return { kind: 'item', name };
+  if (kind === 'spell' || kind === 'cantrip' || pool === 'spell' || pool === 'cantrip') return { kind: 'spell', name };
+  if (pool === 'subclass') return { kind: 'subclassFeature', name };
+  if (name) return { kind: 'auto', name };
+  return null;
+}

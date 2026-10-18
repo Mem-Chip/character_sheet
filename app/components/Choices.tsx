@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { ABILS, ABIL_CN, abilityPlans, choiceOptions, featNames, type CharData, type FeatSlot, type Json, type SheetEnv } from '../../src/sheet';
 import type { Engine } from '../lib/engine';
 import { actions } from '../lib/store';
-import { canLookup } from '../lib/terms';
+import { choiceTerm } from '../lib/terms';
 import { Term } from './Term';
 import { Panel, Tag } from './ui';
 
@@ -200,17 +200,7 @@ function Choice(p: { engine: Engine; id: string; char: CharData; sheet: Json; ch
   }
 
   function termForChoiceOption(ch: Json, o: { value: string; label: string }): { kind: string; name: string } | null {
-    const kind = String(ch.kind ?? '');
-    const pool = String(ch.pool ?? '');
-    if (kind === 'feat' || pool.includes('feat')) return { kind: 'feat', name: o.value };
-    if (kind === 'skill' || kind === 'expertise') return { kind: 'skill', name: o.label };
-    if (kind === 'language' || pool === 'language') return { kind: 'language', name: o.value };
-    if (kind === 'itemMastery' || pool === 'mastery') return { kind: 'itemMastery', name: o.value };
-    if (kind === 'tool' || pool.includes('tool') || pool === 'artisan' || pool === 'instrument') return { kind: 'item', name: o.value };
-    if (kind === 'spell' || kind === 'cantrip') return { kind: 'spell', name: o.value };
-    if (pool === 'subclass') return { kind: 'subclassFeature', name: o.value };
-    if (o.value && canLookup('auto')) return { kind: 'auto', name: o.value };
-    return null;
+    return choiceTerm({ kind: String(ch.kind ?? ''), pool: String(ch.pool ?? ''), value: o.value, label: o.label });
   }
 
   const res = choiceOptions(engine.env, char, sheet, ch);
@@ -295,3 +285,4 @@ export function Choices(p: { engine: Engine; id: string; char: CharData; sheet: 
     </div>
   );
 }
+
