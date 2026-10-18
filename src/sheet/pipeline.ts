@@ -614,6 +614,8 @@ export function createRules(): Pipeline {
     // 「始终准备」的法术 = 能力授予的（专长 / 种族）+ 子职给的（誓约法术、宗主法术…）
     const grantedAll: Json[] = [...(ctx.out.grantedSpells || []), ...(res.subclassSpells || [])].filter((g: Json) => g && g.name);
     sc.granted = [...new Map(grantedAll.map((g) => [String(g.name), g])).values()];
+    // 法师学派子职「免费抄进法术书」的那几道：不算常备，单独给界面（法术书那一块）
+    sc.spellbookAdds = [...new Map(((ctx.char._derived?.spellbookAdds || []) as Json[]).map((g) => [String(g.name), g])).values()];
     ctx.set('spell', sc, 'computed');
   }, { name: 'core:spellcasting' });
 
@@ -663,3 +665,4 @@ export function createRules(): Pipeline {
 
   return R;
 }
+

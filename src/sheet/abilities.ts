@@ -73,11 +73,18 @@ export interface Derived {
   entries: Json[];
   hrSeen?: Set<string>;
   pending: Json[];
+  /** 「免费抄进法术书」的（法师学派子职）：不算常备，进法术书 */
+  spellbookAdds: Json[];
   grantedCandidates?: Set<string>;
 }
 
 /** 选择 → 授予（唯一一份；主循环和末尾的结构性选择都走它） */
 export function applyChoiceGrant(c: Json, vals: string[], out: Derived, from?: string): boolean {
+  // `toSpellbook: true`：这类选择是「免费抄进法术书」（法师学派子职），不算常备
+  if (c.toSpellbook) {
+    for (const v of vals) out.spellbookAdds.push({ name: v, from: from || c.label || '子职法术' });
+    return true;
+  }
   if (c.pool === 'spellList') {
     out.entries.push({ text: `${c.label || c.id}：${vals.join('、')}`, from: from || '', note: true });
     return true;
@@ -859,7 +866,7 @@ export class AbilityBook {
       languages: new Set(), tools: new Set(), feats: new Set(),
       spells: new Set(), cantrips: new Set(), masteries: new Set(),
       spellFrom: {},
-      ac: [], resources: [], entries: [], pending: [],
+      ac: [], resources: [], entries: [], pending: [], spellbookAdds: [],
     };
     const pending: Json[] = [];
     const decisions = char.decisions || {};
@@ -990,3 +997,4 @@ export class AbilityBook {
     return out;
   }
 }
+

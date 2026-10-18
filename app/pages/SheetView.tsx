@@ -485,6 +485,17 @@ function Spells({ engine, id, char, sheet }: Props) {
           )}
 
           {/* 法术书中记载的法术表格 */}
+          {/* 子职免费给的（法师学派子职选的那两道）：直接算在法术书里，不进「已准备」 */}
+          {((sc.spellbookAdds || []) as Json[]).length > 0 && (
+            <div className="small" style={{ marginBottom: 6 }}>
+              <span className="muted">子职免费给的（已在法术书里）：</span>
+              {((sc.spellbookAdds || []) as Json[]).map((g: Json) => (
+                <span key={String(g.name)} className="tag" style={{ marginRight: 4 }} title={`来自 ${String(g.from ?? '子职')}`}>
+                  <Term kind="spell" name={String(g.name)}>{String(g.name)}</Term>
+                </span>
+              ))}
+            </div>
+          )}
           {bookSpellsOrder.length === 0 ? (
             <div className="empty" style={{ padding: '12px 0' }}>
               此法术书尚未抄录任何法术。展开下方「抄录新法术入书」开始添加。

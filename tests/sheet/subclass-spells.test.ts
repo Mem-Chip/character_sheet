@@ -42,7 +42,7 @@ describe.skipIf(!hasLocalData())('学派法术进法术书', () => {
     }
   });
 
-  it('选完的两道进「法术书」（sheet.spell.granted）', async () => {
+  it('选完的两道进「法术书」（spellbookAdds），不算常备（granted）', async () => {
     const c0 = mage();
     const sheet0 = (await env.compute(c0)) as Json;
     const ch = ((sheet0._pending as Json[]) ?? []).find((p) => p.pool === 'spellBySchool')!;
@@ -51,9 +51,13 @@ describe.skipIf(!hasLocalData())('学派法术进法术书', () => {
     const b = String(opts[1].value);
     const c = mage({ [String(ch.key)]: [a, b] });
     const sheet = (await env.compute(c)) as Json;
-    const names = (((sheet.spell as Json)?.granted ?? []) as Json[]).map((g) => String(g.name));
-    expect(names).toContain(a);
-    expect(names).toContain(b);
-    expect(names.some((n) => n.includes('object')), '不该出现 [object Object]').toBe(false);
+    const adds = (((sheet.spell as Json)?.spellbookAdds ?? []) as Json[]).map((g) => String(g.name));
+    expect(adds).toContain(a);
+    expect(adds).toContain(b);
+    // 不能算「始终准备」（法师要先准备）
+    const granted = (((sheet.spell as Json)?.granted ?? []) as Json[]).map((g) => String(g.name));
+    expect(granted).not.toContain(a);
+    expect(adds.some((n) => n.includes('object')), '不该出现 [object Object]').toBe(false);
   });
 });
+
