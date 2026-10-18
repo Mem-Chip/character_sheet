@@ -272,7 +272,14 @@ export async function resolveCharacter(env: SheetEnv, char: CharData): Promise<J
       if (subclass) {
         for (const grp of (subclass.additionalSpells || []) as Json[]) {
           const label = String(grp?.name || '子职法术');
-          for (const [from, list] of Object.entries({ ...(grp?.prepared || {}), ...(grp?.known || {}) })) {
+          // 只处理 `prepared`（始终准备的法术）。`known` 是「学进法术书」：2024 的法师学派子职
+          // 都由「学派学者」特性自带选择框（pool: spellBySchool），再在这里生成一份就重复了。
+          for (const knownGrp of Object.values(grp?.known || {})) {
+            if ((knownGrp as Json[]).some((x) => x && typeof x === 'object' && (x as Json).choose)) {
+              env.log(`子职「${spec.subclass}」的「学会法术」写在 additionalSpells.known 里，交给特性自带的选择框处理`);
+            }
+          }
+          for (const [from, list] of Object.entries(grp?.prepared || {})) {
             const at = Number(from);
             if (!Number.isFinite(at) || at > lvl) continue;
             let chooseIdx = 0;
@@ -446,6 +453,7 @@ export function applyOriginFeatDefault(env: SheetEnv, char: CharData): boolean {
   char.feats.push(granted);
   return true;
 }
+
 
 
 

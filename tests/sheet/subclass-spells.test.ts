@@ -1,4 +1,5 @@
-// 子职「选法术」（咒法师 AU 的咒法系法术）：待决定项 + 选完进「始终准备」
+// 法师学派子职的「选两道学派法术进法术书」：只应有一个选择框，且选完进 granted
+// （咒法师 AU 的 additionalSpells.known 里也有同样的 choose —— 那条不能再生一份「始终准备」）
 import { beforeAll, describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { createNodeEnv } from '../../src/sheet/node-env';
@@ -8,14 +9,13 @@ import type { CharData, Json, SheetEnv } from '../../src/sheet';
 
 const FIXTURES = JSON.parse(readFileSync('tests/fixtures/chars.json', 'utf8')) as Array<{ id: string; char: CharData }>;
 
-describe.skipIf(!hasLocalData())('子职选法术（咒法师 AU）', () => {
+describe.skipIf(!hasLocalData())('学派法术进法术书', () => {
   let env: SheetEnv;
   beforeAll(async () => {
     env = await createNodeEnv();
     await env.store.ensureMany(['races', 'backgrounds', 'feats', 'spellsXphb', 'spellsSources', 'classIndex', 'optionalfeatures']);
   });
 
-  /** 法师 3 级、子职换成咒法师（AU）；别的照抄一张真卡 */
   const mage = (decisions: Json = {}): CharData => {
     const c = structuredClone(FIXTURES.find((f) => f.id === 'wizard3-evoker')!.char);
     c.classes = [{ name: '法师', level: 3, subclass: '咒法师' } as Json];
@@ -23,34 +23,37 @@ describe.skipIf(!hasLocalData())('子职选法术（咒法师 AU）', () => {
     return c;
   };
 
-  it('给出两条「选一道环阶 0–2 的咒法系法师法术」，候选都合法', async () => {
+  it('只有一个「选两道咒法学派法术」的选择框，候选都是 ≤2 环的咒法系法师法术', async () => {
     const c = mage();
     const sheet = (await env.compute(c)) as Json;
-    const pend = (sheet._pending as Json[]).filter((p) => p.pool === 'subclassSpell');
-    expect(pend.length, '咒法师的咒法系法术是两处 choose').toBe(2);
-    expect(String(pend[0].label)).toContain('咒法系');
-    const res = choiceOptions(env, c, sheet, pend[0]);
-    expect(res.options.length).toBeGreaterThan(0);
+    const pend = (sheet._pending as Json[]) ?? [];
+    const school = pend.filter((p) => p.pool === 'spellBySchool');
+    expect(school.length, '咒法学者只该有一个选择框').toBe(1);
+    expect(String(school[0].label)).toContain('咒法学派');
+    // 旧实现会把 additionalSpells.known 里的 choose 也翻成「始终准备」的待决定项 —— 那是重复
+    expect(pend.filter((p) => p.pool === 'subclassSpell').length, '不该再有重复的「始终准备」选择').toBe(0);
+    const res = choiceOptions(env, c, sheet, school[0]);
+    expect(res.options.length, '候选不该是占位文字').toBeGreaterThan(5);
     for (const o of res.options) {
       const sp = env.store.spellsAll.find((s: Json) => s.name === o.value) as Json | undefined;
       expect(sp, `${o.value} 应该是法术`).toBeTruthy();
-      expect(Number(sp!.level), `${o.value} 的环阶`).toBeLessThanOrEqual(2);
-      expect(String(sp!.school), `${o.value} 的学派`).toBe('C');
+      expect(Number(sp!.level)).toBeLessThanOrEqual(2);
+      expect(String(sp!.school)).toBe('C');
     }
   });
 
-  it('选完之后进「始终准备」（sheet.spell.granted），不再出现 [object Object]', async () => {
+  it('选完的两道进「法术书」（sheet.spell.granted）', async () => {
     const c0 = mage();
     const sheet0 = (await env.compute(c0)) as Json;
-    const ch = (sheet0._pending as Json[]).find((p) => p.pool === 'subclassSpell')!;
+    const ch = ((sheet0._pending as Json[]) ?? []).find((p) => p.pool === 'spellBySchool')!;
     const opts = choiceOptions(env, c0, sheet0, ch).options;
     const a = String(opts[0].value);
     const b = String(opts[1].value);
-    const c = mage({ 'AU:法师:咒法师:3#spell-0': [a], 'AU:法师:咒法师:3#spell-1': [b] });
+    const c = mage({ [String(ch.key)]: [a, b] });
     const sheet = (await env.compute(c)) as Json;
     const names = (((sheet.spell as Json)?.granted ?? []) as Json[]).map((g) => String(g.name));
     expect(names).toContain(a);
     expect(names).toContain(b);
-    expect(names.some((n) => n.includes('object'))).toBe(false);
+    expect(names.some((n) => n.includes('object')), '不该出现 [object Object]').toBe(false);
   });
 });
