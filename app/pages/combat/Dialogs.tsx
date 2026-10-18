@@ -567,6 +567,25 @@ export function WildShapeDialog({ s, pick, loadMonsters, onClose }: { s: Session
           ? '2024 规则：寻获魔宠 / 荒野伙伴可选择挑战等级 0 的野兽，召唤后生物类型为妖精（或天界 / 邪魔），先攻紧随你之后。'
           : `德鲁伊 ${lv} 级${moon ? '（月亮结社）' : ''} · 上限 CR ${crFmt(maxCr)}${canFly ? ' · 可选飞行野兽' : ' · 8 级前不能选有飞行速度的野兽'} · 临时生命值 +${moon ? lv * 3 : lv}${moon ? ` · AC 至少 ${13 + v.mod.wis}` : ''}`}
       </div>
+      {/* 角色卡上勾选的「已知形态」：和卡面（建卡页的荒野形态面板）对上，优先列出来 */}
+      {(v.knownForms ?? []).length > 0 && (
+        <div className="row" style={{ gap: 4, flexWrap: 'wrap', marginBottom: 8 }}>
+          <span className="tiny faint">已知形态（卡上选的）：</span>
+          {(v.knownForms ?? []).map((nm) => {
+            const hit = (monsters ?? []).find((m) => String(m.name) === nm);
+            const on = selectedMonster && String(selectedMonster.name) === nm;
+            return (
+              <button
+                key={nm}
+                className={'chip' + (on ? ' on' : '')}
+                title={hit ? '卡上勾选的已知形态' : '图鉴里没找到这个名字（可能在别的书里）'}
+                onClick={() => { if (hit) setSelectedMonster(hit); }}
+              >{nm}{!hit && <span className="faint"> ?</span>}</button>
+            );
+          })}
+        </div>
+      )}
+
       <div className="row" style={{ gap: 4, flexWrap: 'wrap', marginBottom: 8 }}>
         <span className="tiny faint">常用形态：</span>
         {presets.map((p) => (

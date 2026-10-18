@@ -458,6 +458,8 @@ export interface CombatantView {
   type: string;
   ac: number;
   hpMax: number;
+  /** 荒野形态：角色卡上勾选的「已知形态」（战斗里的形态选择器优先列这些） */
+  knownForms?: string[];
   speed: number;
   pb: number;
   level: number;

@@ -71,8 +71,11 @@ export function textToMonster(text: string): Json {
   if (cr) m.cr = cr;
   const ac = field(/(?:^|\s|　)AC\s*[：:]?\s*(\d+)/i)?.[1];
   if (ac) m.ac = [Number(ac)];
-  const hp = field(/生命值\s*[：:]?\s*(\d+)/)?.[1];
-  if (hp) m.hp = { average: Number(hp) };
+  // 「生命值 2d8 + 2」这种骰子写法要换算成平均值（以前只取第一个数字，会变成 2）
+  const hpRaw = field(/生命值\s*[：:]?\s*(.+)$/)?.[1] ?? '';
+  const hpAvg = averageOfHp(hpRaw);
+  const hpFormula = /(\d+\s*[dD]\s*\d+\s*(?:[+-]\s*\d+)?)/.exec(hpRaw)?.[1]?.replace(/\s+/g, ' ');
+  if (hpAvg != null) m.hp = { average: hpAvg, ...(hpFormula ? { formula: hpFormula } : {}) };
   const sp = field(/速度\s*[：:]?\s*(\d+)/)?.[1];
   if (sp) m.speed = { walk: Number(sp) };
   for (const [cn, en] of Object.entries(ABIL)) {
@@ -111,3 +114,23 @@ export function textToMonster(text: string): Json {
   // 传奇抗性写在特性名字里：「传奇抗性（3/日）」——parseMonster 认
   return m;
 }
+
+
+/** 「生命值」后面的文字 → 平均值：支持 `11`、`2d8 + 2`、`平均 11（2d8+2）` */
+export function averageOfHp(raw: string): number | null {
+  const s = String(raw || '').replace(/[（）()]/g, ' ');
+  const avg = /平均\s*(\d+)/.exec(s);
+  if (avg) return Number(avg[1]);
+  const plain = /^\s*(\d+)\s*$/.exec(s);
+  if (plain) return Number(plain[1]);
+  const dice = /(\d+)\s*[dD]\s*(\d+)\s*(?:([+-])\s*(\d+))?/.exec(s);
+  if (dice) {
+    const n = Number(dice[1]);
+    const faces = Number(dice[2]);
+    const k = dice[4] ? Number(dice[4]) * (dice[3] === '-' ? -1 : 1) : 0;
+    if (n > 0 && faces > 0) return Math.max(1, Math.floor((n * (faces + 1)) / 2) + k);
+  }
+  const first = /\d+/.exec(s);
+  return first ? Number(first[0]) : null;
+}
+

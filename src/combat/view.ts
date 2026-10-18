@@ -33,6 +33,7 @@ export function makeView(init: ViewInit): CombatantView {
     type: init.type ?? '类人生物',
     ac: init.ac ?? 10 + mod.dex,
     hpMax: init.hpMax ?? 10,
+    ...(init.knownForms?.length ? { knownForms: init.knownForms.slice() } : {}),
     speed: init.speed ?? 30,
     pb,
     level: init.level ?? 1,
@@ -113,3 +114,5 @@ export function makeCombatant(init: CombatantInit): Combatant {
     ...(init.summonGroup ? { summonGroup: init.summonGroup } : {}),
   };
 }
+
+

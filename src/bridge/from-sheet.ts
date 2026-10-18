@@ -256,6 +256,8 @@ export function viewFromSheet(env: SheetEnv, char: CharData, sheet: Json): Comba
     type: CREATURE_TYPE_CN[ctype] ?? '类人生物',
     ac: sheet.ac,
     hpMax: sheet.hpMax,
+    // 荒野形态：把卡上勾选的「已知形态」带进战斗，形态选择器优先列这些
+    ...((char.wildShapeKnown || []).length ? { knownForms: (char.wildShapeKnown as string[]).slice() } : {}),
     speed: sheet.speed,
     pb: sheet.pb,
     level: sheet.level,
