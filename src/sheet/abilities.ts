@@ -894,7 +894,8 @@ export class AbilityBook {
         (G[g.kind] || (() => out.entries.push({ text: `（未支持的能力授予类型：${g.kind}）`, from: label })))();
         if (['skill', 'expertise', 'save', 'language', 'tool', 'feat', 'spell', 'cantrip', 'itemMastery', 'classFeature', 'subclass', 'custom', 'note'].includes(g.kind)) markHr();
       }
-      for (const r of a.resources || []) out.resources.push({ ...r, from: srcName, cls: s.cls });
+      // `_src`：这条资源是哪条能力声明的（界面据此把悬浮窗查到正确来源，比如 AU 的王车易位而不是 PHB 的同名特性）
+      for (const r of a.resources || []) out.resources.push({ ...r, from: srcName, cls: s.cls, _src: { source: s.source, name: s.name, kind: s.kind, cls: s.cls, level: s.level } });
       for (const c of a.choices || []) {
         const owner = [s.source, s.cls, s.name, (s.level ?? '')].filter((x) => x !== undefined && x !== null && x !== '').join(':');
         const key = `${owner}#${c.id}`;
@@ -932,6 +933,11 @@ export class AbilityBook {
           vals.forEach((v: string) => out.feats.add(v));
         }
       }
+    }
+    // 子职「从法术列表里选 N 道」这类（咒法师的咒法系法术）：每条 choose 变成一项待决定
+    for (const ch of ((char._resolved?.subclassSpellChoices || []) as Json[])) {
+      const dec = decisions[ch.key];
+      pending.push({ ...ch, kind: 'spell', pool: 'subclassSpell', count: ch.count ?? 1, ability: ch.from, decided: !!dec });
     }
     out.pending = pending;
     {

@@ -160,7 +160,7 @@ export class Resources {
         key: `ability:${r.from}:${r.id}`, name: r.name,
         id: r.id,
         max: this.resolveFormula(r.formula, sheet, char, r.cls),
-        recovery: r.recovery || '?', from: r.from, note: r.note || '', source: 'ability',
+        recovery: r.recovery || '?', from: r.from, note: r.note || '', source: 'ability', _src: r._src ?? null,
         override: !!r.override,
         regain: Array.isArray(r.regain) ? r.regain : null,
       });

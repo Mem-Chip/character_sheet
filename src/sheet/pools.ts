@@ -70,6 +70,19 @@ export function classSpells(env: SheetEnv, className: string, opts: { level?: nu
     .sort((a: Json, b: Json) => a.level - b.level || String(a.name).localeCompare(String(b.name), 'zh'));
 }
 
+/** 5etools 的 choose 过滤串：`level=0;1;2|class=法师|school=C` */
+export function parseChoose(s: string): { levels: number[]; cls?: string; school?: string } {
+  const out: { levels: number[]; cls?: string; school?: string } = { levels: [] };
+  for (const part of String(s || '').split('|')) {
+    const [k, v] = part.split('=');
+    if (!k || v === undefined) continue;
+    if (k.trim() === 'level') out.levels = v.split(';').map((x) => Number(x)).filter((n) => Number.isFinite(n));
+    else if (k.trim() === 'class') out.cls = v.trim();
+    else if (k.trim() === 'school') out.school = v.trim();
+  }
+  return out;
+}
+
 /** 一条职业特性给什么（候选后面跟一句摘要，让人看得出两个选项差在哪） */
 export function abilitySummary(env: SheetEnv, name: string, k: Json): string {
   const feat = [...(k?.features || []), ...(k?.subFeatures || [])].find((f: Json) => f.name === name);
@@ -99,6 +112,14 @@ export function choiceOptions(env: SheetEnv, char: CharData, sheet: Json, choice
   }
   if (choice.kind === 'optfeature' && choice.pool !== 'inline') {
     return ok(env.optional.options(choice).map((o) => ({ value: o.name, label: o.name })));
+  }
+  if (choice.pool === 'subclassSpell') {
+    // `{ choose: 'level=0;1;2|class=法师|school=C' }`：子职让你从过滤后的法术列表里选
+    const f = parseChoose(String(choice.choose ?? ''));
+    const lv = f.levels.length ? f.levels : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    const list = classSpells(env, f.cls ?? '法师', { maxLevel: Math.max(...lv) })
+      .filter((s: Json) => lv.includes(s.level) && (!f.school || s.school === f.school));
+    return ok(list.map((s: Json) => ({ value: String(s.name), label: `${String(s.name)}（${s.level} 环）` })));
   }
   if (Array.isArray(choice.candidates) && choice.candidates.length) {
     return ok(choice.candidates.map((v: string) => {

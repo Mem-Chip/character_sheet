@@ -137,7 +137,8 @@ async function find(engine: Engine, ref: TermRef): Promise<TermData | null> {
       const data = await store.classData(slug).catch(() => null);
       for (const kind of ref.kind === 'classFeature' ? ['classFeature', 'subclassFeature'] : ['subclassFeature', 'classFeature']) {
         const hits = (data?.[kind] as Json[] || []).filter((f) => f.name === ref.name && (ref.level == null || f.level === ref.level));
-        const hit = hits.find((f) => /^X/.test(f.source)) ?? hits[0];
+        const hit = (ref.source ? hits.find((f) => String(f.source).toUpperCase() === String(ref.source).toUpperCase()) : null)
+          ?? hits.find((f) => /^X/.test(f.source)) ?? hits[0];
         if (hit) return done(hit, kind);
       }
     }
@@ -208,6 +209,16 @@ export function termOfResource(r: Json): TermRef | null {
     const [, , cls, col] = key.split(':');
     const featName = RESOURCE_FEATURE_MAP[col] || col.replace(/次数$/, '');
     return { kind: 'classFeature', cls, name: featName };
+  }
+  const src = r._src as { source?: string; name?: string; kind?: string; cls?: string; level?: number } | null | undefined;
+  if (src?.name) {
+    const k = src.kind === 'subclassFeature' ? 'subclassFeature' : src.kind === 'classFeature' ? 'classFeature' : 'auto';
+    return {
+      kind: k, name: src.name,
+      ...(src.source ? { source: src.source } : {}),
+      ...(src.cls ? { cls: src.cls } : {}),
+      ...(src.level != null ? { level: src.level } : {}),
+    } as TermRef;
   }
   if (r.from && r.from !== '能力' && r.from !== '职业表') {
     return { kind: 'auto', name: String(r.from).trim() };

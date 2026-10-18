@@ -275,9 +275,38 @@ export async function resolveCharacter(env: SheetEnv, char: CharData): Promise<J
           for (const [from, list] of Object.entries({ ...(grp?.prepared || {}), ...(grp?.known || {}) })) {
             const at = Number(from);
             if (!Number.isFinite(at) || at > lvl) continue;
+            let chooseIdx = 0;
             for (const raw of (Array.isArray(list) ? list : [list])) {
-              const nm = String(raw).split('|')[0].split('#')[0];
-              if (nm) res.subclassSpells.push({ name: nm, from: `${spec.subclass}：${label}`, level: at });
+              const obj = raw && typeof raw === 'object' ? (raw as Json) : null;
+              // 固定法术名（字符串，或 `{ name }`）
+              const fixed = obj ? (typeof obj.name === 'string' ? obj.name : null) : String(raw);
+              if (fixed) {
+                const nm = fixed.split('|')[0].split('#')[0];
+                if (nm && nm !== '[object Object]') res.subclassSpells.push({ name: nm, from: `${spec.subclass}：${label}`, level: at });
+                continue;
+              }
+              // `{ choose: 'level=0;1;2|class=法师|school=C' }`：让玩家自己选，选了算「始终准备」
+              if (obj?.choose) {
+                const i = chooseIdx++;
+                const key = `${subclass.source}:${cls.name}:${subclass.name}:${at}#spell-${i}`;
+                const chooseStr = String(obj.choose);
+                const schoolKey = /school=([A-Z])/.exec(chooseStr)?.[1] ?? '';
+                const lvKeys = (/level=([0-9;]+)/.exec(chooseStr)?.[1] ?? '').split(';').filter(Boolean);
+                const lvTxt = lvKeys.length ? (lvKeys.length > 1 ? `环阶 ${lvKeys[0]}–${lvKeys[lvKeys.length - 1]} 的` : `环阶 ${lvKeys[0]} 的`) : '';
+                const schoolCn = schoolKey ? `${({ A: '防护', C: '咒法', D: '预言', E: '附魔', V: '塑能', I: '幻术', N: '死灵', T: '变化' } as Record<string, string>)[schoolKey] ?? ''}系` : '';
+                (res.subclassSpellChoices ??= []).push({
+                  key, id: `spell-${at}-${i}`, choose: chooseStr, count: 1,
+                  from: `${spec.subclass}：${label}`,
+                  label: `${spec.subclass}：选一道${lvTxt}${schoolCn}法师法术（始终准备）`,
+                  cls: cls.name,
+                });
+                const dec = (char.decisions || {})[key];
+                for (const pick of (Array.isArray(dec) ? dec : dec ? [dec] : [])) {
+                  const nm = String(pick);
+                  const lvl2 = Number((env.store.spellsAll.find((sp: Json) => sp.name === nm) as Json | undefined)?.level ?? at);
+                  res.subclassSpells.push({ name: nm, from: `${spec.subclass}：${label}`, level: lvl2 });
+                }
+              }
             }
           }
           if (grp?.expanded && !grp?.prepared) {
@@ -417,3 +446,6 @@ export function applyOriginFeatDefault(env: SheetEnv, char: CharData): boolean {
   char.feats.push(granted);
   return true;
 }
+
+
+
