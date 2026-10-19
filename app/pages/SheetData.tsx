@@ -18,6 +18,7 @@ import { Field, Panel, Tag } from '../components/ui';
 import type { Engine } from '../lib/engine';
 import { cardCampaign, combatFor, effectiveItems, newItemId, pickablesOf, pickablesOfItems, saveLibraryItem, shareItem, useHub, useLibrary, type LibraryItem } from '../lib/library';
 import { AiDatafy } from '../components/AiDatafy';
+import { ModsEditor } from '../components/ModsEditor';
 import { kindOfKey } from '../../src/library';
 import { aiExamples, aiSheetExamplesText, aiSpec, partsFromAnswer, partsJobForKey } from '../lib/ai';
 import { actions, stripDerived, useApp } from '../lib/store';
@@ -192,7 +193,10 @@ export function SheetData(p: Props) {
       {msg && <div className="small ok">{msg}</div>}
 
       {pickables.length > 0 && (
-        <Panel title="可选内容" aside={<span className="small muted">你的资料库 / 本团里的；勾上才对这张卡生效</span>}>
+        <Panel title="可选内容" aside={<span className="small muted">勾上才对这张卡生效</span>}>
+      <div className="tiny faint" style={{ marginBottom: 6 }}>
+        这些是你在资料库里勾了「选了才生效」的条目；不勾就只是躺在库里。
+      </div>
           <div className="stack" style={{ gap: 4 }}>
             {pickables.map(({ part, item }) => (
               <label key={part.id} className="row small" style={{ gap: 6, alignItems: 'flex-start' }}>
@@ -277,7 +281,11 @@ function ImportPanel({ engine, onAdd }: { engine: Engine; onAdd: (e: HomeRuleEnt
   const query = q.trim();
   const hits = query ? lib.filter((x) => (!kind || x.kind === kind) && x.name.includes(query)).slice(0, 40) : [];
   return (
-    <Panel title="从规则库添加" aside={<span>没数据化的也能加：显示原文、记次数</span>}>
+    <Panel title="从规则库添加" aside={<span>只抄原文，不加数值</span>}>
+      <div className="tiny faint" style={{ marginBottom: 6 }}>
+        这里只把官方原文抄成一条家规（<b>不生效、不改数值</b>）：适合「原文给我看看 + 记个次数」。
+        想真的加数值 / 加抗性，用上面每行的「用家规覆盖」，或者「＋ 新建」后自己填加值。
+      </div>
       <div className="row">
         <input placeholder="搜名字（专长、可选特性、物品、法术）" value={q} onChange={(e) => { setQ(e.target.value); setPick(null); }} style={{ flex: 1, minWidth: 200 }} />
         <select value={kind} onChange={(e) => setKind(e.target.value)}>
@@ -316,7 +324,14 @@ function ImportPanel({ engine, onAdd }: { engine: Engine; onAdd: (e: HomeRuleEnt
 
 function HrEditor({ engine, entry, onSave, onCancel }: { engine: Engine; entry: HomeRuleEntry; onSave: (e: HomeRuleEntry) => void; onCancel: () => void }) {
   const [e, setE] = useState<HomeRuleEntry>(structuredClone(entry));
+  // 表单改的是 e.mods / e.grants；「JSON」页签用 adv 接管
+  const [jsonMode, setJsonMode] = useState(false);
   const [adv, setAdv] = useState(JSON.stringify({ mods: e.mods || [], grants: e.grants || [], choices: e.choices || [] }, null, 1));
+  const syncAdv = (patch: { mods?: Json[]; grants?: Json[] }) => {
+    const next = { ...e, ...patch } as HomeRuleEntry;
+    setE(next);
+    setAdv(JSON.stringify({ mods: next.mods || [], grants: next.grants || [], choices: next.choices || [] }, null, 1));
+  };
   const [err, setErr] = useState('');
   const res: Json[] = e.resources || [];
   const setRes = (i: number, patch: Json) => setE({ ...e, resources: res.map((r, j) => (j === i ? { ...r, ...patch } : r)) });
@@ -357,10 +372,20 @@ function HrEditor({ engine, entry, onSave, onCancel }: { engine: Engine; entry: 
             ))}
             <button className="btn sm" onClick={() => setE({ ...e, resources: [...res, { name: e.name || '', formula: '1', recovery: 'long' }] })}>加一个次数池</button>
           </div>
-          <details>
-            <summary className="small">高级：卡面数据（mods / grants / choices，JSON）</summary>
-            <textarea rows={10} className="mono" value={adv} onChange={(x) => setAdv(x.target.value)} style={{ width: '100%', marginTop: 6 }} />
-          </details>
+          <div className="row" style={{ margin: "8px 0 4px", gap: 8, alignItems: "center" }}>
+            <span className="small bold">这张能力给人物卡加什么</span>
+            <span style={{ flex: 1 }} />
+            <button className={jsonMode ? "btn sm" : "btn sm primary"} onClick={() => setJsonMode(false)}>表单</button>
+            <button className={jsonMode ? "btn sm primary" : "btn sm"} onClick={() => { setAdv(JSON.stringify({ mods: e.mods || [], grants: e.grants || [], choices: e.choices || [] }, null, 1)); setJsonMode(true); }}>JSON</button>
+          </div>
+          {jsonMode ? (
+            <>
+              <div className="tiny faint">mods / grants / choices 的原始 JSON（保存时以这里为准）</div>
+              <textarea rows={10} className="mono" value={adv} onChange={(x) => setAdv(x.target.value)} style={{ width: "100%", marginTop: 6 }} />
+            </>
+          ) : (
+            <ModsEditor mods={(e.mods || []) as Json[]} grants={(e.grants || []) as Json[]} onChange={syncAdv} />
+          )}
           {err && <div className="dangerline small">{err}</div>}
         </div>
         <footer>
