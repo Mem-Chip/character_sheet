@@ -34,6 +34,8 @@ export interface CombatUi {
   /** 骰子来源：按控制者（'*' = 默认） */
   dice: Record<string, DiceMode>;
   selected: string | null;
+  /** Shift 多选的那些（批量 /heal /damage /temphp /cond 用；不含 selected 自己） */
+  manySel: string[];
   targets: string[];
   /** 选目标模式：点了一个要目标的动作之后，点棋子 / 先攻条里的人把他加进来，最后确认 */
   aim: Aim | null;
@@ -137,7 +139,7 @@ interface RemoteState {
   dice?: Record<string, DiceMode>; hidden?: string[]; map?: MapState; chat?: ChatRoll[]; actingAs?: string | null; dicePhys?: DicePhysics; diceColors?: Record<string, string>; diceOpen?: boolean; reveal?: Record<string, boolean>;
 }
 
-let ui: CombatUi = { session: null, version: 0, links: {}, dice: {}, selected: null, targets: [], aim: null, tp: null, formPick: null, summonFor: null, replay: null, chat: [], toast: null, remote: null };
+let ui: CombatUi = { session: null, version: 0, links: {}, dice: {}, selected: null, manySel: [], targets: [], aim: null, tp: null, formPick: null, summonFor: null, replay: null, chat: [], toast: null, remote: null };
 let engineRef: Engine | null = null;
 let stream: EventSource | null = null;
 const listeners = new Set<() => void>();
@@ -299,7 +301,7 @@ export const combat = {
     stream?.close();
     const info = await api<RemoteState & { role: 'dm' | 'player'; me: number; campaignId: string; map: MapState }>('GET', `encounters/${encounterId}`);
     ui = {
-      ...ui, selected: null, targets: [],
+      ...ui, selected: null, manySel: [], targets: [],
       remote: { id: encounterId, name: info.name, campaignId: info.campaignId, role: info.role, me: info.me, owners: info.owners, dice: {}, hidden: [], map: info.map, chat: [], actingAs: null, pings: [], dicePhys: {}, diceColors: {}, diceOpen: false, reveal: {}, connected: false },
     };
     applyRemote(info);
@@ -512,10 +514,42 @@ export const combat = {
   },
   reset(engine: Engine): void {
     if (ui.remote) { act({ op: 'reset' }); return; }
-    set({ session: new Session(createEncounter('enc'), ctxFor(engine)), links: {}, selected: null, targets: [], formPick: null, summonFor: null, replay: null });
+    set({ session: new Session(createEncounter('enc'), ctxFor(engine)), links: {}, selected: null, manySel: [], targets: [], formPick: null, summonFor: null, replay: null });
   },
-  select(id: string | null): void {
-    set({ selected: id }, true);
+  select(id: string | null, add = false): void {
+    if (!add) { set({ selected: id, manySel: [] }, true); return; }
+    // Shift 点：在多选里加 / 去掉（选中的那个算主选，不重复进 manySel）
+    if (!id) return;
+    const has = ui.manySel.includes(id) || ui.selected === id;
+    if (has) {
+      const rest = ui.manySel.filter((x) => x !== id);
+      set({ manySel: rest, ...(ui.selected === id ? { selected: rest[0] ?? null } : {}) }, true);
+      return;
+    }
+    set({ manySel: [...ui.manySel, id], ...(ui.selected ? {} : { selected: id }) }, true);
+  },
+  /** 当前要批量处理的那些（主选 + 多选，去重） */
+  picked(): string[] {
+    const s = ui.session;
+    const all = [ui.selected, ...ui.manySel].filter((x): x is string => !!x && !!s?.state.combatants[x]);
+    return [...new Set(all)];
+  },
+  clearMany(): void { set({ manySel: [] }, true); },
+  /** 批量：heal / damage / tempHp / cond（每个目标各发一条命令） */
+  batch(kind: 'heal' | 'damage' | 'tempHp' | 'cond', amount: number, extra?: string): string | null {
+    const ids = combat.picked();
+    if (!ids.length) return '先选中目标（Shift 点可以多选）';
+    for (const id of ids) {
+      if (kind === 'heal') combat.dispatch({ type: 'heal', id, amount });
+      else if (kind === 'tempHp') combat.dispatch({ type: 'tempHp', id, amount });
+      else if (kind === 'damage') combat.dispatch({ type: 'damage', id, amount, damageType: extra || '钝击' });
+      else {
+        // 状态：走 applyEffect 的 template（XPHB:condition:<名>）
+        const tpl = `XPHB:condition:${extra}`;
+        combat.dispatch({ type: 'applyEffect', to: id, template: tpl });
+      }
+    }
+    return null;
   },
   toggleTarget(id: string): void {
     set({ targets: ui.targets.includes(id) ? ui.targets.filter((t) => t !== id) : [...ui.targets, id] });
@@ -598,9 +632,9 @@ export const combat = {
     combat.dispatch({ ...a.cmd, targets: a.picks, ...(a.placed && a.cmd.type === 'useAction' ? { area: a.placed } : {}) } as Command);
   },
   /** 点了参与者（地图棋子、先攻条、列表）：选目标模式里是加目标，平时是选中 */
-  clickCombatant(id: string): void {
+  clickCombatant(id: string, add = false): void {
     if (ui.aim) combat.aimPick(id);
-    else combat.select(id);
+    else combat.select(id, add);
   },
 
   /** 指令框：/r 公开掷骰、/pr 私密掷骰，别的就是一句话。写错了返回错误信息 */
@@ -773,3 +807,4 @@ export function replayedView(u: CombatUi): { s: Session | null; remote: Remote |
     : null;
   return { s, remote };
 }
+

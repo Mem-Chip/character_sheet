@@ -38,8 +38,8 @@ export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: Comba
         return (
           <div
             key={id}
-            className={['cbt', id === ui.selected && 'sel', id === current && 'turn', c.live.dead && 'dead', isTarget && 'is-tgt', hiddenNow && 'is-hidden'].filter(Boolean).join(' ')}
-            onClick={() => combat.clickCombatant(id)}
+            className={['cbt', (id === ui.selected || (ui.manySel ?? []).includes(id)) && 'sel', id === current && 'turn', c.live.dead && 'dead', isTarget && 'is-tgt', hiddenNow && 'is-hidden'].filter(Boolean).join(' ')}
+            onClick={(ev) => combat.clickCombatant(id, ev.shiftKey)}
             onContextMenu={(e) => tokenMenu(e, id, ui)}
           >
             <span className="init">{c.initiative ?? '—'}</span>
@@ -104,5 +104,6 @@ export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: Comba
     </Panel>
   );
 }
+
 
 

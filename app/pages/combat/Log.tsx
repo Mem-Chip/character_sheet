@@ -301,6 +301,31 @@ function CommandBox() {
       setText('');
       return;
     }
+    // 批量结算：作用在「主选 + Shift 多选」上（/heal 10 · /damage 8 火焰 · /temphp 5 · /cond 中毒）
+    const mm2 = t.match(/^\/(heal|damage|temphp|cond)(?:\s+([\s\S]*))?$/i);
+    if (mm2) {
+      const kind = mm2[1].toLowerCase() as 'heal' | 'damage' | 'temphp' | 'cond';
+      const rest = (mm2[2] ?? '').trim();
+      const need = kind === 'cond' ? '要写状态名，比如 /cond 中毒' : '要写数值，比如 /heal 10';
+      if (!rest) { setErr(need); return; }
+      if (kind === 'cond') {
+        const [cond, ...notes] = rest.split(/\s+/);
+        const err = combat.batch('cond', 0, cond);
+        if (err) { setErr(err); return; }
+        setErr(''); setFound(null); setText('');
+        setHist([t, ...hist.filter((x) => x !== t)].slice(0, 20)); setH(-1);
+        void notes;
+        return;
+      }
+      const [numRaw, ...types] = rest.split(/\s+/);
+      const n = Number(numRaw);
+      if (!Number.isFinite(n) || n <= 0) { setErr('数值要写正数，比如 /damage 8 火焰'); return; }
+      const err = combat.batch(kind === 'temphp' ? 'tempHp' : kind, n, types.join(' '));
+      if (err) { setErr(err); return; }
+      setErr(''); setFound(null); setText('');
+      setHist([t, ...hist.filter((x) => x !== t)].slice(0, 20)); setH(-1);
+      return;
+    }
     setFound(null);
     const e = combat.say(t);
     if (e) { setErr(e); return; }
@@ -312,7 +337,8 @@ function CommandBox() {
   return (
     <div className="cmdbox">
       <input
-        value={text} title={['直接打字 = 说一句话', '/r 1d20+5, 2d6+3 说明 · ad20 优势 · dd20 劣势 · 4d6kh3 取高', '/pr 私密掷骰', '/match 名字（中文或英文）：把法术、状态、专长、物品……的原文发到日志'].join('\n')}
+        value={text} title={['直接打字 = 说一句话', '/r 1d20+5, 2d6+3 说明 · ad20 优势 · dd20 劣势 · 4d6kh3 取高', '/pr 私密掷骰', '/match 名字（中文或英文）：把法术、状态、专长、物品、怪物的原文发到日志',
+        '/heal 10 · /damage 8 火焰 · /temphp 5 · /cond 中毒：批量作用在当前选中的那些（Shift 点可以多选）'].join('\n')}
         onChange={(e) => { setText(e.target.value); setErr(''); }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') send();
@@ -336,3 +362,4 @@ function CommandBox() {
     </div>
   );
 }
+

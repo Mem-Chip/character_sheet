@@ -45,7 +45,7 @@ type Drag =
   | { kind: 'pen'; pts: number[] }
   | { kind: 'measure'; pts: Array<{ x: number; y: number }>; to: { x: number; y: number } }
   | { kind: 'shape'; from: { x: number; y: number }; to: { x: number; y: number } }
-  | { kind: 'shapeMove'; id: string; start: { x: number; y: number }; d: { x: number; y: number } }
+  | { kind: 'shapeMove'; id: string; start: { x: number; y: number }; orig: { x: number; y: number }; d: { x: number; y: number } }
   | { kind: 'shapeRot'; id: string; dir: number }
   | { kind: 'erase'; ids: Set<string> };
 
@@ -303,9 +303,13 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
     } else if (drag.kind === 'shapeMove') {
       // 自由挪；按住 Shift 按整格挪（和格子的相对位置不变）
       const p = toWorld(e);
-      const d = e.shiftKey
-        ? { x: Math.round((p.x - drag.start.x) / g) * g, y: Math.round((p.y - drag.start.y) / g) * g }
-        : { x: p.x - drag.start.x, y: p.y - drag.start.y };
+      let d = { x: p.x - drag.start.x, y: p.y - drag.start.y };
+      if (e.shiftKey) {
+        // 吸附到**地图网格**：把移动后的锚点四舍五入到最近的格点（以地图原点 ox/oy 为基准）
+        const sx = Math.round((drag.orig.x + d.x - map.grid.ox) / g) * g + map.grid.ox;
+        const sy = Math.round((drag.orig.y + d.y - map.grid.oy) / g) * g + map.grid.oy;
+        d = { x: sx - drag.orig.x, y: sy - drag.orig.y };
+      }
       if (d.x !== drag.d.x || d.y !== drag.d.y) setDrag({ ...drag, d });
     } else if (drag.kind === 'token') {
       // 鼠标在哪，棋子的中心就在哪（不管当初按在棋子的哪个位置）
@@ -385,7 +389,9 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
     e.stopPropagation();
     setSelShape(id);
     box.current!.setPointerCapture(e.pointerId);
-    setDrag({ kind: 'shapeMove', id, start: toWorld(e), d: { x: 0, y: 0 } });
+    const sh0 = (map.shapes ?? []).find((x) => x.id === id);
+    const o0 = sh0 ? tplOrigin(sh0.tpl) : null;
+    setDrag({ kind: 'shapeMove', id, start: toWorld(e), orig: o0 ?? { x: 0, y: 0 }, d: { x: 0, y: 0 } });
   };
   const rotDown = (e: React.PointerEvent, id: string, dir: number) => {
     if (e.button !== 0) return;
@@ -408,7 +414,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
     if (ui.aim) { e.stopPropagation(); combat.aimPick(id); return; }
     if (tool !== 'move') return;
     e.stopPropagation();
-    combat.select(id);
+    combat.select(id, e.shiftKey);
     if (!combat.canControl(id)) return;
     const t = map.tokens[id];
     box.current!.setPointerCapture(e.pointerId);
@@ -656,7 +662,8 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
                 down && !proneOf[id] ? (c.live.stable ? '倒地（稳定）' : '倒地（濒死）') : '',
                 ...(effOf[id] ?? []),
               ].filter(Boolean);
-              const cls = ['token', c.side === 'party' ? 'party' : c.side === 'enemy' ? 'enemy' : 'other', id === ui.selected && 'sel', id === current && 'turn',
+              const multi = (ui.manySel ?? []).includes(id);
+    const cls = ['token', c.side === 'party' ? 'party' : c.side === 'enemy' ? 'enemy' : 'other', (id === ui.selected || multi) && 'sel', id === current && 'turn',
                 ui.targets.includes(id) && 'tgt', c.live.dead && 'dead', prone && 'prone', conc && 'conc', remote.hidden.includes(id) && 'hid', combat.canControl(id) && 'mine'].filter(Boolean).join(' ');
               return (
                 <g
@@ -666,7 +673,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
                   onContextMenu={(e) => tokenMenu(e, id, ui)}
                 >
                   <title>{c.name}（{wound}）{tipParts.length ? `：${tipParts.join('、')}` : ''}</title>
-                  {id === ui.selected && <circle className="ring-sel" r={bodyR + 5} />}
+                  {(id === ui.selected || multi) && <circle className="ring-sel" r={bodyR + 5} />}
                   {ui.targets.includes(id) && <circle className="ring-tgt" r={bodyR + (id === ui.selected ? 10 : 5)} />}
                   {conc && <circle className="ring-conc" r={bodyR + 2.5} />}
                   {av && (
