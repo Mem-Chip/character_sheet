@@ -15,6 +15,13 @@ export const KIND_LABEL: Record<string, string> = {
   spell: '法术', condition: '状态', status: '状态', disease: '疾病', feat: '专长', optfeature: '可选特性', item: '物品',
   skill: '技能', action: '动作', sense: '感官', variantrule: '规则', language: '语言', race: '种族', background: '背景',
   classFeature: '职业特性', subclassFeature: '子职特性', raceFeature: '种族特质', itemMastery: '武器精通', itemProperty: '武器属性',
+  monster: '怪物',
+};
+
+/** 5etools 的生物类型 → 中文 */
+const CTYPE_CN: Record<string, string> = {
+  aberration: '异形', beast: '野兽', celestial: '天界生物', construct: '构装生物', dragon: '龙', elemental: '元素',
+  fey: '妖精', fiend: '邪魔', giant: '巨人', humanoid: '类人生物', monstrosity: '异怪', ooze: '泥怪', plant: '植物', undead: '亡灵',
 };
 
 /** 类别 → [数据键, 数组名]；一个类别可以查好几份 */
@@ -37,7 +44,7 @@ const TABLES: Record<string, Array<[string, string]>> = {
   itemProperty: [['itemsBase', 'itemProperty']],
 };
 
-export const canLookup = (kind: string) => kind in TABLES || kind === 'classFeature' || kind === 'subclassFeature' || kind === 'raceFeature' || kind === 'auto';
+export const canLookup = (kind: string) => kind in TABLES || kind === 'classFeature' || kind === 'subclassFeature' || kind === 'raceFeature' || kind === 'monster' || kind === 'auto';
 
 /** 规则条目键 → 术语：`XPHB:spell:名`、`XPHB:action:名`、`XPHB:condition:名`、职业特性 `XPHB:职业:名:等级`、其余 `XPHB:名` */
 export function termOfKey(key: string): TermRef | null {
@@ -127,6 +134,32 @@ async function find(engine: Engine, ref: TermRef): Promise<TermData | null> {
     meta: metaOf(kind, e), entries: e.entries || (e.entry ? [e.entry] : []),
   } : null);
 
+  if (ref.kind === 'monster') {
+    const d = await store.ensure('bestiaryXmm').catch(() => null);
+    const list = ((d as Json | null)?.monster ?? []) as Json[];
+    const want = String(ref.name).replace(/\s/g, '');
+    const hit = list.find((m) => String(m.name).replace(/\s/g, '') === want && !m._copy)
+      ?? list.find((m) => String(m.name).replace(/\s/g, '').includes(want) && !m._copy);
+    if (!hit) return null;
+    const cr = Array.isArray(hit.cr) ? String(hit.cr[0]) : String(hit.cr ?? '?');
+    const ac = Array.isArray(hit.ac) ? (typeof hit.ac[0] === 'number' ? hit.ac[0] : hit.ac[0]?.ac) : hit.ac?.ac;
+    const speed = hit.speed ?? {};
+    const size = ({ T: '微型', S: '小型', M: '中型', L: '大型', H: '巨型', G: '超巨型' } as Record<string, string>)[String((hit.size ?? ['M'])[0])] ?? '中型';
+    const meta = [
+      `${size} ${CTYPE_CN[String((hit.type && (typeof hit.type === 'string' ? hit.type : hit.type.type)) ?? '')] ?? '生物'} · 挑战等级 ${cr}`,
+      [ac != null ? `AC ${ac}` : '', hit.hp?.average != null ? `HP ${hit.hp.average}${hit.hp.formula ? `（${hit.hp.formula}）` : ''}` : '',
+        speed.walk != null ? `速度 ${speed.walk} 尺` : '', speed.fly ? `飞行 ${speed.fly}` : '', speed.swim ? `游泳 ${speed.swim}` : ''].filter(Boolean).join(' · '),
+      ['str', 'dex', 'con', 'int', 'wis', 'cha'].map((k) => `${({ str: '力量', dex: '敏捷', con: '体质', int: '智力', wis: '感知', cha: '魅力' } as Record<string, string>)[k]} ${hit[k] ?? 10}`).join(' · '),
+    ].filter(Boolean);
+    const entries: Json[] = [];
+    for (const [key, label] of [['trait', '特性'], ['action', '动作'], ['bonus', '附赠动作'], ['reaction', '反应'], ['legendary', '传奇动作']] as Array<[string, string]>) {
+      for (const a of ((hit as Json)[key] ?? []) as Json[]) {
+        if (!a?.name) continue;
+        entries.push({ type: 'entries', name: `${label}：${a.name}`, entries: (a.entries ?? []) as Json[] });
+      }
+    }
+    return { kind: 'monster', name: String(hit.name), source: String(hit.source ?? 'XMM'), kindLabel: KIND_LABEL.monster, meta, entries };
+  }
   if (ref.kind === 'raceFeature') {
     return findRaceFeature(engine, ref.name);
   }
@@ -252,6 +285,17 @@ export async function searchTerms(engine: Engine, q: string, limit = 12): Promis
         (nm === want || en.toLowerCase() === low ? exact : part).push({ kind, name: nm, ...(en ? { en } : {}) });
       }
     }
+  }
+  // 怪物（图鉴）：单独扫一遍，别拖慢其它表
+  const best = await store.ensure('bestiaryXmm').catch(() => null);
+  for (const m of (((best as Json | null)?.monster ?? []) as Json[])) {
+    const nm = String(m?.name ?? '');
+    const en = String(m?.ENG_name ?? '');
+    if (!nm || !(nm.includes(want) || en.toLowerCase().includes(low))) continue;
+    const k = `monster|${nm}`;
+    if (seen.has(k)) continue;
+    seen.add(k);
+    (nm === want || en.toLowerCase() === low ? exact : part).push({ kind: 'monster', name: nm, ...(en ? { en } : {}) });
   }
   // 短的名字排前面（「火球术」比「延迟爆裂火球」更可能是要找的）
   part.sort((a, b) => a.name.length - b.name.length);
