@@ -110,12 +110,7 @@ export function SheetData(p: Props) {
         title="这张卡的能力"
         aside={<>
           <span>{sources.length} 项</span>
-          {/* 从零建一条家规能力（不走「覆盖官方」也不走「从规则库导入」） */}
-          <button
-            className="btn sm"
-            onClick={() => setEditing({ ...engine.env.abilities.hrBlank(), name: '新家规能力' })}
-            title="建一条只属于这张卡的能力：名字、说明、加值、次数池都在弹窗里填"
-          >＋ 新建</button>
+
         </>}
         flush
       >
@@ -176,7 +171,7 @@ export function SheetData(p: Props) {
                             <button className="btn sm" onClick={() => setEditing(hr)}>编辑家规</button>
                             <button className="btn ghost sm danger" onClick={() => { if (confirm('删掉这条家规，恢复官方数据？')) removeHr(hr.id); }}>恢复官方数据</button>
                           </>
-                          : <button className="btn sm" onClick={() => startCover(s, card)}>用家规覆盖（只改这张卡）</button>)}
+                          : null)}
                         {!isHr && sync.user && (!combat || combat.automation === 'manual' || hubC) && (
                           <button className="btn sm" onClick={() => setAi({ s, key, card, existing: hubC?.from === 'mine' ? hubC.item : undefined })}>{hubC ? 'AI 再写一遍（卡面 + 战斗）…' : 'AI 写数据（卡面 + 战斗，存进我的资料库）…'}</button>
                         )}
@@ -194,9 +189,6 @@ export function SheetData(p: Props) {
 
       {pickables.length > 0 && (
         <Panel title="可选内容" aside={<span className="small muted">勾上才对这张卡生效</span>}>
-      <div className="tiny faint" style={{ marginBottom: 6 }}>
-        这些是你在资料库里勾了「选了才生效」的条目；不勾就只是躺在库里。
-      </div>
           <div className="stack" style={{ gap: 4 }}>
             {pickables.map(({ part, item }) => (
               <label key={part.id} className="row small" style={{ gap: 6, alignItems: 'flex-start' }}>
@@ -209,7 +201,6 @@ export function SheetData(p: Props) {
         </Panel>
       )}
 
-      <ImportPanel engine={engine} onAdd={(e) => setEditing(e)} />
 
       {ai && (
         <AiDatafy
@@ -271,53 +262,6 @@ function libraryOf(engine: Engine): LibItem[] {
   add('item', d.items?.item);
   add('spell', engine.env.store.spellsAll);
   return out;
-}
-
-function ImportPanel({ engine, onAdd }: { engine: Engine; onAdd: (e: HomeRuleEntry) => void }) {
-  const lib = useMemo(() => libraryOf(engine), [engine]);
-  const [q, setQ] = useState('');
-  const [kind, setKind] = useState('');
-  const [pick, setPick] = useState<LibItem | null>(null);
-  const query = q.trim();
-  const hits = query ? lib.filter((x) => (!kind || x.kind === kind) && x.name.includes(query)).slice(0, 40) : [];
-  return (
-    <Panel title="从规则库添加" aside={<span>只抄原文，不加数值</span>}>
-      <div className="tiny faint" style={{ marginBottom: 6 }}>
-        这里只把官方原文抄成一条家规（<b>不生效、不改数值</b>）：适合「原文给我看看 + 记个次数」。
-        想真的加数值 / 加抗性，用上面每行的「用家规覆盖」，或者「＋ 新建」后自己填加值。
-      </div>
-      <div className="row">
-        <input placeholder="搜名字（专长、可选特性、物品、法术）" value={q} onChange={(e) => { setQ(e.target.value); setPick(null); }} style={{ flex: 1, minWidth: 200 }} />
-        <select value={kind} onChange={(e) => setKind(e.target.value)}>
-          <option value="">全部</option>
-          {['feat', 'optfeature', 'item', 'spell'].map((k) => <option key={k} value={k}>{KIND_CN[k]}</option>)}
-        </select>
-      </div>
-      {query && !hits.length && <div className="small muted" style={{ marginTop: 8 }}>没找到。</div>}
-      {hits.length > 0 && (
-        <div className="importlist">
-          {hits.map((x, i) => (
-            <button key={i} type="button" className={'opt' + (pick === x ? ' on' : '')} onClick={() => setPick(x)}>
-              <span style={{ flex: 1 }} className="serif">{x.name}</span>
-              <span className="tiny faint">{KIND_CN[x.kind]} · {x.source}</span>
-            </button>
-          ))}
-        </div>
-      )}
-      {pick && (
-        <div className="stack" style={{ marginTop: 10 }}>
-          <div className="preview prose"><Entries entries={pick.entries} /></div>
-          <div className="row">
-            <button className="btn primary sm" onClick={() => onAdd({
-              ...engine.env.abilities.hrBlank(), name: pick.name, text: `从规则库导入：${KIND_CN[pick.kind]}「${pick.name}」（${pick.source}）`,
-              entries: pick.entries, ref: { kind: pick.kind, source: pick.source, name: pick.name },
-            })}>加到这张卡…</button>
-            <span className="small muted">下一步可以给它加一个次数池（比如「每次长休 1 次」）。</span>
-          </div>
-        </div>
-      )}
-    </Panel>
-  );
 }
 
 /* ───────────── 家规编辑器 ───────────── */

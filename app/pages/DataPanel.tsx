@@ -64,7 +64,6 @@ export function DataPanel({ engine }: { engine: Engine }) {
     <div className="page stack">
       <div className="row">
         <h2 className="serif" style={{ margin: 0, fontWeight: 500 }}>资料库</h2>
-        <span className="small muted">内容跟着你的账户走：你的卡都能用；挂到战役里才对别人生效（新内容直接生效，覆盖官方规则的要 DM 点头）</span>
         <span style={{ flex: 1 }} />
         <button className="btn" onClick={() => setSearching(true)}>从 5etools 搜一条…</button>
         <button className="btn primary" onClick={() => setEdit(blankItem())}>新建</button>
