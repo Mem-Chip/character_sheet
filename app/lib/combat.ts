@@ -536,13 +536,28 @@ export const combat = {
   },
   clearMany(): void { set({ manySel: [] }, true); },
   /** 批量：heal / damage / tempHp / cond（每个目标各发一条命令） */
-  batch(kind: 'heal' | 'damage' | 'tempHp' | 'cond', amount: number, extra?: string): string | null {
+  batch(kind: 'heal' | 'damage' | 'tempHp' | 'cond', amount: number | string, extra?: string): string | null {
     const ids = combat.picked();
     if (!ids.length) return '先选中目标（Shift 点可以多选）';
+    // 数值也可以写成骰子（2d6+3 / 8d6）：先掷一次，所有人吃这一次的结果，掷骰进日志
+    let value = typeof amount === 'number' ? amount : NaN;
+    if (typeof amount === 'string') {
+      const expr = amount.trim();
+      const who = { id: Math.random().toString(36).slice(2, 10), by: 0, byName: '我', at: Date.now(), afterTx: ui.session?.transactions.length ?? 0 };
+      let entry: ChatRoll | null = null;
+      try { entry = chatEntry(`/r ${expr} 批量${{ heal: '治疗', damage: '伤害', tempHp: '临时生命值', cond: '状态' }[kind]}`, who); }
+      catch (e) { return (e as Error).message; }
+      if (!entry) return `看不懂「${expr}」：写数字或骰子，比如 8 或 2d6+3`;
+      value = Number(entry.results?.[0]?.total ?? NaN);
+      if (!Number.isFinite(value)) return `「${expr}」掷出来不是个数`;
+      // 公开掷骰（战役里也会同步给别人）
+      if (!ui.remote) set({ chat: [...ui.chat, entry].slice(-100) });
+    }
+    if (!Number.isFinite(value) || value <= 0) return '数值要大于 0';
     for (const id of ids) {
-      if (kind === 'heal') combat.dispatch({ type: 'heal', id, amount });
-      else if (kind === 'tempHp') combat.dispatch({ type: 'tempHp', id, amount });
-      else if (kind === 'damage') combat.dispatch({ type: 'damage', id, amount, damageType: extra || '钝击' });
+      if (kind === 'heal') combat.dispatch({ type: 'heal', id, amount: value });
+      else if (kind === 'tempHp') combat.dispatch({ type: 'tempHp', id, amount: value });
+      else if (kind === 'damage') combat.dispatch({ type: 'damage', id, amount: value, damageType: extra || '钝击' });
       else {
         // 状态：走 applyEffect 的 template（XPHB:condition:<名>）
         const tpl = `XPHB:condition:${extra}`;

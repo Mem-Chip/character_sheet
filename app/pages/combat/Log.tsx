@@ -318,9 +318,8 @@ function CommandBox() {
         return;
       }
       const [numRaw, ...types] = rest.split(/\s+/);
-      const n = Number(numRaw);
-      if (!Number.isFinite(n) || n <= 0) { setErr('数值要写正数，比如 /damage 8 火焰'); return; }
-      const err = combat.batch(kind === 'temphp' ? 'tempHp' : kind, n, types.join(' '));
+      // 数字或骰子（2d6+3 / 8d6）都行，掷骰交给 batch（会进日志）
+      const err = combat.batch(kind === 'temphp' ? 'tempHp' : kind, numRaw, types.join(' '));
       if (err) { setErr(err); return; }
       setErr(''); setFound(null); setText('');
       setHist([t, ...hist.filter((x) => x !== t)].slice(0, 20)); setH(-1);
@@ -338,7 +337,7 @@ function CommandBox() {
     <div className="cmdbox">
       <input
         value={text} title={['直接打字 = 说一句话', '/r 1d20+5, 2d6+3 说明 · ad20 优势 · dd20 劣势 · 4d6kh3 取高', '/pr 私密掷骰', '/match 名字（中文或英文）：把法术、状态、专长、物品、怪物的原文发到日志',
-        '/heal 10 · /damage 8 火焰 · /temphp 5 · /cond 中毒：批量作用在当前选中的那些（Shift 点可以多选）'].join('\n')}
+        '/heal 10（也能写 2d6+3）· /damage 8 火焰（或 8d6 火焰）· /temphp 5 · /cond 中毒：批量作用在当前选中的那些（Shift 点可以多选）'].join('\n')}
         onChange={(e) => { setText(e.target.value); setErr(''); }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') send();
@@ -362,4 +361,5 @@ function CommandBox() {
     </div>
   );
 }
+
 
