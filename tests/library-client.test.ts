@@ -48,7 +48,7 @@ beforeEach(() => {
 });
 
 describe('客户端资料库接进规则环境', () => {
-  it('登录后取到我的库，接成第 3 层家规；条目带的来源书一起放行', async () => {
+  it('登录后取到我的库；**卡上勾了哪条才套哪条**；条目带的来源书一起放行', async () => {
     stubApi([ITEM]);
     const { init } = await import('../app/lib/sync');
     const lib = await import('../app/lib/library');
@@ -59,7 +59,10 @@ describe('客户端资料库接进规则环境', () => {
     const engine = fakeEngine();
     lib.installLibrary(engine as never);
 
-    const rules = engine.env.homelib.user({} as CharData);
+    // 默认一条都不套（资料库内容不再自动改所有卡）
+    expect(engine.env.homelib.user({} as CharData)).toHaveLength(0);
+    // 卡上勾了 hr-c00001 才生效
+    const rules = engine.env.homelib.user({ hrPicked: ['hr-c00001'] } as unknown as CharData);
     // 只带战斗数据的那条（hr-c00002）不进卡面；带卡面数据的那条进
     expect(rules).toHaveLength(1);
     expect(rules[0]).toMatchObject({ id: 'hr-c00001', covers: 'XPHB:野蛮人:无甲防御:1', mods: [{ kind: 'ac', bonus: 1 }] });

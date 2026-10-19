@@ -10,7 +10,7 @@
 import { useSyncExternalStore } from 'react';
 import { RULE_FILES } from '../../src/bridge/rule-files';
 import { RuleBook, encounterLayers } from '../../src/combat';
-import { coveredKeysOf, homeRulesFor, houseRulesFor, namesOf, ruleKeyOf, sourcesOfItem, usesOwnLibrary, type LibraryItem, type ResPart, type ShareState, type ShareView } from '../../src/library';
+import { coveredKeysOf, hasSheetData, homeRuleOf, homeRulesFor, houseRulesFor, namesOf, ruleKeyOf, sourcesOfItem, usesOwnLibrary, type LibraryItem, type ResPart, type ShareState, type ShareView } from '../../src/library';
 import type { CampaignData, CharData, HomeRuleEntry } from '../../src/sheet';
 import { api } from './api';
 import type { Engine } from './engine';
@@ -180,7 +180,13 @@ export function installLibrary(engine: Engine): void {
   // 绑了战役的卡一律按这个战役挂载的内容算（DM 的资源管理器说了算），否则会出现两个问题：
   //   ① 玩家能绕过 DM 在自己卡上用没挂进本团的内容；
   //   ② 同一张卡，玩家自己打开是加了私货的、DM / 别人打开又不是 —— 看到的数不一样。
-  engine.env.homelib.user = (char) => (usesOwnLibrary(char as { _campaign?: string }) ? homeRulesFor(libraryNow()) : []);
+  // 卡面第 3 层：我的资料库 —— **卡上勾了哪几条才生效**（默认一条都不套）。
+  // 以前是「我的库全部自动生效」，等于建一条内容就悄悄改了所有卡；现在改成手动勾选（char.hrPicked）。
+  engine.env.homelib.user = (char) => {
+    if (!usesOwnLibrary(char as { _campaign?: string })) return [];
+    const picked = new Set(((char as { hrPicked?: string[] }).hrPicked ?? []) as string[]);
+    return pickedRulesOf(libraryNow(), picked);
+  };
   // 我库里带的来源书只用来**装数据文件**，不算「启用的书」（否则导入一条就放开整本书）
   engine.env.userSources = () => [...new Set(libraryNow().flatMap(sourcesOfItem))];
   // 我库里的条目只放行它们自己（不在战役里也能选中）
@@ -225,6 +231,23 @@ export function combatPartOf(h: Hub | null, key: string, ownerId?: number): { pa
 export function pickablesOf(h: Hub | null): Array<{ part: ResPart; item: LibraryItem }> {
   return effectiveParts(h).filter(({ part }) => part.pickable);
 }
+
+/** 卡上勾了的那几条 part → 卡面家规（没勾的一条都不给） */
+export function pickedRulesOf(items: LibraryItem[], picked: Set<string>): HomeRuleEntry[] {
+  const out: HomeRuleEntry[] = [];
+  for (const item of items) {
+    for (const part of item.parts ?? []) {
+      if (!picked.has(part.id)) continue;
+      const hr = homeRuleOf(part, item);
+      if (hr) out.push(hr);
+    }
+  }
+  return out;
+}
+
+/** 资料库里「能套到卡上」的那些 part（有卡面数据、能覆盖官方、或者带战斗数据） */
+export const attachableOfItems = (items: LibraryItem[]): Array<{ part: ResPart; item: LibraryItem }> =>
+  items.flatMap((item) => (item.parts ?? []).filter((p) => hasSheetData(p) || p.combat || (p.key && !p.key.startsWith('HR:'))).map((part) => ({ part, item })));
 
 /** 一堆条目里「选了才生效」的那些（人物卡把你的库和本团并起来列） */
 export const pickablesOfItems = (items: LibraryItem[]): Array<{ part: ResPart; item: LibraryItem }> =>

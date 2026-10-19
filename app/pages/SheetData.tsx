@@ -16,7 +16,7 @@ import { Term } from '../components/Term';
 import { termOfKey } from '../lib/terms';
 import { Field, Panel, Tag } from '../components/ui';
 import type { Engine } from '../lib/engine';
-import { cardCampaign, combatFor, effectiveItems, newItemId, pickablesOf, pickablesOfItems, saveLibraryItem, shareItem, useHub, useLibrary, type LibraryItem } from '../lib/library';
+import { attachableOfItems, cardCampaign, combatFor, effectiveItems, newItemId, saveLibraryItem, shareItem, useHub, useLibrary, type LibraryItem } from '../lib/library';
 import { AiDatafy } from '../components/AiDatafy';
 import { ModsEditor } from '../components/ModsEditor';
 import { kindOfKey } from '../../src/library';
@@ -77,8 +77,7 @@ export function SheetData(p: Props) {
   const campIds = new Set(effectiveItems(hub).flatMap((it) => (it.parts ?? []).map((x) => x.id)));
   // 可选内容 = 我的库里「选了才生效」的 + 本团生效的（同一条只列一次）
   const myItems = useLibrary();
-  const pickables = [...pickablesOfItems(myItems), ...pickablesOf(hub)]
-    .filter((x, i, a) => a.findIndex((y) => y.part.id === x.part.id) === i);
+  const pickables = attachableOfItems(myItems).filter((x, i, a) => a.findIndex((y) => y.part.id === x.part.id) === i);
   const picked: string[] = char.hrPicked || [];
   const togglePick = (hrId: string) => actions.update(p.id, (c) => {
     const cur: string[] = c.hrPicked || [];
