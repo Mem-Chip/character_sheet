@@ -7,11 +7,18 @@
  */
 import { useState } from 'react';
 import { keyProblem, type LibraryItem, type ResPart } from '../../src/library';
+import type { Json } from '../../src/sheet';
 import { AiDatafy } from './AiDatafy';
 import { Dialog, Field, Tag } from './ui';
+import { CombatEditor } from './CombatEditor';
+import { ModsEditor } from './ModsEditor';
 import { aiExamples, aiSheetExamplesText, aiSpec, partsFromAnswer, partsJobForKey } from '../lib/ai';
 import type { Engine } from '../lib/engine';
 import { newPartId } from '../lib/library';
+import { RULE_FILES } from '../../src/bridge/rule-files';
+import { RuleBook, auditRuleBook, type Entry, type RuleFile } from '../../src/combat';
+import { lintEntry, lintShape } from '../../src/factory/lint';
+import { genericOwner, smoke } from '../../src/factory/smoke';
 
 const KINDS: Array<[string, string]> = [
   ['homerule', '家规 / 自制'], ['feat', '专长'], ['classFeature', '职业特性'], ['subclassFeature', '子职特性'],
@@ -131,19 +138,9 @@ export function LibraryEditor(p: {
               </Field>
               <div className="row" style={{ gap: 8 }}>
                 <Field label="这条的名字" style={{ flex: 1 }}><input value={raw.name} readOnly={ro} onChange={(e) => setPart(i, { name: e.target.value })} placeholder="不填就用整条的名字" /></Field>
-                {isNew && (
-                  <label className="row small" style={{ alignItems: 'flex-start', whiteSpace: 'normal', flex: 1 }}>
-                    <input type="checkbox" checked={raw.pickable} disabled={ro} onChange={(e) => setPart(i, { pickable: e.target.checked })} />
-                    不是人人都有：卡上选了才生效<br /><span className="faint">（不勾 = 有这个能力或选了这条的卡直接生效）</span>
-                  </label>
-                )}
+
               </div>
-              <Field label="卡面数据（JSON：mods / grants / choices / resources；写法同能力数据）">
-                <textarea rows={4} className="mono" value={raw.sheet} readOnly={ro} onChange={(e) => setPart(i, { sheet: e.target.value })} placeholder='{ "mods": [], "grants": [], "choices": [], "resources": [] }' />
-              </Field>
-              <Field label="战斗数据（JSON：{ entry } 整条；覆盖官方的可以 { patch } 只改字段；核心参数写 { value } 配 key = core.<名>）">
-                <textarea rows={6} className="mono" value={raw.combat} readOnly={ro} onChange={(e) => setPart(i, { combat: e.target.value })} placeholder='{ "entry": { "name": "…", "actions": [] } }' />
-              </Field>
+              <PartData raw={raw} ro={ro} onChange={(patch) => setPart(i, patch)} />
               {!ro && (
                 <div className="row small" style={{ gap: 6 }}>
                   <button className="btn sm" disabled={!d.name.trim()} onClick={() => setAiPart(i)}>AI 写这条的数据（卡面 + 战斗）…</button>
@@ -160,8 +157,8 @@ export function LibraryEditor(p: {
           </div>
         )}
 
+        <CheckPanel parts={d.parts} />
         {problems.length > 0 && <div className="dangerline small">{problems.map((x, i) => <div key={i}>{x}</div>)}</div>}
-        {!ro && <div className="small muted">存进你自己的库。挂到战役之后：新内容立刻对全团生效，覆盖官方的要 DM 点头。</div>}
       </div>
 
       {aiPart !== null && (() => {
@@ -229,5 +226,128 @@ export function ItemTags({ item }: { item: LibraryItem }) {
       {parts.some((x) => x.combat) && <Tag>战斗</Tag>}
       {item.by !== 'hand' && <Tag tone={item.reviewed ? undefined : 'warn'}>{item.reviewed ? 'AI · 已看过' : 'AI · 未审'}</Tag>}
     </>
+  );
+}
+
+/** 一条 part 的数据：卡面（表单 / JSON）+ 战斗（积木 / JSON） */
+function PartData({ raw, ro, onChange }: { raw: { sheet: string; combat: string }; ro: boolean; onChange: (patch: { sheet?: string; combat?: string }) => void }) {
+  const [tab, setTab] = useState<'sheet' | 'combat'>('sheet');
+  const [json, setJson] = useState<Record<'sheet' | 'combat', boolean>>({ sheet: false, combat: false });
+  let sheetObj: Json = {};
+  try { sheetObj = raw.sheet.trim() ? (JSON.parse(raw.sheet) as Json) : {}; } catch { sheetObj = {}; }
+  let combatObj: Json = {};
+  try { combatObj = raw.combat.trim() ? (JSON.parse(raw.combat) as Json) : {}; } catch { combatObj = {}; }
+  const entry: Json = (combatObj.entry as Json) ?? (combatObj.actions || combatObj.triggers ? combatObj : {});
+  const hasCombat = !!(combatObj.entry || combatObj.patch || combatObj.value || Object.keys(entry).length);
+  return (
+    <div className="stack" style={{ gap: 6 }}>
+      <div className="row" style={{ gap: 6, alignItems: 'center' }}>
+        <button className={tab === 'sheet' ? 'btn sm primary' : 'btn sm'} onClick={() => setTab('sheet')}>卡面</button>
+        <button className={tab === 'combat' ? 'btn sm primary' : 'btn sm'} onClick={() => setTab('combat')}>战斗</button>
+        <span style={{ flex: 1 }} />
+        <button className="btn ghost sm" onClick={() => setJson({ ...json, [tab]: !json[tab] })}>{json[tab] ? '用表单' : '原始 JSON'}</button>
+      </div>
+      {tab === 'sheet' ? (
+        json.sheet ? (
+          <textarea rows={5} className="mono" value={raw.sheet} readOnly={ro} onChange={(e) => onChange({ sheet: e.target.value })} placeholder='{ "mods": [], "grants": [], "resources": [] }' />
+        ) : (
+          <ModsEditor
+            mods={(sheetObj.mods || []) as Json[]}
+            grants={(sheetObj.grants || []) as Json[]}
+            onChange={(patch) => onChange({ sheet: JSON.stringify({ ...sheetObj, ...patch }, null, 1) })}
+          />
+        )
+      ) : (
+        json.combat ? (
+          <textarea rows={6} className="mono" value={raw.combat} readOnly={ro} onChange={(e) => onChange({ combat: e.target.value })} placeholder='{ "entry": { "name": "…", "actions": [] } }' />
+        ) : (
+          <>
+            {combatObj.patch || combatObj.value ? (
+              <div className="tiny faint">这条是「只改字段」或「核心参数」，请用原始 JSON 编辑。</div>
+            ) : null}
+            <CombatEditor entry={entry} onChange={(next) => onChange({ combat: JSON.stringify({ ...(combatObj.entry ? { ...combatObj, entry: next } : hasCombat ? next : { entry: next }) }, null, 1) })} />
+          </>
+        )
+      )}
+    </div>
+  );
+}
+
+/** 检查 / 试算：把当前这几条 part 过一遍结构检查、规则审计，再拿假持有者跑一次 */
+function CheckPanel({ parts }: { parts: Array<{ id: string; key: string; name: string; sheet: string; combat: string }> }) {
+  const [errs, setErrs] = useState<string[]>([]);
+  const [notes, setNotes] = useState<string[]>([]);
+  const [done, setDone] = useState(false);
+
+  const entries = () => parts.map((raw) => {
+    const key = raw.key.trim() || `HR:${raw.id}`;
+    let combat: Json = {};
+    try { combat = raw.combat.trim() ? (JSON.parse(raw.combat) as Json) : {}; } catch { /* 交给 lint 报 */ }
+    const entry = (combat.entry as Entry) ?? (combat as unknown as Entry);
+    return { key, name: raw.name, entry };
+  });
+
+  const check = () => {
+    const es: string[] = [];
+    const ns: string[] = [];
+    const files = RULE_FILES as unknown as RuleFile[];
+    for (const { key, name, entry } of entries()) {
+      if (!entry || !Object.keys(entry).length) continue;
+      const e = { name: name || key.split(':').pop(), ...entry } as unknown as Entry;
+      try {
+        for (const m of lintShape(e)) es.push(`${key}：${m}`);
+        for (const m of lintEntry(key, e, { files })) es.push(`${key}：${m}`);
+        const book = new RuleBook([...files, { entries: { [key]: e } } as unknown as RuleFile]);
+        for (const m of auditRuleBook(book)) if (m.startsWith(key)) es.push(m);
+      } catch (x) {
+        es.push(`${key}：检查器崩了（${(x as Error).message}）`);
+      }
+    }
+    setErrs(es);
+    setNotes(ns);
+    setDone(true);
+  };
+
+  const trial = () => {
+    const es: string[] = [];
+    const ns: string[] = [];
+    const files = RULE_FILES as unknown as RuleFile[];
+    for (const { key, name, entry } of entries()) {
+      if (!entry || !Object.keys(entry).length) continue;
+      const e = { name: name || key.split(':').pop(), ...entry } as unknown as Entry;
+      try {
+        const owner = genericOwner(key, {});
+        const r = smoke(key, e, files, owner);
+        for (const m of r.errors) es.push(`${key}：${m}`);
+        for (const m of r.notes) ns.push(`${key}：${m}`);
+        if (!r.errors.length && !r.notes.length) ns.push(`${key}：跑通了`);
+      } catch (x) {
+        es.push(`${key}：试算崩了（${(x as Error).message}）`);
+      }
+    }
+    setErrs(es);
+    setNotes(ns);
+    setDone(true);
+  };
+
+  return (
+    <div className="stack" style={{ gap: 4, marginTop: 4 }}>
+      <div className="row" style={{ gap: 6 }}>
+        <button className="btn sm" onClick={check}>检查</button>
+        <button className="btn sm" onClick={trial}>试算（假持有者跑一遍）</button>
+      </div>
+      {done && !errs.length && <div className="small ok">没问题{notes.length ? `（${notes.length} 条提示）` : ''}</div>}
+      {errs.length > 0 && (
+        <div className="dangerline small">
+          {errs.slice(0, 12).map((x, i) => <div key={i}>{x}</div>)}
+          {errs.length > 12 && <div>…还有 {errs.length - 12} 条</div>}
+        </div>
+      )}
+      {notes.length > 0 && (
+        <div className="small muted">
+          {notes.slice(0, 8).map((x, i) => <div key={i}>{x}</div>)}
+        </div>
+      )}
+    </div>
   );
 }
