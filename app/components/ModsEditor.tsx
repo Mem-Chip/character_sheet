@@ -116,7 +116,12 @@ function Row({
   );
 }
 
-export function ModsEditor({ mods, grants, onChange }: { mods: Json[]; grants: Json[]; onChange: (p: { mods?: Json[]; grants?: Json[] }) => void }) {
+export function ModsEditor({ mods, grants, resources, onChange }: {
+  mods: Json[]; grants: Json[]; resources?: Json[];
+  onChange: (p: { mods?: Json[]; grants?: Json[]; resources?: Json[] }) => void;
+}) {
+  const res = resources ?? [];
+  const setR = (i: number, patch: Json) => onChange({ resources: res.map((r, j) => (j === i ? { ...r, ...patch } : r)) });
   const set = (i: number, patch: Json) => onChange({ mods: mods.map((m, j) => (j === i ? { ...m, ...patch } : m)) });
   const setG = (i: number, patch: Json) => onChange({ grants: grants.map((m, j) => (j === i ? { ...m, ...patch } : m)) });
   return (
@@ -144,6 +149,23 @@ export function ModsEditor({ mods, grants, onChange }: { mods: Json[]; grants: J
           />
         ))}
         <button className="btn sm" onClick={() => onChange({ grants: [...grants, { kind: '' }] })}>＋ 加一条授予</button>
+      </div>
+      <div>
+        <div className="small faint" style={{ marginBottom: 4 }}>次数池（resources）：人物卡「资源」里那几个可勾的点，战斗里也能用</div>
+        {res.map((r, i) => (
+          <div className="row" key={i} style={{ gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
+            <input placeholder="名字（回气 / 顺劈）" value={String(r.name ?? '')} onChange={(e) => setR(i, { name: e.target.value })} style={{ width: 150 }} />
+            <input placeholder="上限：1 / pb / wis / max(1, cha)" value={String(r.formula ?? '')} onChange={(e) => setR(i, { formula: e.target.value })} style={{ width: 190 }} />
+            <select value={String(r.recovery ?? 'long')} onChange={(e) => setR(i, { recovery: e.target.value })}>
+              <option value="long">长休恢复</option>
+              <option value="short">短休恢复</option>
+              <option value="none">不自然恢复</option>
+            </select>
+            <input placeholder="备注（可选）" value={String(r.note ?? '')} onChange={(e) => setR(i, { note: e.target.value })} style={{ flex: 1, minWidth: 120 }} />
+            <button className="btn ghost sm danger" onClick={() => onChange({ resources: res.filter((_, j) => j !== i) })}>删</button>
+          </div>
+        ))}
+        <button className="btn sm" onClick={() => onChange({ resources: [...res, { name: '', formula: '1', recovery: 'long' }] })}>＋ 加一个次数池</button>
       </div>
     </div>
   );

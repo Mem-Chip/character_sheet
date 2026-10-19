@@ -11,6 +11,7 @@ import type { Json } from '../../src/sheet';
 import { AiDatafy } from './AiDatafy';
 import { Dialog, Field, Tag } from './ui';
 import { CombatEditor } from './CombatEditor';
+import { SyntaxHelp } from './SyntaxHelp';
 import { ModsEditor } from './ModsEditor';
 import { aiExamples, aiSheetExamplesText, aiSpec, partsFromAnswer, partsJobForKey } from '../lib/ai';
 import type { Engine } from '../lib/engine';
@@ -157,7 +158,10 @@ export function LibraryEditor(p: {
           </div>
         )}
 
-        <CheckPanel parts={d.parts} />
+        <div className="row" style={{ gap: 6, marginTop: 4 }}>
+          <CheckPanel parts={d.parts} />
+          <SyntaxButton />
+        </div>
         {problems.length > 0 && <div className="dangerline small">{problems.map((x, i) => <div key={i}>{x}</div>)}</div>}
       </div>
 
@@ -254,6 +258,7 @@ function PartData({ raw, ro, onChange }: { raw: { sheet: string; combat: string 
           <ModsEditor
             mods={(sheetObj.mods || []) as Json[]}
             grants={(sheetObj.grants || []) as Json[]}
+            resources={(sheetObj.resources || []) as Json[]}
             onChange={(patch) => onChange({ sheet: JSON.stringify({ ...sheetObj, ...patch }, null, 1) })}
           />
         )
@@ -274,6 +279,17 @@ function PartData({ raw, ro, onChange }: { raw: { sheet: string; combat: string 
 }
 
 /** 检查 / 试算：把当前这几条 part 过一遍结构检查、规则审计，再拿假持有者跑一次 */
+/** 打开语法速查（给「留空自己写节点」的人） */
+function SyntaxButton() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button className="btn ghost sm" onClick={() => setOpen(true)}>语法速查</button>
+      {open && <SyntaxHelp onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+
 function CheckPanel({ parts }: { parts: Array<{ id: string; key: string; name: string; sheet: string; combat: string }> }) {
   const [errs, setErrs] = useState<string[]>([]);
   const [notes, setNotes] = useState<string[]>([]);
