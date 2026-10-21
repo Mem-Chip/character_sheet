@@ -1108,6 +1108,8 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
   const asReaction = o.options?.as === 'reaction';
   const act = asReaction ? 'reaction' : typeof action.activation === 'string' ? action.activation : 'special';
   const costs = actionCosts(action, asReaction);
+  // 没指定环阶：按动作自己的最低环阶（`slot.min`）当默认值，别让 slot.level 在表达式里求值失败
+  const slotLevel0 = o.slotLevel ?? (action.cost ?? []).flatMap((k) => ('slot' in k ? [k.slot.min] : []))[0];
   const entryKey = o.actionKey.split('#')[0];
 
   if (!o.force) {
@@ -1120,7 +1122,7 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
     if (isSpell && cannotCastSpell(tx, actor, action)) throw new Rejected(`${c.name} 现在不能施法`);
     if (action.concentration && cannot.has('concentrate')) throw new Rejected(`${c.name} 现在无法保持专注`);
     if (action.requires !== undefined) {
-      const ok = resolveBool(tx, action.requires, { self: actor, slot: o.slotLevel }, actor, action.name);
+      const ok = resolveBool(tx, action.requires, { self: actor, slot: slotLevel0 }, actor, action.name);
       if (!ok) throw new Rejected(`「${action.name}」的使用条件不满足`);
     }
     if (inCombat(tx) && costs.some((k) => 'economy' in k && k.economy === 'attack') && tx.state.order[tx.state.turnIndex] !== actor) {
@@ -1138,7 +1140,7 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
       // 范围里可以一个生物都没有（只留下区域的火墙），只要选了范围
       if (!o.targets.length && !(t.type === 'area' && o.area)) throw new Rejected(`「${action.name}」需要选择目标`);
       if (t.count !== undefined && t.type === 'creature') {
-        const max = maxTargets(tx, actor, action, o.slotLevel) ?? Infinity;
+        const max = maxTargets(tx, actor, action, slotLevel0) ?? Infinity;
         if (o.targets.length > max) throw new Rejected(`「${action.name}」最多 ${max} 个目标，选了 ${o.targets.length} 个`);
       }
       if (!t.repeat && new Set(o.targets).size < o.targets.length) throw new Rejected(`「${action.name}」不能重复选同一个目标`);
@@ -1149,7 +1151,7 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
         // 范围法术里「你选择的生物」（filter 写成 ask(...)）：人已经在选目标时挑过了，不再逐个问
         const picked = t.type === 'area' && typeof t.filter === 'string' && /^\s*ask\(/.test(t.filter);
         if (t.filter !== undefined && !picked) {
-          const ok = resolveBool(tx, t.filter, { self: actor, target: tid, slot: o.slotLevel }, actor, `${action.name} 的目标限制`);
+          const ok = resolveBool(tx, t.filter, { self: actor, target: tid, slot: slotLevel0 }, actor, `${action.name} 的目标限制`);
           if (!ok) throw new Rejected(`${nameOf(tx, tid)} 不是「${action.name}」的合法目标`);
         }
       }
@@ -1157,7 +1159,7 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
   }
 
   const seq = tx.emit('actionUsed', {
-    actor, action: action.name, key: o.actionKey, targets: o.targets, activation: act, slotLevel: o.slotLevel ?? null,
+    actor, action: action.name, key: o.actionKey, targets: o.targets, activation: act, slotLevel: slotLevel0 ?? null,
   }, o.cause);
 
   // 武器攻击：消耗「攻击」动作给的攻击次数（额外攻击）
@@ -1173,9 +1175,10 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
     }
   }
   // 没指定环阶、效果又随环阶变化（窗口里触发的至圣斩）：问用几环
-  let slotLevel = o.slotLevel;
+  // 注意：这里看的是**调用方**给的环阶（o.slotLevel），slotLevel0 只是给表达式求值兜底的默认值
+  let slotLevel = slotLevel0;
   const slotCost = costs.find((k): k is Extract<Cost, { slot: unknown }> => 'slot' in k);
-  if (slotLevel === undefined && slotCost && scalesWithSlot(action)) {
+  if (o.slotLevel === undefined && slotCost && scalesWithSlot(action)) {
     const levels: number[] = [];
     for (let l = slotCost.slot.min; l <= (slotCost.slot.max ?? 9); l++) if (slotAvailable(tx, actor, l)) levels.push(l);
     if (levels.length > 1) {
@@ -1272,6 +1275,8 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
   runNodes(tx, action.root, ctx);
   tx.emit('actionDone', { actor, action: action.name }, seq);
 }
+
+
 
 
 

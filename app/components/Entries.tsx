@@ -111,12 +111,18 @@ function Entry({ e }: { e: Json }): ReactNode {
     case 'list':
       return (
         <ul>
-          {(e.items || []).map((it: Json, i: number) => (
-            <li key={i}>
-              {typeof it === 'string' ? <Inline text={it} />
-                : <>{it.name && <b>{it.name}。</b>}<Inline text={[it.entry, ...(it.entries || [])].filter((x) => typeof x === 'string').join(' ')} /></>}
-            </li>
-          ))}
+          {(e.items || []).map((it: Json, i: number) => {
+            if (typeof it === 'string') return <li key={i}><Inline text={it} /></li>;
+            const kids = (it.entries || []).filter((x: Json) => typeof x !== 'string');
+            const texts = [it.entry, ...(it.entries || []).filter((x: Json) => typeof x === 'string')].filter(Boolean);
+            return (
+              <li key={i}>
+                {it.name && <b>{it.name}{/[。：:]$/.test(String(it.name)) ? '' : '。'}</b>}
+                {texts.length > 0 && <Inline text={texts.join(' ')} />}
+                {kids.length > 0 && <div className="subentries"><Entries entries={kids} /></div>}
+              </li>
+            );
+          })}
         </ul>
       );
     case 'table':
@@ -146,9 +152,17 @@ function Entry({ e }: { e: Json }): ReactNode {
     case 'abilityAttackMod':
       return <p><b>{e.name} 攻击加值</b> = 熟练加值 + {(e.attributes || []).join('/')} 调整值</p>;
     case 'item':
-      return <p>{e.name && <b>{e.name}。</b>}<Inline text={[e.entry, ...(e.entries || [])].filter((x) => typeof x === 'string').join(' ')} /></p>;
+      return <p>{e.name && <b>{e.name}{/[。：:]$/.test(String(e.name)) ? '' : '。'}</b>}<Inline text={[e.entry, ...(e.entries || [])].filter((x) => typeof x === 'string').join(' ')} /></p>;
     default:
-      if (e.entries) return <>{e.name && <h4>{e.name}</h4>}<Entries entries={e.entries} /></>;
+      // 有子条目 = 这一条是「父」，子条目缩进挂在下面（从属关系一眼能看出来）
+      if (e.entries) {
+        return (
+          <div className={e.name ? 'entry-group' : undefined}>
+            {e.name && <div className="entry-name">{e.name}</div>}
+            <div className={e.name ? 'subentries' : undefined}><Entries entries={e.entries} /></div>
+          </div>
+        );
+      }
       if (e.entry) return <Entry e={e.entry} />;
       return null;
   }
