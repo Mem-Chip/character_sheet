@@ -136,6 +136,14 @@ export function parseAcFormula(text: unknown): { base: number; abils: string[] }
  * 动态层用表达式语言（src/expr），这里保留原项目的写法以兼容静态数据。
  */
 export function resolveNum(v: unknown, ctx: { out: Record<string, any>; char: Json }): number {
+  // 支持 max(a, b) / min(a, b)（官方写法：「加值等于感知调整值，最小为 1」→ max(1, wis)）
+  if (typeof v === 'string') {
+    const fn = /^(max|min)\s*\(\s*([^,]+?)\s*,\s*([^)]+?)\s*\)$/.exec(v.trim());
+    if (fn) {
+      const a = resolveNum(fn[2], ctx), b = resolveNum(fn[3], ctx);
+      return fn[1] === 'max' ? Math.max(a, b) : Math.min(a, b);
+    }
+  }
   if (typeof v === 'number') return v;
   if (v === 'pb') return ctx.out.pb ?? (2 + Math.floor((Math.max(1, ctx.out.level || totalLevel(ctx.char)) - 1) / 4));
   if (v === 'level') return ctx.out.level ?? totalLevel(ctx.char);
@@ -715,11 +723,15 @@ export class AbilityBook {
     const names = new Set<string>();
     for (const k of char._resolved?.classes || []) {
       for (const f of [...(k.features || []), ...(k.subFeatures || [])]) {
-        for (const g of this.env.options.extract(f)) for (const n of g.classFeatures || []) names.add(String(n));
+        for (const g of this.env.options.extract(f)) {
+          for (const n of g.classFeatures || []) names.add(String(n));
+          // inline 选项（原初职能这种）：正文里列的「术师 / 卫士」各自是独立的条目，也要算「得选才有」
+          for (const o of g.options || []) if (o?.name) names.add(String(o.name));
+        }
         const a = this.resolve({ source: f.source, name: f.name, kind: 'classFeature', cls: k.cls.name, level: f.level })
           || this.resolve({ source: f.source, name: f.name, kind: 'subclassFeature', cls: k.cls.name, level: f.level });
         for (const c of a?.choices || []) {
-          if (c.pool !== 'classFeature') continue;
+          if (c.pool !== 'classFeature' && c.pool !== 'inline') continue;
           for (const v of c.candidates || c.from || []) names.add(String(v));
         }
       }
