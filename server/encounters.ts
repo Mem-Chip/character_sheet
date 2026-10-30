@@ -99,6 +99,8 @@ interface Live {
   ctx: EngineCtx;
   seq: number;
   watchers: Set<ServerResponse>;
+  /** 带编号的连接（浏览器之间的 WebRTC 握手要点对点转发：DM 共享音乐用） */
+  peers: Map<string, { res: ServerResponse; userId: number; name: string; role: 'dm' | 'player' }>;
 }
 
 export function createEncounters(d: Deps) {
@@ -165,7 +167,7 @@ export function createEncounters(d: Deps) {
     const e = {
       id, campaignId: String(r.campaign_id), name: String(r.name),
       owners: meta.owners ?? {}, cards: meta.cards ?? {}, dice: meta.dice ?? {}, hidden: meta.hidden ?? [], chat: meta.chat ?? [],
-      actingAs: meta.actingAs ?? null, autoHid: meta.autoHid ?? [], dicePhys: meta.dicePhys ?? {}, diceColors: meta.diceColors ?? {}, diceOpen: !!meta.diceOpen, reveal: meta.reveal ?? {}, map: { ...newMap(), ...(meta.map ?? {}) }, rules: meta.rules ?? [], ownerRules: meta.ownerRules ?? [], seq: 0, watchers: new Set(),
+      actingAs: meta.actingAs ?? null, autoHid: meta.autoHid ?? [], dicePhys: meta.dicePhys ?? {}, diceColors: meta.diceColors ?? {}, diceOpen: !!meta.diceOpen, reveal: meta.reveal ?? {}, map: { ...newMap(), ...(meta.map ?? {}) }, rules: meta.rules ?? [], ownerRules: meta.ownerRules ?? [], seq: 0, watchers: new Set(), peers: new Map(),
     } as unknown as Live;
     e.ctx = ctxOf(e);
     e.session = Session.restore(JSON.parse(String(r.save)) as SessionSave, e.ctx);
@@ -230,6 +232,13 @@ export function createEncounters(d: Deps) {
     }
     d.run('UPDATE encounters SET save = ?, meta = ?, updated = ? WHERE id = ?', JSON.stringify(e.session.save()), metaOf(e), Date.now(), e.id);
     broadcast(e, 'state', stateOf(e));
+  }
+  /** 握手消息：from 发给 to（null = 除自己外所有人） */
+  function rtcSend(e: Live, from: string, to: string | null, data: unknown): void {
+    const p = e.peers.get(from);
+    const msg = `event: rtc\ndata: ${JSON.stringify({ from, fromName: p?.name ?? '', fromRole: p?.role ?? 'player', data })}\n\n`;
+    if (to) { e.peers.get(to)?.res.write(msg); return; }
+    for (const [id, x] of e.peers) if (id !== from) x.res.write(msg);
   }
   /** 只改了地图：不重发整场战斗（客户端重放要时间） */
   function mapChanged(e: Live): void {
@@ -518,8 +527,33 @@ export function createEncounters(d: Deps) {
       });
       res.write(`event: state\ndata: ${JSON.stringify(stateOf(e))}\n\n`);
       e.watchers.add(res);
+      // ?peer=：这条连接的编号（页面每次打开随机生成），握手消息按它转发
+      const peer = new URL(req.url ?? '', 'http://x').searchParams.get('peer');
+      const pid = peer && /^[\w-]{4,32}$/.test(peer) ? peer : null;
+      if (pid) e.peers.set(pid, { res, userId: u.id, name: u.name, role });
       const ping = setInterval(() => res.write(': ping\n\n'), 25_000);
-      req.on('close', () => { clearInterval(ping); e.watchers.delete(res); });
+      req.on('close', () => {
+        clearInterval(ping);
+        e.watchers.delete(res);
+        if (pid && e.peers.get(pid)?.res === res) {
+          e.peers.delete(pid);
+          rtcSend(e, pid, null, { t: 'left' });
+        }
+      });
+      return true;
+    }
+
+    // WebRTC 握手：只转发，不存。to 空 = 发给这场遭遇里的其他所有连接
+    if (method === 'POST' && sub === '/rtc') {
+      const b = await d.bodyOf(req);
+      const from = String(b.from ?? '');
+      if (e.peers.get(from)?.userId !== u.id) throw d.fail(400, '连接编号不对，刷新一下页面');
+      const data = b.data as Row | undefined;
+      if (!data || typeof data !== 'object' || JSON.stringify(data).length > 20_000) throw d.fail(400, '消息不对');
+      // 只有 DM 能当「放音乐的人」
+      if ((data.t === 'hello' || data.t === 'offer') && role !== 'dm') throw d.fail(403, '只有 DM 能共享音乐');
+      rtcSend(e, from, b.to ? String(b.to) : null, data);
+      d.send(res, 200, { ok: true });
       return true;
     }
 

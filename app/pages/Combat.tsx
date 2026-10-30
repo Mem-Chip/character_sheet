@@ -22,6 +22,7 @@ import type { GameEvent } from '../../src/combat';
 import { DiceCaption } from './combat/DiceCaption';
 import { namer } from './combat/shared';
 import { Roster } from './combat/Roster';
+import { MusicBar } from './combat/Music';
 import { Tag } from '../components/ui';
 import { loadMonsters } from '../lib/library';
 
@@ -196,6 +197,7 @@ export function CombatPage({ engine }: { engine: Engine }) {
           <Initiative s={s} ui={ui} name={name} />
           {ui.replay !== null && <Tag tone="accent">回放 #{ui.replay}/{fullS.transactions.length}</Tag>}
           {!remote!.connected && <Tag tone="warn">重连中</Tag>}
+          <MusicBar dm={dm} />
           <button className={'btn sm' + (drawer === 'roster' ? ' on' : '')} onClick={() => setDrawer(drawer === 'roster' ? null : 'roster')}>参与者</button>
         </div>
 
@@ -238,6 +240,7 @@ export function CombatPage({ engine }: { engine: Engine }) {
           ? <>
             <Tag tone={remote.role === 'dm' ? 'accent' : undefined}>战役遭遇 · {remote.role === 'dm' ? 'DM' : '玩家'}</Tag>
             {!remote.connected && <Tag tone="warn">连接断开，正在重连…</Tag>}
+            <MusicBar dm={dm} />
           </>
           : <Tag>本地</Tag>}
         {ui.replay !== null && <Tag tone="accent">回放 #{ui.replay}/{fullS.transactions.length}</Tag>}

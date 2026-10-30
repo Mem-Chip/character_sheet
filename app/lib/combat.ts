@@ -14,6 +14,7 @@ import {
 import { RULE_FILES } from '../../src/bridge/rule-files';
 import { RuleBook, encounterLayers, type HouseRule } from '../../src/combat';
 import { api } from './api';
+import { music } from './music';
 import { applyLocalRules, tagCampaign } from './library';
 import type { Tpl } from './area';
 import { setDiceLocalColor, setDiceLocalPhys, type DicePhysics } from './dicefx';
@@ -305,7 +306,11 @@ export const combat = {
       remote: { id: encounterId, name: info.name, campaignId: info.campaignId, role: info.role, me: info.me, owners: info.owners, dice: {}, hidden: [], map: info.map, chat: [], actingAs: null, pings: [], dicePhys: {}, diceColors: {}, diceOpen: false, reveal: {}, connected: false },
     };
     applyRemote(info);
-    stream = new EventSource(new URL('api/', document.baseURI).pathname + `encounters/${encounterId}/stream`);
+    // peer：这条连接的编号，DM 共享音乐的握手按它点对点转发（music.ts）
+    const peer = Math.random().toString(36).slice(2, 12);
+    stream = new EventSource(new URL('api/', document.baseURI).pathname + `encounters/${encounterId}/stream?peer=${peer}`);
+    stream.onopen = () => music.attach(encounterId, peer);   // 断线重连后也再问一次「有人在放音乐吗」
+    stream.addEventListener('rtc', (ev) => music.onSignal(JSON.parse((ev as MessageEvent).data)));
     stream.addEventListener('state', (ev) => applyRemote(JSON.parse((ev as MessageEvent).data)));
     stream.addEventListener('ping', (ev) => {
       if (!ui.remote) return;
@@ -319,6 +324,7 @@ export const combat = {
   },
   /** 回到本地遭遇 */
   leave(engine: Engine): void {
+    music.detach();
     stream?.close();
     stream = null;
     useEncounterRules(engine, undefined, undefined);
