@@ -686,7 +686,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
                       />
                     </>
                   )}
-                  <circle className="body" r={bodyR} style={av ? { fill: 'none' } : undefined} />
+                  <circle className="body" r={bodyR} style={av ? { fill: 'transparent' } : undefined} />{/* 透明而不是 none：none 的圆里面接不到点击，点在立绘上就选不中 */}
                   {!av && <text dy="0.35em" fontSize={Math.max(10 / view.k, r * 0.62)}>{c.name.slice(0, n > 1 ? 4 : 2)}</text>}
                   <text className={'tok-hp ' + woundCls} y={bodyR + Math.max(10 / view.k, r * 0.34)} fontSize={Math.max(9.5 / view.k, r * 0.32)}>{wound}</text>
                   {prone && (
