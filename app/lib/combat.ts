@@ -295,12 +295,19 @@ function applyRemote(data: RemoteState): void {
   }
 }
 
+/** 上次进的战役遭遇（遭遇管理页的「继续」） */
+const LAST_KEY = 'dnd2024-engine:lastEncounter';
+export function lastEncounter(): string | null {
+  try { return localStorage.getItem(LAST_KEY); } catch { return null; }
+}
+
 export const combat = {
   /** 进入一场战役遭遇 */
   async join(engine: Engine, encounterId: string): Promise<void> {
     engineRef = engine;
     stream?.close();
     const info = await api<RemoteState & { role: 'dm' | 'player'; me: number; campaignId: string; map: MapState }>('GET', `encounters/${encounterId}`);
+    try { localStorage.setItem(LAST_KEY, encounterId); } catch { /* 无所谓 */ }
     ui = {
       ...ui, selected: null, manySel: [], targets: [],
       remote: { id: encounterId, name: info.name, campaignId: info.campaignId, role: info.role, me: info.me, owners: info.owners, dice: {}, hidden: [], map: info.map, chat: [], actingAs: null, pings: [], dicePhys: {}, diceColors: {}, diceOpen: false, reveal: {}, connected: false },

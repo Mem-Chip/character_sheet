@@ -14,7 +14,7 @@ import { Hotbar } from './combat/Hotbar';
 import { Initiative } from './combat/Initiative';
 import { Log } from './combat/Log';
 import { MapView } from './combat/MapView';
-import { OnlineDialog } from './combat/Online';
+import { EncounterHub } from './combat/Hub';
 import { TokenMenu } from './combat/TokenMenu';
 import { diceColor, diceLocalColor, diceLocalPhys, scanChat, scanTape, warmDice } from '../lib/dicefx';
 import { describe, txTitle } from '../lib/events';
@@ -28,11 +28,18 @@ import { loadMonsters } from '../lib/library';
 
 type Drawer = null | 'roster' | 'detail';
 
+const LOCAL_KEY = 'dnd2024-engine:localEncounter';
+
 export function CombatPage({ engine }: { engine: Engine }) {
   const ui = useCombat();
   const uiRef = useRef(ui);
   uiRef.current = ui;
-  const [dlg, setDlg] = useState<null | 'pc' | 'monster' | 'settings' | 'online'>(null);
+  const [dlg, setDlg] = useState<null | 'pc' | 'monster' | 'settings'>(null);
+  // 没进战役遭遇时：显示遭遇管理（默认），还是本地遭遇（不联网试玩）
+  const [local, setLocalState] = useState(() => { try { return localStorage.getItem(LOCAL_KEY) === '1'; } catch { return false; } });
+  const setLocal = (v: boolean) => { setLocalState(v); try { localStorage.setItem(LOCAL_KEY, v ? '1' : '0'); } catch { /* 无所谓 */ } };
+  /** 离开战役遭遇 → 回到遭遇管理 */
+  const leave = () => { combat.leave(engine); setLocal(false); };
   /** DM 代玩家回答：记下是哪个决定，换了决定就自动收起 */
   const [proxy, setProxy] = useState<string | null>(null);
   // 战役遭遇默认用地图布局
@@ -114,6 +121,7 @@ export function CombatPage({ engine }: { engine: Engine }) {
 
   const fullS = ui.session;
   if (!fullS) return <div className="page empty">正在准备遭遇…</div>;
+  if (!ui.remote && !local) return <EncounterHub engine={engine} onLocal={() => setLocal(true)} />;
   const { s: viewS, remote: viewRemote } = replayedView(ui);
   const s = viewS!;
   const st = s.state;
@@ -164,7 +172,6 @@ export function CombatPage({ engine }: { engine: Engine }) {
   const dialogs = <>
     {dlg === 'pc' && <AddPcDialog engine={engine} ui={ui} onClose={() => setDlg(null)} />}
     {dlg === 'monster' && <AddMonsterDialog canHide={!!remote && dm} loadMonsters={() => loadMonsters(engine, remote?.campaignId)} onClose={() => setDlg(null)} />}
-    {dlg === 'online' && <OnlineDialog engine={engine} onClose={() => setDlg(null)} />}
     {dlg === 'settings' && <SettingsDialog s={fullS} ui={ui} onClose={() => setDlg(null)} />}
     {ui.formPick && <WildShapeDialog s={s} pick={ui.formPick} loadMonsters={() => loadMonsters(engine, remote?.campaignId)} onClose={() => combat.cancelFormPick()} />}
     {ui.summonFor && s.state.combatants[ui.summonFor] && <SummonDialog s={s} summonerId={ui.summonFor} loadMonsters={() => loadMonsters(engine, remote?.campaignId)} onClose={() => combat.openSummon(null)} />}
@@ -192,7 +199,7 @@ export function CombatPage({ engine }: { engine: Engine }) {
             {dm && inCombat && <button onClick={() => { if (confirm('结束战斗？')) combat.dispatch({ type: 'endCombat' }); }}>结束战斗</button>}
             {dm && <button onClick={() => { if (confirm('把现在的规则用到这场遭遇？＝ 这个战役挂上来的内容 + 每个参战者自己的资料库，整场会按新规则重算一遍。')) combat.refreshRules(); }} title="开遭遇时抄了一份快照（本团内容 + 每个参战者各自的资料库）；之后改了资料，点这个才生效">更新规则</button>}
             {dm && <button className="danger" onClick={confirmReset}>清空遭遇</button>}
-            <button onClick={() => combat.leave(engine)}>回到本地遭遇</button>
+            <button onClick={leave}>离开遭遇（回到遭遇列表）</button>
           </Menu>
           <Initiative s={s} ui={ui} name={name} />
           {ui.replay !== null && <Tag tone="accent">回放 #{ui.replay}/{fullS.transactions.length}</Tag>}
@@ -260,8 +267,8 @@ export function CombatPage({ engine }: { engine: Engine }) {
         <button className="btn" onClick={() => setDlg('settings')}>{dm ? '设置' : '我的骰子'}</button>
         {dm && <button className="btn ghost danger" onClick={confirmReset}>{remote ? '清空' : '新遭遇'}</button>}
         {remote
-          ? <button className="btn" onClick={() => combat.leave(engine)}>回到本地遭遇</button>
-          : <button className="btn" onClick={() => setDlg('online')}>战役遭遇…</button>}
+          ? <button className="btn" onClick={leave}>离开遭遇</button>
+          : <button className="btn" onClick={() => setLocal(false)}>遭遇列表</button>}
       </div>
       <div className="combat-grid">
         <Roster s={s} ui={ui} onAddPc={() => setDlg('pc')} onAddMonster={() => setDlg('monster')} />

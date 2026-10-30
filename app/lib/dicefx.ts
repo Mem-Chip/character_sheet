@@ -10,6 +10,7 @@
  * - 其余参数（镜头、灯光、外观、时长、播谁的）只影响自己的屏幕，存在本机。
  * - dice3d 连同 three.js 一起按需加载：第一次要播的时候才下载。
  */
+import { useSyncExternalStore } from 'react';
 import { describeRoll, type ChatRoll, type RolledExpr, type Session } from '../../src/combat';
 import type { DiceOptions, DieSpec, RollRequest } from './dice3d';
 import { DEFAULT_DICE_OPTIONS } from './dice3d/options';
@@ -128,15 +129,57 @@ export const subscribeCaption = (f: () => void) => { capSubs.add(f); return () =
 const setCaption = (c: DiceCaption | null) => { caption = c; for (const f of capSubs) f(); };
 export const closeCaption = () => setCaption(null);
 
+/* ───── 日志等骰子：骰子还在滚的那几笔（指令框的那几次），日志里先不出结果，停稳了再显示 ───── */
+/** 还没停稳的：事务序号 → 还有几次没停；指令框掷骰的 id */
+let holdTx = new Map<number, number>();
+let holdChat = new Set<string>();
+export interface DiceHold { tx: number | null; chat: ReadonlySet<string> }
+let hold: DiceHold = { tx: null, chat: holdChat };
+const holdSubs = new Set<() => void>();
+function holdChanged(): void {
+  hold = { tx: holdTx.size ? Math.min(...holdTx.keys()) : null, chat: new Set(holdChat) };
+  for (const f of holdSubs) f();
+}
+/** 日志用：从第几笔起还在等骰子（之后的也一起等，免得结果先后颠倒）、哪些指令框掷骰在等 */
+export function useDiceHold(): DiceHold {
+  return useSyncExternalStore((l) => { holdSubs.add(l); return () => holdSubs.delete(l); }, () => hold);
+}
+type HoldKey = { tx: number } | { chat: string };
+/** 挂上一次等待，返回放开的函数（只放一次；最多等 15 秒，排队太久或动画卡住也不至于一直藏着） */
+function holdOn(k: HoldKey): () => void {
+  if ('tx' in k) holdTx.set(k.tx, (holdTx.get(k.tx) ?? 0) + 1);
+  else holdChat.add(k.chat);
+  holdChanged();
+  let done = false;
+  const release = () => {
+    if (done) return;
+    done = true;
+    clearTimeout(timer);
+    if ('tx' in k) { const n = (holdTx.get(k.tx) ?? 1) - 1; if (n > 0) holdTx.set(k.tx, n); else holdTx.delete(k.tx); }
+    else holdChat.delete(k.chat);
+    holdChanged();
+  };
+  const timer = setTimeout(release, 15_000);
+  return release;
+}
+/** 换了遭遇：之前的等待都不算了 */
+function clearHold(): void {
+  if (!holdTx.size && !holdChat.size) return;
+  holdTx = new Map();
+  holdChat = new Set();
+  holdChanged();
+}
+
 let chain: Promise<void> = Promise.resolve();
-/** 排队播；轮到这一次时换上它的提示条，播完收起 */
-function play(req: RollRequest, physics?: DicePhysics, cap?: { title: string; result?: string; detail?: string }): Promise<void> {
+/** 排队播；轮到这一次时换上它的提示条，播完收起。hold：日志里哪一笔要等它停稳 */
+function play(req: RollRequest, physics?: DicePhysics, cap?: { title: string; result?: string; detail?: string }, holdKey?: HoldKey): Promise<void> {
   if (!req.dice.length) return Promise.resolve();
+  const release = holdKey ? holdOn(holdKey) : () => {};
   const job = chain.then(async () => {
     const c: DiceCaption | null = cap ? { id: ++capSeq, ...cap, settled: false } : null;
     setCaption(c);
-    const onSettle = () => { if (c && caption?.id === c.id) setCaption({ ...c, settled: true }); };
-    try { await playNow({ ...req, onSettle }, physics); } finally { if (c && caption?.id === c.id) setCaption(null); }
+    const onSettle = () => { release(); if (c && caption?.id === c.id) setCaption({ ...c, settled: true }); };
+    try { await playNow({ ...req, onSettle }, physics); } finally { release(); if (c && caption?.id === c.id) setCaption(null); }
   });
   chain = job.catch(() => {});
   return job;
@@ -194,7 +237,7 @@ let chatPrimed = '';
  * 调用方要保证这时候拿到的是完整的记录（战役遭遇：服务器的状态到了之后再调）。
  */
 export function scanChat(encounter: string, chat: ReadonlyArray<ChatRoll>, me: number, physics?: DicePhysics, colors?: Record<string, string>): void {
-  if (chatPrimed !== encounter) { chatPrimed = encounter; for (const c of chat) seenChat.add(c.id); return; }
+  if (chatPrimed !== encounter) { chatPrimed = encounter; clearHold(); for (const c of chat) seenChat.add(c.id); return; }
   const scope = diceFxScope();
   for (const c of chat) {
     if (seenChat.has(c.id)) continue;
@@ -207,14 +250,14 @@ export function scanChat(encounter: string, chat: ReadonlyArray<ChatRoll>, me: n
     // 别人的 /pr：空白骰子（或者不显示）
     if (c.private && !mine) {
       if (diceDarkShow() === 'none') continue;
-      void play({ dice: blankOf(dice), seed: seedOf('chat:' + c.id) }, physics, { title: `${c.byName} 暗骰` });
+      void play({ dice: blankOf(dice), seed: seedOf('chat:' + c.id) }, physics, { title: `${c.byName} 暗骰` }, { chat: c.id });
       continue;
     }
     void play({ dice, seed: seedOf('chat:' + c.id) }, physics, {
       title: `${c.byName} 掷骰${c.note ? `：${c.note}` : ''}`,
       result: c.results.map((r) => r.total).join('，'),
       detail: c.results.map((r) => describeRoll(r).replace(/~(\d+)~/g, '($1)')).join('\n'),
-    });
+    }, { chat: c.id });
   }
 }
 
@@ -247,7 +290,7 @@ export function scanTape(s: Session, ctx: TapeCtx): void {
   const keys: Array<{ key: string; tx: number; i: number }> = [];
   txs.forEach((t, ti) => t.input.tape.forEach((e, i) => { if (e) keys.push({ key: `${ctx.encounter}|${ti}|${i}|${e.sig}|${e.faces.join(';')}`, tx: ti, i }); }));
   // 换了遭遇（或第一次打开）：只记下，不补播
-  if (tapePrimed !== ctx.encounter) { tapePrimed = ctx.encounter; for (const k of keys) seenTape.add(k.key); return; }
+  if (tapePrimed !== ctx.encounter) { tapePrimed = ctx.encounter; clearHold(); for (const k of keys) seenTape.add(k.key); return; }
   const scope = diceFxScope();
   for (const k of keys) {
     if (seenTape.has(k.key)) continue;
@@ -268,11 +311,11 @@ export function scanTape(s: Session, ctx: TapeCtx): void {
       if (SUPPORTED.has(faces)) for (const v of vals) dice.push({ faces: faces as DieSpec['faces'], value: v, color });
     });
     if (dark) {
-      void play({ dice: blankOf(dice), seed: seedOf(`${ctx.encounter}|${k.tx}|${k.i}`) }, ctx.physics, { title: `${ctx.label(t.cmd)}（暗骰）` });
+      void play({ dice: blankOf(dice), seed: seedOf(`${ctx.encounter}|${k.tx}|${k.i}`) }, ctx.physics, { title: `${ctx.label(t.cmd)}（暗骰）` }, { tx: k.tx });
       continue;
     }
     const ev = txs[k.tx].events;
     const detail = ev && e.ev != null && ctx.line ? ctx.line(ev, e.ev) : null;
-    void play({ dice, seed: seedOf(`${ctx.encounter}|${k.tx}|${k.i}`) }, ctx.physics, detail ?? { title: ctx.label(t.cmd) });
+    void play({ dice, seed: seedOf(`${ctx.encounter}|${k.tx}|${k.i}`) }, ctx.physics, detail ?? { title: ctx.label(t.cmd) }, { tx: k.tx });
   }
 }

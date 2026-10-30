@@ -9,6 +9,7 @@ import { Entries } from '../../components/Entries';
 import { describe, txTitle, type Line } from '../../lib/events';
 import type { Namer } from './shared';
 import { ABIL_HELP, DAMAGE_HELP, HELP, damageType, parseCommand } from '../../lib/commands';
+import { useDiceHold } from '../../lib/dicefx';
 
 const OUTCOMES: Record<string, Array<[string, string]>> = {
   attack: [['hit', '命中'], ['miss', '未命中'], ['crit', '重击']],
@@ -26,6 +27,9 @@ export function Log({ s, name, onCollapse }: { s: Session; name: Namer; onCollap
   const txs = s.transactions;
   const [open, setOpen] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
+  // 3D 骰子还在滚的那几笔：先只写「掷骰中」，停稳了再出结果（回放时不管）
+  const hold = useDiceHold();
+  const heldFrom = ui.replay === null ? hold.tx : null;
   const shown = showAll ? txs.length : Math.min(txs.length, 40);
   // 指令框掷的骰：按「掷的时候有几笔事务」插进去
   const chat: ChatRoll[] = ui.remote ? ui.remote.chat : ui.chat;
@@ -74,12 +78,12 @@ export function Log({ s, name, onCollapse }: { s: Session; name: Namer; onCollap
       )}
       <div className="log">
         {!txs.length && !chat.length && <div className="empty">还没有发生任何事。</div>}
-        {chatAt(txs.length).map((c) => <ChatLine key={c.id} c={c} mine={c.by === me} dm={dm} />)}
+        {chatAt(txs.length).map((c) => <ChatLine key={c.id} c={c} mine={c.by === me} dm={dm} held={hold.chat.has(c.id)} />)}
         {txs.slice(-shown).map((t, k) => {
           const i = txs.length - shown + k;
           return { t, i };
         }).reverse().map(({ t, i }) => {
-          const chats = chatAt(i).map((c) => <ChatLine key={c.id} c={c} mine={c.by === me} dm={dm} />);
+          const chats = chatAt(i).map((c) => <ChatLine key={c.id} c={c} mine={c.by === me} dm={dm} held={hold.chat.has(c.id)} />);
           if (mentionsHidden(t.input.cmd)) return chats.length ? <div key={i}>{chats}</div> : null;
           // 「加入 xx」的标题已经说了，不再重复那一行
           const darkSeq = new Map<number, boolean>();
@@ -93,6 +97,7 @@ export function Log({ s, name, onCollapse }: { s: Session; name: Namer; onCollap
           const overridden = t.input.overrides.length > 0;
           const isReplayAt = ui.replay === i + 1;
           const isFuture = ui.replay !== null && i + 1 > ui.replay;
+          const held = heldFrom !== null && i >= heldFrom;
           return (
             <div key={i}>
             <div
@@ -107,7 +112,8 @@ export function Log({ s, name, onCollapse }: { s: Session; name: Namer; onCollap
                 {overridden && <span className="tag warn">已裁定</span>}
                 {isReplayAt && <span className="tag accent">当前位置</span>}
               </div>
-              {lines.map((l) => (
+              {held && <div className="evline"><span className="txt faint">掷骰中…</span></div>}
+              {!held && lines.map((l) => (
                 <LineView
                   key={l.seq}
                   l={l}
@@ -242,21 +248,21 @@ function TermLine({ c }: { c: ChatRoll }) {
 }
 
 /** 指令框掷的一次骰。私密的：别人只看到「掷了骰子」；DM 可以点开看 */
-function ChatLine({ c, mine, dm }: { c: ChatRoll; mine: boolean; dm: boolean }) {
+function ChatLine({ c, mine, dm, held }: { c: ChatRoll; mine: boolean; dm: boolean; held?: boolean }) {
   const [peek, setPeek] = useState(false);
   const remote = !!useCombat().remote;
-  const visible = !c.private || mine || peek;
+  const visible = (!c.private || mine || peek) && !held;
   if (c.term) return <TermLine c={c} />;
   if (c.text != null) return <div className="chatroll said"><div className="evline"><span className="txt"><b>{c.byName}</b>：{c.text}</span></div></div>;
   return (
     <div className={'chatroll' + (c.private ? ' private' : '')}>
       <div className="evline">
         <span className="txt">
-          <b>{c.byName}</b> 掷骰{c.private && <span className="tag">私密</span>}
+          <b>{c.byName}</b> 掷骰{c.private && <span className="tag">私密</span>}{held && <span className="faint">中…</span>}
           {visible && c.note && <span className="muted">：{c.note}</span>}
           {visible && <> → {c.results.map((r, i) => <b key={i} className="num roll-total">{r.total}</b>)}</>}
         </span>
-        {!visible && dm && <button className="btn ghost sm" onClick={() => setPeek(true)}>看</button>}
+        {!visible && dm && !held && <button className="btn ghost sm" onClick={() => setPeek(true)}>看</button>}
         {(mine || dm) && remote && <DarkToggle dark={c.private} onSet={(d) => combat.reveal({ chat: c.id }, !d)} />}
         {c.private && !mine && peek && <button className="btn ghost sm" onClick={() => setPeek(false)}>收起</button>}
       </div>
