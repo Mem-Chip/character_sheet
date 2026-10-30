@@ -1,7 +1,7 @@
 /** 人物卡「卡面」：跑团时看的那一面 */
 import { useState } from 'react';
 import { ABILS, ABIL_CN, SCHOOL_CN, classSpells, type CharData, type Json } from '../../src/sheet';
-import { Choices, openChoiceItems } from '../components/Choices';
+import { Choices } from '../components/Choices';
 import { Term } from '../components/Term';
 import { SpellBrowser } from '../components/SpellBrowser';
 import { SpellPicker } from '../components/SpellPicker';
@@ -679,7 +679,8 @@ export function SheetView(p: Props) {
         <Features {...p} />
       </div>
       <div className="stack">
-        {openChoiceItems(p.engine.env, p.char, sheet).length > 0 && <Choices {...p} />}
+        {/* 选完也留着（折成一行「已决定 N 项」），不然选错了没地方改 */}
+        <Choices {...p} hideEmpty />
         {warnings.length > 0 && (
           <Panel title="提示">{warnings.map((w, i) => <div key={i} className="warnline">{w}</div>)}</Panel>
         )}

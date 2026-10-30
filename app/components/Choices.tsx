@@ -252,7 +252,7 @@ function takenElsewhere(sheet: Json, ch: Json, own: string[]): Set<string> {
   return out;
 }
 
-export function Choices(p: { engine: Engine; id: string; char: CharData; sheet: Json; title?: string }) {
+export function Choices(p: { engine: Engine; id: string; char: CharData; sheet: Json; title?: string; hideEmpty?: boolean }) {
   const slots = p.engine.env.feats.slots(p.char, p.char._resolved);
   const { bySlot } = p.engine.env.feats.assign(p.char.feats || [], slots);
   const openSlots = bySlot.filter((b) => !b.name);
@@ -263,6 +263,7 @@ export function Choices(p: { engine: Engine; id: string; char: CharData; sheet: 
   const totalOpen = openSlots.length + open.length;
   const totalDone = doneSlots.length + done.length;
   const title = p.title ?? '待决定';
+  if (p.hideEmpty && totalOpen === 0 && totalDone === 0) return null;
   return (
     <div id="sheet-choices-panel">
       {totalOpen > 0 && (
@@ -274,7 +275,7 @@ export function Choices(p: { engine: Engine; id: string; char: CharData; sheet: 
         </Panel>
       )}
       {totalDone > 0 && (
-        <Panel title={totalOpen > 0 ? '已决定' : title} aside={<span className="tiny faint">{totalOpen > 0 ? `已决定 ${totalDone} 项` : '都选完了'}</span>} flush>
+        <Panel title="已决定" aside={<span className="tiny faint">{totalOpen > 0 ? `已决定 ${totalDone} 项` : '都选完了'}</span>} flush>
           {/* 全选完时默认折起来，只留一行；点开可以改 */}
           <details open={false}>
             <summary className="small" style={{ cursor: 'pointer', padding: '6px 10px' }}>

@@ -134,6 +134,8 @@ export function choiceOptions(env: SheetEnv, char: CharData, sheet: Json, choice
   const skills = () => SKILLS.map(([k, cn]) => ({ value: k, label: cn }));
   const baseItems = (pre: string) => (d.itemsBase?.baseitem || []).filter((x: Json) => String(x.type).startsWith(pre) && Source.is2024(x))
     .map((x: Json) => ({ value: x.name, label: x.name }));
+  // 城主指南里标了年代（现代 / 未来）的枪不列；玩家手册本身的手枪、滑膛枪照列
+  const masteryWeapons = () => env.store.weapons2024.filter((x) => x.mastery?.length && !x.age).map((x) => ({ value: x.name, label: x.name }));
   switch (choice.pool) {
     case 'skill': return ok(skills());
     case 'originFeat':
@@ -151,9 +153,9 @@ export function choiceOptions(env: SheetEnv, char: CharData, sheet: Json, choice
     case 'artisan': return ok(env.tools.items('artisan').map((x) => ({ value: x.name, label: x.name })));
     case 'tool': return ok(env.tools.items('anyTool').map((x) => ({ value: x.name, label: x.name })));
     case 'language': return ok(env.languages.list().map((l) => ({ value: l.name, label: l.name })));
-    case 'weapon': return ok(env.store.weapons2024.map((x) => ({ value: x.name, label: x.name })));
-    // 枪械（城主指南）一般没有角色熟练，不列
-    case 'weaponMastery': return ok(env.store.weapons2024.filter((x) => x.mastery?.length && !x.firearm).map((x) => ({ value: x.name, label: x.name })));
+    // 武器精通的选择（数据里写的 pool: weapon）也按精通列表走，不然会列出激光步枪这类枪械
+    case 'weapon': return ok(choice.kind === 'itemMastery' ? masteryWeapons() : env.store.weapons2024.map((x) => ({ value: x.name, label: x.name })));
+    case 'weaponMastery': return ok(masteryWeapons());
     case 'subclass': {
       const out: PoolOption[] = [];
       for (const k of char._resolved?.classes || []) {
