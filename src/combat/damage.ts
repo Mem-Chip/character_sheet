@@ -63,7 +63,7 @@ const TYPE_ALIAS: Record<string, string> = {
 // 两种都收进同一个类型，否则数据里写「黯蚀」的伤害匹配不上「暗蚀」的抗性
   黯蚀: '暗蚀',
   斩击: '挥砍', B: '钝击', P: '穿刺', S: '挥砍', A: '强酸', C: '寒冷', F: '火焰', O: '力场', N: '暗蚀', R: '光耀',
-  Y: '心灵', T: '毒素', L: '闪电', I: '雷鸣', E: '力场',
+  Y: '心灵', I: '毒素', L: '闪电', T: '雷鸣', E: '力场',
   bludgeoning: '钝击', piercing: '穿刺', slashing: '挥砍', acid: '强酸', cold: '寒冷', fire: '火焰', force: '力场',
   necrotic: '暗蚀', radiant: '光耀', psychic: '心灵', poison: '毒素', lightning: '闪电', thunder: '雷鸣',
 };

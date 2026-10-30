@@ -640,6 +640,11 @@ export type Command =
   | { type: 'removeEffect'; id: EffectId }
   | { type: 'adjustHp'; id: Id; delta?: number; set?: number; temp?: number }
   | { type: 'damage'; id: Id; amount: number; damageType: string; source?: Id | null }
+  /**
+   * 群体掷骰（指令框 /save、/check）：一笔事务里每人各掷一次（要确认骰子时一个个问，不会互相挡住）。
+   * 豁免带 damage 时伤害只掷一次，没过的吃全额，过了的 half ? 吃一半 : 不受伤害
+   */
+  | { type: 'groupRoll'; kind: 'save' | 'check'; ids: Id[]; ability: Ability; skill?: string; dc?: number; damage?: { dice: string; type: string }; half?: boolean }
   /** 手动治疗：与法术治疗走同一条路（0 生命值时的昏迷随之结束） */
   | { type: 'heal'; id: Id; amount: number }
   | { type: 'tempHp'; id: Id; amount: number }

@@ -279,7 +279,7 @@ export function createEncounters(d: Deps) {
   };
 
   /** 玩家能发的命令 */
-  const PLAYER_CMDS = new Set(['useAction', 'roll', 'addCombatant', 'removeCombatant', 'refreshCombatant', 'heal', 'tempHp', 'setUsage', 'spendHitDie', 'rest', 'manualCast', 'damage', 'setEconomy', 'endConcentration']);
+  const PLAYER_CMDS = new Set(['useAction', 'roll', 'addCombatant', 'removeCombatant', 'refreshCombatant', 'heal', 'tempHp', 'setUsage', 'spendHitDie', 'rest', 'manualCast', 'damage', 'setEconomy', 'endConcentration', 'groupRoll']);
 
   function check(e: Live, u: User, role: 'dm' | 'player', cmd: Command): string | null {
     if (role === 'dm') return null;
@@ -296,6 +296,11 @@ export function createEncounters(d: Deps) {
     }
     if (cmd.type === 'rest') {
       if (!cmd.ids?.length || !cmd.ids.every((id) => ownerOf(e, id) === u.id)) return '只能让自己的角色休息';
+      return null;
+    }
+    // 群体豁免：玩家只能让自己的角色掷（伤害由 DM 来）
+    if (cmd.type === 'groupRoll') {
+      if (!cmd.ids.length || !cmd.ids.every((id) => ownerOf(e, id) === u.id)) return '只能让自己的角色豁免';
       return null;
     }
     const who = subjectOf(cmd);

@@ -120,6 +120,10 @@ function overrideText(p: P, name: (id: unknown) => string): string {
     case 'tempHp': return `给 ${name(p.id)} ${p.amount} 点临时生命值`;
     case 'applyEffect': return `给 ${name(p.to)} 施加「${String(p.template).split(':').pop()}」`;
     case 'removeEffect': return '移除效应';
+    case 'groupRoll': {
+      const dmg = p.damage as { dice: string; type: string } | undefined;
+      return `${(p.ids as string[]).map(name).join('、')} 做${p.label}${dmg ? `，没过的受 ${dmg.dice} ${dmg.type}伤害，${p.half ? '过了的减半' : '过了的不受伤害'}` : ''}`;
+    }
     case 'economy': return `${name(p.id)} 的${Object.entries(p.patch as Record<string, number>).map(([k, v]) => `${({ action: '动作', bonus: '附赠动作', reaction: '反应', move: '移动' } as Record<string, string>)[k] ?? k}${k === 'move' ? ` ${v} 尺` : v ? '可用' : '已用'}`).join('、')}`;
     case 'usage': return `${name(p.id)} 的${p.slot != null ? ` ${p.slot} 环法术位` : p.hitDie != null ? ` d${p.hitDie} 生命骰` : `「${p.resource}」`}已用次数改为 ${p.used}`;
     default: return String(p.what);
@@ -173,6 +177,7 @@ export function txTitle(cmd: { type: string } & P, name: (id: unknown) => string
     case 'removeEffect': return '移除效应';
     case 'adjustHp': return '调整生命值';
     case 'damage': return '手动伤害';
+    case 'groupRoll': return `${cmd.ids.length} 人${ABIL_CN[cmd.ability as Ability]}${cmd.kind === 'save' ? '豁免' : '检定'}`;
     case 'heal': return '手动治疗';
     case 'tempHp': return '临时生命值';
     case 'manualCast': return `${name(cmd.actor)} 施放「${cmd.spell}」`;

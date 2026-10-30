@@ -8,6 +8,7 @@ import { Term, termEngine } from '../../components/Term';
 import { Entries } from '../../components/Entries';
 import { describe, txTitle, type Line } from '../../lib/events';
 import type { Namer } from './shared';
+import { ABIL_HELP, DAMAGE_HELP, HELP, damageType, parseCommand } from '../../lib/commands';
 
 const OUTCOMES: Record<string, Array<[string, string]>> = {
   attack: [['hit', '命中'], ['miss', '未命中'], ['crit', '重击']],
@@ -277,6 +278,7 @@ function CommandBox() {
   const [h, setH] = useState(-1);
   /** /match 找到好几条时列出来，点一个打开 */
   const [found, setFound] = useState<TermRef[] | null>(null);
+  const [help, setHelp] = useState(false);
   const match = async (q: string) => {
     const eng = termEngine();
     if (!q) { setErr('要写名字，比如 /match 魔法飞弹'); return; }
@@ -293,6 +295,26 @@ function CommandBox() {
   const send = () => {
     const t = text.trim();
     if (!t) return;
+    const done = () => { setErr(''); setFound(null); setText(''); setHist([t, ...hist.filter((x) => x !== t)].slice(0, 20)); setH(-1); };
+    // /save /check /next /undo /h（解析在 lib/commands.ts）
+    const pc = parseCommand(t);
+    if (pc) {
+      if (pc.kind === 'error') { setErr(pc.message); return; }
+      if (pc.kind === 'help') { setHelp(true); done(); return; }
+      // 被拒绝（比如还有决定没答）：原因留在指令框下面，指令不清掉
+      const rejected = (r: { status: string; reason?: string }) => { if (r.status !== 'rejected') return false; setErr(r.reason ?? '没做成'); return true; };
+      if (pc.kind === 'next') { if (!rejected(combat.dispatch({ type: 'nextTurn' }))) done(); return; }
+      if (pc.kind === 'undo') { combat.undo(pc.n); done(); return; }
+      const ids = combat.picked();
+      if (!ids.length) { setErr('先选中要掷的人（Shift 点可以多选）'); return; }
+      if (pc.kind === 'save') {
+        if (rejected(combat.dispatch({ type: 'groupRoll', kind: 'save', ids, ability: pc.ability, dc: pc.dc, ...(pc.damage ? { damage: pc.damage, half: pc.half } : {}) }))) return;
+      } else {
+        if (rejected(combat.dispatch({ type: 'groupRoll', kind: 'check', ids, ability: pc.ability, ...(pc.skill ? { skill: pc.skill } : {}), ...(pc.dc ? { dc: pc.dc } : {}) }))) return;
+      }
+      done();
+      return;
+    }
     const mm = t.match(/^\/match(?:\s+([\s\S]*))?$/i);
     if (mm) {
       void match((mm[1] ?? '').trim());
@@ -319,7 +341,10 @@ function CommandBox() {
       }
       const [numRaw, ...types] = rest.split(/\s+/);
       // 数字或骰子（2d6+3 / 8d6）都行，掷骰交给 batch（会进日志）
-      const err = combat.batch(kind === 'temphp' ? 'tempHp' : kind, numRaw, types.join(' '));
+      // 伤害类型认缩写（f / fi / fire / 火焰）
+      const dt = types.length ? damageType(types.join(' ')) : '钝击';
+      if (kind === 'damage' && !dt) { setErr(`「${types.join(' ')}」不是伤害类型。输入 /h 看缩写`); return; }
+      const err = combat.batch(kind === 'temphp' ? 'tempHp' : kind, numRaw, dt ?? '钝击');
       if (err) { setErr(err); return; }
       setErr(''); setFound(null); setText('');
       setHist([t, ...hist.filter((x) => x !== t)].slice(0, 20)); setH(-1);
@@ -336,8 +361,7 @@ function CommandBox() {
   return (
     <div className="cmdbox">
       <input
-        value={text} title={['直接打字 = 说一句话', '/r 1d20+5, 2d6+3 说明 · ad20 优势 · dd20 劣势 · 4d6kh3 取高', '/pr 私密掷骰', '/match 名字（中文或英文）：把法术、状态、专长、物品、怪物的原文发到日志',
-        '/heal 10（也能写 2d6+3）· /damage 8 火焰（或 8d6 火焰）· /temphp 5 · /cond 中毒：批量作用在当前选中的那些（Shift 点可以多选）'].join('\n')}
+        value={text} placeholder="说话，或者 /h 看指令" title="输入 /h 看全部指令"
         onChange={(e) => { setText(e.target.value); setErr(''); }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') send();
@@ -348,6 +372,22 @@ function CommandBox() {
         aria-label="指令"
       />
       {err && <div className="dangerline tiny">{err}</div>}
+      {/* 打到一半（还没空格）时提示对得上的指令 */}
+      {!err && /^\/\S*$/.test(text) && (() => {
+        const w = text.slice(1).toLowerCase();
+        const hits = HELP.filter(([u]) => u.split(/\s*·\s*/).some((x) => x.startsWith('/') && x.slice(1).toLowerCase().startsWith(w)));
+        return hits.length ? <div className="cmd-hint tiny">{hits.map(([u, d]) => <div key={u}><code>{u}</code> <span className="faint">{d}</span></div>)}</div> : null;
+      })()}
+      {help && (
+        <div className="cmd-help tiny">
+          {HELP.map(([u, d]) => <div key={u}><code>{u}</code> <span className="faint">{d}</span></div>)}
+          <div><b>伤害类型</b> <span className="faint">{DAMAGE_HELP}</span></div>
+          <div><b>属性</b> <span className="faint">{ABIL_HELP}</span></div>
+          <div><b>技能</b> <span className="faint">英文前几个字母就行：perc 察觉 · ste 隐匿 · ath 运动 · inv 调查 · ins 洞悉…，中文名也行</span></div>
+          <div className="faint">作用在选中的人身上（Shift 点可以多选）。上下键翻之前发过的。</div>
+          <button className="btn ghost sm" onClick={() => setHelp(false)}>收起</button>
+        </div>
+      )}
       {found && (
         <div className="match-list">
           {found.map((r) => (

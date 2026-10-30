@@ -1,5 +1,5 @@
-import { ABIL_CN } from '../expr';
-import { applyDamagePacket, applyHeal, grantTempHp } from './damage';
+import { ABIL_CN, parseDice } from '../expr';
+import { applyDamagePacket, applyHeal, grantTempHp, normType, rollComponent, type DamageComponent } from './damage';
 import { d20Test } from './d20';
 import { applyEffect, checkEndsOn, concentrationOf, effectiveView, endConcentration, endEffect, skillBonus } from './effects';
 import { Dice } from '../expr';
@@ -151,6 +151,37 @@ function handle(tx: Tx, cmd: Command): void {
         source: cmd.source ?? null, target: cmd.id, components: [{ dice: Dice.constant(cmd.amount), type: cmd.damageType, from: '手动伤害' }],
         crit: false, label: '手动伤害', reduce: [],
       }, seq);
+      return;
+    }
+    case 'groupRoll': {
+      const ids = [...new Set(cmd.ids)].filter((id) => tx.state.combatants[id]);
+      if (!ids.length) throw new Rejected('没有要掷骰的人');
+      const save = cmd.kind === 'save';
+      const label = `${ABIL_CN[cmd.ability]}${cmd.skill ? `（${cmd.skill}）` : ''}${save ? '豁免' : '检定'}`; // DC 不写进来：掷骰那行自己会写「对 DC n」
+      const seq = tx.emit('manualOverride', { what: 'groupRoll', kind: cmd.kind, ids, label: label + (cmd.dc ? ` DC ${cmd.dc}` : ''), ...(save && cmd.damage ? { damage: cmd.damage, half: !!cmd.half } : {}) });
+      // 伤害只掷一次，所有人共用这一次（和火球术一样）
+      let comp: DamageComponent | null = null;
+      if (save && cmd.damage) {
+        let dice: Dice;
+        try { dice = parseDice(cmd.damage.dice); } catch { throw new Rejected(`看不懂伤害「${cmd.damage.dice}」`); }
+        const type = normType(cmd.damage.type || '钝击');
+        const c: DamageComponent = { dice, type, from: label };
+        c.rolled = { ...rollComponent(tx, c, false, 'dm', 0), crit: false };
+        comp = c;
+      }
+      for (const id of ids) {
+        const v = effectiveView(tx, id);
+        const bonus = save ? v.save[cmd.ability] : cmd.skill ? skillBonus(v, cmd.skill, cmd.ability) : v.mod[cmd.ability];
+        const r = d20Test(tx, { roller: id, kind: cmd.kind, ability: cmd.ability, skill: cmd.skill, bonus, ...(cmd.dc ? { vs: cmd.dc } : {}), label, cause: seq });
+        if (!save) continue;
+        const ok = r.outcome === 'success';
+        const s2 = tx.emit(ok ? 'saveSucceeded' : 'saveFailed', { actor: null, target: id, ability: cmd.ability, dc: cmd.dc ?? 0, label }, r.seq);
+        if (!comp || (ok && !cmd.half)) continue;
+        applyDamagePacket(tx, {
+          source: null, target: id, components: [{ ...comp }], crit: false, label, reduce: [],
+          ...(ok ? { scale: 0.5 } : {}), save: { ability: cmd.ability, success: ok, half: !!cmd.half },
+        }, s2);
+      }
       return;
     }
     case 'heal': {

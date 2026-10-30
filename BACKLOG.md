@@ -28,6 +28,9 @@
 - **战斗视图里的特殊资源**：「详情」抽屉的「资源」表能记术法点、气这类次数池，但底部动作栏里看不到，用起来不方便。待确认要怎么改（先问用户）。
   在哪：`app/pages/combat/Hotbar.tsx`、`app/lib/hotres.ts`。
 - **冰刃**：攻击 + 爆开的范围伤害（要范围预览）。在哪：`data/dyn/spells.json`、`app/lib/area.ts`。
+- **力竭层数的界面**：引擎已经会叠层（`stack: "level"`、`self.exhaustion`、6 级死亡），但界面上加 / 减一级、看当前几级都不方便；
+  `/cond` 指令也该能写 `/cond 力竭 2`、配一个去掉状态的 `/uncond`，状态名也要能用缩写（用户说状态待会再优化）。
+  在哪：`app/pages/combat/Actor.tsx`、`TokenMenu.tsx`、`app/lib/commands.ts`、`src/combat/effects.ts`（`exhaustionOf`）。
 - **状态细节**：魅惑者对你的社交检定有优势；擒抱者移动时拖着被擒的人；恐慌时地图上禁止靠近恐惧源。
   在哪：`data/rules-2024.json`（状态）、`src/combat/space.ts`（移动）。（审查报告里「状态语义」这一类 18 条）
 - **跨轮记住选择 / 数据**：比如「第一次用时选元素，之后每轮沿用」，现在只能每轮重新问一次。先看看 `effect.state` / `vars` 够不够用。
