@@ -173,10 +173,10 @@ export class Resources {
     const covered = this.env.abilities.hrCoverKeys(char);
     // 家规覆盖的键可以是 `<来源>:<名字>`，也可以是职业特性的 `<来源>:<职业>:<名字>:<等级>`
     const isCovered = (nm: string) => covered.some((k) => { const p = k.split(':'); return p.length === 4 ? p[2] === nm : k.slice(k.indexOf(':') + 1) === nm; });
+    // 只跳过被家规覆盖的那一列（「荒野形态」被改写 → 等级表的荒野形态列交给家规）；
+    // 以前是职业里任何一个特性被覆盖就整张表都不要，覆盖了精魂图腾，荒野形态次数也跟着没了
     for (const k of char._resolved?.classes || []) {
-      const clsCovered = [...(k.features || []), ...(k.subFeatures || [])].some((f: Json) => isCovered(f.name));
-      if (clsCovered) continue;
-      for (const r of this.fromClass(k)) if (!out.has(r.name)) out.set(r.name, r);
+      for (const r of this.fromClass(k)) if (!isCovered(r.name) && !out.has(r.name)) out.set(r.name, r);
     }
     const tableNames = [...out.keys()];
     const abilityPools = this.fromAbilities(char._derived, char, sheet);
