@@ -6,7 +6,7 @@
  */
 import { viewFromSheet } from '../bridge/from-sheet';
 import type { CombatantView } from '../combat';
-import { blankCharacter, type CharData, type Json, type SheetEnv } from '../sheet';
+import { blankCharacter, sourceKeyOf, type CharData, type Json, type SheetEnv } from '../sheet';
 import { flattenEntries, type Task, type TaskInterface } from './task';
 
 export interface TaskSource {
@@ -19,7 +19,33 @@ export interface TaskSource {
   tag?(char: CharData): void | Promise<void>;
 }
 
-type Probe = { resources: Record<string, string>; classTable: Record<string, string | number>; view: CombatantView };
+/** 子职特性在卡上的键（`<来源>:<职业>:<特性>:<等级>`）：从探针角色身上实际收集到的，不靠猜 */
+export interface SubKey { key: string; name: string; level: number }
+
+type Probe = { resources: Record<string, string>; classTable: Record<string, string | number>; view: CombatantView; subKeys: SubKey[] };
+
+/** 12 个职业的中文名（自制内容按原文里出现的职业名猜它挂在哪个职业上） */
+export const CLASS_NAMES = ['野蛮人', '吟游诗人', '牧师', '德鲁伊', '战士', '武僧', '圣武士', '游侠', '游荡者', '术士', '魔契师', '法师'];
+
+/** 原文里提得最多的职业名（「德鲁伊等级」这类）；一个都没有 = null */
+export function guessClass(text: string): string | null {
+  let best: string | null = null;
+  let n = 0;
+  for (const c of CLASS_NAMES) {
+    const k = text.split(c).length - 1;
+    if (k > n) { best = c; n = k; }
+  }
+  return best;
+}
+
+/** 职业相关任务的通用补充：职业等级、法术 DC、花职业资源怎么写 */
+function classExtra(cls: string): string[] {
+  return [
+    `${cls}等级写 \`self.levelOf('${cls}')\`（升级后自动变）；法术豁免 DC 写 \`self.spell.dc\`，法术攻击加值写 \`self.spell.atk\`。`,
+    "「消耗一次 X 的次数」写 `cost: [{ resource: '<id>' }]`，id 照抄上面「可以花的资源」；「免费用一次、长休恢复」这种自己的次数，在 `sheet.resources` 里声明一个池子，战斗里花它的 id。",
+    '「始终准备的法术」写在卡面 `sheet.grants` 的 `spell`（第 7.2 节）。grants 从拿到这条特性起就生效，没有按等级细分的写法：高等级才给的法术写进 `note` 说明，别提前给。',
+  ];
+}
 
 const UNIT: Record<string, string> = { action: '动作', bonus: '附赠动作', reaction: '反应', minute: '分钟', hour: '小时', round: '轮' };
 const RAR: Record<string, string> = { common: '普通', uncommon: '非普通', rare: '珍稀', 'very rare': '非常珍稀', legendary: '传说', artifact: '神器' };
@@ -92,6 +118,32 @@ export function createTaskBuilder(src: TaskSource) {
     return null;
   }
 
+  /** 子职：`<来源>:<子职名>`。同名几份里优先挂在 2024 职业上的（classSource = XPHB） */
+  async function findSubclass(source: string, name: string): Promise<{ cls: string; sub: Json } | null> {
+    for (const file of await classes()) {
+      const hits = (file.subclass || []).filter((x: Json) => x.name === name && x.source === source);
+      const sub = hits.find((x: Json) => x.classSource === 'XPHB') ?? hits[0];
+      if (sub) return { cls: sub.className, sub };
+    }
+    return null;
+  }
+
+  /**
+   * 站点数据里没有的自制内容：按原文猜挂在哪个职业上（也可以直接给），带上那个职业的资源和职业表。
+   * 猜不到职业就只有原文。
+   */
+  async function homebrewTask(id: string, key: string, name: string, text: string, cls?: string | null): Promise<Task> {
+    const c = cls || guessClass(text);
+    const p = c ? await probe(c).catch(() => null) : null;
+    return {
+      id, key, name, kind: 'feat',
+      where: `本团内容（家规 / 自制能力${p ? `，按原文看是${c}的` : ''}）`,
+      text: text.trim() || name,
+      resources: p?.resources ?? {},
+      ...(p ? { classTable: p.classTable, extra: classExtra(c!) } : {}),
+    };
+  }
+
   /** 静态层能力数据：真的算了的（staticPart）和只是文字的备注（staticNotes）分开 */
   function staticOf(key: string): { staticPart: string[]; staticNotes: string[] } {
     const a = src.abilities[key];
@@ -126,7 +178,10 @@ export function createTaskBuilder(src: TaskSource) {
         await src.tag?.(char);
         const sheet = await src.env.compute(char);
         const v = viewFromSheet(src.env, char, sheet);
-        return { resources: v.resourceNames, classTable: v.classTable, view: v };
+        const subKeys = src.env.abilities.collectSources(char)
+          .filter((x) => x.kind === 'subclassFeature')
+          .map((x) => ({ key: sourceKeyOf(x), name: x.name, level: x.level ?? 0 }));
+        return { resources: v.resourceNames, classTable: v.classTable, view: v, subKeys };
       })()));
     }
     return p;
@@ -235,8 +290,25 @@ export function createTaskBuilder(src: TaskSource) {
         text: flattenEntries(race.entries), resources: own, ...staticOf(key), interface: iface,
       };
     }
-    throw new Error(`找不到专长 / 可选特性 / 种族「${name}」`);
+    // 整个子职：每级特性一条，键用卡上实际收集到的那些
+    const sc = await findSubclass(source, name);
+    if (sc) {
+      const p = await probe(sc.cls, sc.sub.name);
+      const texts: string[] = [];
+      for (const k of p.subKeys) {
+        const f = await findClassFeature(k.key.split(':')[0], sc.cls, k.name, k.level);
+        if (f) texts.push(`【${k.level} 级：${k.name}】\n${flattenEntries(f.hit.entries)}`);
+      }
+      return {
+        id, key, name, kind: 'subclass', where: `${sc.cls}子职（${name}，${source}）`,
+        text: texts.join('\n\n') || flattenEntries(sc.sub.entries ?? []),
+        classTable: p.classTable, resources: p.resources, interface: iface,
+        split: p.subKeys.map((k) => ({ key: k.key, name: `${k.level} 级 ${k.name}` })),
+        extra: classExtra(sc.cls),
+      };
+    }
+    throw new Error(`找不到专长 / 可选特性 / 种族 / 子职「${name}」`);
   }
 
-  return { buildTask, ownerView, findClassFeature, spellsOf, staticOf };
+  return { buildTask, homebrewTask, ownerView, findClassFeature, findSubclass, spellsOf, staticOf };
 }

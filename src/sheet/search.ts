@@ -41,7 +41,7 @@ export const KIND_CN: Record<string, string> = {
 };
 
 /** buildTask 能直接取原文的类别（其余只能给键和出处，数据要自己写） */
-export const SUPPORTED: ReadonlySet<string> = new Set(['spell', 'item', 'feat', 'optfeature', 'race', 'classFeature', 'subclassFeature']);
+export const SUPPORTED: ReadonlySet<string> = new Set(['spell', 'item', 'feat', 'optfeature', 'race', 'classFeature', 'subclassFeature', 'subclass']);
 
 /** 能不能给出一条确定的条目键 */
 const KEYED: ReadonlySet<string> = new Set([...SUPPORTED, 'condition', 'action', 'monster', 'disease', 'variantrule']);

@@ -61,9 +61,9 @@ describe('全库搜索：slug → 条目键', () => {
     });
   });
 
-  it('子职（整条）：slug 里混了 state，名字和来源都别从 slug 取；只能给键以外的信息', () => {
+  it('子职（整条）：slug 里混了 state，名字和来源都别从 slug 取；键是「来源:子职名」（AI 任务按它拆成每级特性）', () => {
     const h = find(hits, 'Alchemist', { cat: 40 });
-    expect(h).toMatchObject({ kind: 'subclass', name: '炼金师', source: 'TCE', key: '', supported: false });
+    expect(h).toMatchObject({ kind: 'subclass', name: '炼金师', source: 'TCE', key: 'TCE:炼金师', supported: true });
   });
 
   it('状态：有键（能拿它覆盖官方），但 buildTask 取不了原文', () => {

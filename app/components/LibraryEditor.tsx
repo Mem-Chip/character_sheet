@@ -184,7 +184,7 @@ export function LibraryEditor(p: {
             saveLabel="填进这条"
             spec={aiSpec('both')}
             examples={`${aiExamples()}\n\n## 卡面数据的例子（真实数据，照这个粒度写）\n\n${aiSheetExamplesText()}`}
-            prepare={() => partsJobForKey(p.engine, p.cid ?? null, { key, name: raw.name || d.name, text: raw.text || d.text })}
+            prepare={() => partsJobForKey(p.engine, p.cid ?? null, { key, name: raw.name || d.name, text: raw.text || d.text, cls: p.item?.ref?.cls })}
             onSave={async (a, by) => {
               const parts = partsFromAnswer(a, { key });
               if (!parts.length) return ['AI 没给出内容（parts 是空的）'];
@@ -204,6 +204,9 @@ export function LibraryEditor(p: {
                 if (j >= 0) next[j] = { ...next[j], name: fresh.name || next[j].name, text: fresh.text || next[j].text, sheet: fresh.sheet, combat: fresh.combat };
                 else next.push(fresh);
               }
+              // 整个子职拆成了每级特性：原来那条（子职键、还没数据）是个空壳，去掉
+              const shell = next[aiPart];
+              if (!parts.some((np) => np.key === key) && !shell.sheet.trim() && !shell.combat.trim()) next.splice(aiPart, 1);
               setD((s) => ({ ...s, parts: next, by }));
               setAiPart(null);
               return [];

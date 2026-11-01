@@ -383,13 +383,15 @@ export interface AiJob {
   check: (answer: unknown) => string[] | Promise<string[]>;
   /** 检查用的上下文（双写流程要拿它接卡面检查） */
   ctx?: CheckCtx;
+  /** 要拆成几条（整个子职 = 每级特性一条） */
+  split?: Array<{ key: string; name: string }>;
 }
 
 /**
  * 一个条目键 → 任务。官方的、启用的书里的能力从站点原文拼（资源、职业表按探针角色）；
  * 拼不出来的（家规、自制内容）用给的名字和文字。houseRule = 本团改过这条，以它为准。
  */
-export async function jobForKey(engine: Engine, cid: string | null | undefined, key: string, o: { name: string; text: string; houseRule?: string }): Promise<AiJob> {
+export async function jobForKey(engine: Engine, cid: string | null | undefined, key: string, o: { name: string; text: string; houseRule?: string; cls?: string | null }): Promise<AiJob> {
   const b = taskBuilder(engine, cid);
   let t: Task;
   let owner: CombatantView | null = null;
@@ -397,11 +399,17 @@ export async function jobForKey(engine: Engine, cid: string | null | undefined, 
     t = await b.buildTask('AI', key);
     owner = await b.ownerView(key).catch(() => null);
   } catch {
-    t = { id: 'AI', key, name: o.name, kind: 'feat', where: '本团内容（家规 / 自制能力）', text: o.text.trim() || o.name, resources: {} };
+    // 站点上没有（自制内容）：按原文猜职业，带上那个职业的资源和职业表
+    t = await b.homebrewTask('AI', key, o.name, o.text, o.cls);
+  }
+  // 资料库里的文字和官方原文不一样（改过的版本）：以资料库的为准
+  const norm = (s: string) => s.replace(/\s+/g, '');
+  if (o.text.trim() && norm(o.text) !== norm(t.text) && t.where.indexOf('本团内容') !== 0) {
+    t = { ...t, text: o.text.trim(), extra: [...(t.extra ?? []), '上面的原文是资料库里这条的文字（可能改过官方版本），以它为准；和官方不一样的地方照它写。'] };
   }
   if (o.houseRule?.trim()) t = { ...t, extra: [...(t.extra ?? []), `本团家规改过这条，以家规为准：${o.houseRule.trim()}`] };
   const ctx = checkCtxOf(t, owner);
-  return { task: renderTask(t), check: (a) => checkEntry(a, ctx), ctx };
+  return { task: renderTask(t), check: (a) => checkEntry(a, ctx), ctx, split: t.split };
 }
 
 /**
@@ -415,12 +423,15 @@ export interface PartsTaskOpts {
   houseRule?: string;
   /** 要拆成几条（键 + 名字）；不给 = 就写这一条 */
   keys?: Array<{ key: string; name: string }>;
+  /** 资料库条目记着的职业（自制内容不在站点上时，用它取职业资源；不给就按原文猜） */
+  cls?: string | null;
   /** 有真角色就传进来：卡面部分会拿它试算一遍（看数值有没有变） */
   smokeChar?: Json | null;
 }
 
 export async function partsJobForKey(engine: Engine, cid: string | null | undefined, o: PartsTaskOpts): Promise<AiJob> {
-  const job = await jobForKey(engine, cid, o.key, { name: o.name, text: o.text, houseRule: o.houseRule });
+  const job = await jobForKey(engine, cid, o.key, { name: o.name, text: o.text, houseRule: o.houseRule, cls: o.cls });
+  const keys = o.keys?.length ? o.keys : job.split;
   const ctx: PartsCheckCtx = {
     ...(job.ctx ?? { key: o.key }),
     resolveFormula: (f, cls) => engine.env.resources.resolveFormula(f, PROBE_SHEET, null, cls),
@@ -428,9 +439,11 @@ export async function partsJobForKey(engine: Engine, cid: string | null | undefi
   const lines = [
     '', '## 输出格式（以这里为准，和上面第 1 节一样）', '',
     '一个 JSON 对象：`{ "parts": [ … ] }`，每个 part 是 `{ key, name, text, sheet, combat }`。',
-    o.keys?.length
-      ? `- 下面每一条各写一个 part，\`key\` 原样照抄：\n${o.keys.map((p) => `  - \`${p.key}\`（${p.name}）`).join('\n')}`
-      : `- 这一条写一个 part；覆盖官方就写 \`key: "${o.key}"\`，新内容就**不写 key**。`,
+    keys?.length
+      ? `- 下面每一条各写一个 part，\`key\` 原样照抄：\n${keys.map((p) => `  - \`${p.key}\`（${p.name}）`).join('\n')}`
+        + '\n- 原文里有、上面却没有对应键的特性（改版新加的）：并进同等级（没有就更低一级）的那条里写。**不要**另起不带 key 的 part：不带 key 的新内容对团里每张卡都生效，不管是不是这个子职。'
+        + '\n- 上面有、原文里却没有的（改版删掉或改名并进别处的）：不写那条。'
+      :`- 这一条写一个 part；覆盖官方就写 \`key: "${o.key}"\`，新内容就**不写 key**。`,
     '- `sheet` 写卡面（第 7 节：mods / grants / choices / resources），`combat` 写战斗（第 2～6 节的 Entry，**直接写**，不要包成 `{ "entry": … }`）。',
     '- **两边互通**：次数池声明在 `sheet.resources` 里，战斗里用 `cost: [{ resource: \'<id>\' }]` 花它；',
     '  「带条件才生效」的写 `combat`，「恒定的加值 / 授予 / 池子上限」写 `sheet`。',

@@ -15,7 +15,7 @@ export interface Task {
   /** 规则条目键：`XPHB:<职业>:<特性>:<等级>` / `XPHB:<专长>` / `XPHB:spell:<法术>` */
   key: string;
   name: string;
-  kind: 'classFeature' | 'subclassFeature' | 'feat' | 'spell' | 'optfeature' | 'race' | 'item';
+  kind: 'classFeature' | 'subclassFeature' | 'subclass' | 'feat' | 'spell' | 'optfeature' | 'race' | 'item';
   /** 「圣武士 3 级（奉献之誓）」「1 环法术」「起源专长」 */
   where: string;
   /** 原文（标签已去掉） */
@@ -31,6 +31,8 @@ export interface Task {
   /** 静态层数据里的备注：只是说明文字，**没有任何效果** */
   staticNotes?: string[];
   interface?: TaskInterface;
+  /** 要拆成几条（一个子职 = 每级特性一条）：键是卡上实际用的条目键 */
+  split?: Array<{ key: string; name: string }>;
   /** 补充说明（这一类条目共通的上下文：卓越骰多大、术法点叫什么…） */
   extra?: string[];
 }
@@ -108,7 +110,7 @@ export function renderTask(t: Task): string {
     for (const a of ifc.actions ?? []) lines.push(`- 动作：id \`${a.id}\`，name「${a.name}」`);
     for (const e of ifc.effects ?? []) lines.push(`- 效应名：「${e}」`);
   } else {
-    lines.push('', '## 接口', '', '- 没有主动使用的动作（如果原文里确实有，id 用 `use`）');
+    lines.push('', '## 接口', '', '- 没有事先约定的动作 id：原文里每个要主动使用的能力各起一个简短的英文 id（只有一个就用 `use`）');
   }
   return lines.join('\n') + '\n';
 }
