@@ -168,6 +168,7 @@ export function campaignData(h: Hub | null): CampaignData | null {
     // 挂着的条目**只放行自己**（不放行整本书）：导入一条 EFA 的种族不该把整本 EFA 都带出来
     covered: [...new Set(items.flatMap(coveredKeysOf))],
     names: namesOf(items),
+    brew: items.flatMap((x) => (x.brew ? [x.brew] : [])),
   };
 }
 
@@ -185,6 +186,8 @@ export function installLibrary(engine: Engine): void {
   engine.env.homelib.user = (char) => {
     if (!usesOwnLibrary(char as { _campaign?: string })) return [];
     const picked = new Set(((char as { hrPicked?: string[] }).hrPicked ?? []) as string[]);
+    // 自制书条目的 part 是按它自己的特性键生效的（只有选了这个子职的卡才有那些特性），不用在卡上勾
+    for (const it of libraryNow()) if (it.brew) for (const pt of it.parts ?? []) picked.add(pt.id);
     return pickedRulesOf(libraryNow(), picked);
   };
   // 我库里带的来源书只用来**装数据文件**，不算「启用的书」（否则导入一条就放开整本书）
@@ -192,6 +195,7 @@ export function installLibrary(engine: Engine): void {
   // 我库里的条目只放行它们自己（不在战役里也能选中）
   engine.env.userCovered = () => [...new Set(libraryNow().flatMap(coveredKeysOf))];
   engine.env.userNames = () => namesOf(libraryNow());
+  engine.env.userBrew = () => libraryNow().flatMap((x) => (x.brew ? [x.brew] : []));
 }
 
 /**

@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createTaskBuilder, guessClass } from '../../src/factory/build';
 import { renderTask } from '../../src/factory/task';
+import { normalizeBrew } from '../../src/library';
 import { createNodeEnv } from '../../src/sheet/node-env';
 import { hasLocalData } from '../../src/sheet/node-provider';
 import type { Json, SheetEnv } from '../../src/sheet';
@@ -36,6 +37,19 @@ describe.skipIf(!hasLocalData())('子职 / 自制内容的任务', () => {
     const md = renderTask(t);
     expect(md).toContain("self.levelOf('德鲁伊')");
     expect(md).toContain('【2 级：精魂图腾】');
+  });
+
+  it('自制书：每条特性一个 part，键用自制书的；带德鲁伊的资源；法术表不要重复授予', async () => {
+    const brew = normalizeBrew({
+      subclass: [{ name: '牧人结社（自制）', className: '德鲁伊', additionalSpells: [{ prepared: { 3: ['命令术'] } }] }],
+      subclassFeature: [{ name: '精魂图腾', level: 3, entries: ['以一个附赠动作召唤精魂图腾。'] }],
+    } as Json, 'HB-TEST');
+    const t = await b.brewTask('AI', brew);
+    expect(t.split?.map((x) => x.key)).toEqual(['HB-TEST:德鲁伊:精魂图腾:3']);
+    expect(Object.values(t.resources ?? {})).toContain('荒野形态');
+    const md = renderTask(t);
+    expect(md).toContain('【3 级：精魂图腾】');
+    expect(md).toContain('不要**再在 grants 里授予');
   });
 
   it('站点上没有的自制内容：按原文猜出德鲁伊，给上荒野形态', async () => {

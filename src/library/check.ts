@@ -5,6 +5,8 @@
  * 那是浏览器的 AI 检查（lintEntry / lintSheet / 试算）的事，服务器不跑引擎。
  */
 import { lintShape } from '../factory';
+import type { Json } from '../sheet';
+import { brewSource, checkBrew, normalizeBrew, type Brew } from './brew';
 import type { LibraryItem, ResPart, ShareState } from './types';
 
 type Row = Record<string, unknown>;
@@ -31,7 +33,10 @@ export const isOverridePart = (p: ResPart): boolean => !String(p.key).startsWith
 
 /** 一条资源挂到战役时的初始状态：覆盖了官方 = 待审，否则自动生效 */
 export const shareStateOf = (item: LibraryItem): Extract<ShareState, 'auto' | 'pending'> =>
-  (item.parts ?? []).some(isOverridePart) ? 'pending' : 'auto';
+  (item.parts ?? []).some((p) => isOverridePart(p) && !isOwnBrewKey(item, p.key)) ? 'pending' : 'auto';
+
+/** 这个键是不是这条内容自己的自制书里的特性（`HB-<id>:…`）—— 不算覆盖官方 */
+export const isOwnBrewKey = (item: LibraryItem, key: string): boolean => !!item.brew && String(key).startsWith(`${brewSource(item.id)}:`);
 
 /** 检查并整理一条库内容；返回问题（空 = 通过） */
 export function checkItem(x: unknown, id: string): { item: LibraryItem | null; problems: string[] } {
@@ -45,7 +50,14 @@ export function checkItem(x: unknown, id: string): { item: LibraryItem | null; p
   const kind = str(x.kind, 24).trim() || 'homerule';
   if (!KIND_RE.test(kind)) p.push('类别不合法');
 
-  if (!Array.isArray(x.parts) || !x.parts.length) {
+  // 自制书（5etools 格式的子职）：检查结构、补齐关联字段；有它的条目可以先没有 parts（数据还没写）
+  let brew: Brew | undefined;
+  if (x.brew !== undefined && x.brew !== null) {
+    const bp = checkBrew(x.brew);
+    if (bp.length) p.push(...bp.map((m) => `自制书：${m}`));
+    else brew = normalizeBrew(x.brew as Json, brewSource(id));
+  }
+  if (!Array.isArray(x.parts) || (!x.parts.length && !brew)) {
     p.push('要有 parts（至少一条；一条资源拆成几条就写几条）');
     return { item: null, problems: p };
   }
@@ -98,9 +110,9 @@ export function checkItem(x: unknown, id: string): { item: LibraryItem | null; p
       ...(combat ? { combat: combat as ResPart['combat'] } : {}),
     });
   }
-  if (!parts.length) return { item: null, problems: p };
+  if (!parts.length && !brew) return { item: null, problems: p };
 
-  if (!parts.some((q) => q.sheet || q.combat || q.text || q.removed) && !str(x.text, 20000).trim()) {
+  if (!brew && !parts.some((q) => q.sheet || q.combat || q.text || q.removed) && !str(x.text, 20000).trim()) {
     p.push('整条内容什么数据都没有（卡面、战斗、说明至少要有一样）');
   }
 
@@ -118,6 +130,7 @@ export function checkItem(x: unknown, id: string): { item: LibraryItem | null; p
       }
       : {}),
     parts,
+    ...(brew ? { brew } : {}),
     by: /^(hand|byok:[^\s]{1,80})$/.test(String(x.by)) ? String(x.by) : 'hand',
     reviewed: !!x.reviewed,
   };

@@ -144,6 +144,29 @@ export function createTaskBuilder(src: TaskSource) {
     };
   }
 
+  /**
+   * 自制书（5etools 格式的子职，src/library/brew.ts）→ 写卡面 + 战斗数据的任务：每条特性一个 part，
+   * 键就是卡上收集到的那个（`<来源>:<职业>:<特性>:<等级>`）。资源和职业表用不带子职的同职业探针。
+   */
+  async function brewTask(id: string, brew: { subclass: Json[]; subclassFeature: Json[] }): Promise<Task> {
+    const sc = brew.subclass[0];
+    const cls = String(sc.className);
+    const p = await probe(cls).catch(() => null);
+    const feats = brew.subclassFeature;
+    return {
+      id, key: `${sc.source}:${sc.name}`, name: String(sc.name), kind: 'subclass',
+      where: `${cls}子职（自制：${sc.name}）`,
+      text: feats.map((f) => `【${f.level} 级：${f.name}】\n${flattenEntries(f.entries)}`).join('\n\n'),
+      resources: p?.resources ?? {}, classTable: p?.classTable,
+      split: feats.map((f) => ({ key: `${f.source}:${f.className}:${f.name}:${f.level}`, name: `${f.level} 级 ${f.name}` })),
+      extra: [
+        ...classExtra(cls),
+        ...(sc.additionalSpells ? ['这个子职的法术表已经写在子职数据里（按等级自动「始终准备」），**不要**再在 grants 里授予那些法术。'] : []),
+        '这些特性的原文已经显示在卡面上；只写引擎要用的数据（加值、授予、资源池、战斗动作 / 触发），纯描述性的（和 NPC 交谈、没有数值的）可以不写那一条。',
+      ],
+    };
+  }
+
   /** 静态层能力数据：真的算了的（staticPart）和只是文字的备注（staticNotes）分开 */
   function staticOf(key: string): { staticPart: string[]; staticNotes: string[] } {
     const a = src.abilities[key];
@@ -310,5 +333,5 @@ export function createTaskBuilder(src: TaskSource) {
     throw new Error(`找不到专长 / 可选特性 / 种族 / 子职「${name}」`);
   }
 
-  return { buildTask, homebrewTask, ownerView, findClassFeature, findSubclass, spellsOf, staticOf };
+  return { buildTask, homebrewTask, brewTask, ownerView, findClassFeature, findSubclass, spellsOf, staticOf };
 }

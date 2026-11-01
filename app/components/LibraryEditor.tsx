@@ -6,14 +6,14 @@
  * 卡面 / 战斗两块都是 JSON，写法同 data/abilities-*.json 和战斗 Entry。
  */
 import { useState } from 'react';
-import { keyProblem, type LibraryItem, type ResPart } from '../../src/library';
+import { brewFeatureKeys, brewSource, checkBrew, hasSheetData, isOwnBrewKey, keyProblem, normalizeBrew, type Brew, type LibraryItem, type ResPart } from '../../src/library';
 import type { Json } from '../../src/sheet';
 import { AiDatafy } from './AiDatafy';
 import { Dialog, Field, Tag } from './ui';
 import { CombatEditor } from './CombatEditor';
 import { SyntaxHelp } from './SyntaxHelp';
 import { ModsEditor } from './ModsEditor';
-import { aiExamples, aiSheetExamplesText, aiSpec, partsFromAnswer, partsJobForKey } from '../lib/ai';
+import { aiExamples, aiSheetExamplesText, aiSpec, brewJob, brewSpec, partsFromAnswer, partsJobForKey } from '../lib/ai';
 import type { Engine } from '../lib/engine';
 import { newPartId } from '../lib/library';
 import { RULE_FILES } from '../../src/bridge/rule-files';
@@ -30,7 +30,7 @@ export const kindLabel = (k: string) => KINDS.find(([v]) => v === k)?.[1] ?? k;
 interface DraftPart {
   id: string; key: string; name: string; text: string; pickable: boolean; removed: boolean; sheet: string; combat: string;
 }
-interface Draft { id: string; kind: string; name: string; text: string; by: string; reviewed: boolean; parts: DraftPart[] }
+interface Draft { id: string; kind: string; name: string; text: string; by: string; reviewed: boolean; parts: DraftPart[]; /** 自制书 JSON（空 = 没有） */ brew: string }
 
 const pretty = (v: unknown) => (v === undefined ? '' : JSON.stringify(v, null, 1));
 const partToDraft = (p: ResPart): DraftPart => ({
@@ -40,7 +40,17 @@ const partToDraft = (p: ResPart): DraftPart => ({
 const itemToDraft = (it: LibraryItem): Draft => ({
   id: it.id, kind: it.kind || 'homerule', name: it.name, text: it.text, by: it.by, reviewed: it.reviewed,
   parts: (it.parts ?? []).map(partToDraft),
+  brew: it.brew ? pretty({ subclass: it.brew.subclass, subclassFeature: it.brew.subclassFeature }) : '',
 });
+
+/** 草稿里的自制书：解析 + 检查 + 补齐（键要按保存后的来源代号算） */
+function draftBrew(d: Draft): { brew: Brew | null; problems: string[] } {
+  if (!d.brew.trim()) return { brew: null, problems: [] };
+  let raw: unknown;
+  try { raw = JSON.parse(d.brew); } catch { return { brew: null, problems: ['自制书不是合法的 JSON'] }; }
+  const problems = checkBrew(raw);
+  return problems.length ? { brew: null, problems } : { brew: normalizeBrew(raw as Json, brewSource(d.id)), problems: [] };
+}
 
 export function LibraryEditor(p: {
   item: LibraryItem;
@@ -56,6 +66,11 @@ export function LibraryEditor(p: {
   const [d, setD] = useState<Draft>(() => itemToDraft(p.item));
   const [problems, setProblems] = useState<string[]>([]);
   const [aiPart, setAiPart] = useState<number | null>(null);
+  /** 自制书的两步 AI：make = 原文 → 5etools 格式；parts = 按它的特性键写卡面 + 战斗 */
+  const [aiBrew, setAiBrew] = useState<null | 'make' | 'parts'>(null);
+  const [brewJson, setBrewJson] = useState(false);
+  const isSub = d.kind === 'subclass';
+  const db = draftBrew(d);
   const setPart = (i: number, patch: Partial<DraftPart>) => setD((s) => ({ ...s, parts: s.parts.map((x, j) => (j === i ? { ...x, ...patch } : x)) }));
 
   const save = async () => {
@@ -84,11 +99,16 @@ export function LibraryEditor(p: {
       };
     });
     if (!d.name.trim()) bad.push('这条内容要有名字');
-    if (!parts.length) bad.push('至少要有一条');
+    if (db.problems.length) bad.push(...db.problems.map((m) => `自制书：${m}`));
+    // 有自制书的可以先没有 part（数据还没写）；什么都没填的空 part 不存
+    const kept = db.brew ? parts.filter((x, i) => !x.key.startsWith('HR:') || hasSheetData(x) || x.combat || d.parts[i].text.trim() || d.parts[i].name.trim()) : parts;
+    parts.splice(0, parts.length, ...kept);
+    if (!parts.length && !db.brew) bad.push('至少要有一条');
     if (bad.length) { setProblems(bad); return; }
     try {
       const r = await p.onSave({
         id: d.id, kind: d.kind, name: d.name.trim(), text: d.text, parts, by: d.by, reviewed: d.reviewed,
+        ...(db.brew ? { brew: db.brew } : {}),
         ...(p.item.source ? { source: p.item.source } : {}),
         ...(p.item.ref ? { ref: p.item.ref } : {}),
       });
@@ -124,15 +144,40 @@ export function LibraryEditor(p: {
           </div>
         )}
 
+        {isSub && (
+          <div className="stack" style={{ gap: 6, border: '1px solid var(--line, #ddd)', borderRadius: 6, padding: 8 }}>
+            <div className="row small" style={{ gap: 6 }}>
+              <b>自制书（5etools 格式）</b>
+              <span className="muted">改版 / 自制的整个子职用这个：存好以后建卡页能像官方子职一样选它，特性按它自己的等级和文字出现。</span>
+            </div>
+            {db.brew ? (
+              <div className="small">
+                <Tag tone="accent">{db.brew.subclass[0].className}子职「{db.brew.subclass[0].name}」</Tag>{' '}
+                {brewFeatureKeys(db.brew).map((k) => `${k.level} 级 ${k.name}`).join('、')}
+                {db.brew.subclass[0].additionalSpells ? ' · 带法术表' : ''}
+              </div>
+            ) : db.problems.length ? <div className="dangerline small">{db.problems.map((x, i) => <div key={i}>{x}</div>)}</div>
+              : <div className="small muted">还没有。把整个子职的原文贴进上面的「说明」，点「AI 整理成 5etools 格式」。</div>}
+            {brewJson && <textarea rows={8} className="mono" value={d.brew} readOnly={ro} onChange={(e) => setD({ ...d, brew: e.target.value })} placeholder='{ "subclass": [ … ], "subclassFeature": [ … ] }' />}
+            <div className="row small" style={{ gap: 6 }}>
+              {!ro && <button className="btn sm" disabled={!d.text.trim()} onClick={() => setAiBrew('make')} title="按上面「说明」里的原文">AI 整理成 5etools 格式…</button>}
+              {!ro && <button className="btn sm" disabled={!db.brew} onClick={() => setAiBrew('parts')} title="每条特性写一条卡面 + 战斗数据，键按自制书来">AI 按自制书写卡面 + 战斗…</button>}
+              <button className="btn ghost sm" onClick={() => setBrewJson(!brewJson)}>{brewJson ? '收起 JSON' : '看 / 改 JSON'}</button>
+            </div>
+          </div>
+        )}
+
         <div className="small faint">条目（一份资源可以拆成几条：一个子职就是每级特性一条）</div>
         {d.parts.map((raw, i) => {
           const key = raw.key.trim() || `HR:${raw.id}`;
           const isNew = key.startsWith('HR:');
+          // 自制书自己的特性（HB-<id>:…）：不是覆盖官方，也不能「本版删除」
+          const ownBrew = !!db.brew && key.startsWith(`${brewSource(d.id)}:`);
           return (
             <div key={raw.id} className="stack" style={{ gap: 6, border: '1px solid var(--line, #ddd)', borderRadius: 6, padding: 8 }}>
               <div className="row small" style={{ gap: 6 }}>
                 <Tag>{i + 1}</Tag>
-                {isNew ? <Tag tone="accent" title={key}>新内容</Tag> : <Tag tone="warn" title={key}>覆盖 {key}</Tag>}
+                {isNew ? <Tag tone="accent" title={key}>新内容</Tag> : ownBrew ? <Tag tone="accent" title={key}>自制书特性 · {key.split(":").slice(2).reverse().join(" 级 ")}</Tag> : <Tag tone="warn" title={key}>覆盖 {key}</Tag>}
                 <span style={{ flex: 1 }} />
                 {!ro && d.parts.length > 1 && <button className="btn ghost sm danger" onClick={() => setD({ ...d, parts: d.parts.filter((_, j) => j !== i) })}>删掉这条</button>}
               </div>
@@ -143,7 +188,7 @@ export function LibraryEditor(p: {
                 <Field label="这条的名字" style={{ flex: 1 }}><input value={raw.name} readOnly={ro} onChange={(e) => setPart(i, { name: e.target.value })} placeholder="不填就用整条的名字" /></Field>
 
               </div>
-              {!isNew && (
+              {!isNew && !ownBrew && (
                 <label className="row small" style={{ gap: 6 }} title="改版里没有这条：卡面上不再显示它，它的加值、资源和战斗数据都拿掉">
                   <input type="checkbox" checked={raw.removed} disabled={ro} onChange={(e) => setPart(i, { removed: e.target.checked })} />
                   本版删除这条官方特性
@@ -198,23 +243,7 @@ export function LibraryEditor(p: {
             onSave={async (a, by) => {
               const parts = partsFromAnswer(a, { key });
               if (!parts.length) return ['AI 没给出内容（parts 是空的）'];
-              // 同键的更新原来那条（保住 id：卡上「选了才生效」勾的是它），新键的追加（一个子职会多出几条）
-              const next = [...d.parts];
-              for (const np of parts) {
-                const j = next.findIndex((x) => (x.key.trim() || `HR:${x.id}`) === np.key);
-                const fresh: DraftPart = {
-                  id: np.id,
-                  key: np.key.startsWith('HR:') ? '' : np.key,
-                  name: np.name ?? '',
-                  text: np.text ?? '',
-                  pickable: !!np.pickable,
-                  removed: !!np.removed,
-                  sheet: pretty(np.sheet),
-                  combat: pretty(np.combat),
-                };
-                if (j >= 0) next[j] = { ...next[j], name: fresh.name || next[j].name, text: fresh.text || next[j].text, removed: fresh.removed, sheet: fresh.sheet, combat: fresh.combat };
-                else next.push(fresh);
-              }
+              const next = mergeParts(d.parts, parts);
               // 整个子职拆成了每级特性：原来那条（子职键、还没数据）是个空壳，去掉
               const shell = next[aiPart];
               if (!parts.some((np) => np.key === key) && !shell.sheet.trim() && !shell.combat.trim()) next.splice(aiPart, 1);
@@ -226,17 +255,89 @@ export function LibraryEditor(p: {
           />
         );
       })()}
+
+      {aiBrew === 'make' && (
+        <AiDatafy
+          title={`AI 把「${d.name || '这个子职'}」整理成 5etools 格式`}
+          initial={d.brew.trim() ? (() => { try { return JSON.parse(d.brew); } catch { return undefined; } })() : undefined}
+          saveLabel="填进自制书"
+          spec={brewSpec()}
+          examples=""
+          prepare={async () => brewJob({ name: d.name, text: d.text })}
+          onSave={async (a, by) => {
+            const bp = checkBrew(a);
+            if (bp.length) return bp;
+            setD((s) => ({ ...s, brew: pretty(a), by }));
+            setAiBrew(null);
+            return [];
+          }}
+          onClose={() => setAiBrew(null)}
+        />
+      )}
+      {aiBrew === 'parts' && db.brew && (() => {
+        const brew = db.brew;
+        const keys = brewFeatureKeys(brew);
+        // 已经写过的那几条当「上一版」
+        const prev = d.parts.filter((x) => keys.some((k) => k.key === x.key.trim()) && (x.sheet.trim() || x.combat.trim()));
+        let initial: unknown;
+        try {
+          initial = prev.length ? { parts: prev.map((x) => ({ key: x.key, name: x.name, sheet: x.sheet.trim() ? JSON.parse(x.sheet) : undefined, combat: x.combat.trim() ? (JSON.parse(x.combat).entry ?? JSON.parse(x.combat)) : undefined })) } : undefined;
+        } catch { initial = undefined; }
+        return (
+          <AiDatafy
+            title={`AI 写「${brew.subclass[0].name}」每条特性的数据（卡面 + 战斗）`}
+            initial={initial}
+            saveLabel="填进条目"
+            spec={aiSpec('both')}
+            examples={`${aiExamples()}\n\n## 卡面数据的例子（真实数据，照这个粒度写）\n\n${aiSheetExamplesText()}`}
+            prepare={() => partsJobForKey(p.engine, p.cid ?? null, { key: keys[0].key, name: brew.subclass[0].name, text: '', brew })}
+            onSave={async (a, by) => {
+              const parts = partsFromAnswer(a, { key: keys[0].key });
+              if (!parts.length) return ['AI 没给出内容（parts 是空的）'];
+              const bad = parts.filter((x) => !keys.some((k) => k.key === x.key)).map((x) => `「${x.key}」不是这个自制书的特性键`);
+              if (bad.length) return bad;
+              setD((s) => ({ ...s, parts: mergeParts(s.parts, parts), by }));
+              setAiBrew(null);
+              return [];
+            }}
+            onClose={() => setAiBrew(null)}
+          />
+        );
+      })()}
     </Dialog>
   );
+}
+
+/** AI 给的 parts 并进草稿：同键的更新原来那条（保住 id：卡上「选了才生效」勾的是它），新键的追加（一个子职会多出几条） */
+function mergeParts(cur: DraftPart[], parts: ResPart[]): DraftPart[] {
+  const next = [...cur];
+  for (const np of parts) {
+    const j = next.findIndex((x) => (x.key.trim() || `HR:${x.id}`) === np.key);
+    const fresh: DraftPart = {
+      id: np.id,
+      key: np.key.startsWith('HR:') ? '' : np.key,
+      name: np.name ?? '',
+      text: np.text ?? '',
+      pickable: !!np.pickable,
+      removed: !!np.removed,
+      sheet: pretty(np.sheet),
+      combat: pretty(np.combat),
+    };
+    if (j >= 0) next[j] = { ...next[j], name: fresh.name || next[j].name, text: fresh.text || next[j].text, removed: fresh.removed, sheet: fresh.sheet, combat: fresh.combat };
+    else next.push(fresh);
+  }
+  return next;
 }
 
 /** 一条内容在列表里的标签：覆盖了什么 / 新内容 / 卡面 / 战斗 / AI 未审 */
 export function ItemTags({ item }: { item: LibraryItem }) {
   const parts = item.parts ?? [];
-  const covers = parts.filter((x) => !x.key.startsWith('HR:')).map((x) => x.key);
+  // 自制书自己的特性键不算覆盖官方
+  const covers = parts.filter((x) => !x.key.startsWith('HR:') && !isOwnBrewKey(item, x.key)).map((x) => x.key);
   return (
     <>
-      {covers.length
+      {item.brew && <Tag tone="accent" title={item.brew.subclassFeature.map((f) => `${f.level} 级 ${f.name}`).join('\n')}>自制子职 · {item.brew.subclass[0]?.className}</Tag>}
+      {item.brew && !covers.length ? null : covers.length
         ? <Tag tone="warn" title={covers.join('\n')}>覆盖 {covers.length > 1 ? `${covers.length} 条` : covers[0]}</Tag>
         : <Tag>新内容</Tag>}
       {parts.length > 1 && <Tag title="拆成了几条">{parts.length} 条</Tag>}

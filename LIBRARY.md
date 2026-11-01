@@ -449,3 +449,22 @@ slug 是「名字_来源」或「名字_职业_来源_等级_职业来源」，�
 
 
 
+
+## 自制书：整个子职用 5etools 格式（`src/library/brew.ts`）
+
+改版 / 自制的**整个子职**不要再用「覆盖官方」去凑：覆盖只换背后的数据，卡面显示的还是官方原文；
+改版的特性名字、等级和官方对不上（XGE 的牧人结社特性挂在 2 级），键对不上就不生效。
+
+做法：条目带一份 `brew`（5etools 格式：一条 `subclass` + 每级一条 `subclassFeature`）。
+
+- 来源代号由条目 id 定（`HB-<id>`），各种关联字段（source / classSource / shortName / subclassFeatures）由 `normalizeBrew` 补齐，
+  服务器的 `checkItem` 检查并补齐后再存。
+- 算卡时 `DataStore.classData` 把自制书合进对应职业的文件（`store.brew`，每次 `useCampaign` 换：战役里的卡用战役挂的，
+  不在战役里的用我自己库里的）。建卡页像官方子职一样选它；特性按它自己的等级出现、显示它自己的文字；
+  `additionalSpells.prepared` 走现成的子职法术逻辑，按等级「始终准备」。
+- 每条特性的键是 `HB-<id>:<职业>:<特性>:<等级>`（`brewFeatureKeys`），条目的 parts 按这些键写卡面 / 战斗数据。
+  这些 part 只对选了这个子职的卡生效（没这项能力的卡不会被它改），所以不用在卡上勾、挂到战役也直接生效（不算覆盖官方）。
+- AI 分两步（资料库编辑器里「子职」类别的「自制书」那块）：
+  ① 「AI 整理成 5etools 格式」：说明里的原文 → `brew`（`brewJob` / `brewSpec`，检查用 `checkBrew`）；
+  ② 「AI 按自制书写卡面 + 战斗」：`brewTask` 按自制书拼任务，每条特性一个 part，键照抄。
+- 卡已经选了官方子职的，换成自制版要在建卡页手动换。

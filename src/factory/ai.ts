@@ -54,8 +54,11 @@ export const isSkip = (a: unknown): a is { skip: string } =>
 export async function datafy(input: DatafyInput): Promise<DatafyResult> {
   const msgs: ChatMsg[] = [
     { role: 'system', content: input.spec },
-    { role: 'user', content: `## 例子（键 → Entry，照它们的风格和粒度写）\n\n\`\`\`json\n${input.examples}\n\`\`\`` },
-    { role: 'assistant', content: '明白，我会照说明书和例子的写法输出。请给任务。' },
+    // 例子可以不给（整理自制书那一步：说明书里已经有格式）
+    ...(input.examples.trim() ? [
+      { role: 'user' as const, content: `## 例子（键 → Entry，照它们的风格和粒度写）\n\n\`\`\`json\n${input.examples}\n\`\`\`` },
+      { role: 'assistant' as const, content: '明白，我会照说明书和例子的写法输出。请给任务。' },
+    ] : []),
     {
       role: 'user',
       content: input.task + (input.previous !== undefined

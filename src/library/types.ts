@@ -10,6 +10,7 @@
  * - 写 `core.<名>` = 改核心参数。
  */
 import type { Json } from '../sheet';
+import type { Brew } from './brew';
 
 /** 一份资源拆出来的一条 */
 export interface ResPart {
@@ -43,6 +44,8 @@ export interface LibraryItem {
   /** 出处：用来重新取原文、显示「覆盖了哪条」 */
   ref?: { kind: string; source: string; name: string; cls?: string; level?: number };
   parts: ResPart[];
+  /** 自制书（5etools 格式的子职数据，见 brew.ts）：卡上能像官方子职一样选；parts 按它的特性键写卡面 / 战斗数据 */
+  brew?: Brew;
   /** 谁写的：手写 / AI（byok:<模型名>） */
   by: string;
   reviewed: boolean;

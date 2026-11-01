@@ -15,7 +15,7 @@ import { isSkip, type Chat, type ChatMsg } from '../../src/factory/ai';
 import { createTaskBuilder } from '../../src/factory/build';
 import { genericOwner, smoke } from '../../src/factory/smoke';
 import type { Json } from '../../src/sheet';
-import { kindOfKey, type LibraryItem, type ResPart } from '../../src/library';
+import { BREW_CLASSES, checkBrew, kindOfKey, type Brew, type LibraryItem, type ResPart } from '../../src/library';
 import { api } from './api';
 import type { Engine } from './engine';
 import { newItemId, newPartId, tagCampaign } from './library';
@@ -397,11 +397,17 @@ export interface AiJob {
  * 一个条目键 → 任务。官方的、启用的书里的能力从站点原文拼（资源、职业表按探针角色）；
  * 拼不出来的（家规、自制内容）用给的名字和文字。houseRule = 本团改过这条，以它为准。
  */
-export async function jobForKey(engine: Engine, cid: string | null | undefined, key: string, o: { name: string; text: string; houseRule?: string; cls?: string | null }): Promise<AiJob> {
+export async function jobForKey(engine: Engine, cid: string | null | undefined, key: string, o: { name: string; text: string; houseRule?: string; cls?: string | null; brew?: Brew }): Promise<AiJob> {
   const b = taskBuilder(engine, cid);
   let t: Task;
   let owner: CombatantView | null = null;
   try {
+    // 自制书：任务从它的数据拼（键、原文都从那份来），不走站点原文
+    if (o.brew) {
+      const bt = await b.brewTask('AI', o.brew);
+      const ctx = checkCtxOf(bt, null);
+      return { task: renderTask(bt), check: (a) => checkEntry(a, ctx), ctx, split: bt.split };
+    }
     t = await b.buildTask('AI', key);
     owner = await b.ownerView(key).catch(() => null);
   } catch {
@@ -429,6 +435,8 @@ export interface PartsTaskOpts {
   houseRule?: string;
   /** 要拆成几条（键 + 名字）；不给 = 就写这一条 */
   keys?: Array<{ key: string; name: string }>;
+  /** 自制书：按它的特性键写（每条特性一个 part） */
+  brew?: Brew;
   /** 资料库条目记着的职业（自制内容不在站点上时，用它取职业资源；不给就按原文猜） */
   cls?: string | null;
   /** 有真角色就传进来：卡面部分会拿它试算一遍（看数值有没有变） */
@@ -436,7 +444,7 @@ export interface PartsTaskOpts {
 }
 
 export async function partsJobForKey(engine: Engine, cid: string | null | undefined, o: PartsTaskOpts): Promise<AiJob> {
-  const job = await jobForKey(engine, cid, o.key, { name: o.name, text: o.text, houseRule: o.houseRule, cls: o.cls });
+  const job = await jobForKey(engine, cid, o.key, { name: o.name, text: o.text, houseRule: o.houseRule, cls: o.cls, brew: o.brew });
   const keys = o.keys?.length ? o.keys : job.split;
   const ctx: PartsCheckCtx = {
     ...(job.ctx ?? { key: o.key }),
@@ -475,4 +483,39 @@ export async function partsJobForKey(engine: Engine, cid: string | null | undefi
 /** 答卷里的 parts 数组（不是数组就给空的；checkParts 已经报过这个问题） */
 function partsOfAnswer(a: unknown): unknown[] {
   return isObj(a) && Array.isArray(a.parts) ? a.parts : [];
+}
+
+/* ───── 自制书第一步：原文 → 5etools 格式的子职 ───── */
+
+/** 给 AI 的说明：只要名字、职业、等级、原文（来源这些字段程序补） */
+export const brewSpec = () => `你把 D&D 子职的原文（任何语言、任何排版）整理成 5etools 格式的 JSON，给程序加载成一个子职。
+
+输出一个 JSON 对象（不要解释，不要代码围栏）：
+
+{
+  "subclass": [{
+    "name": "子职名（和官方同名的话加「（自制）」）",
+    "className": "职业中文名，只能是：${BREW_CLASSES.join('、')}",
+    "additionalSpells": [{ "prepared": { "3": ["命令术", "野兽召唤术"], "5": ["…"] } }]
+  }],
+  "subclassFeature": [
+    { "name": "特性名", "level": 3, "entries": ["第一段原文", { "type": "list", "items": ["列表项"] }, { "type": "entries", "name": "小标题", "entries": ["…"] }] }
+  ]
+}
+
+要求：
+- 每个「N 级：特性名」各写一条 subclassFeature，level 写那个数字。同一级有几个特性就写几条。
+- entries 照抄原文，分段写成字符串；原文里的列表用 {"type":"list","items":[…]}，带小标题的段落（「熊之精魂：…」这种）用 {"type":"entries","name":"熊之精魂","entries":["…"]}，表格用 {"type":"table","colLabels":[…],"rows":[[…]]}。
+- 「始终准备的法术」表写进 subclass 的 additionalSpells.prepared（键是职业等级，值是法术中文名，用 2024 版译名）；那一条特性本身照样写一条，原文里保留表格。
+- 名字里不要有「:」「#」。不要编原文里没有的东西。
+- source、shortName、classSource 这些字段不用写，程序会补。`;
+
+/** 第一步的任务：原文 → 自制书 */
+export function brewJob(o: { name: string; text: string }): AiJob {
+  const task = [
+    `# 整理子职「${o.name || '（没写名字）'}」`, '',
+    '## 原文', '', o.text.trim() || '（没有原文）', '',
+    '## 输出', '', '照说明书写成 { "subclass": [ … ], "subclassFeature": [ … ] }。',
+  ].join('\n');
+  return { task, check: (a) => checkBrew(a) };
 }

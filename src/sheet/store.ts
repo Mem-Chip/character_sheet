@@ -24,6 +24,8 @@ export class DataStore {
   private readonly classFiles = new Map<string, Promise<Json>>();
   /** 战役启用的书的法术（来源 → 法术列表；spells/index.json 里没有这本书 = 空） */
   readonly bookSpells = new Map<string, Json[]>();
+  /** 自制书（资料库里 5etools 格式的子职）：classData 返回时合进对应职业的文件；每次算卡前由 useCampaign 换掉 */
+  brew: Array<{ subclass: Json[]; subclassFeature: Json[] }> = [];
   private readonly pending = new Map<string, Promise<Json>>();
 
   static readonly CORE = ['classIndex', 'races', 'backgrounds', 'feats', 'itemsBase', 'languages', 'conditions', 'actions'];
@@ -72,8 +74,21 @@ export class DataStore {
     return bad;
   }
 
-  /** 职业文件（按 class/index.json 映射，结果缓存） */
+  /** 职业文件（按 class/index.json 映射，结果缓存）；带上自制书里挂在这个职业上的子职 */
   async classData(slug: string): Promise<Json> {
+    const file = await this.classFile(slug);
+    const names = new Set(((file?.class || []) as Json[]).map((c) => c.name));
+    const mine = this.brew.filter((b) => names.has(b.subclass[0]?.className));
+    if (!mine.length) return file;
+    // 不改缓存的那份：浅拷贝后把自制的子职、子职特性接在后面
+    return {
+      ...file,
+      subclass: [...(file.subclass || []), ...mine.flatMap((b) => b.subclass)],
+      subclassFeature: [...(file.subclassFeature || []), ...mine.flatMap((b) => b.subclassFeature)],
+    };
+  }
+
+  private async classFile(slug: string): Promise<Json> {
     const idx = await this.ensure('classIndex');
     const file = idx?.[slug];
     if (!file) throw new Error('class/index.json 里没有该职业：' + slug);

@@ -20,6 +20,8 @@ export interface CampaignData {
   covered?: string[];
   /** 条目键 → 覆盖后的显示名（选择面板显示它，值仍是原名） */
   names?: Record<string, string>;
+  /** 这个战役挂着的自制书（5etools 格式的子职，见 src/library/brew.ts） */
+  brew?: Array<{ subclass: Json[]; subclassFeature: Json[] }>;
 }
 
 export interface SheetEnvOptions {
@@ -70,6 +72,8 @@ export class SheetEnv {
   userCovered: () => string[] = () => [];
   /** 我自己资料库覆盖后的显示名（条目键 → 名字）；界面挂进来 */
   userNames: () => Record<string, string> = () => ({});
+  /** 我自己资料库里的自制书（不在战役里的卡能选这些子职）；界面挂进来 */
+  userBrew: () => Array<{ subclass: Json[]; subclassFeature: Json[] }> = () => [];
   private campRules: HomeRuleEntry[] = [];
   /** 计算前改角色的钩子（原项目 Plugins.applyCharHooks） */
   readonly charHooks: Array<(char: CharData) => void> = [];
@@ -122,6 +126,8 @@ export class SheetEnv {
     const names = { ...(c ? {} : this.userNames()), ...(c?.names ?? {}) };
     for (const [k, v] of Object.entries(names)) if (k && v) Source.names.set(String(k), String(v));
     this.campRules = c?.homerules ?? [];
+    // 自制书：战役里的卡只用这个战役挂的，不在战役里的用我自己库里的（和条目放行同一个规矩）
+    this.store.brew = c ? (c.brew ?? []) : this.userBrew();
     // 数据文件还是要装：战役启用的书 + 我库里条目所在的书（只装数据，不放行）
     const books = [...new Set([...camp, ...this.userSources().map((s) => String(s).toUpperCase())])];
     if (books.length) {
