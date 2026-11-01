@@ -191,6 +191,11 @@ export function checkParts(answer: unknown, c: PartsCheckCtx): string[] {
     seen.add(key);
     const sheet = raw.sheet;
     const combat = raw.combat;
+    if (raw.removed === true) {
+      if (key.startsWith('HR:') || !key.includes(':')) out.push(`${at}：removed 只能用在覆盖官方的条目上（key 写官方键）`);
+      if (sheet !== undefined || combat !== undefined) out.push(`${at}：标了 removed 就不要再写 sheet / combat`);
+      return;
+    }
     if (sheet === undefined && combat === undefined) { out.push(`${at}：sheet 和 combat 至少要写一个`); return; }
     const pools = isObj(sheet) && Array.isArray(sheet.resources)
       ? sheet.resources.map((r) => (isObj(r) ? String(r.id ?? '') : '')).filter(Boolean) : [];
@@ -271,6 +276,7 @@ export function partsFromAnswer(answer: unknown, o: { key: string; existing?: Li
       id, key,
       ...(typeof raw.name === 'string' && raw.name.trim() ? { name: raw.name.trim() } : {}),
       ...(typeof raw.text === 'string' && raw.text.trim() ? { text: raw.text } : {}),
+      ...(raw.removed === true ? { removed: true } : {}),
       ...(isObj(raw.sheet) && sheetHasContent(raw.sheet) ? { sheet: raw.sheet as ResPart['sheet'] } : {}),
       ...(c ? { combat: { ...c, ...(c.entry !== undefined ? { entry: withAiTag(c.entry) } : {}) } } : {}),
     });
@@ -442,7 +448,7 @@ export async function partsJobForKey(engine: Engine, cid: string | null | undefi
     keys?.length
       ? `- 下面每一条各写一个 part，\`key\` 原样照抄：\n${keys.map((p) => `  - \`${p.key}\`（${p.name}）`).join('\n')}`
         + '\n- 原文里有、上面却没有对应键的特性（改版新加的）：并进同等级（没有就更低一级）的那条里写。**不要**另起不带 key 的 part：不带 key 的新内容对团里每张卡都生效，不管是不是这个子职。'
-        + '\n- 上面有、原文里却没有的（改版删掉或改名并进别处的）：不写那条。'
+        + '\n- 上面有、原文里却没有的（改版删掉的）：写 `{ "key": "<那个键>", "name": "…", "removed": true }`，官方那条就从卡面和战斗里拿掉了。'
       :`- 这一条写一个 part；覆盖官方就写 \`key: "${o.key}"\`，新内容就**不写 key**。`,
     '- `sheet` 写卡面（第 7 节：mods / grants / choices / resources），`combat` 写战斗（第 2～6 节的 Entry，**直接写**，不要包成 `{ "entry": … }`）。',
     '- **两边互通**：次数池声明在 `sheet.resources` 里，战斗里用 `cost: [{ resource: \'<id>\' }]` 花它；',

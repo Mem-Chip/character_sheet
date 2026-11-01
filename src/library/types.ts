@@ -22,6 +22,8 @@ export interface ResPart {
   text?: string;
   /** 卡面：不勾 = 团里每张卡都算；勾了 = 卡上选了才生效（char.hrPicked 记 id） */
   pickable?: boolean;
+  /** 本版删除这条官方条目（只对覆盖官方的有用）：卡面上这条特性和它的加值、资源都没了，战斗里也没了 */
+  removed?: boolean;
   /** 卡面数据（写法同 data/abilities-*.json） */
   sheet?: { mods?: Json[]; grants?: Json[]; choices?: Json[]; resources?: Json[] };
   /** 战斗数据：整条替换 entry / 改字段 patch / 改核心参数 value */

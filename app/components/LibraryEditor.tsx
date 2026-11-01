@@ -28,14 +28,14 @@ const KINDS: Array<[string, string]> = [
 export const kindLabel = (k: string) => KINDS.find(([v]) => v === k)?.[1] ?? k;
 
 interface DraftPart {
-  id: string; key: string; name: string; text: string; pickable: boolean; sheet: string; combat: string;
+  id: string; key: string; name: string; text: string; pickable: boolean; removed: boolean; sheet: string; combat: string;
 }
 interface Draft { id: string; kind: string; name: string; text: string; by: string; reviewed: boolean; parts: DraftPart[] }
 
 const pretty = (v: unknown) => (v === undefined ? '' : JSON.stringify(v, null, 1));
 const partToDraft = (p: ResPart): DraftPart => ({
   id: p.id, key: p.key.startsWith('HR:') ? '' : p.key, name: p.name ?? '', text: p.text ?? '',
-  pickable: !!p.pickable, sheet: pretty(p.sheet), combat: pretty(p.combat),
+  pickable: !!p.pickable, removed: !!p.removed, sheet: pretty(p.sheet), combat: pretty(p.combat),
 });
 const itemToDraft = (it: LibraryItem): Draft => ({
   id: it.id, kind: it.kind || 'homerule', name: it.name, text: it.text, by: it.by, reviewed: it.reviewed,
@@ -70,13 +70,15 @@ export function LibraryEditor(p: {
         if (!s.trim()) return undefined;
         try { return JSON.parse(s) as unknown; } catch { bad.push(`${at}：${what}不是合法的 JSON`); return undefined; }
       };
-      const sheet = parse(raw.sheet, '卡面数据') as ResPart['sheet'] | undefined;
-      const combat = parse(raw.combat, '战斗数据') as ResPart['combat'] | undefined;
+      // 本版删除的不带数据（写了也不要）
+      const sheet = raw.removed ? undefined : parse(raw.sheet, '卡面数据') as ResPart['sheet'] | undefined;
+      const combat = raw.removed ? undefined : parse(raw.combat, '战斗数据') as ResPart['combat'] | undefined;
       return {
         id, key,
         ...(raw.name.trim() ? { name: raw.name.trim() } : {}),
         ...(raw.text.trim() ? { text: raw.text } : {}),
         ...(raw.pickable && key.startsWith('HR:') ? { pickable: true } : {}),
+        ...(raw.removed && !key.startsWith('HR:') ? { removed: true } : {}),
         ...(sheet ? { sheet } : {}),
         ...(combat ? { combat } : {}),
       };
@@ -141,7 +143,15 @@ export function LibraryEditor(p: {
                 <Field label="这条的名字" style={{ flex: 1 }}><input value={raw.name} readOnly={ro} onChange={(e) => setPart(i, { name: e.target.value })} placeholder="不填就用整条的名字" /></Field>
 
               </div>
-              <PartData raw={raw} ro={ro} onChange={(patch) => setPart(i, patch)} />
+              {!isNew && (
+                <label className="row small" style={{ gap: 6 }} title="改版里没有这条：卡面上不再显示它，它的加值、资源和战斗数据都拿掉">
+                  <input type="checkbox" checked={raw.removed} disabled={ro} onChange={(e) => setPart(i, { removed: e.target.checked })} />
+                  本版删除这条官方特性
+                </label>
+              )}
+              {raw.removed
+                ? <div className="small muted">这条会从卡面和战斗里拿掉（{key}）。</div>
+                : <PartData raw={raw} ro={ro} onChange={(patch) => setPart(i, patch)} />}
               {!ro && (
                 <div className="row small" style={{ gap: 6 }}>
                   <button className="btn sm" disabled={!d.name.trim()} onClick={() => setAiPart(i)}>AI 写这条的数据（卡面 + 战斗）…</button>
@@ -153,7 +163,7 @@ export function LibraryEditor(p: {
         })}
         {!ro && (
           <div className="row">
-            <button className="btn sm" onClick={() => setD({ ...d, parts: [...d.parts, { id: newPartId(), key: '', name: '', text: '', pickable: false, sheet: '', combat: '' }] })}>再加一条</button>
+            <button className="btn sm" onClick={() => setD({ ...d, parts: [...d.parts, { id: newPartId(), key: '', name: '', text: '', pickable: false, removed: false, sheet: '', combat: '' }] })}>再加一条</button>
             <span className="small muted">{d.parts.length > 1 ? '一个子职 / 职业的每条特性各加一条，键分别是它的条目键。' : ''}</span>
           </div>
         )}
@@ -198,10 +208,11 @@ export function LibraryEditor(p: {
                   name: np.name ?? '',
                   text: np.text ?? '',
                   pickable: !!np.pickable,
+                  removed: !!np.removed,
                   sheet: pretty(np.sheet),
                   combat: pretty(np.combat),
                 };
-                if (j >= 0) next[j] = { ...next[j], name: fresh.name || next[j].name, text: fresh.text || next[j].text, sheet: fresh.sheet, combat: fresh.combat };
+                if (j >= 0) next[j] = { ...next[j], name: fresh.name || next[j].name, text: fresh.text || next[j].text, removed: fresh.removed, sheet: fresh.sheet, combat: fresh.combat };
                 else next.push(fresh);
               }
               // 整个子职拆成了每级特性：原来那条（子职键、还没数据）是个空壳，去掉

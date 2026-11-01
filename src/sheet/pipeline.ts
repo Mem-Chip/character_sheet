@@ -628,10 +628,12 @@ export function createRules(): Pipeline {
       if (!ctx.env.abilities.isDecisionKeyActive(ctx.char, k)) continue;
       for (const x of Array.isArray(v) ? v : [v]) if (typeof x === 'string' && x) chosen.add(x);
     }
-    const active = (f: Json) => !opts.has(f.name) || chosen.has(f.name);
+    // 资料库 / 家规标了「本版删除」的官方特性：不显示
+    const removed = new Set(ctx.env.abilities.homelibAll(ctx.char).filter((e) => e.removed && e.covers).map((e) => String(e.covers)));
+    const active = (f: Json, cls: string) => (!opts.has(f.name) || chosen.has(f.name)) && !removed.has(`${f.source}:${cls}:${f.name}:${f.level}`);
     for (const k of res.classes || []) {
-      for (const f of k.features || []) if (active(f)) list.push({ ...f, _cls: k.cls.name, _sub: false });
-      for (const f of k.subFeatures || []) if (active(f)) list.push({ ...f, _cls: k.cls.name, _sub: true });
+      for (const f of k.features || []) if (active(f, k.cls.name)) list.push({ ...f, _cls: k.cls.name, _sub: false });
+      for (const f of k.subFeatures || []) if (active(f, k.cls.name)) list.push({ ...f, _cls: k.cls.name, _sub: true });
     }
     for (const f of res.race?.entries || []) list.push({ name: f.name || '种族特质', level: 0, entries: f.entries ? [f] : [f], _origin: 'race' });
     // 能力数据里的「备注」（`kind: 'note'`）：只作展示的一段文字，排在特性列表最后（不跟职业特性抢位置）

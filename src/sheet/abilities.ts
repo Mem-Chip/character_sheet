@@ -305,6 +305,8 @@ export interface HomeRuleEntry {
   grants?: Json[];
   choices?: Json[];
   resources?: Json[];
+  /** 本版删除被覆盖的那条官方能力（卡面上不再显示这条特性） */
+  removed?: boolean;
   /** 从规则库导入的：5etools 原文和出处（只用来显示） */
   entries?: Json[];
   ref?: { kind: string; source: string; name: string };
@@ -801,6 +803,8 @@ export class AbilityBook {
         if (i >= 0) out.splice(i, 1);
         // 战役 / 全服的覆盖只改有这项能力的卡（本卡的家规是自己加的，照加）
         else if (e._scope !== 'card') continue;
+        // 本版删除：官方那条拿掉就完了，不补一条家规上去
+        if (e.removed) { applied.add(e.id); continue; }
       }
       if (!out.some((x) => x.source === HR_SOURCE && x.name === e.id)) out.push(this.hrSpec(e));
       applied.add(e.id);

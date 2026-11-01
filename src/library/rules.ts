@@ -35,6 +35,8 @@ export const hasSheetData = (p: ResPart): boolean =>
  */
 export function homeRuleOf(p: ResPart, item: LibraryItem): HomeRuleEntry | null {
   const covers = coversOf(p);
+  // 本版删除：一条空的、标着 removed 的覆盖 —— 顶掉官方卡面数据，特性列表里也不显示
+  if (p.removed && covers) return { id: p.id, name: p.name || item.name, text: p.text ?? '（本版删除）', covers, removed: true, mods: [], grants: [], choices: [], resources: [] };
   const pickable = !!p.pickable && !covers;
   if (!hasSheetData(p) && !pickable) return null;
   return {
@@ -56,9 +58,10 @@ export function homeRulesOf(item: LibraryItem): HomeRuleEntry[] {
 
 /** part → 战斗房规；没有战斗部分返回 null */
 export function houseRuleOf(p: ResPart, item: LibraryItem): HouseRule | null {
+  const key = ruleKeyOf(p);
+  if (p.removed && isOverrideKey(key)) return { id: p.id, key, text: String(p.text ?? '').trim() || `本版删除：${p.name || item.name}`, remove: true };
   const c = p.combat;
   if (!c) return null;
-  const key = ruleKeyOf(p);
   return {
     id: p.id,
     key,

@@ -29,6 +29,8 @@ export interface HouseRule {
   value?: unknown;
   /** 官方能力还没有战斗数据，这条（entry）是给它补上的：键不存在不算错 */
   fill?: boolean;
+  /** 删掉这条官方条目（改版删除的特性）；官方本来就没有战斗数据也不算错 */
+  remove?: boolean;
 }
 
 export interface RuleLayer {
@@ -97,6 +99,12 @@ export class RuleBook {
       return;
     }
     const isNew = r.key.startsWith('HR:');
+    if (r.remove) {
+      if (isNew) { this.problems.push(`${where}：只能删除官方条目`); return; }
+      this.entries.delete(r.key);
+      mark();
+      return;
+    }
     const cur = this.entries.get(r.key);
     // 官方键还没有战斗数据：写明了 fill（给它补上）才行，不然多半是键拼错了
     if (!isNew && !cur && !(r.entry && r.fill)) { this.problems.push(`${where}：要覆盖的官方条目「${r.key}」不存在`); return; }

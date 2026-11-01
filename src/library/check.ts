@@ -81,7 +81,10 @@ export function checkItem(x: unknown, id: string): { item: LibraryItem | null; p
       if (combat.patch !== undefined && !isOverridePart({ id: pid, key })) p.push(`${at}：改字段（patch）只能用在覆盖官方条目上`);
       if (combat.value !== undefined && !key.startsWith('core.')) p.push(`${at}：核心参数的键要写成 core.<名字>`);
     }
-    if (!sheet && !combat && !str(raw.text, 4000).trim() && !str(raw.name, 60).trim()) p.push(`${at}：卡面、战斗、说明、名字至少要有一样`);
+    const removed = raw.removed === true;
+    if (removed && !isOverridePart({ id: pid, key })) p.push(`${at}：「本版删除」只能用在覆盖官方的条目上（要填官方的条目键）`);
+    if (removed && (sheet || combat)) p.push(`${at}：标了「本版删除」就不要再写卡面 / 战斗数据`);
+    if (!removed && !sheet && !combat && !str(raw.text, 4000).trim() && !str(raw.name, 60).trim()) p.push(`${at}：卡面、战斗、说明、名字至少要有一样`);
     // 覆盖官方能力的条目按能力键生效，勾「选了才生效」没有意义（勾了也不会有作用，直接说清楚）
     if (raw.pickable && !key.startsWith('HR:')) p.push(`${at}：覆盖官方能力的条目不能勾「选了才生效」（覆盖是按能力生效的）`);
 
@@ -90,13 +93,14 @@ export function checkItem(x: unknown, id: string): { item: LibraryItem | null; p
       ...(str(raw.name, 60).trim() ? { name: str(raw.name, 60).trim() } : {}),
       ...(str(raw.text, 20000).trim() ? { text: str(raw.text, 20000) } : {}),
       ...(raw.pickable ? { pickable: true } : {}),
+      ...(removed ? { removed: true } : {}),
       ...(sheet ? { sheet: sheet as ResPart['sheet'] } : {}),
       ...(combat ? { combat: combat as ResPart['combat'] } : {}),
     });
   }
   if (!parts.length) return { item: null, problems: p };
 
-  if (!parts.some((q) => q.sheet || q.combat || q.text) && !str(x.text, 20000).trim()) {
+  if (!parts.some((q) => q.sheet || q.combat || q.text || q.removed) && !str(x.text, 20000).trim()) {
     p.push('整条内容什么数据都没有（卡面、战斗、说明至少要有一样）');
   }
 
