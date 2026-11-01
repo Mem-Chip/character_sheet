@@ -30,7 +30,7 @@ export const EMITTED_EVENTS = new Set([
 
 const NODE_KINDS = new Set([
   'attack', 'save', 'check', 'damage', 'addDamage', 'heal', 'tempHp', 'applyEffect', 'removeEffect', 'extendEffect', 'endConcentration', 'grantAction', 'removeGrant', 'castFrom', 'modifyCast',
-  'resource', 'economy', 'choose', 'if', 'forEach', 'repeat', 'move', 'note', 'number', 'modify', 'zone', 'summon',
+  'resource', 'economy', 'choose', 'if', 'forEach', 'repeat', 'move', 'note', 'number', 'modify', 'zone', 'moveZone', 'summon',
 ]);
 const ROLL_OPS = new Set(['adv', 'disadv', 'noAdv', 'add', 'addDice', 'autoFail', 'autoSucceed', 'critRange', 'autoCritOnHit', 'minD20', 'minDie', 'targetAdd', 'maxDice']);
 const MODIFY_OPS = new Set(['reroll', 'addToRoll', 'reduceDamage', 'halveDamage', 'doubleDamage', 'setHp', 'cancel', 'evasion', 'succeed', 'redirect', 'absorb', 'clearAdv', 'cancelUnlessSave', 'unlessSave', 'setDc', 'setAttackBonus', 'setDamageType']);
@@ -174,8 +174,10 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
         expr(n.ft, 'node', NUM, `${at}.ft`);
         break;
       case 'zone':
-        if (!n.on?.length) out.push(`${where(at)}：zone 节点缺少 on（进入 / 回合开始 / 回合结束）`);
-        for (const w of n.on ?? []) if (!['enter', 'turnStart', 'turnEnd'].includes(w)) out.push(`${where(at)}：zone 的 on 不认识「${w}」`);
+        if (!n.on?.length && !n.while?.length) out.push(`${where(at)}：zone 节点既没有 on（什么时候生效）也没有 while（待在里面就有的效果）`);
+        if (n.on?.length && !n.do?.length) out.push(`${where(at)}：zone 写了 on 却没有 do`);
+        for (const w of n.on ?? []) if (!['enter', 'turnStart', 'turnEnd', 'create', 'leave', 'move'].includes(w)) out.push(`${where(at)}：zone 的 on 不认识「${w}」`);
+        for (const w of n.while ?? []) if (w.kind !== 'applyEffect') out.push(`${where(at)}：zone 的 while 里只放 applyEffect（「${w.kind}」请写进 do）`);
         nodes(n.do, `${at}.do`);
         break;
       case 'modify':

@@ -2203,6 +2203,598 @@
      "window": "before"
     }
    ]
+  },
+  "XPHB:spell:月华之光": {
+   "name": "月华之光",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。指定 120 尺内一点，产生半径 5 尺、高 40 尺的柱状微光区域。光柱出现时区域内的生物进行体质豁免，失败受 (slot.level)d10 光耀伤害（2 环 2d10，每高一环 +1d10），成功半数。生物进入光柱、光柱移入它的空间、或在其中结束回合时同样须进行该豁免（每名生物每回合限一次）。已变形的生物豁免失败会变回真实形态、且在离开光柱前无法变形 —— 引擎不判断变形状态，这一条请人工处理。后续回合用「月华之光：移动光柱」在地图上选新位置（最多移动 60 尺，引擎不查距离）。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "月华之光",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 2
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 120,
+      "area": {
+       "shape": "cylinder",
+       "radius": 5
+      }
+     },
+     "root": [
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "con",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "moon",
+           "dice": "(slot.level)d10",
+           "type": "光耀"
+          },
+          {
+           "kind": "note",
+           "text": "月华之光：若目标正在变形（例如受变形术影响），它变回真实形态且离开光柱前无法再次变形（引擎不追踪变形状态，请人工结束那个变形效应并记下限制）。"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "moon",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "con",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "moon",
+           "dice": "(slot.level)d10",
+           "type": "光耀"
+          },
+          {
+           "kind": "note",
+           "text": "月华之光：若目标正在变形，它变回真实形态且离开光柱前无法再次变形（人工处理）。"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "moon",
+           "scale": 0.5
+          }
+         ]
+        }
+       ],
+       "name": "月华之光"
+      }
+     ]
+    },
+    {
+     "id": "move",
+     "name": "月华之光：移动光柱",
+     "activation": "action",
+     "requires": "turn.isMine",
+     "text": "用一个动作把光柱移动到至多 60 尺外的新位置（在地图上重新选柱子的位置；距离引擎不查）。光柱移入谁的空间，谁就按「进入」进行豁免。",
+     "root": [
+      {
+       "kind": "moveZone"
+      }
+     ],
+     "targeting": {
+      "type": "area",
+      "range": 120,
+      "area": {
+       "shape": "cylinder",
+       "radius": 5
+      }
+     }
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:匕首之云": {
+   "name": "匕首之云",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。以 60 尺内一点为中心的 5 尺立方区域内咒唤出旋转的匕首：区域内的每名生物受 (2 * slot.level)d4 挥砍伤害（升环每比 2 环高 1 环 +2d4）。一名生物进入该立方、在其中结束其回合、或立方移动到它占据的空间时，同样受此伤害；同一名生物每回合只会受到一次（区域留在地图上、随专注消失）。后续回合以一个魔法动作用「匕首之云：移动立方」在地图上选新位置（至多 30 尺）。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "匕首之云",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 2
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 60,
+      "area": {
+       "shape": "cube",
+       "size": 5
+      }
+     },
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "匕首之云",
+       "state": {
+        "die": "(2 * slot.level)d4"
+       }
+      },
+      {
+       "kind": "forEach",
+       "in": "area",
+       "do": [
+        {
+         "kind": "damage",
+         "dice": "(2 * slot.level)d4",
+         "type": "挥砍"
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "damage",
+         "dice": "(2 * slot.level)d4",
+         "type": "挥砍"
+        }
+       ],
+       "name": "匕首之云"
+      }
+     ]
+    },
+    {
+     "id": "moveCloud",
+     "name": "匕首之云：移动立方",
+     "activation": "action",
+     "requires": "self.hasEffect('匕首之云（激活）')",
+     "tags": [
+      "magical"
+     ],
+     "targeting": {
+      "type": "area",
+      "range": 30,
+      "area": {
+       "shape": "cube",
+       "size": 5
+      }
+     },
+     "root": [
+      {
+       "kind": "moveZone"
+      }
+     ],
+     "text": "在你的后续回合中，以一个魔法动作把立方传送到 30 尺内：在地图上选新位置。立方移到谁的空间，谁就受一次伤害（每回合限一次）。"
+    }
+   ],
+   "effects": {
+    "匕首之云": {
+     "name": "匕首之云（激活）",
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "text": "维持 5 尺立方的旋转匕首。进入、在其中结束回合或被立方移入空间的生物每回合受到一次挥砍伤害。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:蛛网术": {
+   "name": "蛛网术",
+   "automation": "partial",
+   "text": "专注至多 1 小时。在 60 尺内指定一点召唤 20 尺立方蛛网。一回合中首次进入蛛网、或在蛛网中开始其回合的生物进行敏捷豁免，失败陷入束缚状态直到离开蛛网或挣脱（引擎按区域自动结算；被推、被拉出蛛网时束缚自动解除）。施法当时已经在区域里的生物不会立刻豁免，要等它进入、或在自己的回合开始时才豁免（原文如此）。被束缚者用动作进行力量（运动）检定挣脱、蛛网坍塌（未固定时在你的下一回合开始时终止）以及易燃燃烧需人工处理；区域内的困难地形与轻度遮蔽同样需人工处理。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "蛛网术",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 2
+       }
+      }
+     ],
+     "concentration": {
+      "hours": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 60,
+      "area": {
+       "shape": "cube",
+       "size": 20
+      }
+     },
+     "root": [
+      {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnStart"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "dex",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "蛛网束缚",
+           "whileInZone": true
+          }
+         ]
+        }
+       ],
+       "name": "蛛网术"
+      },
+      {
+       "kind": "note",
+       "text": "蛛网范围内是困难地形并造成轻度遮蔽（需人工处理）；蛛网未固定在两个固体之间时会坍塌，法术在你的下一回合开始时终止（需人工处理）；蛛网可燃，遇火焰会在一轮内烧尽并对在其中开始回合的生物造成 2d4 火焰伤害（需人工处理）"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "蛛网束缚": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "implies": [
+      "XPHB:condition:束缚"
+     ],
+     "text": "陷入束缚状态，直到离开蛛网（自动解除）或挣脱。可用动作进行对抗法术豁免 DC 的力量（运动）检定，成功则不再被束缚（挣脱请手动移除这条效应）。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:沉默术": {
+   "name": "沉默术",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 120 尺内指定一点创造半径 20 尺的球状静音区域：区域内产生不了任何声音，外界的声音也传不进来（引擎不处理声音，请人工裁定）。完全位于该区域内的生物与物件都免疫雷鸣伤害，其中的生物还会陷入耳聋状态；该区域内也无法施展包含言语成分的法术（引擎不拦施法，请人工拒绝）。在区域里的生物（施放时就在、之后进来、区域挪过来）引擎自动挂上「沉默术」效应（耳聋 + 免疫雷鸣），离开区域或法术结束时自动移除；引擎按「占到区域里任何一格」算，边缘只擦到一点的请人工裁定。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "沉默术",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 2
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 10
+     },
+     "targeting": {
+      "type": "area",
+      "range": 120,
+      "area": {
+       "shape": "sphere",
+       "radius": 20
+      }
+     },
+     "root": [
+      {
+       "kind": "note",
+       "text": "沉默术：区域内无法施展包含言语成分的法术 —— 引擎不会拦下这类施法，请人工拒绝。"
+      },
+      {
+       "kind": "zone",
+       "name": "沉默术",
+       "while": [
+        {
+         "kind": "applyEffect",
+         "template": "沉默术"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "沉默术": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "implies": [
+      "XPHB:condition:耳聋"
+     ],
+     "statics": [
+      {
+       "kind": "immune",
+       "values": [
+        "雷鸣"
+       ]
+      }
+     ],
+     "flags": {
+      "cannot": [
+       "speak"
+      ]
+     },
+     "text": "位于沉默术的静音区域内：陷入耳聋状态、免疫雷鸣伤害、无法施展包含言语成分的法术（引擎不拦施法）。离开区域或法术结束时自动移除。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:荆棘丛生": {
+   "name": "荆棘丛生",
+   "automation": "partial",
+   "text": "专注至多 10 分钟。在 150 尺内指定一点创造 20 尺半径的伪装棘刺区域（困难地形，引擎不扣额外移动力）。生物进入该区域或在其中移动时每移动 5 尺受到 2d4 穿刺伤害（引擎按走过的每一格自动结算，被推、被拉也算）。区域经过伪装，须用搜索动作通过感知（察觉或求生）检定才能发现，这条需人工处理。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "荆棘丛生",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 2
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 10
+     },
+     "targeting": {
+      "type": "area",
+      "range": 150,
+      "area": {
+       "shape": "sphere",
+       "radius": 20
+      }
+     },
+     "root": [
+      {
+       "kind": "zone",
+       "on": [
+        "move"
+       ],
+       "affects": "all",
+       "oncePerTurn": false,
+       "do": [
+        {
+         "kind": "damage",
+         "dice": "2d4",
+         "type": "穿刺"
+        }
+       ],
+       "name": "荆棘丛生"
+      },
+      {
+       "kind": "note",
+       "text": "荆棘丛生：区域是困难地形（引擎不扣额外移动力）；棘刺经过伪装，需搜索动作通过感知（察觉或求生）检定对抗法术 DC 才能提前发现。"
+      }
+     ]
+    }
+   ],
+   "tags": [
+    "ai",
+    "未审"
+   ]
+  },
+  "XPHB:spell:哈达之欲": {
+   "name": "哈达之欲",
+   "automation": "partial",
+   "text": "专注至多 1 分钟。以 150 尺内一点为中心出现半径 20 尺的球状黑暗区域（画在地图上，随专注结束消失）。区域是困难地形、任何光照（含魔法光照）都照不亮它、还发散着 30 尺内可闻的不谐耳语与啜嚼噪音 —— 地形、光照、声音引擎都不处理，请人工裁定。「完全进入区域内的生物陷入目盲」：在区域里的生物引擎自动挂上「哈达之欲：目盲」，离开区域或法术结束时自动移除（按「占到区域里任何一格」算，边缘只擦到一点的请人工裁定）。「任何在区域内开始其回合的生物受 2d6 寒冷伤害」与「任何在区域内结束其回合的生物进行敏捷豁免、失败受 2d6 强酸伤害」（原文成功不减半）都已按回合时机分区域结算。升环施法时每比三环高一环、由你选择的那一种伤害 +1d6（施放时会问你选哪一种）。引擎的区域里分不出「开始回合」和「结束回合」两种时机，所以这条法术会在地图上放三个重叠的区域（在里面目盲 / 开始回合结算寒冷 / 结束回合结算强酸）—— 名字相同是正常的，专注结束时它们一起消失。",
+   "actions": [
+    {
+     "id": "cast",
+     "name": "哈达之欲",
+     "activation": "action",
+     "tags": [
+      "spell",
+      "magical"
+     ],
+     "cost": [
+      {
+       "slot": {
+        "min": 3
+       }
+      }
+     ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 150,
+      "area": {
+       "shape": "sphere",
+       "radius": 20
+      }
+     },
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "哈达之欲：升环的额外伤害（每比三环高一环 1d6）加在寒冷还是强酸上？（没升环时两个都是 2d6，随便选）",
+       "var": "elem",
+       "options": [
+        {
+         "label": "寒冷",
+         "value": "cold"
+        },
+        {
+         "label": "强酸",
+         "value": "acid"
+        }
+       ]
+      },
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "哈达之欲",
+       "state": {
+        "elem": "vars.elem"
+       }
+      },
+      {
+       "kind": "note",
+       "text": "哈达之欲：这个球状区域是困难地形，任何光照（含魔法光照）都照不亮它，还发散着 30 尺内可闻的不谐耳语与啜嚼噪音 —— 引擎不处理地形、光照与声音，请人工裁定。"
+      },
+      {
+       "kind": "zone",
+       "affects": "all",
+       "name": "哈达之欲",
+       "while": [
+        {
+         "kind": "applyEffect",
+         "template": "哈达之欲：目盲"
+        }
+       ]
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "turnStart"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "damage",
+         "dice": "2d6 + cond(self.effect('哈达之欲（激活）').state.elem == 'cold', (slot.level - 3)d6, 0)",
+         "type": "寒冷"
+        }
+       ],
+       "name": "哈达之欲"
+      },
+      {
+       "kind": "zone",
+       "on": [
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "dex",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "dice": "2d6 + cond(self.effect('哈达之欲（激活）').state.elem == 'acid', (slot.level - 3)d6, 0)",
+           "type": "强酸"
+          }
+         ]
+        }
+       ],
+       "name": "哈达之欲"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "哈达之欲：目盲": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "implies": [
+      "XPHB:condition:目盲"
+     ],
+     "text": "处于哈达之欲的黑暗区域内：陷入目盲状态。离开区域或法术结束时自动移除。"
+    },
+    "哈达之欲": {
+     "name": "哈达之欲（激活）",
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "text": "哈达之欲在场：记着施放时升环的额外骰加在寒冷还是强酸上（每比三环高一环 +1d6）。区域是困难地形、任何光照都照不亮、30 尺内可闻耳语 —— 引擎不处理，请人工裁定。"
+    }
+   },
+   "tags": [
+    "ai",
+    "未审"
+   ]
   }
  }
 }

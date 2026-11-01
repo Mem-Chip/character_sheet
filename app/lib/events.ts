@@ -36,6 +36,10 @@ const abil = (a: unknown) => (a ? ABIL_CN[a as Ability] ?? String(a) : '');
 /** 玩家视角下要保密的参与者（怪物）：它的骰子明细、AC、生命值数字不显示 */
 export type Secret = (id: unknown) => boolean;
 
+const ZONE_WHY: Record<string, string> = {
+  enter: '进入', turnStart: '在里面开始回合', turnEnd: '在里面结束回合', create: '在区域出现的地方', leave: '离开', move: '在里面移动',
+};
+
 /** dark：这次掷骰在当前视角下是暗骰（不给骰面和明细）；不给 = 掷骰的人是要保密的就算暗骰 */
 export function describe(ev: GameEvent, name: (id: unknown) => string, secret: Secret = () => false, dark?: boolean): Line | null {
   const p = ev.payload as P;
@@ -91,7 +95,8 @@ export function describe(ev: GameEvent, name: (id: unknown) => string, secret: S
     case 'leftReach': return L(`${name(p.id)} 离开了 ${name(p.from)} 的触及范围`, 'warn');
     case 'zoneCreated': return L(`地图上出现区域「${p.zone.name}」`);
     case 'zoneRemoved': return L(`区域「${p.name}」消失${p.reason ? `（${p.reason}）` : ''}`);
-    case 'zoneHit': return L(`${name(p.id)} ${p.why === 'enter' ? '进入' : p.why === 'turnStart' ? '在里面开始回合' : '在里面结束回合'}：区域「${p.name}」`, 'warn');
+    case 'zoneMoved': return L(`区域「${p.name}」挪到了新位置`);
+    case 'zoneHit': return L(`${name(p.id)} ${ZONE_WHY[p.why] ?? '碰到'}：区域「${p.name}」`, 'warn');
     case 'died': return L(`${name(p.id)} 死亡（${p.reason}）`, 'danger');
     case 'deathSaveResult': return L(`${name(p.id)}：${p.result}`, 'heal');
     case 'deathSaveFailed': return L(`${name(p.id)} 死亡豁免失败 ×${p.failures}（${p.by}）`, 'danger');
@@ -187,7 +192,8 @@ export function txTitle(cmd: { type: string } & P, name: (id: unknown) => string
     case 'endConcentration': return `${name(cmd.id)} 终止专注`;
     case 'move': return `${name(cmd.id)} 移动`;
     case 'createZone': return `DM 放下区域「${cmd.zone.name}」`;
-    case 'removeZone': return 'DM 删除区域';
+    case 'removeZone': return '删除区域';
+    case 'moveZone': return '挪动区域';
     case 'advanceTime': return `时间流逝 ${cmd.minutes} 分钟`;
     case 'rest': return `${cmd.ids?.length === 1 ? `${name(cmd.ids[0])} ` : ''}${cmd.kind === 'long' ? '长休' : '短休'}`;
     case 'setSettings': return '设置';

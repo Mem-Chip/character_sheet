@@ -288,7 +288,7 @@ export function createEncounters(d: Deps) {
   };
 
   /** 玩家能发的命令 */
-  const PLAYER_CMDS = new Set(['useAction', 'roll', 'addCombatant', 'removeCombatant', 'refreshCombatant', 'heal', 'tempHp', 'setUsage', 'spendHitDie', 'rest', 'manualCast', 'damage', 'setEconomy', 'endConcentration', 'groupRoll', 'setTriggerOff']);
+  const PLAYER_CMDS = new Set(['useAction', 'roll', 'addCombatant', 'removeCombatant', 'refreshCombatant', 'heal', 'tempHp', 'setUsage', 'spendHitDie', 'rest', 'manualCast', 'damage', 'setEconomy', 'endConcentration', 'groupRoll', 'setTriggerOff', 'moveZone', 'removeZone']);
 
   function check(e: Live, u: User, role: 'dm' | 'player', cmd: Command): string | null {
     if (role === 'dm') return null;
@@ -312,6 +312,11 @@ export function createEncounters(d: Deps) {
     if (cmd.type === 'groupRoll') {
       if (!cmd.ids.length || !cmd.ids.every((id) => ownerOf(e, id) === u.id)) return '只能让自己的角色豁免';
       return null;
+    }
+    // 区域：玩家只能挪 / 撤自己的人放下的（DM 画的、别人的不行）
+    if (cmd.type === 'moveZone' || cmd.type === 'removeZone') {
+      const src = e.session.state.zones?.[cmd.id]?.source;
+      return src && ownerOf(e, src) === u.id ? null : '只能动自己放下的区域';
     }
     const who = subjectOf(cmd);
     if (!who || ownerOf(e, who) !== u.id) return '只能操作自己的角色';

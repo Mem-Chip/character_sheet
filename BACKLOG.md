@@ -6,8 +6,12 @@
 ## 刚做完、待实战检验（用的时候留意，出问题记下来）
 
 - 地图区域（法术留下的 + DM 画的，自动 / 每次问 DM）、借机攻击（+ 威胁范围框）、推离 / 拉近、「某人开始 / 结束回合时」的触发器。
-  已知简化：借机攻击发生时棋子已经在终点（打倒了才退回停下的格子）；区域对「施放当下就在里面的生物」不自动生效，要数据另写；
-  DM 按住 Shift 拖棋子 = 纯摆位置，不触发借机攻击和区域。
+  已知简化：借机攻击发生时棋子已经在终点（打倒了才退回停下的格子）；
+  DM 按住 Shift 拖棋子 = 纯摆位置，不触发借机攻击和区域（「待在里面才有」的效应等那人下次开始 / 结束回合时对账）。
+- 区域引擎扩充（`tests/combat/zone-engine.test.ts`）：区域记住施法时的 `vars`；`on` 加了 `create`（出现 / 挪过来时已在里面）、`leave`、`move`（在里面每走 5 尺）；
+  `while`（待在里面才有的效应，离开 / 区域消失自动摘）、`applyEffect.whileInZone`；`moveZone` 节点和命令（挪过去压到的人算进入）。
+  已改成新写法的数据：月华之光、匕首之云（移动）、蛛网术（离开解除束缚）、沉默术、哈达之欲（待在里面）、荆棘丛生（每 5 尺）。
+  区域按「占到任何一格」算在里面，原文「完全位于」的边缘情况没区分。
 - 撤销把棋子放回去（`server/encounters.ts` 的 `undoMoves`）。
 - 战役资料库：启用的书、本团内容、遭遇里「更新本团规则」（DATA-HUB.md「已做（第 2 步）」）。
 - 自带密钥 AI 工具（DATA-HUB.md「已做（第 3 步）」）：**还没用真模型跑过**，只用本地假接口走过流程。
@@ -69,9 +73,9 @@
     另有 80 条属于「暂时不做」（视线 / 传送 / 三维 / 困难地形）。这 433 条里很多要新引擎概念（移出战场、改变体型、链式跳跃、阻挡弹道、生命骰池…），一次做不完，按类别一轮一轮来。
 - **灵光（aura）的两个引擎缺口**（第二轮复核实测出来的）：① aura 授予的触发器**不检查半径**（`src/combat/triggers.ts` 没走 auraGate）—— 至圣光轮 30 尺、迅捷灵光 10 尺，实测 60 尺 / 20 尺外照样生效；数据侧暂时可以补 `when: 'dist(source, self) <= N'` 兜。
   ② `aura.grant.statics` **根本没被读取**（`effectiveView` 只看 rollMods / triggers）—— 勇气灵光授予的「免疫恐慌」、净化灵光的毒素抗性是死数据（第五轮又实测了一次）。在哪：`src/combat/triggers.ts`、`src/combat/effects.ts`（要把 `aurasCovering` 挪出来或抽成独立模块才能给 `effectiveView` 用）。
-- **区域（zone）拿不到 `vars`**：`src/combat/space.ts` 传给区域的是 `vars: {}`，施法时 `choose` 选出来的东西（伤害类型等）在区域里丢了（哈达之欲的升环加骰永远落在强酸上）。在哪：`space.ts` 的 `runZone` / `Zone`（把创建时的 vars 存进 zone）。
 - **触发窗口里正规地花反应**：`leftReach` 这类窗口里数据写 `cost: [{ economy: 'reaction' }]` 不扣反应（实测反应 0 也能用、还能反复花）；另外 `flags.cannot: ['provoke']` 的效应活到**回合结束**而不是「这次移动结束」，数据要配 `endsOn: moved` 才对（散兵战术踩过）。在哪：`src/combat/tx.ts`（payCosts / canPay）、`src/combat/effects.ts`（disengaged）、`triggers.ts`。
-- **移动已经放下的区域**：zone 只有创建 / 删除，没有「把区域挪到别处」，原文里的「区域移入生物空间」触发也没实现（月华之光、炽焰法球、自然庇护卡这条）。在哪：`src/combat/session.ts`（`createZone`）、`space.ts`、`app/pages/combat/MapView.tsx`（拖动）。
+- **区域的界面操作**：引擎已经有 `moveZone` 命令（玩家能挪 / 撤自己放下的，服务器查过），地图上还不能拖区域、不能编辑区域、DM 对话框没有 `while` / 预设。在哪：`app/pages/combat/MapView.tsx`、`ZoneDialog.tsx`。
+- **还没改成新区域写法的数据**：炽焰法球（「周围 5 尺内结束回合」+「撞进生物空间」两种时机，区域格子和原文对不上）、自然庇护、黑暗术 / 云雾术（遮蔽要视线机制）、埋骨墓地、扩散孢子等；`data/dyn/ai/` 里写着「区域不能移动 / 请手动拖」的条目按 `src/factory/spec.ts` 第 32 条重写。
 - **检查器补两条**：① `target.size` 的字面量：数据写 `target.size == 'S'`（引擎里是「小型」，见 `src/sheet/constants.ts` 的 `SIZE_CN`）恒假，`npm run check:data` 不报；
   ② `heal` / `tempHp` 的 `to` 不接受 `'each'`（只有 `applyEffect` 允许），现在写了也能跑（`exec.ts` 的 `recipients` 恰好认），lint / audit 查不出来（灵感织衣踩到）。在哪：`src/combat/audit.ts`、`src/factory/lint.ts`。
 - **第三轮复核又挖出的引擎语义缺口**（写召唤数据时踩到的）：

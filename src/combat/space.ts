@@ -1,11 +1,11 @@
 /**
- * 地图上的事：一格一格走（借机攻击、进入区域）、推离 / 拉近、区域的生效。
+ * 地图上的事：一格一格走（借机攻击、进出区域）、推离 / 拉近、区域的生效、放下 / 挪动 / 移除区域。
  *
  * 棋子位置不在遭遇状态里（地图是服务器的），引擎每笔操作拿一份快照（tx.pos）。
  * 引擎移动了棋子就发 `moved` 事件（最后停在哪），服务器照着改地图。
  */
 import { controllerOf } from './d20';
-import { activeTemplates, effectiveView, effectsOf } from './effects';
+import { activeTemplates, effectiveView, effectsOf, endEffect } from './effects';
 import { executeAction, findAction, runNodes, collectDamageDefs } from './exec';
 import { nameOf } from './scope';
 import { blockedEconomy, fireWindow } from './triggers';
@@ -170,7 +170,11 @@ export function travel(tx: Tx, id: Id, path: Cell[], o: { forced: boolean; cause
     me.x = path[i].x;
     me.y = path[i].y;
     for (const z of Object.values(tx.state.zones ?? {})) {
-      if (!inZone(z, { ...prev, s: me.s }) && inZone(z, me)) runZone(tx, z, id, 'enter', o.cause);
+      const was = inZone(z, { ...prev, s: me.s }), now = inZone(z, me);
+      if (!was && now) enterZone(tx, z, id, o.cause);
+      else if (was && !now) leaveZone(tx, z, id, o.cause);
+      // 「在里面每移动 5 尺」：这一步落在里面就算（走进来那一步也算）
+      if (now && tx.state.zones?.[z.id]) runZone(tx, z, id, 'move', o.cause);
     }
   }
   if (me.x !== from.x || me.y !== from.y) tx.emit('moved', { id, from, to: { x: me.x, y: me.y }, forced: o.forced }, o.cause);
@@ -214,18 +218,60 @@ export function shove(tx: Tx, by: Id, target: Id, ft: number, mode: 'push' | 'pu
 
 /* ------------------------------ 区域 ------------------------------ */
 
-const WHY_CN: Record<ZoneWhen, string> = { enter: '进入', turnStart: '在里面开始回合', turnEnd: '在里面结束回合' };
+const WHY_CN: Record<ZoneWhen, string> = {
+  enter: '进入', turnStart: '在里面开始回合', turnEnd: '在里面结束回合', create: '在区域出现的地方', leave: '离开', move: '在里面移动',
+};
+
+/** 这个区域对这个人起不起作用（只对敌人 / 盟友的） */
+function affects(tx: Tx, z: Zone, victim: Id): boolean {
+  if (z.affects === 'all' || !z.source || !tx.state.combatants[z.source]) return true;
+  const same = tx.state.combatants[z.source].side === tx.state.combatants[victim]?.side;
+  return z.affects === 'enemies' ? !same : same;
+}
+
+function zoneCtx(tx: Tx, z: Zone, victim: Id, nodes: Zone['do'], cause: number | null) {
+  const self = z.source && tx.state.combatants[z.source] ? z.source : victim;
+  return {
+    self, source: z.source, targets: [victim], target: victim, attacker: self,
+    entryKey: z.entryKey, actionName: z.name, cause, locals: {}, slot: z.slot, zone: z.id,
+    damageDefs: collectDamageDefs(nodes), originKind: (z.source ? 'spell' : 'feature') as 'spell' | 'feature', vars: { ...(z.vars ?? {}) },
+  };
+}
+
+/** 「待在里面就有」的效果：还没挂上就挂（同一个区域挂的效应只留一份） */
+function applyWhile(tx: Tx, z: Zone, victim: Id, cause: number | null): void {
+  const live = tx.state.zones?.[z.id];
+  const c = tx.state.combatants[victim];
+  if (!live?.while?.length || !c || c.live.dead || !affects(tx, live, victim)) return;
+  if (effectsOf(tx, victim).some((e) => e.zone === live.id)) return;
+  runNodes(tx, live.while, { ...zoneCtx(tx, live, victim, live.while, cause), zoneWhile: true });
+}
+
+/** 摘掉这个人（null = 所有人）身上随这个区域的效应 */
+function dropWhile(tx: Tx, zoneId: string, victim: Id | null, reason: string, cause: number | null): void {
+  for (const e of Object.values(tx.state.effects)) {
+    if (e.zone === zoneId && (victim === null || e.bearer === victim)) endEffect(tx, e.id, reason, cause);
+  }
+}
+
+/** 进入区域：先挂「待在里面」的效果，再按 enter 结算 */
+export function enterZone(tx: Tx, z: Zone, victim: Id, cause: number | null): void {
+  applyWhile(tx, z, victim, cause);
+  runZone(tx, z, victim, 'enter', cause);
+}
+
+/** 离开区域：摘掉随区域的效应，再按 leave 结算 */
+export function leaveZone(tx: Tx, z: Zone, victim: Id, cause: number | null): void {
+  dropWhile(tx, z.id, victim, `离开「${z.name}」`, cause);
+  runZone(tx, z, victim, 'leave', cause);
+}
 
 /** 区域对一个生物生效一次 */
 export function runZone(tx: Tx, z: Zone, victim: Id, why: ZoneWhen, cause: number | null): void {
   const c = tx.state.combatants[victim];
   if (!c || c.live.dead || !z.on.includes(why)) return;
   const live = tx.state.zones?.[z.id];
-  if (!live) return;
-  if (live.affects !== 'all' && live.source && tx.state.combatants[live.source]) {
-    const same = tx.state.combatants[live.source].side === c.side;
-    if (live.affects === 'enemies' ? same : !same) return;
-  }
+  if (!live || !affects(tx, live, victim)) return;
   if (live.oncePerTurn && live.hits[victim] === tx.turnKey()) return;
   if (live.confirm) {
     const ans = tx.decide({
@@ -236,29 +282,69 @@ export function runZone(tx: Tx, z: Zone, victim: Id, why: ZoneWhen, cause: numbe
     if (!ans?.zone) return;
   }
   const seq = tx.emit('zoneHit', { zone: live.id, name: live.name, id: victim, at: tx.turnKey(), why }, cause);
-  const self = live.source && tx.state.combatants[live.source] ? live.source : victim;
-  runNodes(tx, live.do, {
-    self, source: live.source, targets: [victim], target: victim, attacker: self,
-    entryKey: live.entryKey, actionName: live.name, cause: seq, locals: {}, slot: live.slot,
-    damageDefs: collectDamageDefs(live.do), originKind: live.source ? 'spell' : 'feature', vars: {},
-  });
+  runNodes(tx, live.do, zoneCtx(tx, live, victim, live.do, seq));
 }
 
-/** 回合开始 / 结束：这个人所在的区域各生效一次 */
+/**
+ * 回合开始 / 结束：这个人所在的区域各生效一次。
+ * 顺带对一遍账：DM 按住 Shift 摆位置、传送这些不经过引擎的移动 —— 已经不在里面的摘掉随区域的效应，新到里面的补挂。
+ */
 export function zonesOnTurn(tx: Tx, id: Id, why: 'turnStart' | 'turnEnd', cause: number | null): void {
-  for (const z of zonesAt(tx, id)) runZone(tx, z, id, why, cause);
+  const here = zonesAt(tx, id);
+  if (tx.pos?.[id]) {
+    for (const e of effectsOf(tx, id)) {
+      if (e.zone && !here.some((z) => z.id === e.zone)) endEffect(tx, e.id, '已经不在区域里', cause);
+    }
+  }
+  for (const z of here) applyWhile(tx, z, id, cause);
+  for (const z of here) runZone(tx, z, id, why, cause);
+}
+
+/** 地图上有位置、活着的参与者里，哪些在这个区域里 */
+function inside(tx: Tx, z: Zone): Id[] {
+  const pos = tx.pos;
+  if (!pos) return [];
+  return Object.keys(pos).filter((id) => tx.state.combatants[id] && !tx.state.combatants[id].live.dead && inZone(z, pos[id]));
+}
+
+/** 放下一块区域：已经在里面的挂上「待在里面」的效果、按 create 结算 */
+export function placeZone(tx: Tx, zone: Zone, cause: number | null): void {
+  const seq = tx.emit('zoneCreated', { zone }, cause);
+  const z = tx.state.zones?.[zone.id];
+  if (!z) return;
+  for (const id of inside(tx, z)) {
+    applyWhile(tx, z, id, seq);
+    runZone(tx, z, id, 'create', seq);
+  }
+}
+
+/** 把区域挪到新格子：挪走后不在里面的算离开，新压到的算进入（「区域移入生物的空间」） */
+export function relocateZone(tx: Tx, z: Zone, cells: string[], tpl: Record<string, unknown> | undefined, cause: number | null): void {
+  const before = new Set(inside(tx, z));
+  const seq = tx.emit('zoneMoved', { id: z.id, name: z.name, cells: cells.slice(), ...(tpl ? { tpl } : {}) }, cause);
+  const live = tx.state.zones?.[z.id];
+  if (!live) return;
+  const after = inside(tx, live);
+  for (const id of before) if (!after.includes(id)) leaveZone(tx, live, id, seq);
+  for (const id of after) if (!before.has(id) && tx.state.zones?.[z.id]) enterZone(tx, live, id, seq);
+}
+
+/** 区域消失：随它的效应一起摘掉 */
+export function removeZone(tx: Tx, z: Zone, reason: string, cause: number | null): void {
+  const seq = tx.emit('zoneRemoved', { id: z.id, name: z.name, reason }, cause);
+  dropWhile(tx, z.id, null, `「${z.name}」消失`, seq);
 }
 
 /** 新一轮开始：到期的区域消失 */
 export function expireZones(tx: Tx, round: number, cause: number | null): void {
   for (const z of Object.values(tx.state.zones ?? {})) {
-    if (z.untilRound !== null && round >= z.untilRound) tx.emit('zoneRemoved', { id: z.id, name: z.name, reason: '持续时间到' }, cause);
+    if (z.untilRound !== null && round >= z.untilRound) removeZone(tx, z, '持续时间到', cause);
   }
 }
 
 /** 专注结束：随它的区域消失 */
 export function zonesOfConcentration(tx: Tx, concId: string, cause: number | null): void {
   for (const z of Object.values(tx.state.zones ?? {})) {
-    if (z.link === concId) tx.emit('zoneRemoved', { id: z.id, name: z.name, reason: '专注结束' }, cause);
+    if (z.link === concId) removeZone(tx, z, '专注结束', cause);
   }
 }

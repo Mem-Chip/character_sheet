@@ -5,7 +5,7 @@ import { applyEffect, checkEndsOn, concentrationOf, effectiveView, endConcentrat
 import { Dice } from '../expr';
 import { engineDice } from './dice';
 import { executeAction, findAction } from './exec';
-import { placeSummon, travel } from './space';
+import { placeSummon, placeZone, relocateZone, removeZone, travel } from './space';
 import { advanceTime, nextTurn, rest, startCombat } from './turns';
 import { NeedDecision, Rejected, Tx, setPostEmit, type EngineCtx, type TapeEntry, type TxInput } from './tx';
 import type { Action, CombatantView, Command, Decision, EncounterState, GameEvent, OverridePatch, Settings, UserId, Zone } from './types';
@@ -285,16 +285,23 @@ function handle(tx: Tx, cmd: Command): void {
       const round = tx.state.round;
       const zone: Zone = {
         id: tx.nextId('z'), name: z.name || '区域', cells: z.cells.slice(), ...(z.tpl ? { tpl: z.tpl } : {}), source: null, entryKey: 'zone',
-        on: z.on, do: z.do, affects: 'all', oncePerTurn: z.oncePerTurn ?? true, confirm: !!z.confirm, link: null,
+        on: z.on, do: z.do, ...(z.while?.length ? { while: z.while } : {}), affects: z.affects ?? 'all', oncePerTurn: z.oncePerTurn ?? true, confirm: !!z.confirm, link: null,
         untilRound: z.rounds && round !== null ? round + z.rounds : null, hits: {},
       };
-      tx.emit('zoneCreated', { zone });
+      placeZone(tx, zone, null);
       return;
     }
     case 'removeZone': {
       const z = tx.state.zones?.[cmd.id];
       if (!z) throw new Rejected('没有这个区域');
-      tx.emit('zoneRemoved', { id: z.id, name: z.name, reason: '移除' });
+      removeZone(tx, z, '移除', null);
+      return;
+    }
+    case 'moveZone': {
+      const z = tx.state.zones?.[cmd.id];
+      if (!z) throw new Rejected('没有这个区域');
+      if (!cmd.cells?.length) throw new Rejected('区域里没有格子');
+      relocateZone(tx, z, cmd.cells, cmd.tpl, null);
       return;
     }
     case 'advanceTime':

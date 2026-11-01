@@ -5,7 +5,7 @@ import { newCastPlan, type CastPlan } from './castplan';
 import { activeTemplates, applyEffect, effectiveView, effectsOf, endConcentration, endEffect, skillBonus, startConcentration } from './effects';
 import { makeEnv, nameOf, type ScopeData } from './scope';
 import { entryOf } from './collect';
-import { placeSummon, shove } from './space';
+import { placeSummon, placeZone, relocateZone, shove } from './space';
 import { blockedEconomy, fireWindow } from './triggers';
 import { Rejected, type Tx } from './tx';
 import { makeCombatant, makeView } from './view';
@@ -59,6 +59,10 @@ export interface ExecCtx {
   vars?: Record<string, number | string>;
   /** 窗口里能改正在结算的东西（modify 节点用）；不在 before 窗口里就没有 */
   modify?: (m: Modify) => void;
+  /** 正在生效的区域（区域的 do / while 里）：applyEffect 的 whileInZone 标到它上面 */
+  zone?: string;
+  /** 在区域的 while 里：挂的效应一律随区域 */
+  zoneWhile?: boolean;
   /** 范围法术选的格子（zone 节点用） */
   area?: { cells: string[]; tpl?: Record<string, unknown> };
   /** 当前在豁免的哪个分支里（伤害包据此知道「成功减半」，反射闪避用） */
@@ -400,11 +404,27 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
       const round = tx.state.round;
       const zone: Zone = {
         id: tx.nextId('z'), name: n.name ?? ctx.actionName, cells: ctx.area.cells.slice(), ...(ctx.area.tpl ? { tpl: ctx.area.tpl } : {}),
-        source: ctx.self, entryKey: ctx.entryKey, on: n.on, do: n.do, affects: n.affects ?? 'all',
+        source: ctx.self, entryKey: ctx.entryKey, on: n.on ?? [], do: n.do ?? [], affects: n.affects ?? 'all',
+        ...(n.while?.length ? { while: n.while } : {}), ...(ctx.vars && Object.keys(ctx.vars).length ? { vars: { ...ctx.vars } } : {}),
         oncePerTurn: n.oncePerTurn ?? true, confirm: false, link: ctx.concentrationId ?? null,
         untilRound: n.rounds && round !== null ? round + n.rounds : null, hits: {}, ...(ctx.slot !== undefined ? { slot: ctx.slot } : {}),
       };
-      tx.emit('zoneCreated', { zone }, ctx.cause);
+      placeZone(tx, zone, ctx.cause);
+      return;
+    }
+    case 'moveZone': {
+      const key = n.key ?? ctx.entryKey;
+      const mine = Object.values(tx.state.zones ?? {}).filter((z) => z.source === ctx.self && z.entryKey === key);
+      if (!mine.length) {
+        tx.emit('note', { text: `${ctx.actionName}：地图上没有可以挪的区域`, owner: ctx.self }, ctx.cause);
+        return;
+      }
+      if (!ctx.area?.cells.length) {
+        tx.emit('note', { text: `${ctx.actionName}：没有在地图上选新位置，区域没动`, owner: ctx.self }, ctx.cause);
+        return;
+      }
+      // 同一道法术放了好几块（不常见）：挪最近放下的那块
+      relocateZone(tx, mine[mine.length - 1], ctx.area.cells, ctx.area.tpl, ctx.cause);
       return;
     }
     case 'note':
@@ -697,6 +717,7 @@ function applyEffectNode(tx: Tx, n: Extract<Node, { kind: 'applyEffect' }>, ctx:
     form: bearer === ctx.self ? ctx.form : undefined,
     origin: { kind: ctx.originKind ?? 'feature', ref: ctx.entryKey },
     cause: ctx.cause,
+    zone: ctx.zone && (n.whileInZone || ctx.zoneWhile) ? ctx.zone : undefined,
   });
 }
 

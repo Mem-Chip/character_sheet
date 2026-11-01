@@ -44,7 +44,7 @@ const NODE_KEYS: Record<string, readonly string[]> = {
   modify: ['modify'],
   heal: ['amount', 'to'],
   tempHp: ['amount', 'to'],
-  applyEffect: ['template', 'inline', 'name', 'to', 'duration', 'link', 'potency', 'state'],
+  applyEffect: ['template', 'inline', 'name', 'to', 'duration', 'link', 'potency', 'state', 'whileInZone'],
   removeEffect: ['match', 'from'],  extendEffect: ['template'], endConcentration: [], grantAction: ['key', 'from', 'fromVar', 'action', 'name', 'text', 'cost', 'activation', 'targeting', 'until'], removeGrant: ['key'], castFrom: ['from', 'fromVar', 'to', 'cost', 'activation'], modifyCast: ['cancel', 'refundSlot', 'dc', 'attackBonus', 'damageType', 'note'],
   resource: ['id', 'delta'],
   economy: ['action', 'bonus', 'reaction', 'attacks', 'move'],
@@ -54,7 +54,8 @@ const NODE_KEYS: Record<string, readonly string[]> = {
   forEach: ['in', 'do'],
   repeat: ['n', 'do'],
   move: ['mode', 'ft'],
-  zone: ['on', 'affects', 'oncePerTurn', 'rounds', 'do'],
+  zone: ['on', 'affects', 'oncePerTurn', 'rounds', 'do', 'while'],
+  moveZone: ['key'],
   summon: ['name', 'count', 'size', 'type', 'creatureType', 'ac', 'hp', 'speed', 'pb', 'score', 'attacksPerAction', 'attacks', 'actions', 'triggers', 'rollMods', 'resist', 'immune', 'conditionImmune', 'notes', 'link', 'group'],
   note: ['text'],
 };

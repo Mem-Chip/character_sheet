@@ -24,6 +24,15 @@ export function applyEvent(s: EncounterState, ev: GameEvent): void {
       if (Number.isFinite(n) && s.nextId <= n) s.nextId = n + 1;
       break;
     }
+    case 'zoneMoved': {
+      const z = s.zones?.[p.id as string];
+      if (z) {
+        z.cells = (p.cells as string[]).slice();
+        if (p.tpl) z.tpl = structuredClone(p.tpl as Record<string, unknown>);
+        else delete z.tpl;
+      }
+      break;
+    }
     case 'zoneRemoved':
       if (s.zones) delete s.zones[p.id as string];
       break;

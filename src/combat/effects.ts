@@ -391,6 +391,8 @@ export interface ApplyOpts {
   form?: CombatantView;
   origin: ActiveEffect['origin'];
   cause: number | null;
+  /** 待在这个区域里才有：离开 / 区域消失时结束 */
+  zone?: string;
 }
 
 /** 施加效应。被状态免疫挡住时返回 null（并发一条事件说明原因，不静默） */
@@ -460,6 +462,7 @@ export function applyEffect(tx: Tx, o: ApplyOpts): ActiveEffect | null {
     tags: tpl.tags ?? [],
     form: o.form ? structuredClone(o.form) : undefined,
   };
+  if (o.zone) effect.zone = o.zone;
   if (effect.inline === undefined) delete effect.inline;
   if (effect.form === undefined) delete effect.form;
   const seq = tx.emit('effectApplied', { effect, bearer: o.bearer, key, name, source: o.source }, o.cause);

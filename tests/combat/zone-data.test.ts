@@ -97,4 +97,56 @@ describe('区域法术：真的结算（真数据 + 一场小遭遇）', () => {
     sync();
     expect(hp(s, 'g')).toBe(60 - 16);
   });
+
+  const cast = (s: Session, key: string, cells: string[]) => {
+    // 有升环效果的才问用几环；不问就直接用最低环
+    const r = s.dispatch({ type: 'useAction', actor: 'w', action: `${key}#cast`, targets: [], area: { cells } });
+    if (r.status === 'pending') done(s.decide('2'));
+    else done(r);
+  };
+  const has = (s: Session, id: string, name: string) => Object.values(s.state.effects).some((e) => e.bearer === id && e.key.endsWith(`#${name}`));
+  const zoneId = (s: Session) => Object.keys(s.state.zones ?? {})[0];
+
+  it('匕首之云：下个回合「移动立方」挪到地精身上 → 地精受伤', () => {
+    const { s, dice } = scene(['XPHB:spell:匕首之云']);
+    cast(s, 'XPHB:spell:匕首之云', ['8,0']);
+    done(s.dispatch({ type: 'nextTurn' }));
+    done(s.dispatch({ type: 'nextTurn' }));
+    dice.push(1, 2, 3, 4);
+    done(s.dispatch({ type: 'useAction', actor: 'w', action: 'XPHB:spell:匕首之云#moveCloud', targets: [], area: { cells: ['5,0'] } }));
+    expect(s.state.zones![zoneId(s)].cells).toEqual(['5,0']);
+    expect(hp(s, 'g')).toBe(60 - 10);
+  });
+
+  it('蛛网术：走进去豁免失败被束缚；蛛网挪走（离开蛛网）束缚自动解除', () => {
+    const { s, dice, sync } = scene(['XPHB:spell:蛛网术']);
+    cast(s, 'XPHB:spell:蛛网术', ['6,0', '7,0']);
+    done(s.dispatch({ type: 'nextTurn' }));
+    dice.push(2);   // 敏捷豁免 2 + 2 < 15
+    done(s.dispatch({ type: 'move', id: 'g', ft: 5, path: [{ x: 5, y: 0 }, { x: 6, y: 0 }] }));
+    sync();
+    expect(has(s, 'g', '蛛网束缚')).toBe(true);
+    done(s.dispatch({ type: 'moveZone', id: zoneId(s), cells: ['0,9'] }));
+    expect(has(s, 'g', '蛛网束缚')).toBe(false);
+  });
+
+  it('沉默术：在里面就耳聋；区域挪走就摘掉', () => {
+    const { s } = scene(['XPHB:spell:沉默术']);
+    cast(s, 'XPHB:spell:沉默术', ['4,0', '5,0', '6,0']);
+    expect(has(s, 'g', '沉默术')).toBe(true);
+    expect(has(s, 'w', '沉默术')).toBe(false);
+    done(s.dispatch({ type: 'moveZone', id: zoneId(s), cells: ['0,0'] }));
+    expect(has(s, 'g', '沉默术')).toBe(false);
+    expect(has(s, 'w', '沉默术')).toBe(true);
+  });
+
+  it('荆棘丛生：在里面每走 5 尺受 2d4', () => {
+    const { s, dice, sync } = scene(['XPHB:spell:荆棘丛生']);
+    cast(s, 'XPHB:spell:荆棘丛生', ['6,0', '7,0', '8,0']);
+    done(s.dispatch({ type: 'nextTurn' }));
+    dice.push(1, 1, 1, 1, 1, 1, 1, 1);
+    done(s.dispatch({ type: 'move', id: 'g', ft: 20, path: [{ x: 5, y: 0 }, { x: 6, y: 0 }, { x: 7, y: 0 }, { x: 8, y: 0 }, { x: 9, y: 0 }] }));
+    sync();
+    expect(hp(s, 'g')).toBe(60 - 6);
+  });
 });

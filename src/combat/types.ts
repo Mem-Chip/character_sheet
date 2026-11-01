@@ -289,6 +289,8 @@ export type Node =
   | {
       kind: 'applyEffect'; template?: string; inline?: EffectTemplate; name?: string; to?: NodeTarget | 'each';
       duration?: Duration; link?: boolean; potency?: ExprSrc; state?: Record<string, ExprSrc>;
+      /** 在区域的 do 里用：离开这个区域（或区域消失）就结束（蛛网术的束缚「直到离开蛛网」） */
+      whileInZone?: boolean;
     }
   | { kind: 'removeEffect'; match: { key?: string; name?: string; tag?: string }; from?: NodeTarget }
   | { kind: 'extendEffect'; template: string }
@@ -353,11 +355,18 @@ export type Node =
   /**
    * 在地图上留下一个持续的区域（法术选的范围那些格子）。生物进入、在里面开始 / 结束回合时，对它执行 do
    * （self = 施法者，target = 那个生物）。随专注结束；没有专注的写 rounds。
+   * - on 还能写 `create`（放下 / 挪过来时已经在里面的）、`leave`（离开）、`move`（在里面每移动 5 尺，含走进来那一步）；
+   * - `while`：待在里面就有的效果（只放 applyEffect），进来时挂上、离开 / 区域消失时自动摘掉，不受 oncePerTurn 限制。
    */
   | {
-      kind: 'zone'; name?: string; on: ZoneWhen[]; do: Node[];
+      kind: 'zone'; name?: string; on?: ZoneWhen[]; do?: Node[]; while?: Node[];
       affects?: 'all' | 'enemies' | 'allies'; oncePerTurn?: boolean; rounds?: number;
     }
+  /**
+   * 把自己之前放下的区域挪到这次动作选的范围（月华之光「移动光柱」、炽焰法球、匕首之云）。
+   * 缺省挪同一条目（同一道法术）放下的；`key` 指定别的条目。挪过来压到的人算「进入」，挪走后不在里面的算「离开」。
+   */
+  | { kind: 'moveZone'; key?: string }
   /**
    * 召唤一个参战生物（召唤术、原初伴侣、魔宠）：与召唤者同控制者、同阵营，先攻紧贴在召唤者后面；
    * link != false 时随本次动作的专注 / 效应结束而消失；
@@ -380,7 +389,7 @@ export type Node =
 /** attacker = 窗口的发起者（攻击者、伤害来源）；each = 这次动作选中的每一个目标（多目标治疗 / 临时生命值） */
 export type NodeTarget = 'target' | 'self' | 'attacker' | 'each';
 
-export type ZoneWhen = 'enter' | 'turnStart' | 'turnEnd';
+export type ZoneWhen = 'enter' | 'turnStart' | 'turnEnd' | 'create' | 'leave' | 'move';
 
 /** 地图上持续存在的区域（法术留下的、DM 画的） */
 export interface Zone {
@@ -395,6 +404,10 @@ export interface Zone {
   entryKey: string;
   on: ZoneWhen[];
   do: Node[];
+  /** 待在里面就有的效果（applyEffect，挂上的效应标了 zone，离开就摘） */
+  while?: Node[];
+  /** 施放时 choose / number 选出来的值（区域里的表达式用 vars.x） */
+  vars?: Record<string, number | string>;
   affects: 'all' | 'enemies' | 'allies';
   /** 同一个生物每回合最多受一次（进入 + 回合开始 / 结束合起来算） */
   oncePerTurn: boolean;
@@ -574,6 +587,8 @@ export interface ActiveEffect {
   suppressed: boolean;
   state: Record<string, unknown>;
   tags: string[];
+  /** 待在这个区域里才有的效应：离开 / 区域消失时结束 */
+  zone?: string;
 }
 
 export interface Settings {
@@ -673,8 +688,10 @@ export type Command =
    */
   | { type: 'move'; id: Id; ft: number; force?: boolean; path?: Array<{ x: number; y: number }> }
   /** DM 在地图上画的区域（伤害 / 效果） */
-  | { type: 'createZone'; zone: Pick<Zone, 'name' | 'cells' | 'tpl' | 'on' | 'do' | 'affects' | 'oncePerTurn' | 'confirm'> & { rounds?: number } }
+  | { type: 'createZone'; zone: Pick<Zone, 'name' | 'cells' | 'tpl' | 'on' | 'do' | 'affects' | 'oncePerTurn' | 'confirm'> & { rounds?: number; while?: Node[] } }
   | { type: 'removeZone'; id: string }
+  /** 把区域挪到新的格子（DM；玩家只能挪自己的人放下的） */
+  | { type: 'moveZone'; id: string; cells: string[]; tpl?: Record<string, unknown> }
   | { type: 'advanceTime'; minutes: number }
   | { type: 'rest'; kind: 'short' | 'long'; ids?: Id[] }
   | { type: 'setSettings'; settings: Partial<Settings> };

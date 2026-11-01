@@ -53,7 +53,8 @@ const NODES: Array<[string, string, string]> = [
   ['forEach', 'in, do', '对一组目标各做一遍'],
   ['repeat', 'n, do', '重复 n 次'],
   ['move', 'mode, ft', '推 / 拉 / 传送（mode: push | pull | teleport）'],
-  ['zone', 'on, do, rounds, oncePerTurn', '在地图上留下一块区域'],
+  ['zone', 'on, do, while, rounds, oncePerTurn', '在地图上留下一块区域（while：待在里面才有的效应）'],
+  ['moveZone', 'key', '把自己放下的区域挪到这次选的范围'],
   ['summon', 'name, count, hp, ac, speed, attacks…', '召唤'],
   ['note', 'text', '只写一行说明'],
 ];
