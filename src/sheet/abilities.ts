@@ -882,6 +882,9 @@ export class AbilityBook {
     };
     const pending: Json[] = [];
     const decisions = char.decisions || {};
+    const classes: Json[] = Array.isArray(char.classes) ? char.classes : [];
+    const totalLv = classes.reduce((n, k) => n + (Number(k?.level) || 0), 0);
+    const ownerLevel = (s: SourceSpec): number => (s.cls ? Number(classes.find((k) => k?.name === s.cls)?.level) || 0 : totalLv);
     for (const s of this.collectSources(char)) {
       let a = this.resolve(s);
       if (!a) continue;
@@ -894,6 +897,8 @@ export class AbilityBook {
       for (const g of a.grants || []) {
         const vals = (g.values || []).filter((v: string) => v !== '*');
         if (g.values?.includes('*')) continue;
+        // `level`：到这个等级才给（职业 / 子职特性按该职业的等级，其余按总等级）——子职法术表「5 级：…」这种
+        if (g.level != null && ownerLevel(s) < Number(g.level)) continue;
         const G: Record<string, () => void> = {
           skill: () => vals.forEach((v: string) => out.skills.add(v)),
           expertise: () => vals.forEach((v: string) => out.expertise.add(v)),

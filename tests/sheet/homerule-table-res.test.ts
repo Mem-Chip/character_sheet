@@ -1,4 +1,4 @@
-// 家规覆盖了职业里的某个特性时，等级表的资源只丢被覆盖的那一列（以前整张表都丢，德鲁伊的荒野形态次数跟着没了）
+// 家规和卡面数据：覆盖某个特性时等级表资源只让出那一列（以前整张表都丢）；grants 带 level 时到等级才给
 import { beforeAll, describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { createNodeEnv } from '../../src/sheet/node-env';
@@ -28,5 +28,21 @@ describe.skipIf(!hasLocalData())('家规覆盖特性 × 职业表资源', () => 
     const c = druid();
     c.homerules = [{ id: 'hr-abcd1234', name: '改写荒野形态', text: '随便', covers: 'XPHB:德鲁伊:荒野形态:2' } as Json];
     expect((await pools(c)).some((r) => r.source === 'levelTable' && r.name === '荒野形态')).toBe(false);
+  });
+});
+
+describe.skipIf(!hasLocalData())('grants 的 level：到等级才给', () => {
+  let env: SheetEnv;
+  beforeAll(async () => { env = await createNodeEnv(); });
+  it('2 级德鲁伊：level 1 的法术给了，level 5 的没给', async () => {
+    const c = structuredClone(FIX.find((f) => f.id === 'sample-druid2')!.char);
+    c.homerules = [{ id: 'hr-abcd1234', name: '结社法术', text: '', grants: [
+      { kind: 'spell', values: ['命令术'], level: 1 },
+      { kind: 'spell', values: ['飞行术'], level: 5 },
+    ] } as Json];
+    const sheet = (await env.compute(c)) as Json;
+    const names = (sheet.spell?.granted ?? []).map((g: Json) => g.name);
+    expect(names).toContain('命令术');
+    expect(names).not.toContain('飞行术');
   });
 });

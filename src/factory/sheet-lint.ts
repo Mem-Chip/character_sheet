@@ -54,6 +54,7 @@ export function lintSheet(sheet: unknown, ctx: SheetLintCtx = {}): string[] {
     if (spec.needs === 'values' && (!Array.isArray(g.values) || !g.values.length)) out.push(`${at}（${kind}）缺 values`);
     if (spec.needs === 'formula' && !g.formula) out.push(`${at}（${kind}）缺 formula`);
     if (spec.needs === 'text' && !g.text) out.push(`${at}（${kind}）缺 text`);
+    if (g.level !== undefined && !(Number.isInteger(g.level) && Number(g.level) >= 1 && Number(g.level) <= 20)) out.push(`${at}（${kind}）的 level 要是 1～20 的整数`);
   }
 
   for (const [i, c] of (list('choices') ?? []).entries()) {

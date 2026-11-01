@@ -320,6 +320,9 @@ ${mods}
 |---|---|---|
 ${grants}
 
+每条 grant 都可以加 \`level: N\`：到 N 级才给（职业 / 子职特性按该职业的等级，其余按总等级）。
+子职法术表「3 级：A、B；5 级：C」写成两条 \`{ "kind": "spell", "values": ["A", "B"], "level": 3 }\`、\`{ "kind": "spell", "values": ["C"], "level": 5 }\`。
+
 ### 7.3 \`choices\`：要玩家做的决定
 
 \`{ "id": "…", "kind": "ability" | "skill" | "spell" | …, "label": "…", "pool": "…" 或 "from": [ … ], "count": 1 }\`。

@@ -43,7 +43,7 @@ function classExtra(cls: string): string[] {
   return [
     `${cls}等级写 \`self.levelOf('${cls}')\`（升级后自动变）；法术豁免 DC 写 \`self.spell.dc\`，法术攻击加值写 \`self.spell.atk\`。`,
     "「消耗一次 X 的次数」写 `cost: [{ resource: '<id>' }]`，id 照抄上面「可以花的资源」；「免费用一次、长休恢复」这种自己的次数，在 `sheet.resources` 里声明一个池子，战斗里花它的 id。",
-    '「始终准备的法术」写在卡面 `sheet.grants` 的 `spell`（第 7.2 节）。grants 从拿到这条特性起就生效，没有按等级细分的写法：高等级才给的法术写进 `note` 说明，别提前给。',
+    '「始终准备的法术」写在卡面 `sheet.grants` 的 `spell`（第 7.2 节）；法术表按等级给的，每个等级一条，带 `level`（比如 5 级才给的写 `level: 5`）。',
   ];
 }
 
