@@ -352,7 +352,9 @@ export class FeatureOptions {
       for (const k of ['entries', 'entry', 'items']) if (node[k] !== undefined) walk(node[k]);
     };
     walk(entries);
-    if (Array.isArray(entries)) {
+    // 「从以下……选择」+ 几段带名字的段落 → 猜成建卡时的选项：官方数据大多是对的，
+    // 自制书（HB-…）不猜 —— 「召唤图腾时从以下精魂中选择一种」是每次用时选的；建卡时的选择自制书要明写 type: 'options'
+    if (Array.isArray(entries) && !String(feature.source || '').startsWith('HB-')) {
       const flat = entries.filter((x: Json) => x && typeof x === 'object' && x.name && (x.entries || x.entry));
       const lead = entries.find((x: Json) => typeof x === 'string' && /(从下列|下列|从以下|以下)[^。]{0,14}(选择|选一项|选其一|择一)/.test(x));
       if (flat.length >= 2 && lead) {

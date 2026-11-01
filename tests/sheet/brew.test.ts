@@ -10,7 +10,14 @@ const RAW = {
   subclass: [{ name: '牧人结社（自制）', className: '德鲁伊', additionalSpells: [{ prepared: { 3: ['命令术'], 5: ['飞行术'] } }] }],
   subclassFeature: [
     { name: '林地之语', level: 3, entries: ['你通晓自然生灵的语言。'] },
-    { name: '精魂图腾', level: 3, entries: ['以一个附赠动作召唤精魂图腾。'] },
+    {
+      name: '精魂图腾', level: 3, entries: [
+        '以一个附赠动作召唤精魂图腾。', '召唤图腾时，从以下精魂中选择一种生效：',
+        { type: 'entries', name: '熊之精魂', entries: ['临时生命值。'] },
+        { type: 'entries', name: '鹰之精魂', entries: ['优势。'] },
+        { type: 'entries', name: '独角兽之精魂', entries: ['移动速度。'] },
+      ],
+    },
     { name: '全能牧者', level: 6, entries: ['召唤物更坚韧。'] },
   ],
 };
@@ -53,6 +60,9 @@ describe.skipIf(!hasLocalData())('自制子职算卡', () => {
     expect(JSON.stringify(feats[1].entries)).toContain('召唤精魂图腾');
     const keys = env.abilities.collectSources(c).map(sourceKeyOf);
     expect(keys).toContain('HB-TEST:德鲁伊:精魂图腾:3');
+    // 「召唤时从以下精魂中选择一种」不是建卡时的选择：不该冒出待决定
+    const pending = ((c as Json)._derived?.pending ?? []) as Json[];
+    expect(pending.filter((x) => JSON.stringify(x).includes('精魂')), JSON.stringify(pending.map((x) => x.label))).toEqual([]);
   });
 
   it('法术表按等级给：3 级有命令术，5 级才有飞行术', async () => {

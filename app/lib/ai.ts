@@ -506,6 +506,7 @@ export const brewSpec = () => `你把 D&D 子职的原文（任何语言、任�
 要求：
 - 每个「N 级：特性名」各写一条 subclassFeature，level 写那个数字。同一级有几个特性就写几条。
 - entries 照抄原文，分段写成字符串；原文里的列表用 {"type":"list","items":[…]}，带小标题的段落（「熊之精魂：…」这种）用 {"type":"entries","name":"熊之精魂","entries":["…"]}，表格用 {"type":"table","colLabels":[…],"rows":[[…]]}。
+- **建卡 / 升级时就要定下来**的选择（「选择以下一项获得」「习得两种……」）写成 {"type":"options","count":1,"entries":[{"type":"entries","name":"选项名","entries":["…"]}, …]}；**每次使用时才选**的（「召唤图腾时从以下精魂中选择一种」）**不要**用 options，写成普通的带小标题段落。
 - 「始终准备的法术」表写进 subclass 的 additionalSpells.prepared（键是职业等级，值是法术中文名，用 2024 版译名）；那一条特性本身照样写一条，原文里保留表格。
 - 名字里不要有「:」「#」。不要编原文里没有的东西。
 - source、shortName、classSource 这些字段不用写，程序会补。`;

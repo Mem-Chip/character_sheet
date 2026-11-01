@@ -58,6 +58,21 @@ function originalEntries(engine: Engine, char: Json, s: SourceSpec): Json[] {
   return [];
 }
 
+/**
+ * 资料库 / 战役覆盖了的能力：卡上收集到的是那条家规（`HR:<id>`），这里换回被覆盖的那条来显示 ——
+ * 原文、类别、战斗数据都按被覆盖的键找（不然自制子职的每条特性都显示成「家规 / 导入」、没有原文）。
+ */
+function coveredSpec(char: Json, s: SourceSpec): SourceSpec | null {
+  if (s.source !== HR_SOURCE || !s.covers || !s.covers.includes(':')) return null;
+  const p = s.covers.split(':');
+  if (p.length === 4) {
+    const [source, cls, name, lv] = p;
+    const sub = (char._resolved?.classes || []).some((k: Json) => k.cls?.name === cls && (k.subFeatures || []).some((f: Json) => f.name === name && f.level === Number(lv)));
+    return { source, cls, name, level: Number(lv), kind: sub ? 'subclassFeature' : 'classFeature' };
+  }
+  return { source: p[0], name: p.slice(1).join(':'), kind: 'feat' };
+}
+
 const hasCardData = (a: Json) => !!a && ['mods', 'grants', 'choices', 'resources'].some((k) => (a[k] || []).length);
 const isAiCard = (a: Json) => !!a && (a.confidence === 'ai' || (a.resources || []).some((r: Json) => r.by === 'ai'));
 
@@ -116,11 +131,14 @@ export function SheetData(p: Props) {
         <table className="rows datatable">
           <thead><tr><th>能力</th><th>类别</th><th>卡面数据</th><th>战斗数据</th><th /></tr></thead>
           <tbody>
-            {sources.map((s) => {
+            {sources.map((s0) => {
+              // 覆盖了的：按被覆盖的那条显示（卡面数据仍是实际生效的那份）
+              const cov = coveredSpec(char, s0);
+              const card = engine.env.abilities.resolve(s0);
+              const s = cov ?? s0;
               const key = sourceKeyOf(s);
               const isHr = s.source === HR_SOURCE;
               const hr = isHr ? homerules.find((x) => x.id === s.name) : homerules.find((x) => x.covers === key);
-              const card = engine.env.abilities.resolve(s);
               const hubC = isHr ? null : hubCombatOf(key);
               const combat = isHr ? undefined : (hubC?.part.combat?.entry as import('../../src/combat').Entry | undefined) ?? engine.rules.entry(key);
               const aiTag = (combat?.tags || []).includes('ai');
@@ -128,7 +146,7 @@ export function SheetData(p: Props) {
               return (
                 <FragmentRow key={key}>
                   <tr className={rowOpen ? 'on' : ''} onClick={() => setOpen(rowOpen ? null : key)} style={{ cursor: 'pointer' }}>
-                    <td className="serif">{isHr ? <>{hr?.name || s.displayName || s.name}{campIds.has(s.name) && <Tag>本团</Tag>}</> : (() => { const t = termOfKey(key); return t ? <Term {...t} inButton>{s.name}</Term> : s.name; })()}{s.level ? <span className="faint small"> {s.level} 级</span> : null}</td>
+                    <td className="serif">{isHr ? <>{hr?.name || s.displayName || s.name}{campIds.has(s.name) && <Tag>本团</Tag>}</> : (() => { const t = termOfKey(key); return t ? <Term {...t} inButton>{s.name}</Term> : s.name; })()}{cov && <Tag title={`资料库的「${s0.displayName || s0.name}」写了这条的数据`}>{campIds.has(s0.name) ? '本团资料' : '我的资料'}</Tag>}{s.level ? <span className="faint small"> {s.level} 级</span> : null}</td>
                     <td className="small muted">{KIND_CN[s.kind] ?? s.kind}{s.cls ? ` · ${s.cls}` : ''}</td>
                     <td>
                       {hr && !isHr ? <Tag tone="warn">家规覆盖</Tag>
