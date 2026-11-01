@@ -13,7 +13,7 @@
  * - 改动先在本地生效（乐观更新），再发给服务器；服务器广播回来的地图为准。
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { footprint, gridFeet, pathFeet, reachOf, type Session } from '../../../src/combat';
+import { difficultExtra, footprint, gridFeet, lineCells, pathFeet, reachOf, type Session } from '../../../src/combat';
 import { ZoneDialog } from './ZoneDialog';
 import { cellHit, coveredCells, directional, snapHalf, snapLen, spellTpl, tplLabel, tplOrigin, tplPath, type Tpl } from '../../lib/area';
 import { PING_LIFE } from '../../lib/combat';
@@ -578,14 +578,14 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
               const tpl = z.tpl as Tpl | undefined;
               const lb = tpl ? tplLabel(tpl, g) : { x: map.grid.ox + (cells[0].x + 0.5) * g, y: map.grid.oy + (cells[0].y + 0.5) * g };
               return (
-                <g key={z.id} className="map-zone">
+                <g key={z.id} className={'map-zone' + (z.difficult ? ' rough' : '')}>
                   <path d={cellsPath(cells, map.grid)} className="zcells" />
                   {tpl && <path d={tplPath(tpl)} className="zline" strokeWidth={2 / view.k} strokeDasharray={`${8 / view.k} ${4 / view.k}`} />}
                   <text className={'map-dist zname' + (dm ? ' del' : '')} fontSize={13 / view.k} x={lb.x} y={lb.y - 16 / view.k}
                     style={{ pointerEvents: dm ? 'auto' : 'none' }}
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={() => { if (dm && confirm(`删除区域「${z.name}」？`)) combat.dispatch({ type: 'removeZone', id: z.id }); }}>
-                    {z.name}{dm && <title>点一下删除</title>}
+                    {z.name}{z.difficult ? '（困难地形）' : ''}{dm && <title>点一下删除</title>}
                   </text>
                 </g>
               );
@@ -631,10 +631,13 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
               const half = (trail.n * g) / 2;
               const pts = trail.cells.map((c) => `${map.grid.ox + c.x * g + half},${map.grid.oy + c.y * g + half}`).join(' ');
               const last = trail.cells[trail.cells.length - 1];
+              // 困难地形多花的也算上（每段按引擎同样的直线逐格走）
+              const steps = trail.cells.flatMap((c, i) => (i ? lineCells(trail.cells[i - 1], c).slice(1) : [c]));
+              const ft = pathFeet(trail.cells, diagonal) + difficultExtra(st.zones, steps, trail.n);
               return (
                 <g className="map-trail">
                   <polyline points={pts} fill="none" strokeWidth={3 / view.k} strokeDasharray={`${2 / view.k} ${6 / view.k}`} strokeLinecap="round" />
-                  <text className="map-dist" fontSize={12 / view.k} x={map.grid.ox + last.x * g + half} y={map.grid.oy + last.y * g - 4 / view.k}>本回合 {pathFeet(trail.cells, diagonal)} 尺</text>
+                  <text className="map-dist" fontSize={12 / view.k} x={map.grid.ox + last.x * g + half} y={map.grid.oy + last.y * g - 4 / view.k}>本回合 {ft} 尺</text>
                 </g>
               );
             })()}
@@ -752,9 +755,12 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
                 x={map.grid.ox + (moving.at.x + moving.n / 2) * g} y={map.grid.oy + moving.at.y * g - 6 / view.k}
               >{(() => {
                 // 回合中轮到的人：顺便显示还剩多少移动
-                const ft = gridFeet(moving.at.x - moving.from.x, moving.at.y - moving.from.y, diagonal);
+                // 困难地形多花的（和引擎扣的算法一样；无视困难地形的效应这里不管，以引擎为准）
+                const extra = difficultExtra(st.zones, lineCells(moving.from, moving.at), moving.n);
+                const ft = gridFeet(moving.at.x - moving.from.x, moving.at.y - moving.from.y, diagonal) + extra;
+                const rough = extra ? `（困难地形 +${extra}）` : '';
                 const left = moving.id === current ? st.combatants[moving.id]?.economy.move : undefined;
-                return left != null ? `${ft} / 剩 ${left} 尺` : `${ft} 尺`;
+                return left != null ? `${ft}${rough} / 剩 ${left} 尺` : `${ft}${rough} 尺`;
               })()}</text>
             )}
             {drag?.kind === 'measure' && (() => {

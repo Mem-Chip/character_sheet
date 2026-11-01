@@ -59,7 +59,26 @@ export function placeSummon(tx: Tx, summoner: Id, summonId: Id, size: string | u
   tx.emit('moved', { id: summonId, from: picked, to: picked, forced: true }, cause);
 }
 
-const inZone = (z: Zone, p: Pos) => cellsOf(p).some((c) => z.cells.includes(c));
+/** 在不在区域里：占到一格就算；标了 fully 的要每一格都在里面（「完全位于」） */
+const inZone = (z: Zone, p: Pos) => (z.fully ? cellsOf(p).every((c) => z.cells.includes(c)) : cellsOf(p).some((c) => z.cells.includes(c)));
+
+/**
+ * 沿路径走要多花的移动力（困难地形）：每一步的落脚处（棋子占的任何一格）在困难地形里就多 5 尺。
+ * 纯函数：引擎扣移动力、地图上拖棋子时的预览都用它。
+ */
+export function difficultExtra(zones: Record<string, Zone> | undefined, path: Cell[], s: number): number {
+  const rough = new Set<string>();
+  for (const z of Object.values(zones ?? {})) if (z.difficult) for (const c of z.cells) rough.add(c);
+  if (!rough.size) return 0;
+  let extra = 0;
+  for (let i = 1; i < path.length; i++) if (cellsOf({ ...path[i], s }).some((c) => rough.has(c))) extra += 5;
+  return extra;
+}
+
+/** 困难地形不多花移动力的（效应 flags.ignores 里有 difficultTerrain） */
+export function ignoresDifficult(tx: Tx, id: Id): boolean {
+  return activeTemplates(tx, id).some((a) => a.tpl.flags?.ignores?.includes('difficultTerrain'));
+}
 
 /** 一个参与者现在在哪些区域里 */
 export function zonesAt(tx: Tx, id: Id): Zone[] {

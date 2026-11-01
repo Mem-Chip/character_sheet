@@ -70,7 +70,7 @@ describe('区域法术：真的结算（真数据 + 一场小遭遇）', () => {
       type: 'addCombatant',
       combatant: makeCombatant({
         id: 'w', kind: 'pc',
-        view: makeView({ name: '法师', score: { int: 16 }, hpMax: 20, spell: { dc: 15, atk: 7, mod: 3, ability: 'int' }, slots: { 2: 2, 3: 2 }, sources: spells }),
+        view: makeView({ name: '法师', score: { int: 16 }, hpMax: 20, spell: { dc: 15, atk: 7, mod: 3, ability: 'int' }, slots: { 1: 2, 2: 2, 3: 2 }, sources: spells }),
       }),
     }));
     done(s.dispatch({
@@ -140,13 +140,40 @@ describe('区域法术：真的结算（真数据 + 一场小遭遇）', () => {
     expect(has(s, 'w', '沉默术')).toBe(true);
   });
 
-  it('荆棘丛生：在里面每走 5 尺受 2d4', () => {
+  it('荆棘丛生：在里面每走 5 尺受 2d4，而且是困难地形', () => {
     const { s, dice, sync } = scene(['XPHB:spell:荆棘丛生']);
     cast(s, 'XPHB:spell:荆棘丛生', ['6,0', '7,0', '8,0']);
     done(s.dispatch({ type: 'nextTurn' }));
-    dice.push(1, 1, 1, 1, 1, 1, 1, 1);
-    done(s.dispatch({ type: 'move', id: 'g', ft: 20, path: [{ x: 5, y: 0 }, { x: 6, y: 0 }, { x: 7, y: 0 }, { x: 8, y: 0 }, { x: 9, y: 0 }] }));
+    dice.push(1, 1, 1, 1);
+    done(s.dispatch({ type: 'move', id: 'g', ft: 10, path: [{ x: 5, y: 0 }, { x: 6, y: 0 }, { x: 7, y: 0 }] }));
     sync();
+    expect(hp(s, 'g')).toBe(60 - 4);
+    expect(s.state.combatants.g.economy.move).toBe(30 - 20);
+  });
+
+  it('炽焰法球：在法球周围 5 尺内结束回合 → 敏捷豁免；附赠动作挪法球', () => {
+    const { s, dice, sync } = scene(['XPHB:spell:炽焰法球']);
+    // 法球在 (9,1)，周围 5 尺 = (8..10, 0..2)
+    const around = (x: number, y: number) => [-1, 0, 1].flatMap((dx) => [-1, 0, 1].map((dy) => `${x + dx},${y + dy}`));
+    cast(s, 'XPHB:spell:炽焰法球', around(9, 1));
+    done(s.dispatch({ type: 'nextTurn' }));
+    done(s.dispatch({ type: 'move', id: 'g', ft: 15, path: [{ x: 5, y: 0 }, { x: 6, y: 0 }, { x: 7, y: 0 }, { x: 8, y: 0 }] }));
+    sync();
+    dice.push(2, 3, 3);   // 豁免 2 + 2 < 15，2d6 = 6
+    done(s.dispatch({ type: 'nextTurn' }));
     expect(hp(s, 'g')).toBe(60 - 6);
+    // 法师的回合：附赠动作把法球挪到 (2,5)，地精不在新范围里了
+    done(s.dispatch({ type: 'useAction', actor: 'w', action: 'XPHB:spell:炽焰法球#move', targets: [], area: { cells: around(2, 5) } }));
+    expect(s.state.zones![zoneId(s)].cells).toContain('2,5');
+  });
+
+  it('油腻术：困难地形，走过去多花移动力', () => {
+    const { s, dice, sync } = scene(['XPHB:spell:油腻术']);
+    cast(s, 'XPHB:spell:油腻术', ['6,0', '6,1']);
+    done(s.dispatch({ type: 'nextTurn' }));
+    dice.push(20);   // 进油里的敏捷豁免：过
+    done(s.dispatch({ type: 'move', id: 'g', ft: 10, path: [{ x: 5, y: 0 }, { x: 6, y: 0 }, { x: 7, y: 0 }] }));
+    sync();
+    expect(s.state.combatants.g.economy.move).toBe(30 - 15);
   });
 });

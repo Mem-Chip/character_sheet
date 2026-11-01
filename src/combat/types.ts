@@ -67,6 +67,8 @@ export interface Flags {
   breaksConcentration?: boolean;
   /** concentrate / castSpells / speak / see / hear / perceive / moveCloser:source … */
   cannot?: string[];
+  /** 不受某些东西影响：difficultTerrain = 困难地形不多花移动力 */
+  ignores?: string[];
   /** 选目标时排除效应来源（魅惑） */
   forbidTarget?: 'source';
   /** 瞬发法术：下一道施法时间为动作的法术改用附赠动作施放（放完这个效应就结束） */
@@ -355,12 +357,14 @@ export type Node =
   /**
    * 在地图上留下一个持续的区域（法术选的范围那些格子）。生物进入、在里面开始 / 结束回合时，对它执行 do
    * （self = 施法者，target = 那个生物）。随专注结束；没有专注的写 rounds。
-   * - on 还能写 `create`（放下 / 挪过来时已经在里面的）、`leave`（离开）、`move`（在里面每移动 5 尺，含走进来那一步）；
-   * - `while`：待在里面就有的效果（只放 applyEffect），进来时挂上、离开 / 区域消失时自动摘掉，不受 oncePerTurn 限制。
+   * - on 还能写 `create`（区域放下时已经在里面的；区域挪过来压到人算 enter）、`leave`（离开）、`move`（在里面每移动 5 尺，含走进来那一步）；
+   * - `while`：待在里面就有的效果（只放 applyEffect），进来时挂上、离开 / 区域消失时自动摘掉，不受 oncePerTurn 限制；
+   * - `difficult`：困难地形（走进这些格子每格多花 5 尺移动力）；
+   * - `fully`：棋子占的每一格都在区域里才算在里面（原文「完全位于」），缺省占到一格就算。
    */
   | {
       kind: 'zone'; name?: string; on?: ZoneWhen[]; do?: Node[]; while?: Node[];
-      affects?: 'all' | 'enemies' | 'allies'; oncePerTurn?: boolean; rounds?: number;
+      affects?: 'all' | 'enemies' | 'allies'; oncePerTurn?: boolean; rounds?: number; difficult?: boolean; fully?: boolean;
     }
   /**
    * 把自己之前放下的区域挪到这次动作选的范围（月华之光「移动光柱」、炽焰法球、匕首之云）。
@@ -408,6 +412,10 @@ export interface Zone {
   while?: Node[];
   /** 施放时 choose / number 选出来的值（区域里的表达式用 vars.x） */
   vars?: Record<string, number | string>;
+  /** 困难地形 */
+  difficult?: boolean;
+  /** 完全位于才算在里面 */
+  fully?: boolean;
   affects: 'all' | 'enemies' | 'allies';
   /** 同一个生物每回合最多受一次（进入 + 回合开始 / 结束合起来算） */
   oncePerTurn: boolean;
@@ -688,7 +696,7 @@ export type Command =
    */
   | { type: 'move'; id: Id; ft: number; force?: boolean; path?: Array<{ x: number; y: number }> }
   /** DM 在地图上画的区域（伤害 / 效果） */
-  | { type: 'createZone'; zone: Pick<Zone, 'name' | 'cells' | 'tpl' | 'on' | 'do' | 'affects' | 'oncePerTurn' | 'confirm'> & { rounds?: number; while?: Node[] } }
+  | { type: 'createZone'; zone: Pick<Zone, 'name' | 'cells' | 'tpl' | 'on' | 'do' | 'affects' | 'oncePerTurn' | 'confirm'> & { rounds?: number; while?: Node[]; difficult?: boolean; fully?: boolean } }
   | { type: 'removeZone'; id: string }
   /** 把区域挪到新的格子（DM；玩家只能挪自己的人放下的） */
   | { type: 'moveZone'; id: string; cells: string[]; tpl?: Record<string, unknown> }

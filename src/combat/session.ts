@@ -5,7 +5,7 @@ import { applyEffect, checkEndsOn, concentrationOf, effectiveView, endConcentrat
 import { Dice } from '../expr';
 import { engineDice } from './dice';
 import { executeAction, findAction } from './exec';
-import { placeSummon, placeZone, relocateZone, removeZone, travel } from './space';
+import { difficultExtra, ignoresDifficult, placeSummon, placeZone, relocateZone, removeZone, travel } from './space';
 import { advanceTime, nextTurn, rest, startCombat } from './turns';
 import { NeedDecision, Rejected, Tx, setPostEmit, type EngineCtx, type TapeEntry, type TxInput } from './tx';
 import type { Action, CombatantView, Command, Decision, EncounterState, GameEvent, OverridePatch, Settings, UserId, Zone } from './types';
@@ -269,11 +269,15 @@ function handle(tx: Tx, cmd: Command): void {
     case 'move': {
       const c = tx.state.combatants[cmd.id];
       if (!c) throw new Rejected(`没有参与者 ${cmd.id}`);
-      const ft = Math.max(0, Math.round(cmd.ft));
       if (tx.state.round === null) return;
+      // 困难地形：路上每走进一格多花 5 尺（服务器给的 ft 只按格数算）
+      const me = tx.pos?.[cmd.id];
+      const extra = cmd.path && me && !ignoresDifficult(tx, cmd.id) ? difficultExtra(tx.state.zones, cmd.path, me.s) : 0;
+      const ft = Math.max(0, Math.round(cmd.ft)) + extra;
       const left = c.economy.move;
-      if (ft > left && !cmd.force) throw new Rejected(`${c.name} 只剩 ${left} 尺移动，这一步要 ${ft} 尺`);
-      const seq = tx.emit('note', { text: `${c.name} 移动 ${ft} 尺（剩 ${Math.max(0, left - ft)} 尺）`, owner: cmd.id });
+      const rough = extra ? `，困难地形多 ${extra} 尺` : '';
+      if (ft > left && !cmd.force) throw new Rejected(`${c.name} 只剩 ${left} 尺移动，这一步要 ${ft} 尺${rough}`);
+      const seq = tx.emit('note', { text: `${c.name} 移动 ${ft} 尺（${rough ? rough.slice(1) + '，' : ''}剩 ${Math.max(0, left - ft)} 尺）`, owner: cmd.id });
       tx.emit('economyChanged', { id: cmd.id, patch: { move: Math.max(0, left - ft) } }, seq);
       // 一格一格走：借机攻击、进入区域
       if (cmd.path && cmd.path.length > 1) travel(tx, cmd.id, cmd.path, { forced: false, cause: seq });
@@ -285,7 +289,7 @@ function handle(tx: Tx, cmd: Command): void {
       const round = tx.state.round;
       const zone: Zone = {
         id: tx.nextId('z'), name: z.name || '区域', cells: z.cells.slice(), ...(z.tpl ? { tpl: z.tpl } : {}), source: null, entryKey: 'zone',
-        on: z.on, do: z.do, ...(z.while?.length ? { while: z.while } : {}), affects: z.affects ?? 'all', oncePerTurn: z.oncePerTurn ?? true, confirm: !!z.confirm, link: null,
+        on: z.on, do: z.do, ...(z.while?.length ? { while: z.while } : {}), ...(z.difficult ? { difficult: true } : {}), ...(z.fully ? { fully: true } : {}), affects: z.affects ?? 'all', oncePerTurn: z.oncePerTurn ?? true, confirm: !!z.confirm, link: null,
         untilRound: z.rounds && round !== null ? round + z.rounds : null, hits: {},
       };
       placeZone(tx, zone, null);

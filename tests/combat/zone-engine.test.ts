@@ -35,6 +35,13 @@ const TEST: RuleFile = {
         { id: 'move', name: '移动光柱', activation: 'bonus', targeting: area, root: [{ kind: 'moveZone' }] },
       ],
     },
+    // 只是困难地形
+    'T:spell:泥地': spell('泥地', [{ kind: 'zone', difficult: true }]),
+    // 完全位于才算
+    'T:spell:静域': spell('静域', [{ kind: 'zone', fully: true, while: [BLIND] }]),
+    // 困难地形不多花移动力
+    'T:轻步': { effects: { 轻步: { name: '轻步', flags: { ignores: ['difficultTerrain'] } } } },
+    'T:spell:震波': { actions: [{ id: 'cast', name: '震波', activation: 'action', tags: ['spell'], targeting: { type: 'creature', count: 1 }, root: [{ kind: 'move', mode: 'push', ft: '15' }] }] },
   },
 } as unknown as RuleFile;
 
@@ -151,5 +158,42 @@ describe('区域引擎', () => {
     positions.current.g = { x: 7, y: 7, s: 1 };
     done(s.dispatch({ type: 'nextTurn' }));
     expect(blind(s, 'g')).toBe(0);
+  });
+
+  it('困难地形：走进去每格多花 5 尺；不够就不让走', () => {
+    const { s, sync } = setupM([wizard({ sources: ['T:spell:泥地'] }), goblin('g', { speed: 30 }, 30)], { w: [0, 5], g: [1, 1] });
+    done(cast(s, 'T:spell:泥地', pool));
+    done(s.dispatch({ type: 'nextTurn' }));
+    // (1,1)→(2,1)→(3,1)→(4,1)：只有 (3,1) 是泥地，15 + 5
+    done(s.dispatch({ type: 'move', id: 'g', ft: 15, path: path([1, 1], [2, 1], [3, 1], [4, 1]) }));
+    sync();
+    expect(s.state.combatants.g.economy.move).toBe(10);
+    // 剩 10 尺：再穿过泥地走回 (2,1) 要 10 + 5 = 15，不够
+    const r = s.dispatch({ type: 'move', id: 'g', ft: 10, path: path([4, 1], [3, 1], [2, 1]) });
+    expect(r.status).toBe('rejected');
+    expect((r as { reason: string }).reason).toContain('困难地形多 5 尺');
+  });
+
+  it('困难地形：被推照样穿过去（强制位移不算移动力）；无视困难地形的效应不多花', () => {
+    const { s, sync, positions } = setupM([wizard({ sources: ['T:spell:泥地', 'T:spell:震波'] }), goblin('g', { speed: 30 }, 30)], { w: [0, 1], g: [1, 1] });
+    done(cast(s, 'T:spell:泥地', pool));
+    done(s.dispatch({ type: 'useAction', actor: 'w', action: 'T:spell:震波#cast', targets: ['g'], force: true }));
+    sync();
+    expect(positions.current.g).toMatchObject({ x: 4, y: 1 });
+    done(s.dispatch({ type: 'nextTurn' }));
+    done(s.dispatch({ type: 'applyEffect', to: 'g', template: 'T:轻步#轻步' }));
+    done(s.dispatch({ type: 'move', id: 'g', ft: 10, path: path([4, 1], [3, 1], [3, 2]) }));
+    expect(s.state.combatants.g.economy.move).toBe(20);
+  });
+
+  it('fully：大型生物只有一部分在区域里不算；整个进去才算', () => {
+    const { s, positions, sync } = setupM([wizard({ sources: ['T:spell:静域'] }), goblin('g', { speed: 30 }, 30)], { w: [0, 9], g: [2, 0] });
+    positions.current.g = { x: 2, y: 0, s: 2 };   // 占 (2,0)(3,0)(2,1)(3,1)
+    done(cast(s, 'T:spell:静域', ['3,0', '3,1', '4,0', '4,1']));
+    expect(blind(s, 'g')).toBe(0);
+    done(s.dispatch({ type: 'nextTurn' }));
+    done(s.dispatch({ type: 'move', id: 'g', ft: 5, path: path([2, 0], [3, 0]) }));
+    sync();
+    expect(blind(s, 'g')).toBe(1);
   });
 });

@@ -174,7 +174,7 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
         expr(n.ft, 'node', NUM, `${at}.ft`);
         break;
       case 'zone':
-        if (!n.on?.length && !n.while?.length) out.push(`${where(at)}：zone 节点既没有 on（什么时候生效）也没有 while（待在里面就有的效果）`);
+        if (!n.on?.length && !n.while?.length && !n.difficult) out.push(`${where(at)}：zone 节点既没有 on（什么时候生效）、没有 while（待在里面就有的效果），也不是困难地形`);
         if (n.on?.length && !n.do?.length) out.push(`${where(at)}：zone 写了 on 却没有 do`);
         for (const w of n.on ?? []) if (!['enter', 'turnStart', 'turnEnd', 'create', 'leave', 'move'].includes(w)) out.push(`${where(at)}：zone 的 on 不认识「${w}」`);
         for (const w of n.while ?? []) if (w.kind !== 'applyEffect') out.push(`${where(at)}：zone 的 while 里只放 applyEffect（「${w.kind}」请写进 do）`);

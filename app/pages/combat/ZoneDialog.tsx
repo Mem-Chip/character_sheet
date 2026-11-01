@@ -1,4 +1,4 @@
-/** DM 把地图上的一个形状变成区域：谁进来 / 在里面开始、结束回合时受伤害（可以带豁免、状态），自动结算或者每次问 DM */
+/** DM 把地图上的一个形状变成区域：谁进来 / 在里面开始、结束回合时受伤害（可以带豁免、状态），自动结算或者每次问 DM；也可以只是困难地形 */
 import { useState } from 'react';
 import type { Node, ZoneWhen } from '../../../src/combat';
 import { Dialog } from '../../components/ui';
@@ -25,6 +25,7 @@ export function ZoneDialog({ cells, tpl, onDone, onClose }: {
   const [once, setOnce] = useState(true);
   const [confirmEach, setConfirmEach] = useState(true);
   const [rounds, setRounds] = useState('');
+  const [rough, setRough] = useState(false);
   const [err, setErr] = useState('');
   const pending = !!useCombat().session?.pending;
 
@@ -41,13 +42,15 @@ export function ZoneDialog({ cells, tpl, onDone, onClose }: {
   const create = () => {
     if (pending) { setErr('还有一个决定没做完，先处理它'); return; }
     if (!name.trim()) { setErr('写个名字'); return; }
-    if (!on.length) { setErr('至少选一个生效时机'); return; }
+    const hits = !!(dice.trim() || cond);
     if (dice.trim() && !/^[\d\s+\-d]+$/i.test(dice.trim())) { setErr('伤害写成 2d6、1d10+3 这样'); return; }
-    if (!dice.trim() && !cond) { setErr('伤害和状态至少要一个'); return; }
+    if (!hits && !rough) { setErr('伤害、状态、困难地形至少要一个'); return; }
+    if (hits && !on.length) { setErr('至少选一个生效时机'); return; }
     combat.dispatch({
       type: 'createZone',
       zone: {
-        name: name.trim(), cells, tpl, on, do: build(), affects: 'all', oncePerTurn: once, confirm: confirmEach,
+        name: name.trim(), cells, tpl, on: hits ? on : [], do: hits ? build() : [], affects: 'all', oncePerTurn: once, confirm: confirmEach,
+        ...(rough ? { difficult: true } : {}),
         ...(Number(rounds) > 0 ? { rounds: Number(rounds) } : {}),
       },
     });
@@ -86,6 +89,12 @@ export function ZoneDialog({ cells, tpl, onDone, onClose }: {
           <select value={cond} onChange={(e) => setCond(e.target.value)}>
             <option value="">无</option>{CONDITIONS.map((c) => <option key={c}>{c}</option>)}
           </select>
+        </label>
+        <label className="optrow"><span>困难地形</span>
+          <span className="row" style={{ gap: 6 }}>
+            <input type="checkbox" checked={rough} onChange={(e) => setRough(e.target.checked)} />
+            <span className="tiny faint">走进去每格多花 5 尺移动（只要地形的话，伤害清空、状态选无）</span>
+          </span>
         </label>
         <label className="optrow"><span>每回合最多一次</span><input type="checkbox" checked={once} onChange={(e) => setOnce(e.target.checked)} /></label>
         <label className="optrow"><span>结算</span>

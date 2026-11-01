@@ -10,4 +10,4 @@ export { weaponAction, canPay, describeCost, actionCosts, maxTargets, effectiveA
 export { normType } from './damage';
 export { auditRuleBook, WINDOW_EVENTS, EMITTED_EVENTS } from './audit';
 export * from './command';
-export { lineCells, cellsOf, reachOf, zonesAt } from './space';
+export { lineCells, cellsOf, reachOf, zonesAt, difficultExtra } from './space';
