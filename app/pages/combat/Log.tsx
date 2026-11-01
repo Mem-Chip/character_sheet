@@ -318,7 +318,7 @@ function CommandBox() {
       const ids = combat.picked();
       if (!ids.length) { setErr(pc.kind === 'mod' ? '先选中要改的人（Shift 点可以多选）' : '先选中要掷的人（Shift 点可以多选）'); return; }
       if (pc.kind === 'mod') {
-        const tpl = modTemplate(pc.stat, pc.n);
+        const tpl = modTemplate(pc.stat, pc.n, { ability: pc.ability, skill: pc.skill });
         for (const id of ids) if (rejected(combat.dispatch({ type: 'applyEffect', to: id, inline: tpl as never, name: tpl.name }))) return;
         done();
         return;

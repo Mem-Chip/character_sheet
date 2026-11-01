@@ -66,7 +66,7 @@ export type Parsed =
   | { kind: 'next' }
   | { kind: 'undo'; n: number }
   | { kind: 'help' }
-  | { kind: 'mod'; stat: ModStat; n: number }
+  | { kind: 'mod'; stat: ModStat; n: number; ability?: Ability; skill?: string }
   | { kind: 'error'; message: string };
 
 const DICE = /^\d*d?\d+([+-]\d*d?\d+)*$/i;
@@ -120,13 +120,29 @@ export function parseCommand(text: string): Parsed | null {
       return { kind: 'check', ability: s.ability, skill: s.cn, ...(dc !== undefined ? { dc } : {}) };
     }
     case 'mod': {
-      const usage = '写法：/mod ac -2 · /mod speed 10 · /mod hp 5（生命值上限）· /mod atk 1 · /mod save 1 · /mod dc 2';
+      const usage = '写法：/mod ac -2 · /mod speed 10 · /mod hp 5（生命值上限）· /mod atk 1 · /mod save dex 2 · /mod check perc 1 · /mod dc 2';
       if (!args[0]) return err(usage);
       const stat = MOD_STATS[args[0].toLowerCase()];
       if (!stat) return err(`「${args[0]}」改不了。${usage}`);
-      const n = Number(String(args[1] ?? '').replace(/^＋/, '+'));
-      if (!Number.isInteger(n) || n === 0) return err(`要写一个非零整数，比如 /mod ${args[0]} 2 或 /mod ${args[0]} -2`);
-      return { kind: 'mod', stat, n };
+      // 豁免 / 检定可以指定属性（检定还可以是技能）：/mod save dex 2 · /mod check str 1 · /mod check perc 1；不写 = 全部
+      let ab: Ability | undefined;
+      let sk: string | undefined;
+      let rest = args.slice(1);
+      if ((stat === 'save' || stat === 'check') && rest.length > 1) {
+        const a = ability(rest[0]);
+        if (a) ab = a;
+        else if (stat === 'check') {
+          const s = skill(rest[0]);
+          if (!s) return err(`「${rest[0]}」不是属性也不是技能`);
+          if ('error' in s) return err(s.error);
+          sk = s.cn;
+          ab = s.ability;
+        } else return err(`「${rest[0]}」不是属性（str dex con int wis cha）`);
+        rest = rest.slice(1);
+      }
+      const n = Number(String(rest[0] ?? '').replace(/^＋/, '+'));
+      if (!Number.isInteger(n) || n === 0 || rest.length > 1) return err(`要写一个非零整数，比如 /mod ${args[0]} 2 或 /mod ${args[0]} -2`);
+      return { kind: 'mod', stat, n, ...(ab ? { ability: ab } : {}), ...(sk ? { skill: sk } : {}) };
     }
     default: return null;
   }
@@ -147,10 +163,13 @@ const MOD_STATS: Record<string, ModStat> = {
 export const MOD_CN: Record<ModStat, string> = { ac: 'AC', speed: '速度', hpMax: '生命值上限', spellDc: '法术 DC', attack: '攻击检定', save: '豁免', check: '属性检定', d20: '所有 d20' };
 
 /** /mod → 一个手动结束的现场效应（静态修正或检定加值） */
-export function modTemplate(stat: ModStat, n: number): { name: string; duration: { manual: true }; statics?: Array<{ kind: 'ac' | 'speed' | 'hpMax' | 'spellDc'; bonus: number }>; rollMods?: Array<{ on: { kind: 'attack' | 'save' | 'check' | 'd20' }; who: 'bearer'; op: 'add'; value: number; label: string }> } {
-  const name = `调整：${MOD_CN[stat]} ${n > 0 ? '+' : '−'}${Math.abs(n)}${stat === 'speed' ? ' 尺' : ''}`;
+export function modTemplate(stat: ModStat, n: number, only: { ability?: Ability; skill?: string } = {}): { name: string; duration: { manual: true }; statics?: Array<{ kind: 'ac' | 'speed' | 'hpMax' | 'spellDc'; bonus: number }>; rollMods?: Array<{ on: { kind: 'attack' | 'save' | 'check' | 'd20'; ability?: Ability; skill?: string }; who: 'bearer'; op: 'add'; value: number; label: string }> } {
+  // 「感知豁免」「察觉检定」：指定了属性 / 技能就写进名字
+  const what = only.skill ? `${only.skill}检定` : only.ability ? `${ABIL_CN[only.ability]}${stat === 'save' ? '豁免' : '检定'}` : MOD_CN[stat];
+  const name = `调整：${what} ${n > 0 ? '+' : '−'}${Math.abs(n)}${stat === 'speed' ? ' 尺' : ''}`;
   if (stat === 'attack' || stat === 'save' || stat === 'check' || stat === 'd20') {
-    return { name, duration: { manual: true }, rollMods: [{ on: { kind: stat }, who: 'bearer', op: 'add', value: n, label: name }] };
+    const on = { kind: stat, ...(only.ability && !only.skill ? { ability: only.ability } : {}), ...(only.skill ? { skill: only.skill } : {}) };
+    return { name, duration: { manual: true }, rollMods: [{ on, who: 'bearer', op: 'add', value: n, label: name }] };
   }
   return { name, duration: { manual: true }, statics: [{ kind: stat, bonus: n }] };
 }
@@ -165,7 +184,8 @@ export const HELP: Array<[string, string]> = [
   ['/damage 8d6 f · /heal 2d6+3 · /temphp 5', '选中的人受伤 / 治疗 / 临时生命值（骰子只掷一次）'],
   ['/temphp 10 o · /damage 8d6 f o', '末尾加 o：DM 暗中执行，玩家的日志里看不到'],
   ['/cond 中毒', '选中的人加一个状态'],
-  ['/mod ac -2 · /mod speed 10 · /mod hp 5', '选中的人挂一个调整效应（hp = 生命值上限；还有 atk save check d20 dc）；在效应标签上点 ✕ 去掉'],
+  ['/mod ac -2 · /mod speed 10 · /mod hp 5', '选中的人挂一个调整效应（hp = 生命值上限；还有 atk、d20、dc）；在效应标签上点 ✕ 去掉'],
+  ['/mod save dex 2 · /mod check perc 1', '豁免 / 检定的加值：可以指定属性或技能，不写就是全部'],
   ['/next · /undo · /undo 3', '下一回合 · 撤销最近一步（或几步）'],
   ['/match 名字', '把法术、状态、专长、物品、怪物的原文发到日志'],
   ['/h', '这份说明'],

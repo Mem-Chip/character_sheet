@@ -40,6 +40,20 @@ describe('/mod 现场效应', () => {
     expect(s.state.combatants['a'].live.hp).toBe(20);
   });
 
+  it('指定属性的豁免加值：敏捷豁免 +2 只加敏捷', () => {
+    const { s, dice } = scene();
+    const tpl = modTemplate('save', 2, { ability: 'dex' });
+    expect(tpl.name).toBe('调整：敏捷豁免 +2');
+    done(s.dispatch({ type: 'applyEffect', to: 'a', inline: tpl as never, name: tpl.name }));
+    const total = (ability: 'dex' | 'wis') => {
+      dice.push(10);
+      done(s.dispatch({ type: 'roll', roller: 'a', kind: 'save', ability }));
+      return (s.transactions.at(-1)!.events.find((e) => e.type === 'd20Rolled')!.payload as { total: number }).total;
+    };
+    expect(total('dex')).toBe(12);
+    expect(total('wis')).toBe(10);
+  });
+
   it('d20 +3 加进检定总值', () => {
     const { s, dice } = scene();
     mod(s, 'd20', 3);

@@ -31,6 +31,10 @@ describe('指令解析', () => {
     expect(parseCommand('/mod ac -2')).toEqual({ kind: 'mod', stat: 'ac', n: -2 });
     expect(parseCommand('/mod speed 10')).toEqual({ kind: 'mod', stat: 'speed', n: 10 });
     expect(parseCommand('/mod hp +5')).toEqual({ kind: 'mod', stat: 'hpMax', n: 5 });
+    expect(parseCommand('/mod save dex 2')).toEqual({ kind: 'mod', stat: 'save', n: 2, ability: 'dex' });
+    expect(parseCommand('/mod check perc 1')).toMatchObject({ kind: 'mod', stat: 'check', n: 1, ability: 'wis', skill: '察觉' });
+    expect(parseCommand('/mod save 1')).toEqual({ kind: 'mod', stat: 'save', n: 1 });
+    expect(parseCommand('/mod save foo 1')?.kind).toBe('error');
     expect(parseCommand('/mod foo 1')?.kind).toBe('error');
     expect(parseCommand('/mod ac 0')?.kind).toBe('error');
     expect(modTemplate('ac', -2)).toMatchObject({ name: '调整：AC −2', statics: [{ kind: 'ac', bonus: -2 }] });
