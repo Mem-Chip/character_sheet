@@ -1,6 +1,6 @@
 // 指令框的斜杠指令解析（缩写）
 import { describe, expect, it } from 'vitest';
-import { damageType, parseCommand, skill } from '../../app/lib/commands';
+import { damageType, modTemplate, parseCommand, skill } from '../../app/lib/commands';
 
 describe('指令解析', () => {
   it('伤害类型：单字母、双字母、英文、中文', () => {
@@ -26,5 +26,14 @@ describe('指令解析', () => {
     expect(parseCommand('/h')).toEqual({ kind: 'help' });
     expect(parseCommand('/r 1d20')).toBeNull();
     expect(parseCommand('你好')).toBeNull();
+  });
+  it('/mod ac -2 · /mod speed 10 · /mod hp 5 · /mod atk 1', () => {
+    expect(parseCommand('/mod ac -2')).toEqual({ kind: 'mod', stat: 'ac', n: -2 });
+    expect(parseCommand('/mod speed 10')).toEqual({ kind: 'mod', stat: 'speed', n: 10 });
+    expect(parseCommand('/mod hp +5')).toEqual({ kind: 'mod', stat: 'hpMax', n: 5 });
+    expect(parseCommand('/mod foo 1')?.kind).toBe('error');
+    expect(parseCommand('/mod ac 0')?.kind).toBe('error');
+    expect(modTemplate('ac', -2)).toMatchObject({ name: '调整：AC −2', statics: [{ kind: 'ac', bonus: -2 }] });
+    expect(modTemplate('attack', 1).rollMods?.[0]).toMatchObject({ on: { kind: 'attack' }, op: 'add', value: 1 });
   });
 });

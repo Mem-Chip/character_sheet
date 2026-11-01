@@ -66,6 +66,7 @@ export type Parsed =
   | { kind: 'next' }
   | { kind: 'undo'; n: number }
   | { kind: 'help' }
+  | { kind: 'mod'; stat: ModStat; n: number }
   | { kind: 'error'; message: string };
 
 const DICE = /^\d*d?\d+([+-]\d*d?\d+)*$/i;
@@ -118,8 +119,40 @@ export function parseCommand(text: string): Parsed | null {
       if ('error' in s) return err(s.error);
       return { kind: 'check', ability: s.ability, skill: s.cn, ...(dc !== undefined ? { dc } : {}) };
     }
+    case 'mod': {
+      const usage = '写法：/mod ac -2 · /mod speed 10 · /mod hp 5（生命值上限）· /mod atk 1 · /mod save 1 · /mod dc 2';
+      if (!args[0]) return err(usage);
+      const stat = MOD_STATS[args[0].toLowerCase()];
+      if (!stat) return err(`「${args[0]}」改不了。${usage}`);
+      const n = Number(String(args[1] ?? '').replace(/^＋/, '+'));
+      if (!Number.isInteger(n) || n === 0) return err(`要写一个非零整数，比如 /mod ${args[0]} 2 或 /mod ${args[0]} -2`);
+      return { kind: 'mod', stat, n };
+    }
     default: return null;
   }
+}
+
+export type ModStat = 'ac' | 'speed' | 'hpMax' | 'spellDc' | 'attack' | 'save' | 'check' | 'd20';
+/** /mod 能改的东西（写法 → 改哪个） */
+const MOD_STATS: Record<string, ModStat> = {
+  ac: 'ac', 护甲: 'ac',
+  speed: 'speed', spd: 'speed', 速度: 'speed',
+  hp: 'hpMax', hpmax: 'hpMax', maxhp: 'hpMax', 生命: 'hpMax', 生命上限: 'hpMax',
+  dc: 'spellDc', spelldc: 'spellDc',
+  atk: 'attack', attack: 'attack', 攻击: 'attack',
+  save: 'save', 豁免: 'save',
+  check: 'check', 检定: 'check',
+  d20: 'd20',
+};
+export const MOD_CN: Record<ModStat, string> = { ac: 'AC', speed: '速度', hpMax: '生命值上限', spellDc: '法术 DC', attack: '攻击检定', save: '豁免', check: '属性检定', d20: '所有 d20' };
+
+/** /mod → 一个手动结束的现场效应（静态修正或检定加值） */
+export function modTemplate(stat: ModStat, n: number): { name: string; duration: { manual: true }; statics?: Array<{ kind: 'ac' | 'speed' | 'hpMax' | 'spellDc'; bonus: number }>; rollMods?: Array<{ on: { kind: 'attack' | 'save' | 'check' | 'd20' }; who: 'bearer'; op: 'add'; value: number; label: string }> } {
+  const name = `调整：${MOD_CN[stat]} ${n > 0 ? '+' : '−'}${Math.abs(n)}${stat === 'speed' ? ' 尺' : ''}`;
+  if (stat === 'attack' || stat === 'save' || stat === 'check' || stat === 'd20') {
+    return { name, duration: { manual: true }, rollMods: [{ on: { kind: stat }, who: 'bearer', op: 'add', value: n, label: name }] };
+  }
+  return { name, duration: { manual: true }, statics: [{ kind: stat, bonus: n }] };
 }
 
 /** 指令框的帮助（/h）：[写法, 说明] */
@@ -132,6 +165,7 @@ export const HELP: Array<[string, string]> = [
   ['/damage 8d6 f · /heal 2d6+3 · /temphp 5', '选中的人受伤 / 治疗 / 临时生命值（骰子只掷一次）'],
   ['/temphp 10 o · /damage 8d6 f o', '末尾加 o：DM 暗中执行，玩家的日志里看不到'],
   ['/cond 中毒', '选中的人加一个状态'],
+  ['/mod ac -2 · /mod speed 10 · /mod hp 5', '选中的人挂一个调整效应（hp = 生命值上限；还有 atk save check d20 dc）；在效应标签上点 ✕ 去掉'],
   ['/next · /undo · /undo 3', '下一回合 · 撤销最近一步（或几步）'],
   ['/match 名字', '把法术、状态、专长、物品、怪物的原文发到日志'],
   ['/h', '这份说明'],

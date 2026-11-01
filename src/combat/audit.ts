@@ -34,7 +34,7 @@ const NODE_KINDS = new Set([
 ]);
 const ROLL_OPS = new Set(['adv', 'disadv', 'noAdv', 'add', 'addDice', 'autoFail', 'autoSucceed', 'critRange', 'autoCritOnHit', 'minD20', 'minDie', 'targetAdd', 'maxDice']);
 const MODIFY_OPS = new Set(['reroll', 'addToRoll', 'reduceDamage', 'halveDamage', 'doubleDamage', 'setHp', 'cancel', 'evasion', 'succeed', 'redirect', 'absorb', 'clearAdv', 'cancelUnlessSave', 'unlessSave', 'setDc', 'setAttackBonus', 'setDamageType']);
-const STATIC_KINDS = new Set(['ac', 'speed', 'speedSet', 'spellDc', 'resist', 'resistAll', 'immune', 'vuln', 'conditionImmune']);
+const STATIC_KINDS = new Set(['ac', 'speed', 'hpMax', 'speedSet', 'spellDc', 'resist', 'resistAll', 'immune', 'vuln', 'conditionImmune']);
 
 const NUM = T.num;
 const DICE = T.dice;
@@ -250,7 +250,7 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
   const template = (tpl: EffectTemplate, at: string) => {
     for (const s of tpl.statics ?? []) {
       if (!STATIC_KINDS.has(s.kind)) out.push(`${where(at)}：未知静态修正「${s.kind}」`);
-      if (s.kind === 'ac' || s.kind === 'speed' || s.kind === 'spellDc') expr(s.bonus, 'static', NUM, `${at}.statics`);
+      if (s.kind === 'ac' || s.kind === 'speed' || s.kind === 'hpMax' || s.kind === 'spellDc') expr(s.bonus, 'static', NUM, `${at}.statics`);
     }
     (tpl.rollMods ?? []).forEach((m, i) => rollMod(m, `${at}.rollMods[${i}]`));
     (tpl.triggers ?? []).forEach((t, i) => trigger(t, `${at}.triggers[${i}]`));

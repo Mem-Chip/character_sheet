@@ -8,7 +8,7 @@ import { Term, termEngine } from '../../components/Term';
 import { Entries } from '../../components/Entries';
 import { describe, txTitle, type Line } from '../../lib/events';
 import type { Namer } from './shared';
-import { ABIL_HELP, DAMAGE_HELP, HELP, damageType, parseCommand } from '../../lib/commands';
+import { ABIL_HELP, DAMAGE_HELP, HELP, damageType, modTemplate, parseCommand } from '../../lib/commands';
 import { useDiceHold } from '../../lib/dicefx';
 
 const OUTCOMES: Record<string, Array<[string, string]>> = {
@@ -316,7 +316,13 @@ function CommandBox() {
       if (pc.kind === 'next') { if (!rejected(combat.dispatch({ type: 'nextTurn' }))) done(); return; }
       if (pc.kind === 'undo') { combat.undo(pc.n); done(); return; }
       const ids = combat.picked();
-      if (!ids.length) { setErr('先选中要掷的人（Shift 点可以多选）'); return; }
+      if (!ids.length) { setErr(pc.kind === 'mod' ? '先选中要改的人（Shift 点可以多选）' : '先选中要掷的人（Shift 点可以多选）'); return; }
+      if (pc.kind === 'mod') {
+        const tpl = modTemplate(pc.stat, pc.n);
+        for (const id of ids) if (rejected(combat.dispatch({ type: 'applyEffect', to: id, inline: tpl as never, name: tpl.name }))) return;
+        done();
+        return;
+      }
       if (pc.kind === 'save') {
         if (rejected(combat.dispatch({ type: 'groupRoll', kind: 'save', ids, ability: pc.ability, dc: pc.dc, ...(pc.damage ? { damage: pc.damage, half: pc.half } : {}) }))) return;
       } else {

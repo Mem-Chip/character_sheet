@@ -60,7 +60,7 @@ const NODE_KEYS: Record<string, readonly string[]> = {
 };
 
 const STATIC_KEYS: Record<string, readonly string[]> = {
-  ac: ['bonus'], speed: ['bonus'], spellDc: ['bonus'], speedSet: ['value', 'lock'],
+  ac: ['bonus'], speed: ['bonus'], hpMax: ['bonus'], spellDc: ['bonus'], speedSet: ['value', 'lock'],
   resist: ['values'], resistAll: [], immune: ['values'], vuln: ['values'], conditionImmune: ['values'],
 };
 const COST_KEYS: Array<[string, readonly string[]]> = [

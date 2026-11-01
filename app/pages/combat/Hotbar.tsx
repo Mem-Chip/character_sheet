@@ -133,8 +133,11 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
         }
         // 「睡眠术：失能」显示成失能（悬停看状态原文），来源小字（悬停看来源法术原文）
         const lb = effectLabel(e.name);
-        if (lb.cond) return <span key={e.id} className="tag"><Term kind="condition" name={lb.cond}>{lb.text}</Term>{lb.from && <small className="faint"> · {t ? <Term {...t}>{lb.from}</Term> : lb.from}</small>}</span>;
-        return <span key={e.id} className="tag">{t ? <Term {...t}>{e.name}</Term> : e.name}</span>;
+        // DM 手动挂的（/mod、/cond）：点 ✕ 拿掉
+        const x = (!r || r.role === 'dm') && (e.origin?.kind === 'manual' || e.origin?.kind === 'condition')
+          ? <button className="tag-x" title="去掉这个效应" onClick={() => combat.dispatch({ type: 'removeEffect', id: e.id })}>✕</button> : null;
+        if (lb.cond) return <span key={e.id} className="tag"><Term kind="condition" name={lb.cond}>{lb.text}</Term>{lb.from && <small className="faint"> · {t ? <Term {...t}>{lb.from}</Term> : lb.from}</small>}{x}</span>;
+        return <span key={e.id} className="tag">{t ? <Term {...t}>{e.name}</Term> : e.name}{x}</span>;
       })}
     </div>
   );

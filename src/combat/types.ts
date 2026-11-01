@@ -49,6 +49,8 @@ export interface RollMod {
 export type StaticMod =
   | { kind: 'ac'; bonus: ExprSrc }
   | { kind: 'speed'; bonus: ExprSrc }
+  /** 生命值上限加值（降到当前生命值以下时，当前生命值跟着降） */
+  | { kind: 'hpMax'; bonus: ExprSrc }
   | { kind: 'speedSet'; value: number; lock?: boolean }
   /** 法术豁免 DC 加值（先天术法） */
   | { kind: 'spellDc'; bonus: ExprSrc }

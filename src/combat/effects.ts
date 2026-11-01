@@ -289,6 +289,7 @@ export function effectiveView(tx: Tx, id: Id): CombatantView {
     let acBonus = 0;
     let dcBonus = 0;
     let speedBonus = 0;
+    let hpMaxBonus = 0;
     let speedSet: number | null = null;
     let resistAll = false;
     /** 把一批静态修正并进 v（效应模板和灵光共用同一套解释） */
@@ -308,6 +309,7 @@ export function effectiveView(tx: Tx, id: Id): CombatantView {
           case 'ac': acBonus += num(m.bonus); break;
           case 'spellDc': dcBonus += num(m.bonus); break;
           case 'speed': speedBonus += num(m.bonus); break;
+          case 'hpMax': hpMaxBonus += num(m.bonus); break;
           case 'speedSet': speedSet = speedSet === null ? m.value : Math.min(speedSet, m.value); break;
           case 'resist': v.resist.push(...types(m.values)); break;
           case 'resistAll': resistAll = true; break;
@@ -329,6 +331,7 @@ export function effectiveView(tx: Tx, id: Id): CombatantView {
       applyStatics(g.aura.grant.statics, g.holder, undefined);
     }
     v.ac += acBonus;
+    if (hpMaxBonus) v.hpMax = Math.max(1, v.hpMax + hpMaxBonus);
     if (v.spell && dcBonus) v.spell = { ...v.spell, dc: v.spell.dc + dcBonus };
     // 「速度变为 0，且无法被增加」：设定值优先于一切加值
     v.speed = speedSet !== null ? speedSet : Math.max(0, v.speed + speedBonus);

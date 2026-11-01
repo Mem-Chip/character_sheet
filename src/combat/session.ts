@@ -128,6 +128,10 @@ function handle(tx: Tx, cmd: Command): void {
         origin: { kind: cmd.template?.includes(':condition:') ? 'condition' : 'manual', ref: cmd.template ?? 'manual' },
         cause: seq,
       });
+      // 生命值上限降到当前生命值以下：当前生命值跟着降
+      const c = tx.state.combatants[cmd.to];
+      const max = c ? effectiveView(tx, cmd.to).hpMax : 0;
+      if (c && c.live.hp > max) tx.emit('hpChanged', { id: cmd.to, hp: max, tempHp: c.live.tempHp }, seq);
       return;
     }
     case 'removeEffect':
