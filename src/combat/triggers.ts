@@ -69,6 +69,11 @@ function roleOk(tx: Tx, spec: WindowSpec, owner: Id, role: TriggerSpec['role']):
   return role === 'ally' ? same : !same;
 }
 
+/** 「不问我」开关的键：`条目键#触发 id`（效应带来的不带效应 id，下次同一能力还认得） */
+export function prefKey(c: { from: string; trigger?: { id: string }; action?: { id: string } }): string {
+  return `${c.from}#${c.trigger?.id ?? c.action?.id ?? ''}`;
+}
+
 function limitKey(c: { from: string; id: string }): string {
   return `${c.from}#${c.id}`;
 }
@@ -97,6 +102,8 @@ function collect(tx: Tx, spec: WindowSpec, done: Set<string>): TriggerCand[] {
 
     const consider = (base: Omit<TriggerCand, 'questions' | 'scope'>, t: TriggerSpec & { limit?: Trigger['limit'] }, pre: Question[] = []) => {
       if (done.has(base.key)) return;
+      // 控制者关掉了这个可选能力（「不问我」）：不进候选
+      if (base.optional && c.triggerOff?.includes(prefKey(base))) return;
       const timing = effectiveTiming(tx, t);
       if (timing.window !== spec.window || !timing.on.includes(spec.event)) return;
       if (!roleOk(tx, spec, owner, t.role)) return;

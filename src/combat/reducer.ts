@@ -135,6 +135,13 @@ export function applyEvent(s: EncounterState, ev: GameEvent): void {
     case 'slotUsed':
       c(p.id).live.slotsUsed[p.level as number] = p.used as number;
       break;
+    case 'triggerPref': {
+      const k = c(p.id);
+      const set = new Set(k.triggerOff ?? []);
+      if (p.off) set.add(p.key as string); else set.delete(p.key as string);
+      k.triggerOff = [...set];
+      break;
+    }
     case 'hitDieUsed':
       (c(p.id).live.hitDiceUsed ??= {})[p.faces as number] = p.used as number;
       break;

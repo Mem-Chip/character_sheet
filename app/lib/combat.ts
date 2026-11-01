@@ -549,7 +549,7 @@ export const combat = {
   },
   clearMany(): void { set({ manySel: [] }, true); },
   /** 批量：heal / damage / tempHp / cond（每个目标各发一条命令） */
-  batch(kind: 'heal' | 'damage' | 'tempHp' | 'cond', amount: number | string, extra?: string): string | null {
+  batch(kind: 'heal' | 'damage' | 'tempHp' | 'cond', amount: number | string, extra?: string, quiet = false): string | null {
     const ids = combat.picked();
     if (!ids.length) return '先选中目标（Shift 点可以多选）';
     // 数值也可以写成骰子（2d6+3 / 8d6）：先掷一次，所有人吃这一次的结果，掷骰进日志
@@ -564,13 +564,15 @@ export const combat = {
       value = Number(entry.results?.[0]?.total ?? NaN);
       if (!Number.isFinite(value)) return `「${expr}」掷出来不是个数`;
       // 公开掷骰（战役里也会同步给别人）
-      if (!ui.remote) set({ chat: [...ui.chat, entry].slice(-100) });
+      // 暗中执行的不发掷骰（结果在这一笔里，只有 DM 看得到）
+      if (!ui.remote && !quiet) set({ chat: [...ui.chat, entry].slice(-100) });
     }
     if (!Number.isFinite(value) || value <= 0) return '数值要大于 0';
     for (const id of ids) {
-      if (kind === 'heal') combat.dispatch({ type: 'heal', id, amount: value });
-      else if (kind === 'tempHp') combat.dispatch({ type: 'tempHp', id, amount: value });
-      else if (kind === 'damage') combat.dispatch({ type: 'damage', id, amount: value, damageType: extra || '钝击' });
+      const q = quiet ? { quiet: true } : {};
+      if (kind === 'heal') combat.dispatch({ type: 'heal', id, amount: value, ...q });
+      else if (kind === 'tempHp') combat.dispatch({ type: 'tempHp', id, amount: value, ...q });
+      else if (kind === 'damage') combat.dispatch({ type: 'damage', id, amount: value, damageType: extra || '钝击', ...q });
       else {
         // 状态：走 applyEffect 的 template（XPHB:condition:<名>）
         const tpl = `XPHB:condition:${extra}`;

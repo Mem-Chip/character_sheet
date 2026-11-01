@@ -288,7 +288,7 @@ export function createEncounters(d: Deps) {
   };
 
   /** 玩家能发的命令 */
-  const PLAYER_CMDS = new Set(['useAction', 'roll', 'addCombatant', 'removeCombatant', 'refreshCombatant', 'heal', 'tempHp', 'setUsage', 'spendHitDie', 'rest', 'manualCast', 'damage', 'setEconomy', 'endConcentration', 'groupRoll']);
+  const PLAYER_CMDS = new Set(['useAction', 'roll', 'addCombatant', 'removeCombatant', 'refreshCombatant', 'heal', 'tempHp', 'setUsage', 'spendHitDie', 'rest', 'manualCast', 'damage', 'setEconomy', 'endConcentration', 'groupRoll', 'setTriggerOff']);
 
   function check(e: Live, u: User, role: 'dm' | 'player', cmd: Command): string | null {
     if (role === 'dm') return null;
@@ -298,6 +298,7 @@ export function createEncounters(d: Deps) {
       return cur && ownerOf(e, cur) === u.id ? null : '只能结束自己的回合';
     }
     if (!PLAYER_CMDS.has(cmd.type)) return '这件事要 DM 来做';
+    if ((cmd as { quiet?: boolean }).quiet) return '只有 DM 能暗中执行（日志里不给玩家看）';
     if (cmd.type === 'addCombatant') {
       if (cmd.combatant.kind === 'pc') return null;
       if (cmd.combatant.summoner && ownerOf(e, cmd.combatant.summoner) === u.id) return null;

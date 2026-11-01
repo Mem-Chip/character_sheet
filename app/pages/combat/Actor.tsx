@@ -452,7 +452,7 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
 }
 
 /** 次数：少的画方格，多的（圣疗能量池 30 点）用数字框改「剩余」 */
-function Usage({ max, used, onChange }: { max: number; used: number; onChange: (used: number) => void }) {
+export function Usage({ max, used, onChange }: { max: number; used: number; onChange: (used: number) => void }) {
   const [draft, setDraft] = useState<string | null>(null);
   if (max <= 12) return <Pips max={max} used={used} onChange={onChange} />;
   // 改完（回车 / 离开输入框）才记一笔，不是每敲一个数字记一笔

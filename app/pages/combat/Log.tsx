@@ -84,7 +84,9 @@ export function Log({ s, name, onCollapse }: { s: Session; name: Namer; onCollap
           return { t, i };
         }).reverse().map(({ t, i }) => {
           const chats = chatAt(i).map((c) => <ChatLine key={c.id} c={c} mine={c.by === me} dm={dm} held={hold.chat.has(c.id)} />);
-          if (mentionsHidden(t.input.cmd)) return chats.length ? <div key={i}>{chats}</div> : null;
+          const cmd = t.input.cmd as { type: string; quiet?: boolean };
+          // 藏着的人、DM 暗中执行的、只是改个人偏好（触发提示开关）的：玩家看不到这一笔
+          if (mentionsHidden(cmd) || (cmd.quiet && !dm) || cmd.type === 'setTriggerOff') return chats.length ? <div key={i}>{chats}</div> : null;
           // 「加入 xx」的标题已经说了，不再重复那一行
           const darkSeq = new Map<number, boolean>();
           const lines = t.events
@@ -110,6 +112,7 @@ export function Log({ s, name, onCollapse }: { s: Session; name: Namer; onCollap
                 <span className="tiny faint num">#{i + 1}</span>
                 <span className="who">{txTitle(t.input.cmd as never, name)}</span>
                 {overridden && <span className="tag warn">已裁定</span>}
+                {cmd.quiet && <span className="tag" title="暗中执行：玩家的日志里看不到这一笔">暗</span>}
                 {isReplayAt && <span className="tag accent">当前位置</span>}
               </div>
               {held && <div className="evline"><span className="txt faint">掷骰中…</span></div>}
@@ -278,6 +281,7 @@ function ChatLine({ c, mine, dm, held }: { c: ChatRoll; mine: boolean; dm: boole
 
 /** 日志下面的指令框。回车发出；写错了在下面提示 */
 function CommandBox() {
+  const ui = useCombat();
   const [text, setText] = useState('');
   const [err, setErr] = useState('');
   const [hist, setHist] = useState<string[]>([]);
@@ -345,12 +349,17 @@ function CommandBox() {
         void notes;
         return;
       }
-      const [numRaw, ...types] = rest.split(/\s+/);
+      const words = rest.split(/\s+/);
+      // 末尾写 o（或「暗」）= DM 暗中执行：玩家的日志里不显示
+      const quiet = words.length > 1 && /^(o|暗)$/i.test(words[words.length - 1]);
+      if (quiet) words.pop();
+      if (quiet && ui.remote && ui.remote.role !== 'dm') { setErr('只有 DM 能暗中执行'); return; }
+      const [numRaw, ...types] = words;
       // 数字或骰子（2d6+3 / 8d6）都行，掷骰交给 batch（会进日志）
       // 伤害类型认缩写（f / fi / fire / 火焰）
       const dt = types.length ? damageType(types.join(' ')) : '钝击';
       if (kind === 'damage' && !dt) { setErr(`「${types.join(' ')}」不是伤害类型。输入 /h 看缩写`); return; }
-      const err = combat.batch(kind === 'temphp' ? 'tempHp' : kind, numRaw, dt ?? '钝击');
+      const err = combat.batch(kind === 'temphp' ? 'tempHp' : kind, numRaw, dt ?? '钝击', quiet);
       if (err) { setErr(err); return; }
       setErr(''); setFound(null); setText('');
       setHist([t, ...hist.filter((x) => x !== t)].slice(0, 20)); setH(-1);

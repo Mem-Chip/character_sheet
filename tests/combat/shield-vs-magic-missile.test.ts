@@ -66,5 +66,17 @@ describe('护盾术 vs 魔法飞弹', () => {
     expect(castMM(s, false)).toBe(false);
     expect(s.state.combatants['t'].live.hp).toBeLessThan(40);
   });
+
+  it('关掉「时机到了问我」：不再弹护盾术，照常吃伤害；再打开又会问', () => {
+    const s = scene(true);
+    for (const k of ['XPHB:spell:护盾术#cast', 'XPHB:spell:护盾术#castMM']) done(s.dispatch({ type: 'setTriggerOff', id: 't', key: k, off: true }));
+    expect(s.state.combatants['t'].triggerOff).toHaveLength(2);
+    expect(castMM(s, true), '关掉了就不该问').toBe(false);
+    expect(s.state.combatants['t'].live.hp).toBeLessThan(40);
+    done(s.dispatch({ type: 'setTriggerOff', id: 't', key: 'XPHB:spell:护盾术#castMM', off: false }));
+    done(s.dispatch({ type: 'nextTurn' }));
+    done(s.dispatch({ type: 'nextTurn' }));
+    expect(castMM(s, false), '打开以后又会问').toBe(true);
+  });
 });
 

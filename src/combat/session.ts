@@ -225,6 +225,11 @@ function handle(tx: Tx, cmd: Command): void {
       else if (cmd.resource) tx.emit('resourceUsed', { id: cmd.id, resource: cmd.resource, used }, seq);
       return;
     }
+    case 'setTriggerOff': {
+      if (!tx.state.combatants[cmd.id]) throw new Rejected(`没有参与者 ${cmd.id}`);
+      tx.emit('triggerPref', { id: cmd.id, key: cmd.key, off: cmd.off });
+      return;
+    }
     case 'spendHitDie': {
       const c = tx.state.combatants[cmd.id];
       if (!c) throw new Rejected(`没有参与者 ${cmd.id}`);

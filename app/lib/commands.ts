@@ -130,6 +130,7 @@ export const HELP: Array<[string, string]> = [
   ['/save dex 15 8d6 f h', '豁免 + 伤害：伤害掷一次，没过的全额，过了的减半（不写 h = 过了不受伤害）'],
   ['/check perc · /check str 15', '选中的人做技能 / 属性检定（DC 可不写）'],
   ['/damage 8d6 f · /heal 2d6+3 · /temphp 5', '选中的人受伤 / 治疗 / 临时生命值（骰子只掷一次）'],
+  ['/temphp 10 o · /damage 8d6 f o', '末尾加 o：DM 暗中执行，玩家的日志里看不到'],
   ['/cond 中毒', '选中的人加一个状态'],
   ['/next · /undo · /undo 3', '下一回合 · 撤销最近一步（或几步）'],
   ['/match 名字', '把法术、状态、专长、物品、怪物的原文发到日志'],

@@ -588,11 +588,50 @@ function Resources({ engine, id, char, sheet }: Props) {
           </tbody>
         </table>
       ) : <div className="empty">没有资源池。</div>}
-      <div className="body small muted" style={{ borderTop: '1px solid var(--line)' }}>
-        生命骰：{(sheet.hitDice || []).map((h: Json) => `${h.level}d${h.faces}`).join(' + ') || '—'}
-        {Object.keys(char.hitDiceSpent || {}).length > 0 && `（已花 ${Object.entries(char.hitDiceSpent).map(([f, n]) => `${n}d${f}`).join('、')}）`}
-      </div>
+      <HitDice id={id} char={char} sheet={sheet} />
     </Panel>
+  );
+}
+
+/** 生命骰记账：每种骰面一行，点方格改已花的颗数；「花 1 颗」掷 1dX + 体质调整值回血（长休全部恢复） */
+function HitDice({ id, char, sheet }: { id: string; char: CharData; sheet: Json }) {
+  const [last, setLast] = useState('');
+  const pool: Record<number, number> = {};
+  for (const h of (sheet.hitDice || []) as Json[]) if (h?.faces && h?.level) pool[h.faces] = (pool[h.faces] ?? 0) + h.level;
+  const faces = Object.keys(pool).map(Number);
+  if (!faces.length) return null;
+  const con = Number(sheet['mod:con'] ?? 0);
+  const spentOf = (f: number) => Math.min(pool[f], Number(char.hitDiceSpent?.[f]) || 0);
+  const setSpent = (f: number, u: number) => actions.update(id, (c) => { c.hitDiceSpent = { ...(c.hitDiceSpent || {}), [f]: Math.max(0, Math.min(pool[f], u)) }; });
+  const spend = (f: number) => {
+    const roll = 1 + Math.floor(Math.random() * f);
+    const gain = Math.max(1, roll + con);
+    const max = sheet.hpMax ?? 0;
+    actions.update(id, (c) => {
+      c.hitDiceSpent = { ...(c.hitDiceSpent || {}), [f]: spentOf(f) + 1 };
+      const cur = c.hp?.current ?? max;
+      const next = Math.min(max, cur + gain);
+      c.hp = { ...(c.hp || {}), current: next >= max ? null : next };
+    });
+    setLast(`d${f} 掷出 ${roll}${con ? ` ${con > 0 ? '+' : '−'} ${Math.abs(con)}` : ''}，回复 ${gain} 点`);
+  };
+  return (
+    <table className="rows" style={{ borderTop: '1px solid var(--line)' }}>
+      <tbody>
+        {faces.map((f) => (
+          <tr key={f}>
+            <td className="serif">
+              d{f} 生命骰
+              <button className="btn sm" style={{ marginLeft: 8 }} disabled={spentOf(f) >= pool[f]} onClick={() => spend(f)}
+                title={`花 1 颗：掷 1d${f} + 体质调整值（${sgn(con)}）回血`}>花 1 颗</button>
+            </td>
+            <td><Pips max={pool[f]} used={spentOf(f)} onChange={(u) => setSpent(f, u)} /></td>
+            <td className="r small faint">长休恢复</td>
+          </tr>
+        ))}
+        {last && <tr><td colSpan={3} className="small muted">{last}</td></tr>}
+      </tbody>
+    </table>
   );
 }
 

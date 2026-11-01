@@ -533,6 +533,8 @@ export interface Combatant {
   initiative: number | null;
   /** 召唤者 / 主人（召唤物、原初伴侣、魔宠）：先攻紧贴在召唤者后面，0 HP 时直接消失 */
   summoner?: Id;
+  /** 不问我的可选触发能力（`条目键#触发 id`）：窗口里直接跳过，不弹「要使用以下能力吗」 */
+  triggerOff?: string[];
   /** 链接的效应（专注法术之类）：该效应结束时本召唤物随之消失 */
   linkEffect?: EffectId;
   /**
@@ -639,15 +641,16 @@ export type Command =
   | { type: 'applyEffect'; to: Id; template?: string; inline?: EffectTemplate; name?: string; duration?: Duration; source?: Id | null; form?: CombatantView }
   | { type: 'removeEffect'; id: EffectId }
   | { type: 'adjustHp'; id: Id; delta?: number; set?: number; temp?: number }
-  | { type: 'damage'; id: Id; amount: number; damageType: string; source?: Id | null }
+  /** quiet：DM 暗中执行（玩家的日志里不显示这一笔；结算照常） */
+  | { type: 'damage'; id: Id; amount: number; damageType: string; source?: Id | null; quiet?: boolean }
   /**
    * 群体掷骰（指令框 /save、/check）：一笔事务里每人各掷一次（要确认骰子时一个个问，不会互相挡住）。
    * 豁免带 damage 时伤害只掷一次，没过的吃全额，过了的 half ? 吃一半 : 不受伤害
    */
   | { type: 'groupRoll'; kind: 'save' | 'check'; ids: Id[]; ability: Ability; skill?: string; dc?: number; damage?: { dice: string; type: string }; half?: boolean }
   /** 手动治疗：与法术治疗走同一条路（0 生命值时的昏迷随之结束） */
-  | { type: 'heal'; id: Id; amount: number }
-  | { type: 'tempHp'; id: Id; amount: number }
+  | { type: 'heal'; id: Id; amount: number; quiet?: boolean }
+  | { type: 'tempHp'; id: Id; amount: number; quiet?: boolean }
   /** 没有动态数据的法术：照样付代价（法术位、动作）、开专注、发 spellCast，效果由人处理 */
   | {
       type: 'manualCast'; actor: Id; spell: string; slotLevel?: number;
@@ -657,6 +660,8 @@ export type Command =
   | { type: 'setUsage'; id: Id; resource?: string; slot?: number; hitDie?: number; used: number }
   /** 花生命骰回血（1d<faces> + 体质调整值，至少 1 点） */
   | { type: 'spendHitDie'; id: Id; faces: number; count?: number }
+  /** 某个可选触发能力要不要问（off = 不问、直接跳过） */
+  | { type: 'setTriggerOff'; id: Id; key: string; off: boolean }
   /** 手动改动作经济（DM 裁定、规则没覆盖到的额外动作）：给的那几项改成这个数 */
   | { type: 'setEconomy'; id: Id; patch: { action?: number; bonus?: number; reaction?: number; move?: number } }
   | { type: 'endConcentration'; id: Id }

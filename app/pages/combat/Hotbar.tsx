@@ -13,6 +13,7 @@ import { Clip, sgn } from '../../components/ui';
 import type { Engine } from '../../lib/engine';
 import { CostIcon, actionsFor, costKind, freeSlots, runAction, type ActItem, type Group } from './Actor';
 import { woundOf } from './Initiative';
+import { ManagePanel } from './Manage';
 import { effectLabel } from './shared';
 import type { Namer } from './shared';
 
@@ -70,7 +71,11 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
   const [castAt, setCastAt] = useState<{ id: string; L: number } | null>(null);
   const [asReaction, setAsReaction] = useState(false);
   /** 快速掷骰面板（在详情/收起处切换）：怪物可选 6 围检定/豁免，玩家额外可选 18 项技能检定 */
-  const [quickRoll, setQuickRoll] = useState(false);
+  const [quickRoll, setQuickRollState] = useState(false);
+  /** 资源 / 触发面板（和快速掷骰互斥，占动作区） */
+  const [manage, setManageState] = useState(false);
+  const setQuickRoll = (on: boolean) => { setQuickRollState(on); if (on) setManageState(false); };
+  const setManage = (on: boolean) => { setManageState(on); if (on) setQuickRollState(false); };
   const [rollTab, setRollTab] = useState<'abil' | 'skill'>('abil');
   const [rollDc, setRollDc] = useState('');
   const hiddenRes = useHiddenRes(id ?? '');
@@ -238,7 +243,16 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
         {effTags}
       </div>
 
-      {ui.aim ? <div className="hot-actions"><AimBar ui={ui} name={name} /></div> : quickRoll ? (
+      {ui.aim ? <div className="hot-actions"><AimBar ui={ui} name={name} /></div> : manage ? (
+        <div className="hot-actions">
+          <div className="hot-tabs">
+            <button className="on">资源 / 时机能力</button>
+            <span style={{ flex: 1 }} />
+            <button className="btn ghost sm" onClick={() => setManage(false)} style={{ marginBottom: 2 }}>返回动作</button>
+          </div>
+          <ManagePanel s={s} engine={engine} id={id} mine={mine} />
+        </div>
+      ) : quickRoll ? (
         <div className="hot-actions">
           <div className="hot-tabs">
             <button className={activeRollTab === 'abil' ? 'on' : ''} onClick={() => setRollTab('abil')}>六围检定 / 豁免</button>
@@ -342,6 +356,7 @@ export function Hotbar({ s, ui, engine, name, onDetail, turnButton, collapsed, o
         {turnButton}
         <div className="row" style={{ gap: 4, flexWrap: 'nowrap' }}>
           <button className={'btn sm' + (quickRoll ? ' on' : '')} style={{ flex: 1 }} disabled={!mine} onClick={() => setQuickRoll(!quickRoll)} title={isPc ? '快速选择六围检定、豁免或技能检定' : '快速选择六围检定或豁免'}>快速掷骰</button>
+          <button className={'btn sm' + (manage ? ' on' : '')} style={{ flex: 1 }} onClick={() => setManage(!manage)} title="生命骰、法术位、次数；时机能力要不要问">资源</button>
           <button className="btn sm" style={{ flex: 1 }} onClick={onDetail} title="效应、手动调整、资源明细、检定">详情</button>
         </div>
         {fold}
