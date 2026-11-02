@@ -5,6 +5,8 @@
  *                                                       wave 3 = 其他书（BOOKS=XGE,TCE,AU,FRHoF）的子职、专长、可选特性、种族、法术
  *                                                       wave 4 = 物品：2024 的魔法物品（XDMG）+ 玩家手册的冒险装备、药水（XPHB）
  *                                                       目录名里要有 batch-w<wave>（collect 靠它认是哪一波），缺省放在 .factory/ 下
+ *   npx tsx tools/factory/batch.ts redo <目录> <列表.json>  重做已有 AI 数据的条目（引擎加了新写法）：列表是 [{ key, why: ['…'] }]，
+ *                                                       任务附上现在的数据；collect 写回条目原来所在的 AI 文件
  *   npx tsx tools/factory/batch.ts refresh <目录>        按现在的代码重写这个目录的 spec.md 和 examples.json（引擎改过之后用）
  *   npx tsx tools/factory/batch.ts lint <目录> <题号>     检查一份答案（子代理自己跑）；{ "skip": "…" } 直接算通过
  *   npx tsx tools/factory/batch.ts collect <目录>        检查 + 战斗试算 → 写进 data/dyn/ai/，没过的列进 failures.json
@@ -30,10 +32,7 @@ const AI_FILES: Record<string, string> = { 1: 'features.json', 2: 'spells.json',
 const read = (p: string): Json => JSON.parse(readFileSync(p, 'utf8'));
 const GOLDEN = [rulesJson, spellsJson, featuresJson] as unknown as RuleFile[];
 
-function aiFile(wave: string): RuleFile {
-  const p = resolve(AI_DIR, AI_FILES[wave]);
-  return existsSync(p) ? read(p) as RuleFile : { entries: {} } as RuleFile;
-}
+const aiFile = (wave: string): RuleFile => aiFileByName(AI_FILES[wave]);
 const allAi = (): RuleFile[] => Object.keys(AI_FILES).map(aiFile);
 
 /** 不出题的职业特性：纯静态、或引擎已经统一处理 */
@@ -212,6 +211,58 @@ async function plan(wave: string, outDir?: string): Promise<void> {
   console.log(`任务 ${manifest.length} 个，分 ${batches.length} 批；找不到原文的 ${failed.length} 个${failed.length ? `：\n${failed.join('\n')}` : ''}`);
 }
 
+/**
+ * 重做：已经有 AI 数据的条目（引擎加了新写法之后）再出一遍题。任务里附上现在的数据和这次要看的地方；
+ * 动作 id、效应名照现在的保留（别处可能在引用）。collect 时写回条目原来所在的 AI 文件。
+ * 列表文件：[{ key, why: ['…'] }]
+ */
+async function redo(outDir: string, listFile: string): Promise<void> {
+  const list = read(resolve(listFile)) as Array<{ key: string; why: string[]; group?: string }>;
+  const hand = new Set(GOLDEN.flatMap((f) => Object.keys(f.entries)));
+  const dir = resolve(outDir);
+  mkdirSync(resolve(dir, 'tasks'), { recursive: true });
+  mkdirSync(resolve(dir, 'answers'), { recursive: true });
+  writeSpec(dir);
+  const env = await createNodeEnv();
+  const manifest: Array<{ id: string; key: string; group: string; name: string; file: string }> = [];
+  const failed: string[] = [];
+  let n = 0;
+  for (const it of list) {
+    if (hand.has(it.key)) { failed.push(`${it.key}：已经有手写数据，不出题`); continue; }
+    const file = Object.values(AI_FILES).find((f) => aiFileByName(f).entries[it.key]);
+    if (!file) { failed.push(`${it.key}：AI 数据里没有`); continue; }
+    const cur = aiFileByName(file).entries[it.key];
+    const id = `R${String(++n).padStart(3, '0')}`;
+    try {
+      const iface = { actions: (cur.actions ?? []).map((a) => ({ id: a.id, name: a.name })), effects: Object.keys(cur.effects ?? {}) };
+      const task = await buildTask(env, id, it.key, iface);
+      const { tags: _t, ...shown } = cur as Entry & { tags?: string[] };
+      const body = renderTask(task) + [
+        '', '## 这次为什么重做', '', ...it.why.map((w) => `- ${w}`),
+        '', '## 现在的数据（AI 写的、没人审过；在它的基础上改，改完整条写进答案。原样就好的写 `{ "skip": "不用改：原因" }`）', '',
+        '```json', JSON.stringify(shown, null, 1), '```', '',
+      ].join('\n');
+      writeFileSync(resolve(dir, 'tasks', `${id}.md`), body);
+      writeFileSync(resolve(dir, 'tasks', `${id}.ctx.json`), JSON.stringify({
+        key: it.key, file, resourceIds: Object.keys(task.resources ?? {}), classTableColumns: Object.keys(task.classTable ?? {}),
+      }));
+      manifest.push({ id, key: it.key, group: it.group ?? file, name: task.name, file });
+    } catch (e) {
+      failed.push(`${it.key}：${(e as Error).message}`);
+    }
+  }
+  const batches = chunk(manifest.map((m) => ({ key: m.id, group: m.group })), 8)
+    .map((b, i) => ({ batch: `R-${String(i + 1).padStart(2, '0')}`, group: b.group, ids: b.keys }));
+  writeFileSync(resolve(dir, 'manifest.json'), JSON.stringify(manifest, null, 1));
+  writeFileSync(resolve(dir, 'batches.json'), JSON.stringify(batches, null, 1));
+  console.log(`出题：${dir}`);
+  console.log(`任务 ${manifest.length} 个，分 ${batches.length} 批；没出题的 ${failed.length} 个${failed.length ? `：\n${failed.join('\n')}` : ''}`);
+}
+function aiFileByName(name: string): RuleFile {
+  const p = resolve(AI_DIR, name);
+  return existsSync(p) ? read(p) as RuleFile : { entries: {} } as RuleFile;
+}
+
 type Answer = { skip: string } | Entry;
 const isSkip = (a: unknown): a is { skip: string } => !!a && typeof a === 'object' && 'skip' in (a as object) && Object.keys(a as object).length === 1;
 
@@ -280,17 +331,21 @@ function mergeDeclaredResources(decls: Array<{ key: string; resources: ResourceD
 }
 
 async function collect(dir: string): Promise<void> {
-  const manifest = read(resolve(dir, 'manifest.json')) as Array<{ id: string; key: string; group: string; name: string }>;
+  // file：重做的题写回条目原来所在的 AI 文件；其余按目录名认是哪一波
+  const manifest = read(resolve(dir, 'manifest.json')) as Array<{ id: string; key: string; group: string; name: string; file?: string }>;
   const wave = dir.match(/batch-w(\d)/)?.[1] ?? '1';
   const env = await createNodeEnv();
   const declaredAll: Array<{ key: string; resources: ResourceDecl[] }> = [];
-  const out = aiFile(wave);
+  const outs = new Map<string, RuleFile>();
+  const outOf = (name: string) => { if (!outs.has(name)) outs.set(name, aiFileByName(name)); return outs.get(name)!; };
   const files = [...GOLDEN, ...allAi()];
   const rows: string[] = [];
   const failures: Array<{ id: string; key: string; problems: string[] }> = [];
   const skipped: Array<{ id: string; name: string; why: string }> = [];
   let written = 0, missing = 0;
   for (const m of manifest) {
+    const target = m.file ?? AI_FILES[wave];
+    const isItem = target === 'items.json';
     const { problems, answer } = lintOne(dir, m.id);
     if (!answer) { missing++; continue; }
     if (problems.length) { failures.push({ id: m.id, key: m.key, problems }); continue; }
@@ -312,23 +367,27 @@ async function collect(dir: string): Promise<void> {
     const { resources: _declared, ...entry } = answer as Entry & { resources?: unknown };
     const r = smoke(m.key, entry, files, owner);
     if (r.errors.length) { failures.push({ id: m.id, key: m.key, problems: r.errors.map((e) => `试算：${e}`) }); continue; }
-    out.entries[m.key] = { ...(wave === '4' && decls.length ? { resources: decls } : {}), ...entry, tags: [...new Set([...(entry.tags ?? []), 'ai', '未审'])] } as Entry;
+    outOf(target).entries[m.key] = { ...(isItem && decls.length ? { resources: decls } : {}), ...entry, tags: [...new Set([...(entry.tags ?? []), 'ai', '未审'])] } as Entry;
     // 物品的次数池不进人物卡数据（物品不是人物卡的能力来源），进战斗时从条目里读
-    if (decls.length && wave !== '4') declaredAll.push({ key: m.key, resources: decls });
+    if (decls.length && !isItem) declaredAll.push({ key: m.key, resources: decls });
     written++;
   }
   mkdirSync(AI_DIR, { recursive: true });
-  const sorted = Object.fromEntries(Object.entries(out.entries).sort(([a], [b]) => a.localeCompare(b, 'zh')));
-  writeFileSync(resolve(AI_DIR, AI_FILES[wave]), JSON.stringify({
-    version: 1,
-    note: '数据化工厂生成（Claude 子代理），经过检查和战斗试算，但**没有人审过**。键不与手写数据重复；手写数据优先。',
-    entries: sorted,
-  }, null, 1) + '\n');
+  const totals: string[] = [];
+  for (const [name, out] of outs) {
+    const sorted = Object.fromEntries(Object.entries(out.entries).sort(([a], [b]) => a.localeCompare(b, 'zh')));
+    writeFileSync(resolve(AI_DIR, name), JSON.stringify({
+      version: 1,
+      note: '数据化工厂生成（Claude 子代理），经过检查和战斗试算，但**没有人审过**。键不与手写数据重复；手写数据优先。',
+      entries: sorted,
+    }, null, 1) + '\n');
+    totals.push(`data/dyn/ai/${name} ${Object.keys(sorted).length} 条`);
+  }
   const newPools = mergeDeclaredResources(declaredAll);
   writeFileSync(resolve(dir, 'failures.json'), JSON.stringify(failures, null, 1));
   rows.push(`# 收集：${dir.split(/[\\/]/).pop()}`, '',
     `- 任务 ${manifest.length}；写进 AI 数据 ${written}；跳过 ${skipped.length}；没过 ${failures.length}；没交 ${missing}`,
-    `- AI 数据文件现在共 ${Object.keys(sorted).length} 条：data/dyn/ai/${AI_FILES[wave]}`,
+    `- AI 数据文件现在：${totals.join('，') || '没有写'}`,
     `- 新声明的资源池写进人物卡数据：${newPools} 个（data/abilities-2024.json，标 by: 'ai'）`, '');
   if (failures.length) rows.push('## 没过（重做时把这些问题给模型）', '', ...failures.map((f) => `- ${f.id} ${f.key}：${f.problems.slice(0, 2).join('；')}`), '');
   rows.push('## 跳过', '', ...skipped.map((x) => `- ${x.id} ${x.name}：${x.why}`), '');
@@ -339,6 +398,7 @@ async function collect(dir: string): Promise<void> {
 
 const [cmd, a, b] = process.argv.slice(2);
 if (cmd === 'plan' && ['1', '2', '3', '4'].includes(a)) await plan(a, b);
+else if (cmd === 'redo' && a && b) await redo(a, b);
 else if (cmd === 'refresh' && a) { writeSpec(resolve(a)); console.log(`已重写 ${a}/spec.md 和 examples.json`); }
 else if (cmd === 'lint' && a && b) {
   const { problems, answer } = lintOne(resolve(a), b);

@@ -54,7 +54,7 @@ const NODE_KEYS: Record<string, readonly string[]> = {
   forEach: ['in', 'do'],
   repeat: ['n', 'do'],
   move: ['mode', 'ft'],
-  zone: ['on', 'affects', 'oncePerTurn', 'rounds', 'do', 'while', 'difficult', 'fully'],
+  zone: ['name', 'on', 'affects', 'oncePerTurn', 'rounds', 'do', 'while', 'difficult', 'fully'],
   moveZone: ['key'],
   summon: ['name', 'count', 'size', 'type', 'creatureType', 'ac', 'hp', 'speed', 'pb', 'score', 'attacksPerAction', 'attacks', 'actions', 'triggers', 'rollMods', 'resist', 'immune', 'conditionImmune', 'notes', 'link', 'group'],
   note: ['text'],

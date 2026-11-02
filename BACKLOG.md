@@ -55,8 +55,9 @@
   在哪：`src/bridge/from-sheet.ts`（攻击行）、相关法术的动态数据。
 - **复杂代价**：一次同时花法术位和术法点（超魔）、两种代价二选一。在哪：`src/combat/types.ts`（Cost）、`src/combat/tx.ts`（能不能付、怎么付）。
 - **物件当目标**（门、箱子，有 AC 和生命值）。在哪：`makeView`（`src/combat/view.ts`）、目标选择。
-- **困难地形还缺的**：底图本身（不是法术区域）的困难地形只能靠 DM 画一块「困难地形」区域；「无视困难地形」的能力数据（林地行者这类）还没写 `flags.ignores`；
-  审查报告里卡在困难地形上的约 23 条没重新数据化。在哪：`data/dyn/`、`datafy/manual-audit/answers/*.json`（`gap` 带 move / 困难地形的）。
+- **困难地形还缺的**：底图本身（不是法术区域）的困难地形只能靠 DM 画一块「困难地形」区域。
+- **区域 / 困难地形的 AI 数据重做（外包中）**：`datafy/redo-zones/`，74 条（用了区域的、提到困难地形 / 离开 / 挪区域 / 完全位于 / 无视困难地形的，
+  加审查报告里卡在区域上的），用上 while / leave / move / difficult / fully / moveZone / `flags.ignores`。交回来后 collect、复核、合并。
 - **打断施法 / 让正在施展的法术失效**（法术反制这类，审查报告 6 条）：先确认 `modify.cancel`（带 `refundSlot`）够不够 ——
   它现在主要用于伤害包；施法窗口只有 after、没有 before，得先加一个施法前的拦截窗口。
   在哪：`src/combat/audit.ts`（窗口表）、`src/combat/exec.ts`（施法流程）、`src/factory/spec.ts`（补说明书）。
