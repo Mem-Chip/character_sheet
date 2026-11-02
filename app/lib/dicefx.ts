@@ -264,6 +264,9 @@ export function scanChat(encounter: string, chat: ReadonlyArray<ChatRoll>, me: n
 /* ───── 战斗事务 ───── */
 const seenTape = new Set<string>();
 let tapePrimed = '';
+/** 上次扫的时候有哪几笔（编号 + 命令）、其中结算完的有几笔 */
+let seenTx = new Set<string>();
+let seenDone = 0;
 
 export interface TapeCtx {
   /** 遭遇 id（种子用；换了遭遇重新开始记） */
@@ -287,14 +290,25 @@ export function scanTape(s: Session, ctx: TapeCtx): void {
   const txs: Array<{ events?: ReadonlyArray<unknown>; input: { cmd: unknown; tape: Array<{ sig: string; faces: number[][]; source: string; ev?: number; dark?: boolean } | undefined> } }> = [...s.transactions];
   const p = (s as unknown as { pending?: { input?: (typeof txs)[number]['input'] } | null }).pending;
   if (p?.input) txs.push({ input: p.input });
+  // 每笔事务按「第几笔 + 命令」认：服务器重启（新代码）或 DM 更新规则时整场重算，结算路径一变就从那里往后重掷，
+  // 骰面全变了 —— 但那还是原来那几笔，不该重播。所以只播「新追加的」和「撤销后换了命令的」那几笔里没播过的骰子
+  const ids = txs.map((t, ti) => `${ctx.encounter}|${ti}|${JSON.stringify(t.input.cmd)}`);
   const keys: Array<{ key: string; tx: number; i: number }> = [];
-  txs.forEach((t, ti) => t.input.tape.forEach((e, i) => { if (e) keys.push({ key: `${ctx.encounter}|${ti}|${i}|${e.sig}|${e.faces.join(';')}`, tx: ti, i }); }));
+  txs.forEach((t, ti) => t.input.tape.forEach((e, i) => { if (e) keys.push({ key: `${ids[ti]}|${i}`, tx: ti, i }); }));
+  const known = new Set(ids);
   // 换了遭遇（或第一次打开）：只记下，不补播
-  if (tapePrimed !== ctx.encounter) { tapePrimed = ctx.encounter; clearHold(); for (const k of keys) seenTape.add(k.key); return; }
+  if (tapePrimed !== ctx.encounter) { tapePrimed = ctx.encounter; clearHold(); seenTape.clear(); seenTx = known; seenDone = s.transactions.length; for (const k of keys) seenTape.add(k.key); return; }
+  const old = seenTx, oldDone = seenDone;
+  seenTx = known;
+  seenDone = s.transactions.length;
+  // 撤掉了的那几笔忘掉（撤销后原样再做一次也要播）
+  for (const k of seenTape) if (!known.has(k.slice(0, k.lastIndexOf('|')))) seenTape.delete(k);
   const scope = diceFxScope();
   for (const k of keys) {
     if (seenTape.has(k.key)) continue;
     seenTape.add(k.key);
+    // 上次就已经结算完的那笔：重算出来的骰子，不播（上次还在等决定的那笔照播：做完决定后才掷的骰子）
+    if (old.has(ids[k.tx]) && k.tx < oldDone) continue;
     const t = txs[k.tx].input;
     const e = t.tape[k.i]!;
     if (scope === 'off' || e.source !== 'engine') continue;
