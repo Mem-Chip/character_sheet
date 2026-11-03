@@ -54,7 +54,10 @@ export interface MapState {
   avatars?: Record<string, string>;
   shapes: Shape[];
   trail: Trail | null;
+  /** 战争迷雾：开着时，玩家只看得到揭开了的格子（"x,y"）；DM 用笔刷揭开 / 盖上 */
+  fog?: { on: boolean; open: string[] };
 }
+const MAX_FOG = 40000;
 /** '#abc' / '#aabbcc' / '#aabbcc80'；'' 清掉；其余保持原值 */
 const hexOr = (v: unknown, old?: string): string | undefined =>
   v === '' ? undefined : typeof v === 'string' && /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(v) ? v : old;
@@ -472,6 +475,32 @@ export function createEncounters(d: Deps) {
           return '立绘图片格式不对或太大了';
         }
         m.avatars[id] = s;
+        return null;
+      }
+      case 'fog': {
+        // 战争迷雾：开关；笔刷揭开 / 盖上一批格子；全部揭开 / 全部盖上
+        if (!dm) return '只有 DM 能改迷雾';
+        const fog = (m.fog ??= { on: false, open: [] });
+        if (b.on != null) fog.on = !!b.on;
+        const cellList = (v: unknown): string[] | null => {
+          if (v == null) return [];
+          if (!Array.isArray(v) || v.length > 5000) return null;
+          const out = v.map(String);
+          return out.every((k) => /^-?\d{1,4},-?\d{1,4}$/.test(k)) ? out : null;
+        };
+        const add = cellList(b.open), del = cellList(b.hide);
+        if (!add || !del) return '格子不对';
+        if (b.all === 'hide') fog.open = [];
+        else if (b.all === 'open') {
+          if (m.grid.cols * m.grid.rows > MAX_FOG) return '地图太大，全部揭开请直接关掉迷雾';
+          fog.open = [];
+          for (let y = 0; y < m.grid.rows; y++) for (let x = 0; x < m.grid.cols; x++) fog.open.push(`${x},${y}`);
+        }
+        const set = new Set(fog.open);
+        for (const k of add) set.add(k);
+        for (const k of del) set.delete(k);
+        if (set.size > MAX_FOG) return '揭开的格子太多了';
+        fog.open = [...set];
         return null;
       }
       default: return '不认识的地图操作';

@@ -130,6 +130,8 @@ export interface MapState {
   shapes?: Array<{ id: string; by: number; color: string; tpl: Tpl }>;
   /** 当前回合的人这一回合走过的格子；key = 轮次:先攻位置 */
   trail?: { id: string; key: string; cells: Array<{ x: number; y: number }> } | null;
+  /** 战争迷雾：开着时，玩家只看得到揭开了的格子（"x,y"） */
+  fog?: { on: boolean; open: string[] };
 }
 interface RemoteState {
   /** 开遭遇时抄进来的本团房规 */

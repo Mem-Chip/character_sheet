@@ -26,12 +26,14 @@ import { NumInput } from '../../components/ui';
 import { combat, type CombatUi, type MapState, type Remote } from '../../lib/combat';
 import type { Namer } from './shared';
 
-type Tool = 'move' | 'measure' | 'shape' | 'pen' | 'erase';
-const TOOL_CN: Record<Tool, string> = { move: '移动', measure: '测距', shape: '形状', pen: '画笔', erase: '橡皮' };
+type Tool = 'move' | 'measure' | 'shape' | 'pen' | 'erase' | 'fog';
+const TOOL_CN: Record<Tool, string> = { move: '移动', measure: '测距', shape: '形状', pen: '画笔', erase: '橡皮', fog: '迷雾' };
 const TOOL_TIP: Record<Tool, string> = {
   move: '拖棋子；拖空白处平移', measure: '量两格之间多远；拖的时候按 Q 打个折点接着量（只有你看得到）',
   shape: '放一个方 / 圆 / 锥，量范围用（所有人看得到）', pen: '在地图上画（所有人看得到）', erase: '擦掉画的线和形状',
+  fog: '战争迷雾：用笔刷揭开 / 盖上格子，玩家只看得到揭开了的地方（只有 DM 能用）',
 };
+const FOG_SIZES = [1, 3, 5];
 type ShapeKind = 'rect' | 'circle' | 'cone';
 const SHAPE_CN: Record<ShapeKind, string> = { rect: '方', circle: '圆', cone: '锥' };
 const COLORS = ['#c0392b', '#2f5241', '#1f5f99', '#8a5a12', '#2b241a', '#ffffff'];
@@ -47,7 +49,8 @@ type Drag =
   | { kind: 'shape'; from: { x: number; y: number }; to: { x: number; y: number } }
   | { kind: 'shapeMove'; id: string; start: { x: number; y: number }; orig: { x: number; y: number }; d: { x: number; y: number } }
   | { kind: 'shapeRot'; id: string; dir: number }
-  | { kind: 'erase'; ids: Set<string> };
+  | { kind: 'erase'; ids: Set<string> }
+  | { kind: 'fog'; last: { x: number; y: number }; cells: Set<string> };
 
 export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; remote: Remote; name: Namer }) {
   const map = remote.map;
@@ -66,6 +69,9 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
   const [placing, setPlacing] = useState<string | null>(null);
   const [setup, setSetup] = useState(false);
   const [shapeKind, setShapeKind] = useState<ShapeKind>('rect');
+  /** 迷雾笔刷：揭开还是盖上、几格宽 */
+  const [fogOpen, setFogOpen] = useState(true);
+  const [fogSize, setFogSize] = useState(3);
   /** 范围法术：鼠标在哪（预览），点了之后定下来的模板 */
   const [pt, setPt] = useState<{ x: number; y: number } | null>(null);
   const [fixed, setFixed] = useState<Tpl | null>(null);
@@ -157,11 +163,25 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
     return { x: (e.clientX - r.left - view.x) / view.k, y: (e.clientY - r.top - view.y) / view.k };
   };
   const toCell = (p: { x: number; y: number }) => ({ x: Math.floor((p.x - map.grid.ox) / g), y: Math.floor((p.y - map.grid.oy) / g) });
+  /** 迷雾笔刷盖到的格子（以鼠标所在格为中心的方块） */
+  const brush = (c: { x: number; y: number }, into: Set<string>) => {
+    const h = Math.floor(fogSize / 2);
+    for (let dy = -h; dy <= h; dy++) for (let dx = -h; dx <= h; dx++) into.add(`${c.x + dx},${c.y + dy}`);
+    return into;
+  };
 
   const st = s.state;
   const current = st.round !== null ? st.order[st.turnIndex] : null;
   const visible = (id: string) => !combat.isHidden(id);
-  const tokens = Object.entries(map.tokens).filter(([id]) => st.combatants[id] && visible(id));
+  // 战争迷雾：揭开了的格子；玩家看不到整个身子都在迷雾里的别人的棋子（自己能操控的照样看得到）
+  const fog = map.fog?.on ? map.fog : null;
+  const fogOpenSet = useMemo(() => new Set(fog?.open ?? []), [fog]);
+  const inFog = (id: string, t: { x: number; y: number }) => {
+    const n = footprint(s.view(id).size);
+    for (let dy = 0; dy < n; dy++) for (let dx = 0; dx < n; dx++) if (fogOpenSet.has(`${t.x + dx},${t.y + dy}`)) return false;
+    return true;
+  };
+  const tokens = Object.entries(map.tokens).filter(([id, t]) => st.combatants[id] && visible(id) && (dm || !fog || combat.canControl(id) || !inFog(id, t)));
   /** 选中的棋子在哪些敌人的触及范围里：把那些敌人的触及范围框出来（走出去会被借机攻击） */
   const threats = useMemo(() => {
     const id = ui.selected, me = id ? map.tokens[id] : undefined, c = id ? st.combatants[id] : undefined;
@@ -271,6 +291,10 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
     } else if (tool === 'pen') {
       (e.currentTarget as Element).setPointerCapture(e.pointerId);
       setDrag({ kind: 'pen', pts: [p.x, p.y] });
+    } else if (tool === 'fog') {
+      (e.currentTarget as Element).setPointerCapture(e.pointerId);
+      const c = toCell(p);
+      setDrag({ kind: 'fog', last: c, cells: brush(c, new Set()) });
     } else if (tool === 'erase') {
       const ids = new Set<string>();
       const id = eraseTarget(e.target);
@@ -291,6 +315,14 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
     } else if (drag.kind === 'erase') {
       const id = eraseTarget(document.elementFromPoint(e.clientX, e.clientY));
       if (id && !drag.ids.has(id)) setDrag({ kind: 'erase', ids: new Set([...drag.ids, id]) });
+    } else if (drag.kind === 'fog') {
+      // 鼠标一次跳了好几格：中间经过的格子也刷上
+      const c = toCell(toWorld(e));
+      if (!sameCell(c, drag.last)) {
+        const cells = new Set(drag.cells);
+        for (const x of lineCells(drag.last, c)) brush(x, cells);
+        setDrag({ kind: 'fog', last: c, cells });
+      }
     } else if (drag.kind === 'measure') {
       const c = toCell(toWorld(e));
       if (!sameCell(c, drag.to)) setDrag({ ...drag, to: c });
@@ -331,6 +363,15 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
       const pts = drag.pts.map((v) => Math.round(v * 10) / 10);
       combat.patchMap((m) => { m.strokes.push({ id: `tmp-${Date.now()}`, by: remote.me, color, width, pts }); });
       void combat.map({ action: 'stroke', color, width, pts });
+    } else if (drag.kind === 'fog') {
+      const cells = [...drag.cells];
+      combat.patchMap((m) => {
+        const f = (m.fog ??= { on: true, open: [] });
+        const set = new Set(f.open);
+        for (const k of cells) if (fogOpen) set.add(k); else set.delete(k);
+        f.open = [...set];
+      });
+      void combat.map({ action: 'fog', [fogOpen ? 'open' : 'hide']: cells.slice(0, 5000) });
     } else if (drag.kind === 'erase' && drag.ids.size) {
       const ids = [...drag.ids];
       combat.patchMap((m) => { m.strokes = m.strokes.filter((x) => !drag.ids.has(x.id)); });
@@ -457,17 +498,45 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
   // 当前回合的人这一回合走过的路（服务器记的；换人 / 换轮作废）
   const trail = (() => {
     const tr = map.trail;
-    if (!tr || st.round === null || tr.id !== current || tr.key !== `${st.round}:${st.turnIndex}` || !visible(tr.id) || tr.cells.length < 2) return null;
+    if (!tr || st.round === null || tr.id !== current || tr.key !== `${st.round}:${st.turnIndex}` || !tokens.some(([id]) => id === tr.id) || tr.cells.length < 2) return null;
     return { ...tr, n: footprint(s.view(tr.id).size) };
   })();
   const aimed: Record<string, number> = {};
   for (const p of ui.aim?.picks ?? []) aimed[p] = (aimed[p] ?? 0) + 1;
 
+  /** 迷雾：整张图减去揭开的格子（evenodd 挖洞；每行相邻的揭开格子并成一段）。DM 正在刷的也算上 */
+  const fogDrag = drag?.kind === 'fog' ? drag.cells : null;
+  const fogPath = useMemo(() => {
+    if (!fog) return null;
+    let open = fogOpenSet;
+    if (fogDrag) {
+      open = new Set(open);
+      for (const k of fogDrag) if (fogOpen) open.add(k); else open.delete(k);
+    }
+    const rows = new Map<number, number[]>();
+    for (const k of open) {
+      const [x, y] = k.split(',').map(Number);
+      const r = rows.get(y);
+      if (r) r.push(x); else rows.set(y, [x]);
+    }
+    let d = `M0 0H${worldW}V${worldH}H0Z`;
+    for (const [y, xs] of rows) {
+      xs.sort((a, b) => a - b);
+      for (let i = 0; i < xs.length; ) {
+        let j = i;
+        while (j + 1 < xs.length && xs[j + 1] === xs[j] + 1) j++;
+        d += `M${map.grid.ox + xs[i] * g} ${map.grid.oy + y * g}h${(j - i + 1) * g}v${g}h${-(j - i + 1) * g}Z`;
+        i = j + 1;
+      }
+    }
+    return d;
+  }, [fog, fogOpenSet, fogDrag, fogOpen, worldW, worldH, map.grid.ox, map.grid.oy, g]);
+
   const hint = `滚轮缩放 · 拖空白处或按住空格平移 · 放形状 / 范围法术时按住 Shift 吸附到格子中心、边、角 · 点棋子选中、右键开菜单、Delete 拿下地图、Esc 取消选中 · 双击地图标点 · 测距时按 Q 打折点、按 Ctrl 分享 · 形状可以点选拖动，Delete 删 · DM 按住 Shift 拖棋子不扣移动力 · 每格 5 尺，斜走${diagonal === '5' ? '也算 5 尺' : '交替 5 / 10 尺'}，引擎按棋子位置自动判断距离`;
   return (
     <div className="map-root">
       <div className="hud map-rail" title={hint}>
-        {(['move', 'measure', 'shape', 'pen', 'erase'] as Tool[]).map((t) => (
+        {(['move', 'measure', 'shape', 'pen', 'erase', ...(dm ? ['fog'] : [])] as Tool[]).map((t) => (
           <button key={t} className={tool === t ? 'on' : ''} onClick={() => setTool(t)} title={TOOL_TIP[t]}>{TOOL_CN[t]}</button>
         ))}
         <hr />
@@ -538,6 +607,35 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
           />
         );
       })()}
+      {tool === 'fog' && dm && (
+        <div className="hud map-bar" style={{ flexWrap: 'wrap' }}>
+          <label className="tiny row" style={{ gap: 4 }}>
+            <input type="checkbox" checked={!!map.fog?.on} onChange={(e) => {
+              const on = e.target.checked;
+              combat.patchMap((m) => { m.fog = { on, open: m.fog?.open ?? [] }; });
+              void combat.map({ action: 'fog', on });
+            }} /> 开启迷雾
+          </label>
+          <span style={{ width: 4 }} />
+          <button className={'btn sm' + (fogOpen ? ' on' : '')} onClick={() => setFogOpen(true)}>揭开</button>
+          <button className={'btn sm' + (!fogOpen ? ' on' : '')} onClick={() => setFogOpen(false)}>盖上</button>
+          <span style={{ width: 4 }} />
+          {FOG_SIZES.map((n) => <button key={n} className={'btn sm' + (n === fogSize ? ' on' : '')} onClick={() => setFogSize(n)} title={`笔刷 ${n}×${n} 格`}>{n} 格</button>)}
+          <span style={{ width: 4 }} />
+          <button className="btn ghost sm" onClick={() => {
+            if (!confirm('把整张地图都盖上迷雾？')) return;
+            combat.patchMap((m) => { m.fog = { on: true, open: [] }; });
+            void combat.map({ action: 'fog', on: true, all: 'hide' });
+          }}>全部盖上</button>
+          <button className="btn ghost sm" onClick={() => {
+            const open: string[] = [];
+            for (let y = 0; y < map.grid.rows; y++) for (let x = 0; x < map.grid.cols; x++) open.push(`${x},${y}`);
+            combat.patchMap((m) => { m.fog = { on: m.fog?.on ?? true, open }; });
+            void combat.map({ action: 'fog', all: 'open' });
+          }}>全部揭开</button>
+          <span className="tiny faint">{map.fog?.on ? '按住拖动刷格子。你看到的是半透明的，玩家那边是全黑的，迷雾里的敌人棋子他们也看不到' : '还没开：勾上「开启迷雾」后，玩家那边整张图先是黑的'}</span>
+        </div>
+      )}
       {tool === 'erase' && <div className="hud map-bar tiny faint">按住拖过线条或形状就擦掉。{dm ? '' : '只能擦你自己画的。'}</div>}
       {setup && dm && <MapSetup map={map} />}
       {offMap.length > 0 && (
@@ -642,6 +740,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
               );
             })()}
             {drag?.kind === 'pen' && <polyline points={drag.pts.join(' ')} fill="none" stroke={color} strokeWidth={width} strokeLinecap="round" strokeLinejoin="round" />}
+            {fogPath && <path d={fogPath} fillRule="evenodd" className={'map-fog' + (dm ? ' dm' : '')} />}
             {tokens.map(([id, t]) => {
               const c = st.combatants[id];
               const v = s.view(id);
