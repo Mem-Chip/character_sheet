@@ -49,6 +49,7 @@ export function describe(ev: GameEvent, name: (id: unknown) => string, secret: S
     case 'combatantRemoved': return L(`${name(p.id)} 离开遭遇`);
     case 'baseRefreshed': return L(`${name(p.id)} 的数值按人物卡更新${p.hpMaxBefore !== p.base.hpMax && !secret(p.id) ? `（生命值上限 ${p.hpMaxBefore} → ${p.base.hpMax}）` : ''}`);
     case 'combatStarted': return L(`战斗开始。先攻顺序：${(p.order as string[]).map(name).join('、')}`, 'head');
+    case 'orderSet': return L(`先攻顺序改为：${(p.order as string[]).map(name).join('、')}`);
     case 'combatEnded': return L('战斗结束', 'head');
     case 'roundStarted': return L(`第 ${p.round} 轮`, 'head');
     case 'turnStarted': return L(`${name(p.id)} 的回合`, 'head');
@@ -174,6 +175,8 @@ export function txTitle(cmd: { type: string } & P, name: (id: unknown) => string
     case 'removeCombatant': return `移除 ${name(cmd.id)}`;
     case 'refreshCombatant': return `${name(cmd.id)} 按人物卡更新`;
     case 'startCombat': return '开始战斗';
+    case 'setOrder': return '调整先攻顺序';
+    case 'joinInitiative': return cmd.value != null ? `${name(cmd.id)} 先攻改为 ${cmd.value}` : `${name(cmd.id)} 掷先攻加入`;
     case 'nextTurn': return '下一回合';
     case 'endCombat': return '结束战斗';
     case 'useAction': return `${name(cmd.actor)} 的动作`;

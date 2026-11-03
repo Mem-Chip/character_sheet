@@ -716,10 +716,10 @@ export const combat = {
     // 战役遭遇：交给服务器；若卡上标记了 dmControlled 或卡主就是当前 DM，则直接归 DM 控制（owner: null）
     if (ui.remote) {
       const dmBound = !!card.char.dmControlled || (ui.remote.role === 'dm' && (!card.owner || card.owner.id === ui.remote.me));
-      act({ op: 'dispatch', cmd: { type: 'addCombatant', combatant: c }, cardId, owner: dmBound ? null : card.owner?.id });
+      act({ op: 'dispatch', cmd: { type: 'addCombatant', combatant: c, joinInitiative: true }, cardId, owner: dmBound ? null : card.owner?.id });
       return;
     }
-    const r = ui.session!.dispatch({ type: 'addCombatant', combatant: c });
+    const r = ui.session!.dispatch({ type: 'addCombatant', combatant: c, joinInitiative: true });
     if (r.status === 'done') ui = { ...ui, links: { ...ui.links, [id]: cardId } };
     after(r);
   },
@@ -741,7 +741,7 @@ export const combat = {
     const s = ui.session!;
     for (let i = 1; i <= count; i++) {
       const name = count > 1 ? `${view.name} ${i}` : view.name;
-      const cmd: Command = { type: 'addCombatant', combatant: makeCombatant({ id: uniqueId('m'), kind: 'monster', side, view: makeView({ ...view, name }) }) };
+      const cmd: Command = { type: 'addCombatant', combatant: makeCombatant({ id: uniqueId('m'), kind: 'monster', side, view: makeView({ ...view, name }) }), joinInitiative: true };
       if (ui.remote) { act({ op: 'dispatch', cmd, hidden }); continue; }
       const r = s.dispatch(cmd);
       if (r.status !== 'done') { after(r); return; }

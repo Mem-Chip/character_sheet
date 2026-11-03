@@ -103,6 +103,11 @@ export function applyEvent(s: EncounterState, ev: GameEvent): void {
       s.round = p.round as number;
       s.turnIndex = p.turnIndex as number;
       break;
+    case 'orderSet':
+      // 战斗中改先攻顺序：turnIndex 跟着正在行动的人走
+      s.order = (p.order as string[]).slice();
+      s.turnIndex = p.turnIndex as number;
+      break;
     case 'combatEnded':
       // 这场结束：先攻顺位和每人的先攻值都清掉，下一场重新掷
       // （以前 order 和 initiative 会留着，下一次战斗直接沿用上一场的顺位）
@@ -187,7 +192,7 @@ export function applyEvent(s: EncounterState, ev: GameEvent): void {
 
 /** 会改状态的事件类型（审计与测试用：其余类型必须是纯叙事） */
 export const STATE_EVENTS = new Set([
-  'combatantAdded', 'combatantRemoved', 'baseRefreshed', 'combatStarted', 'turnChanged', 'combatEnded', 'initiativeSet',
+  'combatantAdded', 'combatantRemoved', 'baseRefreshed', 'combatStarted', 'turnChanged', 'orderSet', 'combatEnded', 'initiativeSet',
   'economyReset', 'economyChanged', 'onceUsed', 'hpChanged', 'deathSavesChanged', 'stableChanged', 'deadChanged',
   'resourceUsed', 'slotUsed', 'hitDieUsed', 'heroicInspirationChanged', 'effectApplied', 'effectEnded', 'effectUpdated',
   'answersRemembered', 'settingsChanged',

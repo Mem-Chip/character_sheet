@@ -73,6 +73,43 @@ export function startCombat(tx: Tx, order: Id[] | undefined, cause: number | nul
   beginTurn(tx, finalOrder[0], seq);
 }
 
+/** 战斗中改先攻顺序：每人最多出现一次；正在行动的人必须还在（他的回合进行到一半） */
+export function setOrder(tx: Tx, order: Id[], cause: number | null): void {
+  const st = tx.state;
+  if (st.round === null) throw new Rejected('还没有开始战斗');
+  const ids = order.filter((id, i) => st.combatants[id] && order.indexOf(id) === i);
+  const cur = st.order[st.turnIndex];
+  const at = ids.indexOf(cur);
+  if (at < 0) throw new Rejected(`现在是${st.combatants[cur]?.name ?? cur}的回合，不能把他移出先攻（先结束这个回合）`);
+  if (!ids.length) throw new Rejected('先攻里至少要有一个人');
+  tx.emit('orderSet', { order: ids, turnIndex: at }, cause);
+}
+
+/**
+ * 战斗中把某人加进先攻：给了数就用，没给就掷；插到先攻比他低的第一个人前面（同值排在后面），
+ * 他的召唤物跟在他后面一起挪。正在行动的人不能这样重排。
+ */
+export function joinInitiative(tx: Tx, id: Id, value: number | undefined, cause: number | null): void {
+  const st = tx.state;
+  if (st.round === null) throw new Rejected('还没有开始战斗');
+  const c = st.combatants[id];
+  if (!c) throw new Rejected('没有这个参与者');
+  if (st.order[st.turnIndex] === id) throw new Rejected(`现在是${c.name}的回合，等他结束回合再重排`);
+  let v: number;
+  if (value != null && Number.isFinite(value)) {
+    v = Math.round(value);
+    tx.emit('initiativeSet', { id, value: v }, cause);
+  } else v = rollInitiative(tx, id, cause);
+  const moving = [id, ...st.order.filter((x) => st.combatants[x]?.summoner === id)];
+  const rest = st.order.filter((x) => !moving.includes(x));
+  // 召唤物（跟着主人的）不算插入点
+  let at = rest.findIndex((x) => !st.combatants[x]?.summoner && (st.combatants[x]?.initiative ?? -Infinity) < v);
+  if (at < 0) at = rest.length;
+  const order = [...rest.slice(0, at), ...moving, ...rest.slice(at)];
+  for (const s of moving.slice(1)) if (st.combatants[s].initiative !== v) tx.emit('initiativeSet', { id: s, value: v }, cause);
+  tx.emit('orderSet', { order, turnIndex: order.indexOf(st.order[st.turnIndex]) }, cause);
+}
+
 export function nextTurn(tx: Tx, cause: number | null): void {
   if (tx.state.round === null) throw new Rejected('还没有开始战斗');
   const order = tx.state.order;

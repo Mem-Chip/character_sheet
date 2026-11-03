@@ -653,8 +653,13 @@ export interface GameEvent {
 }
 
 export type Command =
-  | { type: 'addCombatant'; combatant: Combatant }
+  /** joinInitiative：战斗已经开始时，掷先攻、按数值插进先攻队列（不带 = 排到队尾，旧存档照旧） */
+  | { type: 'addCombatant'; combatant: Combatant; joinInitiative?: boolean }
   | { type: 'removeCombatant'; id: Id }
+  /** 战斗中改先攻顺序（拖动排序；少了的人 = 移出先攻，人还在遭遇里）。正在行动的人不能移出 */
+  | { type: 'setOrder'; order: Id[] }
+  /** 战斗中把某人加进先攻（或重新排）：value 给了就用这个数，没给就掷；按数值插到对应位置，召唤物跟着走 */
+  | { type: 'joinInitiative'; id: Id; value?: number }
   /** 人物卡改了（升级、换装备）：换掉参与者的数值，当前生命值和已用次数留着 */
   | { type: 'refreshCombatant'; id: Id; view: CombatantView }
   | { type: 'startCombat'; order?: Id[] }

@@ -6,7 +6,7 @@ import { Dice } from '../expr';
 import { engineDice } from './dice';
 import { executeAction, findAction } from './exec';
 import { difficultExtra, ignoresDifficult, placeSummon, placeZone, relocateZone, removeZone, travel } from './space';
-import { advanceTime, nextTurn, rest, startCombat } from './turns';
+import { advanceTime, joinInitiative, nextTurn, rest, setOrder, startCombat } from './turns';
 import { NeedDecision, Rejected, Tx, setPostEmit, type EngineCtx, type TapeEntry, type TxInput } from './tx';
 import type { Action, CombatantView, Command, Decision, EncounterState, GameEvent, OverridePatch, Settings, UserId, Zone } from './types';
 
@@ -72,10 +72,18 @@ function handle(tx: Tx, cmd: Command): void {
       if (tx.state.combatants[cmd.combatant.id]) throw new Rejected(`已经有 id 为 ${cmd.combatant.id} 的参与者`);
       const seq = tx.emit('combatantAdded', { combatant: cmd.combatant });
       if (cmd.combatant.summoner) placeSummon(tx, cmd.combatant.summoner, cmd.combatant.id, cmd.combatant.base.size, seq);
+      // 战斗中途加进来的（召唤物除外：它们紧跟主人）：掷先攻、按数值插队
+      else if (cmd.joinInitiative && tx.state.round !== null) joinInitiative(tx, cmd.combatant.id, undefined, seq);
       return;
     }
     case 'removeCombatant':
       tx.emit('combatantRemoved', { id: cmd.id });
+      return;
+    case 'setOrder':
+      setOrder(tx, cmd.order, null);
+      return;
+    case 'joinInitiative':
+      joinInitiative(tx, cmd.id, cmd.value, null);
       return;
     case 'refreshCombatant': {
       const c = tx.state.combatants[cmd.id];

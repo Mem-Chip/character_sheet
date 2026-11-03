@@ -1,4 +1,5 @@
 /** 参与者列表：先攻顺序、生命值、状态；点一下选中，点「目标」切换目标 */
+import { useState } from 'react';
 import { tokenMenu } from './TokenMenu';
 import type { Session } from '../../../src/combat';
 import { Panel, Tag } from '../../components/ui';
@@ -14,6 +15,20 @@ export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: Comba
   const ids = rosterOrder(s).filter((id) => !combat.isHidden(id));
   const dmRemote = ui.remote?.role === 'dm';
   const current = st.round !== null ? st.order[st.turnIndex] : null;
+  // 战斗中 DM 拖动改先攻顺序（这里按真实顺序排，直接插）；轮到的人不能拖
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+  const canDrag = (id: string) => st.round !== null && (!ui.remote || dmRemote) && id !== current && !s.pending;
+  const drop = (target: string) => {
+    const from = dragId;
+    setDragId(null); setOverId(null);
+    if (!from || from === target || !st.order.includes(target)) return;
+    const fromAt = st.order.indexOf(from);
+    const rest = st.order.filter((x) => x !== from);
+    let to = rest.indexOf(target);
+    if (fromAt >= 0 && fromAt < st.order.indexOf(target)) to += 1;
+    combat.dispatch({ type: 'setOrder', order: [...rest.slice(0, to), from, ...rest.slice(to)] });
+  };
   return (
     <Panel
       title="参与者"
@@ -35,14 +50,23 @@ export function Roster({ s, ui, onAddPc, onAddMonster }: { s: Session; ui: Comba
         const secret = combat.isSecret(id);
         const hiddenNow = dmRemote && ui.remote!.hidden.includes(id);
         const av = avatarOf(s, ui, id);
+        const out = st.round !== null && !st.order.includes(id);
         return (
           <div
             key={id}
-            className={['cbt', (id === ui.selected || (ui.manySel ?? []).includes(id)) && 'sel', id === current && 'turn', c.live.dead && 'dead', isTarget && 'is-tgt', hiddenNow && 'is-hidden'].filter(Boolean).join(' ')}
+            className={['cbt', (id === ui.selected || (ui.manySel ?? []).includes(id)) && 'sel', id === current && 'turn', c.live.dead && 'dead', isTarget && 'is-tgt', hiddenNow && 'is-hidden',
+              out && 'out', dragId === id && 'dragging', overId === id && dragId !== id && 'drop'].filter(Boolean).join(' ')}
             onClick={(ev) => combat.clickCombatant(id, ev.shiftKey)}
             onContextMenu={(e) => tokenMenu(e, id, ui)}
+            draggable={canDrag(id)}
+            onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; setDragId(id); }}
+            onDragEnd={() => { setDragId(null); setOverId(null); }}
+            onDragOver={(e) => { if (dragId && !out) { e.preventDefault(); if (overId !== id) setOverId(id); } }}
+            onDragLeave={() => { if (overId === id) setOverId(null); }}
+            onDrop={(e) => { e.preventDefault(); drop(id); }}
+            title={out ? '不在先攻里：右键「掷先攻加入」，或者拖进队列' : canDrag(id) ? '拖动改先攻顺序' : undefined}
           >
-            <span className="init">{c.initiative ?? '—'}</span>
+            <span className="init">{out ? '外' : c.initiative ?? '—'}</span>
             <span className="nm">
               {av && <img className="cbt-av" src={av} alt="" />}
               {c.name}

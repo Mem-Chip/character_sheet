@@ -162,6 +162,30 @@ export function TokenMenu({ s, ui, engine, name }: { s: Session; ui: CombatUi; e
           void combat.map({ action: 'token', id: m.id, x: null });
         })}>拿下地图</button>
       )}
+      {/* 战斗中改先攻：移出 / 加入（掷骰或填数）/ 改数值重排。轮到的人不能动（他的回合进行到一半） */}
+      {dm && s.state.round !== null && s.state.order[s.state.turnIndex] !== m.id && (() => {
+        const inOrder = s.state.order.includes(m.id);
+        const askValue = (title: string) => {
+          const raw = window.prompt(title, c.initiative != null ? String(c.initiative) : '');
+          if (raw === null || !raw.trim()) return;
+          const v = Number(raw.trim());
+          if (!Number.isFinite(v)) { combat.toast('先攻要填一个数'); return; }
+          combat.dispatch({ type: 'joinInitiative', id: m.id, value: v });
+        };
+        return inOrder ? (
+          <>
+            <button onClick={act(() => askValue(`${name(m.id)} 的先攻改成多少？（按新数值重新排位置）`))}>改先攻值…</button>
+            <button onClick={act(() => combat.dispatch({ type: 'setOrder', order: s.state.order.filter((x) => x !== m.id) }))}>
+              移出先攻{c.live.dead ? '（已死亡）' : ''}
+            </button>
+          </>
+        ) : (
+          <>
+            <button onClick={act(() => combat.dispatch({ type: 'joinInitiative', id: m.id }))}>掷先攻加入</button>
+            <button onClick={act(() => askValue(`${name(m.id)} 的先攻是多少？`))}>填先攻加入…</button>
+          </>
+        );
+      })()}
       {r && dm && <button onClick={act(() => combat.setHidden(m.id, !r.hidden.includes(m.id)))}>{r.hidden.includes(m.id) ? '亮出来（玩家看得到）' : '藏起来（玩家看不到）'}</button>}
       {/* 彻底从这场遭遇里删掉（不是「拿下地图」：那个只是从地图上拿开，人还在先攻里） */}
       {dm && (
