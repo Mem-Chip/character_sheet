@@ -1,0 +1,109 @@
+{
+ "name": "磐石赋权",
+ "automation": "partial",
+ "text": "岩石颗粒布满躯体，持续至多 10 分钟（专注）。获得非魔法钝击、穿刺和挥砍伤害抗性；在泥土岩石困难地形移动无额外消耗；可以穿过固态泥石移动（不可在其中结束回合，否则被排出、法术终止且陷入震慑直至下回合结束）；你可以用动作创造一阵以你为中心 15 尺半径的地表地震，地表其他生物须通过敏捷豁免否则被击倒倒地（穿墙移动与地震可通过次要动作触发）。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "磐石赋权",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 6
+     }
+    }
+   ],
+   "concentration": {
+    "minutes": 10
+   },
+   "targeting": {
+    "type": "self"
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "template": "磐石赋权",
+     "to": "self"
+    }
+   ]
+  },
+  {
+   "id": "earthquake",
+   "name": "磐石赋权：小型地震",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "targeting": {
+    "type": "area",
+    "range": "self",
+    "area": {
+     "shape": "emanation",
+     "radius": 15
+    },
+    "filter": "target.id != self.id"
+   },
+   "root": [
+    {
+     "kind": "forEach",
+     "in": "area",
+     "do": [
+      {
+       "kind": "save",
+       "ability": "dex",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "applyEffect",
+         "template": "磐石赋权：倒地",
+         "to": "target"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "磐石赋权": {
+   "tags": [
+    "magical",
+    "spell",
+    "buff"
+   ],
+   "text": "获得非魔法钝击、穿刺和挥砍伤害抗性；泥石困难地形移动无额外消耗（引擎不扣除困难地形额外移动力）；可穿过固态泥石移动（不可在其中结束移动，否则排出且震慑至下回合结束，请人工判定）。",
+   "statics": [
+    {
+     "kind": "resist",
+     "values": [
+      "钝击",
+      "穿刺",
+      "挥砍"
+     ]
+    }
+   ],
+   "flags": {
+    "ignores": [
+     "difficultTerrain"
+    ]
+   }
+  },
+  "磐石赋权：倒地": {
+   "tags": [
+    "magical",
+    "spell"
+   ],
+   "implies": [
+    "XPHB:condition:倒地"
+   ],
+   "text": "因小型地震击倒倒地。"
+  }
+ }
+}

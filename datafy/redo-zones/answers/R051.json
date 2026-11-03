@@ -1,0 +1,203 @@
+{
+ "name": "转化岩石",
+ "automation": "partial",
+ "text": "转化 120 尺内至多 40 尺立方区域内的非魔法岩石或泥土，持续永久。选择【化石为泥】（地表：区域为困难地形，穿过每尺消耗4尺移动力；施法时、首次进入或回合结束力量豁免失败陷入泥浆束缚，动作可脱离；天花板：掉落泥浆，敏捷豁免失败受4d8钝击伤害，成功半伤）或【化泥为石】（泥中生物敏捷豁免成功安全移至表面，失败被软质岩石束缚，可用动作DC 20力量检定或攻击破坏岩石脱离）。进入与回合结束豁免已由区域自动结算；4比1移动力消耗需手动计算。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "转化岩石",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 5
+     }
+    }
+   ],
+   "targeting": {
+    "type": "area",
+    "range": 120,
+    "area": {
+     "shape": "cube",
+     "size": 40
+    }
+   },
+   "root": [
+    {
+     "kind": "choose",
+     "prompt": "选择转化岩石效果",
+     "options": [
+      {
+       "label": "化石为泥：地表（泥浆束缚豁免与区域）",
+       "do": [
+        {
+         "kind": "forEach",
+         "in": "area",
+         "do": [
+          {
+           "kind": "save",
+           "ability": "str",
+           "dc": "self.spell.dc",
+           "onFail": [
+            {
+             "kind": "applyEffect",
+             "template": "泥浆束缚",
+             "to": "target"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "kind": "zone",
+         "name": "化石为泥",
+         "difficult": true,
+         "on": [
+          "enter",
+          "turnEnd"
+         ],
+         "affects": "all",
+         "oncePerTurn": true,
+         "do": [
+          {
+           "kind": "save",
+           "ability": "str",
+           "dc": "self.spell.dc",
+           "onFail": [
+            {
+             "kind": "applyEffect",
+             "template": "泥浆束缚",
+             "to": "target"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "kind": "note",
+         "text": "化石为泥（地表）：区域为困难地形（引擎已自动多扣移动力）。原文穿过泥浆每尺消耗 4 尺移动力（超出困难地形部分的消耗请手动扣除）。进入与在内结束回合的力量豁免引擎已自动结算。"
+        }
+       ]
+      },
+      {
+       "label": "化石为泥：天花板坠落伤害",
+       "do": [
+        {
+         "kind": "forEach",
+         "in": "area",
+         "do": [
+          {
+           "kind": "save",
+           "ability": "dex",
+           "dc": "self.spell.dc",
+           "onFail": [
+            {
+             "kind": "damage",
+             "id": "mudFallDmg",
+             "dice": "4d8",
+             "type": "钝击"
+            }
+           ],
+           "onSuccess": [
+            {
+             "kind": "damage",
+             "ref": "mudFallDmg",
+             "scale": 0.5
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "化泥为石（岩石束缚豁免）",
+       "do": [
+        {
+         "kind": "forEach",
+         "in": "area",
+         "do": [
+          {
+           "kind": "save",
+           "ability": "dex",
+           "dc": "self.spell.dc",
+           "onFail": [
+            {
+             "kind": "applyEffect",
+             "template": "岩石束缚",
+             "to": "target"
+            }
+           ],
+           "onSuccess": [
+            {
+             "kind": "note",
+             "text": "豁免成功：安全传送到岩石表面一处未被占据的空间。"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "mudSave",
+   "name": "化石为泥：进入或回合结束豁免",
+   "activation": "none",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 120
+   },
+   "root": [
+    {
+     "kind": "save",
+     "ability": "str",
+     "dc": "self.spell.dc",
+     "onFail": [
+      {
+       "kind": "applyEffect",
+       "template": "泥浆束缚",
+       "to": "target"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "泥浆束缚": {
+   "tags": [
+    "magical",
+    "spell",
+    "debuff"
+   ],
+   "implies": [
+    "XPHB:condition:束缚"
+   ],
+   "text": "陷入泥浆并被束缚。穿过泥浆每尺消耗 4 尺移动力。可用动作进行检定把自己拽出泥浆以结束束缚。"
+  },
+  "岩石束缚": {
+   "tags": [
+    "magical",
+    "spell",
+    "debuff"
+   ],
+   "implies": [
+    "XPHB:condition:束缚"
+   ],
+   "text": "被硬化的软质岩石束缚。可用动作进行 DC 20 的力量检定，或对岩石（AC 15，生命值 25，免疫毒素和心灵伤害）造成伤害破坏岩石以解除束缚。"
+  }
+ }
+}

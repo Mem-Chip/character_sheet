@@ -1,0 +1,206 @@
+{
+ "name": "冰霜法杖",
+ "automation": "partial",
+ "text": "持握法杖期间具有寒冷伤害抗性（人物卡处理）。消耗充能施展法术（使用你自己的法术豁免DC）：云雾术（1充能）、冰风暴（4充能）、冰墙术（4充能）、寒冰锥（5充能）。",
+ "actions": [
+  {
+   "id": "fog-cloud",
+   "name": "冰霜法杖：云雾术",
+   "activation": "action",
+   "cost": [
+    {
+     "resource": "物品充能:冰霜法杖",
+     "n": 1
+    }
+   ],
+   "concentration": {
+    "hours": 1
+   },
+   "targeting": {
+    "type": "area",
+    "range": 120,
+    "area": {
+     "shape": "sphere",
+     "radius": 20
+    }
+   },
+   "root": [
+    {
+     "kind": "note",
+     "text": "创造一片半径20尺的球状浓雾，区域被重度遮蔽，持续至专注结束或被强风吹散。"
+    }
+   ]
+  },
+  {
+   "id": "ice-storm",
+   "name": "冰霜法杖：冰风暴",
+   "activation": "action",
+   "cost": [
+    {
+     "resource": "物品充能:冰霜法杖",
+     "n": 4
+    }
+   ],
+   "targeting": {
+    "type": "area",
+    "range": 300,
+    "area": {
+     "shape": "cylinder",
+     "radius": 20
+    }
+   },
+   "root": [
+    {
+     "kind": "forEach",
+     "in": "area",
+     "do": [
+      {
+       "kind": "save",
+       "ability": "dex",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "id": "bludg",
+         "dice": "2d10",
+         "type": "钝击"
+        },
+        {
+         "kind": "damage",
+         "id": "cold",
+         "dice": "4d6",
+         "type": "寒冷"
+        }
+       ],
+       "onSuccess": [
+        {
+         "kind": "damage",
+         "ref": "bludg",
+         "scale": 0.5
+        },
+        {
+         "kind": "damage",
+         "ref": "cold",
+         "scale": 0.5
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "zone",
+     "affects": "all",
+     "rounds": 1,
+     "name": "冰风暴",
+     "difficult": true
+    },
+    {
+     "kind": "note",
+     "text": "冰风暴：柱状区域高 40 尺，请人工判断高度；地面的冰雹是困难地形，地图上留一块 1 轮的困难地形区域（引擎自动多扣移动力），时间到了自动消失。"
+    }
+   ]
+  },
+  {
+   "id": "wall-of-ice",
+   "name": "冰霜法杖：冰墙术",
+   "activation": "action",
+   "cost": [
+    {
+     "resource": "物品充能:冰霜法杖",
+     "n": 4
+    }
+   ],
+   "concentration": {
+    "minutes": 10
+   },
+   "targeting": {
+    "type": "area",
+    "range": 120,
+    "area": {
+     "shape": "line",
+     "length": 100,
+     "width": 1
+    }
+   },
+   "root": [
+    {
+     "kind": "forEach",
+     "in": "area",
+     "do": [
+      {
+       "kind": "save",
+       "ability": "dex",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "id": "cold",
+         "dice": "10d6",
+         "type": "寒冷"
+        }
+       ],
+       "onSuccess": [
+        {
+         "kind": "damage",
+         "ref": "cold",
+         "scale": 0.5
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "note",
+     "text": "每段10尺冰墙AC 12、HP 30。被破坏后留下刺骨寒气，生物穿过时进行DC self.spell.dc体质豁免，失败受5d6寒冷伤害，成功半数。"
+    }
+   ]
+  },
+  {
+   "id": "cone-of-cold",
+   "name": "冰霜法杖：寒冰锥",
+   "activation": "action",
+   "cost": [
+    {
+     "resource": "物品充能:冰霜法杖",
+     "n": 5
+    }
+   ],
+   "targeting": {
+    "type": "area",
+    "range": "self",
+    "area": {
+     "shape": "cone",
+     "length": 60
+    }
+   },
+   "root": [
+    {
+     "kind": "forEach",
+     "in": "area",
+     "do": [
+      {
+       "kind": "save",
+       "ability": "con",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "id": "coc",
+         "dice": "8d8",
+         "type": "寒冷"
+        }
+       ],
+       "onSuccess": [
+        {
+         "kind": "damage",
+         "ref": "coc",
+         "scale": 0.5
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

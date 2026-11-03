@@ -1,0 +1,155 @@
+{
+  "name": "咒唤兽群",
+  "automation": "partial",
+  "text": "专注至多 10 分钟。在 60 尺内一处你可见的未占据空间咒唤出大型虚幻兽群（形态例如狼群、蛇群或鸟群，只是外观）。你位于兽群 5 尺内期间，你的力量豁免检定具有优势（引擎会提示询问）。地图上的区域画的是「兽群 10 尺内」的范围（兽群本身占 10 尺立方，所以区域是 30 尺立方）。每当生物进入兽群 10 尺内、或在该空间结束其回合时，可以迫使该生物做敏捷豁免，失败受 (slot.level)d10 挥砍伤害（3 环 3d10，每比 3 环高 1 环 +1d10）；同一名生物一回合限一次。当你在你的回合移动时，可用「咒唤兽群：移动兽群」将兽群挪动至多 30 尺，移入生物空间会自动按「进入」结算。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "咒唤兽群",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 3
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "area",
+        "range": 60,
+        "area": {
+          "shape": "cube",
+          "size": 30
+        }
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "咒唤兽群",
+          "state": {
+            "die": "(slot.level)d10"
+          }
+        },
+        {
+          "kind": "zone",
+          "on": [
+            "enter",
+            "turnEnd"
+          ],
+          "affects": "all",
+          "oncePerTurn": true,
+          "do": [
+            {
+              "kind": "if",
+              "when": "ask('咒唤兽群：要迫使这个生物进行一次敏捷豁免吗？')",
+              "then": [
+                {
+                  "kind": "save",
+                  "ability": "dex",
+                  "dc": "self.spell.dc",
+                  "onFail": [
+                    {
+                      "kind": "damage",
+                      "dice": "(slot.level)d10",
+                      "type": "挥砍"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "name": "咒唤兽群"
+        },
+        {
+          "kind": "note",
+          "text": "地图上的区域画的是「兽群 10 尺内」的范围（兽群本身占 10 尺立方，所以区域是 30 尺立方）。在你的回合移动时可用「咒唤兽群：移动兽群」挪动区域。"
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "name": "咒唤兽群：兽群践踏",
+      "activation": "free",
+      "requires": "self.hasEffect('咒唤兽群（激活）')",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "dex",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "self.effect('咒唤兽群（激活）').state.die",
+              "type": "挥砍"
+            }
+          ]
+        }
+      ],
+      "text": "兽群移入目标 10 尺内时若未自动触发，可用此动作手动结算豁免；每名生物每回合限一次。"
+    },
+    {
+      "id": "moveHerd",
+      "name": "咒唤兽群：移动兽群",
+      "activation": "free",
+      "requires": "self.hasEffect('咒唤兽群（激活）') && turn.isMine",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 30,
+        "area": {
+          "shape": "cube",
+          "size": 30
+        }
+      },
+      "root": [
+        {
+          "kind": "moveZone"
+        }
+      ],
+      "text": "当你在你的回合移动时，可以令兽群也移动至多 30 尺到一处你可见的未被占据的空间中。兽群移入生物 10 尺内会按「进入」自动结算豁免伤害（每名生物每回合限一次）。"
+    }
+  ],
+  "effects": {
+    "咒唤兽群": {
+      "name": "咒唤兽群（激活）",
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save",
+            "ability": "str"
+          },
+          "who": "bearer",
+          "when": "ask('你是否位于兽群 5 尺内？（在兽群 5 尺内则力量豁免具有优势）')",
+          "op": "adv",
+          "label": "咒唤兽群：位于兽群 5 尺内，力量豁免具有优势"
+        }
+      ],
+      "text": "维持大型虚幻兽群。施法者位于兽群 5 尺内期间力量豁免检定具有优势；可以在自己移动时用「咒唤兽群：移动兽群」让兽群移动至多 30 尺。"
+    }
+  }
+}

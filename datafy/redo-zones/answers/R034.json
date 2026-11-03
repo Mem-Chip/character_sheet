@@ -1,0 +1,148 @@
+{
+ "name": "风暴法球",
+ "automation": "partial",
+ "text": "专注至多 1 分钟。150 尺内一点为中心出现半径 20 尺的强风球体：出现时位于其中的生物做力量豁免，失败受 (slot.level - 2)d6 钝击伤害；在球体内结束回合的生物也要做这次力量豁免（区域留在地图上、随专注消失，同一生物每回合最多结算一次）。升环时所有伤害各 +1d6。球体内部的空间是困难地形（引擎自动多扣移动力）。球体周围 30 尺内的生物为聆听所做的感知（察觉）检定具有劣势 —— 引擎不处理，请人工判定。持续期间你可以在每个你的回合中用附赠动作令球心射出闪电：60 尺内远程法术攻击（若攻击目标在球体内，这次攻击检定具有优势，引擎会问你），命中受 4d6（升环每环 +1d6）闪电伤害。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "风暴法球",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 4
+     }
+    }
+   ],
+   "concentration": {
+    "minutes": 1
+   },
+   "targeting": {
+    "type": "area",
+    "range": 150,
+    "area": {
+     "shape": "sphere",
+     "radius": 20
+    }
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "风暴法球",
+     "state": {
+      "lightning": "(slot.level)d6"
+     }
+    },
+    {
+     "kind": "forEach",
+     "in": "area",
+     "do": [
+      {
+       "kind": "save",
+       "ability": "str",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "dice": "(slot.level - 2)d6",
+         "type": "钝击"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "zone",
+     "on": [
+      "turnEnd"
+     ],
+     "affects": "all",
+     "oncePerTurn": true,
+     "do": [
+      {
+       "kind": "save",
+       "ability": "str",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "dice": "(slot.level - 2)d6",
+         "type": "钝击"
+        }
+       ]
+      }
+     ],
+     "name": "风暴法球",
+     "difficult": true
+    },
+    {
+     "kind": "note",
+     "text": "球体周围 30 尺内的生物为聆听所做的感知（察觉）检定具有劣势 —— 引擎不处理范围外的感知检定，请人工判定。"
+    }
+   ]
+  },
+  {
+   "id": "lightning",
+   "name": "风暴法球：闪电射击",
+   "activation": "bonus",
+   "requires": "self.hasEffect('风暴法球（激活）')",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 60
+   },
+   "root": [
+    {
+     "kind": "attack",
+     "attack": {
+      "ranged": true,
+      "spell": true,
+      "damageType": "闪电"
+     },
+     "onHit": [
+      {
+       "kind": "damage",
+       "dice": "self.effect('风暴法球（激活）').state.lightning",
+       "type": "闪电"
+      }
+     ]
+    }
+   ],
+   "text": "直到法术结束前，每个你的回合中可以用一个附赠动作令球心射出一发闪电，攻击距球心不超过 60 尺的一个生物：远程法术攻击，命中造成闪电伤害（升环每环 +1d6）。目标在球体内时这次攻击检定具有优势。"
+  }
+ ],
+ "effects": {
+  "风暴法球": {
+   "name": "风暴法球（激活）",
+   "tags": [
+    "magical",
+    "spell"
+   ],
+   "rollMods": [
+    {
+     "on": {
+      "kind": "attack",
+      "attack": {
+       "ranged": true,
+       "spell": true
+      }
+     },
+     "who": "bearer",
+     "when": "ask('风暴法球：这次攻击的目标在球体内吗？（在球体内则攻击检定具有优势）')",
+     "op": "adv",
+     "label": "风暴法球：目标在球体内，攻击检定具有优势"
+    }
+   ],
+   "text": "维持半径 20 尺的强风球体。每个你的回合可以用附赠动作从球心射出闪电（60 尺内远程法术攻击），目标在球体内时攻击检定具有优势。"
+  }
+ }
+}

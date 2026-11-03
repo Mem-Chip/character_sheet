@@ -1,0 +1,189 @@
+{
+  "name": "碧水法球",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。在 90 尺内创造半径 5 尺的水球：出现时位于水球空间内的生物做力量豁免（巨型及以上体型自动成功），失败陷入束缚并被水淹没；生物进入水球时同样须做这次豁免。被束缚者在自己每个回合结束时重复豁免，成功即摆脱法术对自己的效果。后续回合可用「碧水法球：移动撞击」移动水球至多 30 尺（移入生物空间会自动按进入触发豁免）。水球的容纳上限（4 个中型或 1 个大型）、成功者排出到水球周围、随水球移动拖动被束缚者棋子、水球离地高度、以及法术结束时水球落地熄灭 30 尺内非魔法火焰并让被束缚者倒地出现，需人工处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "碧水法球",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 90,
+        "area": {
+          "shape": "sphere",
+          "radius": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "碧水法球"
+        },
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "if",
+              "when": "target.size != '巨型' && target.size != '超巨型'",
+              "then": [
+                {
+                  "kind": "save",
+                  "ability": "str",
+                  "dc": "self.spell.dc",
+                  "onFail": [
+                    {
+                      "kind": "applyEffect",
+                      "to": "target",
+                      "template": "碧水法球：束缚",
+                      "duration": {
+                        "saveEnds": {
+                          "ability": "str",
+                          "dc": "self.spell.dc",
+                          "at": "turnEnd"
+                        },
+                        "max": {
+                          "minutes": 1
+                        }
+                      }
+                    }
+                  ]
+                }
+              ],
+              "else": [
+                {
+                  "kind": "note",
+                  "text": "碧水法球：目标体型为巨型或更大，力量豁免自动成功。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "zone",
+          "on": [
+            "enter"
+          ],
+          "affects": "all",
+          "oncePerTurn": false,
+          "do": [
+            {
+              "kind": "if",
+              "when": "target.size != '巨型' && target.size != '超巨型'",
+              "then": [
+                {
+                  "kind": "save",
+                  "ability": "str",
+                  "dc": "self.spell.dc",
+                  "onFail": [
+                    {
+                      "kind": "applyEffect",
+                      "to": "target",
+                      "template": "碧水法球：束缚",
+                      "duration": {
+                        "saveEnds": {
+                          "ability": "str",
+                          "dc": "self.spell.dc",
+                          "at": "turnEnd"
+                        },
+                        "max": {
+                          "minutes": 1
+                        }
+                      }
+                    }
+                  ]
+                }
+              ],
+              "else": [
+                {
+                  "kind": "note",
+                  "text": "碧水法球：目标体型为巨型或更大，力量豁免自动成功。"
+                }
+              ]
+            }
+          ],
+          "name": "碧水法球"
+        },
+        {
+          "kind": "note",
+          "text": "水球至多容纳 4 个中型（或更小）或 1 个大型生物，超出上限时随机排出一个已被束缚者（倒地）出现在水球周围 5 尺内；豁免成功的生物应被排出到水球周围最近的未被占据空间；这些、以及水球离地高度、法术结束时熄灭 30 尺内所有非魔法火焰、被束缚者在落点周围倒地出现，都请人工处理。"
+        }
+      ]
+    },
+    {
+      "id": "moveSphere",
+      "name": "碧水法球：移动撞击",
+      "activation": "action",
+      "requires": "self.hasEffect('碧水法球（激活）')",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 30,
+        "area": {
+          "shape": "sphere",
+          "radius": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "moveZone"
+        },
+        {
+          "kind": "note",
+          "text": "水球沿直线移动至多 30 尺；水球移入生物空间会自动按「进入」判定力量豁免；已被束缚的生物随水球一起移动请在地图上手动拖动棋子。"
+        }
+      ],
+      "text": "用一个动作将水球沿直线移动至多 30 尺。水球移入生物空间会自动按「进入」结算豁免；被束缚者随水球移动请人工拖动棋子。"
+    }
+  ],
+  "effects": {
+    "碧水法球": {
+      "name": "碧水法球（激活）",
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "维持半径 5 尺的水球。可以用一个动作把它沿直线移动至多 30 尺并撞击生物迫使其做力量豁免。"
+    },
+    "碧水法球：束缚": {
+      "tags": [
+        "magical",
+        "spell",
+        "debuff"
+      ],
+      "implies": [
+        "XPHB:condition:束缚"
+      ],
+      "duration": {
+        "saveEnds": {
+          "ability": "str",
+          "dc": "self.spell.dc",
+          "at": "turnEnd"
+        },
+        "max": {
+          "minutes": 1
+        }
+      },
+      "text": "被水球束缚并被水淹没。在其每个回合结束时可重复力量豁免（DC 等于施法者的法术豁免 DC），成功则摆脱。"
+    }
+  }
+}

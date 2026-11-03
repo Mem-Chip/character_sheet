@@ -1,0 +1,182 @@
+{
+ "name": "自然之怒",
+ "automation": "partial",
+ "text": "专注至多 1 分钟。120 尺内一点为中心 60 尺立方区域里的树木、岩石和草丛被活化（区域留在地图上，随专注消失）。草丛与灌木使区域内地面对敌人成为困难地形（引擎自动多扣移动力）。在你的每个回合开始时用「自然之怒：树木挥击」选中树木 10 尺内的敌人结算敏捷豁免（失败受 4d6 挥砍）；在你的每个回合结束时用「自然之怒：根藤缠绕」选中一个生物结算力量豁免（失败被束缚直至法术结束）。附赠动作可用「自然之怒：投石」投掷岩石（远程法术攻击 3d8 钝击，命中力量豁免否则倒地）。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "自然之怒",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 5
+     }
+    }
+   ],
+   "concentration": {
+    "minutes": 1
+   },
+   "targeting": {
+    "type": "area",
+    "range": 120,
+    "area": {
+     "shape": "cube",
+     "size": 60
+    }
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "自然之怒"
+    },
+    {
+     "kind": "zone",
+     "name": "自然之怒",
+     "difficult": true
+    },
+    {
+     "kind": "note",
+     "text": "自然之怒：草丛与灌木覆盖的地面对敌人是困难地形（引擎已自动多扣移动力；若区域内非草木地表请注意区分）。树木与岩石的具体位置由人判断：在你的回合开始时用「自然之怒：树木挥击」、在你的回合结束时用「自然之怒：根藤缠绕」选中生物结算。"
+    }
+   ]
+  },
+  {
+   "id": "treeStrike",
+   "name": "自然之怒：树木挥击",
+   "activation": "free",
+   "requires": "self.hasEffect('自然之怒（激活）')",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "targeting": {
+    "type": "creature",
+    "range": 120
+   },
+   "root": [
+    {
+     "kind": "save",
+     "ability": "dex",
+     "dc": "self.spell.dc",
+     "onFail": [
+      {
+       "kind": "damage",
+       "dice": "4d6",
+       "type": "挥砍"
+      }
+     ]
+    }
+   ],
+   "text": "在你的每个回合开始时结算：选中区域内树木 10 尺内的每个敌人（树木位置由人判断），它们做敏捷豁免，失败受 4d6 挥砍伤害。"
+  },
+  {
+   "id": "rootGrasp",
+   "name": "自然之怒：根藤缠绕",
+   "activation": "free",
+   "requires": "self.hasEffect('自然之怒（激活）')",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 120
+   },
+   "root": [
+    {
+     "kind": "save",
+     "ability": "str",
+     "dc": "self.spell.dc",
+     "onFail": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "自然之怒：束缚",
+       "duration": {
+        "minutes": 1
+       }
+      }
+     ]
+    }
+   ],
+   "text": "在你的每个回合结束时结算：选中区域内站于地面上的一个生物（是否站在地面上由人判断），力量豁免失败被束缚直到法术结束。被束缚的生物可以用它的动作做力量（运动）检定对抗你的法术 DC，成功则结束这个效果——这一步请手动移除效应。"
+  },
+  {
+   "id": "throwRock",
+   "name": "自然之怒：投石",
+   "activation": "bonus",
+   "requires": "self.hasEffect('自然之怒（激活）') && turn.isMine",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 120,
+    "filter": "canSee(self, target)"
+   },
+   "root": [
+    {
+     "kind": "attack",
+     "attack": {
+      "ranged": true,
+      "spell": true,
+      "damageType": "钝击"
+     },
+     "onHit": [
+      {
+       "kind": "damage",
+       "dice": "3d8",
+       "type": "钝击"
+      },
+      {
+       "kind": "save",
+       "ability": "str",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "applyEffect",
+         "to": "target",
+         "template": "XPHB:condition:倒地"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "text": "在你的回合中以一个附赠动作，把区域内的一块松动岩石掷向同样在区域里的一个你可见的生物。命中造成 3d8 非魔法钝击伤害，目标再做力量豁免，失败倒地。"
+  }
+ ],
+ "effects": {
+  "自然之怒": {
+   "name": "自然之怒（激活）",
+   "tags": [
+    "magical",
+    "spell"
+   ],
+   "text": "维持 60 尺立方的活化精魂区域。在你的回合开始时树木挥击、结束时根藤缠绕；还可以用附赠动作投石。"
+  },
+  "自然之怒：束缚": {
+   "tags": [
+    "magical",
+    "spell",
+    "debuff"
+   ],
+   "implies": [
+    "XPHB:condition:束缚"
+   ],
+   "duration": {
+    "minutes": 1
+   },
+   "text": "被根茎和藤蔓束缚，直到法术结束。可用动作做力量（运动）检定对抗施法者的法术 DC 挣脱（检定与移除请手动处理）。"
+  }
+ }
+}

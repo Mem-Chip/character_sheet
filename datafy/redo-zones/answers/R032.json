@@ -1,0 +1,68 @@
+{
+  "name": "大漩涡",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。在 120 尺内地面或水面指定一点，出现深达 5 尺、半径 30 尺的大漩涡（困难地形，引擎自动多扣移动力）。在该区域开始其回合的生物进行力量豁免，失败受 6d6 钝击伤害并被拉向中心 10 尺。这次「拉向中心」引擎做不到（拉近是朝施法者方向拉，漩涡中心在地图上），请人工把棋子朝漩涡中心挪 10 尺；「必须选地面或水面」也需人工确认。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "大漩涡",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "cylinder",
+          "radius": 30
+        }
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "大漩涡：指定的点必须处于地面或水体表面，请人工确认。"
+        },
+        {
+          "kind": "zone",
+          "on": [
+            "turnStart"
+          ],
+          "affects": "all",
+          "oncePerTurn": true,
+          "difficult": true,
+          "do": [
+            {
+              "kind": "save",
+              "ability": "str",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "dice": "6d6",
+                  "type": "钝击"
+                },
+                {
+                  "kind": "note",
+                  "text": "大漩涡：把这块棋子朝漩涡中心拉 10 尺 —— 请手动拖（引擎的拉近是朝施法者方向拉，不是朝漩涡中心，所以这里不自动拉）。"
+                }
+              ]
+            }
+          ],
+          "name": "大漩涡"
+        }
+      ]
+    }
+  ]
+}

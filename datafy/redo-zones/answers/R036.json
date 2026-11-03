@@ -1,0 +1,145 @@
+{
+ "name": "光墙术",
+ "automation": "partial",
+ "text": "专注至多 10 分钟。在 120 尺内升起至多长 60 尺、高 10 尺、厚 5 尺的光墙，出现时区域内生物体质豁免，失败受 (slot.level - 1)d8 光耀伤害并目盲（每回合结束可重豁免），成功半伤。墙留在地图上：在墙内结束回合的生物受到 (slot.level - 1)d8 光耀伤害，随专注结束消失。后续可用动作从墙上发射光辉射线（远程法术攻击，命中 4d8 光耀）；墙体阻挡视线、发光、每次发射缩短 10 尺需人工处理。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "光墙术",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 5
+     }
+    }
+   ],
+   "concentration": {
+    "minutes": 10
+   },
+   "targeting": {
+    "type": "area",
+    "range": 120,
+    "area": {
+     "shape": "line",
+     "length": 60,
+     "width": 5
+    }
+   },
+   "root": [
+    {
+     "kind": "note",
+     "text": "光墙术：墙阻挡视觉线并发出 120 尺明亮照明与额外 120 尺微光（引擎不处理视线与光照，请人工判定）。"
+    },
+    {
+     "kind": "forEach",
+     "in": "area",
+     "do": [
+      {
+       "kind": "save",
+       "ability": "con",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "id": "wallDmg",
+         "dice": "(slot.level - 1)d8",
+         "type": "光耀"
+        },
+        {
+         "kind": "applyEffect",
+         "to": "target",
+         "template": "光墙术：目盲"
+        }
+       ],
+       "onSuccess": [
+        {
+         "kind": "damage",
+         "ref": "wallDmg",
+         "scale": 0.5
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "zone",
+     "on": [
+      "turnEnd"
+     ],
+     "affects": "all",
+     "oncePerTurn": true,
+     "do": [
+      {
+       "kind": "damage",
+       "dice": "(slot.level - 1)d8",
+       "type": "光耀"
+      }
+     ],
+     "name": "光墙术"
+    }
+   ]
+  },
+  {
+   "id": "ray",
+   "name": "光墙术：光辉射线",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 60
+   },
+   "root": [
+    {
+     "kind": "attack",
+     "bonus": "self.spell.atk",
+     "attack": {
+      "ranged": true,
+      "spell": true,
+      "damageType": "光耀"
+     },
+     "onHit": [
+      {
+       "kind": "damage",
+       "dice": "4d8",
+       "type": "光耀"
+      }
+     ]
+    },
+    {
+     "kind": "note",
+     "text": "无论击中或失手，光墙长度都减少 10 尺；降至 0 尺时法术结束（墙体缩短需人工处理）。这次射线按 5 环基础伤害 4d8 结算，若光墙是升环施放的，请人工补上每高一环的 1d8。"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "光墙术：目盲": {
+   "tags": [
+    "magical",
+    "spell",
+    "debuff"
+   ],
+   "duration": {
+    "minutes": 10,
+    "saveEnds": {
+     "ability": "con",
+     "dc": "source.spell.dc",
+     "at": "turnEnd"
+    }
+   },
+   "implies": [
+    "XPHB:condition:目盲"
+   ],
+   "text": "被光墙的耀光目盲。在其每个回合结束时可以重新进行体质豁免，成功则结束目盲。"
+  }
+ }
+}

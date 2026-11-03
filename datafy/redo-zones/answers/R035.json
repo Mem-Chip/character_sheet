@@ -1,0 +1,117 @@
+{
+ "name": "拂晓",
+ "automation": "partial",
+ "text": "专注至多 1 分钟。在 60 尺内指定一点升起 30 尺半径、40 尺高的阳光光柱并留在地图上：出现时处于其中的生物体质豁免，失败受 4d10 光耀伤害，成功半伤；在光柱中结束回合的生物也须再次进行该豁免（每回合限一次）。随专注结束消失。光柱的阳光性质与 40 尺高度需人工处理；在光柱 60 尺内时可在你的回合用附赠动作「拂晓：移动光柱」在地图上选新位置移动至多 60 尺。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "拂晓",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 5
+     }
+    }
+   ],
+   "concentration": {
+    "minutes": 1
+   },
+   "targeting": {
+    "type": "area",
+    "range": 60,
+    "area": {
+     "shape": "cylinder",
+     "radius": 30
+    }
+   },
+   "root": [
+    {
+     "kind": "forEach",
+     "in": "area",
+     "do": [
+      {
+       "kind": "save",
+       "ability": "con",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "id": "dawnDmg",
+         "dice": "4d10",
+         "type": "光耀"
+        }
+       ],
+       "onSuccess": [
+        {
+         "kind": "damage",
+         "ref": "dawnDmg",
+         "scale": 0.5
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "note",
+     "text": "拂晓：这道光芒被视为阳光，光柱高 40 尺（引擎不处理光照与高度，请人工判定）。可以在自己回合用附赠动作「拂晓：移动光柱」将光柱移动 60 尺（在地图上选新位置）。"
+    },
+    {
+     "kind": "zone",
+     "on": [
+      "turnEnd"
+     ],
+     "affects": "all",
+     "oncePerTurn": true,
+     "do": [
+      {
+       "kind": "save",
+       "ability": "con",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "id": "dawnZoneDmg",
+         "dice": "4d10",
+         "type": "光耀"
+        }
+       ],
+       "onSuccess": [
+        {
+         "kind": "damage",
+         "ref": "dawnZoneDmg",
+         "scale": 0.5
+        }
+       ]
+      }
+     ],
+     "name": "拂晓"
+    }
+   ]
+  },
+  {
+   "id": "move",
+   "name": "拂晓：移动光柱",
+   "activation": "bonus",
+   "requires": "turn.isMine",
+   "text": "如果你在光柱 60 尺内，可以在你的回合以附赠动作将光柱移动至多 60 尺（在地图上选新位置；距离与 60 尺限制引擎不查）。",
+   "targeting": {
+    "type": "area",
+    "range": 60,
+    "area": {
+     "shape": "cylinder",
+     "radius": 30
+    }
+   },
+   "root": [
+    {
+     "kind": "moveZone"
+    }
+   ]
+  }
+ ]
+}

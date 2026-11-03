@@ -1,0 +1,93 @@
+{
+  "name": "死云术",
+  "automation": "partial",
+  "text": "专注至多 10 分钟。在 120 尺内指定一点创造半径 20 尺球状剧毒浓雾（视为重度遮蔽，浓雾与遮蔽需人工处理）。区域内的生物进行体质豁免，失败受 (slot.level)d8 毒素伤害（5 环 5d8，每高一环 +1d8），成功半数；区域移动到生物空间、生物进入区域或在其中结束回合时同样须进行该豁免（每名生物每回合限一次）。在你的每个回合开始时，用「死云术：移动云雾」在地图上将球状区域往远离你的方向移动 10 尺（移入谁的空间就算进入）。强风吹散需人工处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "死云术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "sphere",
+          "radius": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "zone",
+          "name": "死云术",
+          "on": [
+            "create",
+            "enter",
+            "turnEnd"
+          ],
+          "affects": "all",
+          "oncePerTurn": true,
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "cloud",
+                  "dice": "(slot.level)d8",
+                  "type": "毒素"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "cloud",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "死云术：这片球状区域视为重度遮蔽；在你的每个回合开始时它往远离你的方向移动 10 尺（用「死云术：移动云雾」重选位置）；被强风吹散时法术解除（请手动结束专注并删除区域）。"
+        }
+      ]
+    },
+    {
+      "id": "move",
+      "name": "死云术：移动云雾",
+      "activation": "free",
+      "requires": "turn.isMine",
+      "text": "在你的每个回合开始时，把球状区域往远离你的方向移动 10 尺（在地图上重新选球体的位置）。云雾移入谁的空间，谁就按「进入」进行豁免。",
+      "root": [
+        {
+          "kind": "moveZone"
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "sphere",
+          "radius": 20
+        }
+      }
+    }
+  ]
+}

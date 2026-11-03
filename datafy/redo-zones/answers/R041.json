@@ -1,0 +1,88 @@
+{
+ "name": "守护之风",
+ "automation": "partial",
+ "text": "专注至多 10 分钟。以自身为中心 10 尺半径的强风留在地图上：区域为困难地形（引擎自动多扣移动力）；处于区域内的生物自动挂上耳聋状态，离开区域或法术结束自动解除。强风随你移动，移动后可使用「守护之风：跟随移动」将区域挪至当前位置。未受保护的小火焰被熄灭、吹散可吹除的毒气与雾气、远程武器攻击穿入或穿出风区具有劣势需人工判定。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "守护之风",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 2
+     }
+    }
+   ],
+   "concentration": {
+    "minutes": 10
+   },
+   "targeting": {
+    "type": "area",
+    "range": "self",
+    "area": {
+     "shape": "emanation",
+     "radius": 10
+    }
+   },
+   "root": [
+    {
+     "kind": "zone",
+     "name": "守护之风",
+     "affects": "all",
+     "while": [
+      {
+       "kind": "applyEffect",
+       "template": "守护之风：耳聋"
+      }
+     ],
+     "difficult": true
+    },
+    {
+     "kind": "note",
+     "text": "守护之风：熄灭区域内火把大小的未受保护火焰；隔开可被强风吹散的毒气、瓦斯与雾气；远程武器攻击进入或离开风区时攻击检定具有劣势 —— 引擎不处理风与弹道穿过，请人工判定。强风随你移动，移动后请用「守护之风：跟随移动」将区域移至新位置。"
+    }
+   ]
+  },
+  {
+   "id": "move",
+   "name": "守护之风：跟随移动",
+   "activation": "free",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "targeting": {
+    "type": "area",
+    "range": "self",
+    "area": {
+     "shape": "emanation",
+     "radius": 10
+    }
+   },
+   "root": [
+    {
+     "kind": "moveZone"
+    }
+   ],
+   "text": "强风始终以你为中心随你移动。移动后使用此动作在地图上将强风区域挪到以你为中心的新位置。"
+  }
+ ],
+ "effects": {
+  "守护之风：耳聋": {
+   "tags": [
+    "magical",
+    "spell",
+    "debuff"
+   ],
+   "implies": [
+    "XPHB:condition:耳聋"
+   ],
+   "text": "处于守护之风的强风中：陷入耳聋状态。离开区域或法术结束时自动解除。"
+  }
+ }
+}

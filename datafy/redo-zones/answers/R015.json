@@ -1,0 +1,86 @@
+{
+  "name": "造风术",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。从自身向指定方向吹出长 60 尺、宽 10 尺的线状强风。风道出现时及在风线内结束其回合的生物进行力量豁免，失败被推离你 15 尺（引擎按区域自动结算；有地图时 push 会移动棋子）。后续回合可用附赠动作「造风术：改变风向」调整风向。迎风移动每 1 尺花 2 尺移动力、吹散毒气蒸汽与吹灭火焰需人工处理。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "造风术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 2
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "line",
+          "length": 60,
+          "width": 10
+        }
+      },
+      "root": [
+        {
+          "kind": "zone",
+          "name": "造风术",
+          "on": [
+            "create",
+            "turnEnd"
+          ],
+          "affects": "all",
+          "oncePerTurn": true,
+          "do": [
+            {
+              "kind": "save",
+              "ability": "str",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "move",
+                  "mode": "push",
+                  "ft": 15
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "造风术：强风吹散区域内的毒气或蒸汽，并吹熄蜡烛等不受保护的火焰；有保护的火焰（如提灯）有 50% 概率被吹熄。迎风（朝更靠近你的方向）移动时每 1 尺花费 2 尺移动力（需人工处理）。后续回合可用附赠动作「造风术：改变风向」调整风道方向。"
+        }
+      ]
+    },
+    {
+      "id": "redirect",
+      "name": "造风术：改变风向",
+      "activation": "bonus",
+      "requires": "turn.isMine",
+      "text": "以附赠动作改变线状风道的方向（在地图上以自身为起点重选风道方向）。",
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "line",
+          "length": 60,
+          "width": 10
+        }
+      },
+      "root": [
+        {
+          "kind": "moveZone"
+        }
+      ]
+    }
+  ]
+}

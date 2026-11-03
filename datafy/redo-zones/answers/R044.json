@@ -1,0 +1,100 @@
+{
+ "name": "治愈之魂",
+ "automation": "partial",
+ "text": "附赠动作施放，专注至多 1 分钟。在 60 尺内一处 5 尺立方空间召唤自然精魂并留在地图上；你或你能看见的生物在回合里第一次进入该空间、或在其开始回合时，你可以让精魂为它恢复 (slot.level - 1)d6 点生命值（不能治疗构装体与不死生物，每回合限一次，随专注结束消失）。精魂至多治愈 1 + 施法属性调整值次（至少 2 次），用尽后消失（需人工记数并在用尽时结束）。自己回合内可用附赠动作「治愈之魂：移动精魂」将区域挪至 30 尺内新位置。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "治愈之魂",
+   "activation": "bonus",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 2
+     }
+    }
+   ],
+   "concentration": {
+    "minutes": 1
+   },
+   "targeting": {
+    "type": "area",
+    "range": 60,
+    "area": {
+     "shape": "cube",
+     "size": 5
+    }
+   },
+   "root": [
+    {
+     "kind": "forEach",
+     "in": "area",
+     "do": [
+      {
+       "kind": "if",
+       "when": "target.type != '构装生物' && target.type != '不死生物' && ask('让精魂为它恢复生命值吗？（精魂至多治愈 1 + 施法属性调整值次，用尽后消失）')",
+       "then": [
+        {
+         "kind": "heal",
+         "amount": "(slot.level - 1)d6",
+         "to": "target"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "note",
+     "text": "治愈之魂：精魂至多能进行 1 + 你的施法属性调整值次治愈（至少 2 次），用尽后消失（请人工记数并手动删除区域/结束专注）；在你的回合中可以用附赠动作「治愈之魂：移动精魂」让它移动 30 尺（在地图上选新位置）。"
+    },
+    {
+     "kind": "zone",
+     "on": [
+      "enter",
+      "turnStart"
+     ],
+     "affects": "all",
+     "oncePerTurn": true,
+     "do": [
+      {
+       "kind": "if",
+       "when": "target.type != '构装生物' && target.type != '不死生物' && ask('让精魂为它恢复生命值吗？（精魂至多治愈 1 + 施法属性调整值次，用尽后消失）')",
+       "then": [
+        {
+         "kind": "heal",
+         "amount": "(slot.level - 1)d6",
+         "to": "target"
+        }
+       ]
+      }
+     ],
+     "name": "治愈之魂"
+    }
+   ]
+  },
+  {
+   "id": "move",
+   "name": "治愈之魂：移动精魂",
+   "activation": "bonus",
+   "requires": "turn.isMine",
+   "text": "在你的回合中，可以用附赠动作让精魂移动至多 30 尺至另一处你可见的空间内（在地图上选新位置，引擎自动挪动区域）。",
+   "targeting": {
+    "type": "area",
+    "range": 30,
+    "area": {
+     "shape": "cube",
+     "size": 5
+    }
+   },
+   "root": [
+    {
+     "kind": "moveZone"
+    }
+   ]
+  }
+ ]
+}

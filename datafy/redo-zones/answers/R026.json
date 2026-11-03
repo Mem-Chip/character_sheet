@@ -1,0 +1,116 @@
+{
+  "name": "埋骨墓地",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。在 120 尺内由至多四个相互连接的 10 尺方格组成骸骨之手区域，对敌人视为困难地形（引擎自动多扣移动力）。骸骨之手出现时，区域内的每个敌人进行力量豁免，失败受 (1 + slot.level)d6 黯蚀伤害，且在其所有伤害掷骰中受 1d6 减值直至其下一回合结束。敌人进入区域或在区域内结束回合时同样须进行该豁免（每回合限一次）。区域会留在地图上、随专注结束消失；多方格拼合形状需人工处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "埋骨墓地",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "cube",
+          "size": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "str",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "dice": "(1 + slot.level)d6",
+                  "type": "黯蚀"
+                },
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "埋骨墓地"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "zone",
+          "on": [
+            "enter",
+            "turnEnd"
+          ],
+          "affects": "enemies",
+          "oncePerTurn": true,
+          "difficult": true,
+          "do": [
+            {
+              "kind": "save",
+              "ability": "str",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "dice": "(1 + slot.level)d6",
+                  "type": "黯蚀"
+                },
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "埋骨墓地"
+                }
+              ]
+            }
+          ],
+          "name": "埋骨墓地"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "埋骨墓地": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "damage"
+          },
+          "who": "bearer",
+          "op": "addDice",
+          "value": "-1d6",
+          "label": "埋骨墓地：伤害掷骰受 1d6 减值"
+        }
+      ],
+      "text": "在所有伤害掷骰中受 1d6 减值，持续至其下一回合结束。"
+    }
+  }
+}

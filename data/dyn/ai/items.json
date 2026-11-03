@@ -1105,8 +1105,15 @@
        ]
       },
       {
+       "kind": "zone",
+       "affects": "all",
+       "rounds": 1,
+       "name": "冰风暴",
+       "difficult": true
+      },
+      {
        "kind": "note",
-       "text": "区域内地面变为困难地形，直至你的下一回合结束。"
+       "text": "冰风暴：柱状区域高 40 尺，请人工判断高度；地面的冰雹是困难地形，地图上留一块 1 轮的困难地形区域（引擎自动多扣移动力），时间到了自动消失。"
       }
      ]
     },
@@ -1528,8 +1535,41 @@
        ]
       },
       {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": true,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "con",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "plague_zone_dmg",
+           "dice": "4d10",
+           "type": "穿刺"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "plague_zone_dmg",
+           "scale": 0.5
+          }
+         ]
+        }
+       ],
+       "name": "疫病虫群",
+       "difficult": true
+      },
+      {
        "kind": "note",
-       "text": "区域视为困难地形并处于轻度遮蔽。生物在一个回合内第一次进入该区域或在其中结束回合同样须进行该体质豁免（每回合每名生物限一次）。"
+       "text": "区域处于轻度遮蔽（引擎不处理遮蔽，需人工处理）"
       }
      ]
     }
@@ -3888,8 +3928,33 @@
        ]
       },
       {
+       "kind": "zone",
+       "on": [
+        "enter",
+        "turnEnd"
+       ],
+       "affects": "all",
+       "oncePerTurn": false,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "dex",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "XPHB:condition:倒地"
+          }
+         ]
+        }
+       ],
+       "name": "油腻术",
+       "difficult": true
+      },
+      {
        "kind": "note",
-       "text": "地面覆盖 10 尺方状区域油腻术效应，持续 8 小时。区域为困难地形，后续进入或在其内结束回合的生物须敏捷豁免对抗倒地。"
+       "text": "地面覆盖 10 尺方状区域油腻术效应，持续 8 小时。区域为困难地形（引擎自动多扣移动力），进入或在其中结束回合须敏捷豁免对抗倒地；若提前被清除请手动删除区域。"
       }
      ]
     }
@@ -3908,7 +3973,12 @@
        ]
       }
      ],
-     "text": "持续 8 小时。移动不受困难地形影响，免疫麻痹与束缚状态，任何法术或魔法效应不能降低其速度，获得等同于速度的游泳速度，可花费 5 尺移动力挣脱受擒或非魔法束缚物。"
+     "flags": {
+      "ignores": [
+       "difficultTerrain"
+      ]
+     },
+     "text": "持续 8 小时。移动不受困难地形影响（引擎自动忽略困难地形），免疫麻痹与束缚状态，任何法术或魔法效应不能降低其速度，获得等同于速度的游泳速度，可花费 5 尺移动力挣脱受擒或非魔法束缚物。"
     }
    },
    "tags": [
@@ -14544,8 +14614,15 @@
        ]
       },
       {
+       "kind": "zone",
+       "affects": "all",
+       "rounds": 1,
+       "name": "冰风暴",
+       "difficult": true
+      },
+      {
        "kind": "note",
-       "text": "区域内地面变为困难地形，直至你的下一回合结束"
+       "text": "冰风暴：柱状区域高 40 尺，请人工判断高度；地面的冰雹是困难地形，地图上留一块 1 轮的困难地形区域（引擎自动多扣移动力），时间到了自动消失。"
       }
      ]
     },
@@ -14907,17 +14984,50 @@
        "resource": "物品次数:吟游诗人乐器，佛克路坎三弦琴:纠缠术"
       }
      ],
+     "concentration": {
+      "minutes": 1
+     },
+     "targeting": {
+      "type": "area",
+      "range": 90,
+      "area": {
+       "shape": "cube",
+       "size": 20
+      }
+     },
      "root": [
       {
-       "kind": "save",
-       "ability": "str",
-       "dc": "self.spell.dc",
-       "onFail": [
+       "kind": "forEach",
+       "in": "area",
+       "do": [
         {
-         "kind": "note",
-         "text": "在 20 尺正方形区域生成杂草缠绕，区域成为困难地形，范围内的生物力量豁免失败陷入束缚状态（专注至多 1 分钟）。"
+         "kind": "if",
+         "when": "target.id != self.id",
+         "then": [
+          {
+           "kind": "save",
+           "ability": "str",
+           "dc": "self.spell.dc",
+           "onFail": [
+            {
+             "kind": "applyEffect",
+             "to": "target",
+             "template": "纠缠"
+            }
+           ]
+          }
+         ]
         }
        ]
+      },
+      {
+       "kind": "zone",
+       "name": "纠缠术",
+       "difficult": true
+      },
+      {
+       "kind": "note",
+       "text": "被植物覆盖的区域是困难地形（引擎自动多扣移动力）；被束缚生物可用动作进行力量（运动）检定对抗法术 DC 挣脱，成功后请手动移除纠缠效应。"
       }
      ]
     },
@@ -14977,6 +15087,18 @@
      ]
     }
    ],
+   "effects": {
+    "纠缠": {
+     "tags": [
+      "magical",
+      "spell"
+     ],
+     "implies": [
+      "XPHB:condition:束缚"
+     ],
+     "text": "陷入束缚状态直到法术结束。可用动作进行力量（运动）检定对抗法术 DC，成功则摆脱藤蔓不再被束缚（这个动作需人工处理）。"
+    }
+   },
    "tags": [
     "ai",
     "未审"

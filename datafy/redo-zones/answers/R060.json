@@ -1,0 +1,73 @@
+{
+ "name": "黑暗术",
+ "automation": "partial",
+ "text": "消耗 1 点功力，无需任何法术成分施展黑暗术：在 60 尺内指定一点放下半径 15 尺的球状魔法黑暗区域，随专注至多 10 分钟存在、专注结束区域消失，生物进入时日志会提示它处在魔法黑暗中。你可以看穿以这个特性施展的黑暗区域（引擎不处理视线，请人工裁定）。法术持续期间，每个回合开始时可以用「黑暗术：移动区域」将其移动到 60 尺内任意空间（在地图上选新位置，引擎自动移动区域）。",
+ "actions": [
+  {
+   "id": "ki",
+   "name": "黑暗术（功力施展）",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "resource": "功力"
+    }
+   ],
+   "concentration": {
+    "minutes": 10
+   },
+   "targeting": {
+    "type": "area",
+    "range": 60,
+    "area": {
+     "shape": "sphere",
+     "radius": 15
+    }
+   },
+   "root": [
+    {
+     "kind": "note",
+     "text": "黑暗术（功力施展）：无需任何法术成分；你可以看穿以这个特性施展的黑暗区域（引擎不处理视线，请人工裁定）。法术持续期间，每个回合开始时可以用「黑暗术：移动区域」将区域移动到 60 尺内任意空间。"
+    },
+    {
+     "kind": "zone",
+     "on": [
+      "enter"
+     ],
+     "affects": "all",
+     "oncePerTurn": true,
+     "do": [
+      {
+       "kind": "note",
+       "text": "黑暗术：该生物进入了魔法黑暗区域（重度遮蔽；黑暗视觉也看不穿，非魔法光照无法照亮）—— 引擎不处理视线，攻击 / 躲藏请人工裁定。"
+      }
+     ],
+     "name": "黑暗术"
+    }
+   ]
+  },
+  {
+   "id": "move",
+   "name": "黑暗术：移动区域",
+   "activation": "free",
+   "requires": "turn.isMine",
+   "targeting": {
+    "type": "area",
+    "range": 60,
+    "area": {
+     "shape": "sphere",
+     "radius": 15
+    }
+   },
+   "root": [
+    {
+     "kind": "moveZone"
+    }
+   ],
+   "text": "在你的每个回合开始时，你可以将黑暗术区域移动到你 60 尺范围内的任意一处空间（在地图上选新位置）。"
+  }
+ ]
+}

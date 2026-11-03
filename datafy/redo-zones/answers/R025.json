@@ -1,0 +1,150 @@
+{
+  "name": "距离失真",
+  "automation": "partial",
+  "text": "专注至多 10 分钟。在 120 尺内以一点为中心 60 尺球状区域创造空间膨胀幻象。对施法时区域内可见生物、以及持续期间进入区域或在其中结束回合的生物（每回合限一次），可选择其一：【天旋地转】智力豁免，失败受 2d10 心灵伤害且区域对其视为困难地形至其回合结束（单体困难地形需人工处理）；【缩地成寸】速度增加 20 尺至其下一回合结束。引擎自动在进入与结束回合时触发判定。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "距离失真",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 4
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 10
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "sphere",
+          "radius": 60
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "choose",
+              "prompt": "为该生物选择距离失真效应",
+              "options": [
+                {
+                  "label": "天旋地转",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "int",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        {
+                          "kind": "damage",
+                          "dice": "2d10",
+                          "type": "心灵"
+                        },
+                        {
+                          "kind": "note",
+                          "text": "球状区域对其视为困难地形，持续至其回合结束（单体困难地形请人工处理）。"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "缩地成寸",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "to": "target",
+                      "template": "缩地成寸"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "zone",
+          "on": [
+            "enter",
+            "turnEnd"
+          ],
+          "affects": "all",
+          "oncePerTurn": true,
+          "do": [
+            {
+              "kind": "choose",
+              "prompt": "为该生物选择距离失真效应",
+              "options": [
+                {
+                  "label": "天旋地转",
+                  "do": [
+                    {
+                      "kind": "save",
+                      "ability": "int",
+                      "dc": "self.spell.dc",
+                      "onFail": [
+                        {
+                          "kind": "damage",
+                          "dice": "2d10",
+                          "type": "心灵"
+                        },
+                        {
+                          "kind": "note",
+                          "text": "球状区域对其视为困难地形，持续至其回合结束（单体困难地形请人工处理）。"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "缩地成寸",
+                  "do": [
+                    {
+                      "kind": "applyEffect",
+                      "to": "target",
+                      "template": "缩地成寸"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "name": "距离失真"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "缩地成寸": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "statics": [
+        {
+          "kind": "speed",
+          "bonus": 20
+        }
+      ],
+      "text": "速度增加 20 尺，持续至其下一回合结束。"
+    }
+  }
+}

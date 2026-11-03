@@ -1,0 +1,117 @@
+{
+ "name": "圈套术",
+ "automation": "partial",
+ "text": "耗时 1 分钟在触及地面创造 5 尺半径的隐形魔法陷阱并在地图上留下区域（持续 8 小时，无需专注）。小型/中型/大型生物移动进入时自动触发敏捷豁免，失败被魔法性倒吊并陷入束缚（在其每个回合结束时可重复敏捷豁免，成功则结束束缚；其他触及生物可用动作进行对抗法术 DC 的智力（奥秘）检定解救）。陷阱隐蔽（智力（调查）检定才能发现）与触发后无束缚生物时法术结束需人工判定（手动删除区域）。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "圈套术",
+   "activation": {
+    "minutes": 1
+   },
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 1
+     }
+    }
+   ],
+   "targeting": {
+    "type": "area",
+    "range": "touch",
+    "area": {
+     "shape": "sphere",
+     "radius": 5
+    }
+   },
+   "root": [
+    {
+     "kind": "zone",
+     "name": "圈套术",
+     "on": [
+      "enter"
+     ],
+     "affects": "all",
+     "oncePerTurn": true,
+     "do": [
+      {
+       "kind": "if",
+       "when": "target.size == '小型' || target.size == '中型' || target.size == '大型' || target.size == 'S' || target.size == 'M' || target.size == 'L'",
+       "then": [
+        {
+         "kind": "save",
+         "ability": "dex",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "圈套倒吊"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "note",
+     "text": "圈套术：陷阱几乎隐形（调查检定对抗法术 DC 才能发现）。当陷阱被触发且没有生物被束缚时，法术结束（请手动删除区域）。"
+    }
+   ]
+  },
+  {
+   "id": "trigger-snare",
+   "name": "圈套术：陷阱触发",
+   "activation": "free",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 5
+   },
+   "root": [
+    {
+     "kind": "save",
+     "ability": "dex",
+     "dc": "self.spell.dc",
+     "onFail": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "圈套倒吊"
+      }
+     ]
+    }
+   ],
+   "text": "手动给踩入陷阱的小型/中型/大型生物结算豁免与倒吊束缚（若地图上已放置区域，走入时会自动触发，此动作备用）。"
+  }
+ ],
+ "effects": {
+  "圈套倒吊": {
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "duration": {
+    "hours": 8,
+    "saveEnds": {
+     "ability": "dex",
+     "dc": "source.spell.dc",
+     "at": "turnEnd"
+    }
+   },
+   "implies": [
+    "XPHB:condition:束缚"
+   ],
+   "text": "被魔法性地倒吊在半空中，头下脚上地悬于地面或地板上方 3 尺，处于束缚状态直到法术结束。每个自己回合结束时可重复敏捷豁免以结束；其他能触及它的生物也可以做一次对抗法术豁免 DC 的智力（奥秘）检定来解除（该检定需人工处理）。"
+  }
+ }
+}

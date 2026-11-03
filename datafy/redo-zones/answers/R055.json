@@ -1,0 +1,96 @@
+{
+ "name": "扩散孢子",
+ "automation": "partial",
+ "text": "处于一体共生状态下，可以用附赠动作将真菌孢子投向至多 30 尺远，在地图上留下一片 10 尺立方的孢子区域，持续 1 分钟（10 轮）。生物移动进入该区域或在该处开始回合时，须进行对抗你法术豁免 DC 的体质豁免，失败受到孢子环绕的伤害（每名生物每回合至多一次，引擎已自动结算）。只要孢子存在，你就不能使用孢子环绕的反应能力。提前消失（再次使用、附赠动作取消、一体共生结束）需要在界面上手动删掉区域。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "扩散孢子",
+   "activation": "bonus",
+   "requires": "self.hasEffect('一体共生')",
+   "tags": [
+    "magical"
+   ],
+   "targeting": {
+    "type": "area",
+    "range": 30,
+    "area": {
+     "shape": "cube",
+     "size": 10
+    }
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "扩散孢子",
+     "duration": {
+      "minutes": 1,
+      "endsOn": [
+       {
+        "event": "effectEnded",
+        "when": "event.bearer == self.id && event.name == '一体共生'"
+       }
+      ]
+     }
+    },
+    {
+     "kind": "zone",
+     "on": [
+      "enter",
+      "turnStart"
+     ],
+     "affects": "all",
+     "oncePerTurn": true,
+     "rounds": 10,
+     "do": [
+      {
+       "kind": "save",
+       "ability": "con",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "dice": "cond(self.levelOf('德鲁伊') >= 14, 1d10, cond(self.levelOf('德鲁伊') >= 10, 1d8, cond(self.levelOf('德鲁伊') >= 6, 1d6, 1d4)))",
+         "type": "黯蚀"
+        }
+       ]
+      }
+     ],
+     "name": "扩散孢子"
+    },
+    {
+     "kind": "note",
+     "text": "扩散孢子：这片孢子在 10 轮后自动消失；再次使用此特性、用附赠动作取消（「取消扩散孢子」）或一体共生结束时，请手动删掉地图上的这个区域。孢子存在期间你不能使用孢子环绕的反应能力。"
+    }
+   ]
+  },
+  {
+   "id": "dismiss",
+   "name": "取消扩散孢子",
+   "activation": "bonus",
+   "requires": "self.hasEffect('扩散孢子')",
+   "root": [
+    {
+     "kind": "removeEffect",
+     "from": "self",
+     "match": {
+      "name": "扩散孢子"
+     }
+    },
+    {
+     "kind": "note",
+     "text": "取消扩散孢子：请手动删掉地图上的孢子区域。"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "扩散孢子": {
+   "tags": [
+    "magical"
+   ],
+   "text": "扩散孢子处于激活状态。只要孢子存在，就无法使用孢子环绕的反应能力。可使用附赠动作取消。"
+  }
+ }
+}

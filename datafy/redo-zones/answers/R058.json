@@ -1,0 +1,49 @@
+{
+ "name": "飙速跑者",
+ "automation": "full",
+ "text": "【速度提升】已在人物卡（速度+10 尺）。【灵活移动】对你发动的借机攻击具有劣势（引擎在被攻击时询问是否为借机攻击）。【险地疾行】在自己回合疾走后，点击「险地疾行」动作，本回合余下时间内困难地形不再额外消耗移动力（引擎自动生效）。",
+ "actions": [
+  {
+   "id": "dash",
+   "name": "险地疾行",
+   "activation": "free",
+   "requires": "turn.isMine",
+   "text": "在自己的回合执行疾走后点击此项：在这个回合余下的时间里，困难地形不再额外消耗你的移动力（引擎自动生效）。",
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "险地疾行"
+    }
+   ]
+  }
+ ],
+ "rollMods": [
+  {
+   "on": {
+    "kind": "attack"
+   },
+   "who": "against",
+   "when": "ask('这次攻击是借机攻击吗？')",
+   "op": "disadv",
+   "label": "飙速跑者：借机攻击劣势（灵活移动）"
+  }
+ ],
+ "effects": {
+  "险地疾行": {
+   "text": "在这个回合余下的时间里，困难地形不再额外消耗你的移动力。",
+   "duration": {
+    "until": {
+     "at": "turnEnd",
+     "of": "bearer",
+     "nth": 0
+    }
+   },
+   "flags": {
+    "ignores": [
+     "difficultTerrain"
+    ]
+   }
+  }
+ }
+}

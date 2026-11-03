@@ -1,0 +1,166 @@
+{
+ "name": "龙卷尘暴",
+ "automation": "partial",
+ "text": "专注至多 1 分钟。60 尺内一处未被占据的 5 尺立方出现尘卷风，区域留在地图上、随专注消失。任何在尘卷风周围 5 尺范围内结束其回合的生物做力量豁免：失败受 (slot.level - 1)d8 钝击伤害并被推离 10 尺，成功只受一半且不被推离。尘卷风所在格引擎按区域自动结算，相邻格请用「龙卷尘暴：回合结束伤害」结算。附赠动作可用「龙卷尘暴：移动尘卷风」将区域移动至多 30 尺（在地图上选新位置）。移动卷起沙土形成的 10 尺半径残骸云（重度遮蔽，持续至下回合开始）需人工判定。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "龙卷尘暴",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 2
+     }
+    }
+   ],
+   "concentration": {
+    "minutes": 1
+   },
+   "targeting": {
+    "type": "area",
+    "range": 60,
+    "area": {
+     "shape": "cube",
+     "size": 5
+    }
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "龙卷尘暴",
+     "state": {
+      "die": "(slot.level - 1)d8"
+     }
+    },
+    {
+     "kind": "zone",
+     "on": [
+      "turnEnd"
+     ],
+     "affects": "all",
+     "oncePerTurn": true,
+     "do": [
+      {
+       "kind": "save",
+       "ability": "str",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "id": "dd",
+         "dice": "(slot.level - 1)d8",
+         "type": "钝击"
+        },
+        {
+         "kind": "move",
+         "mode": "push",
+         "ft": 10
+        }
+       ],
+       "onSuccess": [
+        {
+         "kind": "damage",
+         "ref": "dd",
+         "scale": 0.5
+        }
+       ]
+      }
+     ],
+     "name": "龙卷尘暴"
+    },
+    {
+     "kind": "note",
+     "text": "尘卷风周围 5 尺（相邻格）里结束回合的生物也要做这次豁免，请用「龙卷尘暴：回合结束伤害」结算；卷起沙土形成的 10 尺半径残骸云（重度遮蔽）与它持续到你下个回合开始，请人工判定。"
+    }
+   ]
+  },
+  {
+   "id": "endTurnSave",
+   "name": "龙卷尘暴：回合结束伤害",
+   "activation": "free",
+   "requires": "self.hasEffect('龙卷尘暴（激活）')",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 5,
+    "filter": "target.id != self.id"
+   },
+   "root": [
+    {
+     "kind": "save",
+     "ability": "str",
+     "dc": "self.spell.dc",
+     "onFail": [
+      {
+       "kind": "damage",
+       "id": "dd",
+       "dice": "self.effect('龙卷尘暴（激活）').state.die",
+       "type": "钝击"
+      },
+      {
+       "kind": "move",
+       "mode": "push",
+       "ft": 10
+      }
+     ],
+     "onSuccess": [
+      {
+       "kind": "damage",
+       "ref": "dd",
+       "scale": 0.5
+      }
+     ]
+    }
+   ],
+   "text": "给在尘卷风周围 5 尺范围内（但不在区域格子里，或者区域没跟着移动）结束回合的生物手动结算：力量豁免，失败受伤害并被推离 10 尺，成功只受一半。"
+  },
+  {
+   "id": "moveDevil",
+   "name": "龙卷尘暴：移动尘卷风",
+   "activation": "bonus",
+   "requires": "self.hasEffect('龙卷尘暴（激活）')",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "targeting": {
+    "type": "area",
+    "range": 30,
+    "area": {
+     "shape": "cube",
+     "size": 5
+    }
+   },
+   "root": [
+    {
+     "kind": "moveZone"
+    },
+    {
+     "kind": "note",
+     "text": "若尘卷风移动经过沙子、尘土、松软土壤或小砂砾，在自身周围形成 10 尺半径的残骸云（重度遮蔽），持续到你下个回合开始（遮蔽请人工判定）。"
+    }
+   ],
+   "text": "以一个附赠动作让尘卷风向任意方向移动至多 30 尺（在地图上选新位置，引擎自动移动区域）。若移动经过沙土等在周围形成 10 尺残骸云（重度遮蔽）请人工判定。"
+  }
+ ],
+ "effects": {
+  "龙卷尘暴": {
+   "name": "龙卷尘暴（激活）",
+   "tags": [
+    "magical",
+    "spell"
+   ],
+   "text": "维持 5 尺立方的尘卷风。在它周围 5 尺内结束回合的生物做力量豁免；可以用附赠动作把它移动至多 30 尺。"
+  }
+ }
+}

@@ -1,0 +1,143 @@
+{
+ "name": "虫群法杖",
+ "automation": "partial",
+ "text": "持握法杖期间，消耗充能使用以下能力（使用你自己的法术豁免DC）：虫云（1充能）、巨虫术（4充能）、疫病虫群（5充能）。",
+ "actions": [
+  {
+   "id": "cloud-of-insects",
+   "name": "虫群法杖：虫云",
+   "activation": "action",
+   "cost": [
+    {
+     "resource": "物品充能:虫群法杖",
+     "n": 1
+    }
+   ],
+   "targeting": {
+    "type": "area",
+    "range": "self",
+    "area": {
+     "shape": "emanation",
+     "radius": 30
+    }
+   },
+   "root": [
+    {
+     "kind": "note",
+     "text": "召唤一团无害飞虫群充满以你为源点的30尺光环，持续10分钟。该区域对除你之外的生物重度遮蔽。强风（如造风术）可驱散虫群并终止效应。"
+    }
+   ]
+  },
+  {
+   "id": "giant-insect",
+   "name": "虫群法杖：巨虫术",
+   "activation": "action",
+   "cost": [
+    {
+     "resource": "物品充能:虫群法杖",
+     "n": 4
+    }
+   ],
+   "concentration": {
+    "minutes": 10
+   },
+   "targeting": {
+    "type": "point",
+    "range": 60
+   },
+   "root": [
+    {
+     "kind": "note",
+     "text": "巨虫术：在60尺内召唤一只巨化蜈蚣、蜘蛛或黄蜂。请手动在遭遇中添加该召唤物。"
+    }
+   ]
+  },
+  {
+   "id": "insect-plague",
+   "name": "虫群法杖：疫病虫群",
+   "activation": "action",
+   "cost": [
+    {
+     "resource": "物品充能:虫群法杖",
+     "n": 5
+    }
+   ],
+   "concentration": {
+    "minutes": 10
+   },
+   "targeting": {
+    "type": "area",
+    "range": 300,
+    "area": {
+     "shape": "sphere",
+     "radius": 20
+    }
+   },
+   "root": [
+    {
+     "kind": "forEach",
+     "in": "area",
+     "do": [
+      {
+       "kind": "save",
+       "ability": "con",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "id": "plague_dmg",
+         "dice": "4d10",
+         "type": "穿刺"
+        }
+       ],
+       "onSuccess": [
+        {
+         "kind": "damage",
+         "ref": "plague_dmg",
+         "scale": 0.5
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "zone",
+     "on": [
+      "enter",
+      "turnEnd"
+     ],
+     "affects": "all",
+     "oncePerTurn": true,
+     "do": [
+      {
+       "kind": "save",
+       "ability": "con",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "id": "plague_zone_dmg",
+         "dice": "4d10",
+         "type": "穿刺"
+        }
+       ],
+       "onSuccess": [
+        {
+         "kind": "damage",
+         "ref": "plague_zone_dmg",
+         "scale": 0.5
+        }
+       ]
+      }
+     ],
+     "name": "疫病虫群",
+     "difficult": true
+    },
+    {
+     "kind": "note",
+     "text": "区域处于轻度遮蔽（引擎不处理遮蔽，需人工处理）"
+    }
+   ]
+  }
+ ]
+}

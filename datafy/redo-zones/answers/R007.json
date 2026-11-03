@@ -1,0 +1,109 @@
+{
+  "name": "贾拉兹光辉风暴",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。在 120 尺内创造 10 尺半径、40 尺高的闪光雷鸣风暴柱。身处风暴中的生物陷入目盲与耳聋且无法施展含言语成分法术（离开区域或法术结束自动解除）。风暴出现时、一回合内首次进入或在其中结束回合的生物进行体质豁免，失败受 (slot.level - 3)d10 光耀与 (slot.level - 3)d10 雷鸣伤害（5 环各 2d10，每高一环各 +1d10），成功半数（每回合每名生物限一次）。柱状区域高 40 尺，高度需人工确认。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "贾拉兹光辉风暴",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 5
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "cylinder",
+          "radius": 10,
+          "size": 40
+        }
+      },
+      "root": [
+        {
+          "kind": "zone",
+          "name": "贾拉兹光辉风暴",
+          "on": [
+            "create",
+            "enter",
+            "turnEnd"
+          ],
+          "affects": "all",
+          "oncePerTurn": true,
+          "while": [
+            {
+              "kind": "applyEffect",
+              "template": "贾拉兹光辉风暴"
+            }
+          ],
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "dr",
+                  "dice": "(slot.level - 3)d10",
+                  "type": "光耀"
+                },
+                {
+                  "kind": "damage",
+                  "id": "dt",
+                  "dice": "(slot.level - 3)d10",
+                  "type": "雷鸣"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "dr",
+                  "scale": 0.5
+                },
+                {
+                  "kind": "damage",
+                  "ref": "dt",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "贾拉兹光辉风暴：柱状区域高 40 尺，引擎不追踪高度，请人工确认空中目标。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "贾拉兹光辉风暴": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:目盲",
+        "XPHB:condition:耳聋"
+      ],
+      "flags": {
+        "cannot": [
+          "speak"
+        ]
+      },
+      "text": "身处贾拉兹光辉风暴区域内：陷入目盲与耳聋状态，且无法施展含有言语成分的法术。离开区域或法术结束时自动解除。"
+    }
+  }
+}

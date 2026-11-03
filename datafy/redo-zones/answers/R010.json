@@ -1,0 +1,82 @@
+{
+  "name": "纠缠术",
+  "automation": "partial",
+  "text": "专注至多 1 分钟。20 尺方状区域覆盖破土而出的缠绕植物，持续时间内区域为困难地形（引擎自动多扣移动力）。施展时区域内除施法者外的生物必须进行力量豁免，失败陷入束缚状态直到法术结束。被束缚生物可用动作进行对抗法术 DC 的力量（运动）检定挣脱（需人工处理）。",
+  "actions": [
+    {
+      "id": "cast",
+      "name": "纠缠术",
+      "activation": "action",
+      "tags": [
+        "spell",
+        "magical"
+      ],
+      "cost": [
+        {
+          "slot": {
+            "min": 1
+          }
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 90,
+        "area": {
+          "shape": "cube",
+          "size": 20
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "if",
+              "when": "target.id != self.id",
+              "then": [
+                {
+                  "kind": "save",
+                  "ability": "str",
+                  "dc": "self.spell.dc",
+                  "onFail": [
+                    {
+                      "kind": "applyEffect",
+                      "to": "target",
+                      "template": "纠缠"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "zone",
+          "name": "纠缠术",
+          "affects": "all",
+          "difficult": true
+        },
+        {
+          "kind": "note",
+          "text": "纠缠术：区域为困难地形（引擎自动多扣移动力）；被束缚生物可用动作进行对抗法术 DC 的力量（运动）检定挣脱（需人工处理）。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "纠缠": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "implies": [
+        "XPHB:condition:束缚"
+      ],
+      "text": "陷入束缚状态直到法术结束。可用动作进行力量（运动）检定对抗法术 DC，成功则摆脱藤蔓不再被束缚（这个动作需人工处理）。"
+    }
+  }
+}

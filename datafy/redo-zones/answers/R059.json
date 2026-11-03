@@ -1,0 +1,110 @@
+{
+ "name": "自然庇护",
+ "automation": "partial",
+ "text": "魔法动作，消耗一次荒野形态：在自身 120 尺内地面上的 15 尺立方区域里唤出灵体树木与藤蔓，持续 1 分钟（10 轮）或直到你失能/死亡。区域内你和盟友拥有半身掩护（+2 AC 与敏捷豁免，待在区域内自动生效，离开自动解除），盟友还获得你自然之护的当前抗性（需人工确认）。附赠动作可以用「自然庇护：移动区域」在 120 尺内将区域移动最多 60 尺（移入/移出自动更新受庇护者；移动距离请人工核对）。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "自然庇护",
+   "activation": "action",
+   "cost": [
+    {
+     "resource": "wildshape-uses"
+    }
+   ],
+   "targeting": {
+    "type": "area",
+    "range": 120,
+    "area": {
+     "shape": "cube",
+     "size": 15
+    }
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "自然庇护"
+    },
+    {
+     "kind": "zone",
+     "name": "自然庇护",
+     "affects": "allies",
+     "rounds": 10,
+     "while": [
+      {
+       "kind": "applyEffect",
+       "template": "自然庇护：庇护"
+      }
+     ]
+    },
+    {
+     "kind": "note",
+     "text": "自然庇护：灵体树木与藤蔓覆盖 15 尺立方区域，持续 1 分钟（10 轮）或直到你失能/死亡。区域内你和盟友获得半身掩护（+2 AC 与敏捷豁免，引擎已自动提供）；盟友还获得你自然之护的当前抗性（请人工核对）。可用附赠动作移动区域至多 60 尺。"
+    }
+   ]
+  },
+  {
+   "id": "move",
+   "name": "自然庇护：移动区域",
+   "activation": "bonus",
+   "requires": "turn.isMine && self.hasEffect('自然庇护')",
+   "targeting": {
+    "type": "area",
+    "range": 120,
+    "area": {
+     "shape": "cube",
+     "size": 15
+    }
+   },
+   "root": [
+    {
+     "kind": "moveZone"
+    }
+   ],
+   "text": "以一个附赠动作将 15 尺立方区域在 120 尺内移动最多 60 尺距离（在地图上选新位置，引擎自动更新受庇护者；60 尺移动上限请人工核对）。"
+  }
+ ],
+ "effects": {
+  "自然庇护": {
+   "text": "标记：灵体树木与藤蔓区域已召唤，持续 1 分钟，直到你失能或死亡。",
+   "duration": {
+    "minutes": 1,
+    "endsOn": [
+     {
+      "event": "effectApplied",
+      "when": "event.bearer == self.id && self.has('失能')"
+     },
+     {
+      "event": "died",
+      "when": "self.dead"
+     }
+    ]
+   }
+  },
+  "自然庇护：庇护": {
+   "tags": [
+    "magical"
+   ],
+   "statics": [
+    {
+     "kind": "ac",
+     "bonus": 2
+    }
+   ],
+   "rollMods": [
+    {
+     "on": {
+      "kind": "save",
+      "ability": "dex"
+     },
+     "who": "bearer",
+     "op": "add",
+     "value": 2,
+     "label": "自然庇护：半身掩护 +2"
+    }
+   ],
+   "text": "处于自然庇护区域内：获得半身掩护（+2 AC 与敏捷豁免加值）；获得施法者自然之护的当前抗性（请根据施法者当前自然之护的环境类型人工确认）。离开区域或区域消失自动解除。"
+  }
+ }
+}

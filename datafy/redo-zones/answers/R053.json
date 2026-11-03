@@ -1,0 +1,87 @@
+{
+ "name": "妖精诡术",
+ "automation": "full",
+ "text": "【妖精轻步】在你的回合执行撤离动作时，本回合剩余时间内困难地形不消耗额外移动力（点「妖精轻步」动作，引擎自动无视困难地形额外移动力）。【惊惶打击】攻击检定命中时可消耗一次使用次数，迫使目标进行感知豁免（DC 8+PB+属性加值），失败则其所有豁免检定具有劣势，持续至你的下个回合结束。长休恢复PB次。",
+ "actions": [
+  {
+   "id": "step",
+   "name": "妖精轻步",
+   "activation": "free",
+   "requires": "turn.isMine",
+   "text": "在你的回合执行撤离动作后点击此项：本回合剩余时间内，困难地形不再额外消耗你的移动力（引擎自动生效）。",
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "妖精轻步"
+    }
+   ]
+  }
+ ],
+ "triggers": [
+  {
+   "id": "bewildering-strike",
+   "label": "惊惶打击",
+   "on": "attackHit",
+   "role": "actor",
+   "window": "before",
+   "optional": true,
+   "cost": [
+    {
+     "resource": "bewildering-strike"
+    }
+   ],
+   "do": [
+    {
+     "kind": "save",
+     "ability": "wis",
+     "dc": "8 + self.pb + max(self.mod.int, self.mod.wis, self.mod.cha)",
+     "onFail": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "惊惶"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "妖精轻步": {
+   "text": "本回合剩余时间内，困难地形不会额外消耗你的移动力。",
+   "duration": {
+    "until": {
+     "at": "turnEnd",
+     "of": "bearer",
+     "nth": 0
+    }
+   },
+   "flags": {
+    "ignores": [
+     "difficultTerrain"
+    ]
+   }
+  },
+  "惊惶": {
+   "text": "你的豁免检定具有劣势，持续至施加者的下个回合结束。",
+   "duration": {
+    "until": {
+     "at": "turnEnd",
+     "of": "source",
+     "nth": 1
+    }
+   },
+   "rollMods": [
+    {
+     "on": {
+      "kind": "save"
+     },
+     "who": "bearer",
+     "op": "disadv",
+     "label": "惊惶：豁免具有劣势"
+    }
+   ]
+  }
+ }
+}

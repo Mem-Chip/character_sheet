@@ -1,0 +1,71 @@
+{
+ "name": "地颤",
+ "automation": "partial",
+ "text": "以你为中心 10 尺半径内引发地面颤动，区域内除你以外的生物敏捷豁免，失败受 slot.level d6 钝击伤害并倒地（1 环 1d6，每高一环 +1d6）。若地表为松软土壤或石头，区域在被清理前成为困难地形（引擎自动多扣移动力；非泥石地表请手动删除区域）。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "地颤",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 1
+     }
+    }
+   ],
+   "targeting": {
+    "type": "area",
+    "range": 10,
+    "area": {
+     "shape": "sphere",
+     "radius": 10
+    }
+   },
+   "root": [
+    {
+     "kind": "forEach",
+     "in": "area",
+     "do": [
+      {
+       "kind": "if",
+       "when": "target.id != self.id",
+       "then": [
+        {
+         "kind": "save",
+         "ability": "dex",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "dice": "(slot.level)d6",
+           "type": "钝击"
+          },
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "XPHB:condition:倒地"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "zone",
+     "name": "地颤",
+     "difficult": true
+    },
+    {
+     "kind": "note",
+     "text": "地颤：若地表为松软土壤或石头，区域在被清理前成为困难地形（引擎已自动多扣移动力；若地表不是松软泥石请手动删除区域）。"
+    }
+   ]
+  }
+ ]
+}
