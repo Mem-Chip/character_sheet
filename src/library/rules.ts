@@ -37,8 +37,14 @@ export function homeRuleOf(p: ResPart, item: LibraryItem): HomeRuleEntry | null 
   const covers = coversOf(p);
   // 本版删除：一条空的、标着 removed 的覆盖 —— 顶掉官方卡面数据，特性列表里也不显示
   if (p.removed && covers) return { id: p.id, name: p.name || item.name, text: p.text ?? '（本版删除）', covers, removed: true, mods: [], grants: [], choices: [], resources: [] };
-  const pickable = !!p.pickable && !covers;
+  // 只写了战斗数据的**新内容**：也要上卡（不然卡上没这项能力，它的键进不了战斗，勾了等于没勾）。
+  // 新内容不覆盖任何官方条目，没有「空家规顶掉官方数据」的问题；按「选了才生效」处理，免得挂到战役就套给全团。
+  const combatOnly = !covers && !!p.combat && !hasSheetData(p);
+  const pickable = (!!p.pickable || combatOnly) && !covers;
   if (!hasSheetData(p) && !pickable) return null;
+  // 次数池：卡面没写、战斗数据里声明了（`entry.resources`）的，抄一份到卡面 —— 人物卡显示、记次数，进战斗时按同一个 id 对上
+  const sheetRes = arr<Record<string, unknown>>(p.sheet?.resources);
+  const resources = sheetRes.length || covers ? sheetRes : combatPoolsOf(p);
   return {
     id: p.id,
     name: p.name || item.name,
@@ -48,8 +54,16 @@ export function homeRuleOf(p: ResPart, item: LibraryItem): HomeRuleEntry | null 
     mods: arr(p.sheet?.mods),
     grants: arr(p.sheet?.grants),
     choices: arr(p.sheet?.choices),
-    resources: arr(p.sheet?.resources),
+    resources,
   };
+}
+
+/** 战斗数据里声明的次数池 → 卡面资源的写法（同 id；名字没写就用 id） */
+function combatPoolsOf(p: ResPart): Array<Record<string, unknown>> {
+  const entry = (p.combat?.entry ?? null) as { resources?: unknown } | null;
+  return arr<Record<string, unknown>>(entry?.resources)
+    .filter((r) => r && typeof r.id === 'string' && r.formula !== undefined)
+    .map((r) => ({ id: r.id, name: typeof r.name === 'string' && r.name ? r.name : r.id, formula: r.formula, recovery: r.recovery === 'short' ? 'short' : 'long' }));
 }
 
 export function homeRulesOf(item: LibraryItem): HomeRuleEntry[] {

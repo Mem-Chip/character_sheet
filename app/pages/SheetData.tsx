@@ -139,8 +139,9 @@ export function SheetData(p: Props) {
               const key = sourceKeyOf(s);
               const isHr = s.source === HR_SOURCE;
               const hr = isHr ? homerules.find((x) => x.id === s.name) : homerules.find((x) => x.covers === key);
-              const hubC = isHr ? null : hubCombatOf(key);
-              const combat = isHr ? undefined : (hubC?.part.combat?.entry as import('../../src/combat').Entry | undefined) ?? engine.rules.entry(key);
+              // 家规（新内容）的战斗数据也在资料库里，键是 HR:<id>，和卡上这条能力的键一样
+              const hubC = hubCombatOf(key);
+              const combat = (hubC?.part.combat?.entry as import('../../src/combat').Entry | undefined) ?? engine.rules.entry(key);
               const aiTag = (combat?.tags || []).includes('ai');
               const rowOpen = open === key;
               return (
@@ -154,8 +155,7 @@ export function SheetData(p: Props) {
                           : <span className="faint small">没有</span>}
                     </td>
                     <td>
-                      {isHr ? <span className="faint small">—</span>
-                        : combat ? <Tag tone={aiTag ? undefined : 'accent'}>{hubC ? (hubC.from === 'mine' ? '我的库 · ' : '本团 · ') : ''}{aiTag ? (hubC?.item.reviewed ? 'AI · 已看过' : 'AI 未审') : '手写'}{combat.automation && combat.automation !== 'full' ? ` · ${combat.automation === 'manual' ? '手动' : '部分'}` : ''}</Tag>
+                      {combat ? <Tag tone={aiTag ? undefined : 'accent'}>{hubC ? (hubC.from === 'mine' ? '我的库 · ' : '本团 · ') : ''}{aiTag ? (hubC?.item.reviewed ? 'AI · 已看过' : 'AI 未审') : '手写'}{combat.automation && combat.automation !== 'full' ? ` · ${combat.automation === 'manual' ? '手动' : '部分'}` : ''}</Tag>
                           : <span className="faint small">没有</span>}
                     </td>
                     <td className="tiny faint">{rowOpen ? '收起' : '展开'}</td>
