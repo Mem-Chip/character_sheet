@@ -59,5 +59,25 @@ describe.skipIf(!hasLocalData())('学派法术进法术书', () => {
     expect(granted).not.toContain(a);
     expect(adds.some((n) => n.includes('object')), '不该出现 [object Object]').toBe(false);
   });
+
+  // 塑能 / 死灵两条数据曾经漏了 pool，选择框里只有一句说明文字，选了也没用
+  it.each([['塑能师', 'V'], ['死灵师', 'N'], ['防护师', 'A'], ['预言师', 'D'], ['幻术师', 'I']])(
+    '%s：选择框列的是真法术（学派 %s），选完进法术书',
+    async (sub, school) => {
+      const c0 = mage();
+      c0.classes = [{ name: '法师', level: 3, subclass: sub } as Json];
+      const sheet0 = (await env.compute(c0)) as Json;
+      const ch = ((sheet0._pending as Json[]) ?? []).find((p) => p.pool === 'spellBySchool');
+      expect(ch, `${sub} 应有按学派选法术的选择框`).toBeTruthy();
+      const opts = choiceOptions(env, c0, sheet0, ch!).options;
+      expect(opts.length).toBeGreaterThan(3);
+      for (const o of opts) expect(String((env.store.spellsAll.find((s: Json) => s.name === o.value) as Json)?.school)).toBe(school);
+      const c = structuredClone(c0);
+      c.decisions = { ...(c.decisions || {}), [String(ch!.key)]: [String(opts[0].value), String(opts[1].value)] };
+      const sheet = (await env.compute(c)) as Json;
+      const adds = (((sheet.spell as Json)?.spellbookAdds ?? []) as Json[]).map((g) => String(g.name));
+      expect(adds).toEqual(expect.arrayContaining([String(opts[0].value), String(opts[1].value)]));
+    },
+  );
 });
 
