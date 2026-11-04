@@ -69,6 +69,8 @@ export function sourceKeys(env: SheetEnv, char: CharData): string[] {
   for (const sp of char.spells || []) if (sp?.name && sp.prepared !== false) spells.add(sp.name);
   for (const n of char._derived?.spells || []) spells.add(n);
   for (const n of char._derived?.cantrips || []) spells.add(n);
+  // 子职给的始终准备法术（誓约法术、领域法术、宗主法术…）：解析时放在 _resolved.subclassSpells，不在 _derived 里
+  for (const g of char._resolved?.subclassSpells || []) if (g?.name) spells.add(g.name);
   // 别的书的法术（战役启用的）：键用那本书的来源
   for (const n of spells) keys.push(`${env.store.spellByName(n)?.source || 'XPHB'}:spell:${n}`);
   return [...new Set(keys)];

@@ -97,6 +97,14 @@ describe.skipIf(!hasLocalData())('真实角色卡进战斗', () => {
     expect(v.resources).not.toHaveProperty('祈唤');      // 「已知祈唤数」不是可消耗的资源
   });
 
+  it('子职给的始终准备法术（奉献之誓的誓约法术）进战斗', async () => {
+    const char = fixture('paladin6');
+    const v = viewFromSheet(env, char, await env.compute(char));
+    const sub = (char._resolved?.subclassSpells || []) as Array<{ name: string }>;
+    expect(sub.length).toBeGreaterThan(0);
+    for (const g of sub) expect(v.sources.some((k) => k.endsWith(':spell:' + g.name)), g.name).toBe(true);
+  });
+
   it('游荡者 5：刺剑 +6（修掉的熟练 bug）、偷袭读职业表 3d6、精通「侵扰」', async () => {
     const { s, dice } = await encounter([{ id: 'r', char: fixture('rogue5') }], [{ id: 'g' }]);
     const v = s.view('r');
