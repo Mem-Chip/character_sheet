@@ -1,0 +1,449 @@
+[
+ {
+  "key": "XGE:野蛮人:冻原:14",
+  "name": "冻原",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "每当激活风暴灵光时，可选灵光内一名可见生物进行力量豁免（DC 8 + 熟练 + 体质调整值），失败速度降为 0 直至你的下个回合开始。由于伴随进入狂暴或附赠动作激活灵光时一并触发，写为 free 动作，由人在激活灵光时使用。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"狂怒风暴：冻原\",\"activation\":\"free\",\"requires\":\"turn.isMine && self.hasEffect('狂暴')\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":10,\"filter\":\"target.id != self.id && canSee(self, target)\"},\"root\":[{\"kind\":\"save\",\"ability\":\"str\",\"dc\":\"8 + self.pb + self.mod.con\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"冻结\",\"duration\":{\"until\":{\"at\":\"turnStart\",\"of\":\"source\",\"nth\":1}}}]}]}],\"effects\":{\"冻结\":{\"text\":\"魔法冰霜覆盖，速度降为 0，持续直至施加者的下个回合开始。\",\"statics\":[{\"kind\":\"speedSet\",\"value\":0}],\"duration\":{\"until\":{\"at\":\"turnStart\",\"of\":\"source\",\"nth\":1}}}}}"
+ },
+ {
+  "key": "XGE:野蛮人:风暴之盾:10",
+  "name": "风暴之盾",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "在狂暴期间，处于你风暴灵光（10尺）内的、由你选择的生物，同样获得你风暴之魂特性所赋予的伤害抗性（荒漠：火焰；海洋：闪电；冻原：寒冷）。具体抗性类型取决于所选环境，由人工在盟友承受伤害时确认处理。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XGE:野蛮人:精魂之盾:6",
+  "name": "精魂之盾",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "狂暴期间，你周围 30 尺内你能看到的其他生物受到伤害时，可以用反应为其降低 2d6 点伤害（10 级起 3d6，14 级起 4d6）。【已自动化】反应时机、狂暴条件、30 尺与可见的判断、以及按职业等级自动选 2d6 / 3d6 / 4d6 的减伤。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"spiritShield\",\"label\":\"精魂之盾：降低伤害\",\"on\":\"damageIncoming\",\"role\":\"any\",\"window\":\"before\",\"optional\":true,\"cost\":[{\"economy\":\"reaction\"}],\"when\":\"self.hasEffect('狂暴') && target.id != self.id && within(self, target, 30) && canSee(self, target)\",\"modify\":[{\"op\":\"reduceDamage\",\"value\":\"cond(self.levelOf('野蛮人') >= 14, 4d6, cond(self.levelOf('野蛮人') >= 10, 3d6, 2d6))\"}],\"do\":[]}]}"
+ },
+ {
+  "key": "XGE:野蛮人:怒不畏死:14",
+  "name": "怒不畏死",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "狂暴期间 0 生命值不会使你陷入昏迷；死亡豁免累积失败 3 次在狂暴期间不会死亡；若狂暴结束时仍处于 0 生命值则死亡。引擎目前无法阻止 0 生命值陷入昏迷或拦截死亡豁免致死，需人手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XGE:吟游诗人:不破威仪:14",
+  "name": "不破威仪",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以附赠动作展现威严存在，持续 1 分钟（陷入失能时提前结束）。持续时间内，任何生物在每回合中首次试图攻击你时，必须通过一次对抗你的法术豁免 DC 的魅力豁免。豁免失败时，该生物在该回合内无法攻击你，且必须为本次攻击选定新目标或放弃攻击；豁免成功时能正常攻击，但在你的下个回合中对抗你的法术豁免具有劣势。攻击判定、豁免与改选目标由人手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"不破威仪\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"不破威仪\"}],\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"不破威仪\",\"duration\":{\"minutes\":1,\"endsOn\":[{\"event\":\"effectApplied\",\"when\":\"self.has('失能')\"}]}}]}],\"effects\":{\"不破威仪\":{\"text\":\"展现魔法性的威严存在，持续 1 分钟（失能时提前结束）。每回合中任何生物首次试图攻击你时，须进行对抗你法术豁免 DC 的魅力豁免（手动处理）。\",\"duration\":{\"minutes\":1,\"endsOn\":[{\"event\":\"effectApplied\",\"when\":\"self.has('失能')\"}]}},\"不破威仪：豁免劣势\":{\"text\":\"在不破威仪施加者的下个回合结束前，对抗其法术所做的任何豁免检定具有劣势。\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"source\",\"nth\":1}},\"rollMods\":[{\"on\":{\"kind\":\"save\"},\"who\":\"bearer\",\"when\":\"source != null && ask('这次豁免是对抗不破威仪施加者的法术吗？')\",\"op\":\"disadv\",\"label\":\"不破威仪：法术豁免劣势\"}]}}}"
+ },
+ {
+  "key": "XGE:吟游诗人:额外攻击:6",
+  "name": "额外攻击",
+  "by": "AI",
+  "automation": "full",
+  "level": null,
+  "text": "第 6 级起，你在自己回合内执行攻击动作时可以攻击两次而非一次。战斗里已经自动这样结算：人物卡按特性名「额外攻击」把每次攻击动作的攻击次数算成 2（攻击一次之后还剩 1 次机会），不需要额外的触发器，也没有要人手动补的部分。若以后这条特性改名，攻击次数才需要手动调整。",
+  "notes": [],
+  "data": "{\"automation\":\"full\"}"
+ },
+ {
+  "key": "XGE:吟游诗人:灵感织衣:3",
+  "name": "灵感织衣",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "附赠动作消耗一次诗人激励：选择你周围 60 尺内至多等同于你魅力调整值（至少 1 个）个你可见且能看见你的生物，每个获得临时生命值（3 级 5 点，5 级 8 点，10 级 11 点，15 级 14 点）。临时生命值自动加上；获得临时生命值的生物可以立刻用其反应移动至多等同于其速度的距离，这次移动不引发借机攻击——引擎给每个目标挂一个「免借机」标记，移动一次即消失（或到你的回合结束），反应与移动本身请手动执行。",
+  "notes": [
+   "获得临时生命值的生物可以用其反应移动至多等同于其速度的距离（请手动移动棋子）；这次移动不引发借机攻击。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"灵感织衣\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"诗人激励\"}],\"targeting\":{\"type\":\"creature\",\"count\":\"max(1, mod.cha)\",\"range\":60,\"filter\":\"canSee(self, target) && canSee(target, self)\"},\"root\":[{\"kind\":\"tempHp\",\"amount\":\"cond(self.levelOf('吟游诗人') >= 15, 14, cond(self.levelOf('吟游诗人') >= 10, 11, cond(self.levelOf('吟游诗人') >= 5, 8, 5)))\",\"to\":\"target\"},{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"灵感织衣：免借机\"},{\"kind\":\"note\",\"text\":\"获得临时生命值的生物可以用其反应移动至多等同于其速度的距离（请手动移动棋子）；这次移动不引发借机攻击。\"}]}],\"effects\":{\"灵感织衣：免借机\":{\"text\":\"灵感织衣：这次用反应做出的移动不会引发借机攻击（移动一次后消失，或到吟游诗人回合结束）。\",\"flags\":{\"cannot\":[\"provoke\"]},\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"source\",\"nth\":0},\"endsOn\":[{\"event\":\"moved\",\"when\":\"event.id == self.id\"}]}}}}"
+ },
+ {
+  "key": "XGE:吟游诗人:乱击剑舞:3",
+  "name": "乱击剑舞",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "在你的回合内以攻击动作进行武器攻击命中时，可以消耗一次诗人激励（每回合限一次剑舞）。对命中的目标造成等同于激励骰结果的额外同类型伤害，且你周围 5 尺内由你选择的另一名可见生物也受到等同于该激励骰结果的伤害（次要目标的伤害需手动扣除）。",
+  "notes": [
+   "乱击剑舞：你周围 5 尺范围内由你选择的另一名可见生物也受到等同于本次激励骰掷骰点数的额外伤害，请手动对该生物结算并扣除生命值。"
+  ],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"slashing-flourish\",\"label\":\"乱击剑舞：消耗激励横扫加伤\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"limit\":\"oncePerTurn\",\"optional\":true,\"cost\":[{\"resource\":\"诗人激励\"}],\"when\":\"turn.isMine && attack.weapon\",\"do\":[{\"kind\":\"number\",\"prompt\":\"乱击剑舞：请掷诗人激励骰（classTable('诗人骰')），输入掷出的点数作为额外伤害\",\"var\":\"flourishRoll\",\"min\":1,\"max\":12,\"default\":4},{\"kind\":\"addDamage\",\"dice\":\"vars.flourishRoll\",\"type\":\"attack.damageType\"},{\"kind\":\"note\",\"text\":\"乱击剑舞：你周围 5 尺范围内由你选择的另一名可见生物也受到等同于本次激励骰掷骰点数的额外伤害，请手动对该生物结算并扣除生命值。\"}]}]}"
+ },
+ {
+  "key": "XGE:吟游诗人:推击剑舞:3",
+  "name": "推击剑舞",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "在你的回合内以攻击动作进行武器攻击命中时，可以消耗一次诗人激励（每回合限一次剑舞）。造成等同于激励骰结果的额外同类型伤害，并将目标推离你至多 5 + 激励骰结果尺；之后可立即用反应移动至多自身步行速度距离来到目标 5 尺内未占据空间（战棋移动与反应由人手动处理）。",
+  "notes": [
+   "击退目标后，你可以立即用反应移动至多等于步行速度的距离来到目标 5 尺内未占据空间，请手动在战棋上移动并扣除反应。"
+  ],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"mobile-flourish\",\"label\":\"推击剑舞：消耗激励加伤并击退\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"limit\":\"oncePerTurn\",\"optional\":true,\"cost\":[{\"resource\":\"诗人激励\"}],\"when\":\"turn.isMine && attack.weapon\",\"do\":[{\"kind\":\"number\",\"prompt\":\"推击剑舞：请掷诗人激励骰（classTable('诗人骰')），输入掷出的点数作为额外伤害与击退距离计算\",\"var\":\"flourishRoll\",\"min\":1,\"max\":12,\"default\":4},{\"kind\":\"addDamage\",\"dice\":\"vars.flourishRoll\",\"type\":\"attack.damageType\"},{\"kind\":\"move\",\"mode\":\"push\",\"ft\":\"5 + vars.flourishRoll\"},{\"kind\":\"note\",\"text\":\"击退目标后，你可以立即用反应移动至多等于步行速度的距离来到目标 5 尺内未占据空间，请手动在战棋上移动并扣除反应。\"}]}]}"
+ },
+ {
+  "key": "XGE:吟游诗人:威仪作锦:6",
+  "name": "威仪作锦",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以附赠动作施展命令术（无需法术位），同时获得超凡美貌并进入专注（至多 1 分钟）。持续时间内，每个你的回合都能以附赠动作再次施展命令术（无需法术位）。被你魅惑的生物对抗此特性施放的命令术时自动豁免失败。具体命令指令及效果由人手动处理。",
+  "notes": [
+   "目标处于魅惑状态，自动豁免失败！在它的下个回合服从你的命令（命令术）",
+   "目标豁免失败，在它的下个回合服从你的命令（命令术）"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"威仪作锦\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"majesty\"}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60,\"filter\":\"target.id != self.id\"},\"root\":[{\"kind\":\"if\",\"when\":\"target.has('魅惑')\",\"then\":[{\"kind\":\"note\",\"text\":\"目标处于魅惑状态，自动豁免失败！在它的下个回合服从你的命令（命令术）\"}],\"else\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"note\",\"text\":\"目标豁免失败，在它的下个回合服从你的命令（命令术）\"}]}]},{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"威仪作锦\"}]},{\"id\":\"command\",\"name\":\"威仪作锦：命令术\",\"activation\":\"bonus\",\"requires\":\"self.hasEffect('威仪作锦') && turn.isMine\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60,\"filter\":\"target.id != self.id\"},\"root\":[{\"kind\":\"if\",\"when\":\"target.has('魅惑')\",\"then\":[{\"kind\":\"note\",\"text\":\"目标处于魅惑状态，自动豁免失败！在它的下个回合服从你的命令（命令术）\"}],\"else\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"note\",\"text\":\"目标豁免失败，在它的下个回合服从你的命令（命令术）\"}]}]}]}],\"effects\":{\"威仪作锦\":{\"text\":\"超凡美貌：持续至多 1 分钟（专注）。持续时间内每个你的回合都可以附赠动作施展命令术，且无需法术位。\"}}}"
+ },
+ {
+  "key": "XGE:吟游诗人:阴暗学识:14",
+  "name": "阴暗学识",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个动作对 30 尺内能听见声音的生物发出低语，感知豁免失败则被魅惑 8 小时（受攻击、伤害或被迫豁免时提前结束）。共通语言要求与非战斗秘密恐吓角色扮演效果由人工处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"阴暗学识\",\"activation\":\"action\",\"cost\":[{\"resource\":\"shadowLore\"}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":30,\"filter\":\"target.id != self.id\"},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"阴暗学识\",\"to\":\"target\",\"duration\":{\"hours\":8,\"endsOn\":[{\"event\":\"damageTaken\",\"when\":\"self.id == event.target\"},{\"event\":\"attackHit\",\"when\":\"self.id == event.target\"}]}}]}]}],\"effects\":{\"阴暗学识\":{\"implies\":[\"XPHB:condition:魅惑\"],\"text\":\"被施加者魅惑 8 小时。遵循其命令（不危及性命），视其为密友。受到攻击、受到伤害或被迫豁免时提前结束。\"}}}"
+ },
+ {
+  "key": "XGE:永生者赠礼",
+  "name": "永生者赠礼",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当你被恢复生命值时，只要此时你的魔宠与你之间的距离不超过 100 尺，所有决定你恢复生命值点数的骰都视为骰出了最大值。引擎在治疗结算时会把「被治疗者身上」这类取最大值的修正算进去（不论治疗来自法术、药水还是特性），但它不知道你的魔宠站在哪里 —— 魔宠不在 100 尺内（或已消失、不在身边）时，这次治疗请让 DM 手动把多恢复的部分扣回去（手动伤害同数值，或直接改成掷骰结果）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"rollMods\":[{\"on\":{\"kind\":\"heal\"},\"who\":\"bearer\",\"op\":\"maxDice\",\"label\":\"永生者赠礼：被治疗时治疗骰取最大值\"}]}"
+ },
+ {
+  "key": "XGE:幽魂凝视",
+  "name": "幽魂凝视",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个动作开启幽魂凝视，持续至多 1 分钟（专注）。看穿 30 尺固态物件及黑暗视觉感官属于探索与视觉效果，由玩家手动处理。短休或长休恢复 1 次。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"幽魂凝视\",\"activation\":\"action\",\"concentration\":{\"minutes\":1},\"cost\":[{\"resource\":\"ghostlyGaze\"}],\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"幽魂凝视\",\"duration\":{\"minutes\":1}}]}],\"effects\":{\"幽魂凝视\":{\"text\":\"看穿 30 尺范围内固态物件；若无黑暗视觉则获得 30 尺黑暗视觉。持续至多 1 分钟（专注）。\",\"duration\":{\"minutes\":1}}}}"
+ },
+ {
+  "key": "XGE:游荡者:火眼金睛:13",
+  "name": "火眼金睛",
+  "by": "审后补",
+  "automation": "partial",
+  "level": null,
+  "text": "只要你未处于目盲或耳聋状态，可以一个动作感知周围 30 尺内幻术的存在、非原本形态下的变形生物以及其他欺瞒感官的魔法。可用次数等于感知调整值（至少 1 次），长休恢复。你能感知到欺瞒效果的存在但无法得知真相，细节由 DM 手动告知。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"root\":[{\"kind\":\"choose\",\"options\":[{\"label\":\"感知(察觉)侦测\"},{\"label\":\"智力(调查)破译\"}]},{\"kind\":\"check\",\"ability\":\"per\",\"to\":\"self\"}]}]}"
+ },
+ {
+  "key": "XGE:游荡者:鉴识之眼:3",
+  "name": "鉴识之眼",
+  "by": "审后补",
+  "automation": "partial",
+  "level": null,
+  "text": "可以使用附赠动作进行一次感知（察觉）检定来侦测隐藏的生物或物体，或者进行一次智力（调查）检定来揭示和破译线索。线索与隐匿生物由 DM 手动告知判定。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"root\":[{\"kind\":\"choose\",\"options\":[{\"label\":\"感知(察觉)侦测隐匿\"},{\"label\":\"智力(调查)破译线索\"}]},{\"kind\":\"check\",\"ability\":\"per\",\"to\":\"self\"}]}]}"
+ },
+ {
+  "key": "XGE:游荡者:散兵战术:3",
+  "name": "散兵战术",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当一个敌人在你 5 尺内结束其回合时，你可以用一个反应移动至多你速度一半的距离，这段移动不引发借机攻击。触发时机与反应代价引擎自动处理（它会问你要不要用，用了自动扣反应）；移动本身要人手动——引擎的移动流程只跑当前回合那个棋子，别人回合里的移动是把棋子拖过去，引擎看不到借机攻击。这里给你挂上「散兵战术移动」效应当提醒：它到你的下一回合开始、或你走完一次引擎的移动后消失。",
+  "notes": [
+   "散兵战术：以反应移动至多你速度一半的距离（这段移动不引发借机攻击）——请手动在战图上移动。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"散兵战术\",\"activation\":\"reaction\",\"trigger\":{\"on\":\"turnEnded\",\"role\":\"enemy\",\"when\":\"within(self, target, 5)\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"散兵战术移动\"},{\"kind\":\"note\",\"text\":\"散兵战术：以反应移动至多你速度一半的距离（这段移动不引发借机攻击）——请手动在战图上移动。\"}]}],\"effects\":{\"散兵战术移动\":{\"text\":\"这次由散兵战术带来的移动不引发借机攻击；移动结束（moved）或你的下一回合开始时消失。\",\"flags\":{\"cannot\":[\"provoke\"]},\"duration\":{\"until\":{\"at\":\"turnStart\",\"of\":\"bearer\",\"nth\":1},\"endsOn\":[{\"event\":\"moved\",\"when\":\"event.id == self.id\"}]}}}}"
+ },
+ {
+  "key": "XGE:游荡者:瞬息打击:17",
+  "name": "瞬息打击",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "若你在自己回合中执行了攻击动作，可以用附赠动作发起一次额外的攻击。即使本回合已使用过偷袭，这次攻击同样可以受益于偷袭，但无法在同一回合对同一目标偷袭两次。额外的武器攻击与偷袭由人手动发起与判定。",
+  "notes": [
+   "瞬息打击：以附赠动作发起一次额外武器攻击（在武器行手动发起）。若本回合已对其他生物使用过偷袭，对该不同目标命中的攻击仍可额外享受偷袭伤害（classTable('偷袭')），请手动添加偷袭伤害。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"瞬息打击\",\"activation\":\"bonus\",\"requires\":\"turn.isMine\",\"tags\":[\"weapon\"],\"root\":[{\"kind\":\"note\",\"text\":\"瞬息打击：以附赠动作发起一次额外武器攻击（在武器行手动发起）。若本回合已对其他生物使用过偷袭，对该不同目标命中的攻击仍可额外享受偷袭伤害（classTable('偷袭')），请手动添加偷袭伤害。\"}]}]}"
+ },
+ {
+  "key": "XGE:游荡者:误导:13",
+  "name": "误导",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当你周围 5 尺范围内有另一个生物为你提供掩护且你成为攻击目标被命中时，可以用反应将该攻击转嫁到掩护你的生物身上。引擎取消对你的命中，对掩护生物的攻击由人手动判定结算。",
+  "notes": [
+   "误导：你使用反应将这次攻击的目标转嫁到为你提供掩护的生物身上，请手动判定该生物是否被击中并结算相应伤害。"
+  ],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"misdirection\",\"label\":\"误导：转嫁攻击\",\"on\":\"attackHit\",\"role\":\"target\",\"window\":\"before\",\"optional\":true,\"cost\":[{\"economy\":\"reaction\"}],\"when\":\"ask('5尺内是否有生物为你提供了掩护？')\",\"modify\":[{\"op\":\"cancel\"}],\"do\":[{\"kind\":\"note\",\"text\":\"误导：你使用反应将这次攻击的目标转嫁到为你提供掩护的生物身上，请手动判定该生物是否被击中并结算相应伤害。\"}]}]}"
+ },
+ {
+  "key": "XGE:游荡者:潇洒气质:9",
+  "name": "潇洒气质",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个动作进行魅力（游说）对抗目标感知（洞悉）检定（目标须能听见你且共享语言）。检定对抗由人手动判定。检定成功时，若敌对则施加嘲讽效果（对其除你之外的目标攻击有劣势且不能对其借机攻击，持续1分钟，队友攻击/法术影响或距离超60尺提前结束）；若非敌对则魅惑1分钟（视为友好熟人，受到伤害或有害行为提前结束）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"潇洒气质\",\"activation\":\"action\",\"targeting\":{\"type\":\"creature\",\"count\":1},\"root\":[{\"kind\":\"choose\",\"prompt\":\"潇洒气质：游说对抗洞悉检定是否成功？\",\"options\":[{\"label\":\"成功：目标敌对（挑衅嘲讽）\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"挑衅\",\"duration\":{\"minutes\":1,\"endsOn\":[{\"event\":\"damageTaken\"}]}}]},{\"label\":\"成功：目标非敌对（魅惑）\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"XPHB:condition:魅惑\",\"duration\":{\"minutes\":1,\"endsOn\":[{\"event\":\"damageTaken\"}]}}]},{\"label\":\"失败：对抗未成功\",\"do\":[]}]}]}],\"effects\":{\"挑衅\":{\"text\":\"对剑客以外的目标发动的攻击检定具有劣势，且不能对除剑客以外的目标进行借机攻击。受到伤害、队友施法影响或离开60尺提前结束。\",\"rollMods\":[{\"on\":{\"kind\":\"attack\"},\"who\":\"bearer\",\"when\":\"target != null && target.id != source.id\",\"op\":\"disadv\",\"label\":\"潇洒气质：对剑客以外的目标攻击具有劣势\"}]}}}"
+ },
+ {
+  "key": "XGE:游荡者:战术大师:3",
+  "name": "战术大师",
+  "by": "AI",
+  "automation": "full",
+  "level": null,
+  "text": "你可以以附赠动作执行协助动作。此外，当你使用协助动作支援盟友攻击某个生物时，攻击目标可以在你 30 尺范围内（前提是目标能看到或听到你）。",
+  "notes": [
+   "所选盟友下一次使用你所选技能/工具的属性检定具有优势（在你的下个回合开始前）。"
+  ],
+  "data": "{\"automation\":\"full\",\"actions\":[{\"id\":\"use\",\"name\":\"战术大师（协助）\",\"activation\":\"bonus\",\"requires\":\"turn.isMine\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":30},\"root\":[{\"kind\":\"choose\",\"prompt\":\"战术大师：协助的方式\",\"options\":[{\"label\":\"辅助一次攻击检定：虚晃 30 尺内的一个敌人\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"XPHB:action:协助#协助攻击\"}]},{\"label\":\"辅助一次属性检定（手动处理）\",\"do\":[{\"kind\":\"note\",\"text\":\"所选盟友下一次使用你所选技能/工具的属性检定具有优势（在你的下个回合开始前）。\"}]}]}]}]}"
+ },
+ {
+  "key": "XGE:游荡者:战术洞悉:3",
+  "name": "战术洞悉",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以附赠动作与周围一个可见且未失能的生物进行对抗（你的洞悉对抗目标的欺瞒）。若对抗成功，持续 1 分钟内，即使你对其攻击没有优势也能造成偷袭伤害（但攻击有劣势时依旧无法偷袭）。若对另一目标成功使用此特性，前一次增益提前结束。17级时（伺隙锐瞳），偷袭伤害额外增加 3d6。对抗检定由人手动判定。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"战术洞悉\",\"activation\":\"bonus\",\"targeting\":{\"type\":\"creature\",\"count\":1},\"root\":[{\"kind\":\"choose\",\"prompt\":\"战术洞悉：感知（洞悉）对抗目标魅力（欺瞒）是否成功？\",\"options\":[{\"label\":\"对抗成功：施加战术洞悉\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"战术洞悉\",\"duration\":{\"minutes\":1},\"state\":{\"mark\":\"target\"}}]},{\"label\":\"对抗失败：未能洞悉目标\",\"do\":[]}]}]}],\"effects\":{\"战术洞悉\":{\"text\":\"对洞悉目标发动攻击时，若没有劣势，无需优势亦可造成偷袭伤害。17级起额外造成 3d6 偷袭伤害。\",\"triggers\":[{\"id\":\"insightful-sneak\",\"label\":\"战术洞悉：偷袭\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"optional\":true,\"limit\":\"oncePerTurn\",\"when\":\"(attack.finesse || attack.ranged) && target.id == effect.state.mark && !roll.disadv\",\"do\":[{\"kind\":\"addDamage\",\"dice\":\"classTable('偷袭') + cond(self.levelOf('游荡者') >= 17, 3d6, 0d6)\",\"type\":\"attack.damageType\"}]}]}}}"
+ },
+ {
+  "key": "XGE:游侠:猎手感知:3",
+  "name": "猎手感知",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个动作选择 60 尺内可见的一名生物，获知其伤害免疫、抗性与易伤信息（若被预言系魔法隐瞒则视为无），由 DM 手动告知。长休恢复（次数等于感知调整值，至少 1 次）。",
+  "notes": [
+   "猎手感知：立刻知晓目标生物拥有的伤害免疫、抗性与易伤（若被预言系魔法隐瞒则感知为无），由 DM 告知玩家"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"猎手感知\",\"activation\":\"action\",\"cost\":[{\"resource\":\"猎手感知\"}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"note\",\"text\":\"猎手感知：立刻知晓目标生物拥有的伤害免疫、抗性与易伤（若被预言系魔法隐瞒则感知为无），由 DM 告知玩家\"}]}]}"
+ },
+ {
+  "key": "XGE:游侠:灵体防御:15",
+  "name": "灵体防御",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当你因一次攻击受到伤害时，可用反应使本次伤害减半（模拟获得该攻击所有伤害类型的抗性）。持续至当前回合结束，期间该攻击包含的伤害类型的抗性需人工确认处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"spectral-defense\",\"label\":\"灵体防御：伤害减半\",\"on\":\"attackHit\",\"role\":\"target\",\"window\":\"before\",\"deferTo\":\"damageIncoming\",\"optional\":true,\"cost\":[{\"economy\":\"reaction\"}],\"modify\":[{\"op\":\"halveDamage\"}],\"do\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"灵体防御\"}]}],\"effects\":{\"灵体防御\":{\"text\":\"获得触发攻击所含所有伤害类型的抗性，持续至当前回合结束。\",\"duration\":{\"endsOn\":[{\"event\":\"turnEnded\"}]}}}}"
+ },
+ {
+  "key": "XGE:游侠:魔法使的克星:11",
+  "name": "魔法使的克星",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当你看见周围 60 尺内有生物施展法术或传送时，可以用反应迫使其进行感知豁免（DC 等于你的法术豁免 DC），豁免失败其法术或传送失败并浪费。短休或长休恢复 1 次。法术或传送的中断与浪费需由 DM / 人工处理。",
+  "notes": [
+   "魔法使的克星：目标感知豁免失败，其施展的法术或传送失败并被浪费，请手动取消该法术或传送。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"魔法使的克星\",\"activation\":\"reaction\",\"trigger\":{\"on\":\"spellCast\",\"role\":\"any\",\"window\":\"before\",\"when\":\"ask('周围60尺内有你可见的生物施展法术或传送吗？')\"},\"cost\":[{\"resource\":\"magic-users-nemesis\"}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"note\",\"text\":\"魔法使的克星：目标感知豁免失败，其施展的法术或传送失败并被浪费，请手动取消该法术或传送。\"}]}]}]}"
+ },
+ {
+  "key": "XGE:游侠:杀手反制:15",
+  "name": "杀手反制",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当你的狩猎开始特性目标迫使你进行一次豁免检定时，你可以在进行豁免检定前用反应对它进行一次武器攻击；一旦命中，除攻击的正常效果外，你这次豁免自动成功。【已自动化】时机与目标 —— 必须是你身上挂着「狩猎开始」、并且是别人迫使你豁免时才提示（弹窗里会问是不是你的狩猎开始目标干的）；反应代价；动作自动瞄准迫使你豁免的那个生物。【要人处理】武器攻击本身，以及「命中后本次豁免自动成功」：引擎在豁免掷骰前虽然有个窗口（saveForced），但它不接受改写结果，也没有替你掷武器攻击的写法。请自己掷这次攻击，命中就手动把这次豁免按成功结算（DM 可以改判这次豁免的结果）。",
+  "notes": [
+   "杀手反制：立刻对迫使你豁免的那个生物进行一次武器攻击。若命中，除正常伤害外，你这次豁免自动成功（请手动把豁免结果改判为成功）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"杀手反制\",\"activation\":\"reaction\",\"trigger\":{\"on\":\"saveForced\",\"role\":\"target\",\"window\":\"after\",\"aim\":\"actor\",\"when\":\"self.hasEffect('狩猎开始') && ask('这次豁免是你的狩猎开始目标迫使的吗？')\"},\"targeting\":{\"type\":\"creature\",\"count\":1},\"root\":[{\"kind\":\"note\",\"text\":\"杀手反制：立刻对迫使你豁免的那个生物进行一次武器攻击。若命中，除正常伤害外，你这次豁免自动成功（请手动把豁免结果改判为成功）。\"}]}]}"
+ },
+ {
+  "key": "XGE:游侠:闪现打击:11",
+  "name": "闪现打击",
+  "by": "审后补",
+  "automation": "partial",
+  "level": null,
+  "text": "执行攻击动作时，每次攻击前可传送最多 10 尺至可见未占据空间。若在同一攻击动作中攻击了至少两个不同生物，可获得额外 1 次攻击机会以攻击第三个生物。",
+  "notes": [
+   "闪现打击：获得额外 1 次武器攻击，必须用来攻击第三个不同的生物"
+  ],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"teleport-before-attack\",\"label\":\"闪现打击：攻击前传送 10 尺\",\"on\":\"d20Rolled\",\"role\":\"actor\",\"window\":\"before\",\"optional\":true,\"when\":\"turn.isMine && roll.kind == 'attack' && attack.weapon && ask('这次攻击是否属于攻击动作，且需要在攻击前传送最多 10 尺？')\",\"do\":[{\"kind\":\"move\",\"mode\":\"teleport\",\"ft\":10}]},{\"id\":\"extra-attack-third\",\"label\":\"闪现打击：额外攻击第三个生物\",\"on\":[\"attackHit\",\"attackMissed\"],\"role\":\"actor\",\"window\":\"after\",\"optional\":true,\"limit\":\"oncePerTurn\",\"when\":\"turn.isMine && attack.weapon && ask('你在本次攻击动作中是否已经攻击了至少两个不同的生物？')\",\"do\":[{\"kind\":\"economy\",\"attacks\":1},{\"kind\":\"note\",\"text\":\"闪现打击：获得额外 1 次武器攻击，必须用来攻击第三个不同的生物\"}]}]}"
+ },
+ {
+  "key": "XGE:游侠:位面战士:3",
+  "name": "位面战士",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "附赠动作指定 30 尺内可见的一名生物，本回合对其下一次武器攻击命中造成额外 1d8（11级 2d8）力场伤害。引擎无法自动将武器的基础伤害类型转为力场伤害，需人工处理。",
+  "notes": [
+   "位面战士：本次武器攻击的原有伤害类型也全部转化为力场伤害（引擎无法自动改写武器基础伤害类型，需人工处理）"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"位面战士\",\"activation\":\"bonus\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":30},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"位面战士\",\"state\":{\"mark\":\"target\"}}]}],\"effects\":{\"位面战士\":{\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":0}},\"triggers\":[{\"id\":\"hit\",\"label\":\"位面战士：命中造成额外力场伤害\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"when\":\"attack.weapon && target.id == effect.state.mark\",\"do\":[{\"kind\":\"addDamage\",\"dice\":\"cond(self.levelOf('游侠') >= 11, 2d8, 1d8)\",\"type\":\"力场\"},{\"kind\":\"removeEffect\",\"match\":{\"name\":\"位面战士\"},\"from\":\"self\"},{\"kind\":\"note\",\"text\":\"位面战士：本次武器攻击的原有伤害类型也全部转化为力场伤害（引擎无法自动改写武器基础伤害类型，需人工处理）\"}]}]}}}"
+ },
+ {
+  "key": "XGE:游侠:以太漫步:7",
+  "name": "以太漫步",
+  "by": "审后补",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个附赠动作无需消耗法术位施展法术以太化，持续至当前回合结束。以太位面的交互与移动等细节需人工处理。每次短休或长休恢复 1 次。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"以太漫步\",\"activation\":\"bonus\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"resource\":\"以太漫步\"}],\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"以太漫步\"}]}],\"effects\":{\"以太漫步\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":0}},\"text\":\"处于以太边界（以太化法术效果），无法被原位面生物察觉或影响，仅能与以太位面事物互动；在当前回合结束时结束。\"}},\"resources\":[{\"id\":\"以太漫步\",\"name\":\"以太漫步\",\"formula\":\"1\",\"recovery\":\"rest\"}]}"
+ },
+ {
+  "key": "XGE:游侠:阴影视野:3",
+  "name": "阴影视野",
+  "by": "审后补",
+  "automation": "partial",
+  "level": null,
+  "text": "黑暗视觉增加属于静态感官属性不在此处理。在黑暗中，对于依赖黑暗视觉观察你的生物而言你视为隐形（攻击你具有劣势，你攻击对方具有优势），由人确认光照与对方视觉情况。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"rollMods\":[{\"on\":{\"kind\":\"attack\"},\"who\":\"against\",\"when\":\"ask('你是否完全身处黑暗中，且攻击者只能依靠黑暗视觉看见你？')\",\"op\":\"disadv\",\"label\":\"阴影视野：依赖黑暗视觉的攻击者\"},{\"on\":{\"kind\":\"attack\"},\"who\":\"bearer\",\"when\":\"ask('你是否完全身处黑暗中，且目标只能依靠黑暗视觉看见你？')\",\"op\":\"adv\",\"label\":\"阴影视野：对依赖黑暗视觉的目标\"}]}"
+ },
+ {
+  "key": "XGE:游侠:追猎如风:11",
+  "name": "追猎如风",
+  "by": "AI",
+  "automation": "full",
+  "level": null,
+  "text": "每个你的回合一次，当你的一次武器攻击未命中时，你可以作出另一次武器攻击，作为同一动作的一部分。",
+  "notes": [
+   "追猎如风：武器攻击未命中，增加 1 次攻击机会（作为同一动作的一部分）"
+  ],
+  "data": "{\"automation\":\"full\",\"triggers\":[{\"id\":\"stalkers-flurry\",\"label\":\"追猎如风：失手后额外攻击\",\"on\":\"attackMissed\",\"role\":\"actor\",\"window\":\"after\",\"optional\":true,\"limit\":\"oncePerTurn\",\"when\":\"turn.isMine && attack.weapon\",\"do\":[{\"kind\":\"economy\",\"attacks\":1},{\"kind\":\"note\",\"text\":\"追猎如风：武器攻击未命中，增加 1 次攻击机会（作为同一动作的一部分）\"}]}]}"
+ },
+ {
+  "key": "XGE:战士:坚定之印:3",
+  "name": "坚定之印",
+  "by": "AI",
+  "automation": "full",
+  "level": null,
+  "text": "以近战武器攻击命中敌人时赋予印记，持续至你下个回合结束（失能、死亡或被他人赋予印记时提前结束）。被标记敌人身处你5尺内时，对你以外目标的攻击检定具有劣势。若被标记敌人对你以外生物造成伤害，在你下个回合中可用附赠动作消耗一次使用次数对其发动特殊近战武器攻击，该攻击具有优势且击中额外造成等同于战士等级一半的伤害。使用次数等同于力量调整值（至少1次），长休恢复。",
+  "notes": [
+   "激活惩戒攻击：本回合内发动的下一次近战武器攻击具有优势，且击中时额外造成等同于战士等级一半的武器伤害。"
+  ],
+  "data": "{\"automation\":\"full\",\"triggers\":[{\"id\":\"mark\",\"label\":\"坚定之印：标记目标\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"after\",\"when\":\"attack.melee && attack.weapon\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"坚定之印\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"source\",\"nth\":1},\"endsOn\":[{\"event\":\"effectApplied\",\"when\":\"event.bearer == source.id && source.has('失能')\"}]}}]},{\"id\":\"bonus-damage\",\"label\":\"坚定之印：惩戒攻击额外伤害\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"when\":\"self.hasEffect('坚定之印：惩戒') && attack.melee && attack.weapon\",\"do\":[{\"kind\":\"addDamage\",\"dice\":\"floor(self.levelOf('战士') / 2)\",\"type\":\"attack.damageType\"},{\"kind\":\"removeEffect\",\"from\":\"self\",\"match\":{\"name\":\"坚定之印：惩戒\"}}]}],\"actions\":[{\"id\":\"use\",\"name\":\"坚定之印：惩戒攻击\",\"activation\":\"bonus\",\"requires\":\"turn.isMine\",\"cost\":[{\"resource\":\"unwavering-mark\"}],\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"坚定之印：惩戒\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":0}}},{\"kind\":\"note\",\"text\":\"激活惩戒攻击：本回合内发动的下一次近战武器攻击具有优势，且击中时额外造成等同于战士等级一半的武器伤害。\"}]}],\"effects\":{\"坚定之印\":{\"text\":\"处于坚定之印标记中：若处于骁骑士5尺范围内，对骁骑士以外目标的攻击检定具有劣势。\",\"rollMods\":[{\"on\":{\"kind\":\"attack\"},\"who\":\"bearer\",\"when\":\"target != null && target.id != source.id && within(self, source, 5)\",\"op\":\"disadv\",\"label\":\"坚定之印：对骁骑士以外目标的攻击具有劣势\"}]},\"坚定之印：惩戒\":{\"text\":\"本回合内近战武器攻击具有优势，击中时额外造成战士等级一半的武器伤害。\",\"rollMods\":[{\"on\":{\"kind\":\"attack\",\"attack\":{\"melee\":true,\"weapon\":true}},\"who\":\"bearer\",\"op\":\"adv\",\"label\":\"坚定之印：惩戒攻击具有优势\"}]}}}"
+ },
+ {
+  "key": "XGE:战士:坚守战线:10",
+  "name": "坚守战线",
+  "by": "审后补",
+  "automation": "partial",
+  "level": null,
+  "text": "【在触及范围内移动也引发借机攻击】生物在你触及范围内移动 5 尺或更多即引发你的借机攻击——引擎只认「离开触及范围」（那时它自己会问你要不要借机攻击），「在触及范围内走动」这个时机没有，请人工判断并手动发起。【借机攻击命中定身】你以借机攻击命中生物时，该生物速度降为 0 直至本回合结束。有人离开你的触及范围时引擎会连问两次：先问「坚守战线：借机攻击的时机」用不用（可以拒绝，拒绝就不挂蓄势），再问借机攻击打不打（那一次才真正花掉反应）。两次务必答成一致：只有确实要打才选「要用」；如果选了「要用」后来又没打，请手动删掉「坚守战线：蓄势」这个效应，否则你在这个回合里接下来的任意一次近战命中都会误把目标定身。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"hold-line-ready\",\"label\":\"坚守战线：借机攻击的时机\",\"on\":\"leftReach\",\"role\":\"target\",\"window\":\"after\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"坚守战线：蓄势\"}],\"optional\":true},{\"id\":\"hold-line\",\"label\":\"坚守战线：借机攻击命中定身\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"after\",\"when\":\"attack.melee && self.hasEffect('坚守战线：蓄势')\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"坚守战线：定身\"},{\"kind\":\"removeEffect\",\"from\":\"self\",\"match\":{\"name\":\"坚守战线：蓄势\"}}]},{\"id\":\"hold-line-miss\",\"label\":\"坚守战线：借机攻击失手\",\"on\":\"attackMissed\",\"role\":\"actor\",\"window\":\"after\",\"when\":\"attack.melee && self.hasEffect('坚守战线：蓄势')\",\"do\":[{\"kind\":\"removeEffect\",\"from\":\"self\",\"match\":{\"name\":\"坚守战线：蓄势\"}}]}],\"effects\":{\"坚守战线：蓄势\":{\"text\":\"坚守战线：有人离开了你的触及范围（引擎正在问你要不要借机攻击）。若这次借机攻击命中，目标速度降为 0 直至本回合结束。\",\"duration\":{\"until\":{\"at\":\"turnStart\",\"of\":\"bearer\",\"nth\":1}}},\"坚守战线：定身\":{\"text\":\"被坚守战线的借机攻击命中：速度降为 0 直至本回合结束。\",\"statics\":[{\"kind\":\"speedSet\",\"value\":0}],\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":0}}}}}"
+ },
+ {
+  "key": "XGE:战士:警戒守卫:18",
+  "name": "警戒守卫",
+  "by": "审后补",
+  "automation": "manual",
+  "level": null,
+  "text": "战斗中你在每个其他生物的回合里可以额外做一次特殊反应，这个反应只能用于发动借机攻击，且同一回合里不能既用特殊反应又用你原本的反应。引擎的一次反应就是一个反应槽（有人离开你的触及范围时引擎会自己问要不要借机攻击），没有「只在别人的回合生效、且只能用于借机攻击」的额外反应槽，也表达不了「两者同回合不能并用」——这条只能由玩家与 DM 手动记账；加了额外的反应槽会让这个角色凭空多出一次能用在别处的反应，所以这里不写自动化。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XGE:战士:生死流转:18",
+  "name": "生死流转",
+  "by": "审后补",
+  "automation": "manual",
+  "level": null,
+  "text": "如果你受到会将生命值降到0且不会立即杀死你的伤害，可以用反应延缓陷入昏迷并立刻插入一个额外回合。额外回合结束时若生命值仍为0则陷入昏迷。长休恢复。（引擎未实现打断当前回合插入额外回合的流程，需手动处理）",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XGE:战士:守护战技:7",
+  "name": "守护战技",
+  "by": "审后补",
+  "automation": "partial",
+  "level": null,
+  "text": "只要你持用着一把近战武器或一面盾牌，当你或你周围 5 尺内你可见的生物被一次攻击命中时，你能以一个反应消耗一次使用次数（上限 = 你的体质调整值，至少 1 次，长休恢复全部），掷 1d8 加进被攻击者的 AC：如果加上后 AC 超过攻击检定的总值，这次攻击改为未命中；如果仍然命中，被攻击目标对本次攻击的伤害具有抗性（伤害减半）。【已自动化】次数池与反应代价、以及两个结果各自的效果 —— 弹窗里会给出两条互斥的选项，请先自己掷 1d8，按结果选其中一条：「改为未命中」会把这次命中作废（不进伤害），「仍然命中」会把本次伤害减半。【要人处理】1d8 加进 AC 这一步 —— 引擎没有「把一次掷骰加进 AC」的写法（AC 加值只能是定值），所以每条攻击都要你自己掷这 1d8 并挑选项。另外两处小事：目标本来就对该伤害类型有抗性时，减半会被连减两次，请手动补回一半；「持用近战武器或盾牌」引擎看不出来，弹窗里会问你一次。",
+  "notes": [
+   "守护战技：本次攻击的伤害已按抗性减半。若目标本来就对这类伤害有抗性，这里会被连减两次，请手动补回一半。"
+  ],
+  "data": "{\"automation\":\"partial\",\"resources\":[{\"id\":\"warding-maneuver\",\"name\":\"守护战技\",\"formula\":\"max(1, con)\",\"recovery\":\"long\"}],\"triggers\":[{\"id\":\"wardingManeuverMiss\",\"label\":\"守护战技：1d8 加 AC 后改为未命中\",\"on\":\"attackHit\",\"role\":\"any\",\"window\":\"before\",\"optional\":true,\"cost\":[{\"economy\":\"reaction\"},{\"resource\":\"warding-maneuver\"}],\"when\":\"(target.id == self.id || (within(self, target, 5) && canSee(self, target))) && (self.wearing('S') || ask('持用近战武器吗？'))\",\"modify\":[{\"op\":\"cancel\"}]},{\"id\":\"wardingManeuverHalve\",\"label\":\"守护战技：1d8 后仍然命中则伤害减半\",\"on\":\"attackHit\",\"role\":\"any\",\"window\":\"before\",\"optional\":true,\"cost\":[{\"economy\":\"reaction\"},{\"resource\":\"warding-maneuver\"}],\"when\":\"(target.id == self.id || (within(self, target, 5) && canSee(self, target))) && (self.wearing('S') || ask('持用近战武器吗？'))\",\"modify\":[{\"op\":\"halveDamage\"}],\"do\":[{\"kind\":\"note\",\"text\":\"守护战技：本次攻击的伤害已按抗性减半。若目标本来就对这类伤害有抗性，这里会被连减两次，请手动补回一半。\"}]}]}"
+ },
+ {
+  "key": "XGE:战士:燕返:15",
+  "name": "燕返",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "自己回合里，你对抗某个目标的攻击检定具有优势时可以放弃这项优势，换取对同一目标的一次额外攻击。用法：在这颗 d20 的弹窗里选「燕返」—— 这次检定改为无优势的单颗骰结算（引擎按**第一颗**骰判，弹窗里显示的是较高的那颗，结果对不上时以第一颗为准）（放弃那一优势），并且你的剩余攻击次数 +1，照常在动作栏再点一次武器攻击即可。每回合一次由引擎限制。引擎分不出「这一下是不是攻击动作给的攻击」、也不会限制额外那一次只能打同一个目标，这两点请自行遵守。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"rapid-strike\",\"label\":\"燕返：放弃优势换一次额外攻击\",\"on\":\"d20Rolled\",\"role\":\"actor\",\"window\":\"before\",\"optional\":true,\"limit\":\"oncePerTurn\",\"when\":\"roll.kind == 'attack' && roll.adv && turn.isMine\",\"modify\":[{\"op\":\"clearAdv\",\"which\":\"adv\"}],\"do\":[{\"kind\":\"economy\",\"attacks\":1}]}]}"
+ },
+ {
+  "key": "XGE:spell:碧水法球",
+  "name": "碧水法球",
+  "by": "AI",
+  "automation": "partial",
+  "level": 4,
+  "text": "专注至多 1 分钟。在 90 尺内创造半径 5 尺的水球：出现时位于水球空间内的生物做力量豁免（巨型及以上体型自动成功），失败陷入束缚并被水淹没；生物进入水球时同样须做这次豁免。被束缚者在自己每个回合结束时重复豁免，成功即摆脱法术对自己的效果。后续回合可用「碧水法球：移动撞击」移动水球至多 30 尺（移入生物空间会自动按进入触发豁免）。水球的容纳上限（4 个中型或 1 个大型）、成功者排出到水球周围、随水球移动拖动被束缚者棋子、水球离地高度、以及法术结束时水球落地熄灭 30 尺内非魔法火焰并让被束缚者倒地出现，需人工处理。",
+  "notes": [
+   "碧水法球：目标体型为巨型或更大，力量豁免自动成功。",
+   "水球至多容纳 4 个中型（或更小）或 1 个大型生物，超出上限时随机排出一个已被束缚者（倒地）出现在水球周围 5 尺内；豁免成功的生物应被排出到水球周围最近的未被占据空间；这些、以及水球离地高度、法术结束时熄灭 30 尺内所有非魔法火焰、被束缚者在落点周围倒地出现，都请人工处理。",
+   "水球沿直线移动至多 30 尺；水球移入生物空间会自动按「进入」判定力量豁免；已被束缚的生物随水球一起移动请在地图上手动拖动棋子。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"碧水法球\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":4}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"area\",\"range\":90,\"area\":{\"shape\":\"sphere\",\"radius\":5}},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"碧水法球\"},{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"if\",\"when\":\"target.size != '巨型' && target.size != '超巨型'\",\"then\":[{\"kind\":\"save\",\"ability\":\"str\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"碧水法球：束缚\",\"duration\":{\"saveEnds\":{\"ability\":\"str\",\"dc\":\"self.spell.dc\",\"at\":\"turnEnd\"},\"max\":{\"minutes\":1}}}]}],\"else\":[{\"kind\":\"note\",\"text\":\"碧水法球：目标体型为巨型或更大，力量豁免自动成功。\"}]}]},{\"kind\":\"zone\",\"on\":[\"enter\"],\"affects\":\"all\",\"oncePerTurn\":false,\"do\":[{\"kind\":\"if\",\"when\":\"target.size != '巨型' && target.size != '超巨型'\",\"then\":[{\"kind\":\"save\",\"ability\":\"str\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"碧水法球：束缚\",\"duration\":{\"saveEnds\":{\"ability\":\"str\",\"dc\":\"self.spell.dc\",\"at\":\"turnEnd\"},\"max\":{\"minutes\":1}}}]}],\"else\":[{\"kind\":\"note\",\"text\":\"碧水法球：目标体型为巨型或更大，力量豁免自动成功。\"}]}],\"name\":\"碧水法球\"},{\"kind\":\"note\",\"text\":\"水球至多容纳 4 个中型（或更小）或 1 个大型生物，超出上限时随机排出一个已被束缚者（倒地）出现在水球周围 5 尺内；豁免成功的生物应被排出到水球周围最近的未被占据空间；这些、以及水球离地高度、法术结束时熄灭 30 尺内所有非魔法火焰、被束缚者在落点周围倒地出现，都请人工处理。\"}]},{\"id\":\"moveSphere\",\"name\":\"碧水法球：移动撞击\",\"activation\":\"action\",\"requires\":\"self.hasEffect('碧水法球（激活）')\",\"tags\":[\"spell\",\"magical\"],\"targeting\":{\"type\":\"area\",\"range\":30,\"area\":{\"shape\":\"sphere\",\"radius\":5}},\"root\":[{\"kind\":\"moveZone\"},{\"kind\":\"note\",\"text\":\"水球沿直线移动至多 30 尺；水球移入生物空间会自动按「进入」判定力量豁免；已被束缚的生物随水球一起移动请在地图上手动拖动棋子。\"}],\"text\":\"用一个动作将水球沿直线移动至多 30 尺。水球移入生物空间会自动按「进入」结算豁免；被束缚者随水球移动请人工拖动棋子。\"}],\"effects\":{\"碧水法球\":{\"name\":\"碧水法球（激活）\",\"tags\":[\"magical\",\"spell\"],\"text\":\"维持半径 5 尺的水球。可以用一个动作把它沿直线移动至多 30 尺并撞击生物迫使其做力量豁免。\"},\"碧水法球：束缚\":{\"tags\":[\"magical\",\"spell\",\"debuff\"],\"implies\":[\"XPHB:condition:束缚\"],\"duration\":{\"saveEnds\":{\"ability\":\"str\",\"dc\":\"self.spell.dc\",\"at\":\"turnEnd\"},\"max\":{\"minutes\":1}},\"text\":\"被水球束缚并被水淹没。在其每个回合结束时可重复力量豁免（DC 等于施法者的法术豁免 DC），成功则摆脱。\"}}}"
+ },
+ {
+  "key": "XGE:spell:操控风力",
+  "name": "操控风力",
+  "by": "AI",
+  "automation": "partial",
+  "level": 5,
+  "text": "专注至多 1 小时。控制 300 尺内 100 尺立方的空气并留在地图上；施放时选择一种效果（之后可用动作切换）。【狂风】大风或强风时进入 / 离开区域或穿过其中的远程武器攻击有劣势，强风下逆风移动每尺多花 1 尺移动力。【下沉气流】穿过区域或对区域内生物发起的远程攻击有劣势；飞行生物每回合首次飞入或在其中开始回合须力量豁免，失败摔落倒地（原文只有「俯卧」，本法术任何一项效果都不造成伤害）。【上升气流】区域内的坠落伤害减半、垂直跳跃高出 10 尺。降落、坠落、跳跃、飞行状态与逆风消耗都需人工处理。",
+  "notes": [
+   "操控风力：狂风。进入或离开区域、或穿过其中的远程武器攻击在大风或强风下具有劣势；强风下逆风而行的生物每移动 1 尺额外消耗 1 尺移动力。请人工结算。",
+   "操控风力：下沉气流。穿过其中、或对处于其中的生物进行的远程武器攻击具有劣势；飞行生物每回合第一次飞进该空间、或在飞行状态下于其中开始其回合时，须进行力量豁免，失败摔落倒地。请人工判定飞行与劣势。",
+   "操控风力：上升气流。在该空间内结束摔落的生物只因该摔落受到一半伤害；处于其中的生物垂直跳跃时能比正常高出 10 尺。请人工结算。",
+   "操控风力切换为狂风：大风或强风时进出 / 穿过区域的远程攻击有劣势，强风逆风移动消耗加倍。",
+   "操控风力切换为下沉气流：区域内的远程攻击有劣势；飞行生物飞入或在其中开始回合须力量豁免失败摔落倒地。",
+   "操控风力切换为上升气流：区域内坠落伤害减半、垂直跳跃高度 +10 尺。",
+   "操控风力：可以用动作暂停或重启一个被暂停的效应（请人工标记）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"操控风力\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":5}}],\"concentration\":{\"hours\":1},\"targeting\":{\"type\":\"area\",\"range\":300,\"area\":{\"shape\":\"cube\",\"size\":100}},\"root\":[{\"kind\":\"choose\",\"prompt\":\"选择操控风力的效果\",\"options\":[{\"label\":\"狂风\",\"do\":[{\"kind\":\"note\",\"text\":\"操控风力：狂风。进入或离开区域、或穿过其中的远程武器攻击在大风或强风下具有劣势；强风下逆风而行的生物每移动 1 尺额外消耗 1 尺移动力。请人工结算。\"}]},{\"label\":\"下沉气流\",\"do\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"if\",\"when\":\"ask('这个生物正以飞行状态处于该空间吗？')\",\"then\":[{\"kind\":\"save\",\"ability\":\"str\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"XPHB:condition:倒地\"}]}]}]},{\"kind\":\"note\",\"text\":\"操控风力：下沉气流。穿过其中、或对处于其中的生物进行的远程武器攻击具有劣势；飞行生物每回合第一次飞进该空间、或在飞行状态下于其中开始其回合时，须进行力量豁免，失败摔落倒地。请人工判定飞行与劣势。\"}]},{\"label\":\"上升气流\",\"do\":[{\"kind\":\"note\",\"text\":\"操控风力：上升气流。在该空间内结束摔落的生物只因该摔落受到一半伤害；处于其中的生物垂直跳跃时能比正常高出 10 尺。请人工结算。\"}]}]},{\"kind\":\"zone\",\"on\":[\"enter\",\"turnStart\"],\"affects\":\"all\",\"oncePerTurn\":true,\"do\":[{\"kind\":\"if\",\"when\":\"ask('当前是下沉气流，且这个生物正以飞行状态飞入或在飞行状态下开始其回合吗？')\",\"then\":[{\"kind\":\"save\",\"ability\":\"str\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"XPHB:condition:倒地\"}]}]}],\"name\":\"操控风力\"}]},{\"id\":\"shift\",\"name\":\"操控风力：切换效果\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"choose\",\"prompt\":\"把操控风力切换成哪种效果（也可以暂停 / 重启一个效应）\",\"options\":[{\"label\":\"狂风\",\"do\":[{\"kind\":\"note\",\"text\":\"操控风力切换为狂风：大风或强风时进出 / 穿过区域的远程攻击有劣势，强风逆风移动消耗加倍。\"}]},{\"label\":\"下沉气流\",\"do\":[{\"kind\":\"note\",\"text\":\"操控风力切换为下沉气流：区域内的远程攻击有劣势；飞行生物飞入或在其中开始回合须力量豁免失败摔落倒地。\"}]},{\"label\":\"上升气流\",\"do\":[{\"kind\":\"note\",\"text\":\"操控风力切换为上升气流：区域内坠落伤害减半、垂直跳跃高度 +10 尺。\"}]},{\"label\":\"暂停 / 重启效应\",\"do\":[{\"kind\":\"note\",\"text\":\"操控风力：可以用动作暂停或重启一个被暂停的效应（请人工标记）。\"}]}]}]}]}"
+ },
+ {
+  "key": "XGE:spell:潮涌",
+  "name": "潮涌",
+  "by": "AI",
+  "automation": "partial",
+  "level": 3,
+  "text": "在 120 尺内召唤长至多 30 尺、宽至多 10 尺、高至多 10 尺的浪潮。区域内生物进行敏捷豁免，失败受到 4d8 钝击伤害并倒地，成功半伤且不倒地。随后浪潮向四周流散，熄灭区域及周围 30 尺内未受保护的火焰（灭火环境效果需手动处理）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"潮涌\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":3}}],\"targeting\":{\"type\":\"area\",\"range\":120,\"area\":{\"shape\":\"line\",\"length\":30,\"width\":10}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"wave\",\"dice\":\"4d8\",\"type\":\"钝击\"},{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"XPHB:condition:倒地\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"wave\",\"scale\":0.5}]}]}]}]}"
+ },
+ {
+  "key": "XGE:spell:虫群孳生",
+  "name": "虫群孳生",
+  "by": "AI",
+  "automation": "partial",
+  "level": 0,
+  "text": "迫使 30 尺内你能看见的一名生物进行体质豁免，失败受到 1d6 毒素伤害（5 级 2d6、11 级 3d6、17 级 4d6）。原文还要求目标「可以移动并且有至少 5 尺的速度」才会朝随机方向移动 5 尺：引擎按目标的当前速度判断、并问一句它能不能移动；真的移动时它会得到「免借机」标记，请你掷 1d4 定方向（1 北 2 南 3 东 4 西）手动把棋子移动 5 尺，若该方向被阻挡则不移动（引擎不做随机方向的移动）。这次移动不引发借机攻击——标记在目标移动一次后消失，以防手动拖棋子时误触发借机攻击。",
+  "notes": [
+   "掷 1d4 决定随机方向（1 北 2 南 3 东 4 西），把目标棋子移动 5 尺；若该方向被阻挡则不移动（请手动移动）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"虫群孳生\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":30},\"root\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"dice\":\"(1 + floor((self.level + 1) / 6))d6\",\"type\":\"毒素\"},{\"kind\":\"if\",\"when\":\"target.speed >= 5 && ask('这个目标现在能移动吗？（被擒抱、失能、速度被降为 0 等都不能移动）')\",\"then\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"虫群孳生：乱窜\"},{\"kind\":\"note\",\"text\":\"掷 1d4 决定随机方向（1 北 2 南 3 东 4 西），把目标棋子移动 5 尺；若该方向被阻挡则不移动（请手动移动）。\"}]}]}]}],\"effects\":{\"虫群孳生：乱窜\":{\"text\":\"虫群孳生：这次被寄生虫推着走的移动不会引发借机攻击（移动一次后消失，或到其本回合结束）。\",\"flags\":{\"cannot\":[\"provoke\"]},\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":0},\"endsOn\":[{\"event\":\"moved\",\"when\":\"event.id == self.id\"}]}}}}"
+ }
+]

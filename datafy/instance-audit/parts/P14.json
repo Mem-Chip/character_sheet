@@ -1,0 +1,449 @@
+[
+ {
+  "key": "FRHoF:游侠:寒心复仇:11",
+  "name": "寒心复仇",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当你被一次攻击检定命中时，可用反应迫使攻击你的生物进行感知豁免（DC 为你的法术豁免 DC）。豁免失败陷入震慑状态直到你的下个回合结束，且速度降至 0。次数等同于感知调整值（至少 1 次），长休恢复。需手动指定攻击者结算豁免与状态。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"寒心复仇\",\"activation\":\"reaction\",\"trigger\":{\"on\":\"attackHit\",\"role\":\"target\",\"window\":\"after\"},\"cost\":[{\"resource\":\"coldhearted-vengeance\"}],\"targeting\":{\"type\":\"creature\",\"count\":1},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"寒心复仇：震慑\"}]}]}],\"effects\":{\"寒心复仇：震慑\":{\"text\":\"陷入震慑状态直到游侠的下个回合结束，且速度降至 0。\",\"implies\":[\"XPHB:condition:震慑\"],\"statics\":[{\"kind\":\"speedSet\",\"value\":0}],\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"source\",\"nth\":1}}}}}"
+ },
+ {
+  "key": "FRHoF:战士:集结如潮:10",
+  "name": "集结如潮",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "使用动作如潮时，可选择 30 尺内至多魅力调整值（至少 1）个盟友，各可用反应发动一次武器/徒手攻击或移动半速且不触发借机攻击。盟友的反应由其自行执行。",
+  "notes": [
+   "所选盟友可立即使用反应进行一次武器/徒手攻击，或移动半速且不触发借机攻击。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"集结如潮\",\"activation\":\"free\",\"cost\":[{\"resource\":\"动作如潮\"}],\"requires\":\"turn.isMine && round > 0 && !self.hasEffect('动作如潮')\",\"targeting\":{\"type\":\"creature\",\"count\":\"max(1, self.mod.cha)\",\"range\":30,\"filter\":\"target.isAllyOf(self) && target.id != self.id\"},\"root\":[{\"kind\":\"economy\",\"action\":1},{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"动作如潮\"},{\"kind\":\"note\",\"text\":\"所选盟友可立即使用反应进行一次武器/徒手攻击，或移动半速且不触发借机攻击。\"}]}],\"effects\":{\"动作如潮\":{\"text\":\"本回合已经用过动作如潮。额外的动作不能用来执行魔法动作。\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":0}}}}}"
+ },
+ {
+  "key": "FRHoF:咒火专家",
+  "name": "咒火专家",
+  "by": "审后补",
+  "automation": "partial",
+  "level": null,
+  "text": "【咒火燎原】每回合一次，施展的法术造成光耀伤害时，可消耗并投掷至多两枚生命骰加入该法术的其中一次伤害掷骰中（扣除生命骰与加骰由玩家手动处理）。【焦灼咒火】你进行造成光耀伤害的伤害掷骰时无视光耀伤害抗性（由玩家手动处理）。",
+  "notes": [
+   "咒火燎原：消耗并投掷至多两枚生命骰，将其骰值总和加入本次光耀伤害掷骰中。请在人物卡手动扣除生命骰。"
+  ],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"spellfire-burn\",\"label\":\"咒火燎原：消耗生命骰加伤\",\"on\":\"damageIncoming\",\"role\":\"actor\",\"window\":\"before\",\"limit\":\"oncePerTurn\",\"optional\":true,\"when\":\"damage.type == '光耀' && ask('这次光耀伤害来自你施展的法术吗？')\",\"do\":[{\"kind\":\"note\",\"text\":\"咒火燎原：消耗并投掷至多两枚生命骰，将其骰值总和加入本次光耀伤害掷骰中。请在人物卡手动扣除生命骰。\"}]}]}"
+ },
+ {
+  "key": "FRHoF:紫龙新兵",
+  "name": "紫龙新兵",
+  "by": "审后补",
+  "automation": "partial",
+  "level": null,
+  "text": "【待人接物】技能熟练项属于人物卡静态层授予。【重整姿态】投掷先攻时，若你未陷入失能状态，可选择至多等同于熟练加值个位于你30尺内你可见的生物获得英雄激励。此能力每完成一次长休可使用一次。英雄激励由玩家在人物卡上手动记录。",
+  "notes": [
+   "重整姿态：选择至多等同于熟练加值个30尺内可见生物，使其获得英雄激励（由玩家在人物卡上手动记录）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"rallying-posture\",\"label\":\"紫龙新兵：重整姿态\",\"on\":\"initiativeRolled\",\"role\":\"actor\",\"window\":\"after\",\"optional\":true,\"when\":\"!self.has('失能')\",\"cost\":[{\"resource\":\"rallying-posture\"}],\"do\":[{\"kind\":\"note\",\"text\":\"重整姿态：选择至多等同于熟练加值个30尺内可见生物，使其获得英雄激励（由玩家在人物卡上手动记录）。\"}]}]}"
+ },
+ {
+  "key": "FRHoF:spell:艾拉斯卓的月辉之篷",
+  "name": "艾拉斯卓的月辉之篷",
+  "by": "AI",
+  "automation": "partial",
+  "level": 5,
+  "text": "专注至多 1 分钟。以自身为中心散发半径 20 尺微光光环。你和光环内盟友获得掩护，并对寒冷、闪电及光耀伤害具有抗性。法术持续期间你可以使用以下选项之一（法术立即提前结束）：【解放】当你失败于一次用于避免或结束恐慌、受擒及束缚的豁免时，以反应将本次豁免改为成功；【回春】以魔法动作（动作）为你或区域内一名盟友恢复 4d10 + 施法属性调整值点生命值（掩护效果与法术提前结束需手动处理）。",
+  "notes": [
+   "艾拉斯卓的月辉之篷已结算回春，此法术立即结束（需取消专注）。",
+   "艾拉斯卓的月辉之篷：将本次豁免改为成功，此法术立即结束（需取消专注）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"艾拉斯卓的月辉之篷\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":5}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"艾拉斯卓的月辉之篷\"}]},{\"id\":\"rejuvenate\",\"name\":\"艾拉斯卓的月辉之篷：回春\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"requires\":\"self.concentrating\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":20},\"root\":[{\"kind\":\"heal\",\"amount\":\"4d10 + self.spell.mod\"},{\"kind\":\"note\",\"text\":\"艾拉斯卓的月辉之篷已结算回春，此法术立即结束（需取消专注）。\"}]},{\"id\":\"liberate\",\"name\":\"艾拉斯卓的月辉之篷：解放\",\"activation\":\"reaction\",\"tags\":[\"spell\",\"magical\"],\"requires\":\"self.concentrating\",\"trigger\":{\"on\":\"d20Rolled\",\"role\":\"actor\",\"window\":\"before\",\"when\":\"ask('是否为避免或结束恐慌、受擒或束缚的豁免失败？')\"},\"root\":[{\"kind\":\"note\",\"text\":\"艾拉斯卓的月辉之篷：将本次豁免改为成功，此法术立即结束（需取消专注）。\"}]}],\"effects\":{\"艾拉斯卓的月辉之篷\":{\"tags\":[\"magical\",\"spell\"],\"aura\":{\"id\":\"alustriel-canopy-aura\",\"radius\":20,\"affects\":\"allies\",\"includeSelf\":true,\"grant\":{\"statics\":[{\"kind\":\"resist\",\"values\":[\"寒冷\",\"闪电\",\"光耀\"]}]}},\"text\":\"源自你的 20 尺光环内，你和盟友获得掩护，并具有对寒冷、闪电和光耀伤害的抗性。\"}}}"
+ },
+ {
+  "key": "FRHoF:spell:厄难黑潮",
+  "name": "厄难黑潮",
+  "by": "审后补",
+  "automation": "partial",
+  "level": 4,
+  "text": "专注至多 1 分钟。在 120 尺内指定一点创造半径 20 尺球状墨色黑雾（视为魔法黑暗）。黑雾出现时位于其中的生物进行感知豁免，失败受 5d6 心灵伤害且豁免检定受 1d6 减值直至其下一回合结束，成功仅受半伤。黑雾移入生物空间、生物进入或在其中结束回合同样须进行豁免（每回合限一次）。施法者每个回合开始时黑雾远离施法者移动 10 尺；强风可吹散黑雾并解除法术。结阵施法可增至 1 英里且无需专注（黑雾移动、进入判定与结阵施法需手动处理）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"厄难黑潮\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":4}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"area\",\"range\":120,\"area\":{\"shape\":\"sphere\",\"radius\":20}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"dmg\",\"dice\":\"5d6\",\"type\":\"心灵\"},{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"厄难黑潮：心智侵蚀\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"dmg\",\"scale\":0.5}]}]}]}],\"effects\":{\"厄难黑潮：心智侵蚀\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":1}},\"rollMods\":[{\"on\":{\"kind\":\"save\"},\"who\":\"bearer\",\"op\":\"addDice\",\"value\":\"-1d6\",\"label\":\"厄难黑潮：豁免检定受 1d6 减值\"}],\"text\":\"豁免检定受到 1d6 减值，持续至其下一回合结束。\"}}}"
+ },
+ {
+  "key": "FRHoF:spell:反冲术",
+  "name": "反冲术",
+  "by": "AI",
+  "automation": "full",
+  "level": 4,
+  "text": "反应（当你受到伤害时，作为对该次伤害的回应）：令这次你受到的伤害降低 (环阶)d6 + 你的施法属性调整值（四环 4d6，每高一环 +1d6，已在伤害窗口里真的减掉）。若这次伤害来自一名位于 60 尺内的生物，你可以迫使该生物进行一次体质豁免（DC = 你的法术豁免 DC）：失败受到 (环阶)d6 力场伤害，成功只受一半。施法时若还有更高环的法术位可选，引擎会问用几环。要人留意的一处：引擎判断「伤害来源是否在 60 尺内」靠地图距离，没有地图时会问你一句；答否就只减伤、不反击。",
+  "notes": [
+   "反冲术：这次伤害没有生物来源，或来源不在 60 尺内 —— 只减免了这次伤害，不反弹。"
+  ],
+  "data": "{\"automation\":\"full\",\"actions\":[{\"id\":\"use\",\"name\":\"反冲术\",\"activation\":\"reaction\",\"trigger\":{\"on\":\"damageIncoming\",\"role\":\"target\",\"window\":\"before\"},\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":4}}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"modify\",\"modify\":[{\"op\":\"reduceDamage\",\"value\":\"(slot.level)d6 + self.spell.mod\"}]},{\"kind\":\"if\",\"when\":\"event.source != null && within(self, attacker, 60)\",\"then\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":\"self.spell.dc\",\"to\":\"attacker\",\"onFail\":[{\"kind\":\"damage\",\"dice\":\"(slot.level)d6\",\"type\":\"力场\"}],\"onSuccess\":[{\"kind\":\"damage\",\"dice\":\"(slot.level)d6\",\"type\":\"力场\",\"scale\":0.5}]}],\"else\":[{\"kind\":\"note\",\"text\":\"反冲术：这次伤害没有生物来源，或来源不在 60 尺内 —— 只减免了这次伤害，不反弹。\"}]}]}]}"
+ },
+ {
+  "key": "FRHoF:spell:桑缟的元灵显圣",
+  "name": "桑缟的元灵显圣",
+  "by": "审后补",
+  "automation": "partial",
+  "level": 5,
+  "text": "专注至多 1 分钟。你将巨灵的元素伟力注入自身：①获得所选伤害类型（强酸、寒冷、火焰、闪电或雷鸣）的抗性；②施展时及此后每个自身回合开始时，释放 15 尺光环元素波动，所选生物进行敏捷豁免，失败受 2d6 点所选元素类型伤害且倒地，成功半伤；③获得 30 尺飞行速度且可悬浮。结阵施法可使持续时间增至 10 分钟并将增益共享给额外至多 9 名生物（元素抗性类型、飞行速度及结阵施法需手动处理）。",
+  "notes": [
+   "桑缟的元灵显圣：释放 15 尺元素波动，目标进行敏捷豁免，失败受 2d6 强酸/寒冷/火焰/闪电/雷鸣伤害且陷入倒地，成功半伤。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"桑缟的元灵显圣\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":5}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"桑缟的元灵显圣\"}]},{\"id\":\"burst\",\"name\":\"桑缟的元灵显圣：元素波动\",\"activation\":\"none\",\"tags\":[\"spell\",\"magical\"],\"requires\":\"self.concentrating\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":15},\"root\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"burst_dmg\",\"dice\":\"2d6\",\"type\":\"火焰\"},{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"XPHB:condition:倒地\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"burst_dmg\",\"scale\":0.5}]}]}],\"effects\":{\"桑缟的元灵显圣\":{\"tags\":[\"magical\",\"spell\"],\"triggers\":[{\"id\":\"burst-turn-start\",\"label\":\"桑缟的元灵显圣：回合开始元素波动\",\"on\":\"turnStarted\",\"role\":\"actor\",\"window\":\"after\",\"do\":[{\"kind\":\"note\",\"text\":\"桑缟的元灵显圣：释放 15 尺元素波动，目标进行敏捷豁免，失败受 2d6 强酸/寒冷/火焰/闪电/雷鸣伤害且陷入倒地，成功半伤。\"}]}],\"text\":\"获得 30 尺飞行速度且可悬浮；获得所选伤害类型的抗性（强酸/寒冷/火焰/闪电/雷鸣）；每回合开始可发动元素波动。\"}}}"
+ },
+ {
+  "key": "FRHoF:spell:希伦的剧毒灵蛇",
+  "name": "希伦的剧毒灵蛇",
+  "by": "审后补",
+  "automation": "partial",
+  "level": 3,
+  "text": "持续 1 小时。获得 15 点临时生命值，耗尽时法术提前结束。持续期间获得等同于速度的攀爬速度，并可以魔法动作（动作）发动【剧毒啃咬】：对 50 尺内一名生物进行远程法术攻击，命中造成 1d6 力场伤害且陷入中毒与失能状态直至你的下一回合开始。升环施法时，每高一环临时生命值增加 5 点，剧毒啃咬伤害增加 1d6（啃咬升环伤害及临时生命耗尽结束法术需手动处理）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"希伦的剧毒灵蛇\",\"activation\":\"bonus\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":3}}],\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"tempHp\",\"amount\":\"15 + (slot.level - 3) * 5\"},{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"希伦的剧毒灵蛇\"}]},{\"id\":\"bite\",\"name\":\"希伦的剧毒灵蛇：剧毒啃咬\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":50},\"root\":[{\"kind\":\"attack\",\"attack\":{\"ranged\":true,\"spell\":true},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"1d6\",\"type\":\"力场\"},{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"希伦的剧毒灵蛇：毒噬\"}]}]}],\"effects\":{\"希伦的剧毒灵蛇\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"hours\":1},\"text\":\"获得等同于自身速度的攀爬速度；当临时生命值耗尽时提前结束。\"},\"希伦的剧毒灵蛇：毒噬\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:中毒\",\"XPHB:condition:失能\"],\"duration\":{\"until\":{\"at\":\"turnStart\",\"of\":\"source\",\"nth\":1}},\"text\":\"陷入中毒与失能状态，持续至施法者的下一回合开始。\"}}}"
+ },
+ {
+  "key": "FRHoF:spell:伊尔明斯特的法术闪避",
+  "name": "伊尔明斯特的法术闪避",
+  "by": "审后补",
+  "automation": "partial",
+  "level": 2,
+  "text": "专注至多 10 分钟。持续时间内对抗法术和其他魔法效应时进行的豁免检定具有优势。此外，若对抗豁免成功受半数伤害的法术或魔法效应时豁免成功，则不受伤害（豁免成功免除伤害需手动处理）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"伊尔明斯特的法术闪避\",\"activation\":\"bonus\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":2}}],\"concentration\":{\"minutes\":10},\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"伊尔明斯特的法术闪避\"}]}],\"effects\":{\"伊尔明斯特的法术闪避\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"minutes\":10},\"rollMods\":[{\"on\":{\"kind\":\"save\"},\"who\":\"bearer\",\"when\":\"ask('此次豁免是对抗法术或其他魔法效应吗？')\",\"op\":\"adv\",\"label\":\"伊尔明斯特的法术闪避：对抗魔法豁免优势\"}],\"text\":\"对抗法术和其他魔法效应时的豁免检定具有优势；若对抗豁免成功受半数伤害的法术或魔法效应时豁免成功，则不受伤害。\"}},\"triggers\":[{\"id\":\"spell-dodge-evasion\",\"label\":\"法术闪避：豁免成功免伤\",\"on\":\"saveForced\",\"window\":\"before\",\"role\":\"actor\",\"when\":\"ask('是否为对抗法术/魔法效应的半数伤害豁免？')\",\"modify\":[{\"op\":\"evasion\"}],\"do\":[]}]}"
+ },
+ {
+  "key": "FRHoF:spell:伊尔明斯特的绚丽光球",
+  "name": "伊尔明斯特的绚丽光球",
+  "by": "审后补",
+  "automation": "partial",
+  "level": 0,
+  "text": "持续 1 小时。创造 6 枚彩色光球环绕自身。光球存在期间可消耗光球：【吸收能量】受到强酸/寒冷/火焰/闪电/雷鸣伤害时以反应消耗 1 枚光球，获得对该伤害类型的抗性直至你的下个回合开始；【光能爆】以附赠动作消耗 1 枚光球对 120 尺内目标发动远程法术攻击，命中造成 3d6 点强酸、寒冷、火焰、闪电或雷鸣伤害（由你选择）。升环施法时法术位每高一环多创造 1 枚光球。消耗完全部光球后法术提前结束（光球计数、伤害类型选择与法术提前结束需手动处理）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"effects\":{\"伊尔明斯特的绚丽光球\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"hours\":1},\"text\":\"6 枚彩色光球环绕自身；可通过附赠动作发动光能爆，或通过反应消耗光球获得元素抗性；光球耗尽法术结束。\"},\"绚丽光球：元素抗性\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"until\":{\"at\":\"turnStart\",\"of\":\"bearer\",\"nth\":1}},\"text\":\"获得对触发该反应的元素伤害类型的抗性，持续至你的下个回合开始。\"}},\"resources\":[{\"id\":\"光球\",\"max\":\"slot.level\",\"recover\":\"none\"}]}"
+ },
+ {
+  "key": "FRHoF:spell:噪鸣护盾",
+  "name": "噪鸣护盾",
+  "by": "审后补",
+  "automation": "partial",
+  "level": 0,
+  "text": "专注至多 10 分钟。获得雷鸣伤害抗性，且对你发动的远程攻击检定具有劣势。源自你的半径 10 尺光环内，每当生物进入光环或在其中结束回合时，该生物须进行体质豁免，失败受 3d6 雷鸣伤害（每升一环 +1d6）且陷入耳聋直至你的下回合开始，成功受半伤（每名生物每回合限一次）。光环是画在地图上的区域：它不会跟着你走，也不会「移入」生物空间（这两条请人工处理）；施法时指定不受影响的生物同样需人工处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"effects\":{\"噪鸣护盾\":{\"tags\":[\"magical\",\"spell\"],\"statics\":[{\"kind\":\"resist\",\"values\":[\"雷鸣\"]}],\"rollMods\":[{\"on\":{\"kind\":\"attack\",\"attack\":{\"ranged\":true}},\"who\":\"against\",\"op\":\"disadv\",\"label\":\"噪鸣护盾：对你发动的远程攻击检定具有劣势\"}],\"text\":\"获得对雷鸣伤害的抗性，且对你发动的远程攻击检定均具有劣势。\"},\"噪鸣护盾：耳聋\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:耳聋\"],\"duration\":{\"until\":{\"at\":\"turnStart\",\"of\":\"source\",\"nth\":1}},\"text\":\"陷入耳聋状态，持续至施法者的下一回合开始。\"}}}"
+ },
+ {
+  "key": "FRHoF:spell:制敌术",
+  "name": "制敌术",
+  "by": "审后补",
+  "automation": "partial",
+  "level": 0,
+  "text": "掷出令目标晕眩的魔法力场，目标进行体质豁免（构装和亡灵自动成功）。豁免失败受 2d4 力场伤害（每升一环 +2d4），速度减半至你的下回合开始，且在其下回合中仅可执行一个动作或一个附赠动作（不能同时执行二者）。豁免成功受半伤（构装/亡灵判定、速度减半与行动限制由人手动处理）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"effects\":{\"制敌术\":{\"name\":\"制敌术\",\"statics\":[],\"duration\":{\"until\":{\"at\":\"turnStart\",\"of\":\"source\",\"nth\":1}}}}}"
+ },
+ {
+  "key": "FRHoF:spell:咒唤机群",
+  "name": "咒唤机群",
+  "by": "AI",
+  "automation": "partial",
+  "level": 3,
+  "text": "专注至多 10 分钟。在 60 尺内未占据空间咒唤中型机群。施法时或后续以魔法动作（动作），令机群指定其 5 尺内目标生效：【机关之力】目标敏捷豁免，失败受 3d6 力场伤害，成功半伤；【秩序守护】目标获得 1d6 + 施法属性调整值点临时生命。你在回合移动时可令机群移动至多 30 尺（升环每高一环伤害与临时生命各 +1d6；机群移动与升环需手动处理）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"咒唤机群\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":3}}],\"concentration\":{\"minutes\":10},\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"choose\",\"prompt\":\"选择咒唤机群的效果\",\"options\":[{\"label\":\"机关之力（伤害）\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"dmg\",\"dice\":\"3d6\",\"type\":\"力场\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"dmg\",\"scale\":0.5}]}]},{\"label\":\"秩序守护（临时生命）\",\"do\":[{\"kind\":\"tempHp\",\"amount\":\"1d6 + self.spell.mod\"}]}]}]},{\"id\":\"command\",\"name\":\"咒唤机群：驱策机群\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"requires\":\"self.concentrating\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"choose\",\"prompt\":\"选择机群效果\",\"options\":[{\"label\":\"机关之力（伤害）\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"cmd_dmg\",\"dice\":\"3d6\",\"type\":\"力场\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"cmd_dmg\",\"scale\":0.5}]}]},{\"label\":\"秩序守护（临时生命）\",\"do\":[{\"kind\":\"tempHp\",\"amount\":\"1d6 + self.spell.mod\"}]}]}]}]}"
+ },
+ {
+  "key": "FRHoF:spell:咒火风暴",
+  "name": "咒火风暴",
+  "by": "AI",
+  "automation": "partial",
+  "level": 4,
+  "text": "专注至多 1 分钟。以 60 尺内一点为中心咒唤半径 20 尺、高 20 尺柱状明亮咒火光柱。出现时位于其中的生物进行体质豁免，失败受 4d10 光耀伤害（每升一环 +1d10），成功减半。生物进入区域或在其中结束回合同样须进行豁免（每回合限一次）。此外，区域内生物施法时须通过体质豁免，否则法术消散、动作浪费（法术位不消耗）——引擎没法在区域里挂施法时机，这条请人工判定。施法时指定不受影响的生物、明亮光照与结阵施法也需人工处理。",
+  "notes": [
+   "咒火风暴：柱状区域视为明亮光照；区域内生物施法时须通过一次体质豁免，失败则法术消散、动作浪费且法术位不消耗（引擎无法在区域里挂施法时机，请人工判定）；施法时你可以指定哪些生物不受影响。结阵施法（半径与持续时间按辅施法者数量扩大、无需专注）需人工处理。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"咒火风暴\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":4}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"area\",\"range\":60,\"area\":{\"shape\":\"cylinder\",\"radius\":20}},\"root\":[{\"kind\":\"note\",\"text\":\"咒火风暴：柱状区域视为明亮光照；区域内生物施法时须通过一次体质豁免，失败则法术消散、动作浪费且法术位不消耗（引擎无法在区域里挂施法时机，请人工判定）；施法时你可以指定哪些生物不受影响。结阵施法（半径与持续时间按辅施法者数量扩大、无需专注）需人工处理。\"},{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"dmg\",\"dice\":\"(slot.level)d10\",\"type\":\"光耀\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"dmg\",\"scale\":0.5}]}]},{\"kind\":\"zone\",\"on\":[\"enter\",\"turnEnd\"],\"affects\":\"all\",\"oncePerTurn\":true,\"do\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"dmg\",\"dice\":\"(slot.level)d10\",\"type\":\"光耀\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"dmg\",\"scale\":0.5}]}],\"name\":\"咒火风暴\"}]}]}"
+ },
+ {
+  "key": "FRHoF:spell:咒火闪焰",
+  "name": "咒火闪焰",
+  "by": "审后补",
+  "automation": "partial",
+  "level": 0,
+  "text": "对 60 尺内一个目标发动一次远程法术攻击，目标无法从掩护中获益；命中造成 2d10 光耀伤害。【升环施法】每比 1 环高 1 环，可额外发射一道焰能爆，可瞄准同一或不同目标，每道分别进行攻击（忽略掩护与升环额外攻击需手动处理）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\"}"
+ },
+ {
+  "key": "TCE:奥能动力甲",
+  "name": "奥能动力甲",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "步行速度增加 5 尺与代替缺失肢体属于装备静态与叙事属性。未持握物品的手套作为魔法近战/投掷武器（熟练，1d8 力场伤害，投掷 20/60 尺且投掷后立即飞回重新连接），由玩家在武器攻击中发起并手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "TCE:超魔导师",
+  "name": "超魔导师",
+  "by": "审后补",
+  "automation": "manual",
+  "level": null,
+  "text": "超魔法选项由角色建卡与升级时选定，并在各超魔法条目中生效。获得 2 点术法点专门用于超魔法（资源「术法点（超魔法）」，长休恢复）。使用超魔法与扣除术法点由玩家手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\",\"resources\":[{\"id\":\"术法点(超魔法)\",\"max\":2,\"recover\":\"longRest\"}]}"
+ },
+ {
+  "key": "TCE:德鲁伊:孢子环绕:2",
+  "name": "孢子环绕",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当一个生物进入你周围10尺范围内或在其中开始其回合时，你可以使用反应迫使其进行一次对抗你法术豁免DC的体质豁免，豁免失败受到 1d4 暗蚀伤害（6级 1d6，10级 1d8，14级 1d10）。移动进入10尺空间由玩家手动触发反应。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"孢子环绕\",\"activation\":\"reaction\",\"trigger\":{\"on\":\"turnStarted\",\"role\":\"any\",\"window\":\"after\",\"when\":\"ask('有生物进入你周围10尺空间或在其中开始其回合吗？')\"},\"targeting\":{\"type\":\"creature\",\"range\":10,\"filter\":\"target.id != self.id\"},\"root\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"dice\":\"cond(self.levelOf('德鲁伊') >= 14, 1d10, cond(self.levelOf('德鲁伊') >= 10, 1d8, cond(self.levelOf('德鲁伊') >= 6, 1d6, 1d4)))\",\"type\":\"黯蚀\",\"to\":\"target\"}]}]}]}"
+ },
+ {
+  "key": "TCE:德鲁伊:炽烈回生:14",
+  "name": "炽烈回生",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当你生命值降至 0 且因此陷入昏迷时，若野火灵魄与你相距不超过 120 尺，你可以令灵魄降至 0 生命值，你改为恢复一半最大生命值并立刻站起来。引擎问不了距离，弹出这个触发器时请人回答「灵魄在 120 尺内且存活吗」；灵魄降为 0 并消失也要手动处理。必须完成一次长休才能再次使用。",
+  "notes": [
+   "野火灵魄降至 0 生命值并消失；你恢复一半最大生命值并立刻站起来。"
+  ],
+  "data": "{\"automation\":\"partial\",\"resources\":[{\"id\":\"blazing-revival\",\"name\":\"炽烈回生\",\"formula\":1,\"recovery\":\"long\"}],\"triggers\":[{\"id\":\"blazing-revival\",\"label\":\"炽烈回生：免于死亡\",\"on\":\"reducedTo0\",\"role\":\"target\",\"window\":\"before\",\"optional\":true,\"cost\":[{\"resource\":\"blazing-revival\"}],\"when\":\"ask('野火灵魄在 120 尺内且存活吗？')\",\"modify\":[{\"op\":\"setHp\",\"value\":\"floor(self.hpMax / 2)\"}],\"do\":[{\"kind\":\"removeEffect\",\"match\":{\"name\":\"倒地\"},\"from\":\"self\"},{\"kind\":\"note\",\"text\":\"野火灵魄降至 0 生命值并消失；你恢复一半最大生命值并立刻站起来。\"}]}]}"
+ },
+ {
+  "key": "TCE:德鲁伊:扩散孢子:10",
+  "name": "扩散孢子",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "处于一体共生状态下，可以用附赠动作将真菌孢子投向至多 30 尺远，在地图上留下一片 10 尺立方的孢子区域，持续 1 分钟（10 轮）。生物移动进入该区域或在该处开始回合时，须进行对抗你法术豁免 DC 的体质豁免，失败受到孢子环绕的伤害（每名生物每回合至多一次，引擎已自动结算）。只要孢子存在，你就不能使用孢子环绕的反应能力。提前消失（再次使用、附赠动作取消、一体共生结束）需要在界面上手动删掉区域。",
+  "notes": [
+   "扩散孢子：这片孢子在 10 轮后自动消失；再次使用此特性、用附赠动作取消（「取消扩散孢子」）或一体共生结束时，请手动删掉地图上的这个区域。孢子存在期间你不能使用孢子环绕的反应能力。",
+   "取消扩散孢子：请手动删掉地图上的孢子区域。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"扩散孢子\",\"activation\":\"bonus\",\"requires\":\"self.hasEffect('一体共生')\",\"tags\":[\"magical\"],\"targeting\":{\"type\":\"area\",\"range\":30,\"area\":{\"shape\":\"cube\",\"size\":10}},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"扩散孢子\",\"duration\":{\"minutes\":1,\"endsOn\":[{\"event\":\"effectEnded\",\"when\":\"event.bearer == self.id && event.name == '一体共生'\"}]}},{\"kind\":\"zone\",\"on\":[\"enter\",\"turnStart\"],\"affects\":\"all\",\"oncePerTurn\":true,\"rounds\":10,\"do\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"dice\":\"cond(self.levelOf('德鲁伊') >= 14, 1d10, cond(self.levelOf('德鲁伊') >= 10, 1d8, cond(self.levelOf('德鲁伊') >= 6, 1d6, 1d4)))\",\"type\":\"黯蚀\"}]}],\"name\":\"扩散孢子\"},{\"kind\":\"note\",\"text\":\"扩散孢子：这片孢子在 10 轮后自动消失；再次使用此特性、用附赠动作取消（「取消扩散孢子」）或一体共生结束时，请手动删掉地图上的这个区域。孢子存在期间你不能使用孢子环绕的反应能力。\"}]},{\"id\":\"dismiss\",\"name\":\"取消扩散孢子\",\"activation\":\"bonus\",\"requires\":\"self.hasEffect('扩散孢子')\",\"root\":[{\"kind\":\"removeEffect\",\"from\":\"self\",\"match\":{\"name\":\"扩散孢子\"}},{\"kind\":\"note\",\"text\":\"取消扩散孢子：请手动删掉地图上的孢子区域。\"}]}],\"effects\":{\"扩散孢子\":{\"tags\":[\"magical\"],\"text\":\"扩散孢子处于激活状态。只要孢子存在，就无法使用孢子环绕的反应能力。可使用附赠动作取消。\"}}}"
+ },
+ {
+  "key": "TCE:德鲁伊:强化链接:6",
+  "name": "强化链接",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "在你的野火灵魄存在期间，你施展一个造成火焰伤害或回复生命值的法术时，骰一枚 d8，你在该法术的一次伤害掷骰或治疗掷骰中获得等同于骰出数值的加值。引擎只能自动处理「法术攻击命中后的那次伤害掷骰」：修正挂在法术攻击的伤害包上，每次命中都会问一句「野火灵魄存在，且这个法术造成火焰伤害吗？」，答是就加 1d8（与被加骰的伤害同类型）。引擎做不到、要人工加的部分：① 豁免型法术的伤害掷骰（火球术、燃烧之手这类没有攻击检定的，引擎只在有攻击检定时读施法者的伤害加骰修正）；② 治疗掷骰的加值（治疗结算只读「取最大值」那一类修正，不读加骰）；③ 原文限「该法术的一次」掷骰，引擎每包伤害都会加，多包（灼热射线三束）时只算一次。此外，你施展施法范围非自身的法术时，可以自由选择以你或野火灵魄为发出点 —— 引擎不管位置，请手动判定距离与视线。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"rollMods\":[{\"on\":{\"kind\":\"damage\",\"attack\":{\"spell\":true}},\"who\":\"bearer\",\"when\":\"ask('野火灵魄存在，且这个法术造成火焰伤害吗？')\",\"op\":\"add\",\"value\":\"1d8\",\"label\":\"强化链接：火焰伤害 +1d8\"}]}"
+ },
+ {
+  "key": "TCE:德鲁伊:闪耀星座:10",
+  "name": "闪耀星座",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "每个你的回合开始时，若处于星耀形态，可以更换身上闪耀的星座。射手座与圣杯座的数值提升已在2级对应条目中通过等级判断实现；巨龙座的飞行速度由人物卡静态层体现。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"swap\",\"label\":\"闪耀星座：更换星座\",\"on\":\"turnStarted\",\"role\":\"actor\",\"optional\":true,\"when\":\"self.hasEffect('星耀形态')\",\"do\":[{\"kind\":\"choose\",\"prompt\":\"更换身上闪耀的星座\",\"options\":[{\"label\":\"射手座\",\"when\":\"!self.hasEffect('星耀形态：射手座')\",\"do\":[{\"kind\":\"removeEffect\",\"from\":\"self\",\"match\":{\"tag\":\"starry-constellation\"}},{\"kind\":\"applyEffect\",\"to\":\"self\",\"inline\":{\"name\":\"星耀形态：射手座\",\"tags\":[\"starry-form\",\"starry-constellation\"],\"text\":\"射手座在你身上亮起：可以用附赠动作发射光箭。\",\"duration\":{\"minutes\":10,\"endsOn\":[{\"event\":\"effectApplied\",\"when\":\"event.bearer == self.id && self.has('失能')\"}]}}}]},{\"label\":\"圣杯座\",\"when\":\"!self.hasEffect('星耀形态：圣杯座')\",\"do\":[{\"kind\":\"removeEffect\",\"from\":\"self\",\"match\":{\"tag\":\"starry-constellation\"}},{\"kind\":\"applyEffect\",\"to\":\"self\",\"inline\":{\"name\":\"星耀形态：圣杯座\",\"tags\":[\"starry-form\",\"starry-constellation\"],\"text\":\"圣杯座在你身上亮起。\",\"duration\":{\"minutes\":10,\"endsOn\":[{\"event\":\"effectApplied\",\"when\":\"event.bearer == self.id && self.has('失能')\"}]}}}]},{\"label\":\"巨龙座\",\"when\":\"!self.hasEffect('星耀形态：巨龙座')\",\"do\":[{\"kind\":\"removeEffect\",\"from\":\"self\",\"match\":{\"tag\":\"starry-constellation\"}},{\"kind\":\"applyEffect\",\"to\":\"self\",\"inline\":{\"name\":\"星耀形态：巨龙座\",\"tags\":[\"starry-form\",\"starry-constellation\"],\"text\":\"巨龙座在你身上亮起。\",\"duration\":{\"minutes\":10,\"endsOn\":[{\"event\":\"effectApplied\",\"when\":\"event.bearer == self.id && self.has('失能')\"}]}}}]}]}]}]}"
+ },
+ {
+  "key": "TCE:德鲁伊:一体共生:2",
+  "name": "一体共生",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个动作消耗一次荒野形态使用次数，立刻获得等同于德鲁伊等级 4 倍的临时生命值，并进入「一体共生」状态，持续 10 分钟。已自动化：状态期间你的近战武器攻击命中时自动加 1d6 黯蚀伤害；失去全部临时生命值（临时生命值降到 0）或再次使用荒野形态时，状态与这项加伤一起结束。【要人处理】①「当你的孢子环绕造成伤害时，可以再骰一枚伤害骰并加入伤害」这一条引擎做不到：孢子环绕是豁免伤害、不是攻击，引擎没有「给别的条目造成的伤害补骰」的钩子。那一次孢子环绕的伤害掷完后，请用「事后裁定」把多掷的那一枚补进伤害总量。②结束条件是按「受到伤害结算时临时生命值被吃光」判定的；如果是 DM 在详情抽屉里手改临时生命值 / 手动移除，请自己把「一体共生」效应删掉。③临时生命值取较高者：如果你身上本来就有更高的临时生命值，这次不会顶掉它，「失去全部临时生命值」也以那个更高的数为准（只是计数高一些，规则结果一致）。",
+  "notes": [
+   "一体共生：获得临时生命值并进入状态 10 分钟。若你本来就有更高的临时生命值，这次不会顶掉它；失去全部临时生命值或再次使用荒野形态时状态结束。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"一体共生\",\"activation\":\"action\",\"text\":\"消耗一次荒野形态使用次数唤醒孢子（不变成野兽形态）。\",\"cost\":[{\"resource\":\"wildshape-uses\"}],\"root\":[{\"kind\":\"tempHp\",\"amount\":\"self.levelOf('德鲁伊') * 4\",\"to\":\"self\"},{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"一体共生\"},{\"kind\":\"note\",\"text\":\"一体共生：获得临时生命值并进入状态 10 分钟。若你本来就有更高的临时生命值，这次不会顶掉它；失去全部临时生命值或再次使用荒野形态时状态结束。\"}]}],\"effects\":{\"一体共生\":{\"text\":\"一体共生激活中：近战武器攻击命中时额外造成 1d6 黯蚀伤害。失去全部临时生命值或再次使用荒野形态时提前结束。孢子环绕的多一枚伤害骰仍需人工补。\",\"duration\":{\"minutes\":10,\"endsOn\":[{\"event\":\"damageApplied\",\"when\":\"event.target == self.id && self.tempHp > 0 && event.tempAbsorbed >= self.tempHp\"},{\"event\":\"effectApplied\",\"when\":\"event.bearer == self.id && event.key == 'XPHB:德鲁伊:荒野形态:2#荒野形态'\"}]},\"triggers\":[{\"id\":\"extra-damage\",\"label\":\"一体共生：近战武器额外黯蚀伤害\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"when\":\"attack.melee && attack.weapon\",\"do\":[{\"kind\":\"addDamage\",\"dice\":\"1d6\",\"type\":\"黯蚀\"}]}]}}}"
+ },
+ {
+  "key": "TCE:德鲁伊:召唤野火精魂:2",
+  "name": "召唤野火精魂",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个动作消耗一次荒野形态使用次数，召唤出与你灵魂连接的野火灵魄 —— 它以你选择的、30 尺内一处你可见的未被占据空间出现；它出现时，它 10 尺范围内除你之外的每个生物都要通过一次对抗你法术豁免 DC 的敏捷豁免，失败受 2d6 火焰伤害。数据（TCE 野火精魂数据卡）：小型元素生物，AC 13，HP 5 + 5 × 你的德鲁伊等级，速度 30 尺另有飞行 30 尺（悬浮），力量 10 / 敏捷 14 / 体质 14 / 智力 13 / 感知 15 / 魅力 11，黑暗视觉 60 尺，免疫火焰，免疫魅惑 / 恐慌 / 受擒 / 倒地 / 束缚；火种（远程法术攻击，射程 60 尺，1d6 + 熟练加值 火焰伤害）、烈焰传送。它对你和同伴友善、遵从你的命令，与你共用先攻并在你回合后立即行动；可以自行移动和执行反应，但你只有用附赠动作命令它，它才会执行动作（否则只能回避；你失能时它可以自行选择任何动作）。已自动：灵魄实体与数值、出现时的 2d6 火焰伤害（施法时选中那 10 尺范围内的生物就行）、火种、烈焰传送的爆炸。灵魄的生命值降为 0 时消失（引擎只把它标成死亡、棋子还留在遭遇里，请手动从地图上移除）。",
+  "notes": [
+   "灵魄与它 5 尺内你选择的自愿生物传送至至多 15 尺远的、你可见的未占据空间（请手动拖动棋子）。",
+   "野火灵魄出现在你选择的、30 尺内一处未占据空间 —— 引擎把它放在你旁边，请手动拖过去；出现时 10 尺内除你之外每个生物的 2d6 火焰伤害已在对选中生物的豁免里结算。",
+   "以附赠动作命令野火灵魄执行动作（火种、烈焰传送或其他动作）。附赠动作已扣，灵魄的那个动作请在它自己的动作栏里结算。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"召唤野火精魂\",\"activation\":\"action\",\"tags\":[\"magical\"],\"cost\":[{\"resource\":\"wildshape-uses\"}],\"targeting\":{\"type\":\"area\",\"range\":30,\"area\":{\"shape\":\"sphere\",\"radius\":10},\"filter\":\"target.id != self.id\"},\"root\":[{\"kind\":\"summon\",\"name\":\"野火灵魄\",\"size\":\"S\",\"creatureType\":\"元素生物\",\"ac\":13,\"hp\":\"5 + 5 * self.levelOf('德鲁伊')\",\"speed\":30,\"score\":{\"str\":10,\"dex\":14,\"con\":14,\"int\":13,\"wis\":15,\"cha\":11},\"immune\":[\"火焰\"],\"conditionImmune\":[\"魅惑\",\"恐慌\",\"受擒\",\"倒地\",\"束缚\"],\"attacksPerAction\":1,\"attacks\":[{\"name\":\"火种\",\"melee\":false,\"ranged\":true,\"range\":60,\"damage\":\"1d6 + pb\",\"damageType\":\"火焰\"}],\"actions\":[{\"id\":\"teleport\",\"name\":\"烈焰传送\",\"activation\":\"action\",\"targeting\":{\"type\":\"area\",\"area\":{\"shape\":\"emanation\",\"radius\":5}},\"root\":[{\"kind\":\"note\",\"text\":\"灵魄与它 5 尺内你选择的自愿生物传送至至多 15 尺远的、你可见的未占据空间（请手动拖动棋子）。\"},{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"dice\":\"1d6 + pb\",\"type\":\"火焰\"}]}],\"text\":\"每个还处于灵魄原本位置 5 尺内的生物做对抗你法术豁免 DC 的敏捷豁免，失败受 1d6 + 熟练加值 火焰伤害。传送本身要人工。\"}],\"link\":false,\"notes\":[{\"group\":\"速度\",\"name\":\"飞行\",\"text\":\"速度 30 尺，另有飞行 30 尺（悬浮）；引擎只记一个速度，飞行请人工算。\"},{\"group\":\"特性\",\"name\":\"听从命令\",\"text\":\"它能自由移动和执行反应，但只有你用附赠动作命令它时才能执行动作（否则只能回避）；你失能时它可以自行选择任何动作。引擎让召唤物自己行动，请用「命令野火精魂」记附赠动作。\"},{\"group\":\"特性\",\"name\":\"消失条件\",\"text\":\"持续 1 小时；生命值降为 0、你再次使用此特性（引擎已按组替换）会自动消失；1 小时到期或你死亡请手动移除。\"},{\"group\":\"特性\",\"name\":\"感官\",\"text\":\"黑暗视觉 60 尺；理解你所说的语言。\"}]},{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"dice\":\"2d6\",\"type\":\"火焰\"}]}]},{\"kind\":\"note\",\"text\":\"野火灵魄出现在你选择的、30 尺内一处未占据空间 —— 引擎把它放在你旁边，请手动拖过去；出现时 10 尺内除你之外每个生物的 2d6 火焰伤害已在对选中生物的豁免里结算。\"}]},{\"id\":\"command\",\"name\":\"命令野火精魂\",\"activation\":\"bonus\",\"requires\":\"turn.isMine\",\"root\":[{\"kind\":\"note\",\"text\":\"以附赠动作命令野火灵魄执行动作（火种、烈焰传送或其他动作）。附赠动作已扣，灵魄的那个动作请在它自己的动作栏里结算。\"}],\"text\":\"以附赠动作命令野火灵魄执行一个动作（否则它在自己的回合里只能回避）。\"}]}"
+ },
+ {
+  "key": "TCE:德鲁伊:真菌感染:6",
+  "name": "真菌感染",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "你周围 10 尺内一个生物降到 0 生命值时，如果它是小型或中型的野兽或类人生物，你可以用反应（并消耗一次「真菌感染」次数）把它的尸体活化成丧尸：生命值 1 点、AC 8、速度 20 尺、猛击 +3 命中 1d8+1 钝击，毒素免疫、力竭和中毒状态免疫，先攻紧接在你的回合之后（引擎把召唤物排在你后面）。类型和体型按怪物数据判断；数据里认不出类型 / 体型的怪会问你一句。活化状态持续 1 小时，到点自动退场（引擎用一份 1 小时的「真菌感染」记录把丧尸链接住，时间流逝满 1 小时就一起消失）。丧尸降到 0 生命值时会问你要不要用「不死坚韧」（体质豁免 DC 5 + 所受伤害，光耀伤害或重击不适用），成功就改成 1 点生命值。次数上限等于你的感知调整值（至少 1 次），长休恢复。【要人处理】①原文说丧尸「唯一能执行的动作只有攻击动作并进行一次近战攻击」——引擎不知道这个限制，它的动作栏里也有疾走等通用动作，请只用攻击动作做一次猛击。②丧尸的黑暗视觉 60 尺没有写进战斗数据。③多只丧尸同时存在时，用来计时的那份「真菌感染」记录在界面上只有最新那份显示为生效、其余标「被压制」，但每只丧尸的 1 小时各自计时，不影响结算。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"resources\":[{\"id\":\"fungal-infestation\",\"name\":\"真菌感染\",\"formula\":\"max(1, wis)\",\"recovery\":\"long\"}],\"triggers\":[{\"id\":\"infest\",\"label\":\"真菌感染：活化尸体\",\"on\":\"reducedTo0\",\"role\":\"any\",\"window\":\"before\",\"optional\":true,\"cost\":[{\"economy\":\"reaction\"},{\"resource\":\"fungal-infestation\"}],\"when\":\"within(self, target, 10) && ((target.type == '野兽' || target.type == '类人生物') && (target.size == '小型' || target.size == '中型') || ((target.type == '' || target.size == '') && ask('死者的类型 / 体型不在数据里：它是小型或中型的野兽或类人生物吗？')))\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"inline\":{\"name\":\"真菌感染：丧尸\",\"text\":\"被活化的一具丧尸（生命值 1）跟随召唤者，1 小时后崩解。\",\"duration\":{\"hours\":1},\"onApply\":[{\"kind\":\"summon\",\"name\":\"丧尸\",\"size\":\"M\",\"creatureType\":\"undead\",\"ac\":8,\"hp\":1,\"speed\":20,\"pb\":2,\"attacksPerAction\":1,\"score\":{\"str\":13,\"dex\":6,\"con\":16,\"int\":3,\"wis\":6,\"cha\":5},\"immune\":[\"毒素\"],\"conditionImmune\":[\"力竭\",\"中毒\"],\"attacks\":[{\"name\":\"猛击\",\"bonus\":3,\"damage\":\"1d8 + 1\",\"damageType\":\"钝击\"}],\"triggers\":[{\"id\":\"undead-fortitude\",\"label\":\"丧尸：不死坚韧\",\"on\":\"reducedTo0\",\"role\":\"target\",\"window\":\"before\",\"optional\":true,\"when\":\"damage.type != '光耀' && !damage.crit && ask('不死坚韧：让丧尸做一次体质豁免（DC 5 + 这次所受伤害）。豁免成功了吗？成功则改为 1 点生命值。')\",\"modify\":[{\"op\":\"setHp\",\"value\":\"1\"}]}],\"notes\":[\"丧尸：黑暗视觉 60 尺；免疫毒素伤害与力竭 / 中毒状态；会「不死坚韧」（降到 0 时体质豁免 DC 5 + 所受伤害，成功改为 1 点生命值，光耀伤害或重击不适用）。\",\"它只会执行攻击动作做一次猛击——引擎的动作栏里还有疾走等通用动作，请只用攻击。\"]}]}}]}]}"
+ },
+ {
+  "key": "TCE:德鲁伊:灼烧烈焰:10",
+  "name": "灼烧烈焰",
+  "by": "审后补",
+  "automation": "partial",
+  "level": null,
+  "text": "当小型或更大生物在你或野火灵魄30尺内死亡时涌现幽火，持续1分钟。可见生物进入该空间时，你可以用反应熄灭幽火，对该生物造成 2d10+感知调整值 点火焰伤害或恢复等量生命值。幽火位置与进入时机由人工判定，进入时以自由动作（消耗反应与资源）结算。次数等于熟练加值，长休恢复。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"灼烧烈焰\",\"activation\":\"free\",\"cost\":[{\"economy\":\"reaction\"},{\"resource\":\"cauterizing-flames\"}],\"targeting\":{\"type\":\"creature\",\"range\":30},\"root\":[{\"kind\":\"choose\",\"prompt\":\"灼烧烈焰：选择造成伤害还是治疗\",\"options\":[{\"label\":\"火焰伤害（2d10 + 感知调整值）\",\"do\":[{\"kind\":\"damage\",\"dice\":\"2d10 + self.mod.wis\",\"type\":\"火焰\"}]},{\"label\":\"恢复生命值（2d10 + 感知调整值）\",\"do\":[{\"kind\":\"heal\",\"to\":\"target\",\"amount\":\"2d10 + self.mod.wis\"}]}]}]}],\"resources\":[{\"id\":\"cauterizing-flames\",\"name\":\"灼烧烈焰\",\"formula\":\"prof\",\"recovery\":\"long\"}]}"
+ },
+ {
+  "key": "TCE:法师:大书士:10",
+  "name": "大书士",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "每次长休完成时，可用法师笔触碰空白纸张将觉醒魔典中一个施法时间为1动作的1环或2环法术抄成强化卷轴（视为高1环阶）。你可以以动作阅读卷轴施展该法术（仅你自己可用，施展后或下次长休后消失）。长休恢复1次。此外制造法术卷轴的时间与金币减半。卷轴制作与具体法术施展由人手动处理。",
+  "notes": [
+   "大书士：以动作阅读专属卷轴，施展其中被强化（升1环）的1环或2环法术。由人手动处理法术效应。"
+  ],
+  "data": "{\"automation\":\"manual\",\"actions\":[{\"id\":\"use\",\"name\":\"施展卷轴法术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"master-scrivener\"}],\"root\":[{\"kind\":\"note\",\"text\":\"大书士：以动作阅读专属卷轴，施展其中被强化（升1环）的1环或2环法术。由人手动处理法术效应。\"}]}]}"
+ },
+ {
+  "key": "TCE:法师:觉醒魔典:2",
+  "name": "觉醒魔典",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "法术书可作为施法法器。消耗法术位施展法师法术时，可将伤害类型替换为法术书中同环阶另一法术的伤害类型（由人手动替换伤害类型）。能以法术正常施法时间进行仪式施法而无需额外花费10分钟，长休恢复1次。短休时可用法师笔将魔典转移至新书。",
+  "notes": [
+   "觉醒魔典：以正常施法时间施展一个法师仪式法术，不额外增加10分钟。长休恢复。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"觉醒魔典：快速仪式\",\"activation\":\"none\",\"cost\":[{\"resource\":\"awakened-spellbook-ritual\"}],\"root\":[{\"kind\":\"note\",\"text\":\"觉醒魔典：以正常施法时间施展一个法师仪式法术，不额外增加10分钟。长休恢复。\"}]}]}"
+ },
+ {
+  "key": "TCE:法师:思维具现:6",
+  "name": "思维具现",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "以附赠动作使觉醒魔典中的灵体意识显现在60尺内未占据空间，发出10尺微光，具60尺黑暗视觉并与你心灵感应共享感官。在你回合内施放法师法术时可如同身处其空间施法（PB次/长休）。可以附赠动作令其移动至多30尺或将其驱散。显现后长休或消耗任意环位法术位重置显现次数。灵体意识位置与施法源点由人手动处理。",
+  "notes": [
+   "思维具现：在60尺内未占据空间显现灵体意识。灵体空间与感官由人手动处理。",
+   "消耗一个法术位再次显现灵体意识。",
+   "令灵体意识飘浮至其周围30尺内可见未占据空间。",
+   "如同身处灵体意识所在空间一样施放该法师法术。"
+  ],
+  "data": "{\"automation\":\"manual\",\"actions\":[{\"id\":\"use\",\"name\":\"思维具现\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"manifest-mind\"}],\"root\":[{\"kind\":\"note\",\"text\":\"思维具现：在60尺内未占据空间显现灵体意识。灵体空间与感官由人手动处理。\"}]},{\"id\":\"slotReset\",\"name\":\"思维具现：消耗法术位显现\",\"activation\":\"bonus\",\"cost\":[{\"slot\":{\"min\":1}}],\"root\":[{\"kind\":\"note\",\"text\":\"消耗一个法术位再次显现灵体意识。\"}]},{\"id\":\"moveMind\",\"name\":\"移动灵体意识\",\"activation\":\"bonus\",\"root\":[{\"kind\":\"note\",\"text\":\"令灵体意识飘浮至其周围30尺内可见未占据空间。\"}]},{\"id\":\"castThroughMind\",\"name\":\"通过灵体意识施法\",\"activation\":\"none\",\"cost\":[{\"resource\":\"manifest-mind-cast\"}],\"root\":[{\"kind\":\"note\",\"text\":\"如同身处灵体意识所在空间一样施放该法师法术。\"}]}]}"
+ },
+ {
+  "key": "TCE:法师:一字同心:14",
+  "name": "一字同心",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "携带法术书时，你在任何智力（奥秘）检定中具有优势。此外，法术书的意识处于显现状态时受到伤害，你可以用反应驱散意识并避免所有对你的伤害，之后掷 3d6 暂时失去环阶之和大于等于骰值的法术，持续 1d6 次长休；使用该反应后完成长休才能再次使用。法术失去与长休恢复需人手动记录。",
+  "notes": [
+   "一字同心：已避免所有伤害。请掷 3d6，从法术书中暂时失去环阶之和大于等于骰值的法术，持续 1d6 次长休；若无法支付则生命值降至 0。"
+  ],
+  "data": "{\"automation\":\"partial\",\"rollMods\":[{\"on\":{\"kind\":\"check\",\"ability\":\"int\",\"skill\":\"奥秘\"},\"who\":\"bearer\",\"op\":\"adv\",\"label\":\"一字同心：智力（奥秘）检定具有优势\"}],\"triggers\":[{\"id\":\"dismiss-mind\",\"label\":\"一字同心：避免伤害\",\"on\":\"damageIncoming\",\"role\":\"target\",\"window\":\"before\",\"optional\":true,\"when\":\"ask('法术书的意识当前处于显现状态吗？')\",\"cost\":[{\"economy\":\"reaction\"},{\"resource\":\"one_with_the_word\"}],\"modify\":[{\"op\":\"cancel\"}],\"do\":[{\"kind\":\"note\",\"text\":\"一字同心：已避免所有伤害。请掷 3d6，从法术书中暂时失去环阶之和大于等于骰值的法术，持续 1d6 次长休；若无法支付则生命值降至 0。\"}]}]}"
+ },
+ {
+  "key": "TCE:风暴符文",
+  "name": "风暴符文",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "穿着或携带着铭刻此符文的物品时：你进行的智力（奥秘）检定具有优势；只要你未处于失能状态就不会被突袭（引擎不结算突袭，请人工处理）。附赠动作激活符文进入先知形态，持续 1 分钟，陷入失能会提前结束；激活次数见资源池，短休或长休后恢复。形态期间，每当你或你周围 60 尺内可见的另一生物进行攻击检定、豁免检定或属性检定时，你可以用反应让这次检定获得优势或劣势——引擎不支持在别人的掷骰上直接打优势/劣势标记，这里用「再掷一颗 d20 取高 / 取低」近似（已经有优势或劣势的那次不再提供，因为叠加结果会失真）。为了不打扰，只在会改变结果时问：自己或盟友的检定按现在会失败时问「给优势」，敌人的检定按现在会成功时问「给劣势」；先攻掷骰不提示，要调整请手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"rollMods\":[{\"on\":{\"kind\":\"check\",\"skill\":\"奥秘\"},\"who\":\"bearer\",\"op\":\"adv\",\"label\":\"风暴符文：智力（奥秘）检定优势\"}],\"actions\":[{\"id\":\"use\",\"name\":\"风暴符文：先知形态\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"风暴符文\"}],\"requires\":\"!self.hasEffect('先知形态')\",\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"先知形态\"}]}],\"effects\":{\"先知形态\":{\"duration\":{\"minutes\":1,\"endsOn\":[{\"event\":\"effectApplied\",\"when\":\"event.bearer == self.id && self.has('失能')\"}]},\"triggers\":[{\"id\":\"prophecy-adv\",\"label\":\"风暴符文：让这次检定获得优势\",\"on\":\"d20Rolled\",\"role\":\"any\",\"window\":\"before\",\"optional\":true,\"cost\":[{\"economy\":\"reaction\"}],\"when\":\"roll.sub != 'initiative' && roll.failing && !roll.adv && !roll.disadv && !combatant(roll.roller).isEnemyOf(self) && (roll.roller == self.id || (within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))))\",\"modify\":[{\"op\":\"reroll\",\"die\":\"d20\",\"keep\":\"higher\"}]},{\"id\":\"prophecy-disadv\",\"label\":\"风暴符文：让这次检定获得劣势\",\"on\":\"d20Rolled\",\"role\":\"any\",\"window\":\"before\",\"optional\":true,\"cost\":[{\"economy\":\"reaction\"}],\"when\":\"roll.sub != 'initiative' && !roll.failing && !roll.adv && !roll.disadv && combatant(roll.roller).isEnemyOf(self) && within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))\",\"modify\":[{\"op\":\"reroll\",\"die\":\"d20\",\"keep\":\"lower\"}]}],\"text\":\"持续 1 分钟（失能提前结束）：你或你周围 60 尺内可见的生物掷 d20 时，可以用反应让这次检定获得优势（按再掷一颗取高近似）或劣势（按再掷一颗取低近似）。\"}}}"
+ },
+ {
+  "key": "TCE:符令责斥",
+  "name": "符令责斥",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当护身符的佩戴者被一个位于你 30 尺以内、你能看见的攻击者命中时，你可以用反应对该攻击者造成等同于你熟练加值的心灵伤害，并把它推离佩戴者至多 10 尺。已自动化：被命中的是护符佩戴者时给出这个反应选项，选中后伤害自动打向攻击者（不用再选目标）、并在地图上把攻击者沿直线推离 10 尺（推的是「远离你」的方向，佩戴者就是你时方向正确）。【要人处理】①护符交给盟友戴时引擎不知道现在戴在谁身上，被命中的人是你或你的盟友时都会问一句「这是佩戴者吗」。②佩戴者不是你时，推离方向应当「远离佩戴者」而不是远离你，方向不对请手动拖动。③10 尺只推一次，撞到别的棋子就停下。④「30 尺以内」「你能看见」没有地图时会问你。",
+  "notes": [
+   "符令责斥：攻击者已被推离 10 尺（远离你）。如果佩戴者不是你，方向请手动校正。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"符令责斥\",\"activation\":\"reaction\",\"trigger\":{\"on\":\"attackHit\",\"role\":\"any\",\"window\":\"after\",\"aim\":\"actor\",\"when\":\"(target.id == self.id || target.isAllyOf(self)) && within(self, attacker, 30) && canSee(self, attacker) && ask('被命中的是佩戴你护身符的那位（你，或你交给的盟友）吗？')\"},\"root\":[{\"kind\":\"damage\",\"to\":\"attacker\",\"dice\":\"self.pb\",\"type\":\"心灵\"},{\"kind\":\"move\",\"mode\":\"push\",\"ft\":10},{\"kind\":\"note\",\"text\":\"符令责斥：攻击者已被推离 10 尺（远离你）。如果佩戴者不是你，方向请手动校正。\"}]}]}"
+ },
+ {
+  "key": "TCE:符之魔契",
+  "name": "符之魔契",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "佩戴者在一次属性检定中失败时，可以掷 1d4 加在这次检定的结果上（引擎在「按现在的结果会失败」时问你要不要用；没有 DC 的检定判断不了失没失败，会直接问；先攻掷骰不算会失败的检定，不提示）。次数等于你的熟练加值，长休恢复。护身符可以转交给盟友佩戴：引擎只把它绑在你自己的检定上，盟友戴着时请由你手动给那次检定加 1d4。转交、遗失后 1 小时的仪式重铸、死亡时化为灰烬都要手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"talisman-check\",\"label\":\"符之魔契：属性检定加 1d4\",\"on\":\"d20Rolled\",\"role\":\"actor\",\"window\":\"before\",\"optional\":true,\"when\":\"roll.kind == 'check' && roll.sub != 'initiative' && (roll.failing || roll.vs == null)\",\"cost\":[{\"resource\":\"符之魔契\"}],\"modify\":[{\"op\":\"addToRoll\",\"value\":\"1d4\"}]}]}"
+ },
+ {
+  "key": "TCE:护符庇佑",
+  "name": "护符庇佑",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "佩戴者在一次豁免检定中失败时，可以在掷骰结果上加一个 d4，这可能把结果变成成功；次数等于你的熟练加值，长休恢复。已写成：佩戴者（你，或者你已经把护符交给的那位盟友）豁免失败时会提供这个选项，答应用就在结果上加 1d4，并从「护符庇佑」池里扣掉 1 次 —— 次数池算在持有这条祈唤的人（你）身上，符合「这一能力可使用的次数等于你的熟练加值」。引擎不知道护符现在戴在谁身上，所以会问一句「这次是佩戴者做的豁免吗」；选项只在掷骰者是你或你的盟友时出现，敌人的豁免不会问。加 1d4 之后仍然失败时不退次数（原文没有这个宽松写法，重骰前的选择已经花掉了）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"protection\",\"label\":\"护符庇佑：豁免失败时加 1d4\",\"on\":\"d20Rolled\",\"role\":\"any\",\"window\":\"before\",\"optional\":true,\"when\":\"roll.kind == 'save' && roll.failing && (combatant(roll.roller).id == self.id || combatant(roll.roller).isAllyOf(self)) && ask('这次豁免是佩戴护符的那位（你或你交给的盟友）做的吗？')\",\"cost\":[{\"resource\":\"protectionOfTalisman\"}],\"modify\":[{\"op\":\"addToRoll\",\"value\":\"1d4\"}]}]}"
+ },
+ {
+  "key": "TCE:护符牵绊",
+  "name": "护符牵绊",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当其他人佩戴你的护身符且与你身处同一位面时，你可以用动作传送到其周围未被占据的空间，佩戴者也能用动作传送到你身边。使用次数等同于熟练加值，长休恢复。同位面远距离传送与落点由玩家手动处理。",
+  "notes": [
+   "传送到护符佩戴者周围未被占据的空间，佩戴者亦可用其动作传送到你身边"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"护符牵绊\",\"activation\":\"action\",\"cost\":[{\"resource\":\"bondOfTalisman\"}],\"root\":[{\"kind\":\"note\",\"text\":\"传送到护符佩戴者周围未被占据的空间，佩戴者亦可用其动作传送到你身边\"}]}]}"
+ },
+ {
+  "key": "TCE:警戒",
+  "name": "警戒",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当可见生物移动进入你持握近战武器的触及范围时，可用反应消耗一枚卓越骰对其发起一次武器攻击；若命中，将消耗的卓越骰加入伤害掷骰中。敌方进入触及由人判断；使用本动作扣除反应与卓越骰，并为下一次攻击附加强化伤害。",
+  "notes": [
+   "警戒：现在对进入触及的生物进行一次近战武器攻击；命中时卓越骰自动计入伤害"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"警戒\",\"activation\":\"none\",\"cost\":[{\"economy\":\"reaction\"},{\"resource\":\"卓越骰\"}],\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"警戒\"},{\"kind\":\"note\",\"text\":\"警戒：现在对进入触及的生物进行一次近战武器攻击；命中时卓越骰自动计入伤害\"}]}],\"effects\":{\"警戒\":{\"text\":\"你下一次近战武器攻击命中时，卓越骰计入伤害；攻击结算后消失。\",\"duration\":{\"until\":{\"at\":\"turnStart\",\"of\":\"bearer\",\"nth\":1}},\"triggers\":[{\"id\":\"brace-hit\",\"label\":\"警戒：卓越骰计入伤害\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"when\":\"attack.melee && attack.weapon\",\"do\":[{\"kind\":\"addDamage\",\"dice\":\"cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))\",\"type\":\"attack.damageType\"},{\"kind\":\"removeEffect\",\"from\":\"self\",\"match\":{\"name\":\"警戒\"}}]},{\"id\":\"brace-miss\",\"label\":\"警戒：攻击失手\",\"on\":\"attackMissed\",\"role\":\"actor\",\"when\":\"attack.melee && attack.weapon\",\"do\":[{\"kind\":\"removeEffect\",\"from\":\"self\",\"match\":{\"name\":\"警戒\"}}]}]}}}"
+ },
+ {
+  "key": "TCE:快手投掷",
+  "name": "快手投掷",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个附赠动作消耗一枚卓越骰，拔出一件具有投掷属性的武器投出去（作为攻击的一部分拔出）。做法：先点这个动作（扣附赠动作与卓越骰），它会给你一次额外的攻击次数、并挂上「快手投掷」效应；然后用那把投掷武器的武器行发动一次远程武器攻击（这次攻击不消耗你的动作，因为攻击次数已经给出），命中时卓越骰会自动加进这次伤害（伤害类型跟武器一致，重击时同样加倍）。攻击结算完（命中或失手）效应自动消失。卓越骰大小按战士等级：3 级 d8、10 级 d10、18 级 d12。【要人处理】①引擎会把投掷武器的攻击认成近战（人物卡里手斧 / 标枪是近战武器），所以命中时会问你「这次是投掷吗」，答是才把卓越骰加进伤害。②在那次远程武器攻击之前，如果你先用别的武器打了，那次攻击会吃掉这次额外的攻击次数，请按顺序做。③拔武器这个附带动作不占经济，由你口头处理。",
+  "notes": [
+   "快手投掷：现在用一件具有投掷属性的武器发动一次远程武器攻击（用武器行，不会消耗你的动作）；命中时卓越骰自动计入伤害。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"快手投掷\",\"activation\":\"bonus\",\"text\":\"消耗一枚卓越骰，本回合多出一次攻击次数，用来投出投掷武器。\",\"cost\":[{\"resource\":\"卓越骰\"}],\"root\":[{\"kind\":\"economy\",\"attacks\":1},{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"快手投掷\"},{\"kind\":\"note\",\"text\":\"快手投掷：现在用一件具有投掷属性的武器发动一次远程武器攻击（用武器行，不会消耗你的动作）；命中时卓越骰自动计入伤害。\"}]}],\"effects\":{\"快手投掷\":{\"text\":\"下一次远程武器攻击命中时，消耗的卓越骰计入伤害（类型同武器）；这次攻击结算后消失。\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":0}},\"triggers\":[{\"id\":\"toss-hit\",\"label\":\"快手投掷：卓越骰计入伤害\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"when\":\"attack.weapon && ask('这次是投掷吗？')\",\"do\":[{\"kind\":\"addDamage\",\"dice\":\"cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))\",\"type\":\"attack.damageType\"},{\"kind\":\"removeEffect\",\"from\":\"self\",\"match\":{\"name\":\"快手投掷\"}}]},{\"id\":\"toss-miss\",\"label\":\"快手投掷：这次攻击失手\",\"on\":\"attackMissed\",\"role\":\"actor\",\"when\":\"attack.weapon && ask('这次是投掷吗？')\",\"do\":[{\"kind\":\"removeEffect\",\"from\":\"self\",\"match\":{\"name\":\"快手投掷\"}}]}]}}}"
+ },
+ {
+  "key": "TCE:魔法力量护甲",
+  "name": "魔法力量护甲",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "盔甲有 6 发充能（人物卡资源池，长休恢复；原文是每天黎明恢复 1d6 发，引擎按长休回满，多回的点数请手动点掉）。进行力量检定或力量豁免、按掷出来的结果仍会失败时，会问你要不要花 1 发充能，把智力调整值加到这次投掷上。将被撞倒时的反应（花 1 发充能避免倒地）引擎没有拦截时机：请手动处理 —— 别加倒地状态，自己在资源上点掉 1 发。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"add-int-to-str\",\"label\":\"魔法力量护甲：加智力调整值\",\"on\":\"d20Rolled\",\"role\":\"actor\",\"window\":\"before\",\"optional\":true,\"when\":\"(roll.kind == 'check' || roll.kind == 'save') && roll.ability == 'str' && roll.failing\",\"cost\":[{\"resource\":\"armorOfMagicalStrengthCharges\"}],\"modify\":[{\"op\":\"addToRoll\",\"value\":\"self.mod.int\"}]}]}"
+ },
+ {
+  "key": "TCE:魔契师:海渊传送:14",
+  "name": "海渊传送",
+  "by": "审后补",
+  "automation": "manual",
+  "level": null,
+  "text": "以一个动作，你可以传送自己和最多五个30尺范围内的可见自愿生物至至多1英里以内你曾见过的水域或其周围30尺范围内的未占据空间。短休或长休恢复。传送落点与多生物位移由人手动处理。",
+  "notes": [
+   "海渊传送：传送自己和最多五个30尺范围内的可见自愿生物至至多1英里以内水域或周围30尺未占据空间。由人手动处理。"
+  ],
+  "data": "{\"automation\":\"manual\",\"actions\":[{\"id\":\"use\",\"name\":\"海渊传送\",\"activation\":\"action\",\"cost\":[{\"resource\":\"grasping-slipstream\"}],\"root\":[{\"kind\":\"note\",\"text\":\"海渊传送：传送自己和最多五个30尺范围内的可见自愿生物至至多1英里以内水域或周围30尺未占据空间。由人手动处理。\"}]}]}"
+ }
+]

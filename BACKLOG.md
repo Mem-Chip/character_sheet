@@ -55,6 +55,10 @@
 
 ## 中的
 
+- **动作实例**（引擎）：一次动作 / 施法从开始到结算完是一个实例，它引起的每个窗口都带着它；触发器能读它的字段（法术环阶、学派、伤害骰、每个目标的结果…），
+  能对它做几种通用操作（改字段、跑它的某一支并只取伤害 / 乘倍数、加骰、做记号）。现在每种窗口只挑几样放进作用域，`CastPlan` 也只有 DC / 攻击加值 / 伤害类型 / 打断，
+  所以强力戏法（失手 / 豁免成功仍受一半伤害）、强效塑能（要问人是不是塑能法术）这类做不了。**先审再定形状**：外包包在 `datafy/instance-audit/`（1010 条，26 份），
+  答案收回来跑 `npx tsx tools/factory/instance-audit.ts merge`。在哪：`src/combat/castplan.ts`、`src/combat/triggers.ts`（`WindowSpec.scope`）、`src/combat/exec.ts`（`runAttack` / `runSave`）。
 - **批量 AI 数据化**：从启用的书里勾一批条目，排队跑单条的 AI 循环，失败的列出来、可以重试；结果进账户资料库（或某个战役）。
   在哪：`app/lib/ai.ts`（`partsJobForKey`、`checkParts`）、`src/factory/ai.ts`、`app/pages/CampaignHub.tsx`（战役页「资料」）。
 - **临时武器和武器附魔**（神圣武器、魔石术、幽影刃，改用施法属性攻击）：物品栏有了，规则还没接。

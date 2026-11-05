@@ -1,0 +1,429 @@
+[
+ {
+  "key": "XPHB:野蛮人:神之勇者:3",
+  "name": "神之勇者",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "附赠动作消耗治疗池里任意枚 d12 恢复自身生命值：引擎会问用几枚、掷骰、把总和加上去并扣池，长休由人物卡的治疗池恢复。要人处理：治疗池的上限（6 级 5 枚、12 级 6 枚、17 级 7 枚）—— 人物卡上这个池是静态层写死的 4（data/abilities-2024.json 里 formula 就是 4，条目里再声明同名池会被战斗跳过），引擎没法按等级改。到了这些等级请自己记着多出来的骰子（或者去改那条能力的次数池数据）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"神之勇者：治疗\",\"activation\":\"bonus\",\"requires\":\"self.resource('healing-pool') > 0\",\"root\":[{\"kind\":\"number\",\"prompt\":\"用几枚治疗骰？\",\"var\":\"n\",\"min\":1,\"max\":\"self.resource('healing-pool')\"},{\"kind\":\"heal\",\"to\":\"self\",\"amount\":\"(vars.n)d12\"},{\"kind\":\"resource\",\"id\":\"healing-pool\",\"delta\":\"-vars.n\"}]}]}"
+ },
+ {
+  "key": "XPHB:野蛮人:圣树活力:3",
+  "name": "圣树活力",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "活力之涌（激活狂暴时获得等于野蛮人等级的临时生命值）：引擎没有激活狂暴的时机，需人手动加。赐命之源：已写为动作，需人在你的回合开始时使用（每回合一次靠人判断）。狂暴结束时剩余临时生命值消失：需人手动移除。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"圣树活力：赐命之源\",\"activation\":\"free\",\"requires\":\"turn.isMine && self.hasEffect('狂暴')\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":10,\"filter\":\"target.id != self.id\"},\"root\":[{\"kind\":\"tempHp\",\"amount\":\"(classTable('狂暴伤害'))d6\",\"to\":\"target\"}]}]}"
+ },
+ {
+  "key": "XPHB:野蛮人:世界树之奇旅:14",
+  "name": "世界树之奇旅",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "狂暴期间以附赠动作传送至多 60 尺已写。激活狂暴时的免费传送：引擎没有激活狂暴的时机，需人手动处理。每次狂暴一次的 150 尺传送并带上至多 6 个自愿生物：引擎没有每次狂暴的次数限制，需人手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"世界树之奇旅：传送\",\"activation\":\"bonus\",\"requires\":\"self.hasEffect('狂暴')\",\"root\":[{\"kind\":\"move\",\"mode\":\"teleport\",\"ft\":60}]}]}"
+ },
+ {
+  "key": "XPHB:野蛮人:兽力威能:14",
+  "name": "兽力威能",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "雄狮与角羊的狂暴期间效果已写，靠询问确认本次选的是哪一项；雄狮的例外（以另一名雄狮野蛮人为目标时不生效）未写，需人手动。猎鹰（未着护甲时飞行速度等于速度）：引擎没有飞行速度，需人手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"auras\":[{\"id\":\"lion\",\"radius\":5,\"affects\":\"enemies\",\"includeSelf\":false,\"requires\":\"self.hasEffect('狂暴') && ask('兽力威能：本次狂暴选的是雄狮吗？')\",\"grant\":{\"rollMods\":[{\"on\":{\"kind\":\"attack\"},\"who\":\"bearer\",\"when\":\"target.id != source.id\",\"op\":\"disadv\",\"label\":\"兽力威能：雄狮（5 尺内的敌人）\"}]}}],\"triggers\":[{\"id\":\"goat\",\"label\":\"兽力威能：角羊（倒地）\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"after\",\"optional\":true,\"when\":\"attack.melee && target.size != '巨型' && target.size != '超巨型' && self.hasEffect('狂暴') && ask('兽力威能：本次狂暴选的是角羊吗？')\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"XPHB:condition:倒地\"}]}]}"
+ },
+ {
+  "key": "XPHB:野蛮人:兽性狂暴:3",
+  "name": "兽性狂暴",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "每当你激活狂暴时，从熊 / 鹰 / 狼里选一项。引擎不知道你这次选了哪一项，第一次用到时会问，每次受伤都会问一次（引擎的询问按每次结算记，不按回合记，答一样的即可）。【熊】狂暴期间，你具有除力场、心灵、黯蚀、光耀外所有伤害类型的抗性（钝击、穿刺、挥砍、火焰、寒冷、闪电、雷鸣、强酸、毒素）。引擎没有「某种状态下才生效的抗性」，只能用伤害窗口的减半来实现：单类型的伤害包算得对；钝击 / 穿刺 / 挥砍由狂暴本身的抗性负责，这里不重复减半；一个伤害包同时带着被抵抗和未被抵抗的类型（例如挥砍 + 火焰）时只按主类型判断，混合伤害请手动核对；如果你另有同类抗性（火焰抗性之类）会多减一次，也请手动补回。【狼】狂暴期间，你的盟友对位于你 5 尺内的敌人进行的攻击检定具有优势。已写成半径 5 尺的灵光：敌人站在你 5 尺内时，任何针对它的攻击检定都带优势（原文只给盟友，若第三方也向它攻击，多出来的优势请忽略）。你自己不算自己的盟友，所以你攻击同一个敌人不会获得这个优势。【鹰】狂暴期间，你能以一个附赠动作同时执行撤离与疾走动作：下面那个附赠动作条目会加出等于你速度的移动力、并施加撤离。「当你激活狂暴时，作为进入狂暴那个附赠动作的一部分」这一半引擎没有时机可挂（狂暴的开始在另一条数据里），需人手动：进入狂暴那一下同时撤离 / 疾走时，请直接用下面那条附赠动作条目（或手动移动并口头说明已撤离），别再把这次附赠动作算进下一轮。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"auras\":[{\"id\":\"wolf\",\"radius\":5,\"affects\":\"enemies\",\"includeSelf\":false,\"requires\":\"self.hasEffect('狂暴') && ask('兽性狂暴：本次狂暴选的是狼吗？')\",\"grant\":{\"rollMods\":[{\"on\":{\"kind\":\"attack\"},\"who\":\"against\",\"when\":\"attacker.id != source.id\",\"op\":\"adv\",\"label\":\"兽性狂暴：狼（5 尺内的敌人）\"}]}}],\"triggers\":[{\"id\":\"bear\",\"label\":\"兽性狂暴：熊（抗性）\",\"on\":\"damageIncoming\",\"role\":\"target\",\"window\":\"before\",\"when\":\"damage.type != '力场' && damage.type != '心灵' && damage.type != '黯蚀' && damage.type != '光耀' && damage.type != '钝击' && damage.type != '穿刺' && damage.type != '挥砍' && self.hasEffect('狂暴') && ask('兽性狂暴：本次狂暴选的是熊吗？')\",\"modify\":[{\"op\":\"halveDamage\"}]}],\"actions\":[{\"id\":\"use\",\"name\":\"兽性狂暴：鹰（撤离与疾走）\",\"activation\":\"bonus\",\"requires\":\"self.hasEffect('狂暴') && ask('兽性狂暴：本次狂暴选的是鹰吗？')\",\"root\":[{\"kind\":\"economy\",\"move\":\"self.speed\"},{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"XPHB:action:撤离#撤离\"}]}]}"
+ },
+ {
+  "key": "XPHB:野蛮人:无我狂暴:6",
+  "name": "无我狂暴",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "狂暴激活期间对魅惑与恐慌免疫已写。进入狂暴时已陷入的魅惑或恐慌立即结束：引擎没有进入狂暴的时机，需人手动移除。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"auras\":[{\"id\":\"mindless\",\"radius\":0,\"affects\":\"allies\",\"includeSelf\":true,\"requires\":\"self.hasEffect('狂暴')\",\"grant\":{\"statics\":[{\"kind\":\"conditionImmune\",\"values\":[\"魅惑\",\"恐慌\"]}]}}]}"
+ },
+ {
+  "key": "XPHB:野蛮人:凶蛮打击:9",
+  "name": "凶蛮打击",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "如果你使用了鲁莽攻击，你可以放弃本回合你选择的一次基于力量的攻击检定具有的所有优势（不可选择具有劣势的攻击检定）：命中的话额外 1d10（17 级起 2d10）伤害，伤害类型与此次攻击相同，并附带一种你所选的凶蛮打击效应（13 级起多出震撼猛击、破势猛击；17 级起可同时选两种不同的效应，强化凶蛮打击 13 / 17 级的内容都已按等级并在这里）。做法：宣告后，本回合第一次力量攻击会被加上一个劣势来抵消优势（有优势又有劣势则平掷）；命中则加伤害并选效应，未命中也算用掉。【巨力猛击】推离之后，引擎给出半速移动预算，并让这一次移动不引发借机攻击。【震撼猛击】的「不能借机攻击」引擎没有禁止标志：它被问到借机攻击时请选「不攻击」，效应里带了提醒。仍需人工判断：不能选已经具有劣势的攻击检定。",
+  "notes": [
+   "巨力猛击：现在可以立刻向该目标移动至多一半速度（移动预算已给出），这次移动不引发借机攻击。",
+   "震撼猛击：这个生物不能发动借机攻击，请在借机攻击弹窗里选「不攻击」。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"凶蛮打击\",\"activation\":\"free\",\"text\":\"在发动那次力量攻击之前宣告（需要本回合已使用鲁莽攻击，每回合一次）：这次攻击放弃优势。不能选已具有劣势的攻击（由人判断）。\",\"requires\":\"turn.isMine && self.hasEffect('鲁莽攻击') && !self.hasEffect('凶蛮打击')\",\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"凶蛮打击\"}]}],\"effects\":{\"凶蛮打击\":{\"text\":\"本回合第一次力量攻击放弃优势；命中时 +1d10 伤害并附带一种凶蛮打击效应。\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":0}},\"rollMods\":[{\"on\":{\"kind\":\"attack\"},\"who\":\"bearer\",\"when\":\"attack.ability == 'str' && !self.hasEffect('凶蛮打击：已选')\",\"op\":\"disadv\",\"label\":\"凶蛮打击：放弃优势\"}],\"triggers\":[{\"id\":\"pick\",\"label\":\"凶蛮打击：选定这次攻击\",\"on\":\"d20Rolled\",\"role\":\"actor\",\"window\":\"before\",\"when\":\"roll.kind == 'attack' && attack.ability == 'str' && !self.hasEffect('凶蛮打击：已选')\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"凶蛮打击：已选\"}]},{\"id\":\"hit\",\"label\":\"凶蛮打击：额外伤害与效应\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"when\":\"attack.ability == 'str' && self.hasEffect('凶蛮打击：已选') && !self.hasEffect('凶蛮打击：已结算')\",\"do\":[{\"kind\":\"addDamage\",\"dice\":\"(1 + floor(self.levelOf('野蛮人') / 17))d10\",\"type\":\"attack.damageType\"},{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"凶蛮打击：已结算\"},{\"kind\":\"if\",\"when\":\"self.levelOf('野蛮人') >= 17\",\"then\":[{\"kind\":\"choose\",\"prompt\":\"凶蛮打击：选两种不同的效应\",\"count\":2,\"options\":[{\"label\":\"巨力猛击：将目标直线推离 15 尺，随后你向它移动半速\",\"do\":[{\"kind\":\"move\",\"mode\":\"push\",\"ft\":15},{\"kind\":\"economy\",\"move\":\"floor(self.speed / 2)\"},{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"凶蛮打击：追击移动\"},{\"kind\":\"note\",\"text\":\"巨力猛击：现在可以立刻向该目标移动至多一半速度（移动预算已给出），这次移动不引发借机攻击。\"}]},{\"label\":\"断筋猛击：目标速度 -15 尺\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"断筋猛击\"}]},{\"label\":\"震撼猛击：目标下一次豁免具有劣势，且不能借机攻击\",\"when\":\"self.levelOf('野蛮人') >= 13\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"震撼猛击\"}]},{\"label\":\"破势猛击：他人对目标的下一次攻击检定 +5\",\"when\":\"self.levelOf('野蛮人') >= 13\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"破势猛击\"}]}]}],\"else\":[{\"kind\":\"choose\",\"prompt\":\"凶蛮打击：选一种效应\",\"count\":1,\"options\":[{\"label\":\"巨力猛击：将目标直线推离 15 尺，随后你向它移动半速\",\"do\":[{\"kind\":\"move\",\"mode\":\"push\",\"ft\":15},{\"kind\":\"economy\",\"move\":\"floor(self.speed / 2)\"},{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"凶蛮打击：追击移动\"},{\"kind\":\"note\",\"text\":\"巨力猛击：现在可以立刻向该目标移动至多一半速度（移动预算已给出），这次移动不引发借机攻击。\"}]},{\"label\":\"断筋猛击：目标速度 -15 尺\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"断筋猛击\"}]},{\"label\":\"震撼猛击：目标下一次豁免具有劣势，且不能借机攻击\",\"when\":\"self.levelOf('野蛮人') >= 13\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"震撼猛击\"}]},{\"label\":\"破势猛击：他人对目标的下一次攻击检定 +5\",\"when\":\"se…（截断，全文按键去 data/ 下找）"
+ },
+ {
+  "key": "XPHB:医疗师",
+  "name": "医疗师",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "【战地医师】你带着医疗包时，用一个操作动作消耗它的一次使用次数，救治一个位于你 5 尺内的生物：该生物消耗一枚生命骰，由你掷它，恢复「所掷点数 + 你的熟练加值」。生命骰掷出的点数在弹出的框里填，治疗量自动加上熟练加值；医疗包的使用次数与目标消耗的那枚生命骰引擎不跟踪，请人工记账（中文本条写作「消耗生命值骰的一次使用次数」，英文原文是「消耗医疗包的一次使用次数」，这里按英文理解：花掉医疗包一次）。【治疗重掷】掷骰决定法术或战地医师所恢复的生命值时，掷出的 1 可以重掷，且必须用新结果：引擎掷出的治疗骰（治疗术这类法术）改不了，请自己重掷，再在详情抽屉里手动把治疗量改成新值（「事后裁定」只认 d20 结果与伤害，改不了治疗量）；战地医师这一项因为点数是手输的，重掷后再填即可。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"医疗师：战地医师\",\"activation\":\"action\",\"requires\":\"ask('你带着医疗包、且这次要消耗它的一次使用次数吗？')\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":5},\"root\":[{\"kind\":\"number\",\"prompt\":\"该生物消耗的一枚生命骰掷出了多少点？（掷出 1 并重掷过就填新结果）\",\"var\":\"hitDie\",\"min\":1,\"max\":12,\"default\":1},{\"kind\":\"heal\",\"amount\":\"vars.hitDie + self.pb\",\"to\":\"target\"}],\"text\":\"消耗医疗包一次使用次数（人工记录），5 尺内一名生物消耗一枚生命骰，由你掷它，恢复所掷点数 + 你的熟练加值的生命值。\"}]}"
+ },
+ {
+  "key": "XPHB:吟游诗人:不破威仪:14",
+  "name": "不破威仪",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "附赠动作呈现威仪姿态，持续 1 分钟或失能时结束。在此期间，每个生物在一回合中首次命中你的攻击，须通过对抗你法术豁免 DC 的魅力豁免，否则该次攻击失手。魅力豁免由攻击者掷，引擎无法替其掷，改为询问人。完成短休或长休后才能再次使用。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"不破威仪\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"不破威仪\"}],\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"不破威仪\"}]}],\"effects\":{\"不破威仪\":{\"text\":\"攻击者魅力豁免失败则该次攻击失手；豁免由人判定。\",\"duration\":{\"minutes\":1,\"endsOn\":[{\"event\":\"effectApplied\",\"when\":\"event.bearer == self.id && self.has('失能')\"}]},\"triggers\":[{\"id\":\"majesty\",\"label\":\"不破威仪：攻击者须通过魅力豁免\",\"on\":\"attackHit\",\"role\":\"target\",\"window\":\"before\",\"when\":\"!ask('攻击者是否通过了魅力豁免？（DC 为你的法术豁免 DC；若它本回合已经对你命中过，选是）')\",\"modify\":[{\"op\":\"cancel\"}]}]}}}"
+ },
+ {
+  "key": "XPHB:吟游诗人:创生圣言:20",
+  "name": "创生圣言",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "律令医疗、律令死亡的法术授予已在人物卡静态层。施展这两道法术时可以再选一个第二目标（须位于第一个目标 10 尺内），引擎无法为法术追加目标，需手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XPHB:吟游诗人:额外攻击:6",
+  "name": "额外攻击",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "执行攻击动作时可以发动两次攻击而非一次；其中一次可以替换为施法时间为一动作的戏法。攻击次数的增加与戏法替换由人手动处理（引擎不自动管理攻击动作的次数）。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XPHB:吟游诗人:鼓舞之移:6",
+  "name": "鼓舞之移",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当一名你可见的敌人位于你 5 尺内结束它的回合时，你可以用反应并消耗一次诗人激励使用次数，移动至多等于你速度一半的距离；随后位于你 30 尺内的一名盟友（由你选择）可以用他的反应移动至多等于他速度一半的距离。这两段移动都不引发借机攻击。触发时机、反应与诗人激励代价引擎自动处理；两段移动都要人手动（引擎的移动流程只跑当前回合那个棋子），你这边挂上「鼓舞之移之步」效应当提醒，盟友那一段请人手动移动，并让该玩家自己扣反应。",
+  "notes": [
+   "鼓舞之移：你移动至多速度的一半（不引发借机攻击）——请手动在战图上移动。",
+   "鼓舞之移：你 30 尺内你选择的一名盟友可以用自己的反应移动至多其速度的一半（不引发借机攻击）——请手动移动这个棋子，并让该玩家自己扣掉反应。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"鼓舞之移\",\"activation\":\"reaction\",\"trigger\":{\"on\":\"turnEnded\",\"role\":\"enemy\",\"when\":\"within(self, target, 5) && canSee(self, target)\"},\"cost\":[{\"resource\":\"诗人激励\"}],\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"鼓舞之移之步\"},{\"kind\":\"note\",\"text\":\"鼓舞之移：你移动至多速度的一半（不引发借机攻击）——请手动在战图上移动。\"},{\"kind\":\"note\",\"text\":\"鼓舞之移：你 30 尺内你选择的一名盟友可以用自己的反应移动至多其速度的一半（不引发借机攻击）——请手动移动这个棋子，并让该玩家自己扣掉反应。\"}]}],\"effects\":{\"鼓舞之移之步\":{\"text\":\"这次由鼓舞之移带来的移动不引发借机攻击；移动结束（moved）或你的下一回合开始时消失。\",\"flags\":{\"cannot\":[\"provoke\"]},\"duration\":{\"until\":{\"at\":\"turnStart\",\"of\":\"bearer\",\"nth\":1},\"endsOn\":[{\"event\":\"moved\",\"when\":\"event.id == self.id\"}]}}}}"
+ },
+ {
+  "key": "XPHB:吟游诗人:灵感织衣:3",
+  "name": "灵感织衣",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个附赠动作消耗一次诗人激励并掷诗人激励骰，从你 60 尺内的其他生物中选择至多等于你魅力调整值（至少 1 名）的生物，每个被选中的生物获得等于两倍该诗人骰骰值的临时生命值，然后每名生物都可以用自己的反应立即移动至多等于自己速度的距离，这次移动不会引发借机攻击。选择目标、临时生命值与效应都会自动加上。原文是掷一次诗人骰、所有目标共用两倍该骰值；引擎按每名目标各掷一次（掷的是两颗骰，分布和两倍单颗骰略有不同），想严格按原规则就在掷完后按第一名的值口头统一、其余目标在详情抽屉里改。",
+  "notes": [
+   "灵感织衣：每名被选中的生物可以立即用自己的反应移动至多等于自己速度的距离（不引发借机攻击）——请手动在战图上移动，并让该玩家自己扣掉反应；临时生命值请按第一次掷出的诗人骰 ×2 口头统一。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"灵感织衣\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"诗人激励\"}],\"targeting\":{\"type\":\"creature\",\"count\":\"max(1, mod.cha)\",\"range\":60,\"filter\":\"target.id != self.id\"},\"root\":[{\"kind\":\"tempHp\",\"amount\":\"classTable('诗人骰') + classTable('诗人骰')\",\"to\":\"each\"},{\"kind\":\"applyEffect\",\"to\":\"each\",\"template\":\"灵感织衣之步\"},{\"kind\":\"note\",\"text\":\"灵感织衣：每名被选中的生物可以立即用自己的反应移动至多等于自己速度的距离（不引发借机攻击）——请手动在战图上移动，并让该玩家自己扣掉反应；临时生命值请按第一次掷出的诗人骰 ×2 口头统一。\"}]}],\"effects\":{\"灵感织衣之步\":{\"text\":\"这次由灵感织衣带来的移动不引发借机攻击；移动结束（moved）或该生物的下一回合开始时消失。\",\"flags\":{\"cannot\":[\"provoke\"]},\"duration\":{\"until\":{\"at\":\"turnStart\",\"of\":\"bearer\",\"nth\":1},\"endsOn\":[{\"event\":\"moved\",\"when\":\"event.id == self.id\"}]}}}}"
+ },
+ {
+  "key": "XPHB:吟游诗人:灵巧打击:3",
+  "name": "灵巧打击",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当你在一次动作、附赠动作或反应中消耗了诗人激励使用次数后，作为那个动作的一部分，你可以发动一次徒手打击 —— 不额外花动作 / 附赠动作 / 反应，所以写成「不占动作」的按钮。引擎读不到「刚刚消耗过诗人激励」（没有资源消耗的触发窗口），这一条只能人守：只在你确实刚花掉一次诗人激励的那个动作里点它，别凭空点。徒手打击的命中与伤害按「力量或敏捷取高」近似；舞蹈学院的诗人痛击允许改用「诗人激励骰 + 敏捷调整值」的钝击伤害，要那样打请照「诗人痛击」那条手动改伤害。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"灵巧打击\",\"activation\":\"free\",\"text\":\"只能在刚消耗了诗人激励使用次数的那个动作 / 附赠动作 / 反应里使用（由人判断）。\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"reach\"},\"tags\":[\"weapon\"],\"root\":[{\"kind\":\"attack\",\"bonus\":\"self.pb + max(self.mod.str, self.mod.dex)\",\"attack\":{\"melee\":true,\"unarmed\":true,\"ability\":\"dex\",\"damageType\":\"钝击\",\"item\":\"徒手打击\"},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"1 + max(self.mod.str, self.mod.dex)\",\"type\":\"钝击\"}]}]}]}"
+ },
+ {
+  "key": "XPHB:吟游诗人:诗人痛击:3",
+  "name": "诗人痛击",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "用敏捷代替力量的徒手打击攻击检定已自动（敏捷高于力量时把差值加到攻击检定上，且须未着装护甲、未持盾，见炫目舞步）。以徒手打击造成伤害时改用「诗人激励骰 + 敏捷调整值」的钝击伤害、且不消耗诗人激励次数，需手动处理（引擎不能替换徒手打击自身的伤害）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"rollMods\":[{\"on\":{\"kind\":\"attack\"},\"who\":\"bearer\",\"when\":\"!self.wearing('LA') && !self.wearing('MA') && !self.wearing('HA') && !self.wearing('S') && attack.unarmed && attack.ability == 'str' && self.mod.dex > self.mod.str\",\"op\":\"add\",\"value\":\"self.mod.dex - self.mod.str\",\"label\":\"诗人痛击：徒手打击用敏捷代替力量\"}]}"
+ },
+ {
+  "key": "XPHB:吟游诗人:威仪作锦:6",
+  "name": "威仪作锦",
+  "by": "手写",
+  "automation": "full",
+  "level": null,
+  "text": "你可以用附赠动作免法术位施展命令术（扣「威仪作锦」次数，长休恢复）。点上面那个动作会临时给你一个消耗也一样、但算附赠动作的命令术；魅惑你的生物对这道命令术豁免自动失败，这条引擎判不了，请手动裁定。",
+  "notes": [],
+  "data": "{\"automation\":\"full\",\"actions\":[{\"id\":\"cast\",\"name\":\"威仪作锦：命令术（免法术位，附赠动作）\",\"activation\":\"bonus\",\"tags\":[\"magical\"],\"root\":[{\"kind\":\"grantAction\",\"key\":\"grant:XPHB:吟游诗人:威仪作锦:6\",\"from\":\"XPHB:spell:命令术#cast\",\"cost\":[{\"resource\":\"majesty\"}],\"activation\":\"free\",\"until\":\"turnEnd\"}]}]}"
+ },
+ {
+  "key": "XPHB:吟游诗人:协同舞步:6",
+  "name": "协同舞步",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "自己的先攻加值已自动：投先攻时可选花一次诗人激励，加上诗人骰。30 尺内能听见或看见你的盟友，其先攻同样加上该骰值，需手动处理（引擎不能把同一骰值分享给其他人的先攻）。未失能时才可用。",
+  "notes": [
+   "协同舞步：30 尺内能听见或看见你的盟友，其先攻也加上同一骰值（手动处理）"
+  ],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"coordinated-steps\",\"label\":\"协同舞步：先攻加诗人骰\",\"on\":\"d20Rolled\",\"role\":\"actor\",\"window\":\"before\",\"optional\":true,\"when\":\"(roll.kind == 'initiative' || roll.sub == 'initiative') && !self.has('失能')\",\"cost\":[{\"resource\":\"诗人激励\"}],\"modify\":[{\"op\":\"addToRoll\",\"value\":\"classTable('诗人骰')\"}],\"do\":[{\"kind\":\"note\",\"text\":\"协同舞步：30 尺内能听见或看见你的盟友，其先攻也加上同一骰值（手动处理）\"}]}]}"
+ },
+ {
+  "key": "XPHB:吟游诗人:引导闪避:14",
+  "name": "引导闪避",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "你受到一个「允许敏捷豁免来只承受一半伤害」的效应影响时：豁免成功则完全不受伤害，豁免失败只受一半伤害。位于你 5 尺内、同样要做这次敏捷豁免的其他生物也可以享受。已自动化：这类伤害一进来就把结果改成「成功 0 伤害 / 失败一半」；5 尺内的盟友身上也会挂上同一套判定（引擎会确认「他在吟游诗人 5 尺内吗」——有地图时直接算距离）。你失能时不起作用。要人处理：法术得把「豁免成功只受一半」写成减半的伤害节点，引擎才认得出是这一类效应；写成别的形式（比如成功分支里另写一份伤害）就改不了，请手动按一半结算。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"evasion\",\"label\":\"引导闪避\",\"on\":\"damageIncoming\",\"role\":\"target\",\"window\":\"before\",\"when\":\"damage.save == 'dex' && !self.has('失能')\",\"modify\":[{\"op\":\"evasion\"}]}],\"auras\":[{\"id\":\"evasion-share\",\"radius\":5,\"affects\":\"allies\",\"includeSelf\":false,\"requires\":\"!self.has('失能')\",\"stackKey\":\"引导闪避\",\"grant\":{\"triggers\":[{\"id\":\"evasion-share\",\"label\":\"引导闪避（吟游诗人分享）\",\"on\":\"damageIncoming\",\"role\":\"target\",\"window\":\"before\",\"optional\":true,\"when\":\"damage.save == 'dex' && within(self, source, 5) && !source.has('失能')\",\"modify\":[{\"op\":\"evasion\"}]}]}}]}"
+ },
+ {
+  "key": "XPHB:吟游诗人:战斗激励:3",
+  "name": "战斗激励",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "拥有你的诗人激励骰的生物（身上挂着「诗人激励」效应）可以改用它来做两件事：【防御】被一次攻击检定命中时，用反应掷诗人激励骰、把点数加到对抗这次攻击的 AC 上，可能让它变成失手；【进攻】以攻击检定命中一个目标后，立即掷诗人激励骰、把点数加到这次攻击造成的伤害里。已自动化：只要那个生物身上还有你的诗人激励效应，命中 / 被命中时就会弹出这两个用法，用完把诗人激励消耗掉；【进攻】自动掷点、按这次攻击的伤害类型加伤害，【防御】弹窗让你输入掷出的点数（引擎的 AC 加值只能是定数），按新 AC 重新判定这次攻击，这一次攻击结束就撤掉那份 AC 加值。要人处理：①诗人激励骰的面数随你的吟游诗人等级变（d6 / d8 / d10 / d12），【进攻】自动按等级取；【防御】弹窗上下限按 d12 给，低等级时按实际点数填；②「用不用、给谁用」由你决定，引擎没法限制只有你点名的那个生物能用；③法术攻击的伤害类型引擎常常没记下（会记成无类型），这类攻击的激励骰伤害请按实际类型核对抗性。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"auras\":[{\"id\":\"combat-inspiration\",\"radius\":60,\"affects\":\"allies\",\"includeSelf\":false,\"stackKey\":\"战斗激励\",\"grant\":{\"triggers\":[{\"id\":\"defense\",\"label\":\"战斗激励：防御（掷激励骰加 AC）\",\"on\":\"attackHit\",\"role\":\"target\",\"window\":\"before\",\"optional\":true,\"when\":\"self.hasEffect('诗人激励')\",\"do\":[{\"kind\":\"number\",\"prompt\":\"掷你的诗人激励骰（d6 / d8 / d10 / d12，按吟游诗人等级），输入点数\",\"var\":\"insp\",\"min\":1,\"max\":12,\"default\":6},{\"kind\":\"applyEffect\",\"to\":\"self\",\"name\":\"战斗激励：防御\",\"state\":{\"bonus\":\"vars.insp\"},\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":0},\"endsOn\":[{\"event\":\"attackMissed\",\"when\":\"event.target == self.id\"},{\"event\":\"damageApplied\",\"when\":\"event.target == self.id\"}]},\"inline\":{\"name\":\"战斗激励：防御\",\"text\":\"对抗这一次攻击的 AC 加值（这次攻击结算完就撤掉）\",\"statics\":[{\"kind\":\"ac\",\"bonus\":\"effect.state.bonus\"}]}},{\"kind\":\"removeEffect\",\"from\":\"self\",\"match\":{\"name\":\"诗人激励\"}}],\"cost\":[{\"economy\":\"reaction\"}]},{\"id\":\"offense\",\"label\":\"战斗激励：进攻（掷激励骰加伤害）\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"optional\":true,\"when\":\"self.hasEffect('诗人激励')\",\"do\":[{\"kind\":\"addDamage\",\"dice\":\"cond(source.levelOf('吟游诗人') >= 15, 1d12, cond(source.levelOf('吟游诗人') >= 10, 1d10, cond(source.levelOf('吟游诗人') >= 5, 1d8, 1d6)))\",\"type\":\"attack.damageType\"},{\"kind\":\"removeEffect\",\"from\":\"self\",\"match\":{\"name\":\"诗人激励\"}}]}]}}]}"
+ },
+ {
+  "key": "XPHB:吟游诗人:战斗魔法:14",
+  "name": "战斗魔法",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "在你施展一道施法时间为一动作的法术后，你能够以一个附赠动作，使用一把武器发动一次攻击。已自动化：这是一个附赠动作的武器攻击动作——选目标、掷攻击检定、掷伤害都由引擎做（弹窗里按你用的武器选伤害骰和伤害类型），伤害里含属性调整值。要人处理：引擎读不到「你本回合刚施展完一道施法时间为一动作的法术」，所以每次用之前会问一句；武器是哪一把、够不够得着由你判断；用远程武器时这次攻击在引擎里仍按近战攻击标记，少数按「近战 / 远程」区分的加值可能记错，介意的话直接用那把武器自己的动作手动打。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"weapon\",\"name\":\"战斗魔法：附赠动作武器攻击\",\"activation\":\"bonus\",\"tags\":[\"weapon\"],\"requires\":\"turn.isMine && ask('你本回合刚施展完一道施法时间为一动作的法术吗？')\",\"targeting\":{\"type\":\"creature\",\"count\":1},\"root\":[{\"kind\":\"choose\",\"prompt\":\"战斗魔法：这次用的是哪把武器的伤害骰？\",\"var\":\"die\",\"options\":[{\"label\":\"1d4（匕首、短棒、轻锤、投石索…）\",\"value\":\"1d4\"},{\"label\":\"1d6（短剑、手斧、钉头锤、长矛、短弓…）\",\"value\":\"1d6\"},{\"label\":\"1d8（长剑、战斧、细剑、长弓、轻弩…）\",\"value\":\"1d8\"},{\"label\":\"1d10（长戟、战锤、重弩…）\",\"value\":\"1d10\"},{\"label\":\"1d12（巨斧、巨剑…）\",\"value\":\"1d12\"}]},{\"kind\":\"choose\",\"prompt\":\"战斗魔法：这次攻击的伤害类型？\",\"var\":\"dtype\",\"options\":[{\"label\":\"挥砍\",\"value\":\"挥砍\"},{\"label\":\"穿刺\",\"value\":\"穿刺\"},{\"label\":\"钝击\",\"value\":\"钝击\"}]},{\"kind\":\"attack\",\"bonus\":\"self.pb + max(self.mod.str, self.mod.dex)\",\"attack\":{\"melee\":true,\"weapon\":true},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"vars.die\",\"type\":\"vars.dtype\"},{\"kind\":\"damage\",\"dice\":\"max(self.mod.str, self.mod.dex)\",\"type\":\"vars.dtype\"}]}]}]}"
+ },
+ {
+  "key": "XPHB:饮命者",
+  "name": "饮命者",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "已自动化：每回合一次，用契约武器命中生物时可选额外造成 1d6 黯蚀 / 心灵 / 光耀伤害（伤害类型当场选，触发是可选的 —— 非契约武器的命中不要选它）。同一触发里还能选「消耗一颗生命值骰回血」：选骰面后引擎掷骰，把骰值和体质调整值分别加上去（分成两笔治疗，是因为引擎不能在骰子文本后面接一个变量调整值）。要人处理：那颗生命值骰自己记账（引擎没有生命值骰池，长休后回满）；体质调整值为负时，原文「最小 1 点生命值」要人看一眼。",
+  "notes": [
+   "饮命者：这次消耗的生命值骰请自己记账（引擎没有生命值骰池，长休后回满）；体质调整值为负、掷骰结果加完低于 1 时按 1 点恢复"
+  ],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"drain\",\"label\":\"饮命者：额外伤害与生命值骰\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"optional\":true,\"limit\":\"oncePerTurn\",\"when\":\"attack.weapon\",\"do\":[{\"kind\":\"choose\",\"prompt\":\"饮命者：额外伤害的类型\",\"var\":\"elem\",\"options\":[{\"label\":\"黯蚀\",\"value\":\"黯蚀\"},{\"label\":\"心灵\",\"value\":\"心灵\"},{\"label\":\"光耀\",\"value\":\"光耀\"}]},{\"kind\":\"addDamage\",\"dice\":\"1d6\",\"type\":\"vars.elem\"},{\"kind\":\"choose\",\"prompt\":\"饮命者：要投掷并消耗一颗生命值骰回血吗？（骰面随职业）\",\"var\":\"die\",\"options\":[{\"label\":\"不消耗生命值骰\",\"value\":\"0\"},{\"label\":\"d6\",\"value\":\"1d6\"},{\"label\":\"d8\",\"value\":\"1d8\"},{\"label\":\"d10\",\"value\":\"1d10\"},{\"label\":\"d12\",\"value\":\"1d12\"}]},{\"kind\":\"if\",\"when\":\"vars.die != '0'\",\"then\":[{\"kind\":\"heal\",\"to\":\"self\",\"amount\":\"vars.die\"},{\"kind\":\"heal\",\"to\":\"self\",\"amount\":\"self.mod.con\"},{\"kind\":\"note\",\"text\":\"饮命者：这次消耗的生命值骰请自己记账（引擎没有生命值骰池，长休后回满）；体质调整值为负、掷骰结果加完低于 1 时按 1 点恢复\"}]}]}]}"
+ },
+ {
+  "key": "XPHB:隐伏者",
+  "name": "隐伏者",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "隐伏者：盲视 10 尺为静态（已在人物卡）。战争迷雾已写成战斗中的隐匿检定优势。狙击手（躲藏中攻击未命中不暴露位置）需要人处理：引擎不会因攻击而自动解除躲藏，由 DM 手动移除隐形。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"rollMods\":[{\"on\":{\"kind\":\"check\",\"skill\":\"隐匿\"},\"who\":\"bearer\",\"when\":\"round > 0\",\"op\":\"adv\",\"label\":\"隐伏者：战争迷雾（战斗中躲藏时的隐匿检定）\"}]}"
+ },
+ {
+  "key": "XPHB:影界触碰",
+  "name": "影界触碰",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "所选的一道幻术或死灵一环法术与隐形术始终准备；每道各可无需法术位免费施展一次（长休恢复），也可用合适环阶的法术位施展。所选法术未在数据中指定，且资源池（shadow-touched-spells）上限为 1，与「每道各一次」不一致，需人手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XPHB:游荡者:撤步（花费：1d6）:5",
+  "name": "撤步",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "诡诈打击选项：攻击命中并且造成了偷袭伤害之后，你立刻移动至多等于你速度一半的距离，本回合剩余时间内移动不引发借机攻击。已自动：命中后问你是否花 1d6 偷袭骰选撤步，加出半速的移动力、并挂上「撤离」（引擎的撤离效应持续到你的回合结束 —— 比原文宽，本回合剩下的移动都不引发借机攻击，请按原文只用在这一段移动里）。要人处理的两件事：① 引擎的偷袭是自动掷满的、扣不了骰：请在结算后到事后裁定里把伤害改小 1d6；② 移动力只是加出来了，请在地图上实际拖动棋子。",
+  "notes": [
+   "撤步：已加出半速移动力、本回合剩余时间移动不引发借机攻击；这次偷袭伤害请少掷 1d6（引擎不扣偷袭骰）"
+  ],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"withdraw\",\"label\":\"撤步（花费：1d6）：攻击后移动\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"after\",\"limit\":\"oncePerTurn\",\"when\":\"ask('这次命中造成了偷袭伤害，并且你花 1d6 偷袭骰选择撤步吗？')\",\"do\":[{\"kind\":\"economy\",\"move\":\"floor(self.speed / 2)\"},{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"XPHB:action:撤离#撤离\"},{\"kind\":\"note\",\"text\":\"撤步：已加出半速移动力、本回合剩余时间移动不引发借机攻击；这次偷袭伤害请少掷 1d6（引擎不扣偷袭骰）\"}]}]}"
+ },
+ {
+  "key": "XPHB:游荡者:淬毒武器:13",
+  "name": "淬毒武器",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "使用诡诈打击的淬毒选项时，目标豁免失败会额外受到 2d6 毒素伤害，且无视毒素抗性。该伤害需接在「诡诈打击」的淬毒选项上，本条目无法挂上去，手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XPHB:游荡者:法师之手诈术:3",
+  "name": "法师之手诈术",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "施展法师之手可以改用附赠动作；幽灵手可以隐形，之后可以用附赠动作控制它，并用它进行敏捷（巧手）检定。法师之手的施法方式与幽灵手的控制都不在本条里（需改法师之手条目），人工处理。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XPHB:游荡者:法术窃贼:17",
+  "name": "法术窃贼",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "别人施展的法术以你为目标、或效应范围涵盖你之后，你可以用反应迫使该生物做一次智力豁免（DC = 你的法术豁免 DC）。失败：这个法术对你的影响被消除，你偷走它 —— 接下来 8 小时你准备着它（至少 1 环、你能施展的环阶），施法者 8 小时内无法再施展它。已自动：扣一次「法术窃贼」（每长休一次）、向施法者要豁免、失败时给施法者挂 8 小时的「法术被窃」；如果这个法术只以你为目标（或范围里只有你），会直接把这次施法取消（法术位照常消耗，等于它对你没生效）。要人处理的：范围 / 多目标法术里「只对你一个人失效」引擎做不到，请到目标身上手动删掉这个法术的效应；偷来的法术要真的加到人物卡上（引擎不改卡）；施法者身上的「法术被窃」只是个提醒标记，引擎不会真的拦住他施法，这 8 小时里他要再施这个法术得靠人拦。",
+  "notes": [
+   "法术窃贼：这个法术对你的影响请你手动撤销（引擎不能只让一个目标脱离范围法术，范围里的其他生物照常受影响）",
+   "法术窃贼：接下来 8 小时你准备着这个法术，施法者 8 小时内无法再施展它（请手动加到人物卡上 / 记下来）",
+   "法术窃贼：施法者豁免成功，法术照常生效（反应已经用掉）"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"steal\",\"name\":\"法术窃贼\",\"activation\":\"reaction\",\"trigger\":{\"on\":\"spellCast\",\"role\":\"any\",\"window\":\"before\",\"aim\":\"actor\",\"when\":\"attacker.id != self.id && ask('刚施展的法术是别的生物施展的、以你为目标或效应范围涵盖你，并且它至少 1 环、是你能施展的环阶吗？')\"},\"cost\":[{\"resource\":\"spell-thief\"}],\"root\":[{\"kind\":\"save\",\"ability\":\"int\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"attacker\",\"template\":\"法术被窃\"},{\"kind\":\"if\",\"when\":\"ask('这个法术只以你为目标（或它的范围里只有你）吗？')\",\"then\":[{\"kind\":\"modify\",\"modify\":[{\"op\":\"cancel\",\"refundSlot\":false}]}],\"else\":[{\"kind\":\"note\",\"text\":\"法术窃贼：这个法术对你的影响请你手动撤销（引擎不能只让一个目标脱离范围法术，范围里的其他生物照常受影响）\"}]},{\"kind\":\"note\",\"text\":\"法术窃贼：接下来 8 小时你准备着这个法术，施法者 8 小时内无法再施展它（请手动加到人物卡上 / 记下来）\"}],\"onSuccess\":[{\"kind\":\"note\",\"text\":\"法术窃贼：施法者豁免成功，法术照常生效（反应已经用掉）\"}]}]}],\"effects\":{\"法术被窃\":{\"text\":\"法术窃贼：你被偷走了刚施展的那个法术，8 小时内无法再施展它。\",\"duration\":{\"hours\":8}}}}"
+ },
+ {
+  "key": "XPHB:游荡者:诡术伏击:9",
+  "name": "诡术伏击",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "处于隐形状态期间你对一名生物施展法术时，它在那个回合中为对抗该法术而进行的豁免检定具有劣势。引擎在你施法的那一刻给这道法术的目标挂上「豁免具有劣势」，持续到你的回合结束（豁免就在这之后掷，能吃上）。要人处理的是：法术如有多个目标（如火球术），引擎拿不到「哪一个目标」，请手动给每个目标挂劣势；同一回合里如果它还要为别的来源做豁免，引擎也会算成劣势（原文只针对这道法术）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"ambush\",\"label\":\"诡术伏击\",\"on\":\"spellCast\",\"role\":\"actor\",\"window\":\"after\",\"when\":\"self.has('隐形') && target.id != self.id\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"诡术伏击\"}]}],\"effects\":{\"诡术伏击\":{\"name\":\"诡术伏击\",\"text\":\"本回合内为对抗这道法术而进行的豁免检定具有劣势。\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"source\",\"nth\":0}},\"rollMods\":[{\"on\":{\"kind\":\"save\"},\"who\":\"bearer\",\"op\":\"disadv\",\"label\":\"诡术伏击：对抗该法术的豁免具有劣势\"}]}}}"
+ },
+ {
+  "key": "XPHB:游荡者:诡诈打击:5",
+  "name": "诡诈打击",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "造成偷袭伤害时，你可以从投毒 / 摔绊 / 撤步等选项里选一种加进这次偷袭，每种都要先扣除一定数量的偷袭伤害骰。引擎没有偷袭骰池，扣不掉偷袭骰：引擎的偷袭是自动掷满的、改不了：请先拒绝偷袭、手动补掷「偷袭骰数 − 扣除数」颗，或者照常结算后在事后裁定里把伤害改小（投毒、摔绊、撤步各 1d6，恍惚 2d6，击昏 6d6 之类按各选项原文）。各选项的效果已经分别写在它们自己的条目里（触发时机是攻击命中），选项要求豁免时的 DC = 8 + 你的熟练加值 + 你的敏捷调整值，那里写好了。要是忘了少掷，可以用事后裁定改这次的伤害，或者撤销这一笔重新结算。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XPHB:游荡者:恍惚（花费：2d6）:14",
+  "name": "恍惚（花费：2d6）",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "诡诈打击选项，花费 2d6 偷袭骰：需人工从偷袭伤害中扣除（引擎没有偷袭骰池）。目标进行体质豁免（DC = 8 + 敏捷调整值 + 熟练加值）；失败则其下一回合只能在移动、执行一个动作、执行一个附赠动作中选一项，这个选择限制引擎不执行，需人工处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"daze\",\"label\":\"恍惚（花费：2d6）\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"optional\":true,\"limit\":\"oncePerTurn\",\"when\":\"(attack.finesse || attack.ranged) && (roll.adv || (allyWithin(target, 5, { exclude: [self], notCond: '失能' }) && !roll.disadv))\",\"do\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":\"8 + self.mod.dex + self.pb\",\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"恍惚\"}]}]}],\"effects\":{\"恍惚\":{\"text\":\"下一回合只能在移动、执行一个动作、执行一个附赠动作中选一项（引擎不限制，人工处理）。\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":0}}}}}"
+ },
+ {
+  "key": "XPHB:游荡者:击昏（花费：6d6）:14",
+  "name": "击昏（花费：6d6）",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "诡诈打击选项，花费 6d6 偷袭骰：需人工从偷袭伤害中扣除（引擎没有偷袭骰池）。目标进行体质豁免（DC = 8 + 敏捷调整值 + 熟练加值）；失败则陷入昏迷，持续 1 分钟。昏迷的目标在自己的回合结束时可以重新豁免，通过即结束；受到任何伤害也会结束。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"knockout\",\"label\":\"击昏（花费：6d6）\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"optional\":true,\"limit\":\"oncePerTurn\",\"when\":\"(attack.finesse || attack.ranged) && (roll.adv || (allyWithin(target, 5, { exclude: [self], notCond: '失能' }) && !roll.disadv))\",\"do\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":\"8 + self.mod.dex + self.pb\",\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"XPHB:condition:昏迷\",\"duration\":{\"minutes\":1,\"saveEnds\":{\"ability\":\"con\",\"at\":\"turnEnd\"},\"endsOn\":[{\"event\":\"damageTaken\"}]}}]}]}]}"
+ },
+ {
+  "key": "XPHB:游荡者:极效潜行:9",
+  "name": "极效潜行",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "诡诈打击新选项「无声袭击」（花费 1d6）：若你通过躲藏获得隐形，且回合结束时仍处于掩护中或掩护之后，本次攻击不会使这个隐形结束。诡诈打击的花费与选项需在「诡诈打击」条目中加入；隐形的结束由 DM 手动处理，本条目无法自动化。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XPHB:游荡者:进阶诡诈打击:11",
+  "name": "进阶诡诈打击",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "偷袭时可以一次性选用两种诡诈打击效果，每种都要独立扣除对应的偷袭伤害骰。诡诈打击的选项与扣骰都由人处理（引擎没有偷袭骰池，也不在本条里写诡诈打击选项）。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XPHB:游荡者:可靠才能:7",
+  "name": "可靠才能",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "属性检定可以运用技能或工具熟练时，可以把 d20 掷出的 9 及以下视为 10。是否可以运用熟练、以及是否选择使用，由人在 ask 中确认。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"rollMods\":[{\"on\":{\"kind\":\"check\"},\"who\":\"bearer\",\"when\":\"ask('是否用可靠才能？（这次属性检定可以运用你的技能熟练或工具熟练）')\",\"op\":\"minD20\",\"value\":10,\"label\":\"可靠才能：d20 的 9 及以下视为 10\"}]}"
+ },
+ {
+  "key": "XPHB:游荡者:快手:3",
+  "name": "快手",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "附赠动作可用于：巧手（敏捷（巧手）检定，开锁、解除陷阱或扒窃，DC 由 DM 定，手动处理）；使用物件（附赠动作换得一个动作，只能用于操作动作，或要求该动作的魔法物品的魔法动作，这一限制由人遵守）。",
+  "notes": [
+   "进行一次敏捷（巧手）检定：开锁、解除陷阱或扒窃（DC 由 DM 定，手动）",
+   "本回合多出的这个动作只能用于操作动作，或要求该动作的魔法物品的魔法动作（手动约束）"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"sleight\",\"name\":\"快手（巧手）\",\"activation\":\"bonus\",\"root\":[{\"kind\":\"note\",\"text\":\"进行一次敏捷（巧手）检定：开锁、解除陷阱或扒窃（DC 由 DM 定，手动）\"}]},{\"id\":\"object\",\"name\":\"快手（使用物件）\",\"activation\":\"bonus\",\"root\":[{\"kind\":\"economy\",\"action\":1},{\"kind\":\"note\",\"text\":\"本回合多出的这个动作只能用于操作动作，或要求该动作的魔法物品的魔法动作（手动约束）\"}]}]}"
+ },
+ {
+  "key": "XPHB:游荡者:灵振诀窍:3",
+  "name": "灵振诀窍",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "用熟练的技能或工具做属性检定失败时，可以掷一颗灵能骰加到结果上；只有加完变为成功才消耗这颗骰子。引擎无法判断检定是否用到熟练项，询问时请自行确认。灵能骰池按 2 × 熟练加值计，骰子大小随游荡者等级成长（5 级 d8、11 级 d10、17 级 d12）；短休恢复一颗的部分手动处理。",
+  "notes": [
+   "灵振诀窍：检定仍然失败，不消耗灵能骰"
+  ],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"knack\",\"label\":\"灵振诀窍：+灵能骰（仅限熟练的技能 / 工具）\",\"on\":\"d20Rolled\",\"role\":\"actor\",\"window\":\"before\",\"optional\":true,\"when\":\"roll.kind == 'check' && roll.failing\",\"cost\":[{\"resource\":\"灵能力量\"}],\"modify\":[{\"op\":\"addToRoll\",\"value\":\"cond(self.levelOf('游荡者') >= 17, 1d12, cond(self.levelOf('游荡者') >= 11, 1d10, cond(self.levelOf('游荡者') >= 5, 1d8, 1d6)))\"}],\"do\":[{\"kind\":\"if\",\"when\":\"roll.failing\",\"then\":[{\"kind\":\"resource\",\"id\":\"灵能力量\",\"delta\":1},{\"kind\":\"note\",\"text\":\"灵振诀窍：检定仍然失败，不消耗灵能骰\"}]}]}]}"
+ },
+ {
+  "key": "XPHB:游荡者:窃盗本能:17",
+  "name": "窃盗本能",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "每次战斗的第一轮可以行动两个回合：第二个回合以先攻减 10 行动。引擎没有额外回合与先攻顺序的机制，需要人手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XPHB:游荡者:使用魔法装置:13",
+  "name": "使用魔法装置",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "【同调】你最多可以同时同调于四个魔法物品（注意：物品页现在把同调上限写死成 3，第四个还同调不了，需要时请手动处理） —— 这是物品 / 人物卡那边的静态上限，引擎不检查，请自己留意（超了就手动拒绝同调）。【充能】每当你使用一个魔法物品消耗充能的特性时，投一个 1d6，结果为 6 则本次不消耗充能 —— 引擎没有「扣充能」这个窗口，也没法拦下扣充能的那一下，请手动：用完自己掷 1d6，出 6 就在详情抽屉里把那一发充能加回去。【卷轴】已自动化的只有检定那一步：点「使用魔法装置：阅读卷轴」，填卷轴记载的法术环阶 —— 戏法与一环直接可用；二环及以上引擎会掷一次智力（奥秘）检定，DC = 10 + 该法术的环阶，失败会提示你卷轴化为尘埃。要人处理的：①这条动作只掷检定、不代你施展法术：卷轴里的法术本身仍按那道法术的数据在战斗里结算（引擎没有「从卷轴施法」的入口，「以智力作为施法关键属性」也改不了 —— 法术攻击加值 / 豁免 DC 用的是你卡上的数值，与你的智力施法数值不同时请手动改）；②戏法与一环「稳定可用」也只由这条动作给个提示，法术照常施放。",
+  "notes": [
+   "使用魔法装置：戏法与一环的卷轴你可以稳定使用，直接用智力施展这道法术（法术效果照那道法术的数据结算，引擎不能替你从卷轴施法）。",
+   "使用魔法装置：智力（奥秘）检定通过，你可以用这道卷轴施展该法术（以智力为施法关键属性；用了记得把卷轴划掉）。",
+   "使用魔法装置：智力（奥秘）检定失败，卷轴化为尘埃 —— 法术没能施展，卷轴消耗掉。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"scroll\",\"name\":\"使用魔法装置：阅读卷轴\",\"activation\":\"free\",\"text\":\"掷智力（奥秘）检定决定二环及以上的卷轴能不能用。\",\"root\":[{\"kind\":\"number\",\"prompt\":\"使用魔法装置：这道卷轴记载的法术是几环？（戏法填 0）\",\"var\":\"lvl\",\"min\":0,\"max\":9,\"default\":0},{\"kind\":\"if\",\"when\":\"vars.lvl <= 1\",\"then\":[{\"kind\":\"note\",\"text\":\"使用魔法装置：戏法与一环的卷轴你可以稳定使用，直接用智力施展这道法术（法术效果照那道法术的数据结算，引擎不能替你从卷轴施法）。\"}],\"else\":[{\"kind\":\"check\",\"ability\":\"int\",\"skill\":\"奥秘\",\"dc\":\"10 + vars.lvl\",\"onSuccess\":[{\"kind\":\"note\",\"text\":\"使用魔法装置：智力（奥秘）检定通过，你可以用这道卷轴施展该法术（以智力为施法关键属性；用了记得把卷轴划掉）。\"}],\"onFail\":[{\"kind\":\"note\",\"text\":\"使用魔法装置：智力（奥秘）检定失败，卷轴化为尘埃 —— 法术没能施展，卷轴消耗掉。\"}]}]}]}]}"
+ },
+ {
+  "key": "XPHB:游荡者:摔绊（花费：1d6）:5",
+  "name": "摔绊",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "狡诈打击选项，花费 1d6 偷袭骰。偷袭骰减 1d6 由人手动处理（引擎无法减少偷袭骰），由人确认是否使用。仅对大型及以下目标生效；目标进行敏捷豁免（DC 为狡诈打击通用公式 8 + 敏捷调整值 + 熟练加值），失败则倒地，直到移除。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"trip\",\"label\":\"摔绊（花费：1d6）\",\"on\":\"attackHit\",\"role\":\"actor\",\"limit\":\"oncePerTurn\",\"when\":\"target.size != '巨型' && target.size != '超巨型' && ask('这次命中是否造成了偷袭伤害，并用 1d6 偷袭骰选择摔绊？')\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"8 + mod.dex + pb\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"XPHB:condition:倒地\",\"duration\":{\"manual\":true}}]}]}]}"
+ },
+ {
+  "key": "XPHB:游荡者:撕裂心智:17",
+  "name": "撕裂心智",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "用心灵之刃对生物造成偷袭伤害时，可迫使其进行感知豁免（DC 8 + 熟练 + 敏捷），失败则震慑 1 分钟；其回合结束时可重复豁免，成功即结束。「偷袭生效」按攻击条件近似（心灵之刃、灵巧或远程，且具有优势或 5 尺内有盟友），需人确认。每次长休一次；消耗三枚灵能骰（无需动作）可重置。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"shred\",\"label\":\"撕裂心智：感知豁免\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"after\",\"optional\":true,\"when\":\"attack.item == '心灵之刃' && (attack.finesse || attack.ranged) && (roll.adv || (allyWithin(target, 5, { exclude: [self], notCond: '失能' }) && !roll.disadv))\",\"cost\":[{\"resource\":\"撕裂心智\"}],\"do\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"8 + pb + mod.dex\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"XPHB:condition:震慑\",\"duration\":{\"minutes\":1,\"saveEnds\":{\"ability\":\"wis\",\"dc\":\"8 + source.pb + source.mod.dex\",\"at\":\"turnEnd\"}}}]}]}],\"actions\":[{\"id\":\"reset\",\"name\":\"撕裂心智（重置）\",\"activation\":\"free\",\"requires\":\"self.resource('撕裂心智') == 0\",\"cost\":[{\"resource\":\"灵能力量\",\"n\":3}],\"root\":[{\"kind\":\"resource\",\"id\":\"撕裂心智\",\"delta\":1}]}]}"
+ }
+]

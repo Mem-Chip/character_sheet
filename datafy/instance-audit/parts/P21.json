@@ -1,0 +1,454 @@
+[
+ {
+  "key": "XDMG:item:风暴巨人之力药水",
+  "name": "风暴巨人之力药水",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "饮用后 1 小时内力量属性值变为 29（若原本大于等于 29 则无效）。临时力量属性值改变需手动调整人物卡。",
+  "notes": [
+   "力量属性值变为 29（持续 1 小时；若原本力量已大于等于 29 则无效；需手动修改力量属性值与相关加值）"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"饮用风暴巨人之力药水\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"物品:风暴巨人之力药水\"}],\"root\":[{\"kind\":\"applyEffect\",\"template\":\"风暴巨人之力\",\"to\":\"self\"},{\"kind\":\"note\",\"text\":\"力量属性值变为 29（持续 1 小时；若原本力量已大于等于 29 则无效；需手动修改力量属性值与相关加值）\"}]}],\"effects\":{\"风暴巨人之力\":{\"duration\":{\"hours\":1},\"tags\":[\"magical\"],\"text\":\"力量属性值变为 29（若原本力量大于等于 29 则无效；需手动在人物卡调整）。\"}}}"
+ },
+ {
+  "key": "XDMG:item:浮空之靴",
+  "name": "浮空之靴",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "着装这双靴子期间，你可以对自身施放法术浮空术（专注至多10分钟，垂直上升至多20尺并悬浮）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"浮空之靴：浮空术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"concentration\":{\"minutes\":10},\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"template\":\"浮空术\"}]}],\"effects\":{\"浮空术\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"处于悬浮状态，垂直上升至多20尺。只能通过推拉固定表面来移动（视同攀爬）。可在自己回合改变高度至多20尺；法术终止时缓缓飘落到地面。\"}}}"
+ },
+ {
+  "key": "XDMG:item:复生权杖",
+  "name": "复生权杖",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "此权杖具有 5 充能。持握权杖期间，你可以从中施展医疗术（消耗 1 充能）或复生术（消耗 5 充能）。权杖在每日黎明时重获 1 已消耗的充能。当权杖充能耗尽时，投掷 1d20。若结果为 1，则权杖消失。",
+  "notes": [
+   "施展复生术：触碰一个死去不超过一个世纪的生物，使其复活（生命值回满，受复活惩罚）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"heal\",\"name\":\"复生权杖：医疗术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:复生权杖\",\"n\":1}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60,\"filter\":\"canSee(self, target)\"},\"root\":[{\"kind\":\"heal\",\"amount\":70,\"to\":\"target\"},{\"kind\":\"removeEffect\",\"match\":{\"key\":\"XPHB:condition:目盲\",\"name\":\"目盲\"},\"from\":\"target\"},{\"kind\":\"removeEffect\",\"match\":{\"key\":\"XPHB:condition:耳聋\",\"name\":\"耳聋\"},\"from\":\"target\"},{\"kind\":\"removeEffect\",\"match\":{\"key\":\"XPHB:condition:中毒\",\"name\":\"中毒\"},\"from\":\"target\"}]},{\"id\":\"resurrection\",\"name\":\"复生权杖：复生术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:复生权杖\",\"n\":5}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":5},\"root\":[{\"kind\":\"note\",\"text\":\"施展复生术：触碰一个死去不超过一个世纪的生物，使其复活（生命值回满，受复活惩罚）。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:干燥粉",
+  "name": "干燥粉",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "用操作动作将一把粉末洒在水面上，可将15尺立方的水变成弹珠大小的小球；洒在5尺内身体大部分由水组成的元素生物身上，须通过DC 13体质豁免，失败受10d6点暗蚀伤害，成功减半。粉末共有1d6+4把（数量与吸水小球需手动追踪）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"撒向水体生物\",\"activation\":\"action\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":5},\"root\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":13,\"onFail\":[{\"kind\":\"damage\",\"id\":\"dmg\",\"dice\":\"10d6\",\"type\":\"necrotic\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"dmg\",\"scale\":0.5}]}]}]}"
+ },
+ {
+  "key": "XDMG:item:公羊戒指",
+  "name": "公羊戒指",
+  "by": "AI",
+  "automation": "full",
+  "level": null,
+  "text": "具有3发充能。以一个魔法动作消耗1至3充能对60尺内可见生物进行远程法术攻击（+7命中），每消耗1充能造成2d10力场伤害并推离5尺；也可消耗1至3充能尝试破坏物体（力量检定每充能+5加值）。",
+  "notes": [
+   "消耗1至3充能尝试破坏60尺内可见未被携带的非魔法物体，戒指进行力量检定，每消耗1充能获得+5加值（手动扣减充能并投骰）。"
+  ],
+  "data": "{\"actions\":[{\"id\":\"ram-1\",\"name\":\"公羊戒指：公羊击（1充能）\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:公羊戒指\",\"n\":1}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"attack\",\"bonus\":7,\"attack\":{\"ranged\":true,\"spell\":true},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"2d10\",\"type\":\"力场\"},{\"kind\":\"move\",\"mode\":\"push\",\"ft\":5}]}]},{\"id\":\"ram-2\",\"name\":\"公羊戒指：公羊击（2充能）\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:公羊戒指\",\"n\":2}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"attack\",\"bonus\":7,\"attack\":{\"ranged\":true,\"spell\":true},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"4d10\",\"type\":\"力场\"},{\"kind\":\"move\",\"mode\":\"push\",\"ft\":10}]}]},{\"id\":\"ram-3\",\"name\":\"公羊戒指：公羊击（3充能）\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:公羊戒指\",\"n\":3}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"attack\",\"bonus\":7,\"attack\":{\"ranged\":true,\"spell\":true},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"6d10\",\"type\":\"力场\"},{\"kind\":\"move\",\"mode\":\"push\",\"ft\":15}]}]},{\"id\":\"break-object\",\"name\":\"公羊戒指：破坏物体\",\"activation\":\"action\",\"root\":[{\"kind\":\"note\",\"text\":\"消耗1至3充能尝试破坏60尺内可见未被携带的非魔法物体，戒指进行力量检定，每消耗1充能获得+5加值（手动扣减充能并投骰）。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:光彩夺目宝石",
+  "name": "光彩夺目宝石",
+  "by": "AI",
+  "automation": "full",
+  "level": null,
+  "text": "具有50发充能。持握时可用魔法动作使用三个命令语之一：发出30尺光照（不消耗充能）；消耗1充能对60尺内生物发光束，DC 15体质豁免失败目盲1分钟（每回合结束可重复豁免）；消耗5充能对30尺锥状区域释放强光，区域内生物同样判定目盲。充能耗尽后变为价值50gp的非魔法宝石。",
+  "notes": [
+   "宝石发出亮光，提供 30 尺明亮光照与额外 30 尺微光光照。附赠动作再次说出命令语或使用其他能力时终止。"
+  ],
+  "data": "{\"actions\":[{\"id\":\"light\",\"name\":\"第一命令语：发光\",\"activation\":\"action\",\"root\":[{\"kind\":\"note\",\"text\":\"宝石发出亮光，提供 30 尺明亮光照与额外 30 尺微光光照。附赠动作再次说出命令语或使用其他能力时终止。\"}]},{\"id\":\"beam\",\"name\":\"第二命令语：耀眼光束\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:光彩夺目宝石\",\"n\":1}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60,\"filter\":\"canSee(self, target)\"},\"root\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":15,\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"XPHB:condition:目盲\",\"duration\":{\"minutes\":1,\"saveEnds\":{\"ability\":\"con\",\"dc\":15,\"at\":\"turnEnd\"}}}]}]},{\"id\":\"cone\",\"name\":\"第三命令语：刺眼锥光\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:光彩夺目宝石\",\"n\":5}],\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"cone\",\"length\":30}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":15,\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"XPHB:condition:目盲\",\"duration\":{\"minutes\":1,\"saveEnds\":{\"ability\":\"con\",\"dc\":15,\"at\":\"turnEnd\"}}}]}]}]}]}"
+ },
+ {
+  "key": "XDMG:item:光辉头盔",
+  "name": "光辉头盔",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "头盔镶嵌钻石、红宝石、火欧泊与欧泊，各有不同效果；有红宝石时具火焰抗性；法术豁免DC 18。受到法术火伤时可能引爆。宝石数量及部分被动需手动管理。",
+  "notes": [
+   "令武器包裹烈焰，命中时额外造成 1d6 火焰伤害。附赠动作熄灭。",
+   "消耗一颗欧泊并摧毁，施展昼明术。",
+   "消耗一颗钻石并摧毁，施展虹光喷射（DC 18 敏捷豁免）。",
+   "消耗一颗红宝石并摧毁，施展火墙术（DC 18 敏捷豁免）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"flame\",\"name\":\"火欧泊烈焰\",\"activation\":\"action\",\"root\":[{\"kind\":\"note\",\"text\":\"令武器包裹烈焰，命中时额外造成 1d6 火焰伤害。附赠动作熄灭。\"}]},{\"id\":\"daylight\",\"name\":\"施展昼明术\",\"activation\":\"action\",\"root\":[{\"kind\":\"note\",\"text\":\"消耗一颗欧泊并摧毁，施展昼明术。\"}]},{\"id\":\"fireball\",\"name\":\"施展火球术\",\"activation\":\"action\",\"targeting\":{\"type\":\"area\",\"range\":150,\"area\":{\"shape\":\"sphere\",\"radius\":20}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":18,\"onFail\":[{\"kind\":\"damage\",\"id\":\"fb\",\"dice\":\"8d6\",\"type\":\"fire\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"fb\",\"scale\":0.5}]}]}]},{\"id\":\"prismatic_spray\",\"name\":\"施展虹光喷射\",\"activation\":\"action\",\"root\":[{\"kind\":\"note\",\"text\":\"消耗一颗钻石并摧毁，施展虹光喷射（DC 18 敏捷豁免）。\"}]},{\"id\":\"wall_of_fire\",\"name\":\"施展火墙术\",\"activation\":\"action\",\"root\":[{\"kind\":\"note\",\"text\":\"消耗一颗红宝石并摧毁，施展火墙术（DC 18 敏捷豁免）。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:鬼婆之眼",
+  "name": "鬼婆之眼",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "佩戴或持握期间可消耗 1 充能施展黑暗视觉（仅自身）或识破隐形。集会传感器由鬼婆远距离专注视物，属叙事机制。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"darkvision\",\"name\":\"黑暗视觉\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:鬼婆之眼\",\"n\":1}],\"root\":[{\"kind\":\"applyEffect\",\"template\":\"黑暗视觉\",\"to\":\"self\"}]},{\"id\":\"seeInvisibility\",\"name\":\"识破隐形\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:鬼婆之眼\",\"n\":1}],\"root\":[{\"kind\":\"applyEffect\",\"template\":\"识破隐形\",\"to\":\"self\"}]}],\"effects\":{\"黑暗视觉\":{\"duration\":{\"hours\":8},\"text\":\"获得 150 尺黑暗视觉（感官与探索效果由人处理）\"},\"识破隐形\":{\"duration\":{\"hours\":1},\"text\":\"能看见任何处于隐形状态的生物和物件，如同其正常可见一样；并能看见以太位面\"}}}"
+ },
+ {
+  "key": "XDMG:item:黑暗碎片护符",
+  "name": "黑暗碎片护符",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "可作为魔契师法术法器。此外，你可以使用一个动作尝试施展一道未知的魔契师戏法（施法时间须为1动作），需进行一次DC 10的智力（奥秘）检定；成功则施展该法术，失败则动作浪费。无论成功与否，完成长休前不能再次使用。",
+  "notes": [
+   "检定成功：施展所选魔契师戏法",
+   "检定失败：施法失败，动作浪费"
+  ],
+  "data": "{\"resources\":[{\"id\":\"物品次数:黑暗碎片护符\",\"name\":\"黑暗碎片护符\",\"formula\":1,\"recovery\":\"long\"}],\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"黑暗碎片护符：尝试施展未知戏法\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品次数:黑暗碎片护符\"}],\"root\":[{\"kind\":\"check\",\"ability\":\"int\",\"skill\":\"奥秘\",\"dc\":10,\"onSuccess\":[{\"kind\":\"note\",\"text\":\"检定成功：施展所选魔契师戏法\"}],\"onFail\":[{\"kind\":\"note\",\"text\":\"检定失败：施法失败，动作浪费\"}]}]}]}"
+ },
+ {
+  "key": "XDMG:item:黑刃",
+  "name": "黑刃",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "+3 巨剑。命中亡灵时自身受到 1d10 暗蚀伤害，亡灵恢复 1d10 生命值；若该暗蚀伤害使你降至 0，灵魂将被黑刃吞噬。持握时免疫魅惑和恐慌，具有 30 尺盲视。将非亡灵非构装生物降至 0 时吞噬其灵魂（只能被祈愿术复活），并获得等于该生物生命值上限的临时生命值。黑刃次日黎明前可施展一次加速术（无需专注，持续 1 分钟）。固定加值已在人物卡处理。",
+  "notes": [],
+  "data": "{\"resources\":[{\"id\":\"物品次数:黑刃:加速术\",\"name\":\"黑刃：加速术\",\"formula\":1,\"recovery\":\"long\"}],\"automation\":\"partial\",\"actions\":[{\"id\":\"haste\",\"name\":\"黑刃：加速术\",\"activation\":\"free\",\"cost\":[{\"resource\":\"物品次数:黑刃:加速术\"}],\"root\":[{\"kind\":\"applyEffect\",\"template\":\"加速\",\"to\":\"self\",\"duration\":{\"minutes\":1}}]}],\"effects\":{\"加速\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"黑刃施展的加速术（无需专注）。速度翻倍；AC+2；敏捷豁免具有优势；每回合获得一个额外动作（仅用于发动一次攻击、或疾走、撤离、躲藏和操作动作）。法术终止时陷入失能且速度为 0 直至下一回合结束。\",\"statics\":[{\"kind\":\"speed\",\"bonus\":\"self.speed\"},{\"kind\":\"ac\",\"bonus\":2}],\"rollMods\":[{\"on\":{\"kind\":\"save\",\"ability\":\"dex\"},\"who\":\"bearer\",\"op\":\"adv\",\"label\":\"加速术：敏捷豁免优势\"}],\"triggers\":[{\"id\":\"haste-action\",\"label\":\"加速术：额外动作\",\"on\":\"turnStarted\",\"role\":\"actor\",\"do\":[{\"kind\":\"economy\",\"action\":1}]}],\"onEnd\":[{\"kind\":\"applyEffect\",\"template\":\"加速倦意\",\"to\":\"self\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":1}}}]},\"加速倦意\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"法术终止时泛起倦意，陷入失能并且速度为 0，持续至下一回合结束。\",\"implies\":[\"XPHB:condition:失能\"],\"statics\":[{\"kind\":\"speedSet\",\"value\":0}]}}}"
+ },
+ {
+  "key": "XDMG:item:轰天震雷鲁特琴",
+  "name": "轰天震雷鲁特琴",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "作为魔法短棒持用，命中时额外造成 2d8 雷鸣伤害。若为吟游诗人，发动攻击检定时可用魅力调整值代替力量调整值（手动调整）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"extra-damage\",\"label\":\"轰天震雷鲁特琴：附加雷鸣伤害\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"do\":[{\"kind\":\"addDamage\",\"dice\":\"2d8\",\"type\":\"thunder\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:虹光法袍",
+  "name": "虹光法袍",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "具有3发充能。以一个魔法动作消耗1充能，令法袍散发耀眼色彩持续至你下个回合结束：发出30尺明亮光照与额外30尺微光光照；能看见你的生物对你发动的攻击检定具有劣势；30尺明亮光照内能看见你的生物须通过DC 15感知豁免否则陷入震慑直至效应结束（周围生物豁免与震慑需手动结算）。",
+  "notes": [
+   "法袍散发耀眼色彩，持续至你下个回合结束。提供30尺明亮光照与30尺微光光照；能看见你的生物对你攻击检定具有劣势；处于30尺明亮光照内且能看见你的生物须进行DC 15感知豁免，失败陷入震慑直至效应终止。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"虹光法袍：耀眼色彩\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:虹光法袍\",\"n\":1}],\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"template\":\"耀眼色彩\",\"to\":\"self\"},{\"kind\":\"note\",\"text\":\"法袍散发耀眼色彩，持续至你下个回合结束。提供30尺明亮光照与30尺微光光照；能看见你的生物对你攻击检定具有劣势；处于30尺明亮光照内且能看见你的生物须进行DC 15感知豁免，失败陷入震慑直至效应终止。\"}]}],\"effects\":{\"耀眼色彩\":{\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":1}},\"text\":\"能看见你的生物对你发动的攻击检定具有劣势。\",\"rollMods\":[{\"on\":{\"kind\":\"attack\"},\"who\":\"against\",\"when\":\"canSee(attacker, self)\",\"op\":\"disadv\",\"label\":\"虹光法袍：攻击劣势\"}]}}}"
+ },
+ {
+  "key": "XDMG:item:滑溜之油",
+  "name": "滑溜之油",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "一瓶油涂抹在中小体型生物身上需耗时 10 分钟（体型更大需多瓶），令其获得行动自如效应持续 8 小时。亦可以魔法动作泼洒于地面 10 尺方状区域，复现油腻术效应持续 8 小时。",
+  "notes": [
+   "地面覆盖 10 尺方状区域油腻术效应，持续 8 小时。区域为困难地形（引擎自动多扣移动力），进入或在其中结束回合须敏捷豁免对抗倒地；若提前被清除请手动删除区域。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"apply\",\"name\":\"涂抹滑溜之油\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品:滑溜之油\"}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"touch\"},\"root\":[{\"kind\":\"applyEffect\",\"template\":\"行动自如\",\"to\":\"target\"}]},{\"id\":\"splash\",\"name\":\"泼洒滑溜之油\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品:滑溜之油\"}],\"targeting\":{\"type\":\"area\",\"range\":10,\"area\":{\"shape\":\"cube\",\"size\":10}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"XPHB:condition:倒地\"}]}]},{\"kind\":\"zone\",\"on\":[\"enter\",\"turnEnd\"],\"affects\":\"all\",\"oncePerTurn\":false,\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"XPHB:condition:倒地\"}]}],\"name\":\"油腻术\",\"difficult\":true},{\"kind\":\"note\",\"text\":\"地面覆盖 10 尺方状区域油腻术效应，持续 8 小时。区域为困难地形（引擎自动多扣移动力），进入或在其中结束回合须敏捷豁免对抗倒地；若提前被清除请手动删除区域。\"}]}],\"effects\":{\"行动自如\":{\"duration\":{\"hours\":8},\"statics\":[{\"kind\":\"conditionImmune\",\"values\":[\"麻痹\",\"束缚\"]}],\"flags\":{\"ignores\":[\"difficultTerrain\"]},\"text\":\"持续 8 小时。移动不受困难地形影响（引擎自动忽略困难地形），免疫麻痹与束缚状态，任何法术或魔法效应不能降低其速度，获得等同于速度的游泳速度，可花费 5 尺移动力挣脱受擒或非魔法束缚物。\"}}}"
+ },
+ {
+  "key": "XDMG:item:唤鼠乐笙",
+  "name": "唤鼠乐笙",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "携带期间老鼠与巨鼠对你态度为冷漠。具 3 充能。使用魔法动作演奏乐笙并以附赠动作消耗 1~3 充能，周围半里内若有足够老鼠每消耗 1 充能召唤 1 组鼠群（召唤物手动处理）。演奏期间，未受控鼠群进入周边 30 尺内须进行 DC 15 感知豁免，失败则对你和盟友保持友好并遵从命令。",
+  "notes": [
+   "消耗 1 充能召唤 1 组鼠群（半里内需有足够老鼠，集群向音乐移动）。演奏期间进入 30 尺内的未受控鼠群须进行 DC 15 感知豁免，失败则友好并遵从命令。召唤与控制细节由 DM/玩家手动处理。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"唤鼠乐笙：演奏与召唤\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:唤鼠乐笙\",\"n\":1}],\"root\":[{\"kind\":\"note\",\"text\":\"消耗 1 充能召唤 1 组鼠群（半里内需有足够老鼠，集群向音乐移动）。演奏期间进入 30 尺内的未受控鼠群须进行 DC 15 感知豁免，失败则友好并遵从命令。召唤与控制细节由 DM/玩家手动处理。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:唤鱼三叉戟",
+  "name": "唤鱼三叉戟",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "消耗 1 充能对 60 尺内一只具有游泳速度的野兽施展支配野兽（感知豁免 DC 15）。目标豁免失败陷入魅惑并受支配，专注至多 1 分钟；每次受伤害时可重复 DC 15 豁免。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"dominate-beast\",\"name\":\"唤鱼三叉戟：支配野兽\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:唤鱼三叉戟\",\"n\":1}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60,\"filter\":\"target.type == '野兽'\"},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":15,\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"唤鱼三叉戟：支配野兽\",\"to\":\"target\"}]}]}],\"effects\":{\"唤鱼三叉戟：支配野兽\":{\"implies\":[\"XPHB:condition:魅惑\"],\"triggers\":[{\"id\":\"damage-save\",\"label\":\"支配野兽：受伤重复豁免\",\"on\":\"damageTaken\",\"role\":\"target\",\"window\":\"after\",\"when\":\"damage.amount > 0\",\"do\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":15,\"onSuccess\":[{\"kind\":\"removeEffect\",\"from\":\"self\",\"match\":{\"name\":\"唤鱼三叉戟：支配野兽\"}}]}]}]}}}"
+ },
+ {
+  "key": "XDMG:item:秽暗之书",
+  "name": "秽暗之书",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "非恶魔非亡灵生物调谐需进行 DC 17 魅力豁免，失败转变为幼虫魔。研读80小时后获得：属性值调整已在人物卡处理；免疫力竭状态；回忆邪恶学识的智力检定具有优势；以魔法动作诵读秽恶灵言（自身受 1d12 心灵伤害，周围 15 尺内每个非恶魔非亡灵生物受 3d6 心灵伤害）；施展法术（豁免 DC 18，每个法术次日黎明前限一次）：活化死尸、死亡法阵、支配怪物、死亡一指。",
+  "notes": [
+   "恶魔与亡灵不受秽恶灵言的心灵伤害。",
+   "施展活化死尸。直至次日黎明前无法再次施展。",
+   "死亡一指：若目标类人生物被杀死，在施法者下一回合开始时将其唤起为一只受控丧尸。"
+  ],
+  "data": "{\"resources\":[{\"id\":\"物品次数:秽暗之书:活化死尸\",\"name\":\"秽暗之书：活化死尸\",\"formula\":1,\"recovery\":\"long\"},{\"id\":\"物品次数:秽暗之书:死亡法阵\",\"name\":\"秽暗之书：死亡法阵\",\"formula\":1,\"recovery\":\"long\"},{\"id\":\"物品次数:秽暗之书:支配怪物\",\"name\":\"秽暗之书：支配怪物\",\"formula\":1,\"recovery\":\"long\"},{\"id\":\"物品次数:秽暗之书:死亡一指\",\"name\":\"秽暗之书：死亡一指\",\"formula\":1,\"recovery\":\"long\"}],\"automation\":\"partial\",\"actions\":[{\"id\":\"dark-speech\",\"name\":\"秽暗之书：秽恶灵言\",\"activation\":\"action\",\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"emanation\",\"radius\":15}},\"root\":[{\"kind\":\"damage\",\"dice\":\"1d12\",\"type\":\"心灵\",\"to\":\"self\"},{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"damage\",\"dice\":\"3d6\",\"type\":\"心灵\"}]},{\"kind\":\"note\",\"text\":\"恶魔与亡灵不受秽恶灵言的心灵伤害。\"}]},{\"id\":\"animate-dead\",\"name\":\"秽暗之书：活化死尸\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品次数:秽暗之书:活化死尸\"}],\"root\":[{\"kind\":\"note\",\"text\":\"施展活化死尸。直至次日黎明前无法再次施展。\"}]},{\"id\":\"circle-of-death\",\"name\":\"秽暗之书：死亡法阵\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品次数:秽暗之书:死亡法阵\"}],\"targeting\":{\"type\":\"area\",\"range\":150,\"area\":{\"shape\":\"sphere\",\"radius\":60}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":18,\"onFail\":[{\"kind\":\"damage\",\"id\":\"d\",\"dice\":\"8d8\",\"type\":\"暗蚀\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"d\",\"scale\":0.5}]}]}]},{\"id\":\"dominate-monster\",\"name\":\"秽暗之书：支配怪物\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品次数:秽暗之书:支配怪物\"}],\"concentration\":{\"hours\":1},\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60,\"filter\":\"canSee(self, target)\"},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":18,\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"支配怪物\"}]}]},{\"id\":\"finger-of-death\",\"name\":\"秽暗之书：死亡一指\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品次数:秽暗之书:死亡一指\"}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60,\"filter\":\"canSee(self, target)\"},\"root\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":18,\"onFail\":[{\"kind\":\"damage\",\"id\":\"d\",\"dice\":\"7d8 + 30\",\"type\":\"暗蚀\"},{\"kind\":\"note\",\"text\":\"死亡一指：若目标类人生物被杀死，在施法者下一回合开始时将其唤起为一只受控丧尸。\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"d\",\"scale\":0.5}]}]}],\"effects\":{\"支配怪物\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"目标陷入魅惑。施法者能与其进行心灵感应并下达命令（无需动作）。受到伤害时可重掷感知豁免。\",\"implies\":[\"XPHB:condition:魅惑\"]}},\"rollMods\":[{\"on\":{\"kind\":\"check\",\"ability\":\"int\"},\"who\":\"bearer\",\"op\":\"adv\",\"label\":\"秽暗之书：回忆邪恶学识智力检定优势\"}]}"
+ },
+ {
+  "key": "XDMG:item:活化盾",
+  "name": "活化盾",
+  "by": "审后补",
+  "automation": "partial",
+  "level": null,
+  "text": "持握此盾牌期间，你可以用附赠动作使其活化1分钟。盾牌悬浮保护你（如同持用它），同时解放你的双手。陷入失能、死亡或以附赠动作提前终止。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"活化盾：活化盾牌\",\"activation\":\"bonus\",\"root\":[{\"kind\":\"applyEffect\",\"template\":\"活化盾：活化\",\"duration\":{\"minutes\":1}}]}],\"effects\":{\"活化盾：活化\":{\"name\":\"活化盾：活化\",\"statics\":[],\"flags\":null,\"duration\":{\"minutes\":1}}},\"triggers\":[{\"on\":\"reducedTo0\",\"window\":\"after\",\"role\":\"actor\",\"do\":[{\"kind\":\"removeEffect\",\"template\":\"活化盾：活化\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:活力药水",
+  "name": "活力药水",
+  "by": "审后补",
+  "automation": "partial",
+  "level": null,
+  "text": "以附赠动作饮下药水，移除你具有的任何力竭等级并结束中毒状态。接下来的 24 小时内消耗生命值骰恢复生命值时直接取最大值（生命骰取最大值需短休时手动处理或由掷骰修正生效）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"root\":[{\"kind\":\"removeEffect\",\"template\":\"exhaustion\"},{\"kind\":\"removeEffect\",\"template\":\"poisoned\"},{\"kind\":\"applyEffect\",\"template\":\"活力药水\"}]}],\"effects\":{\"活力药水\":{\"duration\":{\"hours\":24},\"tags\":[\"magical\"],\"text\":\"消耗生命值骰来恢复生命值时直接取用最大值。\",\"rollMods\":[{\"on\":{\"kind\":\"heal\"},\"who\":\"bearer\",\"op\":\"maxDice\",\"label\":\"活力药水：生命骰治疗最大值\"}]}}}"
+ },
+ {
+  "key": "XDMG:item:火巨灵囚瓶",
+  "name": "火巨灵囚瓶",
+  "by": "审后补",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个魔法动作打开瓶塞，在你的回合结束时，一名火巨灵出现在周围 30 尺内未占据空间。首次打开时掷 1d10 决定效应（1：攻击 5 轮后消失；2-9：服从命令 1 小时后回瓶封印 24 小时，至多打开 3 次，第 4 次逃走；10：施展一次祈愿术后消失）。召唤与效应需人工处理。",
+  "notes": [],
+  "data": "{\"resources\":[{\"id\":\"物品次数:火巨灵囚瓶\",\"name\":\"火巨灵囚瓶\",\"formula\":1,\"recovery\":\"long\"}],\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"targeting\":{\"type\":\"point\",\"range\":30},\"root\":[]}]}"
+ },
+ {
+  "key": "XDMG:item:火巨人之力药水",
+  "name": "火巨人之力药水",
+  "by": "审后补",
+  "automation": "partial",
+  "level": null,
+  "text": "饮用后 1 小时内力量属性值变为 25（若原本大于等于 25 则无效）。临时力量属性值改变需手动调整人物卡。",
+  "notes": [
+   "力量属性值变为 25（持续 1 小时；若原本力量已大于等于 25 则无效；需手动修改力量属性值与相关加值）"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"饮用火巨人之力药水\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"物品:火巨人之力药水\"}],\"root\":[{\"kind\":\"applyEffect\",\"template\":\"火巨人之力\",\"to\":\"self\"},{\"kind\":\"note\",\"text\":\"力量属性值变为 25（持续 1 小时；若原本力量已大于等于 25 则无效；需手动修改力量属性值与相关加值）\"}]}],\"effects\":{\"火巨人之力\":{\"name\":\"火巨人之力\",\"statics\":[],\"flags\":null,\"duration\":{\"hours\":1}}}}"
+ },
+ {
+  "key": "XDMG:item:火球项链",
+  "name": "火球项链",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以魔法动作取下1颗或多颗珠子投掷至多60尺，在末端引爆造成3环火球术（DC 15敏捷豁免，8d6火焰伤害，成功半数）。每额外投掷1颗珠子伤害增加1d6（至多12d6）。珠子为消耗品，投掷后消失，消耗请手动在物品中扣除。",
+  "notes": [
+   "珠子投掷后永久消耗，请手动在物品中扣除投掷的珠子数量。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"投掷火球珠\",\"activation\":\"action\",\"targeting\":{\"type\":\"area\",\"range\":60,\"area\":{\"shape\":\"sphere\",\"radius\":20}},\"root\":[{\"kind\":\"number\",\"prompt\":\"选择投掷的珠子数量（1~5颗，伤害为8d6~12d6）\",\"var\":\"beads\",\"min\":1,\"max\":5,\"default\":1},{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":15,\"onFail\":[{\"kind\":\"damage\",\"id\":\"fire\",\"dice\":\"(7 + vars.beads)d6\",\"type\":\"火焰\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"fire\",\"scale\":0.5}]}]},{\"kind\":\"note\",\"text\":\"珠子投掷后永久消耗，请手动在物品中扣除投掷的珠子数量。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:火焰法杖",
+  "name": "火焰法杖",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "持握法杖期间具有火焰伤害抗性（人物卡处理）。具有10充能，每日黎明重获1d6+4充能，充能耗尽时掷d20出1摧毁。\n持握期间可消耗充能施展以下法术（使用自身法术DC）：\n- 燃烧之手（1充能）\n- 火球术（3充能）\n- 火墙术（4充能）",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"burning-hands\",\"name\":\"火焰法杖：燃烧之手\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:火焰法杖\",\"n\":1}],\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"cone\",\"size\":15}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"bh\",\"dice\":\"3d6\",\"type\":\"火焰\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"bh\",\"scale\":0.5}]}]}]},{\"id\":\"fireball\",\"name\":\"火焰法杖：火球术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:火焰法杖\",\"n\":3}],\"targeting\":{\"type\":\"area\",\"range\":150,\"area\":{\"shape\":\"sphere\",\"radius\":20}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"fb\",\"dice\":\"8d6\",\"type\":\"火焰\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"fb\",\"scale\":0.5}]}]}]},{\"id\":\"wall-of-fire\",\"name\":\"火焰法杖：火墙术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:火焰法杖\",\"n\":4}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"area\",\"range\":120,\"area\":{\"shape\":\"line\",\"length\":60,\"width\":1}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"fire\",\"dice\":\"5d8\",\"type\":\"火焰\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"fire\",\"scale\":0.5}]}]}]}]}"
+ },
+ {
+  "key": "XDMG:item:火焰抗性药水",
+  "name": "火焰抗性药水",
+  "by": "审后补",
+  "automation": "partial",
+  "level": null,
+  "text": "",
+  "notes": [],
+  "data": "{\"actions\":[{\"id\":\"use\",\"name\":\"饮用火焰抗性药水\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"物品:火焰抗性药水\"}],\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"inline\":{\"name\":\"火焰抗性药水\",\"duration\":{\"hours\":1},\"statics\":[{\"kind\":\"resist\",\"values\":[\"火焰\"]}]}}]}],\"effects\":{\"火焰抗性\":{\"name\":\"火焰抗性\",\"statics\":[],\"flags\":null,\"duration\":{\"hours\":1}}},\"automation\":\"partial\"}"
+ },
+ {
+  "key": "XDMG:item:火焰吐息药水",
+  "name": "火焰吐息药水",
+  "by": "AI",
+  "automation": "full",
+  "level": null,
+  "text": "以附赠动作饮用此药水，获得喷吐火焰的能力（1 小时内至多喷吐 3 次）。喷吐火焰为附赠动作，指定 30 尺内一名目标进行 DC 13 敏捷豁免，失败受 4d6 火焰伤害，成功半数伤害。",
+  "notes": [
+   "饮用后 1 小时内可执行附赠动作喷吐火焰，至多喷吐 3 次。"
+  ],
+  "data": "{\"resources\":[{\"id\":\"物品次数:火焰吐息药水\",\"name\":\"火焰吐息\",\"formula\":3,\"recovery\":\"long\"}],\"actions\":[{\"id\":\"use\",\"name\":\"饮用火焰吐息药水\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"物品:火焰吐息药水\"}],\"root\":[{\"kind\":\"note\",\"text\":\"饮用后 1 小时内可执行附赠动作喷吐火焰，至多喷吐 3 次。\"}]},{\"id\":\"breath\",\"name\":\"火焰吐息\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"物品次数:火焰吐息药水\",\"n\":1}],\"targeting\":{\"type\":\"creature\",\"range\":30},\"root\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":13,\"onFail\":[{\"kind\":\"damage\",\"id\":\"fire\",\"dice\":\"4d6\",\"type\":\"火焰\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"fire\",\"scale\":0.5}]}]}]}"
+ },
+ {
+  "key": "XDMG:item:急速弯刀",
+  "name": "急速弯刀",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "在你自己的每个回合中可以用一个附赠动作以该弯刀发动一次攻击。+2 命中与伤害加值已在人物卡处理。",
+  "notes": [
+   "以附赠动作使用急速弯刀发动一次攻击"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"急速攻击\",\"activation\":\"bonus\",\"requires\":\"turn.isMine\",\"root\":[{\"kind\":\"note\",\"text\":\"以附赠动作使用急速弯刀发动一次攻击\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:加速药水",
+  "name": "加速药水",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以附赠动作饮下药水，获得加速术效应持续 1 分钟（无需专注），且效应结束时不会泛起倦意。速度翻倍，AC+2，敏捷豁免优势，每回合获得一个额外动作（仅限攻击/疾走/撤离/躲藏/操作）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"饮用加速药水\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"物品:加速药水\"}],\"root\":[{\"kind\":\"applyEffect\",\"template\":\"加速药水\",\"to\":\"self\"}]}],\"effects\":{\"加速药水\":{\"duration\":{\"minutes\":1},\"tags\":[\"magical\"],\"text\":\"速度翻倍；AC+2；敏捷豁免具有优势；每回合获得一个额外动作（仅用于发动一次攻击、或疾走、撤离、躲藏和操作动作）。\",\"statics\":[{\"kind\":\"speed\",\"bonus\":\"self.speed\"},{\"kind\":\"ac\",\"bonus\":2}],\"rollMods\":[{\"on\":{\"kind\":\"save\",\"ability\":\"dex\"},\"who\":\"bearer\",\"op\":\"adv\",\"label\":\"加速药水：敏捷豁免优势\"}],\"triggers\":[{\"id\":\"haste-action\",\"label\":\"加速药水：额外动作\",\"on\":\"turnStarted\",\"role\":\"actor\",\"do\":[{\"kind\":\"economy\",\"action\":1}]}]}}}"
+ },
+ {
+  "key": "XDMG:item:健康灵药",
+  "name": "健康灵药",
+  "by": "AI",
+  "automation": "full",
+  "level": null,
+  "text": "当你饮下这瓶药水时，治愈你身上的所有魔法性疫病，并结束你身上的目盲、耳聋、麻痹与中毒状态。",
+  "notes": [
+   "治愈身上的所有魔法性疫病。"
+  ],
+  "data": "{\"actions\":[{\"id\":\"use\",\"name\":\"饮用健康灵药\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"物品:健康灵药\"}],\"root\":[{\"kind\":\"removeEffect\",\"match\":{\"key\":\"XPHB:condition:目盲\",\"name\":\"目盲\"},\"from\":\"self\"},{\"kind\":\"removeEffect\",\"match\":{\"key\":\"XPHB:condition:耳聋\",\"name\":\"耳聋\"},\"from\":\"self\"},{\"kind\":\"removeEffect\",\"match\":{\"key\":\"XPHB:condition:麻痹\",\"name\":\"麻痹\"},\"from\":\"self\"},{\"kind\":\"removeEffect\",\"match\":{\"key\":\"XPHB:condition:中毒\",\"name\":\"中毒\"},\"from\":\"self\"},{\"kind\":\"note\",\"text\":\"治愈身上的所有魔法性疫病。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:江湖骗子披风",
+  "name": "江湖骗子披风",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以魔法动作施展任意门（传送至多500尺，可携带5尺内一名自愿生物）。出发点与落点各留下一团轻度遮蔽的烟雾，于下一回合结束时消散。直至次日黎明前无法再次使用。",
+  "notes": [
+   "任意门：传送至多500尺。可携带5尺内一名自愿生物。消失处与出现处各留下一团轻度遮蔽的烟雾，在你的下个回合结束时消散。"
+  ],
+  "data": "{\"resources\":[{\"id\":\"物品次数:江湖骗子披风\",\"name\":\"江湖骗子披风\",\"formula\":1,\"recovery\":\"long\"}],\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"江湖骗子披风：任意门\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"resource\":\"物品次数:江湖骗子披风\"}],\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"move\",\"mode\":\"teleport\",\"ft\":500},{\"kind\":\"note\",\"text\":\"任意门：传送至多500尺。可携带5尺内一名自愿生物。消失处与出现处各留下一团轻度遮蔽的烟雾，在你的下个回合结束时消散。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:节肢斗篷",
+  "name": "节肢斗篷",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "着装此斗篷期间，你获得对毒素伤害的抗性，获得等同于步行速度的攀爬速度，且不会被蛛网困住。每日黎明前可以使用动作施展一次蛛网术（DC 13），其创造的蛛网覆盖区域为普通蛛网术的两倍（专注至多 1 小时）。",
+  "notes": [],
+  "data": "{\"resources\":[{\"id\":\"物品次数:节肢斗篷\",\"name\":\"节肢斗篷\",\"formula\":1,\"recovery\":\"long\"}],\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"节肢斗篷：蛛网术\",\"activation\":\"action\",\"tags\":[\"magical\",\"spell\"],\"cost\":[{\"resource\":\"物品次数:节肢斗篷\"}],\"concentration\":{\"hours\":1},\"targeting\":{\"type\":\"area\",\"range\":60,\"area\":{\"shape\":\"cube\",\"size\":40}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":13,\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"蛛网束缚\"}]}]}]}],\"effects\":{\"蛛网束缚\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:束缚\"],\"text\":\"陷入束缚状态。可用动作进行对抗 DC 13 的力量（运动）检定，成功则挣脱束缚。\"}}}"
+ },
+ {
+  "key": "XDMG:item:劲敌硬币",
+  "name": "劲敌硬币",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "使用一个魔法动作抛掷硬币并消耗 1 发充能。掷一枚任意骰子决定硬币朝向：正面（偶数）令 60 尺内可见生物进行 DC 13 感知豁免，失败受 2d4 心灵伤害并在其下一回合结束前进行的下一次攻击检定具有劣势，成功受半伤；背面（奇数）自身受到 1d4 心灵伤害。每日黎明重获充能。",
+  "notes": [
+   "目标在其下一回合结束前进行的下一次攻击检定具有劣势"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"抛掷劲敌硬币\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:劲敌硬币\"}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"choose\",\"prompt\":\"抛掷硬币结果（偶数正面，奇数背面）\",\"options\":[{\"label\":\"正面（偶数）：目标 DC 13 感知豁免\",\"do\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":13,\"onFail\":[{\"kind\":\"damage\",\"id\":\"rc\",\"dice\":\"2d4\",\"type\":\"心灵\"},{\"kind\":\"note\",\"text\":\"目标在其下一回合结束前进行的下一次攻击检定具有劣势\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"rc\",\"scale\":0.5}]}]},{\"label\":\"背面（奇数）：自身受到 1d4 心灵伤害\",\"do\":[{\"kind\":\"damage\",\"dice\":\"1d4\",\"type\":\"心灵\",\"to\":\"self\"}]}]}]}]}"
+ },
+ {
+  "key": "XDMG:item:惊异魔杖",
+  "name": "惊异魔杖",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "具有7充能。每日黎明重获1d6+1充能，充能耗尽时掷d20出1摧毁。\n以动作消耗1充能，选择120尺内一点作为源点，投掷 1d100 产生惊异魔杖效应表中的随机法术或魔法效应（法术豁免 DC 15，射程不足120尺的变为120尺）。详见效应表。",
+  "notes": [
+   "在120尺内选择一点，投掷 1d100 决定效应（豁免 DC 15）：\n01-20：掷1d10施展法术（1-2黑暗术、3-4妖火、5-6火球术、7-8缓慢术、9-10臭云术）；\n21-25：自身陷入震慑至下回合开始；\n26-30：向源点施展造风术；\n31-35：自身受1d6心灵伤害；\n36-40：60尺半径柱状暴雨1分钟（轻度遮蔽）；\n41-45：30尺半径柱状600只蝴蝶10分钟（重度遮蔽）；\n46-50：向源点释放闪电束；\n51-55：最近生物变大（变巨术）；\n56-60：随机出现犀牛(1)/大象(2)/老鼠(3-4)；\n61-64：60尺草地生长十倍长；\n65-68：以太位面放逐一个未携带物件；\n69-72：自身缩小1分钟；\n73-77：最近生物长出树叶；\n78-82：自身30尺光环爆发炫光，DC 15 体质豁免否则目盲1分钟；\n83-87：自身获得隐形术；\n88-92：向源点射出1d4×10颗宝石激流，每颗1钝击伤害均分范围内生物；\n93-97：最近生物变形为黑熊(1)/巨黄蜂(2)/青蛙(3-4)；\n98-00：最近生物 DC 15 体质豁免，失败陷入束缚并转为石化。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"惊异魔杖：触发随机效应\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:惊异魔杖\",\"n\":1}],\"targeting\":{\"type\":\"point\",\"range\":120},\"root\":[{\"kind\":\"note\",\"text\":\"在120尺内选择一点，投掷 1d100 决定效应（豁免 DC 15）：\\n01-20：掷1d10施展法术（1-2黑暗术、3-4妖火、5-6火球术、7-8缓慢术、9-10臭云术）；\\n21-25：自身陷入震慑至下回合开始；\\n26-30：向源点施展造风术；\\n31-35：自身受1d6心灵伤害；\\n36-40：60尺半径柱状暴雨1分钟（轻度遮蔽）；\\n41-45：30尺半径柱状600只蝴蝶10分钟（重度遮蔽）；\\n46-50：向源点释放闪电束；\\n51-55：最近生物变大（变巨术）；\\n56-60：随机出现犀牛(1)/大象(2)/老鼠(3-4)；\\n61-64：60尺草地生长十倍长；\\n65-68：以太位面放逐一个未携带物件；\\n69-72：自身缩小1分钟；\\n73-77：最近生物长出树叶；\\n78-82：自身30尺光环爆发炫光，DC 15 体质豁免否则目盲1分钟；\\n83-87：自身获得隐形术；\\n88-92：向源点射出1d4×10颗宝石激流，每颗1钝击伤害均分范围内生物；\\n93-97：最近生物变形为黑熊(1)/巨黄蜂(2)/青蛙(3-4)；\\n98-00：最近生物 DC 15 体质豁免，失败陷入束缚并转为石化。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:精灵斗篷",
+  "name": "精灵斗篷",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "着装此斗篷期间，任何为感知到你所做的感知（察觉）检定都将具有劣势（需手动判定）；你为躲藏所进行的敏捷（隐匿）检定具有优势。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"rollMods\":[{\"on\":{\"kind\":\"check\",\"skill\":\"隐匿\"},\"who\":\"bearer\",\"op\":\"adv\",\"label\":\"精灵斗篷：隐匿优势\"}]}"
+ },
+ {
+  "key": "XDMG:item:警示权杖",
+  "name": "警示权杖",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "持握权杖时，感知（察觉）检定和先攻掷骰具有优势；可通过权杖施放侦测善恶、侦测魔法、侦测毒性和疾病、识破隐形（法术由人物卡处理）。\n【防护灵光】以魔法动作将权杖插入地面，发出60尺明亮光照（持续10分钟，次日黎明恢复），光照内的你与盟友AC和豁免+1，并可感知隐形生物位置（范围加值与感知隐形需手动结算）。",
+  "notes": [
+   "将权杖插入地面，散发60尺明亮光照与60尺微光光照，持续10分钟。处于明亮光照中的你与盟友AC和豁免+1加值，并可感知处于明亮光照中的隐形生物位置。"
+  ],
+  "data": "{\"resources\":[{\"id\":\"物品次数:警示权杖\",\"name\":\"警示权杖\",\"formula\":1,\"recovery\":\"long\"}],\"automation\":\"partial\",\"rollMods\":[{\"on\":{\"kind\":\"check\",\"ability\":\"wis\",\"skill\":\"察觉\"},\"who\":\"bearer\",\"op\":\"adv\",\"label\":\"警示权杖：察觉检定优势\"},{\"on\":{\"kind\":\"initiative\"},\"who\":\"bearer\",\"op\":\"adv\",\"label\":\"警示权杖：先攻优势\"}],\"actions\":[{\"id\":\"protective-aura\",\"name\":\"警示权杖：防护灵光\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品次数:警示权杖\"}],\"root\":[{\"kind\":\"applyEffect\",\"template\":\"防护灵光\",\"to\":\"self\"},{\"kind\":\"note\",\"text\":\"将权杖插入地面，散发60尺明亮光照与60尺微光光照，持续10分钟。处于明亮光照中的你与盟友AC和豁免+1加值，并可感知处于明亮光照中的隐形生物位置。\"}]}],\"effects\":{\"防护灵光\":{\"duration\":{\"minutes\":10},\"text\":\"权杖插入地面发出60尺明亮光照。身处明亮光照中的你与盟友AC和豁免+1加值，并可感知其中隐形生物位置。\"}}}"
+ },
+ {
+  "key": "XDMG:item:静语卷册",
+  "name": "静语卷册",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "可作为法术书和法器。持握卷册期间，能以附赠动作施展一道记录在卷册中的法术而无需言语或姿势成分，也无需消耗法术位（每日一次，次日黎明恢复）。",
+  "notes": [
+   "以附赠动作施展一道记录在卷册中的法术，无需言语或姿势成分，且无需消耗法术位。"
+  ],
+  "data": "{\"resources\":[{\"id\":\"物品次数:静语卷册\",\"name\":\"静语卷册\",\"formula\":1,\"recovery\":\"long\"}],\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"静语卷册：施展法术\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"物品次数:静语卷册\"}],\"root\":[{\"kind\":\"note\",\"text\":\"以附赠动作施展一道记录在卷册中的法术，无需言语或姿势成分，且无需消耗法术位。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:纠缠绳",
+  "name": "纠缠绳",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以动作命令绳索缠住 20 尺内可见的一名生物，目标须通过 DC 15 敏捷豁免否则陷入束缚。被束缚者可以动作进行 DC 15 运动或特技检定逃脱；持用者可用附赠动作释放并召回绳索。绳索生命值与逃脱判定需手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"缠绕目标\",\"activation\":\"action\",\"tags\":[\"magical\"],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":20,\"filter\":\"canSee(self, target)\"},\"root\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":15,\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"纠缠绳束缚\",\"to\":\"target\"}]}]}],\"effects\":{\"纠缠绳束缚\":{\"duration\":{\"manual\":true},\"tags\":[\"magical\"],\"implies\":[\"XPHB:condition:束缚\"],\"text\":\"陷入束缚状态。可以用动作进行 DC 15 力量（运动）或敏捷（特技）检定以挣脱。\"}}}"
+ },
+ {
+  "key": "XDMG:item:巨蟒法杖",
+  "name": "巨蟒法杖",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以魔法动作将法杖扔到10尺内地面变为受控的巨蟒（先攻与你相同，回合紧随其后；60尺内精神命令无需动作）。以附赠动作可命令其还原回法杖（恢复所有生命值，1小时内无法再次变为巨蟒）。生命值降为0时死亡且法杖摧毁。",
+  "notes": [
+   "将法杖扔到10尺内未占据空间地面，变为受控巨蟒。巨蟒先攻与你相同，在你的回合结束后立即行动。60尺内精神下达指令（无需动作）。生命值降为0法杖摧毁。",
+   "命令巨蟒还原为法杖形态，恢复所有失去的生命值。还原后1小时内无法再次使用变蛇。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"transform\",\"name\":\"巨蟒法杖：变为巨蟒\",\"activation\":\"action\",\"root\":[{\"kind\":\"note\",\"text\":\"将法杖扔到10尺内未占据空间地面，变为受控巨蟒。巨蟒先攻与你相同，在你的回合结束后立即行动。60尺内精神下达指令（无需动作）。生命值降为0法杖摧毁。\"}]},{\"id\":\"revert\",\"name\":\"巨蟒法杖：还原形态\",\"activation\":\"bonus\",\"root\":[{\"kind\":\"note\",\"text\":\"命令巨蟒还原为法杖形态，恢复所有失去的生命值。还原后1小时内无法再次使用变蛇。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:卡夫统灵药",
+  "name": "卡夫统灵药",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "瓶中装有 1d4 + 1 剂。以一个操作动作吞下一剂或涂在 5 尺内一个生物身上，为其恢复 2d8 + 2 点生命值并解除其中毒状态。剂数请手动追踪。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"使用卡夫统灵药\",\"activation\":\"action\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":5},\"root\":[{\"kind\":\"heal\",\"amount\":\"2d8 + 2\"},{\"kind\":\"removeEffect\",\"match\":{\"key\":\"XPHB:condition:中毒\"}}]}]}"
+ },
+ {
+  "key": "XDMG:item:凯斯之剑",
+  "name": "凯斯之剑",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "+3 长剑。19~20 产生重击。对亡灵额外造成 2d10 挥砍伤害。先攻检定 +1d10。获得暗蚀伤害抗性。发动攻击时可将至多 +3 攻击加值转移为 AC 至下回合开始。出鞘后 1 分钟未见血需 DC 15 魅力豁免，成功受 3d6 心灵伤害，失败被剑控制。施展法术（豁免 DC 18，每个法术次日黎明前限一次）：召雷术、圣言术、死亡一指。固定加值已在人物卡处理。",
+  "notes": [
+   "豁免失败者按当前生命值受到惩戒：<=50 耳聋1分钟；<=40 耳聋且目盲10分钟；<=30 耳聋、目盲且震慑1小时；<=20 立即死亡。非本位面天界生物、元素、邪魔、妖精被驱逐回原籍位面。",
+   "死亡一指：若目标类人生物被杀死，在施法者下一回合开始时将其唤起为一只受控丧尸。"
+  ],
+  "data": "{\"resources\":[{\"id\":\"物品次数:凯斯之剑:召雷术\",\"name\":\"凯斯之剑：召雷术\",\"formula\":1,\"recovery\":\"long\"},{\"id\":\"物品次数:凯斯之剑:圣言术\",\"name\":\"凯斯之剑：圣言术\",\"formula\":1,\"recovery\":\"long\"},{\"id\":\"物品次数:凯斯之剑:死亡一指\",\"name\":\"凯斯之剑：死亡一指\",\"formula\":1,\"recovery\":\"long\"}],\"automation\":\"partial\",\"actions\":[{\"id\":\"call-lightning\",\"name\":\"凯斯之剑：召雷术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品次数:凯斯之剑:召雷术\"}],\"concentration\":{\"minutes\":10},\"targeting\":{\"type\":\"area\",\"range\":120,\"area\":{\"shape\":\"cylinder\",\"radius\":5}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":18,\"onFail\":[{\"kind\":\"damage\",\"id\":\"d\",\"dice\":\"3d10\",\"type\":\"闪电\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"d\",\"scale\":0.5}]}]}]},{\"id\":\"divine-word\",\"name\":\"凯斯之剑：圣言术\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"物品次数:凯斯之剑:圣言术\"}],\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"emanation\",\"radius\":30}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"cha\",\"dc\":18,\"onFail\":[{\"kind\":\"note\",\"text\":\"豁免失败者按当前生命值受到惩戒：<=50 耳聋1分钟；<=40 耳聋且目盲10分钟；<=30 耳聋、目盲且震慑1小时；<=20 立即死亡。非本位面天界生物、元素、邪魔、妖精被驱逐回原籍位面。\"}]}]}]},{\"id\":\"finger-of-death\",\"name\":\"凯斯之剑：死亡一指\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品次数:凯斯之剑:死亡一指\"}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60,\"filter\":\"canSee(self, target)\"},\"root\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":18,\"onFail\":[{\"kind\":\"damage\",\"id\":\"d\",\"dice\":\"7d8 + 30\",\"type\":\"暗蚀\"},{\"kind\":\"note\",\"text\":\"死亡一指：若目标类人生物被杀死，在施法者下一回合开始时将其唤起为一只受控丧尸。\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"d\",\"scale\":0.5}]}]}],\"triggers\":[{\"id\":\"undead-slayer\",\"label\":\"凯斯之剑：对亡灵额外伤害\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"when\":\"target.type == '亡灵' || target.type == 'undead'\",\"do\":[{\"kind\":\"addDamage\",\"dice\":\"2d10\",\"type\":\"挥砍\"}]}],\"rollMods\":[{\"on\":{\"kind\":\"initiative\"},\"who\":\"bearer\",\"op\":\"addDice\",\"value\":\"1d10\",\"label\":\"战斗饥渴：先攻 +1d10\"},{\"on\":{\"kind\":\"attack\",\"attack\":{\"weapon\":true}},\"who\":\"bearer\",\"op\":\"critRange\",\"value\":19,\"label\":\"凯斯之剑：19-20 重击\"}]}"
+ },
+ {
+  "key": "XDMG:item:抗法盾",
+  "name": "抗法盾",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "在你持握着这面盾牌期间，你为抵抗法术和其他魔法效应所进行的豁免具有优势，且对你发动的法术攻击检定具有劣势。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"rollMods\":[{\"on\":{\"kind\":\"save\"},\"who\":\"bearer\",\"when\":\"ask('这是为了抵抗法术或其他魔法效应吗？')\",\"op\":\"adv\",\"label\":\"抗法盾：抵抗法术或魔法效应豁免优势\"},{\"on\":{\"kind\":\"attack\"},\"who\":\"against\",\"when\":\"attack.spell\",\"op\":\"disadv\",\"label\":\"抗法盾：对你发动的法术攻击劣势\"}]}"
+ },
+ {
+  "key": "XDMG:item:恐惧魔杖",
+  "name": "恐惧魔杖",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "持握魔杖时，你可以消耗充能施展命令术（DC 15，只能走开或趴下，消耗1充能）或恐惧术（DC 15，60尺锥状，消耗3充能）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"command\",\"name\":\"恐惧魔杖：命令术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:恐惧魔杖\",\"n\":1}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":15,\"onFail\":[{\"kind\":\"choose\",\"prompt\":\"选择命令术指令（走开或趴下）\",\"options\":[{\"label\":\"趴下（陷入倒地并结束回合）\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"命令术：趴下\"}]},{\"label\":\"走开（以最快方式远离施法者）\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"命令术：走开\"}]}]}]}]},{\"id\":\"fear\",\"name\":\"恐惧魔杖：恐惧术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:恐惧魔杖\",\"n\":3}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"cone\",\"size\":60}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":15,\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"恐惧魔杖：恐惧术\",\"to\":\"target\"}]}]}]}],\"effects\":{\"命令术：趴下\":{\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":1}},\"implies\":[\"XPHB:condition:倒地\"],\"text\":\"命令术：目标陷入倒地状态并结束其回合。\"},\"命令术：走开\":{\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":1}},\"text\":\"命令术：目标在其回合内以最快最有效方式远离施法者。\"},\"恐惧魔杖：恐惧术\":{\"implies\":[\"XPHB:condition:恐慌\"],\"text\":\"陷入恐慌，丢弃所有持握物；在回合内必须执行疾走动作远离施法者；若回合结束时施法者不在视线中，可进行感知豁免对抗 DC 15，成功则解除效应。\",\"triggers\":[{\"id\":\"save-no-los\",\"label\":\"恐惧术：视线外感知豁免\",\"on\":\"turnEnded\",\"role\":\"actor\",\"when\":\"ask('施法者此时不在该生物视线中吗？')\",\"do\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":15,\"onSuccess\":[{\"kind\":\"removeEffect\",\"match\":{\"name\":\"恐惧魔杖：恐惧术\"},\"from\":\"self\"}]}]}]}}}"
+ }
+]

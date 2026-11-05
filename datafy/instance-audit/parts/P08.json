@@ -1,0 +1,428 @@
+[
+ {
+  "key": "XPHB:术士:元素亲和:6",
+  "name": "元素亲和",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "选择强酸、寒冷、火焰、闪电或毒素之一：你获得该伤害类型的抗性；施展造成该类型伤害的法术时，你可以把魅力调整值加到那个法术的其中一次伤害掷骰中。已自动化：用「元素亲和」动作选定类型后抗性立刻生效（所选类型记在效应里，选过就不能再选），此后你的法术攻击命中、伤害类型与你所选一致时会问你要不要加魅力调整值。要人处理的：①只有带攻击检定的法术走引擎的「命中」窗口，需要豁免的法术（火球术这类）引擎没有能加伤害的时机（伤害窗口里不能加伤害、damageRolled 的修正只在带攻击的伤害包里生效），请在豁免伤害出来后手动加上魅力调整值（详情抽屉里改总值）；②原文限制是「那个法术的其中一次伤害掷骰」，引擎按「每回合一次」近似 —— 同一回合里先后施展了两个同类法术、想给第二个也加时请手动加；③魅力调整值不大于 0 时不问也不加。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"元素亲和\",\"activation\":\"free\",\"text\":\"选定你的元素亲和伤害类型（只选一次）。\",\"requires\":\"!self.hasEffect('元素亲和')\",\"root\":[{\"kind\":\"choose\",\"prompt\":\"元素亲和：选择伤害类型\",\"var\":\"elem\",\"options\":[{\"label\":\"强酸\",\"value\":\"强酸\"},{\"label\":\"寒冷\",\"value\":\"寒冷\"},{\"label\":\"火焰\",\"value\":\"火焰\"},{\"label\":\"闪电\",\"value\":\"闪电\"},{\"label\":\"毒素\",\"value\":\"毒素\"}]},{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"元素亲和\",\"state\":{\"type\":\"vars.elem\"}}]}],\"effects\":{\"元素亲和\":{\"name\":\"元素亲和\",\"text\":\"拥有所选伤害类型的抗性；施展造成该类型伤害的法术时，可把魅力调整值加到其中一次伤害掷骰上。\",\"duration\":{\"manual\":true},\"statics\":[{\"kind\":\"resist\",\"values\":[\"effect.state.type\"]}],\"triggers\":[{\"id\":\"cha\",\"label\":\"元素亲和：加魅力调整值\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"optional\":true,\"limit\":\"oncePerTurn\",\"when\":\"attack.spell && ask('这道法术的伤害类型与你选的一致吗？') && self.mod.cha > 0\",\"do\":[{\"kind\":\"addDamage\",\"dice\":\"self.mod.cha\",\"type\":\"effect.state.type\"}]}]}}}"
+ },
+ {
+  "key": "XPHB:术士:掌控混沌:14",
+  "name": "掌控混沌",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "每次掷狂野魔法浪涌表可以掷两次并取任一结果。浪涌表由人掷骰，引擎没有掷表事件，整条不自动化。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XPHB:双持客",
+  "name": "双持客",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "【强化双持】你在自己的回合里执行了攻击动作、并用具有轻型词条的武器发动过一次攻击后，可以在同一回合里用一个附赠动作，再用另一把不具有两手持握（2H）词条的近战武器攻击一次；这次额外攻击的伤害不能加你的属性调整值（除非该调整值为负数）。已自动化：这是一个附赠动作的攻击动作——选目标、掷攻击检定、掷伤害都由引擎做（弹窗里按副手武器选伤害骰与伤害类型），伤害里没有属性调整值。要人处理：①引擎读不到「本回合用过轻型武器攻击」「副手是哪一把」，所以用之前会问一句，副手必须是另一把、单手近战，由你判断；②调整值为负数时请手动补上那点伤害。【快速拔刀】拔出或入鞘武器时可以同时处理两把——纯物件交互，不在战斗结算里，手动即可。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"offhand\",\"name\":\"双持客：副手攻击\",\"activation\":\"bonus\",\"tags\":[\"weapon\"],\"requires\":\"turn.isMine && ask('你本回合已经执行过攻击动作，并用具有轻型词条的武器攻击过一次了吗？')\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"reach\"},\"root\":[{\"kind\":\"choose\",\"prompt\":\"双持客：副手武器是哪一把？\",\"var\":\"die\",\"options\":[{\"label\":\"1d4（匕首、短棒、轻锤、长鞭…）\",\"value\":\"1d4\"},{\"label\":\"1d6（短剑、手斧、钉头锤、长矛、弯刀…）\",\"value\":\"1d6\"},{\"label\":\"1d8（长剑、战斧、战镐、细剑、连枷…）\",\"value\":\"1d8\"}]},{\"kind\":\"choose\",\"prompt\":\"双持客：副手武器的伤害类型？\",\"var\":\"dtype\",\"options\":[{\"label\":\"挥砍\",\"value\":\"挥砍\"},{\"label\":\"穿刺\",\"value\":\"穿刺\"},{\"label\":\"钝击\",\"value\":\"钝击\"}]},{\"kind\":\"attack\",\"bonus\":\"self.pb + max(self.mod.str, self.mod.dex)\",\"attack\":{\"melee\":true,\"weapon\":true},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"vars.die\",\"type\":\"vars.dtype\"}]}]}]}"
+ },
+ {
+  "key": "XPHB:提夫林",
+  "name": "提夫林",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "这个种族的动态层没有可自动结算的部分：黑暗视觉 60 尺、邪魔遗赠 1 级好处的伤害抗性（毒素 / 黯蚀 / 火焰，看遗赠）与戏法（毒气喷涌 / 颤栗之触 / 火焰箭）都是恒定的东西，人物卡的静态层已经带上；异界存在的奇术是戏法，也不占次数。真正要人守的只有一件事：3 级和 5 级各学会一道遗赠法术，各自可以不消耗法术位施展一次、长休后重获 —— 引擎的施法动作不支持用种族自带的免费资源池顶替法术位，所以请照常选那道法术手动施放，然后在这个池子（不消耗法术位施展习得法术，1 次 / 长休）上扣一次；用相应环阶的法术位正常施展则不用扣。（引擎的池子上限只有 1：两道法术合计只能免一次，另一道请按法术位施放或手动扣一次池子，并自己记住哪一道还没用过。）",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XPHB:徒手战斗",
+  "name": "徒手战斗",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "徒手打击命中时可改为造成 1d6（未持握武器与盾牌时为 1d8）+ 力量调整值钝击伤害；回合开始时可对一个被你擒抱的生物造成 1d4 钝击伤害。引擎不支持替换伤害与选择擒抱目标，需人工处理。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XPHB:无敌攻势之恩惠",
+  "name": "无敌攻势之恩惠",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "无阻打击（攻击检定的 d20 掷出 20 时，额外造成等于所提升属性属性值的伤害，类型与本次攻击相同）已写，提升的属性（力量或敏捷）由人选择。摧坚破甲（钝击、挥砍、穿刺伤害无视抗性）引擎不支持忽略抗性，需人工处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"unstoppable-crit\",\"label\":\"无敌攻势之恩惠：无阻打击\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"optional\":true,\"when\":\"roll.natural == 20\",\"do\":[{\"kind\":\"choose\",\"prompt\":\"无阻打击：额外伤害取哪项属性的属性值？\",\"options\":[{\"label\":\"力量\",\"do\":[{\"kind\":\"addDamage\",\"dice\":\"score.str\",\"type\":\"attack.damageType\"}]},{\"label\":\"敏捷\",\"do\":[{\"kind\":\"addDamage\",\"dice\":\"score.dex\",\"type\":\"attack.damageType\"}]}]}]}]}"
+ },
+ {
+  "key": "XPHB:武僧:暗影步:6",
+  "name": "暗影步",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "完全身处微光光照或黑暗中时，可用附赠动作传送到 60 尺内另一处你可见的未占据空间（落点同样需在微光光照或黑暗中）；随后当前回合结束前的下一次近战攻击具有优势。光照与落点条件由人确认。",
+  "notes": [
+   "落点须为你可见的未占据空间，且同样位于微光光照或黑暗中（人工确认）"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"暗影步\",\"activation\":\"bonus\",\"requires\":\"turn.isMine && ask('你完全身处微光光照或黑暗中吗？')\",\"root\":[{\"kind\":\"move\",\"mode\":\"teleport\",\"ft\":60},{\"kind\":\"note\",\"text\":\"落点须为你可见的未占据空间，且同样位于微光光照或黑暗中（人工确认）\"},{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"暗影步\"}]}],\"effects\":{\"暗影步\":{\"text\":\"下一次近战攻击具有优势，直到当前回合结束。\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":0}},\"rollMods\":[{\"on\":{\"kind\":\"attack\",\"attack\":{\"melee\":true}},\"who\":\"bearer\",\"op\":\"adv\",\"label\":\"暗影步：下一次近战攻击\"}],\"triggers\":[{\"id\":\"used\",\"label\":\"暗影步：用掉优势\",\"on\":\"d20Rolled\",\"role\":\"actor\",\"window\":\"after\",\"when\":\"roll.kind == 'attack' && attack.melee\",\"do\":[{\"kind\":\"removeEffect\",\"from\":\"self\",\"match\":{\"name\":\"暗影步\"}}]}]}}}"
+ },
+ {
+  "key": "XPHB:武僧:拨挡攻击:3",
+  "name": "拨挡攻击",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当你被一次伤害中包含钝击、穿刺或挥砍伤害的攻击检定命中时，你可以用反应把这次攻击对你造成的伤害减少 1d10 + 你的敏捷调整值 + 你的武僧等级。已自动化：反应减伤（只减钝击 / 穿刺 / 挥砍那部分；混了火焰之类的攻击，别的类型不减 —— 原文是减「总值」，这点请按 DM 判断要不要手动补）；减伤结算完会问你「伤害被减到 0 了吗」，答是且还有功力时提示你去用「拨挡攻击：重新定向」。要人处理的：①引擎拿不到「这次伤害来自哪个攻击」，只按「不是豁免带来的伤害 + 伤害类型」判断，所以坠落、陷阱那种非攻击的钝击伤害也会问你要不要用 —— 那不是攻击，答否即可；②重新定向要另选一个生物（近战 5 尺内 / 远程 60 尺内、不在掩护后、你可见），引擎在反应的结算里没法让你另选目标，所以另做了免费动作「拨挡攻击：重新定向」：它花 1 点功力、问一次原攻击的伤害类型，让目标做敏捷豁免（DC 8 + 敏捷调整值 + 熟练加值），失败受 2 个武艺骰 + 敏捷调整值的同类型伤害。用法：反应把伤害减到 0 之后点它。掩护与视线引擎不管，由你在选目标时判断；失能 / 没有反应时引擎会自己拦。",
+  "notes": [
+   "拨挡攻击：要重新定向就点免费动作「拨挡攻击：重新定向」（它会扣 1 点功力，问一次原攻击的伤害类型，然后让目标做敏捷豁免、失败受 2 个武艺骰 + 敏捷调整值的同类型伤害）。近战攻击：选你周围 5 尺内你可见的一个生物；远程攻击：选 60 尺内一个不位于掩护后的你可见生物。",
+   "拨挡攻击：伤害没有减到 0（或没有功力），本次只减伤，不重新定向。"
+  ],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"deflect\",\"label\":\"拨挡攻击\",\"on\":\"damageIncoming\",\"role\":\"target\",\"window\":\"before\",\"optional\":true,\"cost\":[{\"economy\":\"reaction\"}],\"when\":\"damage.save == '' && (damage.type == '钝击' || damage.type == '穿刺' || damage.type == '挥砍')\",\"modify\":[{\"op\":\"reduceDamage\",\"value\":\"1d10 + self.mod.dex + self.levelOf('武僧')\",\"types\":[\"钝击\",\"穿刺\",\"挥砍\"]}],\"do\":[{\"kind\":\"if\",\"when\":\"self.resource('功力') >= 1 && ask('拨挡攻击：这次攻击的伤害被减到 0 了吗？（是的话可以花 1 点功力把部分伤害重新定向）')\",\"then\":[{\"kind\":\"note\",\"text\":\"拨挡攻击：要重新定向就点免费动作「拨挡攻击：重新定向」（它会扣 1 点功力，问一次原攻击的伤害类型，然后让目标做敏捷豁免、失败受 2 个武艺骰 + 敏捷调整值的同类型伤害）。近战攻击：选你周围 5 尺内你可见的一个生物；远程攻击：选 60 尺内一个不位于掩护后的你可见生物。\"}],\"else\":[{\"kind\":\"note\",\"text\":\"拨挡攻击：伤害没有减到 0（或没有功力），本次只减伤，不重新定向。\"}]}]}],\"actions\":[{\"id\":\"redirect\",\"name\":\"拨挡攻击：重新定向\",\"activation\":\"free\",\"text\":\"用反应把一次攻击的伤害减到 0 之后使用：花 1 点功力，让目标敏捷豁免，失败受 2 个武艺骰 + 你敏捷调整值的同类型伤害。\",\"requires\":\"self.resource('功力') >= 1 && ask('拨挡攻击：刚刚用反应把一次攻击的伤害减到了 0，现在花 1 点功力重新定向吗？')\",\"cost\":[{\"resource\":\"功力\"}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60,\"filter\":\"target.id != self.id && canSee(self, target)\"},\"root\":[{\"kind\":\"choose\",\"prompt\":\"拨挡攻击：原来那次攻击的伤害类型是？（近战攻击只能选 5 尺内的生物，远程攻击 60 尺内且不在掩护后）\",\"var\":\"dmgtype\",\"options\":[{\"label\":\"钝击\",\"value\":\"钝击\"},{\"label\":\"穿刺\",\"value\":\"穿刺\"},{\"label\":\"挥砍\",\"value\":\"挥砍\"},{\"label\":\"火焰\",\"value\":\"火焰\"},{\"label\":\"寒冷\",\"value\":\"寒冷\"},{\"label\":\"闪电\",\"value\":\"闪电\"},{\"label\":\"雷鸣\",\"value\":\"雷鸣\"},{\"label\":\"强酸\",\"value\":\"强酸\"},{\"label\":\"毒素\",\"value\":\"毒素\"},{\"label\":\"黯蚀\",\"value\":\"黯蚀\"},{\"label\":\"光耀\",\"value\":\"光耀\"},{\"label\":\"心灵\",\"value\":\"心灵\"},{\"label\":\"力场\",\"value\":\"力场\"}]},{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"8 + self.mod.wis + pb\",\"onFail\":[{\"kind\":\"damage\",\"dice\":\"classTable('武艺') + classTable('武艺') + self.mod.dex\",\"type\":\"vars.dmgtype\"}]}]}]}"
+ },
+ {
+  "key": "XPHB:武僧:反射闪避:7",
+  "name": "反射闪避",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "受到允许敏捷豁免以只承受一半伤害的效应影响时：豁免成功不受伤害，豁免失败只承受一半伤害；失能状态下无效。引擎无法从效应的豁免结果里分辨伤害来源，也不能替换其伤害，需要由人处理。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XPHB:武僧:返本还元:10",
+  "name": "返本还元",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "每次自己的回合结束时，可以移除魅惑、恐慌或中毒之一。不吃不喝不再提升力竭等级属于探索 / 休息时的规则，由人手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"clear\",\"label\":\"返本还元：移除魅惑、恐慌或中毒\",\"on\":\"turnEnded\",\"role\":\"actor\",\"optional\":true,\"when\":\"self.has('魅惑') || self.has('恐慌') || self.has('中毒')\",\"do\":[{\"kind\":\"choose\",\"prompt\":\"返本还元：移除哪个状态？\",\"options\":[{\"label\":\"移除魅惑\",\"when\":\"self.has('魅惑')\",\"do\":[{\"kind\":\"removeEffect\",\"match\":{\"key\":\"XPHB:condition:魅惑\"},\"from\":\"self\"}]},{\"label\":\"移除恐慌\",\"when\":\"self.has('恐慌')\",\"do\":[{\"kind\":\"removeEffect\",\"match\":{\"key\":\"XPHB:condition:恐慌\"},\"from\":\"self\"}]},{\"label\":\"移除中毒\",\"when\":\"self.has('中毒')\",\"do\":[{\"kind\":\"removeEffect\",\"match\":{\"key\":\"XPHB:condition:中毒\"},\"from\":\"self\"}]}]}]}]}"
+ },
+ {
+  "key": "XPHB:武僧:飞檐走壁:9",
+  "name": "飞檐走壁",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "未着装任何护甲且未持用盾牌时，可在自己的回合中于垂直表面和液体表面上移动而不坠落。引擎不处理地形与攀爬移动，由人处理。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XPHB:武僧:黑暗术:3",
+  "name": "黑暗术",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "消耗 1 点功力，无需任何法术成分施展黑暗术：在 60 尺内指定一点放下半径 15 尺的球状魔法黑暗区域，随专注至多 10 分钟存在、专注结束区域消失，生物进入时日志会提示它处在魔法黑暗中。你可以看穿以这个特性施展的黑暗区域（引擎不处理视线，请人工裁定）。法术持续期间，每个回合开始时可以用「黑暗术：移动区域」将其移动到 60 尺内任意空间（在地图上选新位置，引擎自动移动区域）。",
+  "notes": [
+   "黑暗术（功力施展）：无需任何法术成分；你可以看穿以这个特性施展的黑暗区域（引擎不处理视线，请人工裁定）。法术持续期间，每个回合开始时可以用「黑暗术：移动区域」将区域移动到 60 尺内任意空间。",
+   "黑暗术：该生物进入了魔法黑暗区域（重度遮蔽；黑暗视觉也看不穿，非魔法光照无法照亮）—— 引擎不处理视线，攻击 / 躲藏请人工裁定。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"ki\",\"name\":\"黑暗术（功力施展）\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"resource\":\"功力\"}],\"concentration\":{\"minutes\":10},\"targeting\":{\"type\":\"area\",\"range\":60,\"area\":{\"shape\":\"sphere\",\"radius\":15}},\"root\":[{\"kind\":\"note\",\"text\":\"黑暗术（功力施展）：无需任何法术成分；你可以看穿以这个特性施展的黑暗区域（引擎不处理视线，请人工裁定）。法术持续期间，每个回合开始时可以用「黑暗术：移动区域」将区域移动到 60 尺内任意空间。\"},{\"kind\":\"zone\",\"on\":[\"enter\"],\"affects\":\"all\",\"oncePerTurn\":true,\"do\":[{\"kind\":\"note\",\"text\":\"黑暗术：该生物进入了魔法黑暗区域（重度遮蔽；黑暗视觉也看不穿，非魔法光照无法照亮）—— 引擎不处理视线，攻击 / 躲藏请人工裁定。\"}],\"name\":\"黑暗术\"}]},{\"id\":\"move\",\"name\":\"黑暗术：移动区域\",\"activation\":\"free\",\"requires\":\"turn.isMine\",\"targeting\":{\"type\":\"area\",\"range\":60,\"area\":{\"shape\":\"sphere\",\"radius\":15}},\"root\":[{\"kind\":\"moveZone\"}],\"text\":\"在你的每个回合开始时，你可以将黑暗术区域移动到你 60 尺范围内的任意一处空间（在地图上选新位置）。\"}]}"
+ },
+ {
+  "key": "XPHB:武僧:疾步如风:2",
+  "name": "疾步如风",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "跳跃距离翻倍：引擎没有跳跃距离，由人处理。",
+  "notes": [
+   "本回合跳跃距离翻倍：手动处理"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"dash\",\"name\":\"疾步如风：疾走\",\"activation\":\"bonus\",\"requires\":\"turn.isMine\",\"root\":[{\"kind\":\"economy\",\"move\":\"self.speed\"}]},{\"id\":\"disengage-dash\",\"name\":\"疾步如风：撤离与疾走\",\"activation\":\"bonus\",\"requires\":\"turn.isMine\",\"cost\":[{\"resource\":\"功力\"}],\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"XPHB:action:撤离#撤离\"},{\"kind\":\"economy\",\"move\":\"self.speed\"},{\"kind\":\"note\",\"text\":\"本回合跳跃距离翻倍：手动处理\"}]}]}"
+ },
+ {
+  "key": "XPHB:武僧:流星步:11",
+  "name": "流星步",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当你使用一个附赠动作而非疾步如风时，你可以在该附赠动作后立即使用疾步如风。引擎不知道你刚花掉的是哪个附赠动作、也没有「附赠动作之后」这个时机，所以把疾步如风的用法写成不要动作的三个免费条目：疾走、撤离、撤离与疾走（后者要花 1 点功力，和疾步如风一样）。用法：先点掉那个别的附赠动作，再点这里，提问里确认「刚用过一个不是疾步如风的附赠动作」。要人处理的：①引擎不会替你扣那个附赠动作（按钮本身不花动作），也不检查你是不是真用过一个别的附赠动作 —— 靠那句提问和你自己记得；②一回合里只用一次（原文是「立即使用疾步如风」，一个附赠动作换一次）；③跳跃距离翻倍那类与移动、地形有关的规则引擎不管。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"dash\",\"name\":\"流星步：疾走\",\"activation\":\"free\",\"requires\":\"turn.isMine && ask('流星步：你这个回合刚用过一个附赠动作，而且不是疾步如风吗？')\",\"root\":[{\"kind\":\"economy\",\"move\":\"self.speed\"}]},{\"id\":\"both\",\"name\":\"流星步：撤离与疾走\",\"activation\":\"free\",\"requires\":\"turn.isMine && ask('流星步：你这个回合刚用过一个附赠动作，而且不是疾步如风吗？')\",\"cost\":[{\"resource\":\"功力\"}],\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"XPHB:action:撤离#撤离\"},{\"kind\":\"economy\",\"move\":\"self.speed\"}]}]}"
+ },
+ {
+  "key": "XPHB:武僧:敏捷攻击:1",
+  "name": "敏捷攻击",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "徒手打击与武僧武器（按近战武器近似判断）的攻击检定与伤害，改用敏捷替代力量的部分已自动化。擒抱 / 推撞的豁免 DC 改用敏捷属于那两个基础动作本身，引擎不能替换，需要人处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"rollMods\":[{\"on\":{\"kind\":\"attack\",\"attack\":{\"melee\":true}},\"who\":\"bearer\",\"when\":\"attack.ability == 'str' && (attack.unarmed || attack.weapon)\",\"op\":\"add\",\"value\":\"max(0, mod.dex - mod.str)\",\"label\":\"敏捷攻击\"},{\"on\":{\"kind\":\"damage\"},\"who\":\"bearer\",\"when\":\"attack.melee && attack.ability == 'str' && (attack.unarmed || attack.weapon)\",\"op\":\"add\",\"value\":\"max(0, mod.dex - mod.str)\",\"label\":\"敏捷攻击：伤害\"}]}"
+ },
+ {
+  "key": "XPHB:武僧:命极之手:17",
+  "name": "命极之手",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "魔法动作，消耗 5 点功力，触碰死亡不超过 24 小时的生物尸体：以 4d10 + 感知调整值的生命值复活，并移除目盲、耳聋、麻痹、中毒、震慑。每次长休一次。引擎是否会自动取消死亡状态不确定，必要时请手动处理。",
+  "notes": [
+   "命极之手：目标须是死亡不超过 24 小时的生物尸体。复活后的生命值等于治疗量；如果引擎没有自动取消死亡状态，请手动处理。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"命极之手\",\"activation\":\"action\",\"cost\":[{\"resource\":\"功力\",\"n\":5},{\"resource\":\"handOfUltimateMercy\"}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"touch\"},\"root\":[{\"kind\":\"note\",\"text\":\"命极之手：目标须是死亡不超过 24 小时的生物尸体。复活后的生命值等于治疗量；如果引擎没有自动取消死亡状态，请手动处理。\"},{\"kind\":\"heal\",\"to\":\"target\",\"amount\":\"4d10 + self.mod.wis\"},{\"kind\":\"removeEffect\",\"from\":\"target\",\"match\":{\"key\":\"XPHB:condition:目盲\"}},{\"kind\":\"removeEffect\",\"from\":\"target\",\"match\":{\"key\":\"XPHB:condition:耳聋\"}},{\"kind\":\"removeEffect\",\"from\":\"target\",\"match\":{\"key\":\"XPHB:condition:麻痹\"}},{\"kind\":\"removeEffect\",\"from\":\"target\",\"match\":{\"key\":\"XPHB:condition:中毒\"}},{\"kind\":\"removeEffect\",\"from\":\"target\",\"match\":{\"key\":\"XPHB:condition:震慑\"}}]}]}"
+ },
+ {
+  "key": "XPHB:武僧:轻身坠:4",
+  "name": "轻身坠",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "要承受坠落伤害时，用反应把伤害减少 5 × 武僧等级。引擎没有专门标记坠落伤害，所以对钝击伤害用提问判断是不是坠落。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"slowfall\",\"label\":\"轻身坠\",\"on\":\"damageIncoming\",\"role\":\"target\",\"window\":\"before\",\"optional\":true,\"cost\":[{\"economy\":\"reaction\"}],\"when\":\"damage.type == '钝击' && ask('这是坠落伤害吗？')\",\"modify\":[{\"op\":\"reduceDamage\",\"value\":\"5 * self.levelOf('武僧')\"}]}]}"
+ },
+ {
+  "key": "XPHB:武僧:散打技巧:3",
+  "name": "散打技巧",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "每当你疾风连击中的一次攻击命中一个生物时，可以迫使它承受下列效应之一（可选，弹窗里选）：【慌神】直到它的下个回合开始不能使用借机攻击——引擎没有「禁止发动借机攻击」的标志，效应会在它被问到借机攻击之前提醒你选「不攻击」；【推离】力量豁免（原文没写 DC，按武艺豁免 DC = 8 + 感知调整值 + 熟练加值），失败则被推离 15 尺（有地图就真的移动棋子）；【失衡】敏捷豁免（同上），失败则陷入倒地。",
+  "notes": [
+   "慌神：这个生物不能发动借机攻击，请在借机攻击弹窗里选「不攻击」。"
+  ],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"open-hand\",\"label\":\"散打技巧（疾风连击命中）\",\"on\":\"attackHit\",\"role\":\"actor\",\"optional\":true,\"when\":\"attack.unarmed\",\"do\":[{\"kind\":\"choose\",\"prompt\":\"散打技巧：选择一种效果\",\"options\":[{\"label\":\"慌神\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"散打技巧：慌神\"}]},{\"label\":\"推离 15 尺\",\"do\":[{\"kind\":\"save\",\"ability\":\"str\",\"dc\":\"8 + self.mod.wis + self.pb\",\"onFail\":[{\"kind\":\"move\",\"mode\":\"push\",\"ft\":15}]}]},{\"label\":\"失衡\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"8 + self.mod.wis + self.pb\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"XPHB:condition:倒地\"}]}]}]}]}],\"effects\":{\"散打技巧：慌神\":{\"text\":\"不能使用借机攻击，直至其下个回合开始。引擎没有「禁止发动借机攻击」的标志：它被问到借机攻击时请选「不攻击」（效应里带了提醒）。\",\"duration\":{\"until\":{\"at\":\"turnStart\",\"of\":\"bearer\",\"nth\":1}},\"triggers\":[{\"id\":\"no-oa\",\"label\":\"散打技巧：慌神（不能借机攻击）\",\"on\":\"leftReach\",\"role\":\"target\",\"window\":\"after\",\"do\":[{\"kind\":\"note\",\"text\":\"慌神：这个生物不能发动借机攻击，请在借机攻击弹窗里选「不攻击」。\"}]}]}}}"
+ },
+ {
+  "key": "XPHB:武僧:渗透劲:17",
+  "name": "渗透劲",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "暗劲的持续时间（相当于武僧等级的天数）无法自动计时，需手动结束；同一时间只能有一名生物处于暗劲中，需人手动确认。结束暗劲时的体质豁免 DC 按功力豁免 DC 计算。",
+  "notes": [
+   "你和目标不在同一个存在位面，不能用攻击结束暗劲"
+  ],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"strike\",\"label\":\"渗透劲：打入暗劲\",\"on\":\"attackHit\",\"role\":\"actor\",\"optional\":true,\"when\":\"attack.unarmed\",\"cost\":[{\"resource\":\"功力\",\"n\":4}],\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"暗劲\"}]}],\"actions\":[{\"id\":\"use\",\"name\":\"渗透劲：结束暗劲\",\"activation\":\"action\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"filter\":\"target.hasEffect('暗劲')\"},\"root\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":\"8 + self.mod.wis + self.pb\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"ki\",\"dice\":\"10d12\",\"type\":\"力场\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"ki\",\"scale\":0.5}]},{\"kind\":\"removeEffect\",\"match\":{\"name\":\"暗劲\"},\"from\":\"target\"}]},{\"id\":\"attack\",\"name\":\"渗透劲：以一次攻击结束暗劲\",\"activation\":\"none\",\"cost\":[{\"economy\":\"attack\"}],\"requires\":\"turn.isMine\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"filter\":\"target.hasEffect('暗劲')\"},\"text\":\"在自己的回合执行攻击动作时，可以将其中一次攻击替换为此动作。若如此做，你和目标必须处于同一个存在位面（由人确认）。\",\"root\":[{\"kind\":\"if\",\"when\":\"ask('你和目标是否处于同一个存在位面？')\",\"then\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":\"8 + self.mod.wis + self.pb\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"ki\",\"dice\":\"10d12\",\"type\":\"力场\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"ki\",\"scale\":0.5}]},{\"kind\":\"removeEffect\",\"match\":{\"name\":\"暗劲\"},\"from\":\"target\"}],\"else\":[{\"kind\":\"note\",\"text\":\"你和目标不在同一个存在位面，不能用攻击结束暗劲\"}]}]},{\"id\":\"release\",\"name\":\"渗透劲：结束暗劲（不造成伤害）\",\"activation\":\"free\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"filter\":\"target.hasEffect('暗劲')\"},\"root\":[{\"kind\":\"removeEffect\",\"match\":{\"name\":\"暗劲\"},\"from\":\"target\"}]}],\"effects\":{\"暗劲\":{\"text\":\"在你使用动作结束之前是无害的。同一时间只能有一名生物处于此效应中。持续时间为武僧等级的天数（手动结束）。\",\"duration\":{\"manual\":true}}}}"
+ },
+ {
+  "key": "XPHB:武僧:升阶专注:10",
+  "name": "升阶专注",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "你的疾风连击、坚强防御、疾步如风获得增益。疾风连击的三次徒手打击已由基础条目 XPHB:武僧:疾风连击:2 按等级写入（次数 = 2 + min(1, floor(武僧等级 / 10))），此处不重复。剩下两条引擎没有挂接点（它不知道「你消耗功力使用了坚强防御 / 疾步如风」），需要人工处理：消耗功力使用坚强防御时，自己加上两个武艺骰的临时生命值；消耗功力使用疾步如风时，选一个 5 尺内体型大型或更小的自愿生物随你移动直至你回合结束，并让这次移动不引发借机攻击。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\"}"
+ },
+ {
+  "key": "XPHB:武僧:生杀予夺:11",
+  "name": "生杀予夺",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "次数等于感知调整值（最少一次），长休后全部恢复。自动部分：疾风连击命中后可免费使用一次夺命之手（不耗功力，走本条的次数）。需人工处理：疾风连击中把每一次徒手打击替换为予命之手且免费的部分（需在疾风连击条目里处理）；「每回合只能用一次夺命之手」无法与夺命之手（XPHB:武僧:夺命之手:3）联动，同一下命中若两者都选了，需人工注意。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"free-harm\",\"label\":\"生杀予夺：免费夺命之手\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"optional\":true,\"limit\":\"oncePerTurn\",\"when\":\"attack.unarmed\",\"cost\":[{\"resource\":\"life-death-gift\"}],\"do\":[{\"kind\":\"addDamage\",\"dice\":\"classTable('武艺') + self.mod.wis\",\"type\":\"黯蚀\"}]}]}"
+ },
+ {
+  "key": "XPHB:武僧:生死之触:6",
+  "name": "生死之触",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "夺命之手：对生物使用夺命之手时，可使其中毒，直至你的下个回合结束。予命之手：使用予命之手时，可结束被治疗生物身上的目盲、耳聋、麻痹、中毒或震慑之一。这两点是对夺命之手（XPHB:武僧:夺命之手:3）和予命之手（XPHB:武僧:予命之手:3）动作的追加，需要挂在那两个条目上，目前手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XPHB:武僧:四象遁术:11",
+  "name": "四象遁术",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "元素同调特性激活期间，获得相当于你速度的飞行速度与游泳速度。（引擎没有飞行 / 游泳速度的静态类型，人工处理。）",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XPHB:武僧:四象神通:17",
+  "name": "四象神通",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "元素同调期间：伤害抗性（强酸/寒冷/火焰/闪电/雷鸣之一，每回合开始可改，自动）；破灭奔行（疾步如风时速度 +20 尺已算入静态；进入生物 5 尺范围时造成武艺骰伤害，每个生物每回合一次，进入距离的判断需人工）；真力注拳（每回合一次，徒手打击命中时额外造成一个武艺骰的同类型伤害，自动）。",
+  "notes": [
+   "本回合抗性类型不变"
+  ],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"elemental-choice\",\"label\":\"四象神通：选择伤害抗性\",\"on\":\"turnStarted\",\"role\":\"actor\",\"optional\":true,\"when\":\"turn.isMine && self.hasEffect('元素同调')\",\"do\":[{\"kind\":\"choose\",\"prompt\":\"本回合选择的元素抗性\",\"options\":[{\"label\":\"强酸\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"inline\":{\"name\":\"四象神通：抗性\",\"stackKey\":\"四象神通抗性\",\"statics\":[{\"kind\":\"resist\",\"values\":[\"强酸\"]}],\"duration\":{\"endsOn\":[{\"event\":\"effectEnded\",\"when\":\"event.name == '元素同调'\"}]}}}]},{\"label\":\"寒冷\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"inline\":{\"name\":\"四象神通：抗性\",\"stackKey\":\"四象神通抗性\",\"statics\":[{\"kind\":\"resist\",\"values\":[\"寒冷\"]}],\"duration\":{\"endsOn\":[{\"event\":\"effectEnded\",\"when\":\"event.name == '元素同调'\"}]}}}]},{\"label\":\"火焰\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"inline\":{\"name\":\"四象神通：抗性\",\"stackKey\":\"四象神通抗性\",\"statics\":[{\"kind\":\"resist\",\"values\":[\"火焰\"]}],\"duration\":{\"endsOn\":[{\"event\":\"effectEnded\",\"when\":\"event.name == '元素同调'\"}]}}}]},{\"label\":\"闪电\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"inline\":{\"name\":\"四象神通：抗性\",\"stackKey\":\"四象神通抗性\",\"statics\":[{\"kind\":\"resist\",\"values\":[\"闪电\"]}],\"duration\":{\"endsOn\":[{\"event\":\"effectEnded\",\"when\":\"event.name == '元素同调'\"}]}}}]},{\"label\":\"雷鸣\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"inline\":{\"name\":\"四象神通：抗性\",\"stackKey\":\"四象神通抗性\",\"statics\":[{\"kind\":\"resist\",\"values\":[\"雷鸣\"]}],\"duration\":{\"endsOn\":[{\"event\":\"effectEnded\",\"when\":\"event.name == '元素同调'\"}]}}}]},{\"label\":\"保持不变\",\"do\":[{\"kind\":\"note\",\"text\":\"本回合抗性类型不变\"}]}]}]},{\"id\":\"true-force\",\"label\":\"四象神通：真力注拳（每回合一次）\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"optional\":true,\"limit\":\"oncePerTurn\",\"when\":\"attack.unarmed && self.hasEffect('元素同调')\",\"do\":[{\"kind\":\"addDamage\",\"dice\":\"classTable('武艺')\",\"type\":\"attack.damageType\"}]}]}"
+ },
+ {
+  "key": "XPHB:武僧:无影步:11",
+  "name": "无影步",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "使用暗影步时可消耗 1 点功力，移除开始与结束时对微光光照或黑暗的要求；此外，作为同一个附赠动作的一部分，传送后可立即进行一次徒手打击。本条目是消耗功力的版本（普通暗影步见「暗影步」条目）。传送后的徒手打击需人工选目标并结算（命中 = 熟练 + max(力量, 敏捷)，伤害 = 武艺骰 + max(力量, 敏捷) 钝击）。",
+  "notes": [
+   "传送后可立即进行一次徒手打击（附赠动作的一部分），请人工选择目标并结算"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"ki\",\"name\":\"无影步：暗影步（消耗 1 点功力）\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"功力\"}],\"requires\":\"turn.isMine\",\"root\":[{\"kind\":\"move\",\"mode\":\"teleport\",\"ft\":60},{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"暗影步\"},{\"kind\":\"note\",\"text\":\"传送后可立即进行一次徒手打击（附赠动作的一部分），请人工选择目标并结算\"}]}],\"effects\":{\"暗影步\":{\"text\":\"下一次近战攻击具有优势，直到当前回合结束。\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":0}},\"rollMods\":[{\"on\":{\"kind\":\"attack\",\"attack\":{\"melee\":true}},\"who\":\"bearer\",\"op\":\"adv\",\"label\":\"暗影步：下一次近战攻击\"}],\"triggers\":[{\"id\":\"used\",\"label\":\"暗影步：用掉优势\",\"on\":\"d20Rolled\",\"role\":\"actor\",\"window\":\"after\",\"when\":\"roll.kind == 'attack' && attack.melee\",\"do\":[{\"kind\":\"removeEffect\",\"from\":\"self\",\"match\":{\"name\":\"暗影步\"}}]}]}}}"
+ },
+ {
+  "key": "XPHB:武僧:武艺骰:1",
+  "name": "武艺骰",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "可以选择用武艺骰代替徒手打击或武僧武器的伤害。徒手打击的武艺骰已在 XPHB:武僧:武艺:1 的徒手打击伤害里自动计算；武僧武器上选择用武艺骰还是武器本身的伤害骰，由人处理。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XPHB:武僧:幽影斗篷:17",
+  "name": "幽影斗篷",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "完全身处微光或黑暗中时，以魔法动作消耗 3 点功力，周身环绕幽影 1 分钟，直至失能或在明亮光照中结束回合。获得隐形；可如通过困难地形般穿过已占据空间（回合结束仍在其中则排出到最近的未占据空间，需人工处理）；疾风连击不再消耗功力（本条目提供这一版本）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"幽影斗篷\",\"activation\":\"action\",\"tags\":[\"magical\"],\"cost\":[{\"resource\":\"功力\",\"n\":3}],\"requires\":\"!self.hasEffect('幽影斗篷') && ask('你完全身处微光光照或黑暗中吗？')\",\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"幽影斗篷\"}]},{\"id\":\"flurry\",\"name\":\"幽影斗篷：疾风连击（不耗功力）\",\"activation\":\"bonus\",\"requires\":\"turn.isMine && self.hasEffect('幽影斗篷')\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"reach\"},\"tags\":[\"weapon\"],\"root\":[{\"kind\":\"repeat\",\"n\":\"2 + min(1, floor(self.levelOf('武僧') / 10))\",\"do\":[{\"kind\":\"attack\",\"bonus\":\"self.pb + max(self.mod.str, self.mod.dex)\",\"attack\":{\"melee\":true,\"unarmed\":true,\"ability\":\"dex\",\"damageType\":\"钝击\",\"item\":\"徒手打击\"},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"classTable('武艺') + max(self.mod.str, self.mod.dex)\",\"type\":\"钝击\"}]}]}]}],\"effects\":{\"幽影斗篷\":{\"text\":\"获得隐形状态；持续到失能，或在明亮光照中结束你的回合。\",\"tags\":[\"magical\"],\"implies\":[\"XPHB:condition:隐形\"],\"duration\":{\"minutes\":1,\"endsOn\":[{\"event\":\"effectApplied\",\"when\":\"event.bearer == self.id && self.has('失能')\"},{\"event\":\"turnEnded\",\"when\":\"turn.isMine && ask('你的回合结束时是否处于明亮光照中？')\"}]}}}}"
+ },
+ {
+  "key": "XPHB:武僧:予命之手:3",
+  "name": "予命之手",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "魔法动作：消耗 1 点功力接触一个生物（可以是自己），恢复其一枚武艺骰 + 感知调整值的生命值。疾风连击中把一次徒手打击改为予命之手且不额外消耗功力的部分，需在疾风连击条目里处理（人工）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"予命之手\",\"activation\":\"action\",\"tags\":[\"magical\"],\"cost\":[{\"resource\":\"功力\"}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"touch\"},\"root\":[{\"kind\":\"heal\",\"amount\":\"classTable('武艺') + self.mod.wis\"}]}]}"
+ },
+ {
+  "key": "XPHB:武僧:元素同调:3",
+  "name": "元素同调",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "回合开始时可消耗 1 点功力，让元素能量浸润己身，持续 10 分钟或直至失能。触及 +10 尺（徒手打击的触及，需人工处理）。元素注拳：徒手打击命中时可改用强酸/寒冷/火焰/闪电/雷鸣伤害（伤害类型需人工改）；以此类伤害命中时可迫使目标进行力量豁免（DC 原文未写，暂按功力 DC：8 + 感知 + 熟练，请核对），失败则推离或拉近 10 尺。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"infuse\",\"label\":\"元素同调（回合开始：消耗 1 点功力）\",\"on\":\"turnStarted\",\"role\":\"actor\",\"optional\":true,\"when\":\"turn.isMine && !self.hasEffect('元素同调')\",\"cost\":[{\"resource\":\"功力\"}],\"do\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"元素同调\"}]}],\"effects\":{\"元素同调\":{\"text\":\"持续 10 分钟或直至失能；期间徒手打击的触及 +10 尺（人工），元素注拳见条目说明。\",\"tags\":[\"magical\"],\"duration\":{\"minutes\":10,\"endsOn\":[{\"event\":\"effectApplied\",\"when\":\"event.bearer == self.id && self.has('失能')\"}]},\"triggers\":[{\"id\":\"push-pull\",\"label\":\"元素同调：元素注拳推拉\",\"on\":\"attackHit\",\"role\":\"actor\",\"optional\":true,\"when\":\"attack.unarmed\",\"do\":[{\"kind\":\"save\",\"ability\":\"str\",\"dc\":\"8 + self.mod.wis + self.pb\",\"onFail\":[{\"kind\":\"choose\",\"prompt\":\"将目标推离还是拉近 10 尺？\",\"options\":[{\"label\":\"推离 10 尺\",\"do\":[{\"kind\":\"move\",\"mode\":\"push\",\"ft\":10}]},{\"label\":\"拉近 10 尺\",\"do\":[{\"kind\":\"move\",\"mode\":\"pull\",\"ft\":10}]}]}]}]}]}}}"
+ },
+ {
+  "key": "XPHB:武僧:真力注拳:6",
+  "name": "真力注拳",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "使用徒手打击造成伤害时，可以选择造成力场伤害或原伤害类型。徒手打击的伤害类型在 XPHB:武僧:武艺:1 中写为钝击，改选力场需要由人处理。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XPHB:凶蛮打手",
+  "name": "凶蛮打手",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "每回合一次，当你用武器命中目标时，可以掷两次这把武器的伤害骰，并自选其中一次应用在目标上。引擎没有「重掷伤害骰」这个操作（窗口里的 reroll 只认 d20），所以不自动化：命中后请自己再掷一遍这次攻击的武器伤害骰，在「事后裁定」里把这次伤害改成你选的那一组；每回合一次也请自己记。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XPHB:延效法术",
+  "name": "延效法术",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "超魔法：施展持续时间为 1 分钟或更长的法术时，消耗 1 术法点使其持续时间翻倍，最多 24 小时。若该法术需要专注，施法者维持专注的豁免具有优势。引擎不改写持续时间，由人处理。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XPHB:演员",
+  "name": "演员",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "伪装的优势已写：仅当你伪装成某个个体、为使人相信而进行的欺瞒或表演魅力检定，由人确认后给优势。拟声的 DC（8 + 魅力调整值 + 熟练加值）以及听者须通过洞悉检定才能识破，引擎无法让听者掷骰，需要人手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"rollMods\":[{\"on\":{\"kind\":\"check\",\"ability\":\"cha\",\"skill\":[\"欺瞒\",\"表演\"]},\"who\":\"bearer\",\"when\":\"ask('你是否正在伪装成某个虚构或真实的个体，并为使人相信而进行这次检定？')\",\"op\":\"adv\",\"label\":\"演员：伪装\"}]}"
+ },
+ {
+  "key": "XPHB:妖精触碰",
+  "name": "妖精触碰",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "妖精魔法中的迷踪步已写：可以无需法术位施展（附赠动作，传送 30 尺），消耗资源池 fey-touched-spells。注意：原文是「每道法术各一次」（迷踪步与所选的那道预言或惑控一环法术各一次），而人物卡的池子上限为 1，两者不一致，需人核对。所选的那道一环法术可以无需法术位施展，但它的内容由人选定，无法在此写出，需人手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"misty\",\"name\":\"妖精魔法：迷踪步\",\"activation\":\"bonus\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"resource\":\"fey-touched-spells\"}],\"root\":[{\"kind\":\"move\",\"mode\":\"teleport\",\"ft\":30}]}]}"
+ },
+ {
+  "key": "XPHB:野蛮人:报偿:10",
+  "name": "报偿",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "受到伤害后，如果伤害来源在你 5 尺内，可以用反应对它发动一次近战攻击（用武器或徒手打击）。已自动化：反应挂在受伤之后，目标自动确定为伤害你的那个生物（aim: 'actor'），不用自己选；徒手打击那一支连攻击检定和伤害（1 + 力量调整值，狂暴伤害加值照常生效）都由引擎结算。要人处理：用武器反击 —— 引擎没法从数据里调出武器行，请选「近战武器攻击（手动）」，再在武器行手动发起这次近战攻击（反应已经在这里付过了，别再付）。",
+  "notes": [
+   "报偿：请用武器对伤害你的那个生物发动一次近战攻击（反应已在这里付过，在武器行手动发起，不要再付反应）"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"报偿\",\"activation\":\"reaction\",\"trigger\":{\"on\":\"damageTaken\",\"role\":\"target\",\"window\":\"after\",\"aim\":\"actor\",\"when\":\"damage.amount > 0 && attacker != null && attacker.id != self.id && within(self, attacker, 5)\"},\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"reach\"},\"tags\":[\"weapon\"],\"root\":[{\"kind\":\"choose\",\"prompt\":\"报偿：用什么反击？\",\"options\":[{\"label\":\"徒手打击\",\"do\":[{\"kind\":\"attack\",\"bonus\":\"self.pb + self.mod.str\",\"attack\":{\"melee\":true,\"unarmed\":true,\"ability\":\"str\",\"damageType\":\"钝击\",\"item\":\"徒手打击\"},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"1 + self.mod.str\",\"type\":\"钝击\"}]}]},{\"label\":\"近战武器攻击（手动）\",\"do\":[{\"kind\":\"note\",\"text\":\"报偿：请用武器对伤害你的那个生物发动一次近战攻击（反应已在这里付过，在武器行手动发起，不要再付反应）\"}]}]}]}]}"
+ },
+ {
+  "key": "XPHB:野蛮人:持久狂暴:15",
+  "name": "持久狂暴",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "投掷先攻时可以重获所有已用的狂暴次数（长休前只能一次）。狂暴持续 10 分钟：每个回合开始时自动延长。尚未实现的部分：持久狂暴只在昏迷或穿重甲时提前结束，而狂暴效应本身在失能时就会结束，这一点需要人处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"regain\",\"label\":\"持久狂暴：先攻时重获全部狂暴次数\",\"on\":\"initiativeRolled\",\"role\":\"actor\",\"window\":\"after\",\"optional\":true,\"when\":\"self.resource('狂暴') < classTable('狂暴次数')\",\"cost\":[{\"resource\":\"持久狂暴\"}],\"do\":[{\"kind\":\"resource\",\"id\":\"狂暴\",\"delta\":\"classTable('狂暴次数') - self.resource('狂暴')\"}]},{\"id\":\"extend\",\"label\":\"持久狂暴：自动延长狂暴\",\"on\":\"turnStarted\",\"role\":\"actor\",\"window\":\"after\",\"when\":\"self.hasEffect('狂暴')\",\"do\":[{\"kind\":\"extendEffect\",\"template\":\"XPHB:野蛮人:狂暴:1#狂暴\"}]}]}"
+ },
+ {
+  "key": "XPHB:野蛮人:根击千钧:10",
+  "name": "根击千钧",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "回合内武器触及增加 10 尺：引擎没有武器触及修正，需人手动处理。推离与失衡的额外激活已写，靠询问确认该武器是重型或多用武器。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"push\",\"label\":\"根击千钧：推离\",\"on\":\"attackHit\",\"role\":\"actor\",\"optional\":true,\"when\":\"turn.isMine && attack.weapon && attack.melee && attack.mastery != '推离' && target.size != '巨型' && target.size != '超巨型' && ask('根击千钧：这把武器是重型或多用武器吗？')\",\"do\":[{\"kind\":\"move\",\"mode\":\"push\",\"ft\":10}]},{\"id\":\"topple\",\"label\":\"根击千钧：失衡\",\"on\":\"attackHit\",\"role\":\"actor\",\"optional\":true,\"when\":\"turn.isMine && attack.weapon && attack.melee && attack.mastery != '失衡' && ask('根击千钧：这把武器是重型或多用武器吗？')\",\"do\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":\"8 + abilityMod(attack.ability) + pb\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"XPHB:condition:倒地\"}]}]}]}"
+ },
+ {
+  "key": "XPHB:野蛮人:灵树枝杈:6",
+  "name": "灵树枝杈",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "自动部分：狂暴期间，你可见且在你 30 尺内的生物回合开始时，以反应令其力量豁免（DC 8 + 力量调整值 + 熟练），失败则被传送，之后可令其速度降为 0 至当前回合结束。传送的落点（你 5 尺内你可见的未占据空间，或最近的那个）由人在地图上摆放。",
+  "notes": [
+   "灵树枝杈：把目标传送到你 5 尺内你可见的未占据空间（没有的话取离你最近的那个）"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"灵树枝杈\",\"activation\":\"reaction\",\"trigger\":{\"on\":\"turnStarted\",\"role\":\"any\",\"window\":\"after\",\"when\":\"!turn.isMine && within(self, turn.of, 30) && canSee(self, turn.of)\"},\"requires\":\"self.hasEffect('狂暴')\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":30,\"filter\":\"target.id != self.id\"},\"root\":[{\"kind\":\"save\",\"ability\":\"str\",\"dc\":\"8 + mod.str + pb\",\"onFail\":[{\"kind\":\"note\",\"text\":\"灵树枝杈：把目标传送到你 5 尺内你可见的未占据空间（没有的话取离你最近的那个）\"},{\"kind\":\"choose\",\"prompt\":\"灵树枝杈：令被传送的目标速度降为 0（至当前回合结束）吗？\",\"options\":[{\"label\":\"令其速度降为 0\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"灵树枝杈：定住\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":0}}}]},{\"label\":\"不降低速度\",\"do\":[]}]}]}]}],\"effects\":{\"灵树枝杈：定住\":{\"text\":\"被灵树枝杈传送后速度变为 0，持续至当前回合结束。\",\"statics\":[{\"kind\":\"speedSet\",\"value\":0}],\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":0}}}}}"
+ },
+ {
+  "key": "XPHB:野蛮人:莽驰:7",
+  "name": "莽驰",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "进入狂暴的附赠动作的一部分：可以移动至多一半速度。引擎无法把它挂在「进入狂暴」那个动作上，所以做成一个免费动作，只应在刚进入狂暴时使用（由人判断），每回合至多一次。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"莽驰\",\"activation\":\"free\",\"text\":\"只能作为进入狂暴的那个附赠动作的一部分使用（由人判断）：移动至多一半速度。\",\"requires\":\"turn.isMine && self.hasEffect('狂暴') && !self.hasEffect('莽驰')\",\"root\":[{\"kind\":\"economy\",\"move\":\"floor(self.speed / 2)\"},{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"莽驰\"}]}],\"effects\":{\"莽驰\":{\"text\":\"本回合已经用过莽驰。\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":0}}}}}"
+ },
+ {
+  "key": "XPHB:野蛮人:神之狂暴:14",
+  "name": "神之狂暴",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "激活狂暴时可以呈现圣斗士姿态（1 分钟，生命值降至 0 时提前结束，每次长休一次）。已自动处理：暗蚀/心灵/光耀抗性、回春（反应 + 一次狂暴次数）。飞行速度（等于速度）与悬浮需要人处理；「必须在激活狂暴时使用」由人判断。",
+  "notes": [
+   "圣斗士姿态：获得等于速度的飞行速度并可悬浮（请手动处理）"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"神之狂暴\",\"activation\":\"free\",\"text\":\"激活狂暴时才能呈现圣斗士姿态（由人判断）。持续 1 分钟，生命值降至 0 时提前结束。\",\"cost\":[{\"resource\":\"神之狂暴\"}],\"requires\":\"turn.isMine && self.hasEffect('狂暴') && !self.hasEffect('圣斗士姿态')\",\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"圣斗士姿态\"},{\"kind\":\"note\",\"text\":\"圣斗士姿态：获得等于速度的飞行速度并可悬浮（请手动处理）\"}]}],\"effects\":{\"圣斗士姿态\":{\"text\":\"飞行速度等于你的速度并可悬浮（手动）；暗蚀、心灵、光耀抗性；回春：30 尺内一名生物将降至 0 时，可以反应消耗一次狂暴次数，令其生命值变为你的野蛮人等级。\",\"duration\":{\"minutes\":1,\"endsOn\":[{\"event\":\"damageTaken\",\"when\":\"self.hp <= 0\"}]},\"statics\":[{\"kind\":\"resist\",\"values\":[\"黯蚀\",\"心灵\",\"光耀\"]}],\"triggers\":[{\"id\":\"revive\",\"label\":\"神之狂暴：回春\",\"on\":\"reducedTo0\",\"role\":\"any\",\"window\":\"before\",\"optional\":true,\"when\":\"target.id != self.id && target.isAllyOf(self) && within(self, target, 30)\",\"cost\":[{\"economy\":\"reaction\"},{\"resource\":\"狂暴\"}],\"modify\":[{\"op\":\"setHp\",\"value\":\"self.levelOf('野蛮人')\"}]}]}}}"
+ }
+]

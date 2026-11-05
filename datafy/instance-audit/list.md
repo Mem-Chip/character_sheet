@@ -1,0 +1,1014 @@
+# 要审的条目
+
+共 1010 条（partial 842、manual 134、标 full 但有 note 或写了手动的 34），分 26 份。6 环及以上法术不在里面。
+
+- P01 · 艾伐黑触手（`XPHB:spell:艾伐黑触手`）· 手写 · partial · 4 环
+- P01 · 安定心神（`XPHB:spell:安定心神`）· AI · partial · 2 环
+- P01 · 暗示术（`XPHB:spell:暗示术`）· AI · partial · 2 环
+- P01 · 黯冰狱铠（`XPHB:spell:黯冰狱铠`）· AI · partial · 1 环
+- P01 · 匕首之云（`XPHB:spell:匕首之云`）· 手写 · partial · 2 环
+- P01 · 毕格比之手（`XPHB:spell:毕格比之手`）· AI · partial · 5 环
+- P01 · 庇护术（`XPHB:spell:庇护术`）· AI · partial · 1 环
+- P01 · 变巨/缩小术（`XPHB:spell:变巨/缩小术`）· AI · partial · 2 环
+- P01 · 变身术（`XPHB:spell:变身术`）· AI · partial · 2 环
+- P01 · 变形术（`XPHB:spell:变形术`）· AI · partial · 4 环
+- P01 · 冰风暴（`XPHB:spell:冰风暴`）· 手写 · partial · 4 环
+- P01 · 冰刃（`XPHB:spell:冰刃`）· AI · partial · 1 环
+- P01 · 不谐低语（`XPHB:spell:不谐低语`）· AI · partial · 1 环
+- P01 · 操控水体（`XPHB:spell:操控水体`）· AI · partial · 4 环
+- P01 · 颤栗之触（`XPHB:spell:颤栗之触`）· AI · partial · 戏法
+- P01 · 沉默术（`XPHB:spell:沉默术`）· 手写 · partial · 2 环
+- P01 · 炽焰法球（`XPHB:spell:炽焰法球`）· 手写 · partial · 2 环
+- P01 · 臭云术（`XPHB:spell:臭云术`）· AI · partial · 3 环
+- P01 · 篡改记忆（`XPHB:spell:篡改记忆`）· AI · partial · 5 环
+- P01 · 催眠图纹（`XPHB:spell:催眠图纹`）· AI · partial · 3 环
+- P01 · 脆弱诅咒（`XPHB:spell:脆弱诅咒`）· AI · partial · 1 环
+- P01 · 法师护甲（`XPHB:spell:法师护甲`）· AI · partial · 1 环
+- P01 · 繁彩球（`XPHB:spell:繁彩球`）· AI · partial · 1 环
+- P01 · 防护法阵（`XPHB:spell:防护法阵`）· AI · manual · 3 环
+- P01 · 防护善恶（`XPHB:spell:防护善恶`）· AI · partial · 1 环
+- P01 · 防活物护罩（`XPHB:spell:防活物护罩`）· AI · partial · 5 环
+- P01 · 防死结界（`XPHB:spell:防死结界`）· AI · partial · 4 环
+- P01 · 放逐术（`XPHB:spell:放逐术`）· AI · partial · 4 环
+- P01 · 放逐斩（`XPHB:spell:放逐斩`）· AI · partial · 5 环
+- P01 · 飞行术（`XPHB:spell:飞行术`）· AI · partial · 3 环
+- P01 · 粉碎音波（`XPHB:spell:粉碎音波`）· AI · partial · 2 环
+- P01 · 风墙术（`XPHB:spell:风墙术`）· AI · partial · 3 环
+- P01 · 疯狂冠冕（`XPHB:spell:疯狂冠冕`）· AI · partial · 2 环
+- P01 · 浮空术（`XPHB:spell:浮空术`）· AI · partial · 2 环
+- P01 · 复苏秘法（`XPHB:spell:复苏秘法`）· AI · partial · 2 环
+- P01 · 钢风斩（`XPHB:spell:钢风斩`）· AI · partial · 5 环
+- P01 · 高等复原术（`XPHB:spell:高等复原术`）· AI · partial · 5 环
+- P01 · 哈达之欲（`XPHB:spell:哈达之欲`）· 手写 · partial · 3 环
+- P01 · 黑暗术（`XPHB:spell:黑暗术`）· AI · partial · 2 环
+- P01 · 缓慢术（`XPHB:spell:缓慢术`）· AI · partial · 3 环
+- P02 · 回生术（`XPHB:spell:回生术`）· AI · partial · 3 环
+- P02 · 活化物件（`XPHB:spell:活化物件`）· AI · partial · 5 环
+- P02 · 活力灵光（`XPHB:spell:活力灵光`）· AI · partial · 3 环
+- P02 · 火墙术（`XPHB:spell:火墙术`）· AI · partial · 4 环
+- P02 · 火焰刀（`XPHB:spell:火焰刀`）· AI · partial · 2 环
+- P02 · 火焰护盾（`XPHB:spell:火焰护盾`）· AI · partial · 4 环
+- P02 · 棘雹术（`XPHB:spell:棘雹术`）· AI · partial · 1 环
+- P02 · 加速术（`XPHB:spell:加速术`）· AI · partial · 3 环
+- P02 · 贾拉兹光辉风暴（`XPHB:spell:贾拉兹光辉风暴`）· AI · partial · 5 环
+- P02 · 假象术（`XPHB:spell:假象术`）· AI · partial · 5 环
+- P02 · 降咒（`XPHB:spell:降咒`）· AI · partial · 3 环
+- P02 · 解除魔法（`XPHB:spell:解除魔法`）· AI · partial · 3 环
+- P02 · 荆棘丛生（`XPHB:spell:荆棘丛生`）· 手写 · partial · 2 环
+- P02 · 警戒箭阵（`XPHB:spell:警戒箭阵`）· AI · partial · 2 环
+- P02 · 净化灵光（`XPHB:spell:净化灵光`）· AI · partial · 4 环
+- P02 · 镜影术（`XPHB:spell:镜影术`）· AI · partial · 2 环
+- P02 · 纠缠术（`XPHB:spell:纠缠术`）· AI · partial · 1 环
+- P02 · 巨虫术（`XPHB:spell:巨虫术`）· AI · partial · 4 环
+- P02 · 克敌先击（`XPHB:spell:克敌先击`）· AI · partial · 戏法
+- P02 · 恐惧术（`XPHB:spell:恐惧术`）· AI · partial · 3 环
+- P02 · 困惑术（`XPHB:spell:困惑术`）· AI · partial · 4 环
+- P02 · 力场墙（`XPHB:spell:力场墙`）· AI · partial · 5 环
+- P02 · 灵体卫士（`XPHB:spell:灵体卫士`）· AI · partial · 3 环
+- P02 · 灵体武器（`XPHB:spell:灵体武器`）· AI · partial · 2 环
+- P02 · 龙息术（`XPHB:spell:龙息术`）· AI · partial · 2 环
+- P02 · 魅惑怪物（`XPHB:spell:魅惑怪物`）· AI · partial · 4 环
+- P02 · 魅惑类人（`XPHB:spell:魅惑类人`）· AI · partial · 1 环
+- P02 · 魅影之力（`XPHB:spell:魅影之力`）· AI · partial · 2 环
+- P02 · 朦胧术（`XPHB:spell:朦胧术`）· AI · partial · 2 环
+- P02 · 命令术（`XPHB:spell:命令术`）· AI · partial · 1 环
+- P02 · 魔邓肯忠犬（`XPHB:spell:魔邓肯忠犬`）· AI · partial · 4 环
+- P02 · 魔化武器（`XPHB:spell:魔化武器`）· AI · partial · 2 环
+- P02 · 欧提路克弹力法球（`XPHB:spell:欧提路克弹力法球`）· AI · partial · 4 环
+- P02 · 气化形体（`XPHB:spell:气化形体`）· AI · partial · 3 环
+- P02 · 强令对决（`XPHB:spell:强令对决`）· AI · partial · 1 环
+- P02 · 强迫术（`XPHB:spell:强迫术`）· AI · partial · 4 环
+- P02 · 擒抱藤（`XPHB:spell:擒抱藤`）· AI · partial · 4 环
+- P02 · 驱逐善恶（`XPHB:spell:驱逐善恶`）· AI · partial · 5 环
+- P02 · 燃火术（`XPHB:spell:燃火术`）· AI · partial · 戏法
+- P02 · 任意门（`XPHB:spell:任意门`）· AI · partial · 4 环
+- P03 · 闪电箭矢（`XPHB:spell:闪电箭矢`）· AI · partial · 3 环
+- P03 · 闪现术（`XPHB:spell:闪现术`）· AI · partial · 3 环
+- P03 · 闪耀斩（`XPHB:spell:闪耀斩`）· AI · partial · 2 环
+- P03 · 神莓术（`XPHB:spell:神莓术`）· AI · partial · 1 环
+- P03 · 生命灵光（`XPHB:spell:生命灵光`）· AI · partial · 4 环
+- P03 · 圣火术（`XPHB:spell:圣火术`）· AI · partial · 戏法
+- P03 · 石墙术（`XPHB:spell:石墙术`）· AI · partial · 5 环
+- P03 · 识破隐形（`XPHB:spell:识破隐形`）· AI · partial · 2 环
+- P03 · 守护之链（`XPHB:spell:守护之链`）· AI · partial · 2 环
+- P03 · 守卫刻文（`XPHB:spell:守卫刻文`）· AI · partial · 3 环
+- P03 · 术法爆发（`XPHB:spell:术法爆发`）· AI · partial · 戏法
+- P03 · 树跃术（`XPHB:spell:树跃术`）· AI · partial · 5 环
+- P03 · 睡眠术（`XPHB:spell:睡眠术`）· AI · partial · 1 环
+- P03 · 死云术（`XPHB:spell:死云术`）· AI · partial · 5 环
+- P03 · 塔莎狂笑术（`XPHB:spell:塔莎狂笑术`）· AI · partial · 1 环
+- P03 · 跳跃术（`XPHB:spell:跳跃术`）· AI · partial · 1 环
+- P03 · 维生术（`XPHB:spell:维生术`）· AI · partial · 戏法
+- P03 · 巫术箭（`XPHB:spell:巫术箭`）· AI · partial · 1 环
+- P03 · 橡棍术（`XPHB:spell:橡棍术`）· AI · partial · 戏法
+- P03 · 心灵尖刺（`XPHB:spell:心灵尖刺`）· AI · partial · 2 环
+- P03 · 心灵遥控（`XPHB:spell:心灵遥控`）· AI · partial · 5 环
+- P03 · 信仰守卫（`XPHB:spell:信仰守卫`）· AI · partial · 4 环
+- P03 · 行动自如（`XPHB:spell:行动自如`）· AI · partial · 4 环
+- P03 · 雪雨暴（`XPHB:spell:雪雨暴`）· 手写 · partial · 3 环
+- P03 · 寻获坐骑（`XPHB:spell:寻获坐骑`）· AI · partial · 2 环
+- P03 · 妖火（`XPHB:spell:妖火`）· AI · partial · 1 环
+- P03 · 移除诅咒（`XPHB:spell:移除诅咒`）· AI · partial · 3 环
+- P03 · 疫病虫群（`XPHB:spell:疫病虫群`）· 手写 · partial · 5 环
+- P03 · 疫病术（`XPHB:spell:疫病术`）· AI · partial · 5 环
+- P03 · 隐形术（`XPHB:spell:隐形术`）· AI · partial · 2 环
+- P03 · 英雄气概（`XPHB:spell:英雄气概`）· AI · partial · 1 环
+- P03 · 悠兰德王者威仪（`XPHB:spell:悠兰德王者威仪`）· AI · partial · 5 环
+- P03 · 油腻术（`XPHB:spell:油腻术`）· 手写 · partial · 1 环
+- P03 · 诱捕打击（`XPHB:spell:诱捕打击`）· AI · partial · 1 环
+- P03 · 羽落术（`XPHB:spell:羽落术`）· AI · manual · 戏法
+- P03 · 元素武器（`XPHB:spell:元素武器`）· AI · partial · 3 环
+- P03 · 原力法阵（`XPHB:spell:原力法阵`）· AI · partial · 5 环
+- P03 · 援助术（`XPHB:spell:援助术`）· AI · partial · 2 环
+- P03 · 月光涌泉（`XPHB:spell:月光涌泉`）· AI · partial · 4 环
+- P03 · 月华之光（`XPHB:spell:月华之光`）· 手写 · partial · 2 环
+- P04 · 云雾术（`XPHB:spell:云雾术`）· AI · partial · 1 环
+- P04 · 造风术（`XPHB:spell:造风术`）· AI · partial · 2 环
+- P04 · 召雷术（`XPHB:spell:召雷术`）· AI · partial · 3 环
+- P04 · 支配类人（`XPHB:spell:支配类人`）· AI · partial · 5 环
+- P04 · 支配野兽（`XPHB:spell:支配野兽`）· AI · partial · 4 环
+- P04 · 植物滋长（`XPHB:spell:植物滋长`）· AI · partial · 3 环
+- P04 · 治疗祷言（`XPHB:spell:治疗祷言`）· AI · partial · 2 环
+- P04 · 咒唤林地卫士（`XPHB:spell:咒唤林地卫士`）· AI · partial · 4 环
+- P04 · 咒唤兽群（`XPHB:spell:咒唤兽群`）· AI · partial · 3 环
+- P04 · 咒唤微元素群（`XPHB:spell:咒唤微元素群`）· AI · partial · 4 环
+- P04 · 咒唤元素（`XPHB:spell:咒唤元素`）· AI · partial · 5 环
+- P04 · 昼明术（`XPHB:spell:昼明术`）· AI · manual · 3 环
+- P04 · 蛛网术（`XPHB:spell:蛛网术`）· 手写 · partial · 2 环
+- P04 · 蛛行术（`XPHB:spell:蛛行术`）· AI · partial · 2 环
+- P04 · 注目术（`XPHB:spell:注目术`）· AI · partial · 2 环
+- P04 · 灼热金属（`XPHB:spell:灼热金属`）· AI · partial · 2 环
+- P04 · 阿斯莫（`XPHB:阿斯莫`）· AI · partial
+- P04 · 矮人（`XPHB:矮人`）· AI · partial
+- P04 · 暗夜精魂之恩惠（`XPHB:暗夜精魂之恩惠`）· AI · partial
+- P04 · 半身人（`XPHB:半身人`）· AI · partial
+- P04 · 超凡强韧之恩惠（`XPHB:超凡强韧之恩惠`）· AI · manual
+- P04 · 穿刺者（`XPHB:穿刺者`）· AI · manual
+- P04 · 次元旅行之恩惠（`XPHB:次元旅行之恩惠`）· AI · partial
+- P04 · 大厨（`XPHB:大厨`）· AI · partial
+- P04 · 大德鲁伊（`XPHB:德鲁伊:大德鲁伊:20`）· AI · partial
+- P04 · 大洋慨赠（`XPHB:德鲁伊:大洋慨赠:14`）· AI · partial
+- P04 · 风暴降生（`XPHB:德鲁伊:风暴降生:10`）· AI · manual
+- P04 · 荒野复苏（`XPHB:德鲁伊:荒野复苏:5`）· AI · partial
+- P04 · 进阶结社形态（`XPHB:德鲁伊:进阶结社形态:6`）· AI · manual
+- P04 · 闪耀星座（`XPHB:德鲁伊:闪耀星座:10`）· 审后补 · partial
+- P04 · 圣杯座（`XPHB:德鲁伊:圣杯座:3`）· AI · partial
+- P04 · 水生亲和（`XPHB:德鲁伊:水生亲和:6`）· AI · manual
+- P04 · 元素狂怒（`XPHB:德鲁伊:元素狂怒:15`）· AI · manual
+- P04 · 月光飞步（`XPHB:德鲁伊:月光飞步:10`）· 审后补 · partial
+- P04 · 自然庇护（`XPHB:德鲁伊:自然庇护:14`）· AI · partial
+- P04 · 自然恢复（`XPHB:德鲁伊:自然恢复:6`）· AI · partial
+- P04 · 毒师（`XPHB:毒师`）· AI · partial
+- P04 · 盾牌大师（`XPHB:盾牌大师`）· AI · partial
+- P04 · 奥术回想（`XPHB:法师:奥术回想:1`）· 审后补 · partial
+- P04 · 奥术守御（`XPHB:法师:奥术守御:3`）· 审后补 · partial
+- P05 · 超限导能（`XPHB:法师:超限导能:14`）· 审后补 · partial
+- P05 · 法术精通（`XPHB:法师:法术精通:18`）· 审后补 · manual
+- P05 · 法术抗性（`XPHB:法师:法术抗性:14`）· 审后补 · partial
+- P05 · 法术塑形（`XPHB:法师:法术塑形:6`）· 审后补 · manual
+- P05 · 魅影生物（`XPHB:法师:魅影生物:6`）· 审后补 · full
+- P05 · 破法者（`XPHB:法师:破法者:10`）· 审后补 · partial
+- P05 · 强化幻术（`XPHB:法师:强化幻术:3`）· 审后补 · manual
+- P05 · 强力戏法（`XPHB:法师:强力戏法:3`）· 审后补 · manual
+- P05 · 强效塑能（`XPHB:法师:强效塑能:10`）· AI · partial
+- P05 · 天眼通（`XPHB:法师:天眼通:10`）· AI · partial
+- P05 · 亦真亦幻（`XPHB:法师:亦真亦幻:14`）· AI · partial
+- P05 · 预言专家（`XPHB:法师:预言专家:6`）· AI · manual
+- P05 · 预兆（`XPHB:法师:预兆:3`）· AI · partial
+- P05 · 招牌法术（`XPHB:法师:招牌法术:20`）· AI · partial
+- P05 · 法术射手（`XPHB:法术射手`）· AI · manual
+- P05 · 法术溯回之恩惠（`XPHB:法术溯回之恩惠`）· AI · manual
+- P05 · 反击（`XPHB:反击`）· AI · partial
+- P05 · 粉碎者（`XPHB:粉碎者`）· AI · partial
+- P05 · 歌利亚（`XPHB:歌利亚`）· AI · partial
+- P05 · 共视感官（`XPHB:共视感官`）· AI · partial
+- P05 · 观察力（`XPHB:观察力`）· AI · partial
+- P05 · 横扫攻击（`XPHB:横扫攻击`）· AI · partial
+- P05 · 换位诈术（`XPHB:换位诈术`）· AI · partial
+- P05 · 饥渴魔刃（`XPHB:饥渴魔刃`）· AI · manual
+- P05 · 缴械攻击（`XPHB:缴械攻击`）· AI · full
+- P05 · 谨慎法术（`XPHB:谨慎法术`）· AI · manual
+- P05 · 精灵（`XPHB:精灵`）· AI · partial
+- P05 · 精妙法术（`XPHB:精妙法术`）· AI · manual
+- P05 · 警觉（`XPHB:警觉`）· AI · manual
+- P05 · 酒馆斗殴者（`XPHB:酒馆斗殴者`）· AI · partial
+- P05 · 巨武器大师（`XPHB:巨武器大师`）· AI · partial
+- P05 · 苦痛魔爆（`XPHB:苦痛魔爆`）· AI · partial
+- P05 · 链之魔契（`XPHB:链之魔契`）· AI · partial
+- P05 · 链主赋能（`XPHB:链主赋能`）· AI · partial
+- P05 · 灵动攻击（`XPHB:灵动攻击`）· AI · partial
+- P05 · 龙裔（`XPHB:龙裔`）· AI · partial
+- P05 · 孪生法术（`XPHB:孪生法术`）· AI · manual
+- P05 · 灭世魔刃（`XPHB:灭世魔刃`）· AI · manual
+- P05 · 敏锐心灵（`XPHB:敏锐心灵`）· AI · partial
+- P05 · 魔法学徒（`XPHB:魔法学徒`）· AI · manual
+- P06 · 魔能长枪（`XPHB:魔能长枪`）· AI · manual
+- P06 · 创造奴仆（`XPHB:魔契师:创造奴仆:14`）· AI · manual
+- P06 · 斗转星移（`XPHB:魔契师:斗转星移:10`）· AI · partial
+- P06 · 光耀之魂（`XPHB:魔契师:光耀之魂:6`）· AI · manual
+- P06 · 骇异恶咒（`XPHB:魔契师:骇异恶咒:10`）· AI · partial
+- P06 · 唤醒心灵（`XPHB:魔契师:唤醒心灵:3`）· AI · partial
+- P06 · 锐眼斗士（`XPHB:魔契师:锐眼斗士:6`）· AI · partial
+- P06 · 思维之盾（`XPHB:魔契师:思维之盾:10`）· AI · manual
+- P06 · 天界韧性（`XPHB:魔契师:天界韧性:10`）· AI · partial
+- P06 · 雾隐遁行（`XPHB:魔契师:雾隐遁行:6`）· AI · partial
+- P06 · 心灵法术（`XPHB:魔契师:心灵法术:3`）· AI · manual
+- P06 · 玄奥秘法（`XPHB:魔契师:玄奥秘法:11`）· AI · manual
+- P06 · 妖精步伐（`XPHB:魔契师:妖精步伐:3`）· 审后补 · partial
+- P06 · 直坠噩梦（`XPHB:魔契师:直坠噩梦:14`）· AI · partial
+- P06 · 灼光复仇（`XPHB:魔契师:灼光复仇:14`）· AI · partial
+- P06 · 醉心魔法（`XPHB:魔契师:醉心魔法:14`）· AI · partial
+- P06 · 光冕（`XPHB:牧师:光冕:17`）· AI · partial
+- P06 · 诡术祝福（`XPHB:牧师:诡术祝福:3`）· AI · partial
+- P06 · 诡诈换位（`XPHB:牧师:诡诈换位:6`）· AI · manual
+- P06 · 极效治疗（`XPHB:牧师:极效治疗:17`）· AI · partial
+- P06 · 进阶神圣干预（`XPHB:牧师:进阶神圣干预:20`）· AI · manual
+- P06 · 精通分身（`XPHB:牧师:精通分身:17`）· AI · manual
+- P06 · 精通受祝击（`XPHB:牧师:精通受祝击:14`）· AI · partial
+- P06 · 黎明曙光（`XPHB:牧师:黎明曙光:3`）· 审后补 · partial
+- P06 · 驱散亡灵（`XPHB:牧师:驱散亡灵:2`）· 审后补 · partial
+- P06 · 神圣干预（`XPHB:牧师:神圣干预:10`）· AI · manual
+- P06 · 神佑医者（`XPHB:牧师:神佑医者:6`）· AI · manual
+- P06 · 生命门徒（`XPHB:牧师:生命门徒:3`）· AI · manual
+- P06 · 维持生命（`XPHB:牧师:维持生命:3`）· AI · partial
+- P06 · 战神祝福（`XPHB:牧师:战神祝福:6`）· AI · manual
+- P06 · 战争祭司（`XPHB:牧师:战争祭司:3`）· AI · partial
+- P06 · 召现分身（`XPHB:牧师:召现分身:3`）· AI · partial
+- P06 · 灼净亡灵（`XPHB:牧师:灼净亡灵:5`）· AI · manual
+- P06 · 耐性（`XPHB:耐性`）· AI · partial
+- P06 · 能量抗性之恩惠（`XPHB:能量抗性之恩惠`）· AI · partial
+- P06 · 念动力（`XPHB:念动力`）· AI · manual
+- P06 · 骑乘战斗（`XPHB:骑乘战斗`）· AI · partial
+- P06 · 强弩专家（`XPHB:强弩专家`）· AI · manual
+- P06 · 强效法术（`XPHB:强效法术`）· AI · manual
+- P06 · 擒抱者（`XPHB:擒抱者`）· AI · partial
+- P07 · 刃之魔契（`XPHB:刃之魔契`）· AI · partial
+- P07 · 融身入影（`XPHB:融身入影`）· AI · partial
+- P07 · 哨兵（`XPHB:哨兵`）· AI · partial
+- P07 · 神射手（`XPHB:神射手`）· AI · manual
+- P07 · 升阶法术（`XPHB:升阶法术`）· AI · partial
+- P07 · 不灭哨卫（`XPHB:圣武士:不灭哨卫:15`）· AI · full
+- P07 · 仇敌誓言（`XPHB:圣武士:仇敌誓言:3`）· AI · partial
+- P07 · 奉献灵光（`XPHB:圣武士:奉献灵光:7`）· AI · partial
+- P07 · 复仇天使（`XPHB:圣武士:复仇天使:20`）· AI · partial
+- P07 · 复仇之魂（`XPHB:圣武士:复仇之魂:15`）· AI · partial
+- P07 · 复原之触（`XPHB:圣武士:复原之触:14`）· AI · manual
+- P07 · 鼓舞斩（`XPHB:圣武士:鼓舞斩:3`）· AI · partial
+- P07 · 辉煌防御（`XPHB:圣武士:辉煌防御:15`）· AI · partial
+- P07 · 坚韧复仇（`XPHB:圣武士:坚韧复仇:7`）· AI · partial
+- P07 · 绝伦健将（`XPHB:圣武士:绝伦健将:3`）· AI · partial
+- P07 · 灵光增效（`XPHB:圣武士:灵光增效:18`）· AI · manual
+- P07 · 弃绝众敌（`XPHB:圣武士:弃绝众敌:9`）· AI · partial
+- P07 · 上古斗士（`XPHB:圣武士:上古斗士:20`）· AI · partial
+- P07 · 神圣感知（`XPHB:圣武士:神圣感知:3`）· AI · partial
+- P07 · 现世传说（`XPHB:圣武士:现世传说:20`）· AI · partial
+- P07 · 信实坐骑（`XPHB:圣武士:信实坐骑:5`）· AI · partial
+- P07 · 迅捷灵光（`XPHB:圣武士:迅捷灵光:7`）· AI · partial
+- P07 · 勇气灵光（`XPHB:圣武士:勇气灵光:10`）· AI · partial
+- P07 · 至圣光轮（`XPHB:圣武士:至圣光轮:20`）· AI · partial
+- P07 · 守护馈赠（`XPHB:守护馈赠`）· AI · partial
+- P07 · 奥术登神（`XPHB:术士:奥术登神:20`）· AI · manual
+- P07 · 超魔法（`XPHB:术士:超魔法:2`）· AI · manual
+- P07 · 传心谈话（`XPHB:术士:传心谈话:3`）· 审后补 · partial
+- P07 · 混沌之潮（`XPHB:术士:混沌之潮:3`）· AI · partial
+- P07 · 狂野魔法浪涌（`XPHB:术士:狂野魔法浪涌:3`）· AI · partial
+- P07 · 灵能术法（`XPHB:术士:灵能术法:6`）· AI · manual
+- P07 · 龙伴（`XPHB:术士:龙伴:18`）· 手写 · full
+- P07 · 龙翼（`XPHB:术士:龙翼:14`）· AI · partial
+- P07 · 律令之壁（`XPHB:术士:律令之壁:6`）· AI · partial
+- P07 · 魔力泉涌（`XPHB:术士:魔力泉涌:2`）· AI · partial
+- P07 · 扭曲爆裂（`XPHB:术士:扭曲爆裂:18`）· AI · partial
+- P07 · 时械矩阵（`XPHB:术士:时械矩阵:18`）· AI · partial
+- P07 · 术法化身（`XPHB:术士:术法化身:7`）· AI · partial
+- P07 · 血肉启示（`XPHB:术士:血肉启示:14`）· AI · partial
+- P07 · 驯服浪涌（`XPHB:术士:驯服浪涌:18`）· AI · manual
+- P08 · 元素亲和（`XPHB:术士:元素亲和:6`）· AI · partial
+- P08 · 掌控混沌（`XPHB:术士:掌控混沌:14`）· AI · manual
+- P08 · 双持客（`XPHB:双持客`）· AI · partial
+- P08 · 提夫林（`XPHB:提夫林`）· AI · manual
+- P08 · 徒手战斗（`XPHB:徒手战斗`）· AI · manual
+- P08 · 无敌攻势之恩惠（`XPHB:无敌攻势之恩惠`）· AI · partial
+- P08 · 暗影步（`XPHB:武僧:暗影步:6`）· AI · partial
+- P08 · 拨挡攻击（`XPHB:武僧:拨挡攻击:3`）· AI · partial
+- P08 · 反射闪避（`XPHB:武僧:反射闪避:7`）· AI · manual
+- P08 · 返本还元（`XPHB:武僧:返本还元:10`）· AI · partial
+- P08 · 飞檐走壁（`XPHB:武僧:飞檐走壁:9`）· AI · manual
+- P08 · 黑暗术（`XPHB:武僧:黑暗术:3`）· AI · partial
+- P08 · 疾步如风（`XPHB:武僧:疾步如风:2`）· AI · partial
+- P08 · 流星步（`XPHB:武僧:流星步:11`）· AI · partial
+- P08 · 敏捷攻击（`XPHB:武僧:敏捷攻击:1`）· AI · partial
+- P08 · 命极之手（`XPHB:武僧:命极之手:17`）· AI · partial
+- P08 · 轻身坠（`XPHB:武僧:轻身坠:4`）· AI · partial
+- P08 · 散打技巧（`XPHB:武僧:散打技巧:3`）· AI · partial
+- P08 · 渗透劲（`XPHB:武僧:渗透劲:17`）· AI · partial
+- P08 · 升阶专注（`XPHB:武僧:升阶专注:10`）· AI · partial
+- P08 · 生杀予夺（`XPHB:武僧:生杀予夺:11`）· AI · partial
+- P08 · 生死之触（`XPHB:武僧:生死之触:6`）· AI · manual
+- P08 · 四象遁术（`XPHB:武僧:四象遁术:11`）· AI · manual
+- P08 · 四象神通（`XPHB:武僧:四象神通:17`）· AI · partial
+- P08 · 无影步（`XPHB:武僧:无影步:11`）· AI · partial
+- P08 · 武艺骰（`XPHB:武僧:武艺骰:1`）· AI · manual
+- P08 · 幽影斗篷（`XPHB:武僧:幽影斗篷:17`）· AI · partial
+- P08 · 予命之手（`XPHB:武僧:予命之手:3`）· AI · partial
+- P08 · 元素同调（`XPHB:武僧:元素同调:3`）· AI · partial
+- P08 · 真力注拳（`XPHB:武僧:真力注拳:6`）· AI · manual
+- P08 · 凶蛮打手（`XPHB:凶蛮打手`）· AI · manual
+- P08 · 延效法术（`XPHB:延效法术`）· AI · manual
+- P08 · 演员（`XPHB:演员`）· AI · partial
+- P08 · 妖精触碰（`XPHB:妖精触碰`）· AI · partial
+- P08 · 报偿（`XPHB:野蛮人:报偿:10`）· AI · partial
+- P08 · 持久狂暴（`XPHB:野蛮人:持久狂暴:15`）· AI · partial
+- P08 · 根击千钧（`XPHB:野蛮人:根击千钧:10`）· AI · partial
+- P08 · 灵树枝杈（`XPHB:野蛮人:灵树枝杈:6`）· AI · partial
+- P08 · 莽驰（`XPHB:野蛮人:莽驰:7`）· AI · partial
+- P08 · 神之狂暴（`XPHB:野蛮人:神之狂暴:14`）· AI · partial
+- P09 · 神之勇者（`XPHB:野蛮人:神之勇者:3`）· AI · partial
+- P09 · 圣树活力（`XPHB:野蛮人:圣树活力:3`）· AI · partial
+- P09 · 世界树之奇旅（`XPHB:野蛮人:世界树之奇旅:14`）· AI · partial
+- P09 · 兽力威能（`XPHB:野蛮人:兽力威能:14`）· AI · partial
+- P09 · 兽性狂暴（`XPHB:野蛮人:兽性狂暴:3`）· AI · partial
+- P09 · 无我狂暴（`XPHB:野蛮人:无我狂暴:6`）· AI · partial
+- P09 · 凶蛮打击（`XPHB:野蛮人:凶蛮打击:9`）· AI · partial
+- P09 · 医疗师（`XPHB:医疗师`）· AI · partial
+- P09 · 不破威仪（`XPHB:吟游诗人:不破威仪:14`）· AI · partial
+- P09 · 创生圣言（`XPHB:吟游诗人:创生圣言:20`）· AI · manual
+- P09 · 额外攻击（`XPHB:吟游诗人:额外攻击:6`）· AI · manual
+- P09 · 鼓舞之移（`XPHB:吟游诗人:鼓舞之移:6`）· AI · partial
+- P09 · 灵感织衣（`XPHB:吟游诗人:灵感织衣:3`）· AI · partial
+- P09 · 灵巧打击（`XPHB:吟游诗人:灵巧打击:3`）· AI · partial
+- P09 · 诗人痛击（`XPHB:吟游诗人:诗人痛击:3`）· AI · partial
+- P09 · 威仪作锦（`XPHB:吟游诗人:威仪作锦:6`）· 手写 · full
+- P09 · 协同舞步（`XPHB:吟游诗人:协同舞步:6`）· AI · partial
+- P09 · 引导闪避（`XPHB:吟游诗人:引导闪避:14`）· AI · partial
+- P09 · 战斗激励（`XPHB:吟游诗人:战斗激励:3`）· AI · partial
+- P09 · 战斗魔法（`XPHB:吟游诗人:战斗魔法:14`）· AI · partial
+- P09 · 饮命者（`XPHB:饮命者`）· AI · partial
+- P09 · 隐伏者（`XPHB:隐伏者`）· AI · partial
+- P09 · 影界触碰（`XPHB:影界触碰`）· AI · manual
+- P09 · 撤步（`XPHB:游荡者:撤步（花费：1d6）:5`）· AI · partial
+- P09 · 淬毒武器（`XPHB:游荡者:淬毒武器:13`）· AI · manual
+- P09 · 法师之手诈术（`XPHB:游荡者:法师之手诈术:3`）· AI · manual
+- P09 · 法术窃贼（`XPHB:游荡者:法术窃贼:17`）· AI · partial
+- P09 · 诡术伏击（`XPHB:游荡者:诡术伏击:9`）· AI · partial
+- P09 · 诡诈打击（`XPHB:游荡者:诡诈打击:5`）· AI · manual
+- P09 · 恍惚（花费：2d6）（`XPHB:游荡者:恍惚（花费：2d6）:14`）· AI · partial
+- P09 · 击昏（花费：6d6）（`XPHB:游荡者:击昏（花费：6d6）:14`）· AI · partial
+- P09 · 极效潜行（`XPHB:游荡者:极效潜行:9`）· AI · manual
+- P09 · 进阶诡诈打击（`XPHB:游荡者:进阶诡诈打击:11`）· AI · manual
+- P09 · 可靠才能（`XPHB:游荡者:可靠才能:7`）· AI · partial
+- P09 · 快手（`XPHB:游荡者:快手:3`）· AI · partial
+- P09 · 灵振诀窍（`XPHB:游荡者:灵振诀窍:3`）· AI · partial
+- P09 · 窃盗本能（`XPHB:游荡者:窃盗本能:17`）· AI · manual
+- P09 · 使用魔法装置（`XPHB:游荡者:使用魔法装置:13`）· AI · partial
+- P09 · 摔绊（`XPHB:游荡者:摔绊（花费：1d6）:5`）· AI · partial
+- P09 · 撕裂心智（`XPHB:游荡者:撕裂心智:17`）· AI · partial
+- P10 · 投毒（`XPHB:游荡者:投毒（花费：1d6）:5`）· AI · partial
+- P10 · 万能诡术（`XPHB:游荡者:万能诡术:13`）· AI · manual
+- P10 · 心灵传送（`XPHB:游荡者:心灵传送:9`）· AI · partial
+- P10 · 心灵低语（`XPHB:游荡者:心灵低语:3`）· AI · partial
+- P10 · 心灵之刃（`XPHB:游荡者:心灵之刃:3`）· AI · partial
+- P10 · 眩目（花费：3d6）（`XPHB:游荡者:眩目（花费：3d6）:14`）· AI · partial
+- P10 · 致命一击（`XPHB:游荡者:致命一击:17`）· AI · partial
+- P10 · 专业渗透（`XPHB:游荡者:专业渗透:9`）· AI · manual
+- P10 · 不知疲倦（`XPHB:游侠:不知疲倦:10`）· AI · partial
+- P10 · 法术共享（`XPHB:游侠:法术共享:15`）· AI · manual
+- P10 · 防守战术（`XPHB:游侠:防守战术:7`）· AI · partial
+- P10 · 高阶猎杀技艺（`XPHB:游侠:高阶猎杀技艺:11`）· AI · partial
+- P10 · 精宸所与（`XPHB:游侠:精宸所与:11`）· 手写 · full
+- P10 · 恐惧伏击（`XPHB:游侠:恐惧伏击:3`）· AI · partial
+- P10 · 猎杀技艺（`XPHB:游侠:猎杀技艺:3`）· AI · partial
+- P10 · 兽性狂怒（`XPHB:游侠:兽性狂怒:11`）· AI · partial
+- P10 · 宿敌（`XPHB:游侠:宿敌:1`）· AI · full
+- P10 · 特殊训练（`XPHB:游侠:特殊训练:7`）· AI · manual
+- P10 · 屠灭众敌（`XPHB:游侠:屠灭众敌:20`）· AI · manual
+- P10 · 雾行漫游（`XPHB:游侠:雾行漫游:15`）· AI · partial
+- P10 · 妖思魅缕（`XPHB:游侠:妖思魅缕:7`）· AI · partial
+- P10 · 阴影视野（`XPHB:游侠:阴影视野:3`）· AI · partial
+- P10 · 永恒追猎（`XPHB:游侠:永恒追猎:13`）· AI · manual
+- P10 · 原初伴侣（`XPHB:游侠:原初伴侣:3`）· 手写 · full
+- P10 · 追猎如风（`XPHB:游侠:追猎如风:11`）· AI · partial
+- P10 · 元素掌控（`XPHB:元素掌控`）· AI · partial
+- P10 · 远程法术（`XPHB:远程法术`）· AI · manual
+- P10 · 运动员（`XPHB:运动员`）· AI · partial
+- P10 · 战地施法者（`XPHB:战地施法者`）· 手写 · full
+- P10 · 奥法打击（`XPHB:战士:奥法打击:10`）· AI · partial
+- P10 · 奥能冲锋（`XPHB:战士:奥能冲锋:15`）· AI · partial
+- P10 · 坚韧（`XPHB:战士:坚韧:15`）· AI · manual
+- P10 · 精通战争魔法（`XPHB:战士:精通战争魔法:18`）· AI · manual
+- P10 · 力场壁垒（`XPHB:战士:力场壁垒:15`）· AI · partial
+- P10 · 料敌机先（`XPHB:战士:料敌机先:7`）· AI · partial
+- P10 · 灵力跃动（`XPHB:战士:灵力跃动:7`）· AI · partial
+- P10 · 念力控物（`XPHB:战士:念力控物:3`）· AI · partial
+- P10 · 念力突刺（`XPHB:战士:念力突刺:7`）· AI · partial
+- P10 · 念力宗师（`XPHB:战士:念力宗师:18`）· AI · partial
+- P10 · 意念守护（`XPHB:战士:意念守护:10`）· AI · partial
+- P11 · 勇战英豪（`XPHB:战士:勇战英豪:10`）· AI · partial
+- P11 · 运动健将（`XPHB:战士:运动健将:3`）· AI · full
+- P11 · 战术主宰（`XPHB:战士:战术主宰:9`）· AI · manual
+- P11 · 战术转进（`XPHB:战士:战术转进:5`）· AI · partial
+- P11 · 战争联结（`XPHB:战士:战争联结:3`）· AI · partial
+- P11 · 战争魔法（`XPHB:战士:战争魔法:7`）· AI · partial
+- P11 · 长柄武器大师（`XPHB:长柄武器大师`）· AI · partial
+- P11 · 指挥官奇袭（`XPHB:指挥官奇袭`）· AI · partial
+- P11 · 中甲大师（`XPHB:中甲大师`）· AI · manual
+- P11 · 侏儒（`XPHB:侏儒`）· AI · partial
+- P11 · 转化法术（`XPHB:转化法术`）· AI · manual
+- P11 · 奥法殡葬师（`AU:奥法殡葬师`）· AI · partial
+- P11 · 奥法超负荷（`AU:奥法超负荷`）· AI · partial
+- P11 · 奥法护佑者（`AU:奥法护佑者`）· AI · partial
+- P11 · 奥法艺术家（`AU:奥法艺术家`）· AI · partial
+- P11 · 爆裂弹（`AU:爆裂弹`）· AI · partial
+- P11 · 变化专家（`AU:变化专家`）· AI · partial
+- P11 · 缠绕弹（`AU:缠绕弹`）· AI · partial
+- P11 · 穿梭弹（`AU:穿梭弹`）· AI · partial
+- P11 · 变化宗师（`AU:法师:变化宗师:14`）· AI · partial
+- P11 · 变形生物（`AU:法师:变形生物:10`）· AI · manual
+- P11 · 分裂惑控（`AU:法师:分裂惑控:6`）· AI · partial
+- P11 · 坟冢之力（`AU:法师:坟冢之力:6`）· AI · manual
+- P11 · 裂分召唤（`AU:法师:裂分召唤:14`）· AI · partial
+- P11 · 妙法化形（`AU:法师:妙法化形:3`）· AI · partial
+- P11 · 强力变化（`AU:法师:强力变化:6`）· AI · partial
+- P11 · 强韧召唤（`AU:法师:强韧召唤:6`）· AI · partial
+- P11 · 收割亡灵（`AU:法师:收割亡灵:10`）· AI · partial
+- P11 · 死灵魔典（`AU:法师:死灵魔典:3`）· AI · partial
+- P11 · 死之尊主（`AU:法师:死之尊主:14`）· AI · partial
+- P11 · 亡灵仆役（`AU:法师:亡灵仆役:6`）· AI · partial
+- P11 · 王车易位（`AU:法师:王车易位:3`）· AI · partial
+- P11 · 直觉魅惑（`AU:法师:直觉魅惑:10`）· AI · partial
+- P11 · 法术诡计（`AU:法术诡计`）· AI · manual
+- P11 · 放逐弹（`AU:放逐弹`）· AI · partial
+- P11 · 魔宠密友（`AU:魔宠密友`）· AI · partial
+- P11 · 魔法行家（`AU:魔法行家`）· AI · manual
+- P11 · 拟态生命（`AU:魔契师:拟态生命:14`）· AI · manual
+- P11 · 契灵复苏（`AU:魔契师:契灵复苏:10`）· AI · partial
+- P11 · 契灵伙伴（`AU:魔契师:契灵伙伴:3`）· AI · partial
+- P12 · 契灵神威（`AU:魔契师:契灵神威:6`）· AI · partial
+- P12 · 巩固法术（`AU:牧师:巩固法术:3`）· AI · partial
+- P12 · 驱法复原（`AU:牧师:驱法复原:6`）· AI · partial
+- P12 · 稳固法术（`AU:牧师:稳固法术:3`）· AI · partial
+- P12 · 欺诈弹（`AU:欺诈弹`）· AI · partial
+- P12 · 尚武魔宠（`AU:尚武魔宠`）· AI · partial
+- P12 · 死灵专家（`AU:死灵专家`）· AI · manual
+- P12 · 塑能专家（`AU:塑能专家`）· AI · manual
+- P12 · 慰疗魔宠（`AU:慰疗魔宠`）· AI · manual
+- P12 · 精通秘法战斗风格（`AU:武僧:精通秘法战斗风格:17`）· AI · manual
+- P12 · 秘法武功（`AU:武僧:秘法武功:6`）· AI · partial
+- P12 · 秘法战斗风格（`AU:武僧:秘法战斗风格:6`）· 审后补 · full
+- P12 · 凝神击（`AU:武僧:凝神击:11`）· AI · partial
+- P12 · 虚弱弹（`AU:虚弱弹`）· 审后补 · full
+- P12 · 异界魔宠（`AU:异界魔宠`）· AI · manual
+- P12 · 预言专家（`AU:预言专家`）· AI · partial
+- P12 · 元素魔宠（`AU:元素魔宠`）· AI · partial
+- P12 · 奥术射击（`AU:战士:奥术射击:3`）· AI · partial
+- P12 · 不屈传送（`AU:战士:不屈传送:15`）· AI · partial
+- P12 · 注魔弹（`AU:战士:注魔弹:7`）· AI · partial
+- P12 · 宗师射术（`AU:战士:宗师射术:18`）· AI · partial
+- P12 · 咒能爆发之恩惠（`AU:咒能爆发之恩惠`）· AI · partial
+- P12 · 追踪弹（`AU:追踪弹`）· AI · partial
+- P12 · 步履维艰（`AU:spell:步履维艰`）· AI · partial · 2 环
+- P12 · 负能量洪流（`AU:spell:负能量洪流`）· AI · partial · 5 环
+- P12 · 魂灵提灯（`AU:spell:魂灵提灯`）· AI · partial · 5 环
+- P12 · 汲能术（`AU:spell:汲能术`）· AI · partial · 5 环
+- P12 · 假寐术（`AU:spell:假寐术`）· AI · partial · 3 环
+- P12 · 距离失真（`AU:spell:距离失真`）· AI · partial · 4 环
+- P12 · 力竭波（`AU:spell:力竭波`）· AI · partial · 5 环
+- P12 · 埋骨墓地（`AU:spell:埋骨墓地`）· AI · partial · 5 环
+- P12 · 靡叶生华（`AU:spell:靡叶生华`）· AI · partial · 2 环
+- P12 · 魔邓肯冥思术（`AU:spell:魔邓肯冥思术`）· AI · manual · 5 环
+- P12 · 友善之域（`AU:spell:友善之域`）· 审后补 · partial · 4 环
+- P12 · 战斗魔宠（`AU:spell:战斗魔宠`）· AI · partial · 2 环
+- P12 · 植物召唤术（`AU:spell:植物召唤术`）· AI · partial · 5 环
+- P12 · 暴风骤岚之恩惠（`FRHoF:暴风骤岚之恩惠`）· 审后补 · partial
+- P12 · 变幻无常之恩惠（`FRHoF:变幻无常之恩惠`）· 审后补 · partial
+- P12 · 翠绿闲庭新羽（`FRHoF:翠绿闲庭新羽`）· 审后补 · partial
+- P12 · 翠色魔法（`FRHoF:翠色魔法`）· 审后补 · manual
+- P13 · 毒手殁心之恩惠（`FRHoF:毒手殁心之恩惠`）· 审后补 · partial
+- P13 · 额外攻击（`FRHoF:法师:额外攻击:6`）· AI · manual
+- P13 · 剑歌（`FRHoF:法师:剑歌:3`）· 审后补 · partial
+- P13 · 胜利之歌（`FRHoF:法师:胜利之歌:14`）· AI · partial
+- P13 · 贵族信念（`FRHoF:贵族信念`）· 审后补 · partial
+- P13 · 街头正义（`FRHoF:街头正义`）· 审后补 · partial
+- P13 · 惊魂落魄之恩惠（`FRHoF:惊魂落魄之恩惠`）· 审后补 · partial
+- P13 · 巨灵魔法（`FRHoF:巨灵魔法`）· AI · manual
+- P13 · 领主联盟特工（`FRHoF:领主联盟特工`）· 审后补 · partial
+- P13 · 迷锁触碰（`FRHoF:迷锁触碰`）· 审后补 · manual
+- P13 · 思维魔法（`FRHoF:牧师:思维魔法:3`）· AI · manual
+- P13 · 散塔林会暴徒（`FRHoF:散塔林会暴徒`）· AI · partial
+- P13 · 散塔林会战术（`FRHoF:散塔林会战术`）· AI · partial
+- P13 · 生机勃发之恩惠（`FRHoF:生机勃发之恩惠`）· AI · manual
+- P13 · 火巨灵之狂怒（`FRHoF:圣武士:火巨灵之狂怒:3`）· AI · partial
+- P13 · 巨灵贵胄（`FRHoF:圣武士:巨灵贵胄:20`）· AI · partial
+- P13 · 气巨灵之遁形（`FRHoF:圣武士:气巨灵之遁形:3`）· AI · full
+- P13 · 水巨灵之激流（`FRHoF:圣武士:水巨灵之激流:3`）· AI · partial
+- P13 · 土巨灵之碾压（`FRHoF:圣武士:土巨灵之碾压:3`）· AI · partial
+- P13 · 元素守御灵光（`FRHoF:圣武士:元素守御灵光:7`）· 审后补 · partial
+- P13 · 炽焰鼓舞（`FRHoF:术士:炽焰鼓舞:3`）· AI · partial
+- P13 · 辉耀之火（`FRHoF:术士:辉耀之火:3`）· AI · partial
+- P13 · 汲纳法术（`FRHoF:术士:汲纳法术:6`）· 审后补 · partial
+- P13 · 咒火冠冕（`FRHoF:术士:咒火冠冕:18`）· 审后补 · partial
+- P13 · 竖琴手协同（`FRHoF:竖琴手协同`）· 审后补 · partial
+- P13 · 新锻臂铠（`FRHoF:新锻臂铠`）· 审后补 · partial
+- P13 · 新晋龙巫教徒（`FRHoF:新晋龙巫教徒`）· 审后补 · partial
+- P13 · 旭日骄阳之恩惠（`FRHoF:旭日骄阳之恩惠`）· 审后补 · partial
+- P13 · 妖精诡术（`FRHoF:妖精诡术`）· 审后补 · partial
+- P13 · 夜宴狂欢之恩惠（`FRHoF:夜宴狂欢之恩惠`）· 审后补 · manual
+- P13 · 熠熠生辉之恩惠（`FRHoF:熠熠生辉之恩惠`）· 审后补 · partial
+- P13 · 明月激励（`FRHoF:吟游诗人:明月激励:3`）· 审后补 · partial
+- P13 · 月光祝福（`FRHoF:吟游诗人:月光祝福:6`）· AI · partial
+- P13 · 恶毒灵光（`FRHoF:游荡者:恶毒灵光:13`）· AI · partial
+- P13 · 恐怖化身（`FRHoF:游荡者:恐怖化身:17`）· AI · partial
+- P13 · 嗜血（`FRHoF:游荡者:嗜血:3`）· AI · partial
+- P13 · 袭杀恐惧（`FRHoF:游荡者:袭杀恐惧:9`）· AI · partial
+- P13 · 冰结恶灵（`FRHoF:游侠:冰结恶灵:15`）· AI · partial
+- P13 · 冬猎霜寒（`FRHoF:游侠:冬猎霜寒:3`）· AI · partial
+- P13 · 冻原探索者（`FRHoF:游侠:冻原探索者:3`）· AI · partial
+- P14 · 寒心复仇（`FRHoF:游侠:寒心复仇:11`）· AI · partial
+- P14 · 集结如潮（`FRHoF:战士:集结如潮:10`）· AI · partial
+- P14 · 咒火专家（`FRHoF:咒火专家`）· 审后补 · partial
+- P14 · 紫龙新兵（`FRHoF:紫龙新兵`）· 审后补 · partial
+- P14 · 艾拉斯卓的月辉之篷（`FRHoF:spell:艾拉斯卓的月辉之篷`）· AI · partial · 5 环
+- P14 · 厄难黑潮（`FRHoF:spell:厄难黑潮`）· 审后补 · partial · 4 环
+- P14 · 反冲术（`FRHoF:spell:反冲术`）· AI · full · 4 环
+- P14 · 桑缟的元灵显圣（`FRHoF:spell:桑缟的元灵显圣`）· 审后补 · partial · 5 环
+- P14 · 希伦的剧毒灵蛇（`FRHoF:spell:希伦的剧毒灵蛇`）· 审后补 · partial · 3 环
+- P14 · 伊尔明斯特的法术闪避（`FRHoF:spell:伊尔明斯特的法术闪避`）· 审后补 · partial · 2 环
+- P14 · 伊尔明斯特的绚丽光球（`FRHoF:spell:伊尔明斯特的绚丽光球`）· 审后补 · partial · 戏法
+- P14 · 噪鸣护盾（`FRHoF:spell:噪鸣护盾`）· 审后补 · partial · 戏法
+- P14 · 制敌术（`FRHoF:spell:制敌术`）· 审后补 · partial · 戏法
+- P14 · 咒唤机群（`FRHoF:spell:咒唤机群`）· AI · partial · 3 环
+- P14 · 咒火风暴（`FRHoF:spell:咒火风暴`）· AI · partial · 4 环
+- P14 · 咒火闪焰（`FRHoF:spell:咒火闪焰`）· 审后补 · partial · 戏法
+- P14 · 奥能动力甲（`TCE:奥能动力甲`）· AI · manual
+- P14 · 超魔导师（`TCE:超魔导师`）· 审后补 · manual
+- P14 · 孢子环绕（`TCE:德鲁伊:孢子环绕:2`）· AI · partial
+- P14 · 炽烈回生（`TCE:德鲁伊:炽烈回生:14`）· AI · partial
+- P14 · 扩散孢子（`TCE:德鲁伊:扩散孢子:10`）· AI · partial
+- P14 · 强化链接（`TCE:德鲁伊:强化链接:6`）· AI · partial
+- P14 · 闪耀星座（`TCE:德鲁伊:闪耀星座:10`）· AI · partial
+- P14 · 一体共生（`TCE:德鲁伊:一体共生:2`）· AI · partial
+- P14 · 召唤野火精魂（`TCE:德鲁伊:召唤野火精魂:2`）· AI · partial
+- P14 · 真菌感染（`TCE:德鲁伊:真菌感染:6`）· AI · partial
+- P14 · 灼烧烈焰（`TCE:德鲁伊:灼烧烈焰:10`）· 审后补 · partial
+- P14 · 大书士（`TCE:法师:大书士:10`）· AI · manual
+- P14 · 觉醒魔典（`TCE:法师:觉醒魔典:2`）· AI · partial
+- P14 · 思维具现（`TCE:法师:思维具现:6`）· AI · manual
+- P14 · 一字同心（`TCE:法师:一字同心:14`）· AI · partial
+- P14 · 风暴符文（`TCE:风暴符文`）· AI · partial
+- P14 · 符令责斥（`TCE:符令责斥`）· AI · partial
+- P14 · 符之魔契（`TCE:符之魔契`）· AI · partial
+- P14 · 护符庇佑（`TCE:护符庇佑`）· AI · partial
+- P14 · 护符牵绊（`TCE:护符牵绊`）· AI · partial
+- P14 · 警戒（`TCE:警戒`）· AI · partial
+- P14 · 快手投掷（`TCE:快手投掷`）· AI · partial
+- P14 · 魔法力量护甲（`TCE:魔法力量护甲`）· AI · partial
+- P14 · 海渊传送（`TCE:魔契师:海渊传送:14`）· 审后补 · manual
+- P15 · 瓶中小憩（`TCE:魔契师:瓶中小憩:1`）· 审后补 · manual
+- P15 · 器皿庇护所（`TCE:魔契师:器皿庇护所:10`）· 审后补 · manual
+- P15 · 擒握触手（`TCE:魔契师:擒握触手:10`）· 审后补 · partial
+- P15 · 有限祈愿术（`TCE:魔契师:有限祈愿术:14`）· 审后补 · manual
+- P15 · 元素赐福（`TCE:魔契师:元素赐福:6`）· 审后补 · full
+- P15 · 保护联结（`TCE:牧师:保护联结:6`）· 审后补 · manual
+- P15 · 律法化身（`TCE:牧师:律法化身:6`）· 审后补 · manual
+- P15 · 权威之音（`TCE:牧师:权威之音:1`）· 审后补 · partial
+- P15 · 受祝击（`TCE:牧师:受祝击:8`）· AI · partial
+- P15 · 午夜飞步（`TCE:牧师:午夜飞步:6`）· AI · partial
+- P15 · 引导神力：和平抚慰（`TCE:牧师:引导神力：和平抚慰:3`）· AI · partial
+- P15 · 引导神力：秩序之令（`TCE:牧师:引导神力：秩序之令:3`）· AI · full
+- P15 · 增强联结（`TCE:牧师:增强联结:17`）· AI · manual
+- P15 · 奇械学徒（`TCE:奇械学徒`）· 审后补 · manual
+- P15 · 枪手（`TCE:枪手`）· AI · manual
+- P15 · 人工生命仆从（`TCE:人工生命仆从`）· AI · partial
+- P15 · 尘世壁垒（`TCE:圣武士:尘世壁垒:20`）· AI · partial
+- P15 · 鼓舞斩（`TCE:圣武士:鼓舞斩:3`）· 审后补 · full
+- P15 · 辉煌防御（`TCE:圣武士:辉煌防御:15`）· AI · partial
+- P15 · 警戒呵斥（`TCE:圣武士:警戒呵斥:15`）· AI · partial
+- P15 · 绝伦健将（`TCE:圣武士:绝伦健将:3`）· 审后补 · partial
+- P15 · 驱散异域（`TCE:圣武士:驱散异域:3`）· AI · partial
+- P15 · 哨卫灵光（`TCE:圣武士:哨卫灵光:7`）· 审后补 · partial
+- P15 · 现世传说（`TCE:圣武士:现世传说:20`）· 审后补 · partial
+- P15 · 迅捷灵光（`TCE:圣武士:迅捷灵光:7`）· 审后补 · partial
+- P15 · 归复平衡（`TCE:术士:归复平衡:1`）· AI · full
+- P15 · 灵能术法（`TCE:术士:灵能术法:6`）· AI · partial
+- P15 · 律令之壁（`TCE:术士:律令之壁:6`）· AI · partial
+- P15 · 扭曲爆裂（`TCE:术士:扭曲爆裂:18`）· AI · partial
+- P15 · 时械矩阵（`TCE:术士:时械矩阵:18`）· AI · partial
+- P15 · 血肉启示（`TCE:术士:血肉启示:14`）· AI · partial
+- P15 · 命极之手（`TCE:武僧:命极之手:17`）· AI · partial
+- P15 · 生杀予夺（`TCE:武僧:生杀予夺:11`）· AI · partial
+- P15 · 生死之触（`TCE:武僧:生死之触:6`）· AI · manual
+- P15 · 星我觉醒（`TCE:武僧:星我觉醒:17`）· AI · partial
+- P15 · 星我之臂（`TCE:武僧:星我之臂:3`）· AI · partial
+- P15 · 星我之容（`TCE:武僧:星我之容:6`）· AI · partial
+- P15 · 予命之手（`TCE:武僧:予命之手:3`）· AI · partial
+- P15 · 感染之怒（`TCE:野蛮人:感染之怒:10`）· AI · partial
+- P15 · 狂野浪潮（`TCE:野蛮人:狂野浪潮:3`）· AI · manual
+- P16 · 无常反冲（`TCE:野蛮人:无常反冲:10`）· AI · manual
+- P16 · 野兽之形（`TCE:野蛮人:野兽之形:3`）· AI · partial
+- P16 · 振奋魔法（`TCE:野蛮人:振奋魔法:6`）· AI · partial
+- P16 · 不竭鼓舞（`TCE:吟游诗人:不竭鼓舞:6`）· AI · manual
+- P16 · 传播鼓舞（`TCE:吟游诗人:传播鼓舞:14`）· 审后补 · partial
+- P16 · 活化表演（`TCE:吟游诗人:活化表演:6`）· AI · partial
+- P16 · 潜能微尘（`TCE:吟游诗人:潜能微尘:3`）· AI · partial
+- P16 · 造物表演（`TCE:吟游诗人:造物表演:3`）· 审后补 · partial
+- P16 · 灵能面纱（`TCE:游荡者:灵能面纱:13`）· 审后补 · partial
+- P16 · 撕裂心智（`TCE:游荡者:撕裂心智:17`）· AI · partial
+- P16 · 心灵传送（`TCE:游荡者:心灵传送:9`）· AI · partial
+- P16 · 心灵低语（`TCE:游荡者:心灵低语:3`）· 审后补 · partial
+- P16 · 心灵之刃（`TCE:游荡者:心灵之刃:3`）· 审后补 · partial
+- P16 · 翻腾浪涌（`TCE:游侠:翻腾浪涌:7`）· 审后补 · partial
+- P16 · 蜂聚集群（`TCE:游侠:蜂聚集群:3`）· AI · partial
+- P16 · 精宸所与（`TCE:游侠:精宸所与:11`）· 审后补 · manual
+- P16 · 群逸逃散（`TCE:游侠:群逸逃散:15`）· 审后补 · partial
+- P16 · 雾行漫游（`TCE:游侠:雾行漫游:15`）· 审后补 · partial
+- P16 · 妖思魅缕（`TCE:游侠:妖思魅缕:7`）· 审后补 · partial
+- P16 · 云雾符文（`TCE:云雾符文`）· AI · partial
+- P16 · 增强奥术法器（`TCE:增强奥术法器`）· 审后补 · manual
+- P16 · 巨人之力（`TCE:战士:巨人之力:3`）· AI · full
+- P16 · 灵力跃动（`TCE:战士:灵力跃动:7`）· AI · partial
+- P16 · 念力控物（`TCE:战士:念力控物:3`）· 审后补 · partial
+- P16 · 念力突刺（`TCE:战士:念力突刺:7`）· AI · partial
+- P16 · 念力宗师（`TCE:战士:念力宗师:18`）· AI · partial
+- P16 · 意念守护（`TCE:战士:意念守护:10`）· AI · partial
+- P16 · 暗影衍体召唤术（`TCE:spell:暗影衍体召唤术`）· AI · partial · 3 环
+- P16 · 翠炎剑（`TCE:spell:翠炎剑`）· AI · partial · 戏法
+- P16 · 轰雷剑（`TCE:spell:轰雷剑`）· AI · partial · 戏法
+- P16 · 魂灵环绕（`TCE:spell:魂灵环绕`）· AI · partial · 3 环
+- P16 · 塔莎酸蚀酿（`TCE:spell:塔莎酸蚀酿`）· AI · partial · 1 环
+- P16 · 塔莎心灵鞭（`TCE:spell:塔莎心灵鞭`）· AI · partial · 2 环
+- P16 · 矮人坚毅（`XGE:矮人坚毅`）· AI · partial
+- P16 · 残酷巫咒（`XGE:残酷巫咒`）· AI · partial
+- P16 · 精魂图腾（`XGE:德鲁伊:精魂图腾:2`）· AI · partial
+- P16 · 全能牧者（`XGE:德鲁伊:全能牧者:6`）· AI · manual
+- P16 · 隐匿通途（`XGE:德鲁伊:隐匿通途:10`）· AI · full
+- P16 · 忠诚牧畜（`XGE:德鲁伊:忠诚牧畜:14`）· AI · partial
+- P16 · 癫狂巫咒（`XGE:癫狂巫咒`）· AI · partial
+- P17 · 奥术偏斜（`XGE:法师:奥术偏斜:2`）· AI · full
+- P17 · 魔力潮涌（`XGE:法师:魔力潮涌:6`）· AI · partial
+- P17 · 飞蝇斗篷（`XGE:飞蝇斗篷`）· AI · partial
+- P17 · 弗莱格索斯之焰（`XGE:弗莱格索斯之焰`）· AI · partial
+- P17 · 高等卓尔魔法（`XGE:高等卓尔魔法`）· AI · manual
+- P17 · 慷慨吉运（`XGE:慷慨吉运`）· AI · partial
+- P17 · 莱维斯图斯之墓（`XGE:莱维斯图斯之墓`）· 审后补 · partial
+- P17 · 龙之威怖（`XGE:龙之威怖`）· 审后补 · partial
+- P17 · 光耀之魂（`XGE:魔契师:光耀之魂:6`）· 审后补 · partial
+- P17 · 天界韧性（`XGE:魔契师:天界韧性:10`）· AI · partial
+- P17 · 巫咒大师（`XGE:魔契师:巫咒大师:14`）· AI · partial
+- P17 · 巫咒盔甲（`XGE:魔契师:巫咒盔甲:10`）· AI · partial
+- P17 · 巫咒战士（`XGE:魔契师:巫咒战士:1`）· AI · partial
+- P17 · 咒缚幽灵（`XGE:魔契师:咒缚幽灵:6`）· 审后补 · partial
+- P17 · 咒剑诅咒（`XGE:魔契师:咒剑诅咒:1`）· 审后补 · partial
+- P17 · 灼光复仇（`XGE:魔契师:灼光复仇:14`）· AI · partial
+- P17 · 木精灵魔法（`XGE:木精灵魔法`）· 审后补 · manual
+- P17 · 不移胜者（`XGE:圣武士:不移胜者:20`）· 审后补 · partial
+- P17 · 叱喝暴力（`XGE:圣武士:叱喝暴力:3`）· AI · partial
+- P17 · 导引打击（`XGE:圣武士:导引打击:3`）· AI · full
+- P17 · 救赎使节（`XGE:圣武士:救赎使节:20`）· 审后补 · partial
+- P17 · 轻蔑呵斥（`XGE:圣武士:轻蔑呵斥:15`）· AI · partial
+- P17 · 征服灵光（`XGE:圣武士:征服灵光:7`）· 审后补 · partial
+- P17 · 兽人狂怒（`XGE:兽人狂怒`）· 审后补 · partial
+- P17 · 暴风狂怒（`XGE:术士:暴风狂怒:14`）· AI · partial
+- P17 · 暴风魔法（`XGE:术士:暴风魔法:1`）· 审后补 · partial
+- P17 · 风暴之心（`XGE:术士:风暴之心:6`）· AI · partial
+- P17 · 强效治疗（`XGE:术士:强效治疗:6`）· 审后补 · partial
+- P17 · 清风之灵（`XGE:术士:清风之灵:18`）· 审后补 · partial
+- P17 · 异界光翼（`XGE:术士:异界光翼:14`）· 审后补 · partial
+- P17 · 锋锐剑影（`XGE:武僧:锋锐剑影:11`）· AI · partial
+- P17 · 酣醉若狂（`XGE:武僧:酣醉若狂:17`）· 审后补 · partial
+- P17 · 借力打力（`XGE:武僧:借力打力:6`）· 审后补 · partial
+- P17 · 灵巧格挡（`XGE:武僧:灵巧格挡:3`）· 审后补 · partial
+- P17 · 热能袭（`XGE:武僧:热能袭:6`）· AI · partial
+- P17 · 人剑合一（`XGE:武僧:人剑合一:6`）· AI · partial
+- P17 · 太阳盾（`XGE:武僧:太阳盾:17`）· AI · partial
+- P17 · 焰阳爆（`XGE:武僧:焰阳爆:11`）· AI · partial
+- P17 · 耀阳箭（`XGE:武僧:耀阳箭:3`）· AI · partial
+- P17 · 醉拳技巧（`XGE:武僧:醉拳技巧:3`）· AI · partial
+- P18 · 冻原（`XGE:野蛮人:冻原:14`）· AI · partial
+- P18 · 风暴之盾（`XGE:野蛮人:风暴之盾:10`）· AI · manual
+- P18 · 精魂之盾（`XGE:野蛮人:精魂之盾:6`）· AI · partial
+- P18 · 怒不畏死（`XGE:野蛮人:怒不畏死:14`）· AI · manual
+- P18 · 不破威仪（`XGE:吟游诗人:不破威仪:14`）· AI · partial
+- P18 · 额外攻击（`XGE:吟游诗人:额外攻击:6`）· AI · full
+- P18 · 灵感织衣（`XGE:吟游诗人:灵感织衣:3`）· AI · partial
+- P18 · 乱击剑舞（`XGE:吟游诗人:乱击剑舞:3`）· AI · partial
+- P18 · 推击剑舞（`XGE:吟游诗人:推击剑舞:3`）· AI · partial
+- P18 · 威仪作锦（`XGE:吟游诗人:威仪作锦:6`）· AI · partial
+- P18 · 阴暗学识（`XGE:吟游诗人:阴暗学识:14`）· AI · partial
+- P18 · 永生者赠礼（`XGE:永生者赠礼`）· AI · partial
+- P18 · 幽魂凝视（`XGE:幽魂凝视`）· AI · partial
+- P18 · 火眼金睛（`XGE:游荡者:火眼金睛:13`）· 审后补 · partial
+- P18 · 鉴识之眼（`XGE:游荡者:鉴识之眼:3`）· 审后补 · partial
+- P18 · 散兵战术（`XGE:游荡者:散兵战术:3`）· AI · partial
+- P18 · 瞬息打击（`XGE:游荡者:瞬息打击:17`）· AI · partial
+- P18 · 误导（`XGE:游荡者:误导:13`）· AI · partial
+- P18 · 潇洒气质（`XGE:游荡者:潇洒气质:9`）· AI · partial
+- P18 · 战术大师（`XGE:游荡者:战术大师:3`）· AI · full
+- P18 · 战术洞悉（`XGE:游荡者:战术洞悉:3`）· AI · partial
+- P18 · 猎手感知（`XGE:游侠:猎手感知:3`）· AI · partial
+- P18 · 灵体防御（`XGE:游侠:灵体防御:15`）· AI · partial
+- P18 · 魔法使的克星（`XGE:游侠:魔法使的克星:11`）· AI · partial
+- P18 · 杀手反制（`XGE:游侠:杀手反制:15`）· AI · partial
+- P18 · 闪现打击（`XGE:游侠:闪现打击:11`）· 审后补 · partial
+- P18 · 位面战士（`XGE:游侠:位面战士:3`）· AI · partial
+- P18 · 以太漫步（`XGE:游侠:以太漫步:7`）· 审后补 · partial
+- P18 · 阴影视野（`XGE:游侠:阴影视野:3`）· 审后补 · partial
+- P18 · 追猎如风（`XGE:游侠:追猎如风:11`）· AI · full
+- P18 · 坚定之印（`XGE:战士:坚定之印:3`）· AI · full
+- P18 · 坚守战线（`XGE:战士:坚守战线:10`）· 审后补 · partial
+- P18 · 警戒守卫（`XGE:战士:警戒守卫:18`）· 审后补 · manual
+- P18 · 生死流转（`XGE:战士:生死流转:18`）· 审后补 · manual
+- P18 · 守护战技（`XGE:战士:守护战技:7`）· 审后补 · partial
+- P18 · 燕返（`XGE:战士:燕返:15`）· AI · partial
+- P18 · 碧水法球（`XGE:spell:碧水法球`）· AI · partial · 4 环
+- P18 · 操控风力（`XGE:spell:操控风力`）· AI · partial · 5 环
+- P18 · 潮涌（`XGE:spell:潮涌`）· AI · partial · 3 环
+- P18 · 虫群孳生（`XGE:spell:虫群孳生`）· AI · partial · 戏法
+- P19 · 创造篝火（`XGE:spell:创造篝火`）· AI · partial · 戏法
+- P19 · 大漩涡（`XGE:spell:大漩涡`）· AI · partial · 5 环
+- P19 · 弹射术（`XGE:spell:弹射术`）· 审后补 · partial · 1 环
+- P19 · 地颤（`XGE:spell:地颤`）· 审后补 · partial · 戏法
+- P19 · 地缚（`XGE:spell:地缚`）· AI · partial · 2 环
+- P19 · 地狱呼唤（`XGE:spell:地狱呼唤`）· AI · partial · 5 环
+- P19 · 敌群环绕（`XGE:spell:敌群环绕`）· AI · partial · 3 环
+- P19 · 风暴法球（`XGE:spell:风暴法球`）· 审后补 · partial · 戏法
+- P19 · 疯狂之暗（`XGE:spell:疯狂之暗`）· 审后补 · partial · 戏法
+- P19 · 拂晓（`XGE:spell:拂晓`）· 审后补 · partial · 戏法
+- P19 · 高阶恶魔召唤术（`XGE:spell:高阶恶魔召唤术`）· AI · partial · 4 环
+- P19 · 光墙术（`XGE:spell:光墙术`）· 审后补 · partial · 戏法
+- P19 · 混乱箭（`XGE:spell:混乱箭`）· 审后补 · partial · 1 环
+- P19 · 骷髅之舞（`XGE:spell:骷髅之舞`）· 审后补 · partial · 5 环
+- P19 · 雷霆步（`XGE:spell:雷霆步`）· AI · partial · 3 环
+- P19 · 烈焰箭矢（`XGE:spell:烈焰箭矢`）· AI · partial · 3 环
+- P19 · 灵魂牢笼（`XGE:spell:灵魂牢笼`）· 审后补 · partial · 戏法
+- P19 · 龙卷尘暴（`XGE:spell:龙卷尘暴`）· AI · partial · 2 环
+- P19 · 马友夫微流星（`XGE:spell:马友夫微流星`）· AI · partial · 3 环
+- P19 · 麦克斯米利安的地之攫（`XGE:spell:麦克斯米利安的地之攫`）· AI · partial · 2 环
+- P19 · 迷你仆役（`XGE:spell:迷你仆役`）· 审后补 · partial · 3 环
+- P19 · 魔石术（`XGE:spell:魔石术`）· AI · partial · 戏法
+- P19 · 莫伊之影（`XGE:spell:莫伊之影`）· 审后补 · partial · 4 环
+- P19 · 圈套术（`XGE:spell:圈套术`）· AI · partial · 1 环
+- P19 · 沙墙术（`XGE:spell:沙墙术`）· AI · partial · 3 环
+- P19 · 神圣武器（`XGE:spell:神圣武器`）· AI · partial · 5 环
+- P19 · 生命转换（`XGE:spell:生命转换`）· AI · partial · 3 环
+- P19 · 守护之风（`XGE:spell:守护之风`）· 审后补 · partial · 2 环
+- P19 · 水墙术（`XGE:spell:水墙术`）· AI · partial · 3 环
+- P19 · 土石喷发（`XGE:spell:土石喷发`）· AI · partial · 3 环
+- P19 · 舞风术（`XGE:spell:舞风术`）· 审后补 · partial · 戏法
+- P19 · 吸收元素（`XGE:spell:吸收元素`）· AI · partial · 1 环
+- P19 · 西风打击（`XGE:spell:西风打击`）· AI · partial · 1 环
+- P19 · 烟火术（`XGE:spell:烟火术`）· 审后补 · manual · 戏法
+- P19 · 幽影刃（`XGE:spell:幽影刃`）· 审后补 · partial · 戏法
+- P19 · 元素灾厄（`XGE:spell:元素灾厄`）· AI · partial · 4 环
+- P19 · 召唤次级恶魔（`XGE:spell:召唤次级恶魔`）· AI · partial · 3 环
+- P19 · 治愈之魂（`XGE:spell:治愈之魂`）· AI · partial · 2 环
+- P19 · 致病辐射（`XGE:spell:致病辐射`）· AI · partial · 4 环
+- P19 · 转化岩石（`XGE:spell:转化岩石`）· 审后补 · partial · 5 环
+- P20 · 自然之怒（`XGE:spell:自然之怒`）· 审后补 · partial · 5 环
+- P20 · +1 契约掌控者权杖（`XDMG:item:+1 契约掌控者权杖`）· AI · partial
+- P20 · +2 契约掌控者权杖（`XDMG:item:+2 契约掌控者权杖`）· AI · partial
+- P20 · +3 契约掌控者权杖（`XDMG:item:+3 契约掌控者权杖`）· AI · partial
+- P20 · 矮人飞锤（`XDMG:item:矮人飞锤`）· AI · partial
+- P20 · 矮人王圣斧（`XDMG:item:矮人王圣斧`）· AI · partial
+- P20 · 矮人腰带（`XDMG:item:矮人腰带`）· AI · partial
+- P20 · 艾恩石, 储法（`XDMG:item:艾恩石, 储法`）· AI · manual
+- P20 · 艾恩石, 高等吸收（`XDMG:item:艾恩石, 高等吸收`）· AI · partial
+- P20 · 艾恩石, 吸收（`XDMG:item:艾恩石, 吸收`）· AI · partial
+- P20 · 奥喀斯之杖（`XDMG:item:奥喀斯之杖`）· AI · partial
+- P20 · 芭芭·雅嘎的舞空帚（`XDMG:item:芭芭·雅嘎的舞空帚`）· AI · partial
+- P20 · 白龙鳞甲（`XDMG:item:白龙鳞甲`）· AI · partial
+- P20 · 百眼法袍（`XDMG:item:百眼法袍`）· AI · partial
+- P20 · 比拉罗的铁索（`XDMG:item:比拉罗的铁索`）· AI · partial
+- P20 · 蝙蝠斗篷（`XDMG:item:蝙蝠斗篷`）· AI · partial
+- P20 · 变形魔杖（`XDMG:item:变形魔杖`）· AI · partial
+- P20 · 冰霜法杖（`XDMG:item:冰霜法杖`）· AI · partial
+- P20 · 波涛（`XDMG:item:波涛`）· AI · partial
+- P20 · 颤栗乐笙（`XDMG:item:颤栗乐笙`）· AI · partial
+- P20 · 成长药水（`XDMG:item:成长药水`）· AI · partial
+- P20 · 虫群法杖（`XDMG:item:虫群法杖`）· AI · partial
+- P20 · 触须权杖（`XDMG:item:触须权杖`）· AI · partial
+- P20 · 传送头盔（`XDMG:item:传送头盔`）· AI · partial
+- P20 · 纯善护符（`XDMG:item:纯善护符`）· AI · partial
+- P20 · 丛林法杖（`XDMG:item:丛林法杖`）· AI · partial
+- P20 · 淬毒匕首（`XDMG:item:淬毒匕首`）· AI · partial
+- P20 · 打击之锤（`XDMG:item:打击之锤`）· AI · partial
+- P20 · 读心水晶球（`XDMG:item:读心水晶球`）· AI · partial
+- P20 · 读心勋章（`XDMG:item:读心勋章`）· AI · partial
+- P20 · 读心药水（`XDMG:item:读心药水`）· AI · partial
+- P20 · 发条护符（`XDMG:item:发条护符`）· AI · partial
+- P20 · 法力再生珍珠（`XDMG:item:法力再生珍珠`）· AI · partial
+- P20 · 法球护符（`XDMG:item:法球护符`）· AI · partial
+- P20 · 法术反转戒指（`XDMG:item:法术反转戒指`）· AI · partial
+- P20 · 反射闪避戒指（`XDMG:item:反射闪避戒指`）· AI · partial
+- P20 · 防护圣甲虫（`XDMG:item:防护圣甲虫`）· AI · partial
+- P20 · 飞行药水（`XDMG:item:飞行药水`）· AI · partial
+- P20 · 飞翼斗篷（`XDMG:item:飞翼斗篷`）· AI · partial
+- P20 · 飞翼之靴（`XDMG:item:飞翼之靴`）· AI · partial
+- P21 · 风暴巨人之力药水（`XDMG:item:风暴巨人之力药水`）· AI · partial
+- P21 · 浮空之靴（`XDMG:item:浮空之靴`）· AI · partial
+- P21 · 复生权杖（`XDMG:item:复生权杖`）· AI · partial
+- P21 · 干燥粉（`XDMG:item:干燥粉`）· AI · partial
+- P21 · 公羊戒指（`XDMG:item:公羊戒指`）· AI · full
+- P21 · 光彩夺目宝石（`XDMG:item:光彩夺目宝石`）· AI · full
+- P21 · 光辉头盔（`XDMG:item:光辉头盔`）· AI · partial
+- P21 · 鬼婆之眼（`XDMG:item:鬼婆之眼`）· AI · partial
+- P21 · 黑暗碎片护符（`XDMG:item:黑暗碎片护符`）· AI · partial
+- P21 · 黑刃（`XDMG:item:黑刃`）· AI · partial
+- P21 · 轰天震雷鲁特琴（`XDMG:item:轰天震雷鲁特琴`）· AI · partial
+- P21 · 虹光法袍（`XDMG:item:虹光法袍`）· AI · partial
+- P21 · 滑溜之油（`XDMG:item:滑溜之油`）· AI · partial
+- P21 · 唤鼠乐笙（`XDMG:item:唤鼠乐笙`）· AI · partial
+- P21 · 唤鱼三叉戟（`XDMG:item:唤鱼三叉戟`）· AI · partial
+- P21 · 秽暗之书（`XDMG:item:秽暗之书`）· AI · partial
+- P21 · 活化盾（`XDMG:item:活化盾`）· 审后补 · partial
+- P21 · 活力药水（`XDMG:item:活力药水`）· 审后补 · partial
+- P21 · 火巨灵囚瓶（`XDMG:item:火巨灵囚瓶`）· 审后补 · partial
+- P21 · 火巨人之力药水（`XDMG:item:火巨人之力药水`）· 审后补 · partial
+- P21 · 火球项链（`XDMG:item:火球项链`）· AI · partial
+- P21 · 火焰法杖（`XDMG:item:火焰法杖`）· AI · partial
+- P21 · 火焰抗性药水（`XDMG:item:火焰抗性药水`）· 审后补 · partial
+- P21 · 火焰吐息药水（`XDMG:item:火焰吐息药水`）· AI · full
+- P21 · 急速弯刀（`XDMG:item:急速弯刀`）· AI · partial
+- P21 · 加速药水（`XDMG:item:加速药水`）· AI · partial
+- P21 · 健康灵药（`XDMG:item:健康灵药`）· AI · full
+- P21 · 江湖骗子披风（`XDMG:item:江湖骗子披风`）· AI · partial
+- P21 · 节肢斗篷（`XDMG:item:节肢斗篷`）· AI · partial
+- P21 · 劲敌硬币（`XDMG:item:劲敌硬币`）· AI · partial
+- P21 · 惊异魔杖（`XDMG:item:惊异魔杖`）· AI · partial
+- P21 · 精灵斗篷（`XDMG:item:精灵斗篷`）· AI · partial
+- P21 · 警示权杖（`XDMG:item:警示权杖`）· AI · partial
+- P21 · 静语卷册（`XDMG:item:静语卷册`）· AI · partial
+- P21 · 纠缠绳（`XDMG:item:纠缠绳`）· AI · partial
+- P21 · 巨蟒法杖（`XDMG:item:巨蟒法杖`）· AI · partial
+- P21 · 卡夫统灵药（`XDMG:item:卡夫统灵药`）· AI · partial
+- P21 · 凯斯之剑（`XDMG:item:凯斯之剑`）· AI · partial
+- P21 · 抗法盾（`XDMG:item:抗法盾`）· AI · partial
+- P21 · 恐惧魔杖（`XDMG:item:恐惧魔杖`）· AI · partial
+- P22 · 恐惧之锤（`XDMG:item:恐惧之锤`）· AI · partial
+- P22 · 夸尔羽符，鞭（`XDMG:item:夸尔羽符，鞭`）· AI · partial
+- P22 · 夸力许装置（`XDMG:item:夸力许装置`）· AI · partial
+- P22 · 蝰蛇法杖（`XDMG:item:蝰蛇法杖`）· AI · partial
+- P22 · 老兵手杖（`XDMG:item:老兵手杖`）· AI · partial
+- P22 · 雷霆法杖（`XDMG:item:雷霆法杖`）· AI · partial
+- P22 · 雷霆巨棒（`XDMG:item:雷霆巨棒`）· AI · partial
+- P22 · 力场魔方（`XDMG:item:力场魔方`）· AI · partial
+- P22 · 力场珠（`XDMG:item:力场珠`）· AI · partial
+- P22 · 流星戒指（`XDMG:item:流星戒指`）· AI · partial
+- P22 · 龙珠（`XDMG:item:龙珠`）· AI · partial
+- P22 · 魅惑法杖（`XDMG:item:魅惑法杖`）· AI · partial
+- P22 · 魅惑镜片（`XDMG:item:魅惑镜片`）· AI · partial
+- P22 · 迷情媚药（`XDMG:item:迷情媚药`）· AI · partial
+- P22 · 迷醉香水（`XDMG:item:迷醉香水`）· AI · partial
+- P22 · 命令火元素火盆（`XDMG:item:命令火元素火盆`）· AI · partial
+- P22 · 命令气元素香炉（`XDMG:item:命令气元素香炉`）· AI · partial
+- P22 · 命令水元素水钵（`XDMG:item:命令水元素水钵`）· AI · partial
+- P22 · 命令土元素石核（`XDMG:item:命令土元素石核`）· AI · partial
+- P22 · 命令元素戒指（火）（`XDMG:item:命令元素戒指（火）`）· AI · partial
+- P22 · 命令元素戒指（气）（`XDMG:item:命令元素戒指（气）`）· AI · partial
+- P22 · 命令元素戒指（水）（`XDMG:item:命令元素戒指（水）`）· AI · partial
+- P22 · 命令元素戒指（土）（`XDMG:item:命令元素戒指（土）`）· AI · partial
+- P22 · 魔豆之袋（`XDMG:item:魔豆之袋`）· AI · partial
+- P22 · 魔术袋，灰色（`XDMG:item:魔术袋，灰色`）· AI · partial
+- P22 · 魔术袋，铁锈色（`XDMG:item:魔术袋，铁锈色`）· AI · partial
+- P22 · 魔术袋，棕褐色（`XDMG:item:魔术袋，棕褐色`）· AI · partial
+- P22 · 魔咒法杖（1环）（`XDMG:item:魔咒法杖（1环）`）· AI · partial
+- P22 · 魔咒法杖（2环）（`XDMG:item:魔咒法杖（2环）`）· AI · partial
+- P22 · 魔咒法杖（3环）（`XDMG:item:魔咒法杖（3环）`）· AI · partial
+- P22 · 魔咒法杖（4环）（`XDMG:item:魔咒法杖（4环）`）· AI · partial
+- P22 · 魔咒法杖（5环）（`XDMG:item:魔咒法杖（5环）`）· AI · partial
+- P22 · 魔咒法杖（6环）（`XDMG:item:魔咒法杖（6环）`）· AI · partial
+- P22 · 魔咒法杖（7环）（`XDMG:item:魔咒法杖（7环）`）· AI · partial
+- P22 · 魔咒法杖（8环）（`XDMG:item:魔咒法杖（8环）`）· AI · partial
+- P22 · 魔咒法杖（戏法）（`XDMG:item:魔咒法杖（戏法）`）· AI · partial
+- P22 · 念珠项链（`XDMG:item:念珠项链`）· AI · partial
+- P22 · 鸟鸣法杖（`XDMG:item:鸟鸣法杖`）· AI · partial
+- P22 · 攀爬药水（`XDMG:item:攀爬药水`）· AI · partial
+- P22 · 喷嚏粉（`XDMG:item:喷嚏粉`）· AI · partial
+- P23 · 辟矢夺箭手套（`XDMG:item:辟矢夺箭手套`）· AI · partial
+- P23 · 祈神蜡烛（`XDMG:item:祈神蜡烛`）· AI · partial
+- P23 · 骑士之盾（`XDMG:item:骑士之盾`）· AI · partial
+- P23 · 气化形体药水（`XDMG:item:气化形体药水`）· AI · partial
+- P23 · 锐锋之油（`XDMG:item:锐锋之油`）· AI · partial
+- P23 · 三愿戒指（`XDMG:item:三愿戒指`）· AI · partial
+- P23 · 山丘巨人之力药水（`XDMG:item:山丘巨人之力药水`）· AI · partial
+- P23 · 闪电标枪（`XDMG:item:闪电标枪`）· AI · partial
+- P23 · 圣洁之书（`XDMG:item:圣洁之书`）· AI · partial
+- P23 · 石巨人之力药水（`XDMG:item:石巨人之力药水`）· AI · partial
+- P23 · 适应项链（`XDMG:item:适应项链`）· AI · partial
+- P23 · 收妖瓶（`XDMG:item:收妖瓶`）· AI · partial
+- P23 · 守护卷轴（不死生物）（`XDMG:item:守护卷轴（不死生物）`）· AI · partial
+- P23 · 守护卷轴（怪兽）（`XDMG:item:守护卷轴（怪兽）`）· AI · partial
+- P23 · 守护卷轴（巨人）（`XDMG:item:守护卷轴（巨人）`）· AI · partial
+- P23 · 守护卷轴（类人生物）（`XDMG:item:守护卷轴（类人生物）`）· AI · partial
+- P23 · 守护卷轴（泥怪）（`XDMG:item:守护卷轴（泥怪）`）· AI · partial
+- P23 · 守护卷轴（邪魔）（`XDMG:item:守护卷轴（邪魔）`）· AI · partial
+- P23 · 守护卷轴（妖精）（`XDMG:item:守护卷轴（妖精）`）· AI · partial
+- P23 · 守护卷轴（野兽）（`XDMG:item:守护卷轴（野兽）`）· AI · partial
+- P23 · 守护卷轴（异怪）（`XDMG:item:守护卷轴（异怪）`）· AI · partial
+- P23 · 守护卷轴（元素生物）（`XDMG:item:守护卷轴（元素生物）`）· AI · partial
+- P23 · 守护卷轴（植物）（`XDMG:item:守护卷轴（植物）`）· AI · partial
+- P23 · 霜巨人之力药水（`XDMG:item:霜巨人之力药水`）· AI · partial
+- P23 · 水上行走戒指（`XDMG:item:水上行走戒指`）· AI · partial
+- P23 · 水下呼吸药水（`XDMG:item:水下呼吸药水`）· AI · partial
+- P23 · 搜敌魔杖（`XDMG:item:搜敌魔杖`）· AI · partial
+- P23 · 搜魔魔杖（`XDMG:item:搜魔魔杖`）· AI · partial
+- P23 · 速度之靴（`XDMG:item:速度之靴`）· AI · partial
+- P23 · 缩小药水（`XDMG:item:缩小药水`）· AI · partial
+- P23 · 泰坦召唤卷轴（泰拉斯奎）（`XDMG:item:泰坦召唤卷轴（泰拉斯奎）`）· AI · partial
+- P23 · 探秘魔杖（`XDMG:item:探秘魔杖`）· AI · partial
+- P23 · 跳跃戒指（`XDMG:item:跳跃戒指`）· AI · partial
+- P23 · 通灵板（`XDMG:item:通灵板`）· AI · partial
+- P23 · 通晓药水（`XDMG:item:通晓药水`）· AI · partial
+- P23 · 统御权杖（`XDMG:item:统御权杖`）· AI · partial
+- P23 · 瓦尔哈拉号角，白银（`XDMG:item:瓦尔哈拉号角，白银`）· AI · partial
+- P23 · 瓦尔哈拉号角，黑铁（`XDMG:item:瓦尔哈拉号角，黑铁`）· AI · partial
+- P23 · 瓦尔哈拉号角，黄铜（`XDMG:item:瓦尔哈拉号角，黄铜`）· AI · partial
+- P23 · 瓦尔哈拉号角，青铜（`XDMG:item:瓦尔哈拉号角，青铜`）· AI · partial
+- P24 · 瓦解之锤（`XDMG:item:瓦解之锤`）· AI · partial
+- P24 · 万法无常帽（`XDMG:item:万法无常帽`）· AI · partial
+- P24 · 万象无常牌（`XDMG:item:万象无常牌`）· AI · partial
+- P24 · 王者权杖（`XDMG:item:王者权杖`）· AI · partial
+- P24 · 威力法杖（`XDMG:item:威力法杖`）· AI · partial
+- P24 · 维克那法眼（`XDMG:item:维克那法眼`）· AI · partial
+- P24 · 维克那魔掌（`XDMG:item:维克那魔掌`）· AI · partial
+- P24 · 位面护符（`XDMG:item:位面护符`）· AI · partial
+- P24 · 巫术帽（`XDMG:item:巫术帽`）· AI · partial
+- P24 · 无尽水瓶（`XDMG:item:无尽水瓶`）· AI · partial
+- P24 · 无尽烟壶（`XDMG:item:无尽烟壶`）· AI · partial
+- P24 · 无踪粉（`XDMG:item:无踪粉`）· AI · partial
+- P24 · 吸矢盾（`XDMG:item:吸矢盾`）· AI · partial
+- P24 · 吸收权杖（`XDMG:item:吸收权杖`）· AI · partial
+- P24 · 鲜花法杖（`XDMG:item:鲜花法杖`）· AI · partial
+- P24 · 贤者法杖（`XDMG:item:贤者法杖`）· AI · partial
+- P24 · 心灵感应水晶球（`XDMG:item:心灵感应水晶球`）· AI · partial
+- P24 · 心灵感应头盔（`XDMG:item:心灵感应头盔`）· AI · partial
+- P24 · 星辰法袍（`XDMG:item:星辰法袍`）· AI · partial
+- P24 · 烟火魔杖（`XDMG:item:烟火魔杖`）· AI · partial
+- P24 · 湮灭法球（`XDMG:item:湮灭法球`）· AI · partial
+- P24 · 阳炎剑（`XDMG:item:阳炎剑`）· AI · full
+- P24 · 伊格薇尔伏恶魔志（`XDMG:item:伊格薇尔伏恶魔志`）· AI · partial
+- P24 · 移位斗篷（`XDMG:item:移位斗篷`）· AI · partial
+- P24 · 以太化之油（`XDMG:item:以太化之油`）· AI · partial
+- P24 · 异界之门魔方（`XDMG:item:异界之门魔方`）· AI · partial
+- P24 · 异能塑像, 白银渡鸦（`XDMG:item:异能塑像, 白银渡鸦`）· AI · partial
+- P24 · 异能塑像，黑曜石驹（`XDMG:item:异能塑像，黑曜石驹`）· AI · partial
+- P24 · 音爆号角（`XDMG:item:音爆号角`）· AI · partial
+- P24 · 吟游诗人乐器，安眠鲁特琴（`XDMG:item:吟游诗人乐器，安眠鲁特琴`）· AI · partial
+- P24 · 吟游诗人乐器，安斯翠瑟竖琴（`XDMG:item:吟游诗人乐器，安斯翠瑟竖琴`）· AI · partial
+- P24 · 吟游诗人乐器，奥莱姆竖琴（`XDMG:item:吟游诗人乐器，奥莱姆竖琴`）· AI · partial
+- P24 · 吟游诗人乐器，佛克路坎三弦琴（`XDMG:item:吟游诗人乐器，佛克路坎三弦琴`）· AI · partial
+- P24 · 吟游诗人乐器，凯纳斯曼陀林（`XDMG:item:吟游诗人乐器，凯纳斯曼陀林`）· AI · partial
+- P24 · 吟游诗人乐器，科里里拉琴（`XDMG:item:吟游诗人乐器，科里里拉琴`）· AI · partial
+- P24 · 吟游诗人乐器，麦克-弗瑞米西特琴（`XDMG:item:吟游诗人乐器，麦克-弗瑞米西特琴`）· AI · partial
+- P24 · 银龙鳞甲（`XDMG:item:银龙鳞甲`）· AI · partial
+- P24 · 引弹盾（`XDMG:item:引弹盾`）· AI · partial
+- P24 · 隐形药水（`XDMG:item:隐形药水`）· AI · partial
+- P24 · 应答之剑（`XDMG:item:应答之剑`）· AI · partial
+- P25 · 鹰眼术药水（`XDMG:item:鹰眼术药水`）· AI · partial
+- P25 · 影响动物戒指（`XDMG:item:影响动物戒指`）· AI · partial
+- P25 · 羽落戒指（`XDMG:item:羽落戒指`）· AI · manual
+- P25 · 愈合护符（`XDMG:item:愈合护符`）· AI · partial
+- P25 · 元素宝石，翡翠（`XDMG:item:元素宝石，翡翠`）· AI · partial
+- P25 · 元素宝石，红刚玉（`XDMG:item:元素宝石，红刚玉`）· AI · partial
+- P25 · 元素宝石，黄钻石（`XDMG:item:元素宝石，黄钻石`）· AI · partial
+- P25 · 元素宝石，蓝宝石（`XDMG:item:元素宝石，蓝宝石`）· AI · partial
+- P25 · 云巨人之力药水（`XDMG:item:云巨人之力药水`）· AI · partial
+- P25 · 杂技长棍（`XDMG:item:杂技长棍`）· AI · partial
+- P25 · 造风之扇（`XDMG:item:造风之扇`）· AI · partial
+- P25 · 召唤魔方（`XDMG:item:召唤魔方`）· AI · partial
+- P25 · 召唤气巨灵戒指（`XDMG:item:召唤气巨灵戒指`）· AI · partial
+- P25 · 召唤泰坦卷轴（巨像）（`XDMG:item:召唤泰坦卷轴（巨像）`）· AI · partial
+- P25 · 召唤泰坦卷轴（克拉肯）（`XDMG:item:召唤泰坦卷轴（克拉肯）`）· AI · partial
+- P25 · 召唤泰坦卷轴（兽主）（`XDMG:item:召唤泰坦卷轴（兽主）`）· AI · partial
+- P25 · 召唤泰坦卷轴（吞世黏浆）（`XDMG:item:召唤泰坦卷轴（吞世黏浆）`）· AI · partial
+- P25 · 召唤泰坦卷轴（元初天劫）（`XDMG:item:召唤泰坦卷轴（元初天劫）`）· AI · partial
+- P25 · 召唤泰坦卷轴（至高天）（`XDMG:item:召唤泰坦卷轴（至高天）`）· AI · partial
+- P25 · 真视宝石（`XDMG:item:真视宝石`）· AI · partial
+- P25 · 真知水晶球（`XDMG:item:真知水晶球`）· AI · partial
+- P25 · 征服（`XDMG:item:征服`）· AI · partial
+- P25 · 指挥魔杖（`XDMG:item:指挥魔杖`）· AI · partial
+- P25 · 至恶护符（`XDMG:item:至恶护符`）· AI · partial
+- P25 · 蛛网魔杖（`XDMG:item:蛛网魔杖`）· AI · partial
+- P25 · 自然斗篷（`XDMG:item:自然斗篷`）· AI · partial
+- P25 · 捕猎陷阱（`XPHB:item:捕猎陷阱`）· AI · partial
+- P25 · 捕网（`XPHB:item:捕网`）· AI · partial
+- P25 · 炽火胶（`XPHB:item:炽火胶`）· AI · partial
+- P25 · 滚珠（`XPHB:item:滚珠`）· AI · partial
+- P25 · 火把（`XPHB:item:火把`）· AI · partial
+- P25 · 基础毒药（`XPHB:item:基础毒药`）· AI · partial
+- P25 · 抗毒剂（`XPHB:item:抗毒剂`）· AI · partial
+- P25 · 链条（`XPHB:item:链条`）· AI · partial
+- P25 · 燃油（`XPHB:item:燃油`）· AI · partial
+- P25 · 铁蒺藜（`XPHB:item:铁蒺藜`）· AI · partial
+- P25 · 医疗包（`XPHB:item:医疗包`）· AI · partial
+- P25 · 魅惑（`XPHB:condition:魅惑`）· 手写 · partial
+- P25 · 昏迷（`XPHB:condition:昏迷`）· 手写 · full
+- P25 · 协助（`XPHB:action:协助`）· 手写 · full
+- P26 · 躲藏（`XPHB:action:躲藏`）· 手写 · full
+- P26 · 搜索（`XPHB:action:搜索`）· 手写 · manual
+- P26 · 研究（`XPHB:action:研究`）· 手写 · manual
+- P26 · 影响（`XPHB:action:影响`）· 手写 · manual
+- P26 · 操作（`XPHB:action:操作`）· 手写 · manual
+- P26 · 魔法（`XPHB:action:魔法`）· 手写 · manual
+- P26 · 预备（`XPHB:action:预备`）· 手写 · manual
+- P26 · 横扫（`XPHB:mastery:横扫`）· 手写 · manual
+- P26 · 迅击（`XPHB:mastery:迅击`）· 手写 · manual
+- P26 · 猎人印记（`XPHB:spell:猎人印记`）· 手写 · partial · 1 环

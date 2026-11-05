@@ -1,0 +1,433 @@
+[
+ {
+  "key": "XPHB:spell:闪电箭矢",
+  "name": "闪电箭矢",
+  "by": "AI",
+  "automation": "partial",
+  "level": 3,
+  "text": "使用武器发动远程攻击命中或失手后立即以附赠动作施展。替代该次攻击的原有伤害与效果，命中时目标受到 4d8（每升一环 +1d8）闪电伤害，失手时受到半数伤害；无论命中与否，目标周围 10 尺内的每个生物须进行敏捷豁免，失败受到 2d8（每升一环 +1d8）闪电伤害，成功半数。原攻击伤害替代与周围生物溅射豁免伤害需手动处理。",
+  "notes": [
+   "闪电箭矢：目标周围 10 尺内的每个生物必须进行敏捷豁免对抗法术 DC，失败受到等同于 (slot.level - 1)d8 的闪电伤害，成功受到半数伤害。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"闪电箭矢\",\"activation\":\"bonus\",\"tags\":[\"spell\",\"magical\"],\"trigger\":{\"on\":[\"attackHit\",\"attackMissed\"],\"role\":\"actor\",\"when\":\"attack.ranged && attack.weapon\"},\"requires\":\"turn.isMine\",\"cost\":[{\"slot\":{\"min\":3}}],\"root\":[{\"kind\":\"if\",\"when\":\"!roll.failing\",\"then\":[{\"kind\":\"damage\",\"dice\":\"(1 + slot.level)d8\",\"type\":\"闪电\"}],\"else\":[{\"kind\":\"damage\",\"dice\":\"(1 + slot.level)d8\",\"scale\":0.5,\"type\":\"闪电\"}]},{\"kind\":\"note\",\"text\":\"闪电箭矢：目标周围 10 尺内的每个生物必须进行敏捷豁免对抗法术 DC，失败受到等同于 (slot.level - 1)d8 的闪电伤害，成功受到半数伤害。\"}]}]}"
+ },
+ {
+  "key": "XPHB:spell:闪现术",
+  "name": "闪现术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 3,
+  "text": "在法术持续时间内每次自己回合结束时掷 1d6，4~6 消失前往以太位面（原位面生物无法观测或影响你）；下一回合开始时返回原先位置 10 尺内未被占据空间。位面转移与空间位移需手动处理。",
+  "notes": [
+   "闪现术：掷 1d6，若为 4~6 则消失并进入以太位面；下个回合开始时返回原位 10 尺内可见的未被占据空间"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"闪现术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":3}}],\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"template\":\"闪现术\",\"to\":\"self\"}]}],\"effects\":{\"闪现术\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"minutes\":1},\"triggers\":[{\"id\":\"blink-turn-end\",\"label\":\"闪现术：回合结束掷骰\",\"on\":\"turnEnded\",\"role\":\"actor\",\"do\":[{\"kind\":\"note\",\"text\":\"闪现术：掷 1d6，若为 4~6 则消失并进入以太位面；下个回合开始时返回原位 10 尺内可见的未被占据空间\"}]}],\"text\":\"每次自己回合结束时掷 1d6，结果 4~6 时消失进入以太位面；下一回合开始时返回原位 10 尺内未被占据空间\"}}}"
+ },
+ {
+  "key": "XPHB:spell:闪耀斩",
+  "name": "闪耀斩",
+  "by": "AI",
+  "automation": "partial",
+  "level": 2,
+  "text": "使用近战武器或徒手打击命中生物后以附赠动作施展。此次攻击额外受到 2d6（每升一环 +1d6）光耀伤害；专注至多 1 分钟，目标发出半径 5 尺明亮光照，对其进行的攻击检定具有优势，且其无法受益于隐形状态（光照与隐形失效需手动处理）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"闪耀斩\",\"activation\":\"bonus\",\"tags\":[\"spell\",\"magical\"],\"trigger\":{\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"when\":\"attack.melee && (attack.weapon || attack.unarmed)\"},\"requires\":\"turn.isMine\",\"cost\":[{\"slot\":{\"min\":2}}],\"concentration\":{\"minutes\":1},\"root\":[{\"kind\":\"addDamage\",\"dice\":\"(slot.level)d6\",\"type\":\"光耀\"},{\"kind\":\"applyEffect\",\"template\":\"闪耀斩\",\"to\":\"target\"}]}],\"effects\":{\"闪耀斩\":{\"tags\":[\"magical\",\"spell\"],\"rollMods\":[{\"on\":{\"kind\":\"attack\"},\"who\":\"against\",\"op\":\"adv\",\"label\":\"闪耀斩：攻击检定优势\"}],\"text\":\"发出半径 5 尺明亮光照，对其进行的攻击检定具有优势，且无法受益于隐形状态\"}}}"
+ },
+ {
+  "key": "XPHB:spell:神莓术",
+  "name": "神莓术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 1,
+  "text": "消耗 1 环法术位在手中创造 10 颗魔法浆果，持续 24 小时。生物可用附赠动作吃下一颗浆果恢复 1 点生命值，并满足一整天的营养需求。浆果数量、分发与食用需由玩家手动记录处理。",
+  "notes": [
+   "神莓术：在手中创造 10 颗魔法浆果，持续 24 小时。生物可用附赠动作吃下一颗恢复 1 点生命值。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"神莓术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":1}}],\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"note\",\"text\":\"神莓术：在手中创造 10 颗魔法浆果，持续 24 小时。生物可用附赠动作吃下一颗恢复 1 点生命值。\"}]}]}"
+ },
+ {
+  "key": "XPHB:spell:生命灵光",
+  "name": "生命灵光",
+  "by": "AI",
+  "automation": "partial",
+  "level": 4,
+  "text": "专注至多 10 分钟。以自身为中心 30 尺光环内，你与盟友获得暗蚀伤害抗性；0 生命值的盟友在灵光范围内开始其回合时恢复 1 点生命值。生命值上限无法被降低需由玩家手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"生命灵光\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":4}}],\"concentration\":{\"minutes\":10},\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"template\":\"生命灵光\",\"to\":\"self\"}]}],\"effects\":{\"生命灵光\":{\"tags\":[\"magical\",\"spell\"],\"aura\":{\"id\":\"aura-of-life\",\"radius\":30,\"affects\":\"allies\",\"includeSelf\":true,\"grant\":{\"statics\":[{\"kind\":\"resist\",\"values\":[\"暗蚀\"]}],\"triggers\":[{\"id\":\"heal-0hp\",\"label\":\"生命灵光：恢复生命\",\"on\":\"turnStarted\",\"role\":\"actor\",\"when\":\"self.hp == 0\",\"do\":[{\"kind\":\"heal\",\"amount\":1,\"to\":\"self\"}]}]}},\"text\":\"30 尺灵光内的你和盟友获得暗蚀伤害抗性；生命值为 0 的盟友在灵光内开始回合时恢复 1 点生命值；生命值上限无法被降低。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:圣火术",
+  "name": "圣火术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 0,
+  "text": "目标进行敏捷豁免，失败受到 1d8（随等级成长）光耀伤害。目标无法从半掩护或四分之三掩护中获得好处（掩护需手动处理）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"圣火术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"dice\":\"(1 + floor((self.level + 1) / 6))d8\",\"type\":\"光耀\"}]}]}]}"
+ },
+ {
+  "key": "XPHB:spell:石墙术",
+  "name": "石墙术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 5,
+  "text": "专注至多 10 分钟（持续至满则变为永久）。在 120 尺内指定一点创造非魔法石墙（由十块 10×10 尺厚 6 寸或十块 10×20 尺厚 3 寸板块相连组成）。每块板块 AC 15，每 1 寸厚度具 30 点生命值，免疫毒素和心灵伤害。穿过生物空间时推至一侧；若即将被完全包围，目标可进行敏捷豁免，成功可用反应移动至多等于其速度的距离以避免被围（石墙具体塑形、推移与豁免反应需手动处理）。",
+  "notes": [
+   "在 120 尺内指定一点创造由十个板块组成的石墙。若穿过生物占据空间，推至石墙一侧；若即将被完全包围，该生物可进行敏捷豁免，成功后可以反应移动至多其速度的距离以避免被围"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"石墙术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":5}}],\"concentration\":{\"minutes\":10},\"targeting\":{\"type\":\"point\",\"range\":120},\"root\":[{\"kind\":\"note\",\"text\":\"在 120 尺内指定一点创造由十个板块组成的石墙。若穿过生物占据空间，推至石墙一侧；若即将被完全包围，该生物可进行敏捷豁免，成功后可以反应移动至多其速度的距离以避免被围\"}]}]}"
+ },
+ {
+  "key": "XPHB:spell:识破隐形",
+  "name": "识破隐形",
+  "by": "AI",
+  "automation": "partial",
+  "level": 2,
+  "text": "持续 1 小时。施法者能看见任何处于隐形状态的生物和物件，如同其正常可见一样；并能看见以太位面（看见隐形生物需在询问视线时确认或手动处理）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"识破隐形\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":2}}],\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"template\":\"识破隐形\",\"to\":\"self\"}]}],\"effects\":{\"识破隐形\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"hours\":1},\"text\":\"能看见处于隐形状态的生物和物件，如同其正常可见一样；并能看见以太位面\"}}}"
+ },
+ {
+  "key": "XPHB:spell:守护之链",
+  "name": "守护之链",
+  "by": "AI",
+  "automation": "partial",
+  "level": 2,
+  "text": "建立神秘连接，持续 1 小时。目标位于施法者 60 尺内时，AC 和所有豁免检定 +1，且对所有伤害具有抗性。每当目标受到伤害时施法者受到相同伤害；施法者生命值降至 0 或双方相距超过 60 尺时法术终止（伤害分担与距离超出终止需手动处理）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"守护之链\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":2}}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"touch\"},\"root\":[{\"kind\":\"applyEffect\",\"template\":\"守护之链\",\"to\":\"target\"}]}],\"effects\":{\"守护之链\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"hours\":1},\"statics\":[{\"kind\":\"ac\",\"bonus\":\"cond(dist(self, source) <= 60, 1, 0)\"},{\"kind\":\"resistAll\"}],\"rollMods\":[{\"on\":{\"kind\":\"save\"},\"who\":\"bearer\",\"when\":\"dist(self, source) <= 60\",\"op\":\"add\",\"value\":1,\"label\":\"守护之链：豁免+1\"}],\"text\":\"位于施法者 60 尺内时，AC+1、豁免+1，对所有伤害具有抗性。受到伤害时施法者受同等伤害。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:守卫刻文",
+  "name": "守卫刻文",
+  "by": "AI",
+  "automation": "partial",
+  "level": 3,
+  "text": "施法耗时 1 小时。在表面或物件上刻画刻纹并设定触发条件。可选择爆炸符文（触发时 20 尺半径球状区域内每个生物进行敏捷豁免，失败受 (2 + slot.level)d8 点强酸/寒冷/火焰/闪电/雷鸣伤害，成功减半）或法术刻纹（储存一道已准备且环阶不超过此法术位的法术，触发时释放）。符文触发判定与法术储存需手动处理。",
+  "notes": [
+   "储存一道已准备且环阶不超过此法术位的法术，触发时以触发者为目标或中心释放"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"守卫刻文\",\"activation\":{\"minutes\":60},\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":3}}],\"targeting\":{\"type\":\"area\",\"range\":\"touch\",\"area\":{\"shape\":\"sphere\",\"radius\":20}},\"root\":[{\"kind\":\"choose\",\"prompt\":\"选择守卫刻文效果\",\"options\":[{\"label\":\"爆炸符文：火焰\",\"do\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"gow_fire\",\"dice\":\"(2 + slot.level)d8\",\"type\":\"火焰\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"gow_fire\",\"scale\":0.5}]}]}]},{\"label\":\"爆炸符文：寒冷\",\"do\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"gow_cold\",\"dice\":\"(2 + slot.level)d8\",\"type\":\"寒冷\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"gow_cold\",\"scale\":0.5}]}]}]},{\"label\":\"爆炸符文：闪电\",\"do\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"gow_lightning\",\"dice\":\"(2 + slot.level)d8\",\"type\":\"闪电\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"gow_lightning\",\"scale\":0.5}]}]}]},{\"label\":\"爆炸符文：雷鸣\",\"do\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"gow_thunder\",\"dice\":\"(2 + slot.level)d8\",\"type\":\"雷鸣\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"gow_thunder\",\"scale\":0.5}]}]}]},{\"label\":\"爆炸符文：强酸\",\"do\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"gow_acid\",\"dice\":\"(2 + slot.level)d8\",\"type\":\"强酸\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"gow_acid\",\"scale\":0.5}]}]}]},{\"label\":\"法术刻纹\",\"do\":[{\"kind\":\"note\",\"text\":\"储存一道已准备且环阶不超过此法术位的法术，触发时以触发者为目标或中心释放\"}]}]}]}]}"
+ },
+ {
+  "key": "XPHB:spell:术法爆发",
+  "name": "术法爆发",
+  "by": "AI",
+  "automation": "partial",
+  "level": 0,
+  "text": "远程法术攻击，命中造成 1d8（随等级成长）自选类型伤害（强酸、寒冷、火焰、闪电、毒素、心灵、雷鸣）。若掷出 8 可追加 d8 伤害（最多等同于施法属性调整值个额外 d8 伤害骰，需手动处理）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"术法爆发\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":120},\"root\":[{\"kind\":\"choose\",\"prompt\":\"选择伤害类型\",\"options\":[{\"label\":\"强酸\",\"do\":[{\"kind\":\"attack\",\"attack\":{\"ranged\":true,\"spell\":true},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"(1 + floor((self.level + 1) / 6))d8\",\"type\":\"强酸\"}]}]},{\"label\":\"寒冷\",\"do\":[{\"kind\":\"attack\",\"attack\":{\"ranged\":true,\"spell\":true},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"(1 + floor((self.level + 1) / 6))d8\",\"type\":\"寒冷\"}]}]},{\"label\":\"火焰\",\"do\":[{\"kind\":\"attack\",\"attack\":{\"ranged\":true,\"spell\":true},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"(1 + floor((self.level + 1) / 6))d8\",\"type\":\"火焰\"}]}]},{\"label\":\"闪电\",\"do\":[{\"kind\":\"attack\",\"attack\":{\"ranged\":true,\"spell\":true},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"(1 + floor((self.level + 1) / 6))d8\",\"type\":\"闪电\"}]}]},{\"label\":\"毒素\",\"do\":[{\"kind\":\"attack\",\"attack\":{\"ranged\":true,\"spell\":true},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"(1 + floor((self.level + 1) / 6))d8\",\"type\":\"毒素\"}]}]},{\"label\":\"心灵\",\"do\":[{\"kind\":\"attack\",\"attack\":{\"ranged\":true,\"spell\":true},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"(1 + floor((self.level + 1) / 6))d8\",\"type\":\"心灵\"}]}]},{\"label\":\"雷鸣\",\"do\":[{\"kind\":\"attack\",\"attack\":{\"ranged\":true,\"spell\":true},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"(1 + floor((self.level + 1) / 6))d8\",\"type\":\"雷鸣\"}]}]}]}]}]}"
+ },
+ {
+  "key": "XPHB:spell:树跃术",
+  "name": "树跃术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 5,
+  "text": "专注至多 1 分钟。获得在活树之间传送的能力：在你的每个回合内限一次，可消耗 5 尺移动力进入一棵至少与你同等大小的活树，感知 500 尺内所有同类树木位置，并消耗 5 尺移动力从其中一棵活树 5 尺内出现；必须在树外结束回合（树木传送与移动消耗需手动处理）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"树跃术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":5}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"树跃术\"}]}],\"effects\":{\"树跃术\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"在你的每个回合内，你可以消耗 5 尺移动力进入一棵活树中，并消耗 5 尺移动力从 500 尺内的另一棵同类活树 5 尺内自选一点走出（感知 500 尺内同类树木位置；每回合限一次；必须在树外结束回合）。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:睡眠术",
+  "name": "睡眠术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 1,
+  "text": "专注至多 1 分钟。以 60 尺内一点为源点 5 尺半径球状区域内所选生物须进行感知豁免，失败则失能至其下回合结束；届时须重复豁免，失败陷入昏迷。目标受到伤害或专注结束时法术终止。免疫力竭、无需睡眠的生物自动成功，以及用动作摇醒需手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"睡眠术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":1}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"area\",\"range\":60,\"area\":{\"shape\":\"sphere\",\"radius\":5},\"filter\":\"ask('这是你选择的目标吗？')\"},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"睡眠术：失能\",\"state\":{\"dc\":\"self.spell.dc\"}}]}]}]}],\"effects\":{\"睡眠术：失能\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:失能\"],\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":1},\"endsOn\":[{\"event\":\"damageTaken\"}]},\"triggers\":[{\"id\":\"second-save\",\"label\":\"睡眠术：昏迷豁免\",\"on\":\"turnEnded\",\"role\":\"actor\",\"do\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"effect.state.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"睡眠术：昏迷\"}]}]}],\"text\":\"陷入失能状态，下回合结束时须再次进行感知豁免，失败则陷入昏迷。受到伤害或被摇醒时结束。\"},\"睡眠术：昏迷\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:昏迷\"],\"duration\":{\"endsOn\":[{\"event\":\"damageTaken\"}]},\"text\":\"陷入昏迷状态。受到伤害或被摇醒时结束。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:死云术",
+  "name": "死云术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 5,
+  "text": "专注至多 10 分钟。在 120 尺内指定一点创造半径 20 尺球状剧毒浓雾（视为重度遮蔽，浓雾与遮蔽需人工处理）。区域内的生物进行体质豁免，失败受 (slot.level)d8 毒素伤害（5 环 5d8，每高一环 +1d8），成功半数；区域移动到生物空间、生物进入区域或在其中结束回合时同样须进行该豁免（每名生物每回合限一次）。在你的每个回合开始时，用「死云术：移动云雾」在地图上将球状区域往远离你的方向移动 10 尺（移入谁的空间就算进入）。强风吹散需人工处理。",
+  "notes": [
+   "死云术：这片球状区域视为重度遮蔽；在你的每个回合开始时它往远离你的方向移动 10 尺（用「死云术：移动云雾」重选位置）；被强风吹散时法术解除（请手动结束专注并删除区域）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"死云术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":5}}],\"concentration\":{\"minutes\":10},\"targeting\":{\"type\":\"area\",\"range\":120,\"area\":{\"shape\":\"sphere\",\"radius\":20}},\"root\":[{\"kind\":\"zone\",\"name\":\"死云术\",\"on\":[\"create\",\"enter\",\"turnEnd\"],\"affects\":\"all\",\"oncePerTurn\":true,\"do\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"cloud\",\"dice\":\"(slot.level)d8\",\"type\":\"毒素\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"cloud\",\"scale\":0.5}]}]},{\"kind\":\"note\",\"text\":\"死云术：这片球状区域视为重度遮蔽；在你的每个回合开始时它往远离你的方向移动 10 尺（用「死云术：移动云雾」重选位置）；被强风吹散时法术解除（请手动结束专注并删除区域）。\"}]},{\"id\":\"move\",\"name\":\"死云术：移动云雾\",\"activation\":\"free\",\"requires\":\"turn.isMine\",\"text\":\"在你的每个回合开始时，把球状区域往远离你的方向移动 10 尺（在地图上重新选球体的位置）。云雾移入谁的空间，谁就按「进入」进行豁免。\",\"root\":[{\"kind\":\"moveZone\"}],\"targeting\":{\"type\":\"area\",\"range\":120,\"area\":{\"shape\":\"sphere\",\"radius\":20}}}]}"
+ },
+ {
+  "key": "XPHB:spell:塔莎狂笑术",
+  "name": "塔莎狂笑术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 1,
+  "text": "专注至多 1 分钟。目标感知豁免失败则陷入倒地和失能，且无法凭自己结束倒地状态（在界面上点「起立」不会真的起来，只会白扣一半移动力，请留意）。目标在其每回合结束时、以及受到伤害时各可再做一次感知豁免，成功即结束法术。因受到伤害而做的这次豁免具有优势——引擎分不清这次豁免是不是因受伤而来，掷骰时会弹窗确认，答「是」才加优势。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"塔莎狂笑术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":1}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"creature\",\"count\":\"slot.level\",\"range\":30,\"filter\":\"target.id != self.id && canSee(self, target)\"},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"塔莎狂笑术\",\"state\":{\"dc\":\"self.spell.dc\"}}]}]}],\"effects\":{\"塔莎狂笑术\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:倒地\",\"XPHB:condition:失能\"],\"duration\":{\"saveEnds\":{\"ability\":\"wis\",\"at\":\"turnEnd\"}},\"rollMods\":[{\"on\":{\"kind\":\"save\",\"ability\":\"wis\"},\"who\":\"bearer\",\"when\":\"ask('这是因受到伤害而进行的豁免吗？')\",\"op\":\"adv\",\"label\":\"塔莎狂笑术：受伤害豁免具有优势\"}],\"triggers\":[{\"id\":\"dmg-save\",\"label\":\"塔莎狂笑术：受伤害豁免\",\"on\":\"damageTaken\",\"role\":\"target\",\"do\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"effect.state.dc\",\"onSuccess\":[{\"kind\":\"removeEffect\",\"from\":\"self\",\"match\":{\"name\":\"塔莎狂笑术\"}}]}],\"when\":\"damage.amount > 0\"}],\"text\":\"陷入倒地和失能状态，无法凭自己结束倒地。每回合结束或受到伤害时可再次进行感知豁免（因伤害所致有优势），成功则法术终止。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:跳跃术",
+  "name": "跳跃术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 1,
+  "text": "触碰自愿生物施加跳跃术（持续 1 分钟）。在法术结束前，承受者每回合一次可消耗 10 尺移动力跳跃至多 30 尺距离（具体跳跃与移动需在地图上手动处理）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"跳跃术\",\"activation\":\"bonus\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":1}}],\"targeting\":{\"type\":\"creature\",\"count\":\"slot.level\",\"range\":\"touch\"},\"root\":[{\"kind\":\"applyEffect\",\"template\":\"跳跃术\",\"to\":\"each\",\"duration\":{\"minutes\":1}}]}],\"effects\":{\"跳跃术\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"minutes\":1},\"text\":\"每回合一次，可以消耗 10 尺移动力跳跃至多 30 尺（需在地图上手动移动）。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:维生术",
+  "name": "维生术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 0,
+  "text": "选择施法距离内一名生命值为 0 且未死亡的生物，使其变为伤势稳定（引擎目前需手动将目标标记为稳定；高等级施法距离增长需手动处理）。",
+  "notes": [
+   "维生术：目标伤势稳定，无需再进行死亡豁免（请手动标记为稳定）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"维生术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":15,\"filter\":\"target.hp == 0 && !target.dead\"},\"root\":[{\"kind\":\"note\",\"text\":\"维生术：目标伤势稳定，无需再进行死亡豁免（请手动标记为稳定）。\"}]}]}"
+ },
+ {
+  "key": "XPHB:spell:巫术箭",
+  "name": "巫术箭",
+  "by": "AI",
+  "automation": "partial",
+  "level": 1,
+  "text": "远程法术攻击，命中造成 2d12（升环每环+1d12）闪电伤害。持续时间内无论初次攻击是否命中，后续每回合可用附赠动作对目标造成 1d12 闪电伤害；超出 60 尺或全掩护时法术终止（距离及掩护中断需手动处理）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"巫术箭\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":1}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"attack\",\"attack\":{\"ranged\":true,\"spell\":true},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"(1 + slot.level)d12\",\"type\":\"闪电\"}]},{\"kind\":\"applyEffect\",\"template\":\"巫术箭\",\"to\":\"target\"}]},{\"id\":\"use\",\"name\":\"巫术箭：电弧伤害\",\"activation\":\"bonus\",\"tags\":[\"spell\",\"magical\"],\"requires\":\"self.concentrating\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"damage\",\"dice\":\"1d12\",\"type\":\"闪电\"}]}],\"effects\":{\"巫术箭\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"施法者每回合可用附赠动作对目标造成 1d12 闪电伤害；若超出 60 尺或处于全掩护则法术提前终止。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:橡棍术",
+  "name": "橡棍术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 0,
+  "text": "附赠动作，持续 1 分钟（不专注）。自动部分：用灌注了自然之力的短棒或长棍进行近战攻击时，攻击检定与伤害掷骰改用你的施法属性调整值代替力量调整值（引擎问一句「是不是那件武器」，答是就把力量调整值换成施法属性调整值）。手动部分（引擎改不了武器的伤害骰与伤害类型）：① 该武器的伤害骰变为 d8，5 级 d10、11 级 d12、17 级 2d6；② 造成伤害时可以选择改为力场伤害或维持原类型；③ 丢掉该武器时法术终止（再次施展会自动结束上一次，不会叠加）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"橡棍术\",\"activation\":\"bonus\",\"tags\":[\"spell\",\"magical\"],\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"removeEffect\",\"match\":{\"name\":\"橡棍术\"},\"from\":\"self\"},{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"橡棍术\"}]}],\"effects\":{\"橡棍术\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"minutes\":1},\"rollMods\":[{\"on\":{\"kind\":\"attack\",\"attack\":{\"melee\":true,\"weapon\":true}},\"who\":\"bearer\",\"when\":\"attack.ability == 'str' && ask('这次近战攻击用的是灌注橡棍术的短棒或长棍吗？')\",\"op\":\"add\",\"value\":\"self.spell.mod - self.mod.str\",\"label\":\"橡棍术：用施法属性攻击\"},{\"on\":{\"kind\":\"damage\",\"attack\":{\"melee\":true,\"weapon\":true}},\"who\":\"bearer\",\"when\":\"attack.ability == 'str' && ask('这次近战伤害用的是灌注橡棍术的短棒或长棍吗？')\",\"op\":\"add\",\"value\":\"self.spell.mod - self.mod.str\",\"label\":\"橡棍术：用施法属性伤害\"}],\"text\":\"用灌注的短棒或长棍进行近战攻击：攻击检定与伤害掷骰用施法属性代替力量。伤害骰应为 d8（5 级 d10、11 级 d12、17 级 2d6）、可以改成力场伤害 —— 这两项请手动处理；丢掉武器时法术终止。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:心灵尖刺",
+  "name": "心灵尖刺",
+  "by": "AI",
+  "automation": "partial",
+  "level": 2,
+  "text": "向 120 尺内可见生物造成心灵伤害。目标进行感知豁免，失败受到 3d8（升环每环+1d8）心灵伤害，专注至多 1 小时内施法者时刻得知其位置且无法对施法者躲藏，对抗施法者时不能从隐形状态受益（位置与隐形无效需手动处理）；豁免成功受到半数伤害且不附加追踪效应。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"心灵尖刺\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":2}}],\"concentration\":{\"hours\":1},\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":120},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"dice\":\"(1 + slot.level)d8\",\"type\":\"心灵\",\"id\":\"d\"},{\"kind\":\"applyEffect\",\"template\":\"心灵尖刺\",\"to\":\"target\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"d\",\"scale\":0.5}]}]}],\"effects\":{\"心灵尖刺\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"hours\":1},\"text\":\"施法者时刻得知目标位置（只要处于同位面），目标不能对施法者躲藏，且若处于隐形状态对抗施法者时不能从中受益。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:心灵遥控",
+  "name": "心灵遥控",
+  "by": "AI",
+  "automation": "partial",
+  "level": 5,
+  "text": "专注至多 10 分钟。施展该法术时以及后续回合中可用动作以思想移动或操纵 60 尺内不超过巨型的生物或巨型及更小的物件。对生物：目标进行力量豁免，失败则被朝任意方向移动至多 30 尺并在你的下个回合结束前陷入束缚（悬停空中）。对物件：未被携带的物件可直接移动至多 30 尺；被着装携带的物件持有者须力量豁免对抗 DC 否则被夺走移动；亦可进行精细操作。物件移动与操纵需手动处理。",
+  "notes": [
+   "可将目标生物朝任意方向移动至多 30 尺；被举到空中的生物悬停在半空中"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"心灵遥控\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":5}}],\"concentration\":{\"minutes\":10},\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"applyEffect\",\"template\":\"心灵遥控\",\"to\":\"self\"},{\"kind\":\"save\",\"ability\":\"str\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"念力束缚\",\"to\":\"target\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"source\",\"nth\":1}}},{\"kind\":\"note\",\"text\":\"可将目标生物朝任意方向移动至多 30 尺；被举到空中的生物悬停在半空中\"}]}]},{\"id\":\"use\",\"name\":\"心灵遥控：操控生物\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"requires\":\"self.concentrating && self.hasEffect('心灵遥控')\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"save\",\"ability\":\"str\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"念力束缚\",\"to\":\"target\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"source\",\"nth\":1}}},{\"kind\":\"note\",\"text\":\"可将目标生物朝任意方向移动至多 30 尺；被举到空中的生物悬停在半空中\"}]}]}],\"effects\":{\"心灵遥控\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"专注至多 10 分钟。每个回合可用动作操纵 60 尺内生物或物件（操纵物件需手动处理）。\"},\"念力束缚\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:束缚\"],\"text\":\"处于束缚状态，被举到空中时在半空中悬停，直到施法者下个回合结束。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:信仰守卫",
+  "name": "信仰守卫",
+  "by": "AI",
+  "automation": "partial",
+  "level": 4,
+  "text": "在 30 尺内召唤大型灵体守护者悬浮 8 小时。敌人在一回合内首次进入守护者 10 尺内或在其 10 尺内开始其回合时进行敏捷豁免，失败受 20 点光耀伤害，成功半数。累计造成 60 点伤害后守护者消失。守护者位置、触发时机与 60 点伤害计数需手动处理（可用「信仰守卫：守卫打击」动作结算）。",
+  "notes": [
+   "在 30 尺内召唤大型灵体守护者悬浮 8 小时。敌人在一回合内首次进入其 10 尺内或在其 10 尺内开始回合时触发豁免"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"信仰守卫\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":4}}],\"targeting\":{\"type\":\"point\",\"range\":30},\"root\":[{\"kind\":\"note\",\"text\":\"在 30 尺内召唤大型灵体守护者悬浮 8 小时。敌人在一回合内首次进入其 10 尺内或在其 10 尺内开始回合时触发豁免\"}]},{\"id\":\"use\",\"name\":\"信仰守卫：守卫打击\",\"activation\":\"free\",\"tags\":[\"spell\",\"magical\"],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":40},\"root\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"d\",\"dice\":20,\"type\":\"光耀\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"d\",\"scale\":0.5}]}]}]}"
+ },
+ {
+  "key": "XPHB:spell:行动自如",
+  "name": "行动自如",
+  "by": "AI",
+  "automation": "partial",
+  "level": 4,
+  "text": "持续 1 小时，无专注。触碰一个自愿生物（4 环 1 名，每高一环 +1 名）：移动不受困难地形影响（引擎不多扣移动力）；免疫麻痹与束缚状态；任何法术或魔法效应不能降低其速度；获得等同于速度的游泳速度；可花费 5 尺移动力直接挣脱受擒或非魔法束缚物。魔法减速限制、游泳速度与消耗 5 尺移动力挣脱需手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"行动自如\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":4}}],\"targeting\":{\"type\":\"creature\",\"count\":\"slot.level - 3\",\"range\":\"touch\"},\"root\":[{\"kind\":\"applyEffect\",\"template\":\"行动自如\",\"to\":\"target\"}]}],\"effects\":{\"行动自如\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"hours\":1},\"statics\":[{\"kind\":\"conditionImmune\",\"values\":[\"麻痹\",\"束缚\"]}],\"flags\":{\"ignores\":[\"difficultTerrain\"]},\"text\":\"移动不受困难地形影响（引擎不多扣移动力）；免疫麻痹与束缚状态；法术或魔法效应不能降低其速度；获得等同于速度的游泳速度；可花费 5 尺移动力直接挣脱受擒或非魔法束缚。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:雪雨暴",
+  "name": "雪雨暴",
+  "by": "手写",
+  "automation": "partial",
+  "level": 3,
+  "text": "专注至多 1 分钟。在 150 尺内指定一点，产生高 40 尺、半径 20 尺的柱状冻雨与冰雹。一回合内首次进入该区域或在区域内开始其回合的生物进行敏捷豁免，失败陷入倒地状态并失去专注（引擎按区域自动结算，每回合限一次）。地面是困难地形（引擎自动多扣移动力）；区域内重度遮蔽、浇熄明火需人工处理；40 尺高度引擎不追踪。",
+  "notes": [
+   "该区域造成重度遮蔽，区域内一切外露的明火都被浇熄（引擎不处理这些，需人工处理；地面的困难地形引擎自动多扣移动力）；柱状区域高 40 尺，地图上只按半径 20 尺判定，高度需人工确认"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"雪雨暴\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":3}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"area\",\"range\":150,\"area\":{\"shape\":\"cylinder\",\"radius\":20,\"size\":40}},\"root\":[{\"kind\":\"zone\",\"on\":[\"enter\",\"turnStart\"],\"affects\":\"all\",\"oncePerTurn\":true,\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"雪雨暴\",\"to\":\"target\"}]}],\"name\":\"雪雨暴\",\"difficult\":true},{\"kind\":\"note\",\"text\":\"该区域造成重度遮蔽，区域内一切外露的明火都被浇熄（引擎不处理这些，需人工处理；地面的困难地形引擎自动多扣移动力）；柱状区域高 40 尺，地图上只按半径 20 尺判定，高度需人工确认\"}]}],\"effects\":{\"雪雨暴\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:倒地\"],\"flags\":{\"breaksConcentration\":true},\"text\":\"陷入倒地状态并失去专注。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:寻获坐骑",
+  "name": "寻获坐骑",
+  "by": "AI",
+  "automation": "partial",
+  "level": 2,
+  "text": "以动作在 30 尺内的未占据空间召唤异界坐骑（天族 / 妖精 / 邪魔，你施法时选择），数据按施展用的法术位环阶：AC 10 + 环阶，HP 5 + 每环阶 10，速度 60 尺，力量 18 敏捷 12 体质 14 智力 6 感知 12 魅力 8；异界猛击：近战法术攻击，1d8 + 环阶的光耀（天族）/ 心灵（妖精）/ 黯蚀（邪魔）伤害；每只坐骑还有一个长休充能的附加动作（天族：治愈之触 2d8 + 环阶；妖精：妖精步伐传送 60 尺；邪魔：堕落凝视，感知豁免否则恐慌）。坐骑是你与盟友的盟友，共用你的先攻。需人处理：①骑乘时为受控坐骑、你失能时它独立行动（引擎只在你的回合后让它行动）；②四环及以上才有的 60 尺飞行；③附加动作里的传送 / 恐慌 / 治疗（传送引擎只能提示手动；治疗可用「治愈之触」手动结算）；④坐骑降到 0 生命值或你死亡时它消失（引擎按召唤物 0 生命值自动移除），再次施法替换旧坐骑（引擎自动替换无专注的召唤物）；⑤坐骑留下的物品。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"寻获坐骑\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":2}}],\"targeting\":{\"type\":\"point\",\"range\":30},\"root\":[{\"kind\":\"choose\",\"prompt\":\"选择坐骑的生物类型\",\"options\":[{\"label\":\"天族（异界猛击造成光耀伤害；长休充能：治愈之触）\",\"do\":[{\"kind\":\"summon\",\"name\":\"异界坐骑（天族）\",\"size\":\"L\",\"type\":\"celestial\",\"ac\":\"10 + slot.level\",\"hp\":\"5 + 10 * slot.level\",\"speed\":60,\"pb\":\"self.pb\",\"score\":{\"str\":18,\"dex\":12,\"con\":14,\"int\":6,\"wis\":12,\"cha\":8},\"attacksPerAction\":1,\"attacks\":[{\"id\":\"slam\",\"name\":\"异界猛击\",\"melee\":true,\"reach\":true,\"damage\":\"1d8 + slot.level\",\"damageType\":\"光耀\"}],\"actions\":[{\"id\":\"touch\",\"name\":\"治愈之触（长休充能）\",\"activation\":\"bonus\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":5},\"root\":[{\"kind\":\"heal\",\"amount\":\"2d8 + slot.level\"}]}],\"notes\":[{\"group\":\"特性\",\"name\":\"生命连接\",\"text\":\"你从一环或更高环的法术中恢复生命值时，若你位于坐骑 5 尺内，坐骑也恢复等量生命值 —— 引擎不追踪，请手动同步。\"},{\"group\":\"特性\",\"name\":\"心灵感应\",\"text\":\"坐骑能与你进行 1 里内的心灵感应。\"}],\"link\":false,\"group\":\"steed\"}]},{\"label\":\"妖精（异界猛击造成心灵伤害；长休充能：妖精步伐）\",\"do\":[{\"kind\":\"summon\",\"name\":\"异界坐骑（妖精）\",\"size\":\"L\",\"type\":\"fey\",\"ac\":\"10 + slot.level\",\"hp\":\"5 + 10 * slot.level\",\"speed\":60,\"pb\":\"self.pb\",\"score\":{\"str\":18,\"dex\":12,\"con\":14,\"int\":6,\"wis\":12,\"cha\":8},\"attacksPerAction\":1,\"attacks\":[{\"id\":\"slam\",\"name\":\"异界猛击\",\"melee\":true,\"reach\":true,\"damage\":\"1d8 + slot.level\",\"damageType\":\"心灵\"}],\"notes\":[{\"group\":\"特性\",\"name\":\"妖精步伐（长休充能）\",\"text\":\"坐骑连同骑手传送至 60 尺内的未占据空间 —— 传送请手动拖动棋子。\"},{\"group\":\"特性\",\"name\":\"生命连接\",\"text\":\"你从一环或更高环的法术中恢复生命值时，若你位于坐骑 5 尺内，坐骑也恢复等量生命值 —— 请手动同步。\"}],\"link\":false,\"group\":\"steed\"}]},{\"label\":\"邪魔（异界猛击造成黯蚀伤害；长休充能：堕落凝视）\",\"do\":[{\"kind\":\"summon\",\"name\":\"异界坐骑（邪魔）\",\"size\":\"L\",\"type\":\"fiend\",\"ac\":\"10 + slot.level\",\"hp\":\"5 + 10 * slot.level\",\"speed\":60,\"pb\":\"self.pb\",\"score\":{\"str\":18,\"dex\":12,\"con\":14,\"int\":6,\"wis\":12,\"cha\":8},\"attacksPerAction\":1,\"attacks\":[{\"id\":\"slam\",\"name\":\"异界猛击\",\"melee\":true,\"reach\":true,\"damage\":\"1d8 + slot.level\",\"damageType\":\"黯蚀\"}],\"actions\":[{\"id\":\"glare\",\"name\":\"堕落凝视（长休充能）\",\"activation\":\"bonus\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"name\":\"堕落凝视：恐慌\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"source\",\"nth\":1},\"manual\":true},\"inline\":{\"name\":\"堕落凝视：恐慌\",\"implies\":[\"XPHB:condition:恐慌\"],\"text\":\"陷入恐慌状态，直到你的下个回合结束。\"}}]}]}],\"notes\":[{\"group\":\"特性\",\"name\":\"生命连接\",\"text\":\"你从一环或更高环的法术中恢复生命值时，若你位于坐骑 5 尺内，坐骑也恢复等量生命值 —— 请手动同步。\"}],\"link\":false,\"group\":\"steed\"}]}]}],\"text\":\"召唤异界坐骑（…（截断，全文按键去 data/ 下找）"
+ },
+ {
+  "key": "XPHB:spell:妖火",
+  "name": "妖火",
+  "by": "AI",
+  "automation": "partial",
+  "level": 1,
+  "text": "20 尺立方区域内的生物必须进行敏捷豁免，失败则被光芒勾勒轮廓；受术者发出 10 尺微光且无法受益于隐形状态（隐形失效需手动处理）；能看见受术者的攻击者对其发动的攻击检定具有优势。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"妖火\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":1}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"area\",\"range\":60,\"area\":{\"shape\":\"cube\",\"size\":20}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"妖火\"}]}]}]}],\"effects\":{\"妖火\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"发出 10 尺半径微光光照；无法受益于隐形状态；能看见受术者的攻击者对其发动的攻击检定具有优势。\",\"rollMods\":[{\"on\":{\"kind\":\"attack\"},\"who\":\"against\",\"when\":\"canSee(attacker, self)\",\"op\":\"adv\",\"label\":\"妖火：攻击优势\"}]}}}"
+ },
+ {
+  "key": "XPHB:spell:移除诅咒",
+  "name": "移除诅咒",
+  "by": "AI",
+  "automation": "partial",
+  "level": 3,
+  "text": "你触碰一名生物或一个物件，使影响其的所有诅咒终止。已自动化：解除目标身上引擎认得出来的诅咒效应——带 curse 标签的，以及数据里写出来的「脆弱诅咒」「咒剑诅咒」。要人处理的：①诅咒魔法物品本身解除不掉（原文如此），法术只打破物品与所有者的同调——请在物品页手动解除同调（引擎的战斗目标只能是生物，对物件施法时也请手动处理这条同调）；②解除一道专注中的诅咒法术时，施法者的专注不会跟着结束（引擎的已知限制），请在施法者身上手动结束专注；③数据里没写成效应、只是叙事上的诅咒，请手动删除或记录。",
+  "notes": [
+   "移除诅咒：目标身上的诅咒已解除。若是一件诅咒魔法物品，物品上的诅咒还在，只打破了它与所有者的同调（请手动解除同调）；被解除的若是专注中的法术，请手动结束原施法者的专注。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"移除诅咒\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":3}}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"touch\"},\"root\":[{\"kind\":\"removeEffect\",\"from\":\"target\",\"match\":{\"tag\":\"curse\"}},{\"kind\":\"removeEffect\",\"from\":\"target\",\"match\":{\"name\":\"脆弱诅咒\"}},{\"kind\":\"removeEffect\",\"from\":\"target\",\"match\":{\"name\":\"咒剑诅咒\"}},{\"kind\":\"note\",\"text\":\"移除诅咒：目标身上的诅咒已解除。若是一件诅咒魔法物品，物品上的诅咒还在，只打破了它与所有者的同调（请手动解除同调）；被解除的若是专注中的法术，请手动结束原施法者的专注。\"}]}]}"
+ },
+ {
+  "key": "XPHB:spell:疫病虫群",
+  "name": "疫病虫群",
+  "by": "手写",
+  "automation": "partial",
+  "level": 5,
+  "text": "专注至多 10 分钟。在 300 尺内指定一点创造半径 20 尺球状噬人蝗虫虫群。显现时区域内每个生物进行体质豁免，失败受 4d10（每比五环高一环 +1d10）穿刺伤害，成功半数。生物一回合内首次进入或在其中结束回合也须进行该豁免（引擎按区域处理，每回合每名生物限一次）。区域同时是困难地形（引擎自动多扣移动力）与轻度遮蔽（需人工处理）；重新进出的同一回合限制也靠引擎的每回合一次。",
+  "notes": [
+   "区域处于轻度遮蔽（引擎不处理遮蔽，需人工处理）；困难地形引擎自动多扣移动力"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"疫病虫群\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":5}}],\"concentration\":{\"minutes\":10},\"targeting\":{\"type\":\"area\",\"range\":300,\"area\":{\"shape\":\"sphere\",\"radius\":20}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"plague_dmg\",\"dice\":\"(slot.level - 1)d10\",\"type\":\"穿刺\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"plague_dmg\",\"scale\":0.5}]}]},{\"kind\":\"zone\",\"on\":[\"enter\",\"turnEnd\"],\"affects\":\"all\",\"oncePerTurn\":true,\"do\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"plague_zone_dmg\",\"dice\":\"(slot.level - 1)d10\",\"type\":\"穿刺\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"plague_zone_dmg\",\"scale\":0.5}]}],\"name\":\"疫病虫群\",\"difficult\":true},{\"kind\":\"note\",\"text\":\"区域处于轻度遮蔽（引擎不处理遮蔽，需人工处理）；困难地形引擎自动多扣移动力\"}]}]}"
+ },
+ {
+  "key": "XPHB:spell:疫病术",
+  "name": "疫病术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 5,
+  "text": "触碰一名生物，它进行体质豁免：失败受到 11d8 黯蚀伤害并陷入中毒。施法时选一项属性，目标在中毒期间进行该属性的豁免检定时具有劣势（已自动）。目标在其每回合结束时的重复体质豁免要累计三次成功 / 三次失败（三次成功结束效应，三次失败则效应持续 7 日），以及中毒目标受到「结束中毒」的效应时必须通过体质豁免否则中毒不结束——这两项引擎没有计数器、也没有拦截「结束中毒」的接口，请手动记录与判定。效应结束（或持续 7 日后）请在目标身上手动移除「疫病」。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"疫病术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":5}}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"touch\"},\"root\":[{\"kind\":\"choose\",\"prompt\":\"疫病术：选择一项属性（中毒期间该属性的豁免检定具有劣势）\",\"var\":\"abil\",\"options\":[{\"label\":\"力量\",\"value\":\"str\"},{\"label\":\"敏捷\",\"value\":\"dex\"},{\"label\":\"体质\",\"value\":\"con\"},{\"label\":\"智力\",\"value\":\"int\"},{\"label\":\"感知\",\"value\":\"wis\"},{\"label\":\"魅力\",\"value\":\"cha\"}]},{\"kind\":\"save\",\"ability\":\"con\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"dice\":\"11d8\",\"type\":\"黯蚀\"},{\"kind\":\"applyEffect\",\"template\":\"疫病\",\"to\":\"target\",\"state\":{\"abil\":\"vars.abil\"}}]}]}],\"effects\":{\"疫病\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:中毒\"],\"rollMods\":[{\"on\":{\"kind\":\"save\"},\"who\":\"bearer\",\"when\":\"roll.ability == effect.state.abil\",\"op\":\"disadv\",\"label\":\"疫病术：所选属性豁免劣势\"}],\"text\":\"陷入中毒状态；进行所选属性的豁免检定时具有劣势。每回合结束时的重复体质豁免要累计三次成功 / 失败（手动记录）。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:隐形术",
+  "name": "隐形术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 2,
+  "text": "触碰至多 (slot.level - 1) 个生物使其获得隐形状态，持续至多 1 小时（专注）。目标若进行攻击检定、造成伤害或施展法术则其隐形提前终止（个体提前终止需手动处理）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"隐形术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":2}}],\"concentration\":{\"hours\":1},\"targeting\":{\"type\":\"creature\",\"count\":\"slot.level - 1\",\"range\":\"touch\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"隐形术\"}]}],\"effects\":{\"隐形术\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:隐形\"],\"text\":\"处于隐形状态。如果进行攻击检定、造成伤害或施展法术，此效应提前终止。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:英雄气概",
+  "name": "英雄气概",
+  "by": "AI",
+  "automation": "partial",
+  "level": 1,
+  "text": "自愿生物免疫恐慌状态；在其每回合开始时获得等同于施法者施法属性调整值的临时生命值；法术结束时失去该法术给予的临时生命值需手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"英雄气概\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":1}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"creature\",\"count\":\"slot.level\",\"range\":\"touch\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"英雄气概\"}]}],\"effects\":{\"英雄气概\":{\"tags\":[\"magical\",\"spell\"],\"statics\":[{\"kind\":\"conditionImmune\",\"values\":[\"恐慌\"]}],\"onApply\":[{\"kind\":\"removeEffect\",\"match\":{\"name\":\"恐慌\"}}],\"triggers\":[{\"id\":\"turnStartTempHp\",\"label\":\"英雄气概：获得临时生命值\",\"on\":\"turnStarted\",\"role\":\"actor\",\"do\":[{\"kind\":\"tempHp\",\"amount\":\"source.spell.mod\",\"to\":\"self\"}]}],\"text\":\"免疫恐慌状态；在其每回合开始时获得等同于施法属性调整值的临时生命值。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:悠兰德王者威仪",
+  "name": "悠兰德王者威仪",
+  "by": "AI",
+  "automation": "partial",
+  "level": 5,
+  "text": "专注至多 1 分钟。自身散发 10 尺光环。施法时以及光环进入可见生物占据空间、可见生物进入光环或在其中结束其回合时，你可迫使其进行感知豁免，失败受 4d6 点心灵伤害、陷入倒地状态并被推离 10 尺，成功受半数伤害（每名生物每回合限一次）。移动光环与后续进入/结束回合触发需手动处理。",
+  "notes": [
+   "自身周围覆盖 10 尺光环。当光环进入可见生物空间、生物进入光环或在其内结束回合时，同样可迫使其进行感知豁免（每回合每名生物限一次）"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"悠兰德王者威仪\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":5}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"emanation\",\"radius\":10},\"filter\":\"target.id != self.id && canSee(self, target)\"},\"root\":[{\"kind\":\"applyEffect\",\"template\":\"悠兰德王者威仪\",\"to\":\"self\"},{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"yrp_dmg\",\"dice\":\"4d6\",\"type\":\"心灵\"},{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"XPHB:condition:倒地\"},{\"kind\":\"move\",\"mode\":\"push\",\"ft\":10}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"yrp_dmg\",\"scale\":0.5}]}]},{\"kind\":\"note\",\"text\":\"自身周围覆盖 10 尺光环。当光环进入可见生物空间、生物进入光环或在其内结束回合时，同样可迫使其进行感知豁免（每回合每名生物限一次）\"}]}],\"effects\":{\"悠兰德王者威仪\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"自身散发 10 尺光环。当光环进入可见生物占据空间，或可见生物进入光环或在其中结束回合时，可迫使其进行感知豁免，失败受 4d6 心灵伤害、倒地并被推离 10 尺，成功受半数伤害（每名生物一回合限一次）。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:油腻术",
+  "name": "油腻术",
+  "by": "手写",
+  "automation": "partial",
+  "level": 1,
+  "text": "无需专注，持续 1 分钟（10 轮）。指定 60 尺内一点覆盖 10 尺方状区域，区域为困难地形（引擎自动多扣移动力）。油脂出现时站在范围内的每个生物进行敏捷豁免，失败陷入倒地状态。进入该区域或在其中结束其回合的生物也必须进行该敏捷豁免，失败则陷入倒地（每名生物每回合限一次）。",
+  "notes": [
+   "油腻术：这个法术不需要专注，区域会在 10 轮后自动消失；提前清掉（比如被点燃）请手动删除区域。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"油腻术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":1}}],\"targeting\":{\"type\":\"area\",\"range\":60,\"area\":{\"shape\":\"cube\",\"size\":10}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"XPHB:condition:倒地\"}]}]},{\"kind\":\"zone\",\"on\":[\"enter\",\"turnEnd\"],\"affects\":\"all\",\"oncePerTurn\":false,\"rounds\":10,\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"XPHB:condition:倒地\"}]}],\"name\":\"油腻术\",\"difficult\":true},{\"kind\":\"note\",\"text\":\"油腻术：这个法术不需要专注，区域会在 10 轮后自动消失；提前清掉（比如被点燃）请手动删除区域。\"}]}]}"
+ },
+ {
+  "key": "XPHB:spell:诱捕打击",
+  "name": "诱捕打击",
+  "by": "AI",
+  "automation": "partial",
+  "level": 1,
+  "text": "武器命中后以附赠动作施展（专注至多 1 分钟）。目标进行力量豁免：体型为大型或更大时，这次豁免具有优势（引擎按目标体型自动给优势，不询问；实现上是在施法时给目标挂一个只活到这次豁免的短效应，日志里会看到它出现又消失，那是正常的）。豁免成功则藤蔓枯萎、法术结束，引擎会连同专注一起收掉。失败则陷入束缚状态（束缚的减速、被打有优势这些由「束缚」状态条目负责），束缚期间在其每回合开始时受到 1d6 点穿刺伤害（升环每比一环高一级 +1d6）。挣脱要由目标或其他位于其触及内的生物花一个动作做一次力量（运动）检定对抗你的法术豁免 DC：「由别的生物花动作解除某个效应」引擎没有入口，这一步请由人掷检定，成功后点「诱捕打击：挣脱」——它会把目标身上的效应和你的专注一起收掉（原文就是「挣脱则法术结束」；引擎不会因为效应被移除就自动结束专注，多目标法术里一个目标摆脱不代表法术结束，所以这一步写成显式动作）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"诱捕打击\",\"activation\":\"bonus\",\"tags\":[\"spell\",\"magical\"],\"trigger\":{\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"when\":\"attack.weapon\"},\"requires\":\"turn.isMine\",\"cost\":[{\"slot\":{\"min\":1}}],\"concentration\":{\"minutes\":1},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"体型豁免优势\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":0},\"endsOn\":[{\"event\":\"d20Rolled\",\"when\":\"event.roller == self.id && event.kind == 'save' && event.ability == 'str'\"}]}},{\"kind\":\"save\",\"ability\":\"str\",\"dc\":\"self.spell.dc\",\"onSuccess\":[{\"kind\":\"removeEffect\",\"from\":\"self\",\"match\":{\"key\":\"concentration\"}}],\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"诱捕打击\",\"state\":{\"dice\":\"(slot.level)d6\"}}]}]},{\"id\":\"escape\",\"name\":\"诱捕打击：挣脱（检定成功后点这个）\",\"activation\":\"free\",\"tags\":[\"spell\",\"magical\"],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":30},\"root\":[{\"kind\":\"removeEffect\",\"from\":\"target\",\"match\":{\"name\":\"诱捕打击\"}},{\"kind\":\"endConcentration\"}]}],\"effects\":{\"体型豁免优势\":{\"name\":\"诱捕打击：体型豁免优势\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":0},\"endsOn\":[{\"event\":\"d20Rolled\",\"when\":\"event.roller == self.id && event.kind == 'save' && event.ability == 'str'\"}]},\"rollMods\":[{\"on\":{\"kind\":\"save\",\"ability\":\"str\"},\"who\":\"bearer\",\"when\":\"self.size == '大型' || self.size == '巨型' || self.size == '超巨型'\",\"op\":\"adv\",\"label\":\"诱捕打击：体型为大型或更大，豁免具有优势\"}],\"text\":\"只活到这次力量豁免掷完：体型为大型或更大时，这次豁免具有优势。\"},\"诱捕打击\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:束缚\"],\"triggers\":[{\"id\":\"turnStartDamage\",\"label\":\"诱捕打击：缠绕伤害\",\"on\":\"turnStarted\",\"role\":\"actor\",\"do\":[{\"kind\":\"damage\",\"dice\":\"effect.state.dice\",\"type\":\"穿刺\"}]}],\"text\":\"陷入束缚状态；在每回合开始时受到 1d6 点穿刺伤害（升环后为 环阶 d6）。可由目标或触及内的生物用一个动作做力量（运动）检定对抗豁免 DC 解除：这一步引擎不会替人掷，成功请手动移除本效应。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:羽落术",
+  "name": "羽落术",
+  "by": "AI",
+  "automation": "manual",
+  "level": 0,
+  "text": "1 反应（你或距你 60 尺内的可见生物坠落时可用）。指定施法距离内至多 5 个正坠落的生物，受术目标的坠落速度降至每回合 60 尺；在法术终止前落地不受到任何坠落伤害，落地后效应终止。由于引擎缺乏坠落事件与下坠/高度机制，需人工处理。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XPHB:spell:元素武器",
+  "name": "元素武器",
+  "by": "AI",
+  "automation": "partial",
+  "level": 3,
+  "text": "触碰一把非魔法武器，使其变为魔法武器并赋予所选元素类型（强酸、寒冷、火焰、闪电、雷鸣）。持续时间内武器攻击检定获得加值（3-4环+1，5-6环+2，7环+3），命中时造成额外伤害（3-4环1d4，5-6环2d4，7环3d4）。非魔法武器限制与指定单把武器需手动判定。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"元素武器\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":3}}],\"concentration\":{\"hours\":1},\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"touch\"},\"root\":[{\"kind\":\"choose\",\"prompt\":\"元素武器：选择伤害类型\",\"options\":[{\"label\":\"强酸\",\"do\":[{\"kind\":\"applyEffect\",\"template\":\"元素武器\",\"to\":\"target\",\"state\":{\"type\":\"'强酸'\",\"slot\":\"slot.level\"}}]},{\"label\":\"寒冷\",\"do\":[{\"kind\":\"applyEffect\",\"template\":\"元素武器\",\"to\":\"target\",\"state\":{\"type\":\"'寒冷'\",\"slot\":\"slot.level\"}}]},{\"label\":\"火焰\",\"do\":[{\"kind\":\"applyEffect\",\"template\":\"元素武器\",\"to\":\"target\",\"state\":{\"type\":\"'火焰'\",\"slot\":\"slot.level\"}}]},{\"label\":\"闪电\",\"do\":[{\"kind\":\"applyEffect\",\"template\":\"元素武器\",\"to\":\"target\",\"state\":{\"type\":\"'闪电'\",\"slot\":\"slot.level\"}}]},{\"label\":\"雷鸣\",\"do\":[{\"kind\":\"applyEffect\",\"template\":\"元素武器\",\"to\":\"target\",\"state\":{\"type\":\"'雷鸣'\",\"slot\":\"slot.level\"}}]}]}]}],\"effects\":{\"元素武器\":{\"tags\":[\"magical\",\"spell\"],\"rollMods\":[{\"on\":{\"kind\":\"attack\",\"attack\":{\"weapon\":true}},\"who\":\"bearer\",\"op\":\"add\",\"value\":\"cond(effect.state.slot >= 7, 3, cond(effect.state.slot >= 5, 2, 1))\",\"label\":\"元素武器：攻击加值\"}],\"triggers\":[{\"id\":\"elementalDamage\",\"label\":\"元素武器：额外伤害\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"when\":\"attack.weapon\",\"do\":[{\"kind\":\"addDamage\",\"dice\":\"cond(effect.state.slot >= 7, 3d4, cond(effect.state.slot >= 5, 2d4, 1d4))\",\"type\":\"effect.state.type\"}]}]}}}"
+ },
+ {
+  "key": "XPHB:spell:原力法阵",
+  "name": "原力法阵",
+  "by": "AI",
+  "automation": "partial",
+  "level": 5,
+  "text": "专注至多 10 分钟。以你为中心 30 尺灵光内的你与你的盟友（灵光随你移动，有地图时按地图算距离，没有地图时按「都在范围内」处理）：① 为对抗法术或其他魔法效应而进行的豁免检定具有优势 —— 引擎分不出这次豁免是不是对抗法术 / 魔法效应，会问你一句；② 对抗「豁免成功只受半数伤害」的法术或魔法效应并豁免成功时完全不受伤害（已自动：豁免成功的那次伤害直接归零；这不是原文里的反射闪避，所以失败时照常受全额伤害；灵光范围外的盟友不该受这条保护，引擎会在没有地图时问一句他在不在范围内）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"原力法阵\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":5}}],\"concentration\":{\"minutes\":10},\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"原力法阵\"}]}],\"effects\":{\"原力法阵\":{\"tags\":[\"magical\",\"spell\"],\"aura\":{\"id\":\"circle-of-power\",\"radius\":30,\"affects\":\"allies\",\"includeSelf\":true,\"grant\":{\"rollMods\":[{\"on\":{\"kind\":\"save\"},\"who\":\"bearer\",\"when\":\"ask('这次豁免是为了对抗法术或其他魔法效应吗？')\",\"op\":\"adv\",\"label\":\"原力法阵：对抗法术与魔法效应的豁免优势\"}],\"triggers\":[{\"id\":\"warded-save\",\"label\":\"原力法阵：豁免成功则不受伤害\",\"on\":\"damageIncoming\",\"role\":\"target\",\"window\":\"before\",\"when\":\"ask('这次豁免是为了对抗法术或其他魔法效应吗？') && damage.save != '' && damage.saved && (self.id == source.id || within(source, self, 30))\",\"modify\":[{\"op\":\"evasion\"}]}]}},\"text\":\"30 尺灵光内的你与盟友：对抗法术或其他魔法效应的豁免具有优势；对抗「成功只受半数伤害」的法术或魔法效应且豁免成功时，完全不受伤害。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:援助术",
+  "name": "援助术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 2,
+  "text": "选择 30 尺内至多三个生物，其生命值上限和当前生命值在 8 小时内提高 5 点（每升 1 环 +5）。生命值上限与当前生命值的提升需手动调整。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"援助术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":2}}],\"targeting\":{\"type\":\"creature\",\"count\":3,\"range\":30},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"援助术\"}]}],\"effects\":{\"援助术\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"hours\":8},\"text\":\"生命值上限和当前生命值提高（基础 5 点，每升 1 环 +5，需手动调整）。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:月光涌泉",
+  "name": "月光涌泉",
+  "by": "AI",
+  "automation": "partial",
+  "level": 4,
+  "text": "散发 20 尺明亮光照与 20 尺微光光照（光照需手动处理）。获得光耀伤害抗性，近战攻击命中时额外造成 2d6 点光耀伤害。受到 60 尺内可见生物伤害后，可以反应迫使其进行体质豁免，失败则目盲至你的下个回合结束。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"月光涌泉\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":4}}],\"concentration\":{\"minutes\":10},\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"template\":\"月光涌泉\",\"to\":\"self\"}]},{\"id\":\"use\",\"name\":\"月光涌泉：致盲反击\",\"activation\":\"reaction\",\"tags\":[\"spell\",\"magical\"],\"requires\":\"self.hasEffect('月光涌泉')\",\"trigger\":{\"on\":\"damageTaken\",\"role\":\"target\",\"window\":\"after\",\"when\":\"damage.amount > 0 && attacker != null && attacker.id != self.id && within(self, attacker, 60) && canSee(self, attacker)\"},\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"XPHB:condition:目盲\",\"to\":\"target\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"source\",\"nth\":1}}}]}]}],\"effects\":{\"月光涌泉\":{\"tags\":[\"magical\",\"spell\"],\"statics\":[{\"kind\":\"resist\",\"values\":[\"光耀\"]}],\"triggers\":[{\"id\":\"extra-damage\",\"label\":\"月光涌泉：额外光耀伤害\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"when\":\"attack.melee\",\"do\":[{\"kind\":\"addDamage\",\"dice\":\"2d6\",\"type\":\"光耀\"}]}]}}}"
+ },
+ {
+  "key": "XPHB:spell:月华之光",
+  "name": "月华之光",
+  "by": "手写",
+  "automation": "partial",
+  "level": 2,
+  "text": "专注至多 1 分钟。指定 120 尺内一点，产生半径 5 尺、高 40 尺的柱状微光区域。光柱出现时区域内的生物进行体质豁免，失败受 (slot.level)d10 光耀伤害（2 环 2d10，每高一环 +1d10），成功半数。生物进入光柱、光柱移入它的空间、或在其中结束回合时同样须进行该豁免（每名生物每回合限一次）。已变形的生物豁免失败会变回真实形态、且在离开光柱前无法变形 —— 引擎不判断变形状态，这一条请人工处理。后续回合用「月华之光：移动光柱」在地图上选新位置（最多移动 60 尺，引擎不查距离）。",
+  "notes": [
+   "月华之光：若目标正在变形（例如受变形术影响），它变回真实形态且离开光柱前无法再次变形（引擎不追踪变形状态，请人工结束那个变形效应并记下限制）。",
+   "月华之光：若目标正在变形，它变回真实形态且离开光柱前无法再次变形（人工处理）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"月华之光\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":2}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"area\",\"range\":120,\"area\":{\"shape\":\"cylinder\",\"radius\":5}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"moon\",\"dice\":\"(slot.level)d10\",\"type\":\"光耀\"},{\"kind\":\"note\",\"text\":\"月华之光：若目标正在变形（例如受变形术影响），它变回真实形态且离开光柱前无法再次变形（引擎不追踪变形状态，请人工结束那个变形效应并记下限制）。\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"moon\",\"scale\":0.5}]}]},{\"kind\":\"zone\",\"on\":[\"enter\",\"turnEnd\"],\"affects\":\"all\",\"oncePerTurn\":true,\"do\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"moon\",\"dice\":\"(slot.level)d10\",\"type\":\"光耀\"},{\"kind\":\"note\",\"text\":\"月华之光：若目标正在变形，它变回真实形态且离开光柱前无法再次变形（人工处理）。\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"moon\",\"scale\":0.5}]}],\"name\":\"月华之光\"}]},{\"id\":\"move\",\"name\":\"月华之光：移动光柱\",\"activation\":\"action\",\"requires\":\"turn.isMine\",\"text\":\"用一个动作把光柱移动到至多 60 尺外的新位置（在地图上重新选柱子的位置；距离引擎不查）。光柱移入谁的空间，谁就按「进入」进行豁免。\",\"root\":[{\"kind\":\"moveZone\"}],\"targeting\":{\"type\":\"area\",\"range\":120,\"area\":{\"shape\":\"cylinder\",\"radius\":5}}}]}"
+ }
+]

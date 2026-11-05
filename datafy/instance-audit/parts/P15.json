@@ -1,0 +1,436 @@
+[
+ {
+  "key": "TCE:魔契师:瓶中小憩:1",
+  "name": "瓶中小憩",
+  "by": "审后补",
+  "automation": "manual",
+  "level": null,
+  "text": "以一个动作，你可以消失并进入你的巨灵器皿内，器皿留在原地。你在器皿内可停留至多 2×熟练加值 小时。使用附赠动作可离开器皿，出现在距离器皿最近的未占据空间。长休恢复。出入器皿与超维度空间由人手动处理。",
+  "notes": [
+   "瓶中小憩：消失并进入巨灵器皿内，器皿留在原地。离开器皿需花费附赠动作。由人手动处理。"
+  ],
+  "data": "{\"automation\":\"manual\",\"actions\":[{\"id\":\"use\",\"name\":\"进入器皿\",\"activation\":\"action\",\"cost\":[{\"resource\":\"bottled-respite\"}],\"root\":[{\"kind\":\"note\",\"text\":\"瓶中小憩：消失并进入巨灵器皿内，器皿留在原地。离开器皿需花费附赠动作。由人手动处理。\"}]}]}"
+ },
+ {
+  "key": "TCE:魔契师:器皿庇护所:10",
+  "name": "器皿庇护所",
+  "by": "审后补",
+  "automation": "manual",
+  "level": null,
+  "text": "使用瓶中小憩进入巨灵器皿时，可选择30尺内最多5个可见自愿生物一同进入。以附赠动作可将任意数量生物逐出器皿；自身离开或器皿被摧毁时所有人均被逐出。在器皿内停留至少10分钟的生物视为完成一次短休，且消耗生命骰恢复生命值时增加你的熟练加值。由人手动处理带入生物、驱逐与短休结算。",
+  "notes": [
+   "器皿庇护所：以附赠动作将任意数目的生物从巨灵器皿中逐出。"
+  ],
+  "data": "{\"automation\":\"manual\",\"actions\":[{\"id\":\"use\",\"name\":\"逐出生物\",\"activation\":\"bonus\",\"root\":[{\"kind\":\"note\",\"text\":\"器皿庇护所：以附赠动作将任意数目的生物从巨灵器皿中逐出。\"}]}]}"
+ },
+ {
+  "key": "TCE:魔契师:擒握触手:10",
+  "name": "擒握触手",
+  "by": "审后补",
+  "automation": "partial",
+  "level": null,
+  "text": "习得法术艾伐黑触手（魔契师法术且不计入已知上限）。每次长休可无需法术位施展一次。每当你施展艾伐黑触手时，获得等同于魔契师等级的临时生命值；对你造成的伤害无法破坏你对该法术的专注。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"root\":[{\"kind\":\"choose\",\"pool\":{\"from\":\"ownSpells\",\"maxLevel\":1,\"castTime\":\"action\"}},{\"kind\":\"castFrom\",\"fromVar\":\"chosen\",\"to\":\"self\"}]}],\"triggers\":[{\"id\":\"grasping-tentacles-cast\",\"label\":\"擒握触手：施展艾伐黑触手获得临时生命值\",\"on\":\"spellCast\",\"role\":\"actor\",\"when\":\"event.spell == '艾伐黑触手' || event.key == 'XPHB:spell:艾伐黑触手'\",\"do\":[{\"kind\":\"tempHp\",\"to\":\"self\",\"amount\":\"self.levelOf('魔契师')\"}]}],\"rollMods\":[{\"on\":{\"kind\":\"concentration\"},\"who\":\"bearer\",\"when\":\"ask('这次专注维持的是艾伐黑触手法术吗？')\",\"op\":\"autoSucceed\",\"label\":\"擒握触手：对艾伐黑触手的专注不受伤害破坏\"}]}"
+ },
+ {
+  "key": "TCE:魔契师:有限祈愿术:14",
+  "name": "有限祈愿术",
+  "by": "审后补",
+  "automation": "manual",
+  "level": null,
+  "text": "以一个动作向巨灵器皿祈求，实现一个任意职业、施法时间为1个动作的6环或以下法术的效应，无需法术材料成分。使用后需完成 1d4 次长休才能再次使用。法术具体效果与 1d4 次长休恢复由人手动处理。",
+  "notes": [
+   "有限祈愿术：实现任意职业、施法时间1动作的6环或以下法术效应。使用后投掷 1d4，需完成相应次数的长休方可再次使用。"
+  ],
+  "data": "{\"automation\":\"manual\",\"actions\":[{\"id\":\"use\",\"name\":\"有限祈愿术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"limited-wish\"}],\"root\":[{\"kind\":\"note\",\"text\":\"有限祈愿术：实现任意职业、施法时间1动作的6环或以下法术效应。使用后投掷 1d4，需完成相应次数的长休方可再次使用。\"}]}]}"
+ },
+ {
+  "key": "TCE:魔契师:元素赐福:6",
+  "name": "元素赐福",
+  "by": "审后补",
+  "automation": "full",
+  "level": null,
+  "text": "对宗主类型决定的伤害类型（土巨灵-钝击、气巨灵-雷鸣、火巨灵-火焰、水巨灵-寒冷）具有抗性。以附赠动作获得30尺飞行速度并可悬浮，持续10分钟。可用次数等同于熟练加值，长休恢复。三维移动与飞行高度由人手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"full\",\"actions\":[{\"id\":\"use\",\"name\":\"元素赐福：飞行\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"elemental-gift\"}],\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"元素赐福\"}]}],\"effects\":{\"元素赐福\":{\"name\":\"元素赐福\",\"statics\":[],\"flags\":null,\"duration\":{\"minutes\":10}},\"元素赐福-抗性\":{\"name\":\"元素赐福-抗性\",\"statics\":[],\"flags\":null,\"duration\":null}}}"
+ },
+ {
+  "key": "TCE:牧师:保护联结:6",
+  "name": "保护联结",
+  "by": "审后补",
+  "automation": "manual",
+  "level": null,
+  "text": "受到勇气联结影响的生物即将受到伤害时，其30尺（17级增强联结后为60尺）内的另一名联结生物可以用反应传送到第一个生物周围5尺内的未占据空间，并代替其承受所有伤害。由于涉及两名被联结生物之间的反应判定、战棋网格传送与伤害转移，整条由人手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "TCE:牧师:律法化身:6",
+  "name": "律法化身",
+  "by": "审后补",
+  "automation": "manual",
+  "level": null,
+  "text": "消耗1环或更高环阶法术位施展施法时间为1动作的惑控学派法术时，可改为1附赠动作施展。使用次数等同于感知调整值（至少1次），长休恢复。引擎不改写法术施法时间与动作经济，需由玩家手动调整。",
+  "notes": [
+   "消耗1次律法化身：将消耗1环或更高环阶法术位、施法时间为1动作的惑控学派法术改为1附赠动作施展（动作经济由玩家手动调整）。"
+  ],
+  "data": "{\"automation\":\"manual\",\"actions\":[{\"id\":\"use\",\"name\":\"律法化身\",\"activation\":\"none\",\"cost\":[{\"resource\":\"embodiment-of-the-law\"}],\"root\":[{\"kind\":\"note\",\"text\":\"消耗1次律法化身：将消耗1环或更高环阶法术位、施法时间为1动作的惑控学派法术改为1附赠动作施展（动作经济由玩家手动调整）。\"}]}]}"
+ },
+ {
+  "key": "TCE:牧师:权威之音:1",
+  "name": "权威之音",
+  "by": "审后补",
+  "automation": "partial",
+  "level": null,
+  "text": "当你消耗法术位施展1环或更高环阶法术且指定盟友为目标时，该盟友（若有多名则由你选择其中一名）可以立即使用反应对你指定且能看见的目标发动一次武器攻击。盟友使用反应发动武器攻击需在场外由盟友角色卡执行。",
+  "notes": [
+   "被指定的盟友可立即使用反应对你指定且能看见的目标发动一次武器攻击。"
+  ],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"voice-of-authority\",\"label\":\"权威之音：驱使盟友反击\",\"on\":\"spellCast\",\"role\":\"actor\",\"window\":\"after\",\"optional\":true,\"when\":\"ask('刚才施展的法术消耗了1环或更高环阶法术位，且指定了盟友为目标吗？')\",\"do\":[{\"kind\":\"note\",\"text\":\"被指定的盟友可立即使用反应对你指定且能看见的目标发动一次武器攻击。\"}]}]}"
+ },
+ {
+  "key": "TCE:牧师:受祝击:8",
+  "name": "受祝击",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "通过戏法或武器攻击伤害一个生物时，可造成额外1d8光耀伤害。每次造成此伤害后直到自己的下一个回合开始前无法再次使用。武器或法术攻击命中时可触发；豁免类戏法造成的伤害需手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"blessed-strikes\",\"label\":\"受祝击：额外 1d8 光耀伤害\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"optional\":true,\"limit\":\"oncePerRound\",\"when\":\"attack.weapon || (attack.spell && ask('这次法术攻击来自戏法吗？'))\",\"do\":[{\"kind\":\"addDamage\",\"dice\":\"1d8\",\"type\":\"光耀\"}]}]}"
+ },
+ {
+  "key": "TCE:牧师:午夜飞步:6",
+  "name": "午夜飞步",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "身处微光光照或黑暗中时，能以附赠动作获得等于自身步行速度的飞行速度，持续1分钟。可使用次数等同于熟练加值，长休恢复。引擎不追踪环境光照（通过询问确认）与飞行高度，飞行移动需由人手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"午夜飞步\",\"activation\":\"bonus\",\"requires\":\"ask('当前身处微光光照或黑暗中？')\",\"cost\":[{\"resource\":\"午夜飞步\"}],\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"午夜飞步\"}]}],\"effects\":{\"午夜飞步\":{\"name\":\"午夜飞步\",\"duration\":{\"minutes\":1},\"text\":\"获得等于自身步行速度的飞行速度。\"}}}"
+ },
+ {
+  "key": "TCE:牧师:引导神力：和平抚慰:3",
+  "name": "引导神力：和平抚慰",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个动作消耗一次引导神力：移动等同于你速度的距离，此移动不引发借机攻击。移动期间进入任意其他生物周围5尺范围内时，可为其恢复 2d6 + 感知调整值（最低1点）生命值，每个生物限一次。战棋移动路径与借机攻击豁免由人处理；移动距离与对所选目标的治疗已部分自动化。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"引导神力：和平抚慰\",\"activation\":\"action\",\"cost\":[{\"resource\":\"引导神力\"}],\"targeting\":{\"type\":\"creature\",\"filter\":\"target.id != self.id\"},\"root\":[{\"kind\":\"economy\",\"move\":\"self.speed\"},{\"kind\":\"heal\",\"amount\":\"2d6 + self.mod.wis\",\"to\":\"target\"}]}]}"
+ },
+ {
+  "key": "TCE:牧师:引导神力：秩序之令:3",
+  "name": "引导神力：秩序之令",
+  "by": "AI",
+  "automation": "full",
+  "level": null,
+  "text": "以一个动作消耗一次引导神力：展示圣徽，30尺内你指定的每个能看到或听到你的生物必须进行一次感知豁免。豁免失败将被你魅惑，直到你下个回合结束或受到伤害为止。当生物豁免失败时，你还可以指定其扔掉手中所持物。",
+  "notes": [
+   "豁免失败的生物被魅惑直到你的下个回合结束或受到伤害。你还可以指定任意被魅惑的生物扔掉手中所持物。"
+  ],
+  "data": "{\"automation\":\"full\",\"actions\":[{\"id\":\"use\",\"name\":\"引导神力：秩序之令\",\"activation\":\"action\",\"cost\":[{\"resource\":\"引导神力\"}],\"targeting\":{\"type\":\"creature\",\"range\":30,\"filter\":\"target.id != self.id\"},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"秩序之令：魅惑\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"source\",\"nth\":1},\"endsOn\":[{\"event\":\"damageTaken\"}]}},{\"kind\":\"note\",\"text\":\"豁免失败的生物被魅惑直到你的下个回合结束或受到伤害。你还可以指定任意被魅惑的生物扔掉手中所持物。\"}]}]}],\"effects\":{\"秩序之令：魅惑\":{\"text\":\"被秩序领域牧师魅惑。受到伤害或施加者的下个回合结束时提前结束。\",\"implies\":[\"XPHB:condition:魅惑\"]}}}"
+ },
+ {
+  "key": "TCE:牧师:增强联结:17",
+  "name": "增强联结",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "勇气联结和保护联结在两名联结生物相距不超过60尺时即可生效。当生物使用保护联结为他人承受伤害时，对该伤害具有抗性。保护联结已标记为手动处理，其生效距离与代受伤害的抗性结算由人在结算保护联结时手动处理；勇气联结的60尺范围已在其效果中按等级体现。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "TCE:奇械学徒",
+  "name": "奇械学徒",
+  "by": "审后补",
+  "automation": "manual",
+  "level": null,
+  "text": "所选奇械师戏法、一环法术、智力施法属性与工匠工具熟练及法器功能均属于人物卡静态层。每日可无需法术位施展一次所选的一环法术（资源「奇械学徒（免费施展一环法术）」，长休恢复），亦可用法术位施展。具体法术施展与法术位免除由玩家手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\",\"resources\":[{\"id\":\"奇械学徒（免费施展一环法术）\",\"recover\":\"longRest\",\"max\":1}],\"actions\":[{\"id\":\"freeCast\",\"name\":\"奇械学徒：免费施展一环法术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"奇械学徒（免费施展一环法术）\"}],\"targeting\":{\"type\":\"point\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"choose\",\"pool\":{\"from\":\"ownSpells\",\"maxLevel\":1,\"singleTarget\":true}},{\"kind\":\"castFrom\",\"fromVar\":\"choice\",\"to\":\"target\"}]}]}"
+ },
+ {
+  "key": "TCE:枪手",
+  "name": "枪手",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "枪械熟练项属于人物卡静态层（建卡时选的熟练项），战斗数据里不用再写。引擎不结算枪械的 LD（装填）词条，忽略即可。「你在敌对生物 5 尺范围内发动远程攻击检定时不会因此具有劣势」是站位规则：引擎本身不会因为敌人在 5 尺内就给远程攻击加劣势，所以也不需要在战斗数据里取消；如果你在地图上手动给这类攻击加了劣势，请自己改回来。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "TCE:人工生命仆从",
+  "name": "人工生命仆从",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "注法造出的人工生命仆从（注法时用一颗价值至少 100gp 的宝石或水晶作它的心脏）：微型构装生物，AC 13，HP = 1 + 你的智力调整值 + 你的奇械师等级（生命骰数量同奇械师等级），速度 20 尺、飞行 30 尺，力量 4 / 敏捷 15 / 体质 12 / 智力 10 / 感知 10 / 魅力 7，力场打击（法术攻击，射程 30 尺，1d4 + 熟练加值 力场伤害），免疫毒素与力竭、中毒状态；它对你和同伴友善、服从你的命令，与你共用先攻并在你回合后立即行动。它可以自行移动和执行反应，但你只有用一个附赠动作命令它，它才会执行数据中的动作或其他动作（否则只能回避；你失能时它可以自行选择任何动作）——引擎让召唤物自己行动、管不了这条附赠动作，请用「人工生命仆从：命令行动」记录。反射闪避已经自动化；生命骰、对它施展修复术恢复 2d6、以及你或它死亡时它消失（只留心脏）都要人手动处理。",
+  "notes": [
+   "以附赠动作命令人工生命仆从执行它数据中的动作或其他动作（它自行移动与执行反应不需要命令；你失能时它可以自行选择任何动作）。引擎不检查这条附赠动作，请手动记录。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"人工生命仆从：唤出仆从\",\"activation\":\"free\",\"tags\":[\"magical\"],\"root\":[{\"kind\":\"summon\",\"name\":\"人工生命仆从\",\"size\":\"T\",\"creatureType\":\"construct\",\"ac\":13,\"hp\":\"1 + mod.int + self.levelOf('奇械师')\",\"speed\":20,\"score\":{\"str\":4,\"dex\":15,\"con\":12,\"int\":10,\"wis\":10,\"cha\":7},\"immune\":[\"毒素\"],\"conditionImmune\":[\"力竭\",\"中毒\"],\"attacksPerAction\":1,\"attacks\":[{\"name\":\"力场打击\",\"melee\":false,\"ranged\":true,\"range\":30,\"damage\":\"1d4 + pb\",\"damageType\":\"力场\"}],\"link\":false,\"triggers\":[{\"id\":\"evasion\",\"label\":\"反射闪避\",\"on\":\"damageIncoming\",\"role\":\"target\",\"window\":\"before\",\"when\":\"damage.save == 'dex' && !self.has('失能')\",\"modify\":[{\"op\":\"evasion\"}]}],\"notes\":[\"反射闪避已自动化：需要通过敏捷豁免减半的伤害，成功时不受伤害、失败时只受一半；它失能时这个特性不生效\",\"传递法术（反应）：你施展施法距离为触碰的法术时，只要它在 120 尺内就能替你传递\",\"速度 20 尺，另有飞行 30 尺（引擎只记一个速度，飞行请手动处理）\",\"对它施展修复术时它恢复 2d6 生命值；你或它死亡时它消失，只留下心脏\"]}]},{\"id\":\"command\",\"name\":\"人工生命仆从：命令行动\",\"activation\":\"bonus\",\"requires\":\"turn.isMine\",\"root\":[{\"kind\":\"note\",\"text\":\"以附赠动作命令人工生命仆从执行它数据中的动作或其他动作（它自行移动与执行反应不需要命令；你失能时它可以自行选择任何动作）。引擎不检查这条附赠动作，请手动记录。\"}]}]}"
+ },
+ {
+  "key": "TCE:圣武士:尘世壁垒:20",
+  "name": "尘世壁垒",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以附赠动作获得 1 分钟增益，每次长休 1 次（可消耗 5 环法术位重置）。获得 120 尺真实视觉（手动处理）。对异怪、天界生物、元素、精类或邪魔的攻击检定具有优势。攻击命中并造成伤害时可迫使其进行魅力豁免，失败且不属于此位面时被放逐回原生位面，成功则 24 小时内免疫该放逐（放逐与免疫需手动处理）。",
+  "notes": [
+   "尘世壁垒：目标若不属于此位面，被放逐回原生位面；豁免成功则 24 小时内免疫"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"尘世壁垒\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"mortalBulwark\"}],\"requires\":\"!self.hasEffect('尘世壁垒')\",\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"尘世壁垒\"}]},{\"id\":\"end\",\"name\":\"结束尘世壁垒\",\"activation\":\"free\",\"requires\":\"self.hasEffect('尘世壁垒')\",\"root\":[{\"kind\":\"removeEffect\",\"from\":\"self\",\"match\":{\"name\":\"尘世壁垒\"}}]},{\"id\":\"reset\",\"name\":\"尘世壁垒：重置使用权（五环法术位）\",\"activation\":\"free\",\"cost\":[{\"slot\":{\"min\":5,\"max\":5}}],\"requires\":\"self.resource('mortalBulwark') < 1\",\"root\":[{\"kind\":\"resource\",\"id\":\"mortalBulwark\",\"delta\":1}]}],\"effects\":{\"尘世壁垒\":{\"text\":\"1 分钟内：120 尺真实视觉；对异怪、天界生物、元素、精类或邪魔的攻击检定具有优势；攻击命中造成伤害时可迫使目标进行魅力豁免放逐。\",\"duration\":{\"minutes\":1},\"rollMods\":[{\"on\":{\"kind\":\"attack\"},\"who\":\"bearer\",\"when\":\"target.type == '异怪' || target.type == '天界生物' || target.type == '元素' || target.type == '精类' || target.type == '邪魔'\",\"op\":\"adv\",\"label\":\"尘世壁垒：攻击优势\"}],\"triggers\":[{\"id\":\"banish\",\"label\":\"尘世壁垒：放逐打击\",\"on\":\"damageTaken\",\"role\":\"any\",\"window\":\"after\",\"optional\":true,\"when\":\"attacker != null && attacker.id == self.id && ask('这次伤害来自一次攻击吗？') && damage.amount > 0\",\"do\":[{\"kind\":\"save\",\"ability\":\"cha\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"note\",\"text\":\"尘世壁垒：目标若不属于此位面，被放逐回原生位面；豁免成功则 24 小时内免疫\"}]}]}]}}}"
+ },
+ {
+  "key": "TCE:圣武士:鼓舞斩:3",
+  "name": "鼓舞斩",
+  "by": "审后补",
+  "automation": "full",
+  "level": null,
+  "text": "以至圣斩造成伤害时，可立即用附赠动作消耗 1 次引导神力，为你自身或 30 尺内由你选择的生物分配合计 2d8 + 你的圣武士等级 点临时生命值。自动化默认加给自身，分配给他人需手动调整。",
+  "notes": [],
+  "data": "{\"automation\":\"full\",\"actions\":[{\"id\":\"use\",\"name\":\"引导神力：鼓舞斩\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"channel-divinity\"}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":30,\"filter\":\"target.id == self.id || target.isAllyOf(self)\"},\"requires\":\"ask('刚才是否以至圣斩造成了伤害？')\",\"root\":[{\"kind\":\"tempHp\",\"dice\":\"2d8 + self.level\",\"to\":\"target\"}]}],\"triggers\":[]}"
+ },
+ {
+  "key": "TCE:圣武士:辉煌防御:15",
+  "name": "辉煌防御",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当你或你周围 10 尺内你可见的其他生物被一次攻击检定命中时，你可以用反应（消耗 1 次辉煌防御，次数等于魅力调整值、至少 1 次，长休恢复）使被击中的生物获得等同于你魅力调整值（至少 +1）的 AC 加值。加值由引擎加上并立刻按新 AC 重新判定这次攻击，因此该次攻击可能变成失手；这次攻击结算后加值消失。需要人处理的部分：若这次攻击因此失手、且攻击者在你的武器触及范围内，你可以对那个攻击者进行一次武器攻击（属于本反应的一部分）—— 引擎不会自动发起这次武器攻击，请在武器行手动攻击一次。",
+  "notes": [
+   "辉煌防御：若这次攻击因此失手，且攻击者在你的武器触及范围内，你可以对那个攻击者进行一次武器攻击（作为本反应的一部分）—— 引擎不会自动发起，请在武器行手动攻击。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"辉煌防御\",\"activation\":\"reaction\",\"trigger\":{\"on\":\"attackHit\",\"role\":\"any\",\"window\":\"before\",\"when\":\"attacker.id != self.id && (target.id == self.id || (target.isAllyOf(self) && within(self, target, 10) && canSee(self, target)))\"},\"cost\":[{\"resource\":\"radiantDefense\"}],\"root\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"辉煌防御\"},{\"kind\":\"note\",\"text\":\"辉煌防御：若这次攻击因此失手，且攻击者在你的武器触及范围内，你可以对那个攻击者进行一次武器攻击（作为本反应的一部分）—— 引擎不会自动发起，请在武器行手动攻击。\"}],\"text\":\"你或 10 尺内你可见的生物被攻击命中时，给它加上等同于你魅力调整值（至少 +1）的 AC，可能让这次攻击失手。\"}],\"effects\":{\"辉煌防御\":{\"text\":\"对这次攻击获得 AC 加值：施加者的魅力调整值（至少 +1）。这次攻击结算后消失。\",\"statics\":[{\"kind\":\"ac\",\"bonus\":\"max(1, source.mod.cha)\"}],\"duration\":{\"rounds\":1,\"endsOn\":[{\"event\":\"attackMissed\",\"when\":\"event.target == self.id\"},{\"event\":\"damageTaken\",\"when\":\"event.target == self.id\"}]}}}}"
+ },
+ {
+  "key": "TCE:圣武士:警戒呵斥:15",
+  "name": "警戒呵斥",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当你或你 30 尺内可见生物在智力、感知或魅力豁免上成功时，你可以用反应对迫使进行豁免检定的生物造成 2d8 + 魅力调整值点力场伤害（迫使豁免的生物需手动指定为目标结算）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"警戒呵斥\",\"activation\":\"reaction\",\"trigger\":{\"on\":\"d20Rolled\",\"role\":\"any\",\"window\":\"after\",\"when\":\"roll.kind == 'save' && (roll.ability == 'int' || roll.ability == 'wis' || roll.ability == 'cha') && !roll.failing && (roll.roller == self.id || (within(self, combatant(roll.roller), 30) && canSee(self, combatant(roll.roller))))\"},\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"damage\",\"dice\":\"2d8 + self.mod.cha\",\"type\":\"力场\"}]}]}"
+ },
+ {
+  "key": "TCE:圣武士:绝伦健将:3",
+  "name": "绝伦健将",
+  "by": "审后补",
+  "automation": "partial",
+  "level": null,
+  "text": "以附赠动作消耗 1 次引导神力，10 分钟内力量（运动）和敏捷（体操）检定具有优势。负重与拖拉重量翻倍、跳远跳高距离增加 10 尺需手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"绝伦健将\",\"activation\":\"bonus\",\"requires\":\"turn.isMine\",\"cost\":[{\"resource\":\"channel-divinity\"}],\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"绝伦健将\"}]}],\"effects\":{\"绝伦健将\":{\"name\":\"绝伦健将\",\"statics\":[],\"flags\":null,\"rollMods\":[{\"on\":{\"kind\":\"check\",\"skill\":\"运动\"},\"who\":\"bearer\",\"op\":\"adv\",\"label\":\"绝伦健将：运动优势\"},{\"on\":{\"kind\":\"check\",\"skill\":\"体操\"},\"who\":\"bearer\",\"op\":\"adv\",\"label\":\"绝伦健将：体操优势\"}],\"duration\":{\"minutes\":10}}}}"
+ },
+ {
+  "key": "TCE:圣武士:驱散异域:3",
+  "name": "驱散异域",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以动作消耗 1 次引导神力，展示圣徽，周围 30 尺内能听到祷言的异怪、天界生物、元素、精类或邪魔须进行感知豁免（DC 为法术豁免 DC），失败陷入恐慌 1 分钟（受到任何伤害提前结束）。被驱散生物远离移动、只能疾走或挣脱等行为限制需手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"驱散异域\",\"activation\":\"action\",\"tags\":[\"magical\"],\"cost\":[{\"resource\":\"channel-divinity\"}],\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"emanation\",\"radius\":30}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"if\",\"when\":\"target.id != self.id && (target.type == '异怪' || target.type == '天界生物' || target.type == '元素' || target.type == '精类' || target.type == '邪魔')\",\"then\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"XPHB:condition:恐慌\",\"duration\":{\"minutes\":1,\"endsOn\":[{\"event\":\"damageTaken\"}]}}]}]}]}]}]}"
+ },
+ {
+  "key": "TCE:圣武士:哨卫灵光:7",
+  "name": "哨卫灵光",
+  "by": "审后补",
+  "automation": "partial",
+  "level": null,
+  "text": "当你未处于失能时，你和周围 10 尺内由你选择的盟友先攻检定获得等同于你熟练加值的加值。18 级灵光范围增至 30 尺需手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"auras\":[{\"id\":\"sentinel\",\"radius\":10,\"affects\":\"allies\",\"includeSelf\":true,\"requires\":\"!self.has('失能')\",\"stackKey\":\"哨卫灵光\",\"grant\":{\"rollMods\":[{\"on\":{\"kind\":\"initiative\"},\"who\":\"bearer\",\"op\":\"add\",\"value\":\"source.pb\",\"label\":\"哨卫灵光\"}]}}],\"effects\":{\"哨卫灵光\":{\"name\":\"哨卫灵光\",\"statics\":[],\"flags\":null,\"aura\":{\"id\":\"哨卫灵光\",\"radius\":10,\"affects\":\"allies\",\"includeSelf\":true,\"grant\":{\"rollMods\":[{\"on\":{\"kind\":\"initiative\"},\"who\":\"bearer\",\"op\":\"add\",\"value\":\"source.pb\",\"label\":\"哨卫灵光：先攻加值\"}]}}}}}"
+ },
+ {
+  "key": "TCE:圣武士:现世传说:20",
+  "name": "现世传说",
+  "by": "审后补",
+  "automation": "partial",
+  "level": null,
+  "text": "附赠动作获得 1 分钟增益，每次长休一次；也可消耗一个五环法术位重置使用权。魅力检定具有优势。重掷豁免：豁免失败时用反应重投，必须采用新结果。无误打击：每个自己回合一次，武器攻击失手时改为命中（用给攻击检定 +100 近似，天然 1 是否仍算失手请人工判断）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"现世传说\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"livingLegend\"}],\"requires\":\"!self.hasEffect('现世传说')\",\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"现世传说\"}]},{\"id\":\"end\",\"name\":\"结束现世传说\",\"activation\":\"free\",\"requires\":\"self.hasEffect('现世传说')\",\"root\":[{\"kind\":\"removeEffect\",\"from\":\"self\",\"match\":{\"name\":\"现世传说\"}}]},{\"id\":\"reset\",\"name\":\"现世传说：重置使用权（五环法术位）\",\"activation\":\"free\",\"cost\":[{\"slot\":{\"min\":5,\"max\":5}}],\"requires\":\"self.resource('livingLegend') < 1\",\"root\":[{\"kind\":\"resource\",\"id\":\"livingLegend\",\"delta\":1}]}],\"effects\":{\"现世传说\":{\"name\":\"现世传说\",\"statics\":[],\"flags\":null,\"rollMods\":[{\"on\":{\"kind\":\"check\",\"ability\":\"cha\"},\"who\":\"bearer\",\"op\":\"adv\",\"label\":\"现世传说：魅力优势\"}],\"duration\":{\"minutes\":1}}},\"triggers\":[{\"id\":\"rerollSave\",\"label\":\"现世传说：重掷豁免\",\"on\":\"saveForced\",\"role\":\"actor\",\"window\":\"before\",\"when\":\"roll.failing && self.hasEffect('现世传说')\",\"cost\":[{\"economy\":\"reaction\"}],\"modify\":[{\"op\":\"reroll\",\"die\":\"d20\",\"keep\":\"new\"}]}]}"
+ },
+ {
+  "key": "TCE:圣武士:迅捷灵光:7",
+  "name": "迅捷灵光",
+  "by": "审后补",
+  "automation": "partial",
+  "level": null,
+  "text": "自身速度 +10 尺已在静态层。5 尺灵光内的盟友在自己回合开始时步行速度获得 +10 尺加值，直至那一回合结束；18 级灵光范围增至 10 尺需手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"auras\":[{\"id\":\"alacrity\",\"radius\":5,\"affects\":\"allies\",\"includeSelf\":false,\"requires\":\"!self.has('失能')\",\"stackKey\":\"迅捷灵光\",\"grant\":{\"triggers\":[{\"id\":\"alacrity-start\",\"label\":\"迅捷灵光：速度\",\"on\":\"turnStarted\",\"role\":\"actor\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"迅捷灵光\"}]}]}}],\"effects\":{\"迅捷灵光\":{\"name\":\"迅捷灵光\",\"statics\":[],\"flags\":null,\"aura\":{\"id\":\"迅捷灵光\",\"radius\":5,\"affects\":\"allies\",\"includeSelf\":true,\"grant\":{\"statics\":[{\"kind\":\"speed\",\"bonus\":10}]}}}}}"
+ },
+ {
+  "key": "TCE:术士:归复平衡:1",
+  "name": "归复平衡",
+  "by": "AI",
+  "automation": "full",
+  "level": null,
+  "text": "60 尺内你可见的一个生物即将带着优势或劣势掷 d20 检定时，你可以用反应让这次检定不再受优势 / 劣势影响（改成只掷一颗 d20，用第一颗的结果）。已自动化：掷骰前会弹出可选项，选了就自动抹掉这次检定的优势与劣势、只保留第一颗 d20 重新判定。「60 尺内」「你能看见」在没有地图时会问你；这个选项对任何人的 d20 检定都会出现（只要它带优势或劣势），敌人的也算。次数上限等于你的熟练加值，长休恢复。",
+  "notes": [
+   "归复平衡：这次检定不再有优势 / 劣势，只按第一颗 d20 的结果判定。"
+  ],
+  "data": "{\"automation\":\"full\",\"resources\":[{\"id\":\"restore-balance\",\"name\":\"归复平衡\",\"formula\":\"pb\",\"recovery\":\"long\"}],\"actions\":[{\"id\":\"use\",\"name\":\"归复平衡\",\"activation\":\"reaction\",\"trigger\":{\"on\":\"d20Rolled\",\"role\":\"any\",\"window\":\"before\",\"when\":\"(roll.adv || roll.disadv) && (roll.roller == self.id || (within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))))\"},\"cost\":[{\"resource\":\"restore-balance\"}],\"root\":[{\"kind\":\"modify\",\"modify\":[{\"op\":\"clearAdv\",\"which\":\"both\"}]},{\"kind\":\"note\",\"text\":\"归复平衡：这次检定不再有优势 / 劣势，只按第一颗 d20 的结果判定。\"}]}]}"
+ },
+ {
+  "key": "TCE:术士:灵能术法:6",
+  "name": "灵能术法",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "施展灵能法术特性中的 1 环或更高环阶法术时，可改为消耗等同于法术环数的术法点而非消耗法术位施展，且无视语言、姿势成分及不会消耗的材料成分。此处提供扣除术法点的辅助动作；具体法术施展与成分免除由人手动处理。",
+  "notes": [
+   "灵能术法：消耗了术法点施放灵能法术，无视语言、姿势及不消耗的材料成分（法术效果由人手动处理）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"灵能术法：消耗术法点施法\",\"activation\":\"free\",\"requires\":\"self.resource('sorcery_points') > 0\",\"root\":[{\"kind\":\"number\",\"prompt\":\"灵能术法：法术环数（消耗等量术法点）\",\"var\":\"n\",\"min\":1,\"max\":\"min(5, self.resource('sorcery_points'))\",\"default\":1},{\"kind\":\"resource\",\"id\":\"sorcery_points\",\"delta\":\"-vars.n\"},{\"kind\":\"note\",\"text\":\"灵能术法：消耗了术法点施放灵能法术，无视语言、姿势及不消耗的材料成分（法术效果由人手动处理）。\"}]}]}"
+ },
+ {
+  "key": "TCE:术士:律令之壁:6",
+  "name": "律令之壁",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个动作消耗 1~5 点术法点，为你自己或 30 尺内一个你能看见的生物造出屏障：屏障里有等量的 d8。被守护者每次受到伤害时，可以选择消耗其中几颗 d8、掷出并把合计从这次伤害里减掉（会弹一个数字框，上限就是屏障里剩下的颗数）；颗数消完屏障就结束。屏障持续到你完成长休，或你再次使用这个特性（在新的生物身上再造屏障时，旧的那个自动结束）。【要人处理】①「屏障还剩几颗」是靠把效应重新施加一次来记的，所以界面上会看到一份旧的「律令之壁」标着「被压制」——它不参与结算，吃完最后一颗或长休时会一起清掉。②一次伤害包带有多种伤害类型时，引擎会把减伤分别从每种类型里各扣一次（引擎的既有行为），混合伤害请自己核对结果。③被守护的是别人时，那个「消耗几颗」的弹窗给的是那个生物的控制器；如果那是 DM 的怪，请让 DM 代答。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"律令之壁\",\"activation\":\"action\",\"tags\":[\"magical\"],\"requires\":\"self.resource('sorcery_points') > 0\",\"text\":\"目标选自己即为环绕自己。\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":30,\"filter\":\"canSee(self, target) || target.id == self.id\"},\"root\":[{\"kind\":\"number\",\"prompt\":\"律令之壁：消耗几点术法点（获得等量 d8）？\",\"var\":\"n\",\"min\":1,\"max\":\"min(5, self.resource('sorcery_points'))\"},{\"kind\":\"resource\",\"id\":\"sorcery_points\",\"delta\":\"-vars.n\"},{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"律令之壁\",\"state\":{\"dice\":\"vars.n\"}}]}],\"effects\":{\"律令之壁\":{\"tags\":[\"magical\"],\"stackKey\":\"律令之壁\",\"text\":\"屏障里有若干 d8；受到伤害时可以消耗任意几颗，把掷出的合计从伤害里减掉。持续到施加者长休或再次使用律令之壁。\",\"duration\":{\"manual\":true,\"endsOn\":[{\"event\":\"restCompleted\",\"when\":\"event.kind == 'long'\"},{\"event\":\"effectApplied\",\"when\":\"event.key == 'TCE:术士:律令之壁:6#律令之壁' && source != null && event.source == source.id && event.bearer != self.id\"}]},\"triggers\":[{\"id\":\"ward\",\"label\":\"律令之壁：消耗 d8 减伤\",\"on\":\"damageIncoming\",\"role\":\"target\",\"window\":\"before\",\"optional\":true,\"when\":\"damage.amount > 0 && !self.hasEffect('律令之壁：已结算')\",\"do\":[{\"kind\":\"number\",\"prompt\":\"律令之壁：这次伤害要消耗几颗 d8？（上限是屏障里剩下的颗数）\",\"var\":\"n\",\"min\":1,\"max\":\"effect.state.dice\"},{\"kind\":\"if\",\"when\":\"vars.n > 0\",\"then\":[{\"kind\":\"modify\",\"modify\":[{\"op\":\"reduceDamage\",\"value\":\"(vars.n)d8\"}]},{\"kind\":\"applyEffect\",\"to\":\"self\",\"inline\":{\"name\":\"律令之壁：已结算\",\"text\":\"（这次伤害已经用过屏障，结算完就消失）\",\"duration\":{\"endsOn\":[{\"event\":\"damageApplied\",\"when\":\"event.target == self.id\"}]}}},{\"kind\":\"if\",\"when\":\"effect.state.dice - vars.n > 0\",\"then\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"律令之壁\",\"state\":{\"dice\":\"effect.state.dice - vars.n\"}}],\"else\":[{\"kind\":\"removeEffect\",\"from\":\"self\",\"match\":{\"name\":\"律令之壁\"}}]}]}]}]}}}"
+ },
+ {
+  "key": "TCE:术士:扭曲爆裂:18",
+  "name": "扭曲爆裂",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个动作，传送到 120 尺内可见未占据位置，原位置 30 尺内生物须进行力量豁免，失败受 3d10 力场伤害并被拉向原位置，成功受半伤且不被拉扯。传送与位移需手动处理。每次长休免费使用 1 次，之后可消耗 5 点术法点恢复使用次数。",
+  "notes": [
+   "目标被立即拉向你原本的位置并停在最靠近的未占据空间"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"扭曲爆裂\",\"activation\":\"action\",\"cost\":[{\"resource\":\"warping-implosion\"}],\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"sphere\",\"radius\":30}},\"root\":[{\"kind\":\"move\",\"mode\":\"teleport\",\"ft\":120},{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"str\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"warp_dmg\",\"dice\":\"3d10\",\"type\":\"力场\"},{\"kind\":\"note\",\"text\":\"目标被立即拉向你原本的位置并停在最靠近的未占据空间\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"warp_dmg\",\"scale\":0.5}]}]}]},{\"id\":\"restore\",\"name\":\"扭曲爆裂：恢复使用次数（5术法点）\",\"activation\":\"free\",\"cost\":[{\"resource\":\"sorcery_points\",\"n\":5}],\"root\":[{\"kind\":\"resource\",\"id\":\"warping-implosion\",\"delta\":1}]}]}"
+ },
+ {
+  "key": "TCE:术士:时械矩阵:18",
+  "name": "时械矩阵",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以动作召唤精魂覆盖以你为中心30尺立方，同时产生三种效应：治愈（合计至多100生命值，随意分配给范围内任意数量生物）、修复（范围内损坏的物件立刻修复）、破法（范围内任意生物或物件承受的六环或以下法术结束）。每次长休可免费使用一次；也可消耗7点术法点恢复使用权。治愈的总量不超过100由使用者自行控制；修复和破法手动处理。",
+  "notes": [
+   "时械矩阵：治愈合计至多 100 生命值，随意分配给范围内的生物（下面逐个生物填写，合计不要超过 100）",
+   "时械矩阵：修复范围内损坏的物件；范围内你选择的生物或物件承受的六环或以下法术结束（手动处理）"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"时械矩阵\",\"activation\":\"action\",\"tags\":[\"magical\"],\"cost\":[{\"resource\":\"clockwork-cavalcade\"}],\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"cube\",\"size\":30}},\"root\":[{\"kind\":\"note\",\"text\":\"时械矩阵：治愈合计至多 100 生命值，随意分配给范围内的生物（下面逐个生物填写，合计不要超过 100）\"},{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"number\",\"prompt\":\"时械矩阵：这个生物恢复多少生命值？（所有生物合计至多 100，0 表示不治疗）\",\"var\":\"n\",\"min\":0,\"max\":\"min(100, target.hpMax - target.hp)\"},{\"kind\":\"heal\",\"amount\":\"vars.n\"}]},{\"kind\":\"note\",\"text\":\"时械矩阵：修复范围内损坏的物件；范围内你选择的生物或物件承受的六环或以下法术结束（手动处理）\"}]},{\"id\":\"restore\",\"name\":\"时械矩阵：恢复使用权（7术法点）\",\"activation\":\"free\",\"cost\":[{\"resource\":\"sorcery_points\",\"n\":7}],\"requires\":\"self.resource('clockwork-cavalcade') < 1\",\"root\":[{\"kind\":\"resource\",\"id\":\"clockwork-cavalcade\",\"delta\":1}]}],\"resources\":[{\"id\":\"clockwork-cavalcade\",\"name\":\"时械矩阵\",\"formula\":1,\"recovery\":\"long\"}]}"
+ },
+ {
+  "key": "TCE:术士:血肉启示:14",
+  "name": "血肉启示",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个附赠动作，消耗 1 点或更多术法点魔法性转变形态，持续 10 分钟。每消耗 1 术法点可选择获得一项增益：看见 60 尺内隐形生物；获得等同步行速度的飞行速度且能悬浮；获得两倍步行速度的游泳速度且能水下呼吸；穿过窄至 1 寸空间且消耗 5 尺移动力脱离非魔法束缚或受擒。具体选项与移动/感官效果需手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"血肉启示\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"sorcery_points\"}],\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"血肉启示\"}]}],\"effects\":{\"血肉启示\":{\"text\":\"转变形态持续 10 分钟。获得自选增益（看破隐形/飞行悬浮/游泳水下呼吸/狭窄穿行脱离束缚受擒）。若消耗更多术法点，请手动扣除额外术法点。\",\"duration\":{\"minutes\":10}}}}"
+ },
+ {
+  "key": "TCE:武僧:命极之手:17",
+  "name": "命极之手",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个动作消耗 5 点功力触碰一个死亡不超过 24 小时的生物尸体，使其起死回生并恢复 4d10 + 感知调整值点生命值，并移除其死前所具有的目盲、耳聋、麻痹、中毒和震慑状态。长休恢复。手动在界面上复活目标并处理相应状态。",
+  "notes": [
+   "命极之手：目标起死回生并恢复生命值，移除其目盲、耳聋、麻痹、中毒和震慑状态（需手动复活并调整状态）"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"命极之手\",\"activation\":\"action\",\"cost\":[{\"resource\":\"hand-of-ultimate-mercy\"},{\"resource\":\"功力\",\"n\":5}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"touch\"},\"tags\":[\"magical\"],\"root\":[{\"kind\":\"heal\",\"amount\":\"4d10 + self.mod.wis\"},{\"kind\":\"note\",\"text\":\"命极之手：目标起死回生并恢复生命值，移除其目盲、耳聋、麻痹、中毒和震慑状态（需手动复活并调整状态）\"}]}]}"
+ },
+ {
+  "key": "TCE:武僧:生杀予夺:11",
+  "name": "生杀予夺",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "使用疾风连击时，每一次徒手打击都可以替换为使用予命之手（无需额外消耗功力）。另外，在疾风连击中发动的徒手打击命中时，可使用夺命之手而无需额外消耗功力（每回合限一次）。疾风连击中替换予命之手需手动处理；与普通夺命之手共用每回合一次限制需人工注意。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"triggers\":[{\"id\":\"free-harm\",\"label\":\"生杀予夺：免费夺命之手\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"optional\":true,\"limit\":\"oncePerTurn\",\"when\":\"attack.unarmed && ask('这次徒手打击来自疾风连击吗？')\",\"do\":[{\"kind\":\"addDamage\",\"dice\":\"classTable('武艺') + self.mod.wis\",\"type\":\"黯蚀\"}]}]}"
+ },
+ {
+  "key": "TCE:武僧:生死之触:6",
+  "name": "生死之触",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "使用予命之手时，还可结束目标身上的一种疾病或以下状态之一：目盲、耳聋、麻痹、中毒、震慑。使用夺命之手时，可使目标陷入中毒状态，持续到你的下一回合结束。由于此特性追加于予命之手和夺命之手，状态的施加与移除由人手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "TCE:武僧:星我觉醒:17",
+  "name": "星我觉醒",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个附赠动作花费 5 点功力，同时召唤星我之臂、星我之容与星我之躯并使它们觉醒，持续 10 分钟；陷入失能或死亡时提前结束。已自动化：觉醒期间你的 AC 获得 +2（精魂护甲）；星我之臂与星我之容的效应同时挂上（星我之臂的效应里只有「力量检定用感知代替」，力场伤害的徒手打击与触及 +5 没有实现，需要时手动处理）；星之连击做成了一个不占动作的「星之连击（+1 次攻击）」按钮——本回合用攻击动作时点它，会多出一次攻击机会（每回合至多一次），三次攻击都要用星我之臂这一点由你自己遵守。【要人处理】①17 级这次召唤不带「召唤星我之臂」时那一下对周围 10 尺内所选生物的 2 颗武艺骰力场伤害（敏捷豁免），需要的话用「召唤星我之臂」条目或手动结算。②星我之躯的拨挡能量、猛力之臂在它自己的条目里，已经按「身上有星我觉醒」认这个状态。③星之连击给的是一次攻击次数，若本回合先用别的武器打了，它会被那次攻击用掉。",
+  "notes": [
+   "星我觉醒：星我之臂 / 星我之容 / 星我之躯一起显现，觉醒 10 分钟，AC +2。本回合若用攻击动作，记得点「星之连击」多拿一次攻击。召唤时对周围 10 尺内所选生物的 2 颗武艺骰力场伤害（敏捷豁免）不在本条目里，需要时手动结算。",
+   "星之连击：本回合多出一次攻击，三次攻击都必须用星我之臂进行。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"星我觉醒\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"功力\",\"n\":5}],\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"星我觉醒\"},{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"TCE:武僧:星我之臂:3#星我之臂\"},{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"TCE:武僧:星我之容:6#星我之容\"},{\"kind\":\"note\",\"text\":\"星我觉醒：星我之臂 / 星我之容 / 星我之躯一起显现，觉醒 10 分钟，AC +2。本回合若用攻击动作，记得点「星之连击」多拿一次攻击。召唤时对周围 10 尺内所选生物的 2 颗武艺骰力场伤害（敏捷豁免）不在本条目里，需要时手动结算。\"}]},{\"id\":\"barrage\",\"name\":\"星之连击（+1 次攻击）\",\"activation\":\"free\",\"text\":\"本回合的攻击动作可以攻击三次，但所有攻击都要用星我之臂进行。每回合一次。\",\"requires\":\"turn.isMine && self.hasEffect('星我觉醒') && !self.hasEffect('星之连击：已用')\",\"root\":[{\"kind\":\"economy\",\"attacks\":1},{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"星之连击：已用\"},{\"kind\":\"note\",\"text\":\"星之连击：本回合多出一次攻击，三次攻击都必须用星我之臂进行。\"}]}],\"effects\":{\"星我觉醒\":{\"text\":\"星我觉醒：AC +2（精魂护甲）；星我之臂、星我之容同时显现。陷入失能或死亡时提前结束。\",\"duration\":{\"minutes\":10,\"endsOn\":[{\"event\":\"effectApplied\",\"when\":\"event.bearer == self.id && self.has('失能')\"},{\"event\":\"died\",\"when\":\"event.id == self.id\"}]},\"statics\":[{\"kind\":\"ac\",\"bonus\":2}]},\"星之连击：已用\":{\"text\":\"本回合已经用过星之连击（额外攻击已经给出）。\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":0}}}}}"
+ },
+ {
+  "key": "TCE:武僧:星我之臂:3",
+  "name": "星我之臂",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "附赠动作消耗 1 点功力召唤星我之臂，对周围 10 尺内由你选择的生物造成 2 颗武艺骰力场伤害（敏捷豁免）。持续 10 分钟，失能或死亡提前结束。期间力量检定/豁免可用感知调整值代替；徒手打击触及加 5 尺，可使用感知调整值且造成力场伤害。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"召唤星我之臂\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"功力\"}],\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"sphere\",\"radius\":10}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"8 + self.pb + self.mod.wis\",\"onFail\":[{\"kind\":\"damage\",\"dice\":\"classTable('武艺') + classTable('武艺')\",\"type\":\"力场\"}]}]},{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"星我之臂\"}]}],\"effects\":{\"星我之臂\":{\"duration\":{\"minutes\":10,\"endsOn\":[{\"event\":\"effectApplied\",\"when\":\"event.bearer == self.id && self.has('失能')\"}]},\"rollMods\":[{\"on\":{\"kind\":[\"check\",\"save\"],\"ability\":\"str\"},\"who\":\"bearer\",\"op\":\"add\",\"value\":\"max(0, self.mod.wis - self.mod.str)\",\"label\":\"星我之臂：感知代替力量\"}]}}}"
+ },
+ {
+  "key": "TCE:武僧:星我之容:6",
+  "name": "星我之容",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个附赠动作花费 1 点功力召唤星我之容（亦可作为召唤星我之臂的附赠动作一部分同时召唤），持续 10 分钟，失能或死亡提前消失。期间获得 120 尺魔法/非魔法黑暗视觉，感知（洞悉）和魅力（威吓）检定具有优势，并可定向传音或放大声音至 600 尺。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"召唤星我之容\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"功力\"}],\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"星我之容\"}]}],\"effects\":{\"星我之容\":{\"duration\":{\"minutes\":10,\"endsOn\":[{\"event\":\"effectApplied\",\"when\":\"event.bearer == self.id && self.has('失能')\"}]},\"rollMods\":[{\"on\":{\"kind\":\"check\",\"ability\":\"wis\",\"skill\":\"洞悉\"},\"who\":\"bearer\",\"op\":\"adv\",\"label\":\"精魂感知：感知（洞悉）优势\"},{\"on\":{\"kind\":\"check\",\"ability\":\"cha\",\"skill\":\"威吓\"},\"who\":\"bearer\",\"op\":\"adv\",\"label\":\"精魂感知：魅力（威吓）优势\"}]}}}"
+ },
+ {
+  "key": "TCE:武僧:予命之手:3",
+  "name": "予命之手",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个动作消耗 1 点功力接触一个生物，为其恢复一枚武艺骰 + 感知调整值点生命值。使用疾风连击时可将其中一次徒手打击替换为此特性（无需额外消耗功力），疾风连击中的替换由人手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"予命之手\",\"activation\":\"action\",\"cost\":[{\"resource\":\"功力\"}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"touch\"},\"tags\":[\"magical\"],\"root\":[{\"kind\":\"heal\",\"amount\":\"classTable('武艺') + self.mod.wis\"}]}]}"
+ },
+ {
+  "key": "TCE:野蛮人:感染之怒:10",
+  "name": "感染之怒",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "你在狂暴中用天生武器命中一个敌人时（会问你这次命中的是不是天生武器），可以消耗一次「感染之怒」次数，迫使目标做一次感知豁免（DC = 8 + 你的体质调整值 + 熟练加值）。豁免失败时由你选择：①目标受到 2d12 心灵伤害（已自动化）；②目标用反应对一个由你选择、且你能看见的生物发动一次近战攻击。【要人处理】第 ② 项引擎不能让一个生物「代你」发动攻击：选这一项之后会给出提示，请手动让那个目标用反应打一次（发起攻击时选「作为反应」），并自己核对目标的选择合法（你选的、你能看见的）。次数上限等于你的熟练加值，长休恢复。",
+  "notes": [
+   "感染之怒：请让目标用它的反应，对你选择的一个你能看见的生物发动一次近战攻击（发起时选「作为反应」），并手动结算这次攻击。"
+  ],
+  "data": "{\"automation\":\"partial\",\"resources\":[{\"id\":\"infectious-fury\",\"name\":\"感染之怒\",\"formula\":\"pb\",\"recovery\":\"long\"}],\"triggers\":[{\"id\":\"infectious-fury\",\"label\":\"感染之怒：诅咒目标\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"after\",\"optional\":true,\"cost\":[{\"resource\":\"infectious-fury\"}],\"when\":\"self.hasEffect('狂暴') && attack.melee && ask('这次命中的武器是天生武器（咬击 / 爪击 / 尾击之类）吗？')\",\"do\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"8 + self.mod.con + self.pb\",\"onFail\":[{\"kind\":\"choose\",\"prompt\":\"感染之怒：选择豁免失败的效应\",\"options\":[{\"label\":\"受到 2d12 心灵伤害\",\"do\":[{\"kind\":\"damage\",\"dice\":\"2d12\",\"type\":\"心灵\"}]},{\"label\":\"目标用反应对另一个生物发动一次近战攻击\",\"do\":[{\"kind\":\"note\",\"text\":\"感染之怒：请让目标用它的反应，对你选择的一个你能看见的生物发动一次近战攻击（发起时选「作为反应」），并手动结算这次攻击。\"}]}]}]}]}]}"
+ },
+ {
+  "key": "TCE:野蛮人:狂野浪潮:3",
+  "name": "狂野浪潮",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "进入狂暴时，投掷 1d8 决定狂野魔法效应（豁免 DC = 8 + 熟练加值 + 体质调整值）。表中包含传送、精魂爆炸、武器变质为力场投掷武器、被击中时力场反击、自身与盟友 AC+1、15 尺敌方困难地形、附赠动作目盲射线等。引擎没有「掷表并按结果分支」的机制，效应也涉及空间网格传送、地形改变与武器属性的动态改写，整条由人手动掷表并结算对应效果。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ }
+]

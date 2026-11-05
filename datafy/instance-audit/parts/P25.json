@@ -1,0 +1,465 @@
+[
+ {
+  "key": "XDMG:item:鹰眼术药水",
+  "name": "鹰眼术药水",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以附赠动作饮用后，获得法术鹰眼术的效应（无需专注），持续10分钟。在指定地点创造不可见的传感器用于看或听，感官侦察需手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"饮用鹰眼术药水\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"物品:鹰眼术药水\"}],\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"template\":\"鹰眼术\",\"to\":\"self\"}]}],\"effects\":{\"鹰眼术\":{\"tags\":[\"magical\"],\"duration\":{\"minutes\":10},\"text\":\"获得法术鹰眼术效应（无需专注）。在1哩内所选熟悉或已知地点创造无形传感器，通过该传感器看或听。\"}}}"
+ },
+ {
+  "key": "XDMG:item:影响动物戒指",
+  "name": "影响动物戒指",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "戒指具有 3 充能，每日黎明重获 1d3 充能。着装期间可消耗 1 充能施展化兽为友、恐惧术（只影响野兽，专注至多 1 分钟）或动物交谈之一（豁免 DC 13）。动物交谈的交流效果需手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"animal-friendship\",\"name\":\"施展化兽为友\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"resource\":\"物品充能:影响动物戒指\",\"n\":1}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":30,\"filter\":\"target.type == '野兽'\"},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":13,\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"化兽为友\",\"to\":\"target\"}]}]},{\"id\":\"fear\",\"name\":\"施展恐惧术（仅野兽）\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"resource\":\"物品充能:影响动物戒指\",\"n\":1}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"cone\",\"size\":30}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"if\",\"when\":\"target.type == '野兽'\",\"then\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":13,\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"恐惧术\",\"to\":\"target\"}]}]}]}]},{\"id\":\"speak-with-animals\",\"name\":\"施展动物交谈\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"resource\":\"物品充能:影响动物戒指\",\"n\":1}],\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"template\":\"动物交谈\",\"to\":\"self\"}]}],\"effects\":{\"化兽为友\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:魅惑\"],\"duration\":{\"hours\":24},\"text\":\"处于魅惑状态，持续 24 小时或直到你或同伴伤害它。\"},\"恐惧术\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:恐慌\"],\"text\":\"陷入恐慌，在回合内必须疾走远离；回合结束不在视线内时可再次进行感知豁免（DC 13）。\"},\"动物交谈\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"minutes\":10},\"text\":\"获得与野兽理解与言语交流的能力，持续 10 分钟。\"}}}"
+ },
+ {
+  "key": "XDMG:item:羽落戒指",
+  "name": "羽落戒指",
+  "by": "AI",
+  "automation": "manual",
+  "level": null,
+  "text": "着装此戒指期间，你在坠落时每轮只会下落 60 尺且不会受到坠落伤害。由于引擎缺乏坠落事件与高度机制，需人工处理。",
+  "notes": [],
+  "data": "{\"automation\":\"manual\"}"
+ },
+ {
+  "key": "XDMG:item:愈合护符",
+  "name": "愈合护符",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "维持生命：进行死亡豁免检定时，9 及以下的骰值改为 10。加速自愈：投掷生命骰恢复生命值时恢复量翻倍（短休掷生命骰恢复量翻倍需手动处理）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"rollMods\":[{\"on\":{\"kind\":\"deathSave\"},\"who\":\"bearer\",\"op\":\"minD20\",\"value\":10,\"label\":\"愈合护符：维持生命（死亡豁免保底 10）\"}]}"
+ },
+ {
+  "key": "XDMG:item:元素宝石，翡翠",
+  "name": "元素宝石，翡翠",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "用操作动作打破宝石，召唤一只水元素（出现在最近未占据空间，服从命令，紧随你之后行动）。元素持续1小时、死亡或附赠动作解消时消失。打破后宝石失去魔法（需手动添加水元素到战斗中）。",
+  "notes": [
+   "打破宝石召唤一只水元素，服从你的命令，紧随你之后行动。持续 1 小时、死亡或附赠动作解消时消失（需手动在战斗中添加水元素数据块）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"打破宝石：召唤水元素\",\"activation\":\"action\",\"root\":[{\"kind\":\"note\",\"text\":\"打破宝石召唤一只水元素，服从你的命令，紧随你之后行动。持续 1 小时、死亡或附赠动作解消时消失（需手动在战斗中添加水元素数据块）。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:元素宝石，红刚玉",
+  "name": "元素宝石，红刚玉",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "用操作动作打破宝石，召唤一只火元素（出现在最近未占据空间，服从命令，紧随你之后行动）。元素持续1小时、死亡或附赠动作解消时消失。打破后宝石失去魔法（需手动添加火元素到战斗中）。",
+  "notes": [
+   "打破宝石召唤一只火元素，服从你的命令，紧随你之后行动。持续 1 小时、死亡或附赠动作解消时消失（需手动在战斗中添加火元素数据块）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"打破宝石：召唤火元素\",\"activation\":\"action\",\"root\":[{\"kind\":\"note\",\"text\":\"打破宝石召唤一只火元素，服从你的命令，紧随你之后行动。持续 1 小时、死亡或附赠动作解消时消失（需手动在战斗中添加火元素数据块）。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:元素宝石，黄钻石",
+  "name": "元素宝石，黄钻石",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "用操作动作打破宝石，召唤一只土元素（出现在最近未占据空间，服从命令，紧随你之后行动）。元素持续1小时、死亡或附赠动作解消时消失。打破后宝石失去魔法（需手动添加土元素到战斗中）。",
+  "notes": [
+   "打破宝石召唤一只土元素，服从你的命令，紧随你之后行动。持续 1 小时、死亡或附赠动作解消时消失（需手动在战斗中添加土元素数据块）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"打破宝石：召唤土元素\",\"activation\":\"action\",\"root\":[{\"kind\":\"note\",\"text\":\"打破宝石召唤一只土元素，服从你的命令，紧随你之后行动。持续 1 小时、死亡或附赠动作解消时消失（需手动在战斗中添加土元素数据块）。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:元素宝石，蓝宝石",
+  "name": "元素宝石，蓝宝石",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "用操作动作打破宝石，召唤一只气元素（出现在最近未占据空间，服从命令，紧随你之后行动）。元素持续1小时、死亡或附赠动作解消时消失。打破后宝石失去魔法（需手动添加气元素到战斗中）。",
+  "notes": [
+   "打破宝石召唤一只气元素，服从你的命令，紧随你之后行动。持续 1 小时、死亡或附赠动作解消时消失（需手动在战斗中添加气元素数据块）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"打破宝石：召唤气元素\",\"activation\":\"action\",\"root\":[{\"kind\":\"note\",\"text\":\"打破宝石召唤一只气元素，服从你的命令，紧随你之后行动。持续 1 小时、死亡或附赠动作解消时消失（需手动在战斗中添加气元素数据块）。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:云巨人之力药水",
+  "name": "云巨人之力药水",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "饮用后 1 小时内力量属性值变为 27（若原本大于等于 27 则无效）。临时力量属性值改变需手动调整人物卡。",
+  "notes": [
+   "力量属性值变为 27（持续 1 小时；若原本力量已大于等于 27 则无效；需手动修改力量属性值与相关加值）"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"饮用云巨人之力药水\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"物品:云巨人之力药水\"}],\"root\":[{\"kind\":\"applyEffect\",\"template\":\"云巨人之力\",\"to\":\"self\"},{\"kind\":\"note\",\"text\":\"力量属性值变为 27（持续 1 小时；若原本力量已大于等于 27 则无效；需手动修改力量属性值与相关加值）\"}]}],\"effects\":{\"云巨人之力\":{\"duration\":{\"hours\":1},\"tags\":[\"magical\"],\"text\":\"力量属性值变为 27（若原本力量大于等于 27 则无效；需手动在人物卡调整）。\"}}}"
+ },
+ {
+  "key": "XDMG:item:杂技长棍",
+  "name": "杂技长棍",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "敏捷（特技）检定具有优势。被攻击命中时可以消耗反应使该次攻击中 AC+5（每短休/长休一次）。可以附赠动作在短杆、长杆和长棍形态间转化及发光。长棍形态具有投掷(30/120)且攻击后飞回手中。固定加值已在人物卡处理。",
+  "notes": [
+   "针对触发此反应的攻击，护甲等级+5，可能导致该攻击变为未命中。"
+  ],
+  "data": "{\"resources\":[{\"id\":\"物品次数:杂技长棍:偏斜攻击\",\"name\":\"杂技长棍：偏斜攻击\",\"formula\":1,\"recovery\":\"short\"}],\"automation\":\"partial\",\"rollMods\":[{\"on\":{\"kind\":\"check\",\"skill\":\"特技\"},\"who\":\"bearer\",\"op\":\"adv\",\"label\":\"杂技长棍：特技检定优势\"}],\"actions\":[{\"id\":\"deflect\",\"name\":\"偏斜攻击\",\"activation\":\"reaction\",\"trigger\":{\"on\":\"attackHit\",\"role\":\"target\",\"window\":\"before\"},\"cost\":[{\"resource\":\"物品次数:杂技长棍:偏斜攻击\"}],\"root\":[{\"kind\":\"note\",\"text\":\"针对触发此反应的攻击，护甲等级+5，可能导致该攻击变为未命中。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:造风之扇",
+  "name": "造风之扇",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "持握扇子时，可以动作施展造风术（豁免 DC 13，专注至多 1 分钟）。吹出 60 尺长、10 尺宽强风线，区域内生物力量豁免失败被推离 15 尺。次日黎明前随后每再次使用累积 20% 失效撕裂几率（需手动判定）。",
+  "notes": [
+   "在次日黎明之前，随后每再次使用这把扇子都会累积 20% 的几率失效并撕裂成碎纸。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"gust-of-wind\",\"name\":\"造风之扇：造风术\",\"activation\":\"action\",\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"line\",\"length\":60,\"width\":10}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"str\",\"dc\":13,\"onFail\":[{\"kind\":\"move\",\"mode\":\"push\",\"ft\":15}]}]},{\"kind\":\"note\",\"text\":\"在次日黎明之前，随后每再次使用这把扇子都会累积 20% 的几率失效并撕裂成碎纸。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:召唤魔方",
+  "name": "召唤魔方",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "用一个魔法动作转动曲柄，掷 1d6 确定召唤魔方施展何种召唤法术（五环，豁免 DC 17，攻击加值+9，无需维持专注）。直至次日黎明前无法再次使用。具体召唤生物需手动处理。",
+  "notes": [
+   "掷 1d6 确定施展的五环召唤法术（豁免 DC 17，攻击加值+9，无需维持专注）：1 异怪召唤术；2 野兽召唤术；3 构装召唤术；4 龙类召唤术；5 元素召唤术；6 妖精召唤术。召唤生物由玩家手动处理。"
+  ],
+  "data": "{\"resources\":[{\"id\":\"物品次数:召唤魔方\",\"name\":\"召唤魔方\",\"formula\":1,\"recovery\":\"long\"}],\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"召唤魔方：转动曲柄\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品次数:召唤魔方\"}],\"root\":[{\"kind\":\"note\",\"text\":\"掷 1d6 确定施展的五环召唤法术（豁免 DC 17，攻击加值+9，无需维持专注）：1 异怪召唤术；2 野兽召唤术；3 构装召唤术；4 龙类召唤术；5 元素召唤术；6 妖精召唤术。召唤生物由玩家手动处理。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:召唤气巨灵戒指",
+  "name": "召唤气巨灵戒指",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "着装此戒指期间，可以一个魔法动作从气元素位面召唤一名特定的气巨灵（出现在 120 尺内未占据空间，专注至多 1 小时，友好并服从命令）。气巨灵消失后 24 小时内无法再次召唤；若气巨灵死亡，戒指失去魔力。召唤生物需手动处理。",
+  "notes": [
+   "在 120 尺内未占据空间召唤一名特定的气巨灵（专注至多 1 小时，生命值降至 0 提前消失）。气巨灵对你和盟友友好并服从命令。消失后 24 小时内无法再次召唤；若死亡则戒指变为非魔法物品。"
+  ],
+  "data": "{\"resources\":[{\"id\":\"物品次数:召唤气巨灵戒指\",\"name\":\"召唤气巨灵戒指\",\"formula\":1,\"recovery\":\"long\"}],\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"召唤气巨灵戒指：召唤气巨灵\",\"activation\":\"action\",\"concentration\":{\"max\":{\"hours\":1}},\"cost\":[{\"resource\":\"物品次数:召唤气巨灵戒指\"}],\"root\":[{\"kind\":\"note\",\"text\":\"在 120 尺内未占据空间召唤一名特定的气巨灵（专注至多 1 小时，生命值降至 0 提前消失）。气巨灵对你和盟友友好并服从命令。消失后 24 小时内无法再次召唤；若死亡则戒指变为非魔法物品。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:召唤泰坦卷轴（巨像）",
+  "name": "召唤泰坦卷轴（巨像）",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以魔法动作阅读此卷轴，一个巨神兵显现在你 1 里内的地面或水里的未占据空间中。巨神兵对其他所有生物态度敌对，在生命值降至 0 时消失。若空间不足以容纳它，召唤失败且卷轴被浪费。",
+  "notes": [
+   "召唤一个巨神兵显现在 1 里内的地面或水里未占据空间中。对所有其他生物敌对，HP 降至 0 时消失。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"阅读卷轴\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品:召唤泰坦卷轴（巨像）\"}],\"root\":[{\"kind\":\"note\",\"text\":\"召唤一个巨神兵显现在 1 里内的地面或水里未占据空间中。对所有其他生物敌对，HP 降至 0 时消失。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:召唤泰坦卷轴（克拉肯）",
+  "name": "召唤泰坦卷轴（克拉肯）",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以魔法动作阅读此卷轴，克拉肯显现在你 1 里内的地面或水里的未占据空间中。召唤一只克拉肯需要足以容纳它躯体的水体，否则召唤失败且卷轴被浪费。克拉肯对其他所有生物态度敌对，在生命值降至 0 时消失。若空间不足以容纳它，召唤失败且卷轴被浪费。",
+  "notes": [
+   "召唤一只克拉肯显现在 1 里内的水里未占据空间中（需要足以容纳其躯体的水体）。对所有其他生物敌对，HP 降至 0 时消失。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"阅读卷轴\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品:召唤泰坦卷轴（克拉肯）\"}],\"root\":[{\"kind\":\"note\",\"text\":\"召唤一只克拉肯显现在 1 里内的水里未占据空间中（需要足以容纳其躯体的水体）。对所有其他生物敌对，HP 降至 0 时消失。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:召唤泰坦卷轴（兽主）",
+  "name": "召唤泰坦卷轴（兽主）",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以魔法动作阅读此卷轴，一个兽主显现在你 1 里内的地面或水里的未占据空间中。兽主对其他所有生物态度敌对，在生命值降至 0 时消失。若空间不足以容纳它，召唤失败且卷轴被浪费。",
+  "notes": [
+   "召唤一个兽主显现在 1 里内的地面或水里未占据空间中。对所有其他生物敌对，HP 降至 0 时消失。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"阅读卷轴\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品:召唤泰坦卷轴（兽主）\"}],\"root\":[{\"kind\":\"note\",\"text\":\"召唤一个兽主显现在 1 里内的地面或水里未占据空间中。对所有其他生物敌对，HP 降至 0 时消失。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:召唤泰坦卷轴（吞世黏浆）",
+  "name": "召唤泰坦卷轴（吞世黏浆）",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以魔法动作阅读此卷轴，一个吞世黏浆显现在你 1 里内的地面或水里的未占据空间中。吞世黏浆对其他所有生物态度敌对，在生命值降至 0 时消失。若空间不足以容纳它，召唤失败且卷轴被浪费。",
+  "notes": [
+   "召唤一个吞世黏浆显现在 1 里内的地面或水里未占据空间中。对所有其他生物敌对，HP 降至 0 时消失。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"阅读卷轴\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品:召唤泰坦卷轴（吞世黏浆）\"}],\"root\":[{\"kind\":\"note\",\"text\":\"召唤一个吞世黏浆显现在 1 里内的地面或水里未占据空间中。对所有其他生物敌对，HP 降至 0 时消失。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:召唤泰坦卷轴（元初天劫）",
+  "name": "召唤泰坦卷轴（元初天劫）",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以魔法动作阅读此卷轴，一个元初天劫显现在你 1 里内的地面或水里的未占据空间中。元初天劫对其他所有生物态度敌对，在生命值降至 0 时消失。若空间不足以容纳它，召唤失败且卷轴被浪费。",
+  "notes": [
+   "召唤一个元初天劫显现在 1 里内的地面或水里未占据空间中。对所有其他生物敌对，HP 降至 0 时消失。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"阅读卷轴\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品:召唤泰坦卷轴（元初天劫）\"}],\"root\":[{\"kind\":\"note\",\"text\":\"召唤一个元初天劫显现在 1 里内的地面或水里未占据空间中。对所有其他生物敌对，HP 降至 0 时消失。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:召唤泰坦卷轴（至高天）",
+  "name": "召唤泰坦卷轴（至高天）",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以魔法动作阅读此卷轴，一个至高天显现在你 1 里内的地面或水里的未占据空间中。至高天对其他所有生物态度敌对，在生命值降至 0 时消失。若空间不足以容纳它，召唤失败且卷轴被浪费。",
+  "notes": [
+   "召唤一个至高天显现在 1 里内的地面或水里未占据空间中。对所有其他生物敌对，HP 降至 0 时消失。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"阅读卷轴\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品:召唤泰坦卷轴（至高天）\"}],\"root\":[{\"kind\":\"note\",\"text\":\"召唤一个至高天显现在 1 里内的地面或水里未占据空间中。对所有其他生物敌对，HP 降至 0 时消失。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:真视宝石",
+  "name": "真视宝石",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个魔法动作消耗 1 发充能，接下来 10 分钟内透过宝石观察周围时具有 120 尺真实视觉。真实视觉效果由玩家与 DM 手动处理。",
+  "notes": [
+   "接下来的 10 分钟内，透过宝石观察周围时具有 120 尺真实视觉。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"真视宝石：观察\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:真视宝石\",\"n\":1}],\"root\":[{\"kind\":\"applyEffect\",\"inline\":{\"name\":\"真实视觉（120尺）\",\"duration\":{\"minutes\":10}}},{\"kind\":\"note\",\"text\":\"接下来的 10 分钟内，透过宝石观察周围时具有 120 尺真实视觉。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:真知水晶球",
+  "name": "真知水晶球",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "接触该水晶球期间，你可以用它施展探知术（豁免DC 17）。此外，你获得以该法术传感器为中心，半径120尺的真实视觉。",
+  "notes": [
+   "目标豁免失败，在其周围创造隐形传感器（专注至多10分钟），且你获得以该传感器为中心120尺的真实视觉",
+   "目标豁免成功，法术失败且24小时内免疫"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"真知水晶球：施展探知术\",\"activation\":\"action\",\"concentration\":{\"minutes\":10},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":17,\"onFail\":[{\"kind\":\"note\",\"text\":\"目标豁免失败，在其周围创造隐形传感器（专注至多10分钟），且你获得以该传感器为中心120尺的真实视觉\"}],\"onSuccess\":[{\"kind\":\"note\",\"text\":\"目标豁免成功，法术失败且24小时内免疫\"}]}]}]}"
+ },
+ {
+  "key": "XDMG:item:征服",
+  "name": "征服",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "+3 战锤。具有投掷（60/180尺），命中额外 1d8 力场伤害（构装、元素或巨人改为 4d8 力场），命中或失手后立即飞回手中。持握时揭示 30 尺内密门/隐藏门位置。次日黎明前可以魔法动作重击地面发出震荡波（60尺内自选生物 DC 20 体质豁免，失败陷入震慑 1 分钟）。次日黎明前可施展一次侦测善恶或物件定位术。固定加值已在人物卡处理。",
+  "notes": [
+   "施展侦测善恶（持续专注至多 10 分钟）。施展后直至次日黎明无法再次从中施展法术。",
+   "施展物件定位术（感应 1000 尺内某一熟悉或已知物件的方向，持续专注至多 10 分钟）。施展后直至次日黎明无法再次从中施展法术。"
+  ],
+  "data": "{\"resources\":[{\"id\":\"物品次数:征服:震荡波\",\"name\":\"征服：震荡波\",\"formula\":1,\"recovery\":\"long\"},{\"id\":\"物品次数:征服:施法\",\"name\":\"征服：施法\",\"formula\":1,\"recovery\":\"long\"}],\"automation\":\"partial\",\"actions\":[{\"id\":\"shockwave\",\"name\":\"征服：震荡波\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品次数:征服:震荡波\"}],\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"emanation\",\"radius\":60}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":20,\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"震慑\",\"duration\":{\"minutes\":1,\"saveEnds\":{\"ability\":\"con\",\"dc\":20,\"at\":\"turnEnd\"}}}]}]}]},{\"id\":\"detect-evil-and-good\",\"name\":\"征服：侦测善恶\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品次数:征服:施法\"}],\"concentration\":{\"minutes\":10},\"root\":[{\"kind\":\"note\",\"text\":\"施展侦测善恶（持续专注至多 10 分钟）。施展后直至次日黎明无法再次从中施展法术。\"}]},{\"id\":\"locate-object\",\"name\":\"征服：物件定位术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品次数:征服:施法\"}],\"concentration\":{\"minutes\":10},\"root\":[{\"kind\":\"note\",\"text\":\"施展物件定位术（感应 1000 尺内某一熟悉或已知物件的方向，持续专注至多 10 分钟）。施展后直至次日黎明无法再次从中施展法术。\"}]}],\"effects\":{\"震慑\":{\"implies\":[\"XPHB:condition:震慑\"],\"text\":\"陷入震慑状态。回合结束时可重复体质豁免，成功则终止。\"}}}"
+ },
+ {
+  "key": "XDMG:item:指挥魔杖",
+  "name": "指挥魔杖",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "持握魔杖时，你可以执行魔法动作并消耗1充能，通过挥舞它来创造一段管弦乐（120尺内可听见，停止挥舞时结束）。",
+  "notes": [
+   "通过挥舞魔杖创造一段管弦乐，在120尺之内都能被听到，并且在你停止挥舞魔杖时结束"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"指挥魔杖：奏乐\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:指挥魔杖\",\"n\":1}],\"root\":[{\"kind\":\"note\",\"text\":\"通过挥舞魔杖创造一段管弦乐，在120尺之内都能被听到，并且在你停止挥舞魔杖时结束\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:至恶护符",
+  "name": "至恶护符",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "触碰护符的非亡灵非邪魔受 8d6 暗蚀伤害（携带结束回合再受一次）。\n法术攻击检定 +2（人物卡已处理）。\n【万物终焉】护符具 6 充能。以魔法动作消耗 1 充能，令 120 尺内可见地面生物进行 DC 20 敏捷豁免（天族劣势）。失败则坠入裂隙灰飞烟灭；成功受 4d6 心灵伤害。充能耗尽时护符化为恶臭粘液摧毁。",
+  "notes": [
+   "目标坠入裂隙，灰飞烟灭！"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"flame-rift\",\"name\":\"至恶护符：万物终焉\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:至恶护符\",\"n\":1}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":120,\"filter\":\"canSee(self, target)\"},\"root\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":20,\"onFail\":[{\"kind\":\"note\",\"text\":\"目标坠入裂隙，灰飞烟灭！\"}],\"onSuccess\":[{\"kind\":\"damage\",\"dice\":\"4d6\",\"type\":\"psychic\",\"to\":\"target\"}]}]}]}"
+ },
+ {
+  "key": "XDMG:item:蛛网魔杖",
+  "name": "蛛网魔杖",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "持握魔杖时，你可以消耗1充能从中施展蛛网术（豁免 DC 13，专注至多1小时）。区域内生物敏捷豁免失败陷入束缚状态，可用动作进行 DC 13 力量（运动）检定挣脱。耗尽充能时若骰出1则魔杖化为飞灰摧毁。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"web\",\"name\":\"蛛网魔杖：蛛网术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:蛛网魔杖\",\"n\":1}],\"concentration\":{\"hours\":1},\"targeting\":{\"type\":\"area\",\"range\":60,\"area\":{\"shape\":\"cube\",\"size\":20}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":13,\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"蛛网束缚\"}]}]}]}],\"effects\":{\"蛛网束缚\":{\"implies\":[\"XPHB:condition:束缚\"],\"text\":\"陷入束缚状态。可用动作进行对抗 DC 13 的力量（运动）检定，成功则挣脱束缚。\"}}}"
+ },
+ {
+  "key": "XDMG:item:自然斗篷",
+  "name": "自然斗篷",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "可作为德鲁伊和游侠法术的法器。身处轻度遮蔽的区域时，你可以用附赠动作执行躲藏动作，即便你能被直接观察到。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"hide\",\"name\":\"躲藏（自然斗篷）\",\"activation\":\"bonus\",\"text\":\"身处轻度遮蔽的区域时，你可以用附赠动作执行躲藏动作，即便你能被直接观察到。\",\"root\":[{\"kind\":\"check\",\"ability\":\"dex\",\"skill\":\"隐匿\",\"dc\":15,\"onSuccess\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"XPHB:condition:隐形\",\"duration\":{\"manual\":true}}]}]}]}"
+ },
+ {
+  "key": "XPHB:item:捕猎陷阱",
+  "name": "捕猎陷阱",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个操作动作在某处设下捕猎陷阱（需用链条固定至无法移动的物件）。踩到压力板的生物须通过 DC 13 敏捷豁免，失败受到 1d4 穿刺伤害且速度降至 0 直至其下一回合开始，并被链条限制在 3 尺范围内。生物可用动作通过 DC 13 力量（运动）检定挣脱，检定失败受 1 点穿刺伤害。陷阱布置与触发由人手动处理。",
+  "notes": [
+   "以操作动作设下捕猎陷阱。踩中者须通过 DC 13 敏捷豁免，失败承受 1d4 穿刺伤害且速度归 0 直至其下回合开始（移动被限制在 3 尺内）。动作 DC 13 力量（运动）可脱困，失败受 1 点穿刺伤害。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"设下捕猎陷阱\",\"activation\":\"action\",\"root\":[{\"kind\":\"note\",\"text\":\"以操作动作设下捕猎陷阱。踩中者须通过 DC 13 敏捷豁免，失败承受 1d4 穿刺伤害且速度归 0 直至其下回合开始（移动被限制在 3 尺内）。动作 DC 13 力量（运动）可脱困，失败受 1 点穿刺伤害。\"}]},{\"id\":\"snap\",\"name\":\"陷阱触发\",\"activation\":\"none\",\"targeting\":{\"type\":\"creature\"},\"root\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":13,\"onFail\":[{\"kind\":\"damage\",\"dice\":\"1d4\",\"type\":\"穿刺\"},{\"kind\":\"applyEffect\",\"to\":\"target\",\"inline\":{\"name\":\"捕猎陷阱夹住\",\"duration\":{\"rounds\":1},\"text\":\"速度降至 0，直至下一回合开始；移动范围被限制在链条长度内（通常 3 尺）。可用动作进行 DC 13 力量（运动）检定脱困，失败受 1 点穿刺伤害。\"}}]}]}]}"
+ },
+ {
+  "key": "XPHB:item:捕网",
+  "name": "捕网",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当你执行攻击动作，可以将一次攻击替换为向15尺内可见生物投掷捕网。目标必须通过一次DC 8+敏捷调整值+熟练加值的敏捷豁免，否则陷入束缚状态直至挣脱（巨型及以上体型生物自动通过豁免）。被束缚的目标或其5尺内生物可用动作通过DC 10力量（运动）检定挣脱；摧毁捕网（AC 10，HP 5，免疫钝击/毒素/心灵伤害）亦可解除束缚（需手动处理）。",
+  "notes": [
+   "巨型及以上体型生物自动通过豁免。挣脱捕网需动作进行DC 10力量（运动）检定；或摧毁捕网（AC 10, HP 5, 免疫钝击、毒素、心灵）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"投掷捕网\",\"activation\":\"action\",\"root\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"8 + self.mod.dex + self.pb\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"XPHB:condition:束缚\"}]},{\"kind\":\"note\",\"text\":\"巨型及以上体型生物自动通过豁免。挣脱捕网需动作进行DC 10力量（运动）检定；或摧毁捕网（AC 10, HP 5, 免疫钝击、毒素、心灵）。\"}]}]}"
+ },
+ {
+  "key": "XPHB:item:炽火胶",
+  "name": "炽火胶",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当你执行攻击动作时，可以将其中一次攻击替换为丢出一扁瓶炽火胶，选择20尺内可见的一个生物或物件。目标必须通过敏捷豁免（DC 8 + 你的敏捷调整值 + 你的熟练），否则承受1d4点火焰伤害并开始燃烧。燃烧的目标在其每回合开始时受到1d4点火焰伤害，生物可用一个动作熄灭火焰（熄灭火焰需手动操作）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"投掷炽火胶\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品:炽火胶\"}],\"targeting\":{\"type\":\"creature\",\"range\":20},\"root\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"8 + self.mod.dex + self.pb\",\"onFail\":[{\"kind\":\"damage\",\"dice\":\"1d4\",\"type\":\"火焰\"},{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"燃烧\"}]}]}],\"effects\":{\"燃烧\":{\"text\":\"在你的每个回合开始时承受 1d4 点火焰伤害。生物可以使用一个动作扑灭自己或5尺内另一生物身上的火焰。\",\"triggers\":[{\"id\":\"burn\",\"label\":\"燃烧：回合开始受伤害\",\"on\":\"turnStarted\",\"role\":\"actor\",\"do\":[{\"kind\":\"damage\",\"dice\":\"1d4\",\"type\":\"火焰\"}]}]}}}"
+ },
+ {
+  "key": "XPHB:item:滚珠",
+  "name": "滚珠",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个操作动作，把一小包滚珠撒至地面覆盖周围10尺内的一处10尺方形区域。任何生物每回合首次进入这片区域时都必须通过一次DC 10的敏捷豁免，否则陷入倒地状态。重新收集这些滚珠需要花费10分钟（场地进入检定与倒地状态需手动操作）。",
+  "notes": [
+   "把滚珠撒至地面覆盖10尺方形区域。任何生物每回合首次进入这片区域时都必须通过一次DC 10的敏捷豁免，否则陷入倒地状态。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"撒下滚珠\",\"activation\":\"action\",\"targeting\":{\"type\":\"area\",\"range\":10,\"area\":{\"shape\":\"cube\",\"size\":10}},\"root\":[{\"kind\":\"note\",\"text\":\"把滚珠撒至地面覆盖10尺方形区域。任何生物每回合首次进入这片区域时都必须通过一次DC 10的敏捷豁免，否则陷入倒地状态。\"}]}]}"
+ },
+ {
+  "key": "XPHB:item:火把",
+  "name": "火把",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "点燃后燃烧1小时，发出20尺明亮光照及额外20尺微光光照（需手动跟踪）。可作为简易近战武器发动攻击，命中造成1点火焰伤害。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"火把攻击\",\"activation\":\"action\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":5},\"root\":[{\"kind\":\"attack\",\"bonus\":\"self.pb + self.mod.str\",\"attack\":{\"melee\":true,\"weapon\":true,\"ability\":\"str\"},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"1\",\"type\":\"火焰\"}]}]}]}"
+ },
+ {
+  "key": "XPHB:item:基础毒药",
+  "name": "基础毒药",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个附赠动作将一小瓶基础毒药涂抹在一把武器或至多三枚弹药上。持续1分钟或直到造成额外伤害。当生物受到涂毒武器或弹药造成的穿刺或挥砍伤害时，受到额外1d4点毒素伤害。若涂抹在弹药上需手动记录三发次数限制。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"涂抹基础毒药\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"物品:基础毒药\"}],\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"基础毒药\"}]}],\"effects\":{\"基础毒药\":{\"duration\":{\"minutes\":1},\"triggers\":[{\"id\":\"poison-hit\",\"label\":\"基础毒药：附加毒素伤害\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"when\":\"attack.weapon && (attack.damageType == '穿刺' || attack.damageType == '挥砍')\",\"do\":[{\"kind\":\"addDamage\",\"dice\":\"1d4\",\"type\":\"毒素\"},{\"kind\":\"removeEffect\",\"from\":\"self\",\"match\":{\"name\":\"基础毒药\"}}]}]}}}"
+ },
+ {
+  "key": "XPHB:item:抗毒剂",
+  "name": "抗毒剂",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个附赠动作喝下一小瓶抗毒剂，使你在避免或结束中毒状态的豁免中具有优势，持续1小时（豁免优势由引擎弹窗询问）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"饮用抗毒剂\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"物品:抗毒剂\"}],\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"抗毒剂\"}]}],\"effects\":{\"抗毒剂\":{\"duration\":{\"hours\":1},\"rollMods\":[{\"on\":{\"kind\":\"save\"},\"who\":\"bearer\",\"when\":\"ask('这个豁免是为了避免或结束中毒状态吗？')\",\"op\":\"adv\",\"label\":\"抗毒剂：抵抗中毒\"}]}}}"
+ },
+ {
+  "key": "XPHB:item:链条",
+  "name": "链条",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个操作动作对5尺内处于受擒、失能或束缚状态的非自愿生物进行一次DC 13的力量（运动）检定。检定成功可用链条捆住目标，若绑住腿则目标陷入束缚状态直至挣脱。挣脱需动作通过DC 18敏捷（特技）检定，扯坏需动作通过DC 20力量（运动）检定。",
+  "notes": [
+   "成功捆住目标（若绑住腿陷入束缚状态直至挣脱）。挣脱需动作通过DC 18敏捷（特技）检定，扯坏需动作通过DC 20力量（运动）检定。",
+   "力量（运动）检定失败，未成功捆住目标。",
+   "目标未处于受擒、失能或束缚状态，无法使用链条捆绑。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"链条捆绑\",\"activation\":\"action\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":5},\"root\":[{\"kind\":\"if\",\"when\":\"target.has('受擒') || target.has('失能') || target.has('束缚')\",\"then\":[{\"kind\":\"check\",\"ability\":\"str\",\"skill\":\"运动\",\"dc\":13,\"onSuccess\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"XPHB:condition:束缚\"},{\"kind\":\"note\",\"text\":\"成功捆住目标（若绑住腿陷入束缚状态直至挣脱）。挣脱需动作通过DC 18敏捷（特技）检定，扯坏需动作通过DC 20力量（运动）检定。\"}],\"onFail\":[{\"kind\":\"note\",\"text\":\"力量（运动）检定失败，未成功捆住目标。\"}]}],\"else\":[{\"kind\":\"note\",\"text\":\"目标未处于受擒、失能或束缚状态，无法使用链条捆绑。\"}]}]}]}"
+ },
+ {
+  "key": "XPHB:item:燃油",
+  "name": "燃油",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "你能将燃油泼在一个生物、物件或一处空间上，或作为燃料使用。①泼洒生物/物件：替换一次攻击掷向20尺内目标，目标须通过DC 8+敏捷调整值+熟练加值的敏捷豁免，否则被油覆盖1分钟；在油干燥前受到火焰伤害时，额外受到5点火焰伤害。②泼洒空间：以操作动作覆盖5尺方形区域，点燃后燃烧2轮，进入或在该区域结束回合的生物受到5点火焰伤害（每回合限一次）。③燃料：可供油灯或提灯燃烧6小时。场地燃烧与手动计时需玩家处理。",
+  "notes": [
+   "将燃油泼在地面上覆盖5尺方形区域。点燃后持续燃烧2轮，任何进入该区域或在该区域结束回合的生物受到5点火焰伤害（同一生物每回合只受一次）。",
+   "倒入油灯或提灯中作为燃料，点着后可累计持续燃烧6小时。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"燃油\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品:燃油\"}],\"root\":[{\"kind\":\"choose\",\"prompt\":\"选择燃油使用方式\",\"options\":[{\"label\":\"泼洒生物或物件（20尺投掷）\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"8 + self.mod.dex + self.pb\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"inline\":{\"name\":\"覆油\",\"duration\":{\"minutes\":1},\"text\":\"被油覆盖。在油干燥前若受到火焰伤害，额外受到 5 点火焰伤害。\"}}]}]},{\"label\":\"泼洒地面（5尺方形区域）\",\"do\":[{\"kind\":\"note\",\"text\":\"将燃油泼在地面上覆盖5尺方形区域。点燃后持续燃烧2轮，任何进入该区域或在该区域结束回合的生物受到5点火焰伤害（同一生物每回合只受一次）。\"}]},{\"label\":\"作为燃料注入油灯/提灯\",\"do\":[{\"kind\":\"note\",\"text\":\"倒入油灯或提灯中作为燃料，点着后可累计持续燃烧6小时。\"}]}]}]}]}"
+ },
+ {
+  "key": "XPHB:item:铁蒺藜",
+  "name": "铁蒺藜",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个操作动作把一包铁蒺藜撒至地面并覆盖周围5尺内的一处5尺方形区域。任何生物每回合首次进入这片区域时必须通过一次DC 15的敏捷豁免，否则受到1点穿刺伤害，并且速度降至0直到其下一回合开始为止。重新收集需要花费10分钟（场地进入检定与减速效果需手动处理）。",
+  "notes": [
+   "把一包铁蒺藜撒至地面覆盖5尺方形区域。任何生物每回合首次进入该区域时必须通过DC 15敏捷豁免，否则受到1点穿刺伤害且速度降至0直到其下一回合开始。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"撒下铁蒺藜\",\"activation\":\"action\",\"targeting\":{\"type\":\"area\",\"range\":5,\"area\":{\"shape\":\"cube\",\"size\":5}},\"root\":[{\"kind\":\"note\",\"text\":\"把一包铁蒺藜撒至地面覆盖5尺方形区域。任何生物每回合首次进入该区域时必须通过DC 15敏捷豁免，否则受到1点穿刺伤害且速度降至0直到其下一回合开始。\"}]}]}"
+ },
+ {
+  "key": "XPHB:item:医疗包",
+  "name": "医疗包",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "一个医疗包有十次使用次数。以一个操作动作，你可以花费一次使用次数用来稳定一名生命值为 0 的陷入昏迷的生物的伤势（无需进行感知（医药）检定）。使用次数与目标伤势稳定状态由人工手动记录。",
+  "notes": [
+   "花费医疗包一次使用次数，稳定一名生命值为 0 的陷入昏迷的生物的伤势（无需医药检定；请手动记录使用次数和目标稳定状态）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"稳定伤势\",\"activation\":\"action\",\"targeting\":{\"type\":\"creature\",\"range\":5},\"root\":[{\"kind\":\"note\",\"text\":\"花费医疗包一次使用次数，稳定一名生命值为 0 的陷入昏迷的生物的伤势（无需医药检定；请手动记录使用次数和目标稳定状态）。\"}]}]}"
+ },
+ {
+  "key": "XPHB:condition:魅惑",
+  "name": "魅惑",
+  "by": "手写",
+  "automation": "partial",
+  "level": null,
+  "text": "你无法攻击魅惑源，也无法将其作为伤害性能力或魔法效应的对象。魅惑源对你进行的任何有关社交的属性检定均具有优势。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"effects\":{\"魅惑\":{\"tags\":[\"condition\"],\"flags\":{\"forbidTarget\":\"source\"},\"text\":\"魅惑源对你的社交检定具有优势（需要由魅惑源那边声明，目前手动处理）\"}}}"
+ },
+ {
+  "key": "XPHB:condition:昏迷",
+  "name": "昏迷",
+  "by": "手写",
+  "automation": "full",
+  "level": null,
+  "text": "你陷入失能与倒地状态，掉落手持物；此状态结束时倒地不会随之结束。速度为 0。以你为目标的攻击检定具有优势。力量与敏捷豁免自动失败。5 尺内命中你的攻击即重击。你无法感知周遭。",
+  "notes": [
+   "手上持握的东西全数掉落"
+  ],
+  "data": "{\"effects\":{\"昏迷\":{\"tags\":[\"condition\"],\"implies\":[\"XPHB:condition:失能\"],\"statics\":[{\"kind\":\"speedSet\",\"value\":0,\"lock\":true}],\"rollMods\":[{\"on\":{\"kind\":\"save\",\"ability\":[\"str\",\"dex\"]},\"who\":\"bearer\",\"op\":\"autoFail\",\"label\":\"昏迷：力量/敏捷豁免自动失败\"},{\"on\":{\"kind\":\"attack\"},\"who\":\"against\",\"op\":\"adv\",\"label\":\"目标昏迷\"},{\"on\":{\"kind\":\"attack\"},\"who\":\"against\",\"when\":\"dist(attacker, self) <= 5\",\"op\":\"autoCritOnHit\",\"label\":\"昏迷：5 尺内命中即重击\"}],\"onApply\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"XPHB:condition:倒地\",\"duration\":{\"manual\":true}},{\"kind\":\"note\",\"text\":\"手上持握的东西全数掉落\"}],\"flags\":{\"cannot\":[\"perceive\"]}}}}"
+ },
+ {
+  "key": "XPHB:action:协助",
+  "name": "协助",
+  "by": "手写",
+  "automation": "full",
+  "level": null,
+  "text": "",
+  "notes": [
+   "所选盟友下一次使用你所选技能/工具的属性检定具有优势（在你的下个回合开始前）"
+  ],
+  "data": "{\"actions\":[{\"id\":\"use\",\"name\":\"协助\",\"activation\":\"action\",\"targeting\":{\"type\":\"creature\",\"count\":1},\"root\":[{\"kind\":\"choose\",\"prompt\":\"协助的方式\",\"options\":[{\"label\":\"辅助一次攻击检定：虚晃 5 尺内的一个敌人\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"协助攻击\"}]},{\"label\":\"辅助一次属性检定（手动处理）\",\"do\":[{\"kind\":\"note\",\"text\":\"所选盟友下一次使用你所选技能/工具的属性检定具有优势（在你的下个回合开始前）\"}]}]}]}],\"effects\":{\"协助攻击\":{\"text\":\"下一次由协助者的盟友对该敌人进行的攻击检定具有优势；协助者的下一回合开始时消失。\",\"rollMods\":[{\"on\":{\"kind\":\"attack\"},\"who\":\"against\",\"when\":\"source != null && attacker.isAllyOf(source)\",\"op\":\"adv\",\"label\":\"协助\"}],\"duration\":{\"until\":{\"at\":\"turnStart\",\"of\":\"source\",\"nth\":1},\"endsOn\":[{\"event\":\"d20Rolled\",\"when\":\"event.kind == 'attack' && event.target == self.id && source != null && combatant(event.roller).isAllyOf(source)\"}]}}}}"
+ }
+]

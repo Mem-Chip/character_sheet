@@ -1,0 +1,496 @@
+[
+ {
+  "key": "XDMG:item:恐惧之锤",
+  "name": "恐惧之锤",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "持握期间可以魔法动作消耗1充能释放恐惧波动，30尺内自选生物须通过DC 15感知豁免，否则陷入恐慌1分钟。恐慌期间须尽力远离持有者、无法发动借机攻击、只能疾走或摆脱阻碍移动（无路可逃时可回避）。其回合结束时可重复豁免结束效应。特定移动限制需手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"恐惧波动\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:恐惧之锤\",\"n\":1}],\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"sphere\",\"radius\":30}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":15,\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"恐惧之锤恐慌\",\"to\":\"target\"}]}]}]}],\"effects\":{\"恐惧之锤恐慌\":{\"name\":\"恐惧之锤：恐慌\",\"implies\":[\"XPHB:condition:恐慌\"],\"duration\":{\"minutes\":1,\"saveEnds\":{\"ability\":\"wis\",\"dc\":15,\"at\":\"turnEnd\"}},\"text\":\"恐慌1分钟。回合内必须尽可能远离来源移动，不能发动借机攻击，只能执行疾走或摆脱阻止移动的效应（无路可走可回避）。回合结束可进行DC 15感知豁免。\"}}}"
+ },
+ {
+  "key": "XDMG:item:夸尔羽符，鞭",
+  "name": "夸尔羽符，鞭",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以魔法动作将羽符扔向 10 尺内一点，化作一根漂浮的鞭子（持续 1 小时，陷入失能或死亡时提前消失）。以附赠动作可命令鞭子移动至多 20 尺并对 10 尺内生物发动近战法术攻击（攻击加值 +9，命中造成 1d6 + 5 力场伤害）。",
+  "notes": [],
+  "data": "{\"resources\":[{\"id\":\"物品次数:夸尔羽符，鞭\",\"name\":\"夸尔羽符，鞭\",\"formula\":1,\"recovery\":\"long\"}],\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"挥出羽符：召唤浮空神鞭\",\"activation\":\"action\",\"tags\":[\"magical\"],\"cost\":[{\"resource\":\"物品次数:夸尔羽符，鞭\"}],\"root\":[{\"kind\":\"applyEffect\",\"template\":\"漂浮神鞭\",\"to\":\"self\"}]},{\"id\":\"strike\",\"name\":\"浮空神鞭：攻击\",\"activation\":\"bonus\",\"tags\":[\"magical\"],\"requires\":\"self.hasEffect('漂浮神鞭')\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":30},\"root\":[{\"kind\":\"attack\",\"bonus\":9,\"attack\":{\"melee\":true,\"spell\":true},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"1d6 + 5\",\"type\":\"力场\"}]}]},{\"id\":\"dismiss\",\"name\":\"遣散浮空神鞭\",\"activation\":\"action\",\"tags\":[\"magical\"],\"requires\":\"self.hasEffect('漂浮神鞭')\",\"root\":[{\"kind\":\"removeEffect\",\"match\":{\"name\":\"漂浮神鞭\"},\"from\":\"self\"}]}],\"effects\":{\"漂浮神鞭\":{\"duration\":{\"hours\":1},\"tags\":[\"magical\"],\"text\":\"浮空神鞭持续存在。每回合可以附赠动作命令其移动并攻击（+9 命中，1d6+5 力场伤害）。\"}}}"
+ },
+ {
+  "key": "XDMG:item:夸力许装置",
+  "name": "夸力许装置",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "隔间内的生物可以采取一个操作动作来移动夸力许装置的两个拉杆向上或向下。装置数据：大型物件，AC 20，HP 200，行走与游泳速度30尺（若腿部未展开则为0尺），免疫毒素和心灵伤害。拉杆控制具体详见表格。",
+  "notes": [
+   "移动至多两个拉杆。详见夸力许装置拉杆规则手动处理对应载具效果。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"夸力许装置：操作拉杆\",\"activation\":\"action\",\"root\":[{\"kind\":\"choose\",\"prompt\":\"选择拉杆操作\",\"options\":[{\"label\":\"拉杆5上：钳爪攻击\",\"do\":[{\"kind\":\"attack\",\"bonus\":8,\"attack\":{\"melee\":true,\"reach\":true,\"damageType\":\"bludgeoning\"},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"2d6\",\"type\":\"bludgeoning\"}]}]},{\"label\":\"拉杆5下：钳爪擒抱\",\"do\":[{\"kind\":\"attack\",\"bonus\":8,\"attack\":{\"melee\":true,\"reach\":true},\"onHit\":[{\"kind\":\"applyEffect\",\"template\":\"XPHB:condition:受擒\",\"state\":{\"escapeDc\":15}}]}]},{\"label\":\"其他拉杆（展开/收缩/百叶窗/移动/转向/照明/浮潜/舱门）\",\"do\":[{\"kind\":\"note\",\"text\":\"移动至多两个拉杆。详见夸力许装置拉杆规则手动处理对应载具效果。\"}]}]}]}]}"
+ },
+ {
+  "key": "XDMG:item:蝰蛇法杖",
+  "name": "蝰蛇法杖",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以附赠动作活化蛇头1分钟（AC 15，HP 20，免疫毒素与心灵伤害，HP归0法杖摧毁，还原回满HP）。执行攻击动作时可用活化蛇头进行一次攻击（熟练+感知加值，命中造成1d6穿刺+3d6毒素伤害）。",
+  "notes": [
+   "法杖头部变为活化毒蛇，持续1分钟或附赠动作还原。蛇头AC 15，HP 20，免疫毒素与心灵伤害。HP归0法杖摧毁，还原时恢复满生命。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"animate\",\"name\":\"蝰蛇法杖：活化蛇头\",\"activation\":\"bonus\",\"root\":[{\"kind\":\"note\",\"text\":\"法杖头部变为活化毒蛇，持续1分钟或附赠动作还原。蛇头AC 15，HP 20，免疫毒素与心灵伤害。HP归0法杖摧毁，还原时恢复满生命。\"}]},{\"id\":\"bite\",\"name\":\"蝰蛇法杖：蛇头攻击\",\"activation\":\"none\",\"targeting\":{\"type\":\"creature\",\"range\":5},\"root\":[{\"kind\":\"attack\",\"bonus\":\"pb + mod.wis\",\"onHit\":[{\"kind\":\"damage\",\"dice\":\"1d6\",\"type\":\"穿刺\"},{\"kind\":\"damage\",\"dice\":\"3d6\",\"type\":\"毒素\"}]}]}]}"
+ },
+ {
+  "key": "XDMG:item:老兵手杖",
+  "name": "老兵手杖",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "持握该物品时，你可以以一个附赠动作将手杖变为一把普通长剑，或将长剑变回手杖。",
+  "notes": [
+   "持握该物品时，以一个附赠动作将这根手杖变为一把普通的长剑，或者将长剑变回手杖"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"transform\",\"name\":\"老兵手杖：变形\",\"activation\":\"bonus\",\"root\":[{\"kind\":\"note\",\"text\":\"持握该物品时，以一个附赠动作将这根手杖变为一把普通的长剑，或者将长剑变回手杖\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:雷霆法杖",
+  "name": "雷霆法杖",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "+2 长棍（固定加值人物卡已处理）。包含电闪、雷鸣、雷霆、闪电打击、惊雷5项词条，每项直至次日黎明前限用一次。\n【电闪】：近战攻击命中时额外造成 2d6 闪电伤害。\n【雷鸣】：近战攻击命中时使法杖发出300尺雷响，目标进行 DC 17 体质豁免，失败陷入震慑至你下回合结束。\n【雷霆】：近战命中时以附赠动作同时触发电闪与雷鸣，仅消耗雷霆词条自身次数。\n【闪电打击】：以动作射出 120 尺长 5 尺宽闪电线，DC 17 敏捷豁免受 9d6 闪电伤害（成功半数）。\n【惊雷】：以动作制造 600 尺雷响，60 尺光环内生物 DC 17 体质豁免受 2d6 雷鸣伤害并耳聋 1 分钟（成功半数且不耳聋）。",
+  "notes": [],
+  "data": "{\"resources\":[{\"id\":\"物品次数:雷霆法杖:电闪\",\"name\":\"雷霆法杖：电闪\",\"formula\":1,\"recovery\":\"long\"},{\"id\":\"物品次数:雷霆法杖:雷鸣\",\"name\":\"雷霆法杖：雷鸣\",\"formula\":1,\"recovery\":\"long\"},{\"id\":\"物品次数:雷霆法杖:雷霆\",\"name\":\"雷霆法杖：雷霆\",\"formula\":1,\"recovery\":\"long\"},{\"id\":\"物品次数:雷霆法杖:闪电打击\",\"name\":\"雷霆法杖：闪电打击\",\"formula\":1,\"recovery\":\"long\"},{\"id\":\"物品次数:雷霆法杖:惊雷\",\"name\":\"雷霆法杖：惊雷\",\"formula\":1,\"recovery\":\"long\"}],\"automation\":\"partial\",\"triggers\":[{\"id\":\"lightning\",\"label\":\"雷霆法杖：电闪\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"optional\":true,\"when\":\"attack.melee\",\"cost\":[{\"resource\":\"物品次数:雷霆法杖:电闪\"}],\"do\":[{\"kind\":\"addDamage\",\"dice\":\"2d6\",\"type\":\"闪电\"}]},{\"id\":\"thunder\",\"label\":\"雷霆法杖：雷鸣\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"optional\":true,\"when\":\"attack.melee\",\"cost\":[{\"resource\":\"物品次数:雷霆法杖:雷鸣\"}],\"do\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":17,\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"XPHB:condition:震慑\",\"to\":\"target\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"self\",\"nth\":1}}}]}]},{\"id\":\"lightning-and-thunder\",\"label\":\"雷霆法杖：雷霆（电闪+雷鸣）\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"optional\":true,\"when\":\"attack.melee\",\"cost\":[{\"resource\":\"物品次数:雷霆法杖:雷霆\"},{\"economy\":\"bonus\"}],\"do\":[{\"kind\":\"addDamage\",\"dice\":\"2d6\",\"type\":\"闪电\"},{\"kind\":\"save\",\"ability\":\"con\",\"dc\":17,\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"XPHB:condition:震慑\",\"to\":\"target\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"self\",\"nth\":1}}}]}]}],\"actions\":[{\"id\":\"lightning-strike\",\"name\":\"雷霆法杖：闪电打击\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品次数:雷霆法杖:闪电打击\"}],\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"line\",\"length\":120,\"width\":5}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":17,\"onFail\":[{\"kind\":\"damage\",\"id\":\"ls\",\"dice\":\"9d6\",\"type\":\"闪电\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"ls\",\"scale\":0.5}]}]}]},{\"id\":\"thunderclap\",\"name\":\"雷霆法杖：惊雷\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品次数:雷霆法杖:惊雷\"}],\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"sphere\",\"radius\":60}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":17,\"onFail\":[{\"kind\":\"damage\",\"id\":\"tc\",\"dice\":\"2d6\",\"type\":\"雷鸣\"},{\"kind\":\"applyEffect\",\"template\":\"XPHB:condition:耳聋\",\"to\":\"target\",\"duration\":{\"minutes\":1}}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"tc\",\"scale\":0.5}]}]}]}]}"
+ },
+ {
+  "key": "XDMG:item:雷霆巨棒",
+  "name": "雷霆巨棒",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "力量设为20（人物卡已处理）。\n命中生物额外造成 1d8 雷鸣伤害，命中未被携带的物件额外造成 3d8 雷鸣伤害。\n【雷霆霹雳】：以动作击打坚硬表面，制造30尺锥状区域，区域内生物须通过 DC 15 力量豁免否则倒地，未被携带的非魔法物件受 3d8 雷鸣伤害。\n【地震术】：以动作敲击地面引起50尺半径强烈地震（次日黎明前限一次）。建筑物受50钝击伤害；地面生物 DC 20 敏捷豁免否则倒地，维持专注的生物 DC 20 体质豁免否则被打断。可打开30尺深10尺宽裂缝，上方生物须 DC 20 敏捷豁免否则落入，建筑物坍塌。",
+  "notes": [
+   "区域内未被穿着或携带的非魔法物件受到 3d8 雷鸣伤害。",
+   "区域内建筑物受到50钝击伤害；维持专注的生物须通过 DC 20 体质豁免否则专注被打断；可在地面打开30尺深10尺宽裂缝，裂缝上方生物须 DC 20 敏捷豁免否则坠落，建筑物坍塌落入。"
+  ],
+  "data": "{\"resources\":[{\"id\":\"物品次数:雷霆巨棒\",\"name\":\"雷霆巨棒：地震术\",\"formula\":1,\"recovery\":\"long\"}],\"automation\":\"partial\",\"triggers\":[{\"id\":\"thunder-hit\",\"label\":\"雷霆巨棒：额外雷鸣伤害\",\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"when\":\"attack.weapon\",\"do\":[{\"kind\":\"addDamage\",\"dice\":\"1d8\",\"type\":\"雷鸣\"}]}],\"actions\":[{\"id\":\"thunderclap\",\"name\":\"雷霆巨棒：雷霆霹雳\",\"activation\":\"action\",\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"cone\",\"size\":30}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"str\",\"dc\":15,\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"XPHB:condition:倒地\",\"to\":\"target\"}]}]},{\"kind\":\"note\",\"text\":\"区域内未被穿着或携带的非魔法物件受到 3d8 雷鸣伤害。\"}]},{\"id\":\"earthquake\",\"name\":\"雷霆巨棒：地震术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品次数:雷霆巨棒\"}],\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"cylinder\",\"radius\":50}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":20,\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"XPHB:condition:倒地\",\"to\":\"target\"}]}]},{\"kind\":\"note\",\"text\":\"区域内建筑物受到50钝击伤害；维持专注的生物须通过 DC 20 体质豁免否则专注被打断；可在地面打开30尺深10尺宽裂缝，裂缝上方生物须 DC 20 敏捷豁免否则坠落，建筑物坍塌落入。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:力场魔方",
+  "name": "力场魔方",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "拥有10发充能，每日黎明恢复1d6发。你可以按下立方体的一面并消耗充能以施展对应的法术（豁免DC 17）：法师护甲（1充能）、护盾术（1充能）、李欧蒙小屋（3充能）、魔邓肯私人密室（4充能）、欧提路克弹力法球（4充能）、力场墙（5充能）。",
+  "notes": [
+   "以自身为中心创造半径 9 尺力场半球巨蛋，持续 8 小时。巨蛋提供全遮蔽与舒适庇护所环境。",
+   "指定区域防范探知、传感器、心灵感应与传送，持续 24 小时。",
+   "豁免成功，未受影响",
+   "创造不可见的力场墙（专注至多10分钟），任何物理实体、攻击和法术均无法穿过。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"mage-armor\",\"name\":\"力场魔方：法师护甲\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"resource\":\"物品充能:力场魔方\",\"n\":1}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"touch\"},\"root\":[{\"kind\":\"applyEffect\",\"inline\":{\"name\":\"法师护甲\",\"duration\":{\"hours\":8},\"text\":\"未穿护甲的目标基础护甲等级变为 13 + 敏捷调整值。\"}}]},{\"id\":\"shield\",\"name\":\"力场魔方：护盾术\",\"activation\":\"reaction\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"resource\":\"物品充能:力场魔方\",\"n\":1}],\"trigger\":{\"on\":\"attackHit\",\"role\":\"target\",\"window\":\"before\"},\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"duration\":{\"until\":{\"at\":\"turnStart\",\"of\":\"bearer\",\"nth\":1}},\"inline\":{\"name\":\"护盾\",\"statics\":[{\"kind\":\"ac\",\"bonus\":5}],\"triggers\":[{\"id\":\"mm\",\"label\":\"护盾术：免疫魔法飞弹\",\"on\":\"damageIncoming\",\"role\":\"target\",\"window\":\"before\",\"when\":\"event.label == '魔法飞弹'\",\"modify\":[{\"op\":\"cancel\"}]}]}}]},{\"id\":\"tiny-hut\",\"name\":\"力场魔方：李欧蒙小屋\",\"activation\":{\"minutes\":1},\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"resource\":\"物品充能:力场魔方\",\"n\":3}],\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"note\",\"text\":\"以自身为中心创造半径 9 尺力场半球巨蛋，持续 8 小时。巨蛋提供全遮蔽与舒适庇护所环境。\"}]},{\"id\":\"private-sanctum\",\"name\":\"力场魔方：魔邓肯私人密室\",\"activation\":{\"minutes\":10},\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"resource\":\"物品充能:力场魔方\",\"n\":4}],\"targeting\":{\"type\":\"area\",\"range\":120,\"area\":{\"shape\":\"cube\",\"size\":100}},\"root\":[{\"kind\":\"note\",\"text\":\"指定区域防范探知、传感器、心灵感应与传送，持续 24 小时。\"}]},{\"id\":\"resilient-sphere\",\"name\":\"力场魔方：欧提路克弹力法球\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"resource\":\"物品充能:力场魔方\",\"n\":4}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":30},\"root\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":17,\"onFail\":[{\"kind\":\"applyEffect\",\"inline\":{\"name\":\"弹力法球\",\"duration\":{\"minutes\":1},\"text\":\"被闪耀的力场球封闭（专注至多1分钟）。任何物理障碍物、能量或法术效应均无法进出该法球。\"}}],\"onSuccess\":[{\"kind\":\"note\",\"text\":\"豁免成功，未受影响\"}]}]},{\"id\":\"wall-of-force\",\"name\":\"力场魔方：力场墙\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"resource\":\"物品充能:力场魔方\",\"n\":5}],\"concentration\":{\"minutes\":10},\"targeting\":{\"type\":\"area\",\"range\":120,\"area\":{\"shape\":\"line\",\"length\":100,\"width\":1}},\"root\":[{\"kind\":\"note\",\"text\":\"创造不可见的力场墙（专注至多10分钟），任何物理实体、攻击和法术均无法穿过。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:力场珠",
+  "name": "力场珠",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以魔法动作投出至多60尺。引发10尺半径球状爆炸，范围内的生物进行DC 15敏捷豁免，失败受5d4力场伤害并被困在持续1分钟的隐形力场球中。成功者被推出范围。力场球阻挡攻击和效应，被困生物可以推动力场球移动（半速）。",
+  "notes": [
+   "豁免成功，沿着远离球心方向被推出范围"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"投掷力场珠\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品:力场珠\"}],\"targeting\":{\"type\":\"area\",\"range\":60,\"area\":{\"shape\":\"sphere\",\"radius\":10}},\"root\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":15,\"onFail\":[{\"kind\":\"damage\",\"dice\":\"5d4\",\"type\":\"力场\"},{\"kind\":\"applyEffect\",\"inline\":{\"name\":\"力场球困禁\",\"duration\":{\"minutes\":1},\"text\":\"被困在隐形力场球中。攻击或其他效应无法穿透力场球。可以用一个操作动作推动力场障壁移动半速。\"}}],\"onSuccess\":[{\"kind\":\"note\",\"text\":\"豁免成功，沿着远离球心方向被推出范围\"}]}]}]}"
+ },
+ {
+  "key": "XDMG:item:流星戒指",
+  "name": "流星戒指",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "佩戴此戒指期间可随意施展舞光术或光亮术。具有6发充能：消耗1充能施展妖火（DC 15）；消耗2充能创造至多4个球状闪电（专注至多1分钟，DC 15敏豁，球体移动与碰撞需手动处理）；消耗1至3充能发射流星（每充能一粒，60尺内15尺立方区域，DC 15敏捷豁免，失败受5d4光耀伤害，成功减半）。",
+  "notes": [
+   "施展舞光术，在120尺内创造至多四个火炬大小的光源，专注至多1分钟。",
+   "施展光亮术，使接触的一个物体发出20尺明亮光照和额外20尺微光光照，持续1小时。",
+   "创造至多4个3尺直径的闪电球体，出现于120尺内，专注至多1分钟。附赠动作可移动至多30尺。球体进入生物5尺内时放电消失：DC 15敏捷豁免，失败受闪电伤害（1球: 4d12; 2球: 5d4; 3球: 2d6; 4球: 2d4），成功减半。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"dancing-lights\",\"name\":\"流星戒指：舞光术\",\"activation\":\"action\",\"concentration\":{\"minutes\":1},\"root\":[{\"kind\":\"note\",\"text\":\"施展舞光术，在120尺内创造至多四个火炬大小的光源，专注至多1分钟。\"}]},{\"id\":\"light\",\"name\":\"流星戒指：光亮术\",\"activation\":\"action\",\"root\":[{\"kind\":\"note\",\"text\":\"施展光亮术，使接触的一个物体发出20尺明亮光照和额外20尺微光光照，持续1小时。\"}]},{\"id\":\"faerie-fire\",\"name\":\"流星戒指：妖火\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:流星戒指\",\"n\":1}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"area\",\"range\":60,\"area\":{\"shape\":\"cube\",\"size\":20}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":15,\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"妖火\"}]}]}]},{\"id\":\"ball-lightning\",\"name\":\"流星戒指：球状闪电\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:流星戒指\",\"n\":2}],\"concentration\":{\"minutes\":1},\"root\":[{\"kind\":\"note\",\"text\":\"创造至多4个3尺直径的闪电球体，出现于120尺内，专注至多1分钟。附赠动作可移动至多30尺。球体进入生物5尺内时放电消失：DC 15敏捷豁免，失败受闪电伤害（1球: 4d12; 2球: 5d4; 3球: 2d6; 4球: 2d4），成功减半。\"}]},{\"id\":\"shooting-stars\",\"name\":\"流星戒指：流星（消耗1充能）\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:流星戒指\",\"n\":1}],\"targeting\":{\"type\":\"area\",\"range\":60,\"area\":{\"shape\":\"cube\",\"size\":15}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":15,\"onFail\":[{\"kind\":\"damage\",\"dice\":\"5d4\",\"type\":\"光耀\"}],\"onSuccess\":[{\"kind\":\"damage\",\"dice\":\"5d4\",\"type\":\"光耀\",\"scale\":0.5}]}]}]}],\"effects\":{\"妖火\":{\"text\":\"发出10尺微光；无法受益于隐形状态；能看见受术者的攻击者对其攻击检定具有优势。\",\"rollMods\":[{\"on\":{\"kind\":\"attack\"},\"who\":\"against\",\"when\":\"canSee(attacker, self)\",\"op\":\"adv\",\"label\":\"妖火：攻击优势\"}]}}}"
+ },
+ {
+  "key": "XDMG:item:龙珠",
+  "name": "龙珠",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "同调期间可魔法动作窥视龙珠（DC 15 魅力豁免，成功掌控龙珠，失败被其魅惑且龙珠可随意对你施展 DC 18 暗示术）。掌控期间可以魔法动作呼唤40英里内色彩巨龙赶来（1小时一次）。消耗充能施法（豁免 DC 18）：侦测魔法（0充能）、昼明术（1充能）、防死结界（2充能）、探知术（3充能）、疗伤术（9环，4充能）。",
+  "notes": [
+   "你被龙珠魅惑直至同调中断，无法自行中断同调，龙珠可随意对你施展暗示术（豁免 DC 18）。",
+   "你成功掌控龙珠直至同调中断。",
+   "发出心灵感应呼唤向所有方向延伸40英里。范围内的色彩龙将被迫以最直接路线尽快赶来（巨龙神祇不受影响）。一经使用，一小时内无法再次使用。",
+   "施展侦测魔法（消耗 0 充能，持续专注至多 10 分钟）。",
+   "施展昼明术（在触碰的物件或空间创造60尺明亮光照及额外60尺微光，持续1小时）。",
+   "在目标周围10尺内创造隐形无形眼球进行窥视。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"peer\",\"name\":\"龙珠：窥视龙珠\",\"activation\":\"action\",\"root\":[{\"kind\":\"save\",\"ability\":\"cha\",\"dc\":15,\"onFail\":[{\"kind\":\"note\",\"text\":\"你被龙珠魅惑直至同调中断，无法自行中断同调，龙珠可随意对你施展暗示术（豁免 DC 18）。\"}],\"onSuccess\":[{\"kind\":\"note\",\"text\":\"你成功掌控龙珠直至同调中断。\"}]}]},{\"id\":\"call-dragons\",\"name\":\"龙珠：呼唤巨龙\",\"activation\":\"action\",\"root\":[{\"kind\":\"note\",\"text\":\"发出心灵感应呼唤向所有方向延伸40英里。范围内的色彩龙将被迫以最直接路线尽快赶来（巨龙神祇不受影响）。一经使用，一小时内无法再次使用。\"}]},{\"id\":\"detect-magic\",\"name\":\"龙珠：侦测魔法\",\"activation\":\"action\",\"concentration\":{\"minutes\":10},\"root\":[{\"kind\":\"note\",\"text\":\"施展侦测魔法（消耗 0 充能，持续专注至多 10 分钟）。\"}]},{\"id\":\"daylight\",\"name\":\"龙珠：昼明术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:龙珠\",\"n\":1}],\"root\":[{\"kind\":\"note\",\"text\":\"施展昼明术（在触碰的物件或空间创造60尺明亮光照及额外60尺微光，持续1小时）。\"}]},{\"id\":\"death-ward\",\"name\":\"龙珠：防死结界\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:龙珠\",\"n\":2}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"touch\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"防死结界\"}]},{\"id\":\"scrying\",\"name\":\"龙珠：探知术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:龙珠\",\"n\":3}],\"concentration\":{\"minutes\":10},\"targeting\":{\"type\":\"creature\",\"count\":1},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":18,\"onFail\":[{\"kind\":\"note\",\"text\":\"在目标周围10尺内创造隐形无形眼球进行窥视。\"}]}]},{\"id\":\"cure-wounds-9\",\"name\":\"龙珠：疗伤术（9环）\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:龙珠\",\"n\":4}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"touch\"},\"root\":[{\"kind\":\"heal\",\"amount\":\"18d8 + self.spell.mod\"}]}],\"effects\":{\"防死结界\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"hours\":8},\"triggers\":[{\"id\":\"ward\",\"label\":\"防死结界：免死并降为 1 生命值\",\"on\":\"reducedTo0\",\"role\":\"target\",\"window\":\"before\",\"modify\":[{\"op\":\"setHp\",\"value\":1}],\"do\":[{\"kind\":\"removeEffect\",\"match\":{\"name\":\"防死结界\"},\"from\":\"self\"}]}]}}}"
+ },
+ {
+  "key": "XDMG:item:魅惑法杖",
+  "name": "魅惑法杖",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "具有10充能。每日黎明重获1d8+2充能，充能耗尽时掷d20出1摧毁。\n【施法】消耗1充能施展魅惑类人、命令术或通晓语言（使用自身法术豁免DC）。\n【惑控反射】若仅以你为目标的惑控法术豁免成功，可以反应消耗1充能将法术反射给原施法者。\n【惑控抵抗】若仅以你为目标的惑控法术豁免失败，可将其改为成功（次日黎明前限用一次）。",
+  "notes": [
+   "目标豁免失败，在其下一回合必须服从指定指令（趴下、阻拦、过来、放下或走开）。",
+   "持续 1 小时内，你能理解所听到的任何口头语言字面含义，并能理解读到的任何书面文字字面含义。",
+   "若一道惑控学派法术仅以你为目标且你豁免成功，反应消耗1充能将法术反射给原施法者，如同你施展了该法术（使用自身法术DC）。",
+   "若一道惑控学派法术仅以你为目标且你豁免失败，可将失败的豁免改为成功。次日黎明前无法再次使用。"
+  ],
+  "data": "{\"resources\":[{\"id\":\"物品次数:魅惑法杖\",\"name\":\"魅惑法杖：惑控抵抗\",\"formula\":1,\"recovery\":\"long\"}],\"automation\":\"partial\",\"actions\":[{\"id\":\"charm-person\",\"name\":\"魅惑法杖：魅惑类人\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:魅惑法杖\",\"n\":1}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":30},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"魅惑类人\"}]}]},{\"id\":\"command\",\"name\":\"魅惑法杖：命令术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:魅惑法杖\",\"n\":1}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"note\",\"text\":\"目标豁免失败，在其下一回合必须服从指定指令（趴下、阻拦、过来、放下或走开）。\"}]}]},{\"id\":\"comprehend-languages\",\"name\":\"魅惑法杖：通晓语言\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:魅惑法杖\",\"n\":1}],\"root\":[{\"kind\":\"note\",\"text\":\"持续 1 小时内，你能理解所听到的任何口头语言字面含义，并能理解读到的任何书面文字字面含义。\"}]},{\"id\":\"enchantment-reflection\",\"name\":\"魅惑法杖：惑控反射\",\"activation\":\"reaction\",\"trigger\":{\"on\":\"d20Rolled\"},\"cost\":[{\"resource\":\"物品充能:魅惑法杖\",\"n\":1}],\"root\":[{\"kind\":\"note\",\"text\":\"若一道惑控学派法术仅以你为目标且你豁免成功，反应消耗1充能将法术反射给原施法者，如同你施展了该法术（使用自身法术DC）。\"}]},{\"id\":\"enchantment-resistance\",\"name\":\"魅惑法杖：惑控抵抗\",\"activation\":\"none\",\"cost\":[{\"resource\":\"物品次数:魅惑法杖\"}],\"root\":[{\"kind\":\"note\",\"text\":\"若一道惑控学派法术仅以你为目标且你豁免失败，可将失败的豁免改为成功。次日黎明前无法再次使用。\"}]}],\"effects\":{\"魅惑类人\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:魅惑\"],\"duration\":{\"hours\":1,\"endsOn\":[{\"event\":\"damageTaken\"}]},\"text\":\"陷入魅惑状态，视施法者为友好同伴。受到伤害时此效应提前终止。\"}}}"
+ },
+ {
+  "key": "XDMG:item:魅惑镜片",
+  "name": "魅惑镜片",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "具有3充能（每日黎明重获）。可消耗1至3充能施展对应环阶的魅惑类人（豁免DC 13）。若正在与其战斗则豁免具有优势需手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"charm-person-1\",\"name\":\"魅惑类人（1环）\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:魅惑镜片\",\"n\":1}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":30,\"filter\":\"target.type == '类人生物'\"},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":13,\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"魅惑类人\"}]}]},{\"id\":\"charm-person-2\",\"name\":\"魅惑类人（2环）\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:魅惑镜片\",\"n\":2}],\"targeting\":{\"type\":\"creature\",\"count\":2,\"range\":30,\"filter\":\"target.type == '类人生物'\"},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":13,\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"魅惑类人\"}]}]},{\"id\":\"charm-person-3\",\"name\":\"魅惑类人（3环）\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:魅惑镜片\",\"n\":3}],\"targeting\":{\"type\":\"creature\",\"count\":3,\"range\":30,\"filter\":\"target.type == '类人生物'\"},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":13,\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"魅惑类人\"}]}]}],\"effects\":{\"魅惑类人\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:魅惑\"],\"duration\":{\"hours\":1,\"endsOn\":[{\"event\":\"damageTaken\"}]},\"text\":\"陷入魅惑状态，视施法者为友好同伴。受到伤害时提前终止。\"}}}"
+ },
+ {
+  "key": "XDMG:item:迷情媚药",
+  "name": "迷情媚药",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以附赠动作饮用此药水后，接下来 10 分钟内，你将被你看见的第一名生物魅惑。魅惑效应持续 1 小时。具体魅惑目标与时机需手动处理。",
+  "notes": [
+   "接下来 10 分钟内，你将被你看见的第一名生物魅惑，持续 1 小时（需手动处理魅惑状态及魅惑源）"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"饮用迷情媚药\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"物品:迷情媚药\"}],\"root\":[{\"kind\":\"note\",\"text\":\"接下来 10 分钟内，你将被你看见的第一名生物魅惑，持续 1 小时（需手动处理魅惑状态及魅惑源）\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:迷醉香水",
+  "name": "迷醉香水",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "使用一个魔法动作将香水喷洒或涂抹在自己身上，持续 1 小时。在此期间，对试图影响周边 5 尺内生物而进行的所有魅力（欺瞒和游说）检定具有优势。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"使用迷醉香水\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品:迷醉香水\"}],\"root\":[{\"kind\":\"applyEffect\",\"template\":\"迷醉香水\",\"to\":\"self\"}]}],\"effects\":{\"迷醉香水\":{\"duration\":{\"hours\":1},\"tags\":[\"magical\"],\"rollMods\":[{\"on\":{\"kind\":\"check\",\"ability\":\"cha\",\"skill\":[\"欺瞒\",\"游说\"]},\"who\":\"bearer\",\"when\":\"ask('目标是否为周边 5 尺内的生物？')\",\"op\":\"adv\",\"label\":\"迷醉香水：魅力（欺瞒、游说）检定优势\"}],\"text\":\"对试图影响周边 5 尺内生物而进行的所有魅力（欺瞒和游说）检定具有优势。\"}}}"
+ },
+ {
+  "key": "XDMG:item:命令火元素火盆",
+  "name": "命令火元素火盆",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当你位于火盆5尺内时，可以一个魔法动作召唤一只火元素。火元素服从你的命令，并在你的回合之后立即行动，持续1小时，或直到其死亡或以附赠动作解消。直至次日黎明前无法再次使用。具体召唤生物需手动处理。",
+  "notes": [
+   "召唤一只火元素出现在火盆最近的未占据空间，服从命令并在你之后立即执行回合，持续1小时或至死亡/以附赠动作解消。具体生物手动处理。"
+  ],
+  "data": "{\"resources\":[{\"id\":\"物品次数:命令火元素火盆\",\"name\":\"命令火元素火盆\",\"formula\":1,\"recovery\":\"long\"}],\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"命令火元素火盆：召唤火元素\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品次数:命令火元素火盆\"}],\"root\":[{\"kind\":\"note\",\"text\":\"召唤一只火元素出现在火盆最近的未占据空间，服从命令并在你之后立即执行回合，持续1小时或至死亡/以附赠动作解消。具体生物手动处理。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:命令气元素香炉",
+  "name": "命令气元素香炉",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当你轻轻挥动这件香炉时，可以用一个魔法动作召唤一只气元素。气元素服从你的命令，并在你的回合之后立即行动，持续1小时，或直到其死亡或以附赠动作解消。直至次日黎明前无法再次使用。具体召唤生物需手动处理。",
+  "notes": [
+   "召唤一只气元素出现在香炉最近的未占据空间，服从命令并在你之后立即执行回合，持续1小时或至死亡/以附赠动作解消。具体生物手动处理。"
+  ],
+  "data": "{\"resources\":[{\"id\":\"物品次数:命令气元素香炉\",\"name\":\"命令气元素香炉\",\"formula\":1,\"recovery\":\"long\"}],\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"命令气元素香炉：召唤气元素\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品次数:命令气元素香炉\"}],\"root\":[{\"kind\":\"note\",\"text\":\"召唤一只气元素出现在香炉最近的未占据空间，服从命令并在你之后立即执行回合，持续1小时或至死亡/以附赠动作解消。具体生物手动处理。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:命令水元素水钵",
+  "name": "命令水元素水钵",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "当你位于水钵5尺内且其中盛满水时，可以一个魔法动作召唤一只水元素。水元素服从你的命令，并在你的回合之后立即行动，持续1小时，或直到其死亡或以附赠动作解消。直至次日黎明前无法再次使用。具体召唤生物需手动处理。",
+  "notes": [
+   "召唤一只水元素出现在水钵最近的未占据空间，服从命令并在你之后立即执行回合，持续1小时或至死亡/以附赠动作解消。具体生物手动处理。"
+  ],
+  "data": "{\"resources\":[{\"id\":\"物品次数:命令水元素水钵\",\"name\":\"命令水元素水钵\",\"formula\":1,\"recovery\":\"long\"}],\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"命令水元素水钵：召唤水元素\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品次数:命令水元素水钵\"}],\"root\":[{\"kind\":\"note\",\"text\":\"召唤一只水元素出现在水钵最近的未占据空间，服从命令并在你之后立即执行回合，持续1小时或至死亡/以附赠动作解消。具体生物手动处理。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:命令土元素石核",
+  "name": "命令土元素石核",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个魔法动作接触地面召唤一只土元素（持续1小时、死亡或以附赠动作解消时消失），理解你的语言并在你之后立即行动。直至次日黎明前无法再次使用。召唤实体需手动在遭遇中添加。",
+  "notes": [
+   "用石核接触地面，以魔法动作在30尺内未占据空间召唤一只土元素。土元素理解你的语言、服从命令、使用你的先攻值并在你之后立即执行回合。持续1小时或直至死亡或附赠动作解消。请手动在遭遇中添加土元素实体。",
+   "以一个附赠动作解消召唤出的土元素。"
+  ],
+  "data": "{\"resources\":[{\"id\":\"物品次数:命令土元素石核\",\"name\":\"命令土元素石核\",\"formula\":1,\"recovery\":\"long\"}],\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"召唤土元素\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品次数:命令土元素石核\"}],\"targeting\":{\"type\":\"point\",\"range\":30},\"root\":[{\"kind\":\"note\",\"text\":\"用石核接触地面，以魔法动作在30尺内未占据空间召唤一只土元素。土元素理解你的语言、服从命令、使用你的先攻值并在你之后立即执行回合。持续1小时或直至死亡或附赠动作解消。请手动在遭遇中添加土元素实体。\"}]},{\"id\":\"dismiss\",\"name\":\"解消土元素\",\"activation\":\"bonus\",\"root\":[{\"kind\":\"note\",\"text\":\"以一个附赠动作解消召唤出的土元素。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:命令元素戒指（火）",
+  "name": "命令元素戒指（火）",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "着装戒指期间，对元素攻击检定具有优势，元素对你的攻击具有劣势。可以一个魔法动作执行【元素强令】（60 尺内元素 DC 18 感知豁免，失败魅惑至你下回合开始并由你控制其下一回合）。懂火族语，火焰伤害免疫（人物卡处理）。消耗充能施展法术（豁免 DC 18）：燃烧之手（1充能）、火球术（2充能）、火墙术（3充能）、火焰风暴（4充能）。",
+  "notes": [
+   "消耗 3 充能施展火墙术（豁免 DC 18，专注至多 1 分钟）。",
+   "消耗 4 充能施展火焰风暴（豁免 DC 18）。区域内生物敏捷豁免，失败受 7d10 火焰伤害，成功半减。"
+  ],
+  "data": "{\"automation\":\"partial\",\"rollMods\":[{\"on\":{\"kind\":\"attack\"},\"who\":\"bearer\",\"when\":\"ask('目标是元素吗？')\",\"op\":\"adv\",\"label\":\"元素灾厄：对元素攻击优势\"},{\"on\":{\"kind\":\"attack\"},\"who\":\"against\",\"when\":\"ask('攻击者是元素吗？')\",\"op\":\"disadv\",\"label\":\"元素灾厄：元素对你攻击劣势\"}],\"actions\":[{\"id\":\"dominate-elemental\",\"name\":\"命令元素戒指（火）：元素强令\",\"activation\":\"action\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":18,\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"元素强令\",\"to\":\"target\"}]}]},{\"id\":\"burning-hands\",\"name\":\"命令元素戒指（火）：燃烧之手\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:命令元素戒指（火）\",\"n\":1}],\"targeting\":{\"type\":\"area\",\"area\":{\"shape\":\"cone\",\"length\":15}},\"root\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":18,\"onFail\":[{\"kind\":\"damage\",\"id\":\"fire\",\"dice\":\"3d6\",\"type\":\"火焰\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"fire\",\"scale\":0.5}]}]},{\"id\":\"fireball\",\"name\":\"命令元素戒指（火）：火球术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:命令元素戒指（火）\",\"n\":2}],\"targeting\":{\"type\":\"area\",\"range\":150,\"area\":{\"shape\":\"sphere\",\"radius\":20}},\"root\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":18,\"onFail\":[{\"kind\":\"damage\",\"id\":\"fire\",\"dice\":\"8d6\",\"type\":\"火焰\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"fire\",\"scale\":0.5}]}]},{\"id\":\"wall-of-fire\",\"name\":\"命令元素戒指（火）：火墙术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:命令元素戒指（火）\",\"n\":3}],\"concentration\":{\"minutes\":1},\"root\":[{\"kind\":\"note\",\"text\":\"消耗 3 充能施展火墙术（豁免 DC 18，专注至多 1 分钟）。\"}]},{\"id\":\"fire-storm\",\"name\":\"命令元素戒指（火）：火焰风暴\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:命令元素戒指（火）\",\"n\":4}],\"root\":[{\"kind\":\"note\",\"text\":\"消耗 4 充能施展火焰风暴（豁免 DC 18）。区域内生物敏捷豁免，失败受 7d10 火焰伤害，成功半减。\"}]}],\"effects\":{\"元素强令\":{\"duration\":{\"until\":{\"at\":\"turnStart\",\"of\":\"source\",\"nth\":1}},\"implies\":[\"XPHB:condition:魅惑\"],\"text\":\"陷入魅惑状态，且由施加者决定其下一回合使用移动和动作做什么。\"}}}"
+ },
+ {
+  "key": "XDMG:item:命令元素戒指（气）",
+  "name": "命令元素戒指（气）",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "着装戒指期间，对元素攻击检定具有优势，元素对你的攻击具有劣势。可以一个魔法动作执行【元素强令】（60 尺内元素 DC 18 感知豁免，失败魅惑至你下回合开始并由你控制其下一回合）。懂气族语，闪电抗性，获得等同于步行速度的飞行速度并可悬浮（人物卡处理）。消耗充能施展法术（豁免 DC 18）：羽落术（0充能）、风墙术（1充能）、造风术（2充能）、连锁闪电（3充能）。",
+  "notes": [
+   "消耗 0 充能施展羽落术（DC 18）。指定 60 尺内至多 5 名下坠生物，下落速度变为每轮 60 尺，着陆不受坠落伤害。",
+   "消耗 1 充能施展风墙术（豁免 DC 18）。",
+   "消耗 2 充能施展造风术（豁免 DC 18）。",
+   "消耗 3 充能施展连锁闪电（豁免 DC 18）。造成 10d8 闪电伤害，敏捷豁免半减，并跳向至多 3 个次要目标。"
+  ],
+  "data": "{\"automation\":\"partial\",\"rollMods\":[{\"on\":{\"kind\":\"attack\"},\"who\":\"bearer\",\"when\":\"ask('目标是元素吗？')\",\"op\":\"adv\",\"label\":\"元素灾厄：对元素攻击优势\"},{\"on\":{\"kind\":\"attack\"},\"who\":\"against\",\"when\":\"ask('攻击者是元素吗？')\",\"op\":\"disadv\",\"label\":\"元素灾厄：元素对你攻击劣势\"}],\"actions\":[{\"id\":\"dominate-elemental\",\"name\":\"命令元素戒指（气）：元素强令\",\"activation\":\"action\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":18,\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"元素强令\",\"to\":\"target\"}]}]},{\"id\":\"feather-fall\",\"name\":\"命令元素戒指（气）：羽落术\",\"activation\":\"reaction\",\"trigger\":{\"on\":\"damageIncoming\",\"role\":\"any\"},\"root\":[{\"kind\":\"note\",\"text\":\"消耗 0 充能施展羽落术（DC 18）。指定 60 尺内至多 5 名下坠生物，下落速度变为每轮 60 尺，着陆不受坠落伤害。\"}]},{\"id\":\"wind-wall\",\"name\":\"命令元素戒指（气）：风墙术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:命令元素戒指（气）\",\"n\":1}],\"concentration\":{\"minutes\":1},\"root\":[{\"kind\":\"note\",\"text\":\"消耗 1 充能施展风墙术（豁免 DC 18）。\"}]},{\"id\":\"gust-of-wind\",\"name\":\"命令元素戒指（气）：造风术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:命令元素戒指（气）\",\"n\":2}],\"concentration\":{\"minutes\":1},\"root\":[{\"kind\":\"note\",\"text\":\"消耗 2 充能施展造风术（豁免 DC 18）。\"}]},{\"id\":\"chain-lightning\",\"name\":\"命令元素戒指（气）：连锁闪电\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:命令元素戒指（气）\",\"n\":3}],\"root\":[{\"kind\":\"note\",\"text\":\"消耗 3 充能施展连锁闪电（豁免 DC 18）。造成 10d8 闪电伤害，敏捷豁免半减，并跳向至多 3 个次要目标。\"}]}],\"effects\":{\"元素强令\":{\"duration\":{\"until\":{\"at\":\"turnStart\",\"of\":\"source\",\"nth\":1}},\"implies\":[\"XPHB:condition:魅惑\"],\"text\":\"陷入魅惑状态，且由施加者决定其下一回合使用移动和动作做什么。\"}}}"
+ },
+ {
+  "key": "XDMG:item:命令元素戒指（水）",
+  "name": "命令元素戒指（水）",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "着装戒指期间，对元素攻击检定具有优势，元素对你的攻击具有劣势。可以一个魔法动作执行【元素强令】（60 尺内元素 DC 18 感知豁免，失败魅惑至你下回合开始并由你控制其下一回合）。懂水族语，60 尺游泳速度且可水下呼吸（人物卡处理）。消耗充能施展法术（豁免 DC 18）：造水术/枯水术（1充能）、冰风暴（2充能）、水上行走（2充能）、冰墙术（3充能）、海啸术（5充能）。",
+  "notes": [
+   "消耗 1 充能施展造水术或枯水术（豁免 DC 18）。制造至多 10 加仑清水，或消除等量水体/摧毁 30 尺立方范围内的雾气。",
+   "消耗 2 充能施展水上行走（豁免 DC 18）。使至多 10 名自愿生物获得在液体表面行走的能力，持续 1 小时。",
+   "消耗 3 充能施展冰墙术（豁免 DC 18，专注至多 10 分钟）。",
+   "消耗 5 充能施展海啸术（豁免 DC 18，专注至多 6 轮）。创造一堵高至多 300 尺、长至多 300 尺、厚 50 尺的水墙向前奔涌。"
+  ],
+  "data": "{\"automation\":\"partial\",\"rollMods\":[{\"on\":{\"kind\":\"attack\"},\"who\":\"bearer\",\"when\":\"ask('目标是元素吗？')\",\"op\":\"adv\",\"label\":\"元素灾厄：对元素攻击优势\"},{\"on\":{\"kind\":\"attack\"},\"who\":\"against\",\"when\":\"ask('攻击者是元素吗？')\",\"op\":\"disadv\",\"label\":\"元素灾厄：元素对你攻击劣势\"}],\"actions\":[{\"id\":\"dominate-elemental\",\"name\":\"命令元素戒指（水）：元素强令\",\"activation\":\"action\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":18,\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"元素强令\",\"to\":\"target\"}]}]},{\"id\":\"create-or-destroy-water\",\"name\":\"命令元素戒指（水）：造水术/枯水术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:命令元素戒指（水）\",\"n\":1}],\"root\":[{\"kind\":\"note\",\"text\":\"消耗 1 充能施展造水术或枯水术（豁免 DC 18）。制造至多 10 加仑清水，或消除等量水体/摧毁 30 尺立方范围内的雾气。\"}]},{\"id\":\"ice-storm\",\"name\":\"命令元素戒指（水）：冰风暴\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:命令元素戒指（水）\",\"n\":2}],\"targeting\":{\"type\":\"area\",\"range\":300,\"area\":{\"shape\":\"cylinder\",\"radius\":20}},\"root\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":18,\"onFail\":[{\"kind\":\"damage\",\"id\":\"bludg\",\"dice\":\"2d8\",\"type\":\"钝击\"},{\"kind\":\"damage\",\"id\":\"cold\",\"dice\":\"4d6\",\"type\":\"寒冷\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"bludg\",\"scale\":0.5},{\"kind\":\"damage\",\"ref\":\"cold\",\"scale\":0.5}]}]},{\"id\":\"water-walk\",\"name\":\"命令元素戒指（水）：水上行走\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:命令元素戒指（水）\",\"n\":2}],\"root\":[{\"kind\":\"note\",\"text\":\"消耗 2 充能施展水上行走（豁免 DC 18）。使至多 10 名自愿生物获得在液体表面行走的能力，持续 1 小时。\"}]},{\"id\":\"wall-of-ice\",\"name\":\"命令元素戒指（水）：冰墙术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:命令元素戒指（水）\",\"n\":3}],\"concentration\":{\"minutes\":10},\"root\":[{\"kind\":\"note\",\"text\":\"消耗 3 充能施展冰墙术（豁免 DC 18，专注至多 10 分钟）。\"}]},{\"id\":\"tsunami\",\"name\":\"命令元素戒指（水）：海啸术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:命令元素戒指（水）\",\"n\":5}],\"concentration\":{\"rounds\":6},\"root\":[{\"kind\":\"note\",\"text\":\"消耗 5 充能施展海啸术（豁免 DC 18，专注至多 6 轮）。创造一堵高至多 300 尺、长至多 300 尺、厚 50 尺的水墙向前奔涌。\"}]}],\"effects\":{\"元素强令\":{\"duration\":{\"until\":{\"at\":\"turnStart\",\"of\":\"source\",\"nth\":1}},\"implies\":[\"XPHB:condition:魅惑\"],\"text\":\"陷入魅惑状态，且由施加者决定其下一回合使用移动和动作做什么。\"}}}"
+ },
+ {
+  "key": "XDMG:item:命令元素戒指（土）",
+  "name": "命令元素戒指（土）",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "着装戒指期间，对元素攻击检定具有优势，元素对你的攻击具有劣势。可以一个魔法动作执行【元素强令】（60 尺内元素 DC 18 感知豁免，失败魅惑至你下回合开始并由你控制其下一回合）。懂土族语，强酸抗性，无视碎石/岩石/泥土造成的困难地形，可穿行固态土地或岩石（人物卡/地图处理）。消耗充能施展法术（豁免 DC 18）：塑石术（2充能）、石肤术（3充能）、石墙术（3充能）、地震术（5充能）。",
+  "notes": [
+   "消耗 2 充能施展塑石术（豁免 DC 18）。触碰中体型或更小的石质物件或不超过 5 尺维度的石块，将其塑造成你选择的形态。",
+   "消耗 3 充能施展石肤术（豁免 DC 18）。触碰一个自愿生物，目标获得对非魔法钝击、穿刺和挥砍伤害的抗性（专注至多 1 小时）。",
+   "消耗 3 充能施展石墙术（豁免 DC 18）。在 120 尺内创造非魔法石墙（专注至多 10 分钟）。",
+   "消耗 5 充能施展地震术（豁免 DC 18）。在 500 尺内一点引发半径 100 尺的剧烈震颤（专注至多 1 分钟）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"rollMods\":[{\"on\":{\"kind\":\"attack\"},\"who\":\"bearer\",\"when\":\"ask('目标是元素吗？')\",\"op\":\"adv\",\"label\":\"元素灾厄：对元素攻击优势\"},{\"on\":{\"kind\":\"attack\"},\"who\":\"against\",\"when\":\"ask('攻击者是元素吗？')\",\"op\":\"disadv\",\"label\":\"元素灾厄：元素对你攻击劣势\"}],\"actions\":[{\"id\":\"dominate-elemental\",\"name\":\"命令元素戒指（土）：元素强令\",\"activation\":\"action\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":18,\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"元素强令\",\"to\":\"target\"}]}]},{\"id\":\"stone-shape\",\"name\":\"命令元素戒指（土）：塑石术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:命令元素戒指（土）\",\"n\":2}],\"root\":[{\"kind\":\"note\",\"text\":\"消耗 2 充能施展塑石术（豁免 DC 18）。触碰中体型或更小的石质物件或不超过 5 尺维度的石块，将其塑造成你选择的形态。\"}]},{\"id\":\"stoneskin\",\"name\":\"命令元素戒指（土）：石肤术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:命令元素戒指（土）\",\"n\":3}],\"concentration\":{\"hours\":1},\"root\":[{\"kind\":\"note\",\"text\":\"消耗 3 充能施展石肤术（豁免 DC 18）。触碰一个自愿生物，目标获得对非魔法钝击、穿刺和挥砍伤害的抗性（专注至多 1 小时）。\"}]},{\"id\":\"wall-of-stone\",\"name\":\"命令元素戒指（土）：石墙术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:命令元素戒指（土）\",\"n\":3}],\"concentration\":{\"minutes\":10},\"root\":[{\"kind\":\"note\",\"text\":\"消耗 3 充能施展石墙术（豁免 DC 18）。在 120 尺内创造非魔法石墙（专注至多 10 分钟）。\"}]},{\"id\":\"earthquake\",\"name\":\"命令元素戒指（土）：地震术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:命令元素戒指（土）\",\"n\":5}],\"concentration\":{\"minutes\":1},\"root\":[{\"kind\":\"note\",\"text\":\"消耗 5 充能施展地震术（豁免 DC 18）。在 500 尺内一点引发半径 100 尺的剧烈震颤（专注至多 1 分钟）。\"}]}],\"effects\":{\"元素强令\":{\"duration\":{\"until\":{\"at\":\"turnStart\",\"of\":\"source\",\"nth\":1}},\"implies\":[\"XPHB:condition:魅惑\"],\"text\":\"陷入魅惑状态，且由施加者决定其下一回合使用移动和动作做什么。\"}}}"
+ },
+ {
+  "key": "XDMG:item:魔豆之袋",
+  "name": "魔豆之袋",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "装有3d4颗干燥豆子。如果把一颗或更多豆子倒出，会引发半径10尺球状爆炸，生物进行DC 15敏捷豁免，失败受5d4力场伤害，成功减半，豆子被摧毁。种入泥土浇水1分钟后产生随机效应（由DM查表）。",
+  "notes": [
+   "倒出的豆子被摧毁。若种入泥土并浇水，1分钟后的效应由DM查表处理。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"魔豆之袋：倒出豆子\",\"activation\":\"action\",\"targeting\":{\"type\":\"area\",\"area\":{\"shape\":\"sphere\",\"radius\":10}},\"root\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":15,\"onFail\":[{\"kind\":\"damage\",\"dice\":\"5d4\",\"type\":\"力场\",\"id\":\"beanExplosion\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"beanExplosion\",\"scale\":0.5}]},{\"kind\":\"note\",\"text\":\"倒出的豆子被摧毁。若种入泥土并浇水，1分钟后的效应由DM查表处理。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:魔术袋，灰色",
+  "name": "魔术袋，灰色",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个动作取出布袋里的毛绒物件并扔出至多20尺，落地时掷 1d8 变成对应生物（在先攻后行动，次日黎明或生命降至0时消失，附赠动作指挥）；每天最多使用3次。召唤生物需手动在战斗中添加。",
+  "notes": [
+   "掷 1d8 决定变成的生物（1鼬 2巨鼠 3獾 4野猪 5豹 6巨獾 7恐狼 8巨赤鹿），在你的先攻后行动；以附赠动作可下达命令"
+  ],
+  "data": "{\"resources\":[{\"id\":\"物品次数:魔术袋，灰色\",\"name\":\"魔术袋，灰色\",\"formula\":3,\"recovery\":\"long\"}],\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"魔术袋，灰色：抽出毛绒物件\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品次数:魔术袋，灰色\"}],\"targeting\":{\"type\":\"point\",\"range\":20},\"root\":[{\"kind\":\"note\",\"text\":\"掷 1d8 决定变成的生物（1鼬 2巨鼠 3獾 4野猪 5豹 6巨獾 7恐狼 8巨赤鹿），在你的先攻后行动；以附赠动作可下达命令\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:魔术袋，铁锈色",
+  "name": "魔术袋，铁锈色",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个动作取出布袋里的毛绒物件并扔出至多20尺，落地时掷 1d8 变成对应生物（在先攻后行动，次日黎明或生命降至0时消失，附赠动作指挥）；每天最多使用3次。召唤生物需手动在战斗中添加。",
+  "notes": [
+   "掷 1d8 决定变成的生物（1老鼠 2猫头鹰 3獒犬 4山羊 5巨山羊 6巨野猪 7狮子 8棕熊），在你的先攻后行动；以附赠动作可下达命令"
+  ],
+  "data": "{\"resources\":[{\"id\":\"物品次数:魔术袋，铁锈色\",\"name\":\"魔术袋，铁锈色\",\"formula\":3,\"recovery\":\"long\"}],\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"魔术袋，铁锈色：抽出毛绒物件\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品次数:魔术袋，铁锈色\"}],\"targeting\":{\"type\":\"point\",\"range\":20},\"root\":[{\"kind\":\"note\",\"text\":\"掷 1d8 决定变成的生物（1老鼠 2猫头鹰 3獒犬 4山羊 5巨山羊 6巨野猪 7狮子 8棕熊），在你的先攻后行动；以附赠动作可下达命令\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:魔术袋，棕褐色",
+  "name": "魔术袋，棕褐色",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以一个动作取出布袋里的毛绒物件并扔出至多20尺，落地时掷 1d8 变成对应生物（在先攻后行动，次日黎明或生命降至0时消失，附赠动作指挥）；每天最多使用3次。召唤生物需手动在战斗中添加。",
+  "notes": [
+   "掷 1d8 决定变成的生物（1胡狼 2猿 3狒狒 4斧嘴鸟 5黑熊 6巨鼬 7巨鬣狗 8老虎），在你的先攻后行动；以附赠动作可下达命令"
+  ],
+  "data": "{\"resources\":[{\"id\":\"物品次数:魔术袋，棕褐色\",\"name\":\"魔术袋，棕褐色\",\"formula\":3,\"recovery\":\"long\"}],\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"魔术袋，棕褐色：抽出毛绒物件\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品次数:魔术袋，棕褐色\"}],\"targeting\":{\"type\":\"point\",\"range\":20},\"root\":[{\"kind\":\"note\",\"text\":\"掷 1d8 决定变成的生物（1胡狼 2猿 3狒狒 4斧嘴鸟 5黑熊 6巨鼬 7巨鬣狗 8老虎），在你的先攻后行动；以附赠动作可下达命令\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:魔咒法杖（1环）",
+  "name": "魔咒法杖（1环）",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "具有6发充能。可消耗1充能施展制造时铭刻的1环法术（DC 13，攻击加值+5）。若消耗最后一发充能掷d20出1，法杖变为非魔法长棍（具体法术效果需手动处理）。",
+  "notes": [
+   "消耗 1 充能施展制造时铭刻的 1 环法术（法术 DC 13，法术攻击加值 +5）。若消耗最后一发充能，掷 d20 出 1 则变为非魔法长棍。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"施展铭刻法术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:魔咒法杖（1环）\",\"n\":1}],\"root\":[{\"kind\":\"note\",\"text\":\"消耗 1 充能施展制造时铭刻的 1 环法术（法术 DC 13，法术攻击加值 +5）。若消耗最后一发充能，掷 d20 出 1 则变为非魔法长棍。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:魔咒法杖（2环）",
+  "name": "魔咒法杖（2环）",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "制造时铭刻一道2环法术。持握此法杖期间，消耗1充能施展该法术（豁免 DC 13，法术攻击加值 +5）。消耗最后1充能时掷 1d20，若为1则失去法术变为非魔法长棍。具体铭刻法术由玩家确定并手动执行。",
+  "notes": [
+   "消耗 1 充能施展铭刻的 2 环法术（豁免 DC 13，法术攻击加值 +5）。消耗最后 1 充能时掷 1d20，若为 1 则法杖变为非魔法长棍。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"魔咒法杖（2环）：施展法术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:魔咒法杖（2环）\",\"n\":1}],\"root\":[{\"kind\":\"note\",\"text\":\"消耗 1 充能施展铭刻的 2 环法术（豁免 DC 13，法术攻击加值 +5）。消耗最后 1 充能时掷 1d20，若为 1 则法杖变为非魔法长棍。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:魔咒法杖（3环）",
+  "name": "魔咒法杖（3环）",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "制造时铭刻一道3环法术。持握此法杖期间，消耗1充能施展该法术（豁免 DC 15，法术攻击加值 +7）。消耗最后1充能时掷 1d20，若为1则失去法术变为非魔法长棍。具体铭刻法术由玩家确定并手动执行。",
+  "notes": [
+   "消耗 1 充能施展铭刻的 3 环法术（豁免 DC 15，法术攻击加值 +7）。消耗最后 1 充能时掷 1d20，若为 1 则法杖变为非魔法长棍。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"魔咒法杖（3环）：施展法术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:魔咒法杖（3环）\",\"n\":1}],\"root\":[{\"kind\":\"note\",\"text\":\"消耗 1 充能施展铭刻的 3 环法术（豁免 DC 15，法术攻击加值 +7）。消耗最后 1 充能时掷 1d20，若为 1 则法杖变为非魔法长棍。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:魔咒法杖（4环）",
+  "name": "魔咒法杖（4环）",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "持握此法杖期间，你可以消耗 1 充能以施展铭刻的 4 环法术（豁免 DC 15，攻击加值+7）。若你消耗了法杖最后一充能，则掷 1d20，若结果为 1，法杖失去其词条并变为一把非魔法长棍。",
+  "notes": [
+   "消耗 1 充能施展铭刻的 4 环法术（豁免 DC 15，攻击加值+7）。若消耗最后一充能，掷 1d20，若结果为 1，法杖失去其词条并变为非魔法长棍。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"魔咒法杖（4环）：施展法术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:魔咒法杖（4环）\",\"n\":1}],\"root\":[{\"kind\":\"note\",\"text\":\"消耗 1 充能施展铭刻的 4 环法术（豁免 DC 15，攻击加值+7）。若消耗最后一充能，掷 1d20，若结果为 1，法杖失去其词条并变为非魔法长棍。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:魔咒法杖（5环）",
+  "name": "魔咒法杖（5环）",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "持握此法杖期间，你可以消耗 1 充能以施展铭刻的 5 环法术（豁免 DC 17，攻击加值+9）。若你消耗了法杖最后一充能，则掷 1d20，若结果为 1，法杖失去其词条并变为一把非魔法长棍。",
+  "notes": [
+   "消耗 1 充能施展铭刻的 5 环法术（豁免 DC 17，攻击加值+9）。若消耗最后一充能，掷 1d20，若结果为 1，法杖失去其词条并变为非魔法长棍。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"魔咒法杖（5环）：施展法术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:魔咒法杖（5环）\",\"n\":1}],\"root\":[{\"kind\":\"note\",\"text\":\"消耗 1 充能施展铭刻的 5 环法术（豁免 DC 17，攻击加值+9）。若消耗最后一充能，掷 1d20，若结果为 1，法杖失去其词条并变为非魔法长棍。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:魔咒法杖（6环）",
+  "name": "魔咒法杖（6环）",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "持握此法杖期间，你可以消耗 1 充能以施展铭刻的 6 环法术（豁免 DC 17，攻击加值+9）。若你消耗了法杖最后一充能，则掷 1d20，若结果为 1，法杖失去其词条并变为一把非魔法长棍。",
+  "notes": [
+   "消耗 1 充能施展铭刻的 6 环法术（豁免 DC 17，攻击加值+9）。若消耗最后一充能，掷 1d20，若结果为 1，法杖失去其词条并变为非魔法长棍。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"魔咒法杖（6环）：施展法术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:魔咒法杖（6环）\",\"n\":1}],\"root\":[{\"kind\":\"note\",\"text\":\"消耗 1 充能施展铭刻的 6 环法术（豁免 DC 17，攻击加值+9）。若消耗最后一充能，掷 1d20，若结果为 1，法杖失去其词条并变为非魔法长棍。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:魔咒法杖（7环）",
+  "name": "魔咒法杖（7环）",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "持握此法杖期间，你可以消耗 1 充能以施展铭刻的 7 环法术（豁免 DC 18，攻击加值+10）。若你消耗了法杖最后一充能，则掷 1d20，若结果为 1，法杖失去其词条并变为一把非魔法长棍。",
+  "notes": [
+   "消耗 1 充能施展铭刻的 7 环法术（豁免 DC 18，攻击加值+10）。若消耗最后一充能，掷 1d20，若结果为 1，法杖失去其词条并变为非魔法长棍。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"魔咒法杖（7环）：施展法术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:魔咒法杖（7环）\",\"n\":1}],\"root\":[{\"kind\":\"note\",\"text\":\"消耗 1 充能施展铭刻的 7 环法术（豁免 DC 18，攻击加值+10）。若消耗最后一充能，掷 1d20，若结果为 1，法杖失去其词条并变为非魔法长棍。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:魔咒法杖（8环）",
+  "name": "魔咒法杖（8环）",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "持握此法杖期间，你可以消耗 1 充能以施展铭刻的 8 环法术（豁免 DC 18，攻击加值+10）。若你消耗了法杖最后一充能，则掷一次 1d20，若结果为 1，法杖失去其词条并变为一把非魔法长棍。",
+  "notes": [
+   "消耗 1 充能施展铭刻的 8 环法术（豁免 DC 18，攻击加值+10）。若消耗最后一充能，掷 1d20，若结果为 1，法杖失去其词条并变为非魔法长棍。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"魔咒法杖（8环）：施展法术\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:魔咒法杖（8环）\",\"n\":1}],\"root\":[{\"kind\":\"note\",\"text\":\"消耗 1 充能施展铭刻的 8 环法术（豁免 DC 18，攻击加值+10）。若消耗最后一充能，掷 1d20，若结果为 1，法杖失去其词条并变为非魔法长棍。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:魔咒法杖（戏法）",
+  "name": "魔咒法杖（戏法）",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "具有6发充能。可消耗1充能施展制造时铭刻的戏法（DC 13，攻击加值+5）。若消耗最后一发充能掷d20出1，法杖变为非魔法长棍（具体法术效果需手动处理）。",
+  "notes": [
+   "消耗 1 充能施展制造时铭刻的戏法（法术 DC 13，法术攻击加值 +5）。若消耗最后一发充能，掷 d20 出 1 则变为非魔法长棍。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"施展铭刻戏法\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:魔咒法杖（戏法）\",\"n\":1}],\"root\":[{\"kind\":\"note\",\"text\":\"消耗 1 充能施展制造时铭刻的戏法（法术 DC 13，法术攻击加值 +5）。若消耗最后一发充能，掷 d20 出 1 则变为非魔法长棍。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:念珠项链",
+  "name": "念珠项链",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "需同调。佩戴期间，可以附赠动作从中施展念珠所容纳的法术（DC使用自身法术豁免DC）。每颗魔法念珠施法后直至次日黎明前无法再次使用。所含念珠类型由DM决定或随机掷骰确定。",
+  "notes": [
+   "高等复原术：减轻一级力竭，或终止目标身上的魅惑、石化、诅咒、属性减值或生命值上限降低效应。",
+   "闪耀斩：专注至多1分钟。下一次武器攻击命中造成额外2d6光耀伤害，目标散发微光且无法隐形。",
+   "信仰守卫：在30尺内指定空间召唤大型光辉守卫，持续8小时。敌对生物首次进入其10尺内需进行敏捷豁免（DC self.spell.dc），失败受20光耀伤害，成功半数。造成共计60伤害后守卫消失。",
+   "御风而行：将自身和至多10个自愿生物转化为气态飞行云雾形态，持续至多8小时，飞行速度300尺。"
+  ],
+  "data": "{\"resources\":[{\"id\":\"物品次数:念珠项链:祝福术\",\"name\":\"祝福之珠\",\"formula\":1,\"recovery\":\"long\"},{\"id\":\"物品次数:念珠项链:疗伤术\",\"name\":\"疗愈之珠\",\"formula\":1,\"recovery\":\"long\"},{\"id\":\"物品次数:念珠项链:高等复原术\",\"name\":\"恩赐之珠\",\"formula\":1,\"recovery\":\"long\"},{\"id\":\"物品次数:念珠项链:闪耀斩\",\"name\":\"打击之珠\",\"formula\":1,\"recovery\":\"long\"},{\"id\":\"物品次数:念珠项链:信仰守卫\",\"name\":\"召唤之珠\",\"formula\":1,\"recovery\":\"long\"},{\"id\":\"物品次数:念珠项链:御风而行\",\"name\":\"风行之珠\",\"formula\":1,\"recovery\":\"long\"}],\"automation\":\"partial\",\"actions\":[{\"id\":\"bless\",\"name\":\"念珠：祝福术\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"物品次数:念珠项链:祝福术\"}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"creature\",\"count\":3,\"range\":30},\"root\":[{\"kind\":\"applyEffect\",\"inline\":{\"name\":\"祝福术\",\"duration\":{\"minutes\":1},\"rollMods\":[{\"on\":{\"kind\":[\"attack\",\"save\"]},\"who\":\"bearer\",\"op\":\"addDice\",\"value\":\"1d4\",\"label\":\"祝福术：+1d4\"}]},\"to\":\"target\"}]},{\"id\":\"cure-wounds\",\"name\":\"念珠：二环疗伤术\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"物品次数:念珠项链:疗伤术\"}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"touch\"},\"root\":[{\"kind\":\"heal\",\"amount\":\"4d8 + self.spell.mod\"}]},{\"id\":\"greater-restoration\",\"name\":\"念珠：高等复原术\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"物品次数:念珠项链:高等复原术\"}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"touch\"},\"root\":[{\"kind\":\"note\",\"text\":\"高等复原术：减轻一级力竭，或终止目标身上的魅惑、石化、诅咒、属性减值或生命值上限降低效应。\"}]},{\"id\":\"branding-smite\",\"name\":\"念珠：闪耀斩\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"物品次数:念珠项链:闪耀斩\"}],\"concentration\":{\"minutes\":1},\"root\":[{\"kind\":\"note\",\"text\":\"闪耀斩：专注至多1分钟。下一次武器攻击命中造成额外2d6光耀伤害，目标散发微光且无法隐形。\"}]},{\"id\":\"guardian-of-faith\",\"name\":\"念珠：信仰守卫\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"物品次数:念珠项链:信仰守卫\"}],\"targeting\":{\"type\":\"point\",\"range\":30},\"root\":[{\"kind\":\"note\",\"text\":\"信仰守卫：在30尺内指定空间召唤大型光辉守卫，持续8小时。敌对生物首次进入其10尺内需进行敏捷豁免（DC self.spell.dc），失败受20光耀伤害，成功半数。造成共计60伤害后守卫消失。\"}]},{\"id\":\"wind-walk\",\"name\":\"念珠：御风而行\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"物品次数:念珠项链:御风而行\"}],\"targeting\":{\"type\":\"creature\",\"count\":10,\"range\":30},\"root\":[{\"kind\":\"note\",\"text\":\"御风而行：将自身和至多10个自愿生物转化为气态飞行云雾形态，持续至多8小时，飞行速度300尺。\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:鸟鸣法杖",
+  "name": "鸟鸣法杖",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "持握此法杖期间，你可以执行魔法动作来消耗1充能，使其创造出周围120尺范围内都能听到的鸟鸣声之一。",
+  "notes": [
+   "创造出周围120尺范围内都能听到的声音之一：麻雀啾啾、乌鸦哇哇、鸭子嘎嘎、小鸡咯咯、大鹅呱呱、潜鸟呜呜、火鸡咕咕、海鸥嗷嗷、夜枭嘤嘤或老鹰呖呖"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"鸟鸣法杖：发出鸟鸣\",\"activation\":\"action\",\"cost\":[{\"resource\":\"物品充能:鸟鸣法杖\",\"n\":1}],\"root\":[{\"kind\":\"note\",\"text\":\"创造出周围120尺范围内都能听到的声音之一：麻雀啾啾、乌鸦哇哇、鸭子嘎嘎、小鸡咯咯、大鹅呱呱、潜鸟呜呜、火鸡咕咕、海鸥嗷嗷、夜枭嘤嘤或老鹰呖呖\"}]}]}"
+ },
+ {
+  "key": "XDMG:item:攀爬药水",
+  "name": "攀爬药水",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "以附赠动作饮用此药水，获得等同于自身速度的攀爬速度，持续 1 小时。在此期间，为攀爬进行的力量（运动）检定具有优势。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"饮用攀爬药水\",\"activation\":\"bonus\",\"cost\":[{\"resource\":\"物品:攀爬药水\"}],\"root\":[{\"kind\":\"applyEffect\",\"template\":\"攀爬药水\",\"to\":\"self\"}]}],\"effects\":{\"攀爬药水\":{\"duration\":{\"hours\":1},\"tags\":[\"magical\"],\"rollMods\":[{\"on\":{\"kind\":\"check\",\"ability\":\"str\",\"skill\":\"运动\"},\"who\":\"bearer\",\"when\":\"ask('这是为了攀爬进行的力量（运动）检定吗？')\",\"op\":\"adv\",\"label\":\"攀爬药水：攀爬运动检定优势\"}],\"text\":\"获得等同于自身速度的攀爬速度；为攀爬进行的力量（运动）检定具有优势。\"}}}"
+ },
+ {
+  "key": "XDMG:item:喷嚏粉",
+  "name": "喷嚏粉",
+  "by": "AI",
+  "automation": "partial",
+  "level": null,
+  "text": "用操作动作将粉末洒向空中，使你及30尺光环内的生物进行DC 15体质豁免（构装、元素、泥怪、植物和亡灵自动成功，需手动处理）。失败陷入失能与窒息，其回合结束时可重复豁免以终止。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"use\",\"name\":\"撒布喷嚏粉\",\"activation\":\"action\",\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"emanation\",\"radius\":30}},\"root\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":15,\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"喷嚏与窒息\"}]},{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":15,\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"喷嚏与窒息\"}]}]}]}],\"effects\":{\"喷嚏与窒息\":{\"implies\":[\"XPHB:condition:失能\"],\"text\":\"陷入失能并窒息。每回合结束时可重复进行DC 15体质豁免，成功则终止。\",\"duration\":{\"saveEnds\":{\"ability\":\"con\",\"dc\":15,\"at\":\"turnEnd\"}}}}}"
+ }
+]

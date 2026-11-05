@@ -1,0 +1,444 @@
+[
+ {
+  "key": "XPHB:spell:回生术",
+  "name": "回生术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 3,
+  "text": "触碰在前 1 分钟内刚刚死亡的一名生物，使其以 1 点生命值回生。无法复活老死的生物，也不能恢复失去的身体部位（需在界面上手动移除死亡状态并设置生命值为 1）。",
+  "notes": [
+   "回生术：目标生物以 1 点生命值回生（需手动移除死亡状态并将生命值设为 1）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"回生术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":3}}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"touch\"},\"root\":[{\"kind\":\"note\",\"text\":\"回生术：目标生物以 1 点生命值回生（需手动移除死亡状态并将生命值设为 1）。\"}]}]}"
+ },
+ {
+  "key": "XPHB:spell:活化物件",
+  "name": "活化物件",
+  "by": "AI",
+  "automation": "partial",
+  "level": 5,
+  "text": "以一个动作在 120 尺内指定至多等同于施法属性调整值数量的非超巨型非魔法物件活化为构装生物（中型或更小计 1，大型计 2，巨型计 3），持续至多 1 分钟（专注）。活化生物在施法者先攻并在施法者回合后行动，可用附赠动作精神命令 500 尺内的活化生物；生命降至 0 时变回物件。升环增加生物猛击伤害。构装生物需在战斗中由玩家手动操控其移动与攻击。",
+  "notes": [
+   "在 120 尺内活化至多等同于施法属性调整值个物件为构装生物，持续 1 分钟（专注）。可用附赠动作精神发令，具体数据与行动在战斗中手动操控。",
+   "以附赠动作向 500 尺内唤起的活化生物传达同一种精神命令。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"活化物件\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":5}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"point\",\"range\":120},\"root\":[{\"kind\":\"applyEffect\",\"template\":\"活化物件\",\"to\":\"self\"},{\"kind\":\"note\",\"text\":\"在 120 尺内活化至多等同于施法属性调整值个物件为构装生物，持续 1 分钟（专注）。可用附赠动作精神发令，具体数据与行动在战斗中手动操控。\"}]},{\"id\":\"use\",\"name\":\"活化物件：精神命令\",\"activation\":\"bonus\",\"tags\":[\"spell\",\"magical\"],\"requires\":\"self.concentrating && self.hasEffect('活化物件')\",\"targeting\":{\"type\":\"point\",\"range\":500},\"root\":[{\"kind\":\"note\",\"text\":\"以附赠动作向 500 尺内唤起的活化生物传达同一种精神命令。\"}]}],\"effects\":{\"活化物件\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"活化的构装生物在战斗中听从精神命令（附赠动作发令），生命归 0 或专注结束时变回物件形态。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:活力灵光",
+  "name": "活力灵光",
+  "by": "AI",
+  "automation": "partial",
+  "level": 3,
+  "text": "专注至多 1 分钟。以自身为中心发散 30 尺灵光。施法创造灵光时为区域内一名生物恢复 2d6 生命值；持续期间每个自己回合开始时，可为区域内一名生物恢复 2d6 生命值（后续回合的治疗需手动结算）。",
+  "notes": [
+   "活力灵光：回合开始，你可以为 30 尺灵光内的一名生物恢复 2d6 生命值。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"活力灵光\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":3}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":30},\"root\":[{\"kind\":\"applyEffect\",\"template\":\"活力灵光\",\"to\":\"self\"},{\"kind\":\"heal\",\"amount\":\"2d6\",\"to\":\"target\"}]}],\"effects\":{\"活力灵光\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"以自身为中心 30 尺灵光。在你的每个回合开始时，你可以为区域内的一名生物恢复 2d6 生命值。\",\"triggers\":[{\"id\":\"turn-heal\",\"label\":\"活力灵光：回合开始恢复生命值\",\"on\":\"turnStarted\",\"role\":\"actor\",\"do\":[{\"kind\":\"note\",\"text\":\"活力灵光：回合开始，你可以为 30 尺灵光内的一名生物恢复 2d6 生命值。\"}]}]}}}"
+ },
+ {
+  "key": "XPHB:spell:火墙术",
+  "name": "火墙术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 4,
+  "text": "专注至多 1 分钟。在 120 尺内创造一条长 60 尺、高 20 尺、厚 1 尺的直线火墙，或直径 20 尺、高 20 尺、厚 1 尺的环形火墙（选直线还是环形由你在界面上选形状）。火墙不透明。火墙出现时，位于火墙所占据区域内的生物进行敏捷豁免，失败受 (1 + slot.level)d8 火焰伤害（4 环 5d8，每高一环 +1d8），成功半数。生物在一回合内首次进入火墙、或在火墙占据区域内结束回合时受到同样的伤害。施法时选择的「哪一侧造成伤害」以及该侧 10 尺内的伤害引擎不判断几何朝向，请人工确认（区域只覆盖火墙本身占的格子）；另一侧不受伤害。",
+  "notes": [
+   "火墙术：只有你选择的那一侧会造成伤害。站在另一侧的生物即使在火墙占据的区域内结束回合、或是一回合内首次进入火墙，也都不会受到伤害（引擎不判断几何朝向，请在结算前人工确认目标站在哪一侧）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"火墙术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":4}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"area\",\"range\":120,\"area\":{\"shape\":\"line\",\"length\":60,\"width\":1}},\"root\":[{\"kind\":\"choose\",\"prompt\":\"火墙术：哪一侧造成伤害？（记下来，之后人工判断谁站在那一侧）\",\"options\":[{\"label\":\"东 / 北侧\",\"value\":\"side-a\"},{\"label\":\"西 / 南侧\",\"value\":\"side-b\"}]},{\"kind\":\"note\",\"text\":\"火墙术：只有你选择的那一侧会造成伤害。站在另一侧的生物即使在火墙占据的区域内结束回合、或是一回合内首次进入火墙，也都不会受到伤害（引擎不判断几何朝向，请在结算前人工确认目标站在哪一侧）。\"},{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"fire\",\"dice\":\"(1 + slot.level)d8\",\"type\":\"火焰\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"fire\",\"scale\":0.5}]}]},{\"kind\":\"zone\",\"on\":[\"enter\",\"turnEnd\"],\"affects\":\"all\",\"oncePerTurn\":true,\"do\":[{\"kind\":\"if\",\"when\":\"ask('火墙术：这个生物位于你选择的伤害侧（或火墙区域内）吗？另一侧不受伤害，选否就不结算。')\",\"then\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"fire\",\"dice\":\"(1 + slot.level)d8\",\"type\":\"火焰\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"fire\",\"scale\":0.5}]}]}],\"name\":\"火墙术\"}]}]}"
+ },
+ {
+  "key": "XPHB:spell:火焰刀",
+  "name": "火焰刀",
+  "by": "AI",
+  "automation": "partial",
+  "level": 2,
+  "text": "附赠动作（消耗 2 环或更高的法术位），专注至多 10 分钟：在一只空手上召出一把外形近似弯刀的火焰刀。你可以用一个魔法动作（魔法动作 = 动作）用它发动一次近战法术攻击，命中造成 3d6 ＋ 你的施法属性调整值的火焰伤害；使用的法术位每比二环高一环，伤害就多 1d6（3d6 → 4d6 → …）。刀刃提供半径 10 尺的明亮光照以及额外 10 尺的微光光照。已自动处理：召出刀刃、记下施展时的环阶（攻击伤害按「环阶 ＋ 1」个 d6 算，二环就是 3d6）、近战法术攻击的命中与伤害、专注 10 分钟。需人处理：①光照（引擎不管光照）；②需要一只空手（引擎不检查你的手）；③放下刀刃即消失、可以用附赠动作重新唤出 —— 引擎不追踪刀刃是否在手上（效应会一直留到专注结束），放下以后要再用它，请自己先花掉一个附赠动作。",
+  "notes": [
+   "火焰刀：提供半径 10 尺明亮光照与额外 10 尺微光光照（引擎不管光照，请手动标记）；需要一只空手，放下刀刃即消失（请自行遵守）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"火焰刀\",\"activation\":\"bonus\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":2}}],\"concentration\":{\"minutes\":10},\"targeting\":{\"type\":\"self\"},\"text\":\"在一只空手上召出火焰刀：提供半径 10 尺明亮光照与额外 10 尺微光光照，可以用魔法动作发动近战法术攻击。\",\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"火焰刀（在手）\",\"state\":{\"n\":\"slot.level + 1\"}},{\"kind\":\"note\",\"text\":\"火焰刀：提供半径 10 尺明亮光照与额外 10 尺微光光照（引擎不管光照，请手动标记）；需要一只空手，放下刀刃即消失（请自行遵守）。\"}]},{\"id\":\"use\",\"name\":\"火焰刀：攻击\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"requires\":\"self.hasEffect('火焰刀（在手）')\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"reach\"},\"text\":\"用火焰刀发动一次近战法术攻击：命中造成（施法环阶 ＋ 1）d6 ＋ 施法属性调整值的火焰伤害。\",\"root\":[{\"kind\":\"attack\",\"attack\":{\"melee\":true,\"spell\":true},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"(self.effect('火焰刀（在手）').state.n)d6 + self.spell.mod\",\"type\":\"火焰\"}]}]}],\"effects\":{\"火焰刀（在手）\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"手握一把火焰刀（外形近似弯刀）：可以用魔法动作发动近战法术攻击，命中造成 3d6 ＋ 施法属性调整值的火焰伤害（使用的法术位每比二环高一环多 1d6）；刀刃提供半径 10 尺明亮光照与额外 10 尺微光光照；放下刀刃即消失，可以用一个附赠动作重新唤出。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:火焰护盾",
+  "name": "火焰护盾",
+  "by": "AI",
+  "automation": "partial",
+  "level": 4,
+  "text": "持续 10 分钟。选择温暖护盾（寒冷抗性）或冻寒护盾（火焰抗性），抗性自动生效。散发 10 尺明亮与 10 尺微光光照。每当 5 尺内生物以近战攻击命中你时，温暖护盾对其造成 2d8 火焰伤害，冻寒护盾对其造成 2d8 寒冷伤害（反弹伤害需手动处理）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"火焰护盾\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":4}}],\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"choose\",\"prompt\":\"选择火焰护盾类型\",\"options\":[{\"label\":\"温暖护盾（寒冷抗性，反弹 2d8 火焰伤害）\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"火焰护盾：温暖护盾\"}]},{\"label\":\"冻寒护盾（火焰抗性，反弹 2d8 寒冷伤害）\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"火焰护盾：冻寒护盾\"}]}]}]}],\"effects\":{\"火焰护盾：温暖护盾\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"minutes\":10},\"statics\":[{\"kind\":\"resist\",\"values\":[\"寒冷\"]}],\"text\":\"具有寒冷伤害抗性。每当 5 尺内生物以近战攻击命中你时受到 2d8 火焰伤害。散发 10 尺明亮光照及额外 10 尺微光光照。\"},\"火焰护盾：冻寒护盾\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"minutes\":10},\"statics\":[{\"kind\":\"resist\",\"values\":[\"火焰\"]}],\"text\":\"具有火焰伤害抗性。每当 5 尺内生物以近战攻击命中你时受到 2d8 寒冷伤害。散发 10 尺明亮光照及额外 10 尺微光光照。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:棘雹术",
+  "name": "棘雹术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 1,
+  "text": "远程武器命中后立即以附赠动作施展。目标及目标 5 尺内的每个生物必须进行一次敏捷豁免，失败受到 1d10（每升一环 +1d10）穿刺伤害，成功受到半数伤害。引擎自动结算被命中目标的豁免与伤害，其周围 5 尺内其他生物的豁免与伤害需手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"棘雹术\",\"activation\":\"bonus\",\"tags\":[\"spell\",\"magical\"],\"trigger\":{\"on\":\"attackHit\",\"role\":\"actor\",\"window\":\"before\",\"when\":\"attack.ranged && attack.weapon\"},\"requires\":\"turn.isMine\",\"cost\":[{\"slot\":{\"min\":1}}],\"root\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"d\",\"dice\":\"(slot.level)d10\",\"type\":\"穿刺\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"d\",\"scale\":0.5}]}]}]}"
+ },
+ {
+  "key": "XPHB:spell:加速术",
+  "name": "加速术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 3,
+  "text": "专注至多 1 分钟。自愿生物速度翻倍、AC+2、敏捷豁免优势，且每回合获得一个额外动作（仅限发动一次攻击、或疾走/撤离/躲藏/操作动作，需手动遵守限制）。法术终止时目标陷入失能且速度为 0，持续至其下一回合结束。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"加速术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":3}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":30,\"filter\":\"canSee(self, target)\"},\"root\":[{\"kind\":\"applyEffect\",\"template\":\"加速\",\"to\":\"target\"}]}],\"effects\":{\"加速\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"速度翻倍；AC+2；敏捷豁免具有优势；每回合获得一个额外动作（仅用于发动一次攻击、或疾走、撤离、躲藏和操作动作）。法术终止时陷入失能且速度为 0 直至下一回合结束。\",\"statics\":[{\"kind\":\"speed\",\"bonus\":\"self.speed\"},{\"kind\":\"ac\",\"bonus\":2}],\"rollMods\":[{\"on\":{\"kind\":\"save\",\"ability\":\"dex\"},\"who\":\"bearer\",\"op\":\"adv\",\"label\":\"加速术：敏捷豁免优势\"}],\"triggers\":[{\"id\":\"haste-action\",\"label\":\"加速术：额外动作\",\"on\":\"turnStarted\",\"role\":\"actor\",\"do\":[{\"kind\":\"economy\",\"action\":1}]}],\"onEnd\":[{\"kind\":\"applyEffect\",\"template\":\"加速倦意\",\"to\":\"self\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":1}}}]},\"加速倦意\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"法术终止时泛起倦意，陷入失能并且速度为 0，持续至其下一回合结束。\",\"implies\":[\"XPHB:condition:失能\"],\"statics\":[{\"kind\":\"speedSet\",\"value\":0}]}}}"
+ },
+ {
+  "key": "XPHB:spell:贾拉兹光辉风暴",
+  "name": "贾拉兹光辉风暴",
+  "by": "AI",
+  "automation": "partial",
+  "level": 5,
+  "text": "专注至多 1 分钟。在 120 尺内创造 10 尺半径、40 尺高的闪光雷鸣风暴柱。身处风暴中的生物陷入目盲与耳聋且无法施展含言语成分法术（离开区域或法术结束自动解除）。风暴出现时、一回合内首次进入或在其中结束回合的生物进行体质豁免，失败受 (slot.level - 3)d10 光耀与 (slot.level - 3)d10 雷鸣伤害（5 环各 2d10，每高一环各 +1d10），成功半数（每回合每名生物限一次）。柱状区域高 40 尺，高度需人工确认。",
+  "notes": [
+   "贾拉兹光辉风暴：柱状区域高 40 尺，引擎不追踪高度，请人工确认空中目标。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"贾拉兹光辉风暴\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":5}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"area\",\"range\":120,\"area\":{\"shape\":\"cylinder\",\"radius\":10,\"size\":40}},\"root\":[{\"kind\":\"zone\",\"name\":\"贾拉兹光辉风暴\",\"on\":[\"create\",\"enter\",\"turnEnd\"],\"affects\":\"all\",\"oncePerTurn\":true,\"while\":[{\"kind\":\"applyEffect\",\"template\":\"贾拉兹光辉风暴\"}],\"do\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"dr\",\"dice\":\"(slot.level - 3)d10\",\"type\":\"光耀\"},{\"kind\":\"damage\",\"id\":\"dt\",\"dice\":\"(slot.level - 3)d10\",\"type\":\"雷鸣\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"dr\",\"scale\":0.5},{\"kind\":\"damage\",\"ref\":\"dt\",\"scale\":0.5}]}]},{\"kind\":\"note\",\"text\":\"贾拉兹光辉风暴：柱状区域高 40 尺，引擎不追踪高度，请人工确认空中目标。\"}]}],\"effects\":{\"贾拉兹光辉风暴\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:目盲\",\"XPHB:condition:耳聋\"],\"flags\":{\"cannot\":[\"speak\"]},\"text\":\"身处贾拉兹光辉风暴区域内：陷入目盲与耳聋状态，且无法施展含有言语成分的法术。离开区域或法术结束时自动解除。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:假象术",
+  "name": "假象术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 5,
+  "text": "自身获得隐形状态并创造一个幻象分身，持续至多 1 小时（专注）。发动攻击、造成伤害或施展法术会结束自身隐形（分身仍持续存在）。可以动作操纵分身移动与言行，并通过其感官视听（需手动在地图与叙事中操控）。",
+  "notes": [
+   "自身获得隐形，原地出现幻象分身。攻击、造成伤害或施法会终止隐形，但分身持续保留。可以动作操控分身移动与交互。",
+   "以一个魔法动作令幻象分身以至多两倍于你的速度移动，并操纵其言行举止或通过其感官视听。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"假象术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":5}}],\"concentration\":{\"hours\":1},\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"假象术\"},{\"kind\":\"note\",\"text\":\"自身获得隐形，原地出现幻象分身。攻击、造成伤害或施法会终止隐形，但分身持续保留。可以动作操控分身移动与交互。\"}]},{\"id\":\"use\",\"name\":\"假象术：操控分身\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"requires\":\"self.concentrating && self.hasEffect('假象术')\",\"root\":[{\"kind\":\"note\",\"text\":\"以一个魔法动作令幻象分身以至多两倍于你的速度移动，并操纵其言行举止或通过其感官视听。\"}]}],\"effects\":{\"假象术\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:隐形\"],\"text\":\"处于隐形状态并在原地留有幻象分身。若发动攻击、造成伤害或施展法术，隐形随之结束（分身仍持续直至专注结束）。可用动作操控分身移动两倍速度并视听。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:降咒",
+  "name": "降咒",
+  "by": "AI",
+  "automation": "partial",
+  "level": 3,
+  "text": "专注至多 1 分钟。触碰生物进行感知豁免，失败被诅咒并承受四种效应之一：1. 对施法者攻击劣势；2. 某属性检定与豁免劣势；3. 每回合开始感知豁免，失败被迫回避；4. 施法者伤害目标时额外 1d8 暗蚀伤害。升环施法可延长专注或免除专注（需手动调整专注与持续时间；属性选定与被迫回避需人工裁定）。",
+  "notes": [
+   "降咒：感知豁免失败，本回合被迫执行回避动作。",
+   "降咒：受到来自施法者的伤害，额外受到 1d8 暗蚀伤害。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"降咒\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":3}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"touch\"},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"choose\",\"prompt\":\"降咒：选择一项诅咒效应\",\"options\":[{\"label\":\"攻击劣势：目标对你的攻击检定具有劣势\",\"do\":[{\"kind\":\"applyEffect\",\"template\":\"降咒：攻击劣势\",\"to\":\"target\"}]},{\"label\":\"属性劣势：选择属性的检定和豁免劣势\",\"do\":[{\"kind\":\"applyEffect\",\"template\":\"降咒：属性劣势\",\"to\":\"target\"}]},{\"label\":\"行动受阻：回合开始豁免，失败被迫回避\",\"do\":[{\"kind\":\"applyEffect\",\"template\":\"降咒：行动受阻\",\"to\":\"target\"}]},{\"label\":\"额外伤害：你对其造成伤害时额外受到 1d8 暗蚀伤害\",\"do\":[{\"kind\":\"applyEffect\",\"template\":\"降咒：额外伤害\",\"to\":\"target\"}]}]}]}]}],\"effects\":{\"降咒：攻击劣势\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"目标对施法者的攻击检定具有劣势。\",\"rollMods\":[{\"on\":{\"kind\":\"attack\"},\"who\":\"bearer\",\"when\":\"target != null && source != null && target.id == source.id\",\"op\":\"disadv\",\"label\":\"降咒：对施法者攻击劣势\"}]},\"降咒：属性劣势\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"目标使用所选属性进行的属性检定和豁免检定具有劣势（需手动选择属性）。\",\"rollMods\":[{\"on\":{\"kind\":[\"check\",\"save\"]},\"who\":\"bearer\",\"when\":\"ask('这是被降咒指定属性的检定或豁免吗？')\",\"op\":\"disadv\",\"label\":\"降咒：属性检定/豁免劣势\"}]},\"降咒：行动受阻\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"目标在其每回合开始时必须进行一次感知豁免，豁免失败则在该回合中被迫执行回避动作（需手动限制动作）。\",\"triggers\":[{\"id\":\"turn-save\",\"label\":\"降咒：回合开始感知豁免\",\"on\":\"turnStarted\",\"role\":\"actor\",\"do\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"source.spell.dc\",\"onFail\":[{\"kind\":\"note\",\"text\":\"降咒：感知豁免失败，本回合被迫执行回避动作。\"}]}]}]},\"降咒：额外伤害\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"若施法者的攻击检定或法术对目标造成了伤害，则目标还会额外受到 1d8 暗蚀伤害（需手动添加或通过触发器结算）。\",\"triggers\":[{\"id\":\"extra-damage\",\"label\":\"降咒：额外暗蚀伤害\",\"on\":\"damageTaken\",\"role\":\"target\",\"when\":\"source != null && attacker != null && attacker.id == source.id\",\"limit\":\"oncePerTurn\",\"do\":[{\"kind\":\"note\",\"text\":\"降咒：受到来自施法者的伤害，额外受到 1d8 暗蚀伤害。\"}]}]}}}"
+ },
+ {
+  "key": "XPHB:spell:解除魔法",
+  "name": "解除魔法",
+  "by": "AI",
+  "automation": "partial",
+  "level": 3,
+  "text": "指定 120 尺内一名生物、物件或魔法效应。直接终止影响目标的所有小于等于该施法环阶的法术效应；每个更高环阶法术需以施法关键属性进行属性检定（DC 10 + 法术环阶），成功则终止（法术环阶判断与检定需手动处理）。",
+  "notes": [
+   "解除魔法：终止目标身上所有环阶小于等于该施法环阶的法术效应。对更高环阶法术需进行 DC 10+法术环阶的施法属性检定，成功则终止（需手动判定并移除对应效应）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"解除魔法\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":3}}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":120},\"root\":[{\"kind\":\"note\",\"text\":\"解除魔法：终止目标身上所有环阶小于等于该施法环阶的法术效应。对更高环阶法术需进行 DC 10+法术环阶的施法属性检定，成功则终止（需手动判定并移除对应效应）。\"}]}]}"
+ },
+ {
+  "key": "XPHB:spell:荆棘丛生",
+  "name": "荆棘丛生",
+  "by": "手写",
+  "automation": "partial",
+  "level": 2,
+  "text": "专注至多 10 分钟。在 150 尺内指定一点创造 20 尺半径的伪装棘刺区域（困难地形，引擎自动多扣移动力）。生物进入该区域或在其中移动时每移动 5 尺受到 2d4 穿刺伤害（引擎按走过的每一格自动结算，被推、被拉也算）。区域经过伪装，须用搜索动作通过感知（察觉或求生）检定才能发现，这条需人工处理。",
+  "notes": [
+   "荆棘丛生：棘刺经过伪装，需搜索动作通过感知（察觉或求生）检定对抗法术 DC 才能提前发现。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"荆棘丛生\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":2}}],\"concentration\":{\"minutes\":10},\"targeting\":{\"type\":\"area\",\"range\":150,\"area\":{\"shape\":\"sphere\",\"radius\":20}},\"root\":[{\"kind\":\"zone\",\"on\":[\"move\"],\"affects\":\"all\",\"oncePerTurn\":false,\"do\":[{\"kind\":\"damage\",\"dice\":\"2d4\",\"type\":\"穿刺\"}],\"name\":\"荆棘丛生\",\"difficult\":true},{\"kind\":\"note\",\"text\":\"荆棘丛生：棘刺经过伪装，需搜索动作通过感知（察觉或求生）检定对抗法术 DC 才能提前发现。\"}]}]}"
+ },
+ {
+  "key": "XPHB:spell:警戒箭阵",
+  "name": "警戒箭阵",
+  "by": "AI",
+  "automation": "partial",
+  "level": 2,
+  "text": "持续 8 小时，无专注。当着陆时插下至多 4 根（每比二环高一环 +2 根）非魔法箭矢，除你之外的生物第一次进入距弹药 30 尺内或在其中结束回合时，一枚弹药飞起攻击它：敏捷豁免失败受 2d4 穿刺伤害，难度按升环提高。引擎把这 30 尺做成以插下位置为中心的区域（区域不跟着你走，插好后你走开也没关系）；「除你之外」与「每枚弹药只打一次、打完就毁」需人工处理，弹药耗尽时法术终止也需人工。",
+  "notes": [
+   "至多 4 根非魔法箭矢或弩矢插在你所处空间的地面上（每比二环高一环多 2 根）：除你之外的生物第一次进入距弹药 30 尺内或在其中结束回合时，一枚弹药飞起攻击它，敏捷豁免失败受 2d4 穿刺伤害，那枚弹药随之被摧毁；所有弹药都没插在地面上时法术终止。排除生物、弹药数量与消耗需人工处理。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"警戒箭阵\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":2}}],\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"sphere\",\"radius\":30}},\"root\":[{\"kind\":\"zone\",\"on\":[\"enter\",\"turnEnd\"],\"affects\":\"enemies\",\"oncePerTurn\":true,\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"dice\":\"2d4\",\"type\":\"穿刺\"}]}],\"name\":\"警戒箭阵\"},{\"kind\":\"note\",\"text\":\"至多 4 根非魔法箭矢或弩矢插在你所处空间的地面上（每比二环高一环多 2 根）：除你之外的生物第一次进入距弹药 30 尺内或在其中结束回合时，一枚弹药飞起攻击它，敏捷豁免失败受 2d4 穿刺伤害，那枚弹药随之被摧毁；所有弹药都没插在地面上时法术终止。排除生物、弹药数量与消耗需人工处理。\"}]}]}"
+ },
+ {
+  "key": "XPHB:spell:净化灵光",
+  "name": "净化灵光",
+  "by": "AI",
+  "automation": "partial",
+  "level": 4,
+  "text": "专注至多 10 分钟。以自身为中心 30 尺灵光范围内的你和盟友获得毒素伤害抗性，并在为抵抗或结束目盲、魅惑、耳聋、恐慌、麻痹、中毒、震慑状态所做的豁免中具有优势。引擎不知道一次豁免是不是为了抵抗 / 结束这些状态，掷骰时会弹窗确认（死亡豁免与专注检定不属于这一类，不会问）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"净化灵光\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":4}}],\"concentration\":{\"minutes\":10},\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"净化灵光\"}]}],\"effects\":{\"净化灵光\":{\"tags\":[\"magical\",\"spell\"],\"aura\":{\"id\":\"purity\",\"radius\":30,\"affects\":\"allies\",\"includeSelf\":true,\"grant\":{\"statics\":[{\"kind\":\"resist\",\"values\":[\"毒素\"]}],\"rollMods\":[{\"on\":{\"kind\":\"save\"},\"who\":\"bearer\",\"when\":\"roll.sub == null && ask('此豁免用于抵抗或结束目盲、魅惑、耳聋、恐慌、麻痹、中毒或震慑状态吗？')\",\"op\":\"adv\",\"label\":\"净化灵光：状态豁免优势\"}]}},\"text\":\"30 尺灵光内的你和盟友获得毒素伤害抗性；抵抗或结束目盲、魅惑、耳聋、恐慌、麻痹、中毒或震慑状态的豁免具有优势（掷骰时弹窗确认）。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:镜影术",
+  "name": "镜影术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 2,
+  "text": "持续 1 分钟。创造 3 个幻象分身。每当受到攻击命中时，为每个剩余分身掷 1d6，只要有任一结果为 3 或以上，一个分身代受本次命中并被摧毁（可通过触发器取消命中）；3 个分身全部摧毁时法术终止。分身计数及攻击者目盲/盲视/真实视觉免疫需手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"镜影术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":2}}],\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"镜影术\",\"duration\":{\"minutes\":1}}]}],\"effects\":{\"镜影术\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"minutes\":1},\"text\":\"存在至多 3 个幻象分身。被攻击命中时每个分身投掷 1d6，任一骰出 3+ 则分身代受命中被摧毁。分身全部摧毁后法术终止。\",\"triggers\":[{\"id\":\"duplicate_intercept\",\"label\":\"镜影术：分身代受命中\",\"on\":\"attackHit\",\"role\":\"target\",\"window\":\"before\",\"optional\":true,\"modify\":[{\"op\":\"cancel\"}]}]}}}"
+ },
+ {
+  "key": "XPHB:spell:纠缠术",
+  "name": "纠缠术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 1,
+  "text": "专注至多 1 分钟。20 尺方状区域覆盖破土而出的缠绕植物，持续时间内区域为困难地形（引擎自动多扣移动力）。施展时区域内除施法者外的生物必须进行力量豁免，失败陷入束缚状态直到法术结束。被束缚生物可用动作进行对抗法术 DC 的力量（运动）检定挣脱（需人工处理）。",
+  "notes": [
+   "纠缠术：区域为困难地形（引擎自动多扣移动力）；被束缚生物可用动作进行对抗法术 DC 的力量（运动）检定挣脱（需人工处理）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"纠缠术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":1}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"area\",\"range\":90,\"area\":{\"shape\":\"cube\",\"size\":20}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"if\",\"when\":\"target.id != self.id\",\"then\":[{\"kind\":\"save\",\"ability\":\"str\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"纠缠\"}]}]}]},{\"kind\":\"zone\",\"name\":\"纠缠术\",\"affects\":\"all\",\"difficult\":true},{\"kind\":\"note\",\"text\":\"纠缠术：区域为困难地形（引擎自动多扣移动力）；被束缚生物可用动作进行对抗法术 DC 的力量（运动）检定挣脱（需人工处理）。\"}]}],\"effects\":{\"纠缠\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:束缚\"],\"text\":\"陷入束缚状态直到法术结束。可用动作进行力量（运动）检定对抗法术 DC，成功则摆脱藤蔓不再被束缚（这个动作需人工处理）。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:巨虫术",
+  "name": "巨虫术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 4,
+  "text": "专注至多 10 分钟。以动作在 60 尺内召唤一只巨虫（蜈蚣 / 蜘蛛 / 黄蜂，施法时选择），数据按施展用的法术位环阶：AC 11 + 环阶，HP 30 + 每比四环高一环 10，速度 40 尺（蜈蚣有攀爬 40 尺、黄蜂有飞行 40 尺），力量 17 敏捷 13 体质 15 智力 4 感知 14 魅力 3，黑暗视觉 60 尺，能听懂你说的语言；多重攻击：每回合攻击 floor(环阶 / 2) 次；猛毒刺：近战法术攻击，1d6 + 3 + 环阶穿刺外加 1d4 毒素。它是你与盟友的盟友，共用你的先攻并在你的回合结束后立即行动，遵从口头指令。需人处理：①它在你回合结束后立即行动（引擎把召唤物排在你的回合之后，照此行动）；②你不发令时它执行回避并远离危险；③蛛网箭造成的速度归零、剧毒喷涌的中毒、蛛行攀爬（已写在特性里）；④法术结束时消失（专注结束引擎自动移除召唤物）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"巨虫术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":4}}],\"concentration\":{\"minutes\":10},\"targeting\":{\"type\":\"point\",\"range\":60},\"text\":\"环阶决定巨虫的 AC / HP / 攻击次数与伤害（写在召唤数据里）。\",\"root\":[{\"kind\":\"choose\",\"prompt\":\"选择巨虫的形态\",\"options\":[{\"label\":\"蜈蚣（攀爬 40 尺；附赠动作：剧毒喷涌令 10 尺内目标中毒）\",\"do\":[{\"kind\":\"summon\",\"name\":\"巨虫（蜈蚣）\",\"size\":\"L\",\"type\":\"beast\",\"ac\":\"11 + slot.level\",\"hp\":\"30 + 10 * (slot.level - 4)\",\"speed\":40,\"pb\":\"self.pb\",\"score\":{\"str\":17,\"dex\":13,\"con\":15,\"int\":4,\"wis\":14,\"cha\":3},\"attacksPerAction\":\"floor(slot.level / 2)\",\"attacks\":[{\"id\":\"jab\",\"name\":\"猛毒刺\",\"melee\":true,\"reach\":true,\"damage\":\"1d6 + 3 + slot.level\",\"damageType\":\"穿刺\",\"extra\":[{\"dice\":\"1d4\",\"type\":\"毒素\"}]}],\"actions\":[{\"id\":\"spew\",\"name\":\"剧毒喷涌（仅蜈蚣）\",\"activation\":\"bonus\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":10},\"root\":[{\"kind\":\"save\",\"ability\":\"con\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"name\":\"剧毒喷涌：中毒\",\"duration\":{\"until\":{\"at\":\"turnStart\",\"of\":\"bearer\",\"nth\":1},\"manual\":true},\"inline\":{\"name\":\"剧毒喷涌：中毒\",\"implies\":[\"XPHB:condition:中毒\"],\"text\":\"陷入中毒状态，直到巨虫的下个回合开始。\"}}]}]}],\"notes\":[{\"group\":\"特性\",\"name\":\"蛛行\",\"text\":\"可以在难以攀爬的表面上攀爬（包括天花板）而无需属性检定。\"}]}]},{\"label\":\"蜘蛛（攀爬 40 尺；远程：蛛网箭）\",\"do\":[{\"kind\":\"summon\",\"name\":\"巨虫（蜘蛛）\",\"size\":\"L\",\"type\":\"beast\",\"ac\":\"11 + slot.level\",\"hp\":\"30 + 10 * (slot.level - 4)\",\"speed\":40,\"pb\":\"self.pb\",\"score\":{\"str\":17,\"dex\":13,\"con\":15,\"int\":4,\"wis\":14,\"cha\":3},\"attacksPerAction\":\"floor(slot.level / 2)\",\"attacks\":[{\"id\":\"jab\",\"name\":\"猛毒刺\",\"melee\":true,\"reach\":true,\"damage\":\"1d6 + 3 + slot.level\",\"damageType\":\"穿刺\",\"extra\":[{\"dice\":\"1d4\",\"type\":\"毒素\"}]},{\"id\":\"web\",\"name\":\"蛛网箭\",\"ranged\":true,\"range\":60,\"damage\":\"1d10 + 3 + slot.level\",\"damageType\":\"钝击\"}],\"notes\":[{\"group\":\"特性\",\"name\":\"蛛网箭（减速）\",\"text\":\"被蛛网箭命中的目标速度降为 0，直到巨虫的下个回合开始 —— 引擎不改速度，请手动处理。\"},{\"group\":\"特性\",\"name\":\"蛛行\",\"text\":\"可以在难以攀爬的表面上攀爬（包括天花板）而无需属性检定。\"}]}]},{\"label\":\"黄蜂（攀爬 40 尺、飞行 40 尺）\",\"do\":[{\"kind\":\"summon\",\"name\":\"巨虫（黄蜂）\",\"size\":\"L\",\"type\":\"beast\",\"ac\":\"11 + slot.level\",\"hp\":\"30 + 10 * (slot.level - 4)\",\"speed\":40,\"pb\":\"self.pb\",\"score\":{\"str\":17,\"dex\":13,\"con\":15,\"int\":4,\"wis\":14,\"cha\":3},\"attacksPerAction\":\"floor(slot.level / 2)\",\"attacks\":[{\"id\":\"jab\",\"name\":\"猛毒刺\",\"melee\":true,\"reach\":true,\"damage\":\"1d6 + 3 + slot.level\",\"damageType\":\"穿刺\",\"extra\":[{\"dice\":\"1d4\",\"type\":\"毒素\"}]}],\"notes\":[{\"group\":\"特性\",\"name\":\"飞行\",\"text\":\"黄蜂有 40 尺飞行速度 —— 召唤数据只写了一个速度值（40 尺步行），飞行请手动处理。\"},{\"group\":\"特性\",\"name\":\"蛛行\",\"t…（截断，全文按键去 data/ 下找）"
+ },
+ {
+  "key": "XPHB:spell:克敌先击",
+  "name": "克敌先击",
+  "by": "AI",
+  "automation": "partial",
+  "level": 0,
+  "text": "使用武器发动一次攻击。攻击检定使用施法属性（self.spell.atk）。命中时武器伤害加值使用施法属性调整值（self.spell.mod），伤害类型可选择改为光耀伤害或维持武器原本类型（武器伤害由玩家手动结算）。5 级起额外造成的 1d6/2d6/3d6 光耀伤害由系统自动结算。",
+  "notes": [
+   "克敌先击：命中！请结算武器基础伤害（使用施法属性调整值），伤害类型可选择光耀或武器原本类型。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"克敌先击\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"targeting\":{\"type\":\"creature\",\"count\":1},\"root\":[{\"kind\":\"attack\",\"attack\":{\"weapon\":true},\"onHit\":[{\"kind\":\"if\",\"when\":\"self.level >= 5\",\"then\":[{\"kind\":\"damage\",\"dice\":\"floor((self.level + 1) / 6)d6\",\"type\":\"光耀\"}]},{\"kind\":\"note\",\"text\":\"克敌先击：命中！请结算武器基础伤害（使用施法属性调整值），伤害类型可选择光耀或武器原本类型。\"}]}]}]}"
+ },
+ {
+  "key": "XPHB:spell:恐惧术",
+  "name": "恐惧术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 3,
+  "text": "30 尺锥状区域内的生物感知豁免失败陷入恐慌并丢弃其持握物。被恐慌生物在自己回合中必须执行疾走动作并寻找最安全路线远离施法者；若回合结束时施法者不在其视线内，可再进行感知豁免，成功则法术对该生物终止（丢弃物品、强制移动和视线判断需手动处理）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"恐惧术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":3}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"cone\",\"size\":30}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"恐惧术\",\"to\":\"target\"}]}]}]}],\"effects\":{\"恐惧术\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:恐慌\"],\"text\":\"陷入恐慌，丢弃所有持握物；在回合内必须执行疾走动作远离施法者；若回合结束时施法者不在视线中，可进行感知豁免对抗法术 DC，成功则解除效应。\",\"triggers\":[{\"id\":\"save-no-los\",\"label\":\"恐惧术：视线外感知豁免\",\"on\":\"turnEnded\",\"role\":\"actor\",\"when\":\"ask('施法者此时不在该生物视线中吗？')\",\"do\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"source.spell.dc\",\"onSuccess\":[{\"kind\":\"removeEffect\",\"match\":{\"name\":\"恐惧术\"},\"from\":\"self\"}]}]}]}}}"
+ },
+ {
+  "key": "XPHB:spell:困惑术",
+  "name": "困惑术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 4,
+  "text": "专注至多 1 分钟。90 尺内 10 尺球状区域生物进行感知豁免，失败陷入困惑（禁止反应和附赠动作，回合结束可做感知豁免尝试结束效应）。回合开始掷 1d10 决定行为以及升环增加半径需手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"困惑术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":4}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"area\",\"range\":90,\"area\":{\"shape\":\"sphere\",\"radius\":10}},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"困惑\"}]}]}]}],\"effects\":{\"困惑\":{\"tags\":[\"magical\",\"spell\"],\"flags\":{\"blocks\":[\"reaction\",\"bonus\"]},\"duration\":{\"minutes\":1,\"saveEnds\":{\"ability\":\"wis\",\"at\":\"turnEnd\"}},\"text\":\"不能执行反应和附赠动作。每个回合开始时掷 1d10 决定行为：1-向随机方向移动；2~6-不移动也不行动；7~8-对触及内随机生物发动近战攻击；9~10-自由行动。回合结束时可重做感知豁免。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:力场墙",
+  "name": "力场墙",
+  "by": "AI",
+  "automation": "partial",
+  "level": 5,
+  "text": "在 120 尺内指定一点创造隐形的力场墙（半径至多 10 尺半球/球，或 10 块 10×10 尺相连方板），持续 10 分钟（专注）。形成时穿过生物会被推向一侧；无法以物理方式穿过，阻断以太旅行，免疫所有伤害且无法被解除魔法解除（解离术可立即摧毁）。需在地图上由 DM 和玩家手动处理阻挡与地形。",
+  "notes": [
+   "在 120 尺内创造隐形力场墙（半径至多 10 尺球/半球或 10 块 10×10 尺方板），持续 10 分钟（专注）。任何事物无法物理穿过，免疫所有伤害，解离术可立即摧毁。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"力场墙\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":5}}],\"concentration\":{\"minutes\":10},\"targeting\":{\"type\":\"point\",\"range\":120},\"root\":[{\"kind\":\"note\",\"text\":\"在 120 尺内创造隐形力场墙（半径至多 10 尺球/半球或 10 块 10×10 尺方板），持续 10 分钟（专注）。任何事物无法物理穿过，免疫所有伤害，解离术可立即摧毁。\"}]}]}"
+ },
+ {
+  "key": "XPHB:spell:灵体卫士",
+  "name": "灵体卫士",
+  "by": "AI",
+  "automation": "partial",
+  "level": 3,
+  "text": "专注至多 10 分钟。施法者周围 15 尺光环内，指定生物不受影响，其余生物速度减半；生物进入光环、光环进入其空间或在其中结束回合时，须进行感知豁免，失败受到 (slot.level)d8 光耀或暗蚀伤害，成功半数（每回合限一次）。移动判定、速度减半与豁免时机需在战局上手动结算。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"灵体卫士\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":3}}],\"concentration\":{\"minutes\":10},\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"template\":\"灵体卫士\",\"to\":\"self\"}]}],\"effects\":{\"灵体卫士\":{\"tags\":[\"magical\",\"spell\"],\"aura\":{\"id\":\"spirit-guardians\",\"radius\":15,\"affects\":\"enemies\",\"includeSelf\":false,\"grant\":{}},\"text\":\"15 尺光环内敌方生物速度减半；生物进入光环、光环进入其空间或在光环内结束回合时，进行感知豁免对抗法术 DC，失败受到 3d8 点（升环每比三环高一环加 1d8）光耀或暗蚀伤害，成功受到半数伤害（每回合限一次）。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:灵体武器",
+  "name": "灵体武器",
+  "by": "AI",
+  "automation": "partial",
+  "level": 2,
+  "text": "附赠动作在 60 尺内召唤灵体武器（专注至多 1 分钟）并对 5 尺内生物发动近战法术攻击，命中造成 1d8 + 施法属性调整值的力场伤害（升环每环 +1d8）。后续回合可用附赠动作移动武器至多 20 尺并重复攻击（武器移动在地图上手动处理；后续攻击若升环需手动调整伤害）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"灵体武器\",\"activation\":\"bonus\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":2}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"attack\",\"attack\":{\"melee\":true,\"spell\":true},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"(slot.level - 1)d8 + self.spell.mod\",\"type\":\"力场\"}]},{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"灵体武器\"}]},{\"id\":\"use\",\"name\":\"灵体武器：移动并攻击\",\"activation\":\"bonus\",\"tags\":[\"spell\",\"magical\"],\"requires\":\"self.concentrating && self.hasEffect('灵体武器')\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"attack\",\"attack\":{\"melee\":true,\"spell\":true},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"1d8 + self.spell.mod\",\"type\":\"力场\"}]}]}],\"effects\":{\"灵体武器\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"浮空灵体武器持续存在。后续回合可用附赠动作移动至多 20 尺并对 5 尺内目标发动攻击。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:龙息术",
+  "name": "龙息术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 2,
+  "text": "专注至多 1 分钟。触碰一名自愿生物，使其可用动作呼出 15 尺锥状龙息，区域内生物敏捷豁免失败受 3d6（升环每环+1d6）对应属性伤害，成功半数。施加给盟友时需由盟友使用，升环额外伤害需手动调整。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"龙息术\",\"activation\":\"bonus\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":2}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"touch\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"龙息术\"}]},{\"id\":\"use\",\"name\":\"龙息术：喷吐\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"cone\",\"size\":15}},\"root\":[{\"kind\":\"choose\",\"prompt\":\"选择龙息伤害类型\",\"options\":[{\"label\":\"强酸\",\"do\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"d_acid\",\"dice\":\"3d6\",\"type\":\"强酸\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"d_acid\",\"scale\":0.5}]}]}]},{\"label\":\"寒冷\",\"do\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"d_cold\",\"dice\":\"3d6\",\"type\":\"寒冷\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"d_cold\",\"scale\":0.5}]}]}]},{\"label\":\"火焰\",\"do\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"d_fire\",\"dice\":\"3d6\",\"type\":\"火焰\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"d_fire\",\"scale\":0.5}]}]}]},{\"label\":\"闪电\",\"do\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"d_lightning\",\"dice\":\"3d6\",\"type\":\"闪电\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"d_lightning\",\"scale\":0.5}]}]}]},{\"label\":\"毒素\",\"do\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"id\":\"d_poison\",\"dice\":\"3d6\",\"type\":\"毒素\"}],\"onSuccess\":[{\"kind\":\"damage\",\"ref\":\"d_poison\",\"scale\":0.5}]}]}]}]}]}],\"effects\":{\"龙息术\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"可用动作呼出 15 尺锥状吐息，造成 3d6（所选强酸/寒冷/火焰/闪电/毒素）伤害，敏捷豁免半数。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:魅惑怪物",
+  "name": "魅惑怪物",
+  "by": "AI",
+  "automation": "partial",
+  "level": 4,
+  "text": "30 尺内一名你可见的生物进行感知豁免；如果你或你的盟友正在与它战斗，它在这次豁免上具有优势（引擎会问一句，答是就给优势；实现上是在施法时给目标挂一个只活到这次豁免的短效应，日志里会看到它出现又消失）。失败则陷入魅惑状态，持续至多 1 小时，或在你或你的盟友对它造成伤害时提前结束（伤害来源是施法者本人或与施法者同阵营时引擎自动结束）。升环每比四环高一级可多指定一名生物。「对你态度友好」「法术结束时它知道曾被你魅惑」是叙事层面，需要人处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"魅惑怪物\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":4}}],\"targeting\":{\"type\":\"creature\",\"count\":\"slot.level - 3\",\"range\":30,\"filter\":\"canSee(self, target)\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"战斗豁免优势\"},{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"魅惑怪物\"}]}]}],\"effects\":{\"战斗豁免优势\":{\"name\":\"魅惑：战斗中豁免优势\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":0},\"endsOn\":[{\"event\":\"d20Rolled\",\"when\":\"event.roller == self.id && event.kind == 'save' && event.ability == 'wis'\"}]},\"rollMods\":[{\"on\":{\"kind\":\"save\",\"ability\":\"wis\"},\"who\":\"bearer\",\"when\":\"ask('它是否正在与施法者或施法者的盟友战斗？（是则这次豁免具有优势）')\",\"op\":\"adv\",\"label\":\"魅惑怪物：正在战斗，豁免具有优势\"}],\"text\":\"只活到这次感知豁免掷完：正在与施法者或其盟友战斗时，这次豁免具有优势（由人回答）。\"},\"魅惑怪物\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:魅惑\"],\"duration\":{\"hours\":1,\"endsOn\":[{\"event\":\"damageApplied\",\"when\":\"event.target == self.id && event.total > 0 && (event.source == source.id || (event.source != null && combatant(event.source).isAllyOf(source)))\"}]},\"text\":\"陷入魅惑状态，视施法者为友好同伴（态度友好、结束时知道自己曾被魅惑都由人 RP 处理）。施法者本人或其盟友对它造成伤害时提前结束。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:魅惑类人",
+  "name": "魅惑类人",
+  "by": "AI",
+  "automation": "partial",
+  "level": 1,
+  "text": "30 尺内一名你可见的类人生物进行感知豁免；如果你或你的盟友正在与它战斗，它在这次豁免上具有优势（引擎会问一句，答是就给优势；实现上是在施法时给目标挂一个只活到这次豁免的短效应，日志里会看到它出现又消失）。失败则陷入魅惑状态，持续至多 1 小时，或在你或你的盟友对它造成伤害时提前结束（伤害来源是施法者本人或与施法者同阵营时引擎自动结束）。升环每比一环高一级可多指定一名生物。「对你态度友好」「法术结束时它知道曾被你魅惑」是叙事层面，需要人处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"魅惑类人\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":1}}],\"targeting\":{\"type\":\"creature\",\"count\":\"slot.level\",\"range\":30,\"filter\":\"target.type == '类人生物' && canSee(self, target)\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"战斗豁免优势\"},{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"魅惑类人\"}]}]}],\"effects\":{\"战斗豁免优势\":{\"name\":\"魅惑：战斗中豁免优势\",\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":0},\"endsOn\":[{\"event\":\"d20Rolled\",\"when\":\"event.roller == self.id && event.kind == 'save' && event.ability == 'wis'\"}]},\"rollMods\":[{\"on\":{\"kind\":\"save\",\"ability\":\"wis\"},\"who\":\"bearer\",\"when\":\"ask('它是否正在与施法者或施法者的盟友战斗？（是则这次豁免具有优势）')\",\"op\":\"adv\",\"label\":\"魅惑类人：正在战斗，豁免具有优势\"}],\"text\":\"只活到这次感知豁免掷完：正在与施法者或其盟友战斗时，这次豁免具有优势（由人回答）。\"},\"魅惑类人\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:魅惑\"],\"duration\":{\"hours\":1,\"endsOn\":[{\"event\":\"damageApplied\",\"when\":\"event.target == self.id && event.total > 0 && (event.source == source.id || (event.source != null && combatant(event.source).isAllyOf(source)))\"}]},\"text\":\"陷入魅惑状态，视施法者为友好同伴（态度友好、结束时知道自己曾被魅惑都由人 RP 处理）。施法者本人或其盟友对它造成伤害时提前结束。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:魅影之力",
+  "name": "魅影之力",
+  "by": "AI",
+  "automation": "partial",
+  "level": 2,
+  "text": "专注至多 1 分钟。60 尺内一名生物进行智力豁免，失败则受 10 尺立方内的魅影幻象影响并认定其为真实。目标可用研究动作进行智力（调查）检定对抗法术 DC，成功则法术终止。若魅影代表危险现象，施法者在自己的每回合可对处于魅影 5 尺内的目标造成 2d8 心灵伤害。调查检定与叙事互动需手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"魅影之力\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":2}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"save\",\"ability\":\"int\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"魅影之力\"}]}]},{\"id\":\"use\",\"name\":\"魅影之力：幻觉伤害\",\"activation\":\"none\",\"tags\":[\"spell\",\"magical\"],\"requires\":\"self.concentrating\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"damage\",\"dice\":\"2d8\",\"type\":\"心灵\"}]}],\"effects\":{\"魅影之力\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"受魅影幻觉影响并深信不疑。目标可用研究动作进行智力（调查）检定对抗法术 DC，成功则法术终止；处于危险魅影 5 尺内时，施法者在自身回合可对其造成 2d8 心灵伤害。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:朦胧术",
+  "name": "朦胧术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 2,
+  "text": "专注至多 1 分钟。所有生物对施法者发动的攻击检定具有劣势。攻击者若依靠盲视或真实视觉观测则免疫该效应（需手动处理）。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"朦胧术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":2}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"朦胧术\"}]}],\"effects\":{\"朦胧术\":{\"tags\":[\"magical\",\"spell\"],\"rollMods\":[{\"on\":{\"kind\":\"attack\"},\"who\":\"against\",\"op\":\"disadv\",\"label\":\"朦胧术：攻击者具有劣势\"}],\"text\":\"所有生物对你发动的攻击检定具有劣势；攻击者拥有盲视或真实视觉时免疫该效应。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:命令术",
+  "name": "命令术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 1,
+  "text": "目标进行感知豁免，失败在其下一回合必须服从指定命令（过来、放下、走开、趴下、阻拦）。趴下附带倒地，阻拦限制动作和附赠动作；移动路径与提前结束回合需手动配合处理。升环每高一环可多选一个目标。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"命令术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":1}}],\"targeting\":{\"type\":\"creature\",\"count\":\"slot.level\",\"range\":60},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"choose\",\"prompt\":\"选择命令术指令\",\"options\":[{\"label\":\"趴下（陷入倒地并结束回合）\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"命令术：趴下\"}]},{\"label\":\"阻拦（不进行移动，不作动作和附赠动作）\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"命令术：阻拦\"}]},{\"label\":\"过来（向施法者移动，5 尺时结束回合）\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"命令术：过来\"}]},{\"label\":\"放下（放下持握物并结束回合）\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"命令术：放下\"}]},{\"label\":\"走开（以最快方式远离施法者）\",\"do\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"命令术：走开\"}]}]}]}]}],\"effects\":{\"命令术：趴下\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:倒地\"],\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":1}},\"text\":\"命令术：目标陷入倒地状态并结束其回合。\"},\"命令术：阻拦\":{\"tags\":[\"magical\",\"spell\"],\"flags\":{\"blocks\":[\"action\",\"bonus\"]},\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":1}},\"text\":\"命令术：目标不进行移动且不作任何动作和附赠动作。\"},\"命令术：过来\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":1}},\"text\":\"命令术：目标以最短最直接路线向施法者移动，并在到达距施法者 5 尺时结束回合。\"},\"命令术：放下\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":1}},\"text\":\"命令术：目标放下手中持握物并结束其回合。\"},\"命令术：走开\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"until\":{\"at\":\"turnEnd\",\"of\":\"bearer\",\"nth\":1}},\"text\":\"命令术：目标在其回合内以最快最有效方式远离施法者。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:魔邓肯忠犬",
+  "name": "魔邓肯忠犬",
+  "by": "AI",
+  "automation": "partial",
+  "level": 4,
+  "text": "创造幻影守护犬（持续 8 小时，相距超 300 尺终止）。守护犬拥有 30 尺真实视觉，有生物进入 30 尺且无口令时吠叫。施法者每回合开始时守护犬尝试啮咬 5 尺内一名敌人（通过「魔邓肯忠犬：啮咬」敏捷豁免对抗法术 DC，失败受 4d8 力场伤害）；后续回合可用动作令守护犬移动至多 30 尺。",
+  "notes": [
+   "魔邓肯忠犬：以动作令守护犬移动至多 30 尺（需在地图上移动）"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"魔邓肯忠犬\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":4}}],\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"魔邓肯忠犬\",\"duration\":{\"hours\":8}}]},{\"id\":\"bite\",\"name\":\"魔邓肯忠犬：啮咬\",\"activation\":\"none\",\"requires\":\"self.hasEffect('魔邓肯忠犬')\",\"targeting\":{\"type\":\"creature\",\"count\":1},\"root\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"damage\",\"dice\":\"4d8\",\"type\":\"力场\"}]}]},{\"id\":\"move\",\"name\":\"魔邓肯忠犬：移动\",\"activation\":\"action\",\"requires\":\"self.hasEffect('魔邓肯忠犬')\",\"root\":[{\"kind\":\"note\",\"text\":\"魔邓肯忠犬：以动作令守护犬移动至多 30 尺（需在地图上移动）\"}]}],\"effects\":{\"魔邓肯忠犬\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"hours\":8},\"text\":\"守护犬拥有 30 尺真实视觉；回合开始时可用「魔邓肯忠犬：啮咬」对 5 尺内一名敌人造成伤害；后续回合可以动作令其移动 30 尺。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:魔化武器",
+  "name": "魔化武器",
+  "by": "AI",
+  "automation": "partial",
+  "level": 2,
+  "text": "附赠动作触碰一件非魔法武器：它成为魔法武器，攻击检定与伤害掷骰 +1（3～5 环法术位 +2，6 环及以上 +3），持续 1 小时。已自动化：加值按施法环阶算好、挂在被触碰的持有者身上，用它攻击 / 造成伤害时问一句「是不是这把武器」再加；你再次施展本法术时，先前那份效应（包括施在别人武器上的）会自动结束。要人处理：引擎没有「武器 / 装备」这个对象，只能把加值挂在持有者身上，所以①「非魔法武器」这个前提请自己确认；②同一个人身上有两把武器时，靠每击的弹窗区分；③「成为魔法武器」用来穿透非魔法武器抗性这件事引擎不判，请 DM 手动认定。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"魔化武器\",\"activation\":\"bonus\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":2}}],\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":\"touch\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"target\",\"template\":\"魔化武器\",\"state\":{\"bonus\":\"cond(slot.level >= 6, 3, cond(slot.level >= 3, 2, 1))\"}}]}],\"effects\":{\"魔化武器\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"被触碰的武器：攻击检定与伤害掷骰有加值（按施法环阶 +1 / +2 / +3），持续 1 小时；施法者再次施展魔化武器时本效应提前结束。\",\"duration\":{\"hours\":1,\"endsOn\":[{\"event\":\"spellCast\",\"when\":\"event.key == 'XPHB:spell:魔化武器' && event.actor == source.id\"}]},\"rollMods\":[{\"on\":{\"kind\":\"attack\",\"attack\":{\"weapon\":true}},\"who\":\"bearer\",\"when\":\"ask('这次攻击用的是被魔化武器加持的那把武器吗？')\",\"op\":\"add\",\"value\":\"effect.state.bonus\",\"label\":\"魔化武器：攻击加值\"},{\"on\":{\"kind\":\"damage\",\"attack\":{\"weapon\":true}},\"who\":\"bearer\",\"when\":\"ask('这次伤害来自被魔化武器加持的那把武器吗？')\",\"op\":\"add\",\"value\":\"effect.state.bonus\",\"label\":\"魔化武器：伤害加值\"}]}}}"
+ },
+ {
+  "key": "XPHB:spell:欧提路克弹力法球",
+  "name": "欧提路克弹力法球",
+  "by": "AI",
+  "automation": "partial",
+  "level": 4,
+  "text": "专注至多 1 分钟。30 尺内大型或更小的生物进行敏捷豁免，失败则被封在发光的弹力法球内（自愿生物自动被封入）。法球内生物免受一切伤害，任何实体或法术无法进出，且无法对球外造成伤害。被困者可用动作以半速滚动法球。实体进出阻隔、滚动移动与解离术摧毁需手动处理。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"欧提路克弹力法球\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":4}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":30,\"filter\":\"target.size != '巨型' && target.size != '超巨型'\"},\"root\":[{\"kind\":\"if\",\"when\":\"ask('目标是非自愿生物吗？')\",\"then\":[{\"kind\":\"save\",\"ability\":\"dex\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"弹力法球\",\"to\":\"target\"}]}],\"else\":[{\"kind\":\"applyEffect\",\"template\":\"弹力法球\",\"to\":\"target\"}]}]}],\"effects\":{\"弹力法球\":{\"tags\":[\"magical\",\"spell\"],\"triggers\":[{\"id\":\"immune-dmg\",\"label\":\"弹力法球：免受伤害\",\"on\":\"damageIncoming\",\"role\":\"target\",\"window\":\"before\",\"modify\":[{\"op\":\"cancel\"}]}],\"text\":\"被封在弹力法球内，免疫并取消一切伤害。任何物理实体、能量与法术无法穿透法球进出；不能对球外事物造成伤害；可用动作推动法球以半速滚动。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:气化形体",
+  "name": "气化形体",
+  "by": "AI",
+  "automation": "partial",
+  "level": 3,
+  "text": "触碰自愿生物转化为云雾（升环每高一环可多选一个目标）：拥有钝击/穿刺/挥砍抗性，免疫倒地，力量/敏捷/体质豁免具有优势；不能攻击、施法、言语或操作物件；仅有 10 尺悬浮飞行速度；穿过狭隙与占据已有生物空间需手动处理；生命值降至 0 或自愿用魔法动作终止时法术结束。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"气化形体\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":3}}],\"concentration\":{\"hours\":1},\"targeting\":{\"type\":\"creature\",\"count\":\"slot.level - 2\",\"range\":\"touch\"},\"root\":[{\"kind\":\"applyEffect\",\"template\":\"气化形体\",\"to\":\"target\"}]}],\"effects\":{\"气化形体\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"hours\":1,\"endsOn\":[{\"event\":\"reducedTo0\"}]},\"statics\":[{\"kind\":\"resist\",\"values\":[\"钝击\",\"穿刺\",\"挥砍\"]},{\"kind\":\"conditionImmune\",\"values\":[\"倒地\"]},{\"kind\":\"speedSet\",\"value\":10,\"lock\":true}],\"rollMods\":[{\"on\":{\"kind\":\"save\",\"ability\":[\"str\",\"dex\",\"con\"]},\"who\":\"bearer\",\"op\":\"adv\",\"label\":\"气化形体：力敏体豁免优势\"}],\"flags\":{\"cannot\":[\"speak\",\"castSpells\"]},\"text\":\"拥有钝击、穿刺和挥砍伤害的抗性，对倒地状态免疫，进行力量、敏捷、体质豁免具有优势；飞行速度为 10 尺且能悬浮；不能讲话、操作物件、攻击或施法；可穿过狭隙与占据其他生物空间；生命值降至 0 或用魔法动作终止时结束。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:强令对决",
+  "name": "强令对决",
+  "by": "AI",
+  "automation": "partial",
+  "level": 1,
+  "text": "目标感知豁免失败陷入强令对决：对施法者之外的目标进行攻击检定时具有劣势。目标不能自主移动到距离施法者超过 30 尺（需在地图上手动限制）。施法者攻击其他生物、施法者盟友伤害目标、或回合结束相距超过 30 尺时法术提前终止。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"强令对决\",\"activation\":\"bonus\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":1}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":30,\"filter\":\"target.id != self.id && canSee(self, target)\"},\"root\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"强令对决\",\"to\":\"target\"}]}]}],\"effects\":{\"强令对决\":{\"tags\":[\"magical\",\"spell\"],\"rollMods\":[{\"on\":{\"kind\":\"attack\"},\"who\":\"bearer\",\"when\":\"target != null && source != null && target.id != source.id\",\"op\":\"disadv\",\"label\":\"强令对决：攻击决斗者之外的目标具有劣势\"}],\"text\":\"对决斗者以外的目标发动攻击检定具有劣势；不能自主移动到距离决斗者超过 30 尺处。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:强迫术",
+  "name": "强迫术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 4,
+  "text": "专注至多 1 分钟。30 尺内可见所选生物进行感知豁免，失败陷入魅惑状态直至法术结束。施法者后续可用附赠动作「强迫术：指定方向」命令被魅惑生物沿指定方向移动；强制移动及移动后的再次感知豁免需手动处理。",
+  "notes": [
+   "强迫术：以附赠动作指向一个水平方向。受魅惑的目标在下一回合必须用尽移动力朝该方向移动，移动后可重新进行感知豁免对抗法术 DC，成功解除效应。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"强迫术\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":4}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"area\",\"range\":\"self\",\"area\":{\"shape\":\"emanation\",\"radius\":30},\"filter\":\"target.id != self.id && canSee(self, target)\"},\"root\":[{\"kind\":\"forEach\",\"in\":\"area\",\"do\":[{\"kind\":\"save\",\"ability\":\"wis\",\"dc\":\"self.spell.dc\",\"onFail\":[{\"kind\":\"applyEffect\",\"template\":\"强迫术\",\"to\":\"target\"}]}]}]},{\"id\":\"direct\",\"name\":\"强迫术：指定方向\",\"activation\":\"bonus\",\"requires\":\"self.concentrating\",\"root\":[{\"kind\":\"note\",\"text\":\"强迫术：以附赠动作指向一个水平方向。受魅惑的目标在下一回合必须用尽移动力朝该方向移动，移动后可重新进行感知豁免对抗法术 DC，成功解除效应。\"}]}],\"effects\":{\"强迫术\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:魅惑\"],\"text\":\"陷入魅惑状态。施法者以附赠动作指明方向后，目标下回合必须用尽移动力向该方向移动，移动后可重新进行感知豁免，成功则法术终止。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:擒抱藤",
+  "name": "擒抱藤",
+  "by": "AI",
+  "automation": "partial",
+  "level": 4,
+  "text": "附赠动作，专注至多 1 分钟。藤蔓从 60 尺内你指定的未占据空间破土而出（位置请自己在地图上标一个标记，引擎不记藤蔓本身）。对一个距藤蔓 30 尺内的生物进行一次近战法术攻击：命中受到 4d8 点钝击伤害，并被朝藤蔓方向拉近 30 尺；体型不超过巨型则同时陷入受擒（逃脱 DC 等同于你的法术豁免 DC）。之后每个回合可以用附赠动作「擒抱藤：藤蔓攻击」再打一次。手动部分：① 引擎把距离算成「你到目标」而不是「藤蔓到目标」，藤蔓放得远时要自己判断够不够得到；② 拉近的方向是朝你而不是朝藤蔓（有地图时会真的移动棋子）；③ 升环施法「每高一环多擒抱一名生物」引擎记不住，请自己盯住受擒的目标数量。「同一时间只能擒抱一名生物」已自动：再打中一名新目标时，旧的那个会被放开（引擎用重新开启专注来实现，所以每次藤蔓攻击都会让法术的剩余时长重新计 1 分钟）。受擒可用「擒抱藤：放开受擒的生物」随时解除（无需动作）。",
+  "notes": [
+   "藤蔓出现在 60 尺内你指定的未占据空间（请在地图上放一个标记；之后按「距藤蔓 30 尺」自己判断目标够不够得到）。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"擒抱藤\",\"activation\":\"bonus\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":4}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"note\",\"text\":\"藤蔓出现在 60 尺内你指定的未占据空间（请在地图上放一个标记；之后按「距藤蔓 30 尺」自己判断目标够不够得到）。\"},{\"kind\":\"attack\",\"attack\":{\"melee\":true,\"spell\":true},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"4d8\",\"type\":\"钝击\"},{\"kind\":\"move\",\"mode\":\"pull\",\"ft\":30},{\"kind\":\"if\",\"when\":\"target.size != '超巨型'\",\"then\":[{\"kind\":\"applyEffect\",\"template\":\"擒抱藤：受擒\",\"to\":\"target\"}]}]}]},{\"id\":\"strike\",\"name\":\"擒抱藤：藤蔓攻击\",\"activation\":\"bonus\",\"requires\":\"self.concentrating\",\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"attack\",\"attack\":{\"melee\":true,\"spell\":true},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"4d8\",\"type\":\"钝击\"},{\"kind\":\"move\",\"mode\":\"pull\",\"ft\":30},{\"kind\":\"if\",\"when\":\"target.size != '超巨型'\",\"then\":[{\"kind\":\"applyEffect\",\"template\":\"擒抱藤：受擒\",\"to\":\"target\"}]}]}]},{\"id\":\"release\",\"name\":\"擒抱藤：放开受擒的生物\",\"activation\":\"free\",\"requires\":\"self.concentrating\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"filter\":\"target.hasEffect('擒抱藤：受擒')\"},\"root\":[{\"kind\":\"removeEffect\",\"match\":{\"name\":\"擒抱藤：受擒\"},\"from\":\"target\"}]}],\"effects\":{\"擒抱藤：受擒\":{\"tags\":[\"magical\",\"spell\"],\"implies\":[\"XPHB:condition:受擒\"],\"text\":\"被藤蔓擒抱，陷入受擒状态；逃脱 DC 等同于施法者的法术豁免 DC。施法者可以随时放开（无需动作），法术结束或施法者专注结束时也会放开。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:驱逐善恶",
+  "name": "驱逐善恶",
+  "by": "AI",
+  "automation": "partial",
+  "level": 5,
+  "text": "法术持续时间内（至多 1 分钟，专注），天界生物、元素生物、精类、邪魔和不死生物对你的攻击检定具有劣势。你可以以一个魔法动作使用破除惑控（触碰生物解除上述生物造成的附身、魅惑或恐慌）或驱逐（5尺内上述类型生物进行魅力豁免，失败遣送回家园位面；亡灵遣返堕影冥界，精类遣返妖精荒野）。使用任一特性都会提前结束本法术。位面遣返与解除附身需由 DM 与玩家手动处理。",
+  "notes": [
+   "以一个魔法动作触碰一名生物，解除其由天界生物、元素生物、精类、邪魔或不死生物造成的附身、魅惑或恐慌状态。法术提前结束。",
+   "选择5尺内可见的一名天界生物、元素生物、精类、邪魔或不死生物，目标必须通过一次魅力豁免（DC为施法者的法术豁免DC），否则被遣送回其家园位面（不死生物遣返堕影冥界，精类遣返妖精荒野）。法术提前结束。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"驱逐善恶\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":5}}],\"concentration\":{\"minutes\":1},\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"template\":\"驱逐善恶\",\"to\":\"self\"}]},{\"id\":\"use\",\"name\":\"驱逐善恶：破除惑控或驱逐\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"requires\":\"self.concentrating && self.hasEffect('驱逐善恶')\",\"root\":[{\"kind\":\"choose\",\"prompt\":\"选择使用破除惑控还是驱逐以提前结束法术：\",\"options\":[{\"label\":\"破除惑控（触碰生物，结束其被天界/元素/精类/邪魔/不死生物附身、魅惑或恐慌）\",\"do\":[{\"kind\":\"note\",\"text\":\"以一个魔法动作触碰一名生物，解除其由天界生物、元素生物、精类、邪魔或不死生物造成的附身、魅惑或恐慌状态。法术提前结束。\"},{\"kind\":\"removeEffect\",\"match\":{\"name\":\"驱逐善恶\"},\"from\":\"self\"},{\"kind\":\"removeEffect\",\"match\":{\"key\":\"concentration\"},\"from\":\"self\"}]},{\"label\":\"驱逐（5尺内天界/元素/精类/邪魔/不死生物进行魅力豁免，失败被遣送回家园位面）\",\"do\":[{\"kind\":\"note\",\"text\":\"选择5尺内可见的一名天界生物、元素生物、精类、邪魔或不死生物，目标必须通过一次魅力豁免（DC为施法者的法术豁免DC），否则被遣送回其家园位面（不死生物遣返堕影冥界，精类遣返妖精荒野）。法术提前结束。\"},{\"kind\":\"removeEffect\",\"match\":{\"name\":\"驱逐善恶\"},\"from\":\"self\"},{\"kind\":\"removeEffect\",\"match\":{\"key\":\"concentration\"},\"from\":\"self\"}]}]}]}],\"effects\":{\"驱逐善恶\":{\"tags\":[\"magical\",\"spell\"],\"text\":\"天界生物、元素生物、精类、邪魔和不死生物对你的攻击检定具有劣势。你可以以一个魔法动作使用破除惑控或驱逐并提前结束此法术。\",\"rollMods\":[{\"on\":{\"kind\":\"attack\"},\"who\":\"against\",\"when\":\"attacker != null && (attacker.type == '天界生物' || attacker.type == '元素生物' || attacker.type == '精类' || attacker.type == '邪魔' || attacker.type == '不死生物')\",\"op\":\"disadv\",\"label\":\"驱逐善恶：攻击劣势\"}]}}}"
+ },
+ {
+  "key": "XPHB:spell:燃火术",
+  "name": "燃火术",
+  "by": "AI",
+  "automation": "partial",
+  "level": 0,
+  "text": "附赠动作施展，手中产生火焰持续 10 分钟并提供照明（照明手动处理）。持续期间可用动作将火焰掷出，进行远程法术攻击，造成 1d8（随等级成长）火焰伤害，投掷后法术终止。",
+  "notes": [],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"燃火术\",\"activation\":\"bonus\",\"tags\":[\"spell\",\"magical\"],\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"applyEffect\",\"to\":\"self\",\"template\":\"燃火术\"}]},{\"id\":\"use\",\"name\":\"燃火术：投掷火焰\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"requires\":\"self.hasEffect('燃火术')\",\"targeting\":{\"type\":\"creature\",\"count\":1,\"range\":60},\"root\":[{\"kind\":\"attack\",\"attack\":{\"ranged\":true,\"spell\":true},\"onHit\":[{\"kind\":\"damage\",\"dice\":\"(1 + floor((self.level + 1) / 6))d8\",\"type\":\"火焰\"}]},{\"kind\":\"removeEffect\",\"match\":{\"name\":\"燃火术\"},\"from\":\"self\"}]}],\"effects\":{\"燃火术\":{\"tags\":[\"magical\",\"spell\"],\"duration\":{\"minutes\":10},\"text\":\"发出 20 尺半径明亮光照与 20 尺微光光照。可用动作将火焰掷出（法术终止）。\"}}}"
+ },
+ {
+  "key": "XPHB:spell:任意门",
+  "name": "任意门",
+  "by": "AI",
+  "automation": "partial",
+  "level": 4,
+  "text": "将自己传送至多 500 尺到指定位置，并可携带 5 尺内一名自愿生物一同传送。若落点已被生物或物体占据，各受到 4d6 点力场伤害且传送失败。具体传送位置与同行生物需在地图上手动操作。",
+  "notes": [
+   "任意门：传送至多 500 尺。可带 5 尺内一名自愿生物一同传送。落点被占据则各受 4d6 力场伤害且传送失败。"
+  ],
+  "data": "{\"automation\":\"partial\",\"actions\":[{\"id\":\"cast\",\"name\":\"任意门\",\"activation\":\"action\",\"tags\":[\"spell\",\"magical\"],\"cost\":[{\"slot\":{\"min\":4}}],\"targeting\":{\"type\":\"self\"},\"root\":[{\"kind\":\"move\",\"mode\":\"teleport\",\"ft\":500},{\"kind\":\"note\",\"text\":\"任意门：传送至多 500 尺。可带 5 尺内一名自愿生物一同传送。落点被占据则各受 4d6 力场伤害且传送失败。\"}]}]}"
+ }
+]
