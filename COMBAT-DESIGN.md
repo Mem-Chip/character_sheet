@@ -1433,6 +1433,7 @@ type OverridePatch =
 | 新节点 | `mark`（在实例上做记号）、`runBranch`（attackMissed / 豁免结果窗口里改跑那个节点的另一支，可只取伤害、乘倍数、`ifNoDamage`）、`refund`（退还实例花的法术位 / 资源） |
 | `rollMod.mark` | 修正生效时做记号；配 `when` 里 `action.marks.x != true` 做「每次施法只一次」。**共享掷骰**（伤害节点的 id / ref）算一次伤害掷骰：同一次掷骰的其他目标看不见这次掷骰自己做的记号（`hideMarksOfRoll`），所以火球术每个目标都加、灼热射线三道只加一次 |
 | 非攻击伤害的修正 | 以前伤害的 rollMod 只对攻击造成的伤害生效。现在写了 `on.spell` 的也对豁免法术的伤害生效（这时 `attack.*` 全 false）；没写 `on.spell` 的照旧只管攻击，免得「近战伤害 +2」这类跑到法术上 |
+| 区域 | 区域每次生效都压一个实例：从区域记着的条目键、施法者、环阶现搭（`space.ts` 的 `withZoneInstance`），所以区域伤害也算法术伤害、do 里能读 `action.*`（`action.zone` = 哪块区域）。区域是同一次施法的延续：实例上的记号记回区域（`zoneMarked` 事件，`Zone.marks`），强效塑能这类「每次施法只一次」不会每回合再来 |
 | 用上的数据 | 强力戏法、强效塑能、德鲁伊 / 牧师的强力施法（手写，`data/dyn/features.json`），不再问人 |
 
 还没做（审查统计里的第二期）：每个目标的结果（`action.result.*`：命中、重击、豁免成功、伤害、降到 0）、

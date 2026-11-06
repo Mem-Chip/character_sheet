@@ -444,6 +444,11 @@ export interface Zone {
   slot?: number;
   /** 这回合已经受过影响的：参与者 → 回合标记 */
   hits: Record<Id, string>;
+  /**
+   * 放出这块区域的那次施法上的记号（动作实例的 marks）：区域之后每次生效都还是同一次施法，
+   * 「每次施法只一次」的东西（强效塑能）不能每回合再来一遍。
+   */
+  marks?: Record<string, unknown>;
 }
 
 /** 一个规则条目（官方条目的动态层 / 状态 / 通用动作 / 精通 / 房规） */

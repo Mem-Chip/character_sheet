@@ -25,7 +25,7 @@ export const EMITTED_EVENTS = new Set([
   ...WINDOW_EVENTS,
   'actionUsed', 'actionDone', 'damageApplied', 'damageRolled', 'healed', 'tempHpGained',
   'effectApplied', 'effectEnded', 'turnEnding', 'roundStarted', 'combatStarted', 'combatEnded', 'died', 'timeAdvanced',
-  'moved', 'zoneHit', 'entryGranted', 'entryRevoked',
+  'moved', 'zoneHit', 'zoneMarked', 'entryGranted', 'entryRevoked',
 ]);
 
 const NODE_KINDS = new Set([

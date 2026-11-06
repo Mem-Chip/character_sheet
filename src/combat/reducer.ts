@@ -41,6 +41,11 @@ export function applyEvent(s: EncounterState, ev: GameEvent): void {
       if (z) z.hits[p.id as string] = p.at as string;
       break;
     }
+    case 'zoneMarked': {
+      const z = s.zones?.[p.zone as string];
+      if (z) z.marks = structuredClone(p.marks as Record<string, unknown>);
+      break;
+    }
     case 'entryGranted': {
       const id = p.id as string;
       const key = p.key as string;

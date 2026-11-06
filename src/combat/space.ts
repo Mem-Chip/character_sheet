@@ -5,7 +5,8 @@
  * 引擎移动了棋子就发 `moved` 事件（最后停在哪），服务器照着改地图。
  */
 import { controllerOf } from './d20';
-import { activeTemplates, effectiveView, effectsOf, endEffect } from './effects';
+import { activeTemplates, effectiveView, effectsOf, endEffect, entryOf } from './effects';
+import { currentAction, spellMetaOf, type ActionInstance } from './instance';
 import { executeAction, findAction, runNodes, collectDamageDefs } from './exec';
 import { nameOf } from './scope';
 import { blockedEconomy, fireWindow } from './triggers';
@@ -301,7 +302,33 @@ export function runZone(tx: Tx, z: Zone, victim: Id, why: ZoneWhen, cause: numbe
     if (!ans?.zone) return;
   }
   const seq = tx.emit('zoneHit', { zone: live.id, name: live.name, id: victim, at: tx.turnKey(), why }, cause);
-  runNodes(tx, live.do, zoneCtx(tx, live, victim, live.do, seq));
+  withZoneInstance(tx, live, victim, seq, () => runNodes(tx, live.do, zoneCtx(tx, live, victim, live.do, seq)));
+}
+
+/**
+ * 区域每次生效都算「放出它的那道法术」的一次结算：压一个动作实例（instance.ts），
+ * 这样区域造成的伤害也是法术伤害（强效塑能这类修正认得出来），区域的 do 里也能读 action.spell.*。
+ * 实例从区域记着的条目键、施法者、环阶现搭 —— 不用另存，已经放在地图上的区域也认得。DM 画的区域没有施法者，不压。
+ */
+function withZoneInstance(tx: Tx, z: Zone, victim: Id, seq: number, fn: () => void): void {
+  if (!z.source || !tx.state.combatants[z.source]) { fn(); return; }
+  const entry = entryOf(tx, z.source, z.entryKey);
+  const action = entry?.actions?.[0];
+  const isSpell = /:spell:/.test(z.entryKey) || !!action?.tags?.includes('spell');
+  const meta = isSpell ? spellMetaOf(z.entryKey, entry, action ?? { id: '', name: z.name, activation: 'none', root: [] }) : null;
+  const inst: ActionInstance = {
+    seq, by: z.source, name: entry?.name ?? z.name, key: z.entryKey, kind: isSpell ? 'spell' : 'feature',
+    economy: 'none', onMyTurn: tx.state.round === null || tx.state.order[tx.state.turnIndex] === z.source,
+    spell: meta ? { ...meta, slot: z.slot ?? meta.level } : null,
+    attack: null, targets: [victim], marks: { ...((z.marks ?? {}) as ActionInstance['marks']) }, markRoll: {}, paid: { resources: [] },
+    parent: currentAction(tx), pending: null, zone: z.id,
+  };
+  const before = JSON.stringify(inst.marks);
+  tx.actions.push(inst);
+  try { fn(); } finally { tx.actions.pop(); }
+  // 这次生效做了新记号：记回区域上（走事件，撤销 / 重放才对得上）
+  const after = JSON.stringify(inst.marks);
+  if (after !== before && tx.state.zones?.[z.id]) tx.emit('zoneMarked', { zone: z.id, marks: JSON.parse(after) }, seq);
 }
 
 /**

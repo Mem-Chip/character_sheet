@@ -73,7 +73,7 @@ const ATTACK = T.obj({
 const ACTION = T.obj({
   name: T.str, key: T.str, kind: T.str, economy: T.str, onMyTurn: T.bool, by: T.ref,
   spell: T.obj({ level: T.num, slot: T.num, school: T.str, lists: T.list(T.str), concentration: T.bool, ritual: T.bool, range: T.any, components: T.str }),
-  attack: ATTACK, targets: T.list(T.ref), targetCount: T.num, marks: T.open, parent: T.open,
+  attack: ATTACK, targets: T.list(T.ref), targetCount: T.num, marks: T.open, parent: T.open, zone: T.str,
 });
 const DAMAGE = T.obj({ type: T.str, amount: T.num, crit: T.bool, save: T.str, saved: T.bool });
 

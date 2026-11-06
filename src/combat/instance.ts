@@ -65,6 +65,8 @@ export interface ActionInstance {
   parent: ActionInstance | null;
   /** 当前停在哪个攻击 / 豁免的结果上（attackMissed / saveSucceeded 窗口里 runBranch 用） */
   pending: PendingBranch | null;
+  /** 区域生效时压的实例：是哪块区域（不是区域 = 没有） */
+  zone?: string;
 }
 
 const META = spellMeta as Record<string, SpellMeta>;
@@ -122,6 +124,7 @@ export function actionValue(tx: Tx, a: ActionInstance | null): Value {
     attack: a.attack ? ({ ...a.attack } as unknown as Record<string, Value>) : null,
     targets: a.targets.filter((t) => tx.state.combatants[t]).map((t) => refOf(tx, t)),
     targetCount: a.targets.length,
+    zone: a.zone ?? null,
     marks: { ...a.marks },
     parent: a.parent ? actionValue(tx, a.parent) : null,
   } as Record<string, Value>;

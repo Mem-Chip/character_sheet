@@ -416,6 +416,7 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
         source: ctx.self, entryKey: ctx.entryKey, on: n.on ?? [], do: n.do ?? [], affects: n.affects ?? 'all',
         ...(n.while?.length ? { while: n.while } : {}), ...(n.difficult ? { difficult: true } : {}), ...(n.fully ? { fully: true } : {}), ...(ctx.vars && Object.keys(ctx.vars).length ? { vars: { ...ctx.vars } } : {}),
         oncePerTurn: n.oncePerTurn ?? true, confirm: false, link: ctx.concentrationId ?? null,
+        ...(Object.keys(currentAction(tx)?.marks ?? {}).length ? { marks: { ...currentAction(tx)!.marks } } : {}),
         untilRound: n.rounds && round !== null ? round + n.rounds : null, hits: {}, ...(ctx.slot !== undefined ? { slot: ctx.slot } : {}),
       };
       placeZone(tx, zone, ctx.cause);

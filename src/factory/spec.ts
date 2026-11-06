@@ -179,7 +179,8 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
 \`action.kind\`（spell / weapon / item / feature）、\`action.name\`、\`action.key\`、\`action.by\`（谁用的）、\`action.economy\`（action / bonus / reaction…）、\`action.onMyTurn\`、
 \`action.spell.level\`（基础环阶，戏法 0）、\`action.spell.slot\`（实际用的环阶）、\`action.spell.school\`（中文学派名：塑能、防护…）、\`action.spell.lists\`（在哪些职业的法术列表里，用 \`includes(action.spell.lists, '法师')\`）、
 \`action.spell.concentration\` / \`ritual\` / \`range\` / \`components\`（'VSM' 的子集）、\`action.attack\`（最近一次攻击的性质）、\`action.targets\`、\`action.targetCount\`、\`action.marks.<名字>\`、\`action.parent\`（外层那次动作）。
-不在动作里（回合开始、区域每回合生效）时 \`action\` 是 null，读它的字段得到空值：\`action.spell.level == 0\` 为假。
+区域（\`zone\` 节点放下的）每次生效都算放出它的那道法术的一次结算：区域的 do 里 \`action\` 就是那道法术（\`action.zone\` 不为空），区域伤害也是法术伤害；记号跟着区域走，同一次施法只算一次。
+不在动作里（回合开始的触发器这类）时 \`action\` 是 null，读它的字段得到空值：\`action.spell.level == 0\` 为假。
 触发器的 do 读到的就是**触发它的那次动作**；带 \`trigger\` 的反应动作进了 root 之后读到的是它自己，触发它的那次在 \`action.parent\`。
 
 - **「每次施法 / 每次攻击只能一次」**：rollMod 写 \`mark: 'once'\`、when 里加 \`action.marks.once != true\`（生效一次就做上记号；**记号名只能用英文字母和数字**）；触发器的 do 里用 \`{ kind: 'mark', name: 'once' }\`。
