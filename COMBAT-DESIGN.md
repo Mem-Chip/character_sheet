@@ -1450,4 +1450,7 @@ type OverridePatch =
 | `choose` | count 可以是表达式；pool 可以按学派 / 职业列表筛 |
 | 合并规则 | 手写条目盖 AI 条目是逐字段合并：要去掉 AI 那份的触发器，手写那份得显式写 `triggers: []` |
 
-还没做：改射程（射程检查在界面选目标那一步）、把攻击动作里的一次攻击换成施法。
+| 用一次攻击施展戏法 | 不用新引擎：动作 `cost: [{ economy: 'attack' }]` + `choose`（`pool.from: 'ownCantrips'`、`list`）+ `castFrom`。战争魔法、吟游诗人 / 剑咏者的额外攻击、秘法战斗风格这么写了 |
+| 改射程 | 效应 `flags.rangeMult` / `touchRange`；`effectiveRange`（exec.ts）算法术实际射程，界面选目标时用它筛（远程法术） |
+
+还没做：一次换两次攻击（精通战争魔法）、疾风连击里换徒手打击（`economy: 'attack'` 不认 n）。

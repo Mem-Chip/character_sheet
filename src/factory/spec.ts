@@ -215,6 +215,9 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
 - **扣骰子** \`trimDamage\`：命中窗口里从伤害包的某一项去掉几颗骰（诡诈打击：\`from: '偷袭'\`，那一项的来源名就是加伤害的那个能力的 label）。
 - **重掷伤害骰**：\`damageIncoming\` before 窗口里 \`modify: [{ op: 'rerollDamage', count: 'max(1, self.mod.cha)' }]\`（role: 'actor'），重掷点数最小的几颗；共享掷骰只重掷一次。
 - **对另一目标再来一次** \`repeatAction\`：结算期间（命中 / 失手窗口里）对挑中的目标再执行一次这次动作，不再付代价。要配记号限制次数，不然会一直跳。
+- **把一次攻击换成施展戏法**（战争魔法、额外攻击换戏法）：写一个动作 \`activation: 'none'\`、\`cost: [{ economy: 'attack' }]\`、\`targeting: { type: 'creature', count: 1 }\`，
+  root 里先 \`choose\`（\`pool: { from: 'ownCantrips', castTime: 'action', list: '法师' }\`、\`var: 'k'\`）再 \`castFrom\`（\`fromVar: 'k'\`、\`to: 'target'\`）。
+- **改射程**（远程法术）：效应的 \`flags.rangeMult\`（法术射程乘几）/ \`flags.touchRange\`（触碰改成几尺），配 \`endsOn: [{ event: 'spellCast', when: 'event.actor == self.id' }]\` 施完就散。射程由界面选目标时检查。
 
 **某人开始 / 结束回合时**（「敌人在你 10 尺内开始回合时」）：\`on: 'turnStarted'\`、\`role: 'enemy'\`（或 ally / any），\`when: 'dist(self, target) <= 10'\` —— 回合窗口里 \`target\` 就是回合的主人；
 写在效应里、只管承受者自己回合的用 \`role: 'actor'\`。灵光（aura）授予的触发器也一样。

@@ -5,30 +5,45 @@
   "AU:武僧:秘法战斗风格:6": {
    "name": "秘法战斗风格",
    "automation": "full",
-   "text": "在自己回合执行攻击动作时，可以将其中一次徒手打击替换为施展一道施法时间为动作的术士戏法。引擎只扣这一次攻击次数；戏法的选择与施放效果由人手动处理。",
+   "text": "在自己回合执行攻击动作时，可以把其中一次徒手打击换成施展一道施法时间为动作的术士戏法：用「秘法战斗风格：用一次攻击施展戏法」，花掉一次攻击，挑戏法和目标。",
    "actions": [
     {
-     "id": "use",
+     "id": "cantrip",
+     "name": "秘法战斗风格：用一次攻击施展戏法",
+     "activation": "none",
+     "tags": [
+      "magical"
+     ],
+     "cost": [
+      {
+       "economy": "attack"
+      }
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1
+     },
      "root": [
       {
        "kind": "choose",
+       "prompt": "施展哪道戏法？",
+       "var": "k",
        "pool": {
         "from": "ownCantrips",
-        "castTime": "action"
-       }
+        "castTime": "action",
+        "list": "术士"
+       },
+       "options": []
       },
       {
        "kind": "castFrom",
-       "fromVar": true,
+       "fromVar": "k",
        "to": "target"
       }
      ]
     }
    ],
-   "tags": [
-    "ai",
-    "未审"
-   ]
+   "triggers": []
   },
   "AU:虚弱弹": {
    "name": "虚弱弹",

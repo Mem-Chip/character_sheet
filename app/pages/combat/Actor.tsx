@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { ABIL_CN, ABILS, type Ability } from '../../../src/expr';
 import { SKILLS, type Json } from '../../../src/sheet';
 import {
-  actionCosts, canPay, concentrationOf, describeCost, effectiveAction, maxTargets, skillBonus, weaponAction,
+  actionCosts, canPay, concentrationOf, describeCost, effectiveAction, effectiveRange, maxTargets, skillBonus, weaponAction,
   type Action, type Command, type ActiveEffect, type Cost, type Duration, type RuleBook, type Session,
 } from '../../../src/combat';
 import { Clip, NumInput, Panel, Pips, Stat, Tag, sgn } from '../../components/ui';
@@ -528,7 +528,9 @@ export function runAction(s: Session, ui: CombatUi, id: string, it: ActItem, slo
       // 锥和线都从施法者身上出发（数据里个别写了数字射程的也是）
       ? { area: t.area, self: t.range === 'self' || t.area.shape === 'cone' || t.area.shape === 'line' }
       : undefined;
-    combat.startAim({ actor: id, ref: it.ref, name: it.name, max, repeat: !!t?.repeat, cmd, range: rangeOf(t?.range), area });
+    // 射程：远程法术这类效应会改法术的射程（引擎算，界面照着筛）
+    const range = s.peek((tx) => effectiveRange(tx, id, it.action)) ?? rangeOf(t?.range);
+    combat.startAim({ actor: id, ref: it.ref, name: it.name, max, repeat: !!t?.repeat, cmd, range, area });
     return;
   }
   combat.dispatch(cmd);

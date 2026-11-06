@@ -2536,6 +2536,185 @@
      "text": "对这道法术的这次豁免具有劣势（掷完即散）。"
     }
    }
+  },
+  "XPHB:战士:战争魔法:7": {
+   "name": "战争魔法",
+   "automation": "full",
+   "text": "自己回合执行攻击动作时，可以把其中一次攻击换成施展一道施法时间为动作的法师戏法：用「战争魔法：用一次攻击施展戏法」，花掉一次攻击，挑戏法和目标。范围、自身类的戏法请直接从法术栏施展。",
+   "actions": [
+    {
+     "id": "cantrip",
+     "name": "战争魔法：用一次攻击施展戏法",
+     "activation": "none",
+     "tags": [
+      "magical"
+     ],
+     "cost": [
+      {
+       "economy": "attack"
+      }
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1
+     },
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "施展哪道戏法？",
+       "var": "k",
+       "pool": {
+        "from": "ownCantrips",
+        "castTime": "action",
+        "list": "法师"
+       },
+       "options": []
+      },
+      {
+       "kind": "castFrom",
+       "fromVar": "k",
+       "to": "target"
+      }
+     ]
+    }
+   ],
+   "triggers": []
+  },
+  "XPHB:吟游诗人:额外攻击:6": {
+   "name": "额外攻击",
+   "automation": "full",
+   "text": "执行攻击动作时攻击两次（人物卡已经按特性名算了攻击次数）；其中一次可以换成施展一道施法时间为动作的戏法：用「额外攻击：用一次攻击施展戏法」。",
+   "actions": [
+    {
+     "id": "cantrip",
+     "name": "额外攻击：用一次攻击施展戏法",
+     "activation": "none",
+     "tags": [
+      "magical"
+     ],
+     "cost": [
+      {
+       "economy": "attack"
+      }
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1
+     },
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "施展哪道戏法？",
+       "var": "k",
+       "pool": {
+        "from": "ownCantrips",
+        "castTime": "action",
+        "list": "吟游诗人"
+       },
+       "options": []
+      },
+      {
+       "kind": "castFrom",
+       "fromVar": "k",
+       "to": "target"
+      }
+     ]
+    }
+   ],
+   "triggers": []
+  },
+  "FRHoF:法师:额外攻击:6": {
+   "name": "额外攻击",
+   "automation": "full",
+   "text": "执行攻击动作时攻击两次（人物卡已经按特性名算了攻击次数）；其中一次可以换成施展一道施法时间为动作的法师戏法：用「额外攻击：用一次攻击施展戏法」。",
+   "actions": [
+    {
+     "id": "cantrip",
+     "name": "额外攻击：用一次攻击施展戏法",
+     "activation": "none",
+     "tags": [
+      "magical"
+     ],
+     "cost": [
+      {
+       "economy": "attack"
+      }
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1
+     },
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "施展哪道戏法？",
+       "var": "k",
+       "pool": {
+        "from": "ownCantrips",
+        "castTime": "action",
+        "list": "法师"
+       },
+       "options": []
+      },
+      {
+       "kind": "castFrom",
+       "fromVar": "k",
+       "to": "target"
+      }
+     ]
+    }
+   ],
+   "triggers": []
+  },
+  "XPHB:远程法术": {
+   "name": "远程法术",
+   "automation": "full",
+   "tags": [
+    "metamagic"
+   ],
+   "text": "超魔法：施展射程至少 5 尺的法术时，花 1 术法点让射程翻倍；射程是触碰的改成 30 尺。先用「远程法术」（不占动作），下一道法术选目标时射程就按翻倍算（有地图时超出射程的点不进来），施完就散。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "远程法术",
+     "activation": "free",
+     "tags": [
+      "metamagic"
+     ],
+     "cost": [
+      {
+       "resource": "sorcery_points",
+       "n": 1
+      }
+     ],
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "远程"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "远程": {
+     "name": "远程法术：下一道法术射程翻倍",
+     "flags": {
+      "rangeMult": 2,
+      "touchRange": 30
+     },
+     "duration": {
+      "minutes": 1,
+      "endsOn": [
+       {
+        "event": "spellCast",
+        "when": "event.actor == self.id"
+       }
+      ]
+     },
+     "text": "下一道法术射程翻倍（触碰改成 30 尺），施完就散。"
+    }
+   }
   }
  }
 }

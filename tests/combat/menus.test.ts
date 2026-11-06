@@ -239,3 +239,41 @@ describe('手写的盖过 AI 的：同键逐字段合并，要显式清空', () 
     expect(JSON.stringify(rules.entry('XPHB:游荡者:偷袭:1'))).toContain('trimDamage');
   });
 });
+
+/* ---------------- 用一次攻击施展戏法、远程法术 ---------------- */
+import aiSpells from '../../data/dyn/ai/spells.json';
+import { effectiveRange } from '../../src/combat';
+
+describe('真数据：战争魔法（用一次攻击施展戏法）、远程法术', () => {
+  function fighterScene(sources: string[]) {
+    const dice = scriptedDice();
+    const s = new Session(createEncounter('wm'), { rules: new RuleBook([FILES[0], aiSpells as unknown as RuleFile, ...FILES.slice(1)]), diceFor: () => dice });
+    const add = (id: string, kind: 'pc' | 'monster', view: Record<string, unknown>) => done(s.dispatch({ type: 'addCombatant', combatant: makeCombatant({ id, kind, view: makeView({ name: id, hpMax: 40, ac: 12, ...view }) }) }));
+    add('f', 'pc', { level: 7, pb: 3, score: { int: 14, cha: 16 }, levels: { 战士: 7 }, attacksPerAction: 2, spell: { dc: 13, atk: 5, mod: 2, ability: 'int' }, sources });
+    add('g', 'monster', {});
+    done(s.dispatch({ type: 'startCombat', order: ['f', 'g'] }));
+    return { s, dice };
+  }
+
+  it('战争魔法：花一次攻击施展火焰箭（只有一道戏法时不问），攻击动作还剩一次', () => {
+    const { s, dice } = fighterScene(['XPHB:战士:战争魔法:7', 'XPHB:spell:火焰箭']);
+    dice.push(15, 6, 4);   // 7 级：火焰箭 2d10
+    done(s.dispatch({ type: 'useAction', actor: 'f', action: 'XPHB:战士:战争魔法:7#cantrip', targets: ['g'] }));
+    expect(s.state.combatants.g.live.hp).toBe(40 - 10);
+    expect(s.state.combatants.f.economy.attacksLeft).toBe(1);
+    expect(s.state.combatants.f.economy.action).toBe(0);
+  });
+
+  it('远程法术：用了之后下一道法术射程翻倍、触碰改 30 尺；施完就散', () => {
+    const { s, dice } = fighterScene(['XPHB:远程法术', 'XPHB:spell:火焰箭']);
+    const bolt = (aiSpells as unknown as { entries: Record<string, { actions: import('../../src/combat').Action[] }> }).entries['XPHB:spell:火焰箭'].actions[0];
+    const touch = { ...bolt, targeting: { type: 'creature' as const, count: 1, range: 'touch' as const } };
+    expect(s.peek((tx) => effectiveRange(tx, 'f', bolt))).toBe(120);
+    done(s.dispatch({ type: 'useAction', actor: 'f', action: 'XPHB:远程法术#use', targets: [], force: true }));   // 测试角色没有术法点池：强制执行
+    expect(s.peek((tx) => effectiveRange(tx, 'f', bolt))).toBe(240);
+    expect(s.peek((tx) => effectiveRange(tx, 'f', touch))).toBe(30);
+    dice.push(15, 6, 4);
+    done(s.dispatch({ type: 'useAction', actor: 'f', action: 'XPHB:spell:火焰箭#cast', targets: ['g'] }));
+    expect(s.peek((tx) => effectiveRange(tx, 'f', bolt))).toBe(120);
+  });
+});

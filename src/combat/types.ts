@@ -75,6 +75,9 @@ export interface Flags {
   forbidTarget?: 'source';
   /** 瞬发法术：下一道施法时间为动作的法术改用附赠动作施放（放完这个效应就结束） */
   quicken?: boolean;
+  /** 远程法术：法术的射程乘几（触碰的改成 touchRange 尺）；效应自己写 endsOn 施法后结束 */
+  rangeMult?: number;
+  touchRange?: number;
 }
 
 export interface Duration {

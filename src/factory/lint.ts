@@ -27,7 +27,7 @@ const KEYS = {
   until: ['at', 'of', 'nth'],
   saveEnds: ['ability', 'dc', 'at'],
   endsOn: ['event', 'when'],
-  flags: ['blocks', 'breaksConcentration', 'cannot', 'forbidTarget', 'quicken', 'ignores'],
+  flags: ['blocks', 'breaksConcentration', 'cannot', 'forbidTarget', 'quicken', 'ignores', 'rangeMult', 'touchRange'],
   aura: ['id', 'radius', 'affects', 'includeSelf', 'requires', 'grant', 'stackKey'],
   grant: ['rollMods', 'statics', 'triggers'],
   targeting: ['type', 'count', 'repeat', 'range', 'area', 'filter'],

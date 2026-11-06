@@ -1337,6 +1337,23 @@ function quickenOf(tx: Tx, actor: Id, action: Action): ActiveEffect | undefined 
 }
 
 /** 这个动作实际怎么施放（瞬发法术：施法时间为动作的法术改成附赠动作）。界面算代价也用它 */
+/**
+ * 这个动作实际的射程（尺）：远程法术这类效应（flags.rangeMult / touchRange）只改法术的。
+ * 引擎不查射程（选目标是界面的事），界面选目标时用它；null = 不查（自身、没写）。
+ */
+export function effectiveRange(tx: Tx, actor: Id, action: Action): number | null {
+  const r = action.targeting?.range;
+  const base = typeof r === 'number' ? r : r === 'touch' || r === 'reach' ? 5 : null;
+  if (!(action.tags ?? []).includes('spell') || base === null) return base;
+  let out = base;
+  for (const a of activeTemplates(tx, actor)) {
+    const f = a.tpl.flags;
+    if (r === 'touch' && f?.touchRange) out = Math.max(out, f.touchRange);
+    else if (typeof r === 'number' && f?.rangeMult) out = Math.max(out, r * f.rangeMult);
+  }
+  return out;
+}
+
 export function effectiveAction(tx: Tx, actor: Id, action: Action): Action {
   return quickenOf(tx, actor, action) ? { ...action, activation: 'bonus' } : action;
 }
