@@ -18,6 +18,7 @@ import type { Action, EffectTemplate, Entry, Node, RollMod, Trigger } from './ty
 export const WINDOW_EVENTS = new Set([
   'turnStarted', 'turnEnded', 'initiativeRolled', 'spellCast', 'd20Rolled', 'attackHit', 'attackMissed',
   'saveForced', 'saveSucceeded', 'saveFailed', 'damageIncoming', 'damageTaken', 'reducedTo0', 'restCompleted', 'leftReach', 'actionDone',
+  'enteredReach', 'moved', 'summoned',
 ]);
 
 /** 引擎会发出的事件（endsOn 能监听的） */

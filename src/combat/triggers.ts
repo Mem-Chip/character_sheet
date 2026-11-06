@@ -329,6 +329,11 @@ function windowPrompt(tx: Tx, spec: WindowSpec): string {
     }
     case 'damageIncoming': return `${t} 即将受到伤害。要使用以下能力吗？`;
     case 'leftReach': return `${a} 离开了 ${t} 的触及范围。要使用以下能力吗？`;
+    case 'enteredReach': return `${a} 进入了 ${t} 的触及范围。要使用以下能力吗？`;
+    case 'moved': return spec.window === 'before'
+      ? `${t} 将要${(spec.scope.event as Record<string, unknown> | undefined)?.forced ? '被移动' : '移动'}。要使用以下能力吗？`
+      : `${t} 移动了。要使用以下能力吗？`;
+    case 'summoned': return `${a} 召唤出了 ${t}。要使用以下能力吗？`;
     case 'd20Rolled': return `${rollText(spec, a, t)}要使用以下能力吗？`;
     case 'damageTaken': return `${t} 受到了伤害。要使用以下能力吗？`;
     case 'spellCast': {

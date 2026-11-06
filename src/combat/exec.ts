@@ -798,6 +798,10 @@ function runSummon(tx: Tx, n: Extract<Node, { kind: 'summon' }>, ctx: ExecCtx): 
     });
     const seq = tx.emit('combatantAdded', { combatant: cb }, ctx.cause);
     placeSummon(tx, ctx.self, id, view.size, seq);
+    // 召唤出来了：开 summoned 窗口（承受者 = 召唤物，发起者 = 召唤者；action 就是这道召唤法术）——
+    // 强韧召唤（给虚血、抗性）、不死坚韧（加生命上限）这些挂在这里，用现成的节点对 target 做
+    const sseq = tx.emit('summoned', { id, by: ctx.self, name: view.name }, seq);
+    fireWindow(tx, { event: 'summoned', window: 'after', actor: ctx.self, target: id, scope: { event: { id, by: ctx.self, name: view.name, type: view.type ?? '' } }, cause: sseq });
   }
 }
 

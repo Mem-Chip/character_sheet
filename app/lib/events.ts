@@ -93,7 +93,9 @@ export function describe(ev: GameEvent, name: (id: unknown) => string, secret: S
     case 'triggerFired': return L(`${name(p.owner)}：${p.label}`, 'warn');
     case 'note': return L(String(p.text));
     case 'moved': return p.forced ? L(`${name(p.id)} 被移动到新位置`) : null;
-    case 'leftReach': return L(`${name(p.id)} 离开了 ${name(p.from)} 的触及范围`, 'warn');
+    case 'leftReach': return L(`${name(p.id)} 离开了 ${name(p.from)} 的触及范围${p.provokes === false ? '（撤离了，不引发借机攻击）' : ''}`, 'warn');
+    case 'enteredReach': return L(`${name(p.id)} 进入了 ${name(p.of)} 的触及范围`);
+    case 'summoned': return L(`${name(p.by)} 召唤出 ${p.name}`);
     case 'zoneCreated': return L(`地图上出现区域「${p.zone.name}」`);
     case 'zoneRemoved': return L(`区域「${p.name}」消失${p.reason ? `（${p.reason}）` : ''}`);
     case 'zoneMoved': return L(`区域「${p.name}」挪到了新位置`);

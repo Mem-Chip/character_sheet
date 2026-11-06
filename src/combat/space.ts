@@ -108,12 +108,12 @@ export function reachOf(tx: Tx, id: Id): number | null {
   return melee.some((a) => a.reach) ? 10 : 5;
 }
 
-/** 谁会因为 mover 从 from 走到 to 而能借机攻击（离开了他的触及范围） */
-export function provokers(tx: Tx, mover: Id, from: Cell, to: Cell): Id[] {
+/** mover 从 from 走到 to 时触及关系的变化：离开了谁的触及范围、进了谁的（只看敌人；没有近战攻击的没有触及） */
+export function reachChanges(tx: Tx, mover: Id, from: Cell, to: Cell): { left: Id[]; entered: Id[] } {
   const pos = tx.pos, me = pos?.[mover], sp = tx.spatial;
-  if (!pos || !me || !sp) return [];
+  const out = { left: [] as Id[], entered: [] as Id[] };
+  if (!pos || !me || !sp) return out;
   const side = tx.state.combatants[mover]?.side;
-  const out: Id[] = [];
   const at = (c: Cell) => { me.x = c.x; me.y = c.y; };
   const back = { x: me.x, y: me.y };
   for (const e of Object.values(tx.state.combatants)) {
@@ -124,11 +124,16 @@ export function provokers(tx: Tx, mover: Id, from: Cell, to: Cell): Id[] {
     const d0 = sp.distance(e.id, mover);
     at(to);
     const d1 = sp.distance(e.id, mover);
-    if (d0 !== null && d1 !== null && d0 <= reach && d1 > reach) out.push(e.id);
+    if (d0 === null || d1 === null) continue;
+    if (d0 <= reach && d1 > reach) out.left.push(e.id);
+    if (d0 > reach && d1 <= reach) out.entered.push(e.id);
   }
   at(back);
   return out;
 }
+
+/** 谁会因为 mover 从 from 走到 to 而能借机攻击（离开了他的触及范围） */
+export const provokers = (tx: Tx, mover: Id, from: Cell, to: Cell): Id[] => reachChanges(tx, mover, from, to).left;
 
 /** 撤离了（或者有别的「移动不引发借机攻击」） */
 function disengaged(tx: Tx, id: Id): boolean {
@@ -153,13 +158,31 @@ function opportunity(tx: Tx, mover: Id, from: Cell, to: Cell, cause: number | nu
 /* ------------------------------ 走 ------------------------------ */
 
 /**
- * 一格一格走过 path（含起点）。每一步：先看有没有人能借机攻击（还在原来那格时打），再看进了哪些区域。
- * forced = 被推、被拉（不引发借机攻击，进区域照算）。走的人倒下 / 速度变成 0 就停下。
+ * 一格一格走过 path（含起点）。
+ *
+ * 移动和施法一样有前后两个窗口（event = { id, by, forced, ft }）：
+ *   - moved before：还没走，cancel = 拦下这次移动（新锻臂铠「阻止盟友被推离 / 拉近」）；
+ *   - moved after：走完了，ft = 实际走了几尺（轰雷剑「目标自愿移动 5 尺以上就受伤」）。
+ * 每一步：先看离开了谁的触及范围（还在原来那格时，借机攻击挂在 leftReach 上），走过去，再看进了谁的触及范围（enteredReach：
+ * 长柄武器大师）、进出了哪些区域。forced = 被推、被拉（不引发借机攻击；进触及、进区域照算）。走的人倒下 / 速度变成 0 就停下。
  */
-export function travel(tx: Tx, id: Id, path: Cell[], o: { forced: boolean; cause: number | null }): void {
+export function travel(tx: Tx, id: Id, path: Cell[], o: { forced: boolean; by?: Id; cause: number | null }): void {
   const me = tx.pos?.[id];
   if (!me || path.length < 2) return;
+  const by = o.by ?? id;
+  const plan = { cancelled: false };
+  fireWindow(tx, {
+    event: 'moved', window: 'before', actor: by, target: id,
+    scope: { event: { id, by, forced: o.forced, ft: (path.length - 1) * 5 } },
+    modify: (m) => { if (m.op === 'cancel') plan.cancelled = true; },
+    cause: o.cause,
+  });
+  if (plan.cancelled) {
+    tx.emit('note', { text: `${nameOf(tx, id)} 的这次移动被拦下了`, owner: id }, o.cause);
+    return;
+  }
   const from = { x: me.x, y: me.y };
+  let steps = 0;
   for (let i = 1; i < path.length; i++) {
     const c = tx.state.combatants[id];
     if (!c || c.live.dead || c.live.hp <= 0) break;
@@ -170,8 +193,15 @@ export function travel(tx: Tx, id: Id, path: Cell[], o: { forced: boolean; cause
       if (!after || after.live.dead || after.live.hp <= 0) break;
       if (effectiveView(tx, id).speed === 0) break;
     }
+    const entered = reachChanges(tx, id, prev, path[i]).entered;
     me.x = path[i].x;
     me.y = path[i].y;
+    steps++;
+    for (const e of entered) {
+      if (!tx.state.combatants[id] || tx.state.combatants[id].live.dead) break;
+      const seq = tx.emit('enteredReach', { id, of: e, forced: o.forced }, o.cause);
+      fireWindow(tx, { event: 'enteredReach', window: 'after', actor: id, target: e, scope: { event: { id, of: e, forced: o.forced } }, cause: seq });
+    }
     for (const z of Object.values(tx.state.zones ?? {})) {
       const was = inZone(z, { ...prev, s: me.s }), now = inZone(z, me);
       if (!was && now) enterZone(tx, z, id, o.cause);
@@ -180,7 +210,13 @@ export function travel(tx: Tx, id: Id, path: Cell[], o: { forced: boolean; cause
       if (now && tx.state.zones?.[z.id]) runZone(tx, z, id, 'move', o.cause);
     }
   }
-  if (me.x !== from.x || me.y !== from.y) tx.emit('moved', { id, from, to: { x: me.x, y: me.y }, forced: o.forced }, o.cause);
+  if (me.x !== from.x || me.y !== from.y) {
+    const seq = tx.emit('moved', { id, from, to: { x: me.x, y: me.y }, forced: o.forced }, o.cause);
+    fireWindow(tx, {
+      event: 'moved', window: 'after', actor: by, target: id,
+      scope: { event: { id, by, forced: o.forced, ft: steps * 5, from, to: { x: me.x, y: me.y } } }, cause: seq,
+    });
+  }
 }
 
 /** 推离 / 拉近：沿着两者连线的方向走直线，碰到别的棋子就停；拉近到贴身为止 */
@@ -215,7 +251,7 @@ export function shove(tx: Tx, by: Id, target: Id, ft: number, mode: 'push' | 'pu
     cur = next;
   }
   if (path.length < 2) return true;
-  travel(tx, target, path, { forced: true, cause });
+  travel(tx, target, path, { forced: true, by, cause });
   return true;
 }
 
