@@ -187,6 +187,11 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
 区域（\`zone\` 节点放下的）每次生效都算放出它的那道法术的一次结算：区域的 do 里 \`action\` 就是那道法术（\`action.zone\` 不为空），区域伤害也是法术伤害；记号跟着区域走，同一次施法只算一次。
 **这包伤害是不是攻击造成的**：伤害窗口（damageIncoming、damageTaken）里用 \`damage.isAttack\`（法术豁免、区域、持续伤害都是 false），不要写 \`attack != null\`，也不用问人。
 检定修正（rollMod）里没有 \`damage\`，伤害的类型读 \`action.damage.type\`。\`includes\` 也能查文字：\`includes(action.name, '吐息')\` = 名字里有「吐息」。
+**伤害由哪几项组成**：每项伤害记着来源名（加这项伤害的能力的 label，偷袭就是「偷袭」），\`damage.parts\` / \`action.damage.parts\` 是这些名字。
+「这次有没有偷袭」写 \`includes(action.damage.parts, '偷袭')\`，不用另做记号（命中窗口里也读得到刚加上的项）。
+伤害修正写 \`on: { kind: 'damage', part: '偷袭' }\` 就只管那几项：这次没有偷袭就不生效；\`minDie\` / \`maxDice\` 只改偷袭的骰子（恐怖化身：偷袭骰的 1、2 当 3）。
+**检定防的是什么**：\`roll.against\` 是这次检定防的状态名 —— 豁免失败那一支会挂上的（连隐含的：恐惧术的效应隐含恐慌），回合末摆脱效应的豁免就是那个效应带的。
+「对抗中毒的豁免有优势」写 rollMod \`when: "includes(roll.against, '中毒')"\`，不用问人。数据照常写，不用另标。
 不在动作里（回合开始的触发器这类）时 \`action\` 是 null，读它的字段得到空值：\`action.spell.level == 0\` 为假。
 触发器的 do 读到的就是**触发它的那次动作**；带 \`trigger\` 的反应动作进了 root 之后读到的是它自己，触发它的那次在 \`action.parent\`。
 

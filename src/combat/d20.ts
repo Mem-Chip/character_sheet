@@ -29,6 +29,8 @@ export interface RollRequest {
   /** AC / DC；没有就不判定成败 */
   vs?: number;
   critRange?: number;
+  /** 这次检定防的是哪些状态（失败会被施加的、豁免成功能摆脱的）：roll.against */
+  against?: string[];
   label: string;
   cause: number | null;
 }
@@ -51,6 +53,7 @@ export interface RollResult {
   sub?: RollSub;
   ability?: Ability;
   skill?: string;
+  against?: string[];
   label: string;
   /** 掷出的 d20（一颗或两颗） */
   d20: number[];
@@ -176,6 +179,7 @@ export function d20Test(tx: Tx, req: RollRequest): RollResult {
   const index = tx.rollIdx++;
   const rollScope: Record<string, Value> = {
     kind: req.kind, sub: req.sub ?? null, ability: req.ability ?? null, skill: req.skill ?? null, roller: req.roller, target: req.target ?? null,
+    against: req.against ?? [],
   };
 
   // ② 收集
@@ -262,7 +266,7 @@ export function d20Test(tx: Tx, req: RollRequest): RollResult {
   }
 
   const result: RollResult = {
-    index, roller: req.roller, target: req.target ?? null, kind: req.kind, sub: req.sub, ability: req.ability, skill: req.skill, label: req.label,
+    index, roller: req.roller, target: req.target ?? null, kind: req.kind, sub: req.sub, ability: req.ability, skill: req.skill, against: req.against ?? [], label: req.label,
     d20, natural, kept: Math.max(natural, minD20), extra, bonus: req.bonus, flat, total: 0,
     vs: req.vs === undefined ? null : req.vs + targetAdd,
     adv, disadv, cancelled, autoFail, autoSucceed, critRange, outcome: null, crit: false, autoCritOnHit,
@@ -370,7 +374,7 @@ export function rollValue(r: RollResult): Record<string, Value> {
   return {
     kind: r.kind, sub: r.sub ?? null, ability: r.ability ?? null, skill: r.skill ?? null, natural: r.natural, total: r.total,
     vs: r.vs, adv: r.adv, disadv: r.disadv, roller: r.roller, target: r.target, crit: r.crit,
-    failing: isFailing(r),
+    failing: isFailing(r), against: r.against ?? [],
   };
 }
 

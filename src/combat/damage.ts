@@ -74,6 +74,9 @@ export const normType = (t: string): string => TYPE_ALIAS[t] ?? t;
 
 const sum = (a: number[]) => a.reduce((x, y) => x + y, 0);
 
+/** 这包伤害由哪几项组成（来源名，去重）：damage.parts / action.damage.parts，「这次有没有偷袭」看它 */
+const partsOf = (p: DamagePacket): string[] => [...new Set(p.components.map((c) => c.from).filter(Boolean))];
+
 /**
  * 掷一个组件。重击按核心参数：
  *   doubleDice（RAW）—— 伤害骰掷两次；maxPlusRoll（常见房规）—— 一份取最大值 + 一份正常掷。
@@ -146,7 +149,8 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
   // ① 攻击者的伤害修正（狂暴伤害、巨武器战斗…）
   //    攻击造成的伤害：所有 damage 修正都看；不是攻击的伤害（火球术这类豁免法术）：只看写了 on.spell 的
   //    （强效塑能、强力施法），免得「近战伤害 +2」这类没写攻击过滤的修正跑到法术伤害上
-  let minDie = 0;
+  // minDie / maxDice 按伤害组成记：没写 part 的管整包，写了的只管那几项
+  const dieMods: Array<{ min: number; max: boolean; parts: string[] | null }> = [];
   if (p.source && tx.state.combatants[p.source]) {
     const primary = p.components[0]?.type ?? '';
     const req = { kind: 'attack' as const, attack: p.attack };
@@ -155,20 +159,24 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
     const cands = rollModsOf(tx, p.source)
       .filter((d) => d.item.who === 'bearer' && d.item.on.kind !== undefined && [d.item.on.kind].flat().includes('damage')
         && (p.attack ? filterMatches({ ...d.item.on, kind: 'attack' }, req) : d.item.on.spell !== undefined && !d.item.on.attack)
-        && (d.item.on.spell === undefined || d.item.on.spell === fromSpell))
+        && (d.item.on.spell === undefined || d.item.on.spell === fromSpell)
+        && (d.item.on.part === undefined || [d.item.on.part].flat().some((x) => p.components.some((c) => c.from === x))))
       .map((d) => ({
         d,
         scope: {
           self: p.source!, source: d.source, target: p.target, attacker: p.source!, attack: p.attack ?? NO_ATTACK, effect: d.effect,
-          damage: { type: primary, amount: 0, crit: p.crit, isAttack: !!p.attack } as Record<string, Value>,
+          damage: { type: primary, amount: 0, crit: p.crit, isAttack: !!p.attack, parts: partsOf(p) } as Record<string, Value>,
         },
       }));
     if (cands.length) {
       const { active } = hideMarksOfRoll(tx, p.rollKey, () => evaluateMods(tx, cands, p.source!, `${p.label} 伤害`));
       for (const { d } of active) if (d.item.mark) markAction(tx, d.item.mark, true, p.rollKey);
       for (const { d, value } of active) {
-        if (d.item.op === 'minDie' && typeof value === 'number') minDie = Math.max(minDie, value);
-        if (d.item.op === 'maxDice' && (d.item.on.spell === undefined || d.item.on.spell === !!p.attack?.spell)) p.max = true;
+        const parts = d.item.on.part === undefined ? null : [d.item.on.part].flat();
+        if (d.item.op === 'minDie' && typeof value === 'number') dieMods.push({ min: value, max: false, parts });
+        if (d.item.op === 'maxDice' && (d.item.on.spell === undefined || d.item.on.spell === !!p.attack?.spell)) {
+          if (parts) dieMods.push({ min: 0, max: true, parts }); else p.max = true;
+        }
         if ((d.item.op === 'add' || d.item.op === 'addDice') && value !== undefined) {
           const dice = value instanceof Dice ? value : Dice.constant(value);
           p.components.push({ dice, type: primary, from: d.item.label });
@@ -183,7 +191,9 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
   const rer = p.rollKey ? currentAction(tx)?.rerolled?.[p.rollKey] : undefined;
   p.components.forEach((c, i) => { const x = rer?.[i]; if (x && c.rolled) c.rolled = { faces: x.faces.map((f) => f.slice()), total: x.total, crit: x.crit }; });
   for (const c of p.components) {
-    const r = c.rolled ?? { ...rollComponent(tx, c, p.crit, user, minDie, p.max), crit: p.crit };
+    const mine = dieMods.filter((m) => !m.parts || m.parts.includes(c.from));
+    const minDie = Math.max(0, ...mine.map((m) => m.min));
+    const r = c.rolled ?? { ...rollComponent(tx, c, p.crit, user, minDie, p.max || mine.some((m) => m.max)), crit: p.crit };
     c.rolled = r;
     const type = normType(c.type);
     rolledParts.push({ from: c.from, type, dice: (r.crit ? c.dice.doubled() : c.dice).toString(), faces: r.faces.flat(), total: r.total });
@@ -194,7 +204,7 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
   // 动作实例记下这次的伤害骰（「再掷一颗同样的骰子」用 action.damage.die）：取第一项（武器 / 法术本身的伤害）
   const dinst = currentAction(tx);
   if (dinst && p.source === dinst.by && p.components[0]) {
-    dinst.damage = { dice: p.components[0].dice.toString(), type: normType(p.components[0].type), total: rolledTotal };
+    dinst.damage = { dice: p.components[0].dice.toString(), type: normType(p.components[0].type), total: rolledTotal, parts: partsOf(p) };
   }
   const index = tx.damageIdx++;
   const rolledSeq = tx.emit('damageRolled', {
@@ -207,7 +217,7 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
     scope: {
       attack: p.attack,
       // save：这次伤害来自哪项豁免（不是豁免带来的 = 空字符串）；saved：豁免成功了没有
-      damage: { type: p.components[0]?.type ?? '', amount: rolledTotal, crit: p.crit, save: p.save?.ability ?? '', saved: !!p.save?.success, isAttack: !!p.attack },
+      damage: { type: p.components[0]?.type ?? '', amount: rolledTotal, crit: p.crit, save: p.save?.ability ?? '', saved: !!p.save?.success, isAttack: !!p.attack, parts: partsOf(p) },
       event: { label: p.label, source: p.source },
     },
     cause: rolledSeq,
@@ -311,7 +321,7 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
   if (hpBefore > 0 && hpAfter === 0 && rest > 0) {
     fireWindow(tx, {
       event: 'reducedTo0', window: 'before', actor: p.source ?? undefined, target: p.target,
-      scope: { attack: p.attack, damage: { type: p.components[0]?.type ?? '', amount: total, crit: p.crit, isAttack: !!p.attack } },
+      scope: { attack: p.attack, damage: { type: p.components[0]?.type ?? '', amount: total, crit: p.crit, isAttack: !!p.attack, parts: partsOf(p) } },
       cause: rolledSeq,
       modify: (m, by) => {
         if (m.op === 'setHp') {
@@ -389,7 +399,7 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
     tx.emit('damageTaken', { id: p.target, from: p.source ?? null, amount: total, type: p.components[0]?.type ?? '', crit: !!p.crit, tempAbsorbed, downed, killed }, seq);
     fireWindow(tx, {
       event: 'damageTaken', window: 'after', actor: p.source ?? undefined, target: p.target,
-      scope: { attack: p.attack, damage: { type: p.components[0]?.type ?? '', amount: total, crit: p.crit, isAttack: !!p.attack } },
+      scope: { attack: p.attack, damage: { type: p.components[0]?.type ?? '', amount: total, crit: p.crit, isAttack: !!p.attack, parts: partsOf(p) } },
       cause: seq,
     });
   }

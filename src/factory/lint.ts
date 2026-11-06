@@ -8,7 +8,7 @@
  * 纯逻辑，浏览器和 Node 共用。
  */
 import { RuleBook, auditRuleBook, type Entry, type RuleFile } from '../combat';
-import type { Modify, Node } from '../combat/types';
+import type { Action, AttackInfo, Aura, Duration, EffectTemplate, Flags, Modify, Node, RollFilter, RollMod, Trigger } from '../combat/types';
 
 /** 联合类型里 tag 为 K 的那几种合起来有哪些字段（分配律：每一种各自取 keyof） */
 type FieldsOf<U, Tag extends string, K> = U extends Record<Tag, K> ? Exclude<keyof U, Tag> : never;
@@ -24,7 +24,7 @@ const KEYS = {
   triggerSpec: ['on', 'role', 'window', 'deferTo', 'when', 'aim'],
   trigger: ['id', 'on', 'role', 'window', 'deferTo', 'when', 'aim', 'optional', 'limit', 'cost', 'do', 'modify', 'label'],
   rollMod: ['on', 'who', 'when', 'op', 'value', 'label', 'mark'],
-  rollFilter: ['kind', 'ability', 'skill', 'attack', 'spell'],
+  rollFilter: ['kind', 'ability', 'skill', 'attack', 'spell', 'part'],
   attackFilter: ['melee', 'ranged', 'weapon', 'spell'],
   template: ['name', 'duration', 'statics', 'rollMods', 'triggers', 'aura', 'flags', 'implies', 'stackKey', 'stack', 'deathAtLevel', 'onApply', 'onEnd', 'tags', 'text'],
   duration: ['instant', 'rounds', 'minutes', 'hours', 'until', 'max', 'saveEnds', 'endsOn', 'manual'],
@@ -38,6 +38,20 @@ const KEYS = {
   area: ['shape', 'radius', 'size', 'length', 'width'],
   attackInfo: ['melee', 'ranged', 'weapon', 'spell', 'unarmed', 'finesse', 'reach', 'ability', 'damageType', 'item', 'mastery'],
 } as const;
+
+// 同上：清单要和 types.ts 里对应的类型一致（多了 / 少了字段，typecheck 报在这里）
+type Diff<T, L extends readonly string[]> =
+  | `缺：${Exclude<keyof T & string, L[number]>}`
+  | `多：${Exclude<L[number], keyof T & string>}`;
+type Clean<X> = X extends `缺：` | `多：` ? never : X;
+type KeysDrift =
+  | Clean<Diff<RollMod, typeof KEYS.rollMod>> | Clean<Diff<RollFilter, typeof KEYS.rollFilter>>
+  | Clean<Diff<EffectTemplate, typeof KEYS.template>> | Clean<Diff<Duration, typeof KEYS.duration>>
+  | Clean<Diff<Flags, typeof KEYS.flags>> | Clean<Diff<Aura, typeof KEYS.aura>>
+  | Clean<Diff<Trigger, typeof KEYS.trigger>> | Clean<Diff<Action, typeof KEYS.action>>
+  | Clean<Diff<AttackInfo, typeof KEYS.attackInfo>>;
+const keysInSync: [KeysDrift] extends [never] ? true : KeysDrift = true;
+void keysInSync;
 
 const NODE_KEYS = {
   attack: ['bonus', 'attack', 'critRange', 'onHit', 'onMiss'],

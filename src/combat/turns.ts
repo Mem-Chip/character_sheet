@@ -1,7 +1,7 @@
 import { ABIL_CN, Unknown, runInt } from '../expr';
 import { applyHeal, kill } from './damage';
 import { d20Test } from './d20';
-import { effectiveView, effectsOf, endEffect, roundsOf } from './effects';
+import { conditionsOfTemplate, effectiveView, effectsOf, endEffect, roundsOf, templateOf } from './effects';
 import { expireGrants } from './exec';
 import { makeEnv } from './scope';
 import { expireZones, zonesOnTurn } from './space';
@@ -200,6 +200,7 @@ function saveEndsCheck(tx: Tx, bearer: Id, at: 'turnStart' | 'turnEnd', cause: n
     }
     const r = d20Test(tx, {
       roller: bearer, kind: 'save', ability: se.ability, bonus: effectiveView(tx, bearer).save[se.ability], vs: dc,
+      against: ((t) => (t ? conditionsOfTemplate(tx, e.key, t) : []))(templateOf(tx, e)),
       label: `${ABIL_CN[se.ability]}豁免（摆脱「${e.name}」）`, cause,
     });
     if (r.outcome === 'success') endEffect(tx, e.id, '豁免成功', r.seq);

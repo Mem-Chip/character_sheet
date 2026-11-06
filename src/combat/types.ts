@@ -25,6 +25,11 @@ export interface RollFilter {
   attack?: { melee?: boolean; ranged?: boolean; weapon?: boolean; spell?: boolean };
   /** 伤害 / 治疗骰：只管来自法术的（true）或不是法术的（false） */
   spell?: boolean;
+  /**
+   * 伤害：只管这几项（伤害组成的来源名 = 加这项伤害的能力的 label，trimDamage 的 from 同一个名字）。
+   * 这次伤害里没有这几项 → 不生效；minDie / maxDice 只改这几项的骰子（恐怖化身：偷袭骰的 1、2 当 3）
+   */
+  part?: string | string[];
 }
 
 export type RollOp =

@@ -72,7 +72,8 @@ export interface ActionInstance {
   /** 正在结算的是哪个目标（action.result 读它的） */
   last: Id | null;
   /** 最近一次伤害掷骰：骰子（文本）、类型、掷出的总数 */
-  damage: { dice: string; type: string; total: number } | null;
+  /** live：命中窗口里伤害还没掷，指着正在攒的那包伤害的组成 —— 偷袭这类后加的项也读得到 */
+  damage: { dice: string; type: string; total: number; parts: string[]; live?: Array<{ from: string }> } | null;
   /** 共享掷骰被重掷过（rerollDamage）：掷骰 id → 每一项重掷后的骰面，同一次掷骰的其他目标照用 */
   rerolled?: Record<string, Array<{ faces: number[][]; total: number; crit: boolean } | undefined>>;
   /** 对另一个目标再执行一次这次动作（repeatAction 用；executeAction 搭好，区域没有） */
@@ -171,6 +172,7 @@ export function actionValue(tx: Tx, a: ActionInstance | null): Value {
     downedCount: Object.values(a.results).filter((r) => r.reducedTo0).length,
     damage: a.damage ? {
       dice: parseDice(a.damage.dice), type: a.damage.type, total: a.damage.total,
+      parts: a.damage.live ? [...new Set(a.damage.live.map((c) => c.from).filter(Boolean))] : a.damage.parts,
       die: oneDie(a.damage.dice) ? parseDice(oneDie(a.damage.dice)!) : null,
     } : null,
     marks: { ...a.marks },

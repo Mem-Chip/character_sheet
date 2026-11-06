@@ -4,7 +4,7 @@ import { runNodes } from './exec';
 import { zonesOfConcentration } from './space';
 import { makeEnv, nameOf } from './scope';
 import type { Tx } from './tx';
-import type { ActiveEffect, Aura, CombatantView, Duration, EffectId, EffectTemplate, Entry, GameEvent, Id, StaticMod } from './types';
+import type { ActiveEffect, Aura, CombatantView, Duration, EffectId, EffectTemplate, Entry, GameEvent, Id, Node, StaticMod } from './types';
 
 /**
  * ActiveEffect 的生命周期（COMBAT-DESIGN §3.3 / §3.4）：施加、叠加与压制、隐含状态、专注链接、结束。
@@ -53,6 +53,39 @@ export function activeTemplates(tx: Tx, bearer: Id): ActiveTpl[] {
     if (tpl) visit(e, e.key, tpl, false, 0);
   }
   return out;
+}
+
+/** 一个效应模板（连同它隐含的）算哪些状态：名字列表（恐惧术 → 恐慌） */
+export function conditionsOfTemplate(tx: Tx, key: string, tpl: EffectTemplate, depth = 0): string[] {
+  const out = (tpl.tags ?? []).includes('condition') ? [tplName(key, tpl)] : [];
+  if (depth > 4) return out;
+  for (const ik of tpl.implies ?? []) {
+    const r = tx.rules.resolveTemplate(ik, key);
+    if (r) out.push(...conditionsOfTemplate(tx, r.key, r.tpl, depth + 1));
+  }
+  return [...new Set(out)];
+}
+
+/**
+ * 一串效果节点会施加哪些状态 —— 检定「防的是什么」：豁免失败那一支挂中毒，这次豁免就是「避免中毒的豁免」。
+ * 从数据里直接读，不用另外标（抗毒剂、矮人韧性这类「对抗 X 状态的豁免有优势」看 roll.against）。
+ */
+export function conditionsInNodes(tx: Tx, nodes: Node[] | undefined, baseKey: string): string[] {
+  const out: string[] = [];
+  const walk = (ns: Node[] | undefined, depth: number) => {
+    if (!ns || depth > 6) return;
+    for (const n of ns) {
+      if (n.kind === 'applyEffect') {
+        const r = n.inline ? { key: `${baseKey}#${n.name ?? ''}`, tpl: n.inline } : n.template ? tx.rules.resolveTemplate(n.template, baseKey) : null;
+        if (r) out.push(...conditionsOfTemplate(tx, r.key, r.tpl));
+      }
+      const o = n as unknown as Record<string, unknown>;
+      for (const f of ['onFail', 'onHit', 'then', 'else', 'do']) if (Array.isArray(o[f])) walk(o[f] as Node[], depth + 1);
+      if (n.kind === 'choose') for (const opt of n.options ?? []) walk(opt.do, depth + 1);
+    }
+  };
+  walk(nodes, 0);
+  return [...new Set(out)];
 }
 
 export function hasCondition(tx: Tx, bearer: Id, name: string): boolean {

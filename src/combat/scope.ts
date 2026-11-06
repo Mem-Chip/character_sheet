@@ -62,9 +62,10 @@ const FUNCS: Record<string, FnSig> = {
 
 const ROLL_FULL = T.obj({
   kind: T.str, sub: T.str, ability: T.str, skill: T.str, natural: T.num, total: T.num, vs: T.num, adv: T.bool, disadv: T.bool,
-  roller: T.str, target: T.str, crit: T.bool, failing: T.bool,
+  roller: T.str, target: T.str, crit: T.bool, failing: T.bool, against: T.list(T.str),
 });
-const ROLL_PRE = T.obj({ kind: T.str, sub: T.str, ability: T.str, skill: T.str, roller: T.str, target: T.str });
+/** against：这次检定防的是哪些状态（豁免失败会挂上的、豁免成功能摆脱的），includes(roll.against, '中毒') */
+const ROLL_PRE = T.obj({ kind: T.str, sub: T.str, ability: T.str, skill: T.str, roller: T.str, target: T.str, against: T.list(T.str) });
 const ATTACK = T.obj({
   melee: T.bool, ranged: T.bool, weapon: T.bool, spell: T.bool, unarmed: T.bool, finesse: T.bool, reach: T.bool,
   ability: T.str, damageType: T.str, item: T.str, mastery: T.str,
@@ -76,10 +77,10 @@ const ACTION = T.obj({
   attack: ATTACK, targets: T.list(T.ref), targetCount: T.num, marks: T.open, parent: T.open, zone: T.str,
   result: T.obj({ hit: T.bool, crit: T.bool, saved: T.bool, damage: T.num, reducedTo0: T.bool, killed: T.bool }),
   results: T.list(T.open), hitCount: T.num, critCount: T.num, savedCount: T.num, failedCount: T.num, damageTotal: T.num, downedCount: T.num,
-  damage: T.obj({ dice: T.dice, die: T.dice, type: T.str, total: T.num }),
+  damage: T.obj({ dice: T.dice, die: T.dice, type: T.str, total: T.num, parts: T.list(T.str) }),
 });
 /** 正在结算的这包伤害；isAttack：是不是攻击（命中）造成的，法术豁免、区域、持续伤害都是 false */
-const DAMAGE = T.obj({ type: T.str, amount: T.num, crit: T.bool, save: T.str, saved: T.bool, isAttack: T.bool });
+const DAMAGE = T.obj({ type: T.str, amount: T.num, crit: T.bool, save: T.str, saved: T.bool, isAttack: T.bool, parts: T.list(T.str) });
 
 const COMMON: Record<string, Ty> = {
   self: T.ref, source: T.ref,

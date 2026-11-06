@@ -3,7 +3,7 @@ import { applyDamagePacket, applyHeal, grantTempHp, maxDiceFor, normType, rollCo
 import { controllerOf, d20Test, rollValue } from './d20';
 import { newCastPlan, type CastPlan } from './castplan';
 import { currentAction, markAction, resultOf, spellMetaOf, type ActionInstance } from './instance';
-import { activeTemplates, applyEffect, effectiveView, effectsOf, endConcentration, endEffect, skillBonus, startConcentration } from './effects';
+import { activeTemplates, applyEffect, conditionsInNodes, effectiveView, effectsOf, endConcentration, endEffect, skillBonus, startConcentration } from './effects';
 import { makeEnv, nameOf, type ScopeData } from './scope';
 import { entryOf } from './collect';
 import { placeSummon, placeZone, relocateZone, shove } from './space';
@@ -185,7 +185,7 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
       const bonus = n.skill ? skillBonus(v, n.skill, n.ability) : v.mod[n.ability];
       const dc = num(tx, ctx, n.dc, '检定 DC');
       const r = d20Test(tx, {
-        roller: ctx.self, kind: 'check', ability: n.ability, skill: n.skill, bonus, vs: dc,
+        roller: ctx.self, kind: 'check', ability: n.ability, skill: n.skill, bonus, vs: dc, against: conditionsInNodes(tx, n.onFail, ctx.entryKey),
         label: `${ABIL_CN[n.ability]}${n.skill ? `（${n.skill}）` : ''}检定`, cause: ctx.cause,
       });
       runNodes(tx, r.outcome === 'success' ? n.onSuccess : n.onFail, { ...ctx, roll: rollValue(r), cause: r.seq, dc });
@@ -844,7 +844,7 @@ function runAttack(tx: Tx, n: Extract<Node, { kind: 'attack' }>, ctx: ExecCtx): 
   if (inst) {
     Object.assign(resultOf(inst, target), { hit: true, crit: r.crit });
     // 命中窗口里伤害还没掷：先记下这次要掷的骰子（「多掷一颗武器伤害骰」读 action.damage.die）
-    if (packet.components[0]) inst.damage = { dice: packet.components[0].dice.toString(), type: normType(packet.components[0].type), total: 0 };
+    if (packet.components[0]) inst.damage = { dice: packet.components[0].dice.toString(), type: normType(packet.components[0].type), total: 0, parts: [], live: packet.components };
   }
 
   // a. 防守方（护盾术、镜影术、庇护术、骑乘战斗、云雾符文……）
@@ -935,7 +935,7 @@ function runSave(tx: Tx, n: Extract<Node, { kind: 'save' }>, ctx: ExecCtx): void
   const forced = tx.emit('saveForced', { actor: ctx.self, target, ability, dc, label: ctx.actionName }, ctx.cause);
   fireWindow(tx, { event: 'saveForced', window: 'after', actor: ctx.self, target, scope: {}, cause: forced });
   const r = d20Test(tx, {
-    roller: target, kind: 'save', ability, bonus: tv.save[ability], vs: dc,
+    roller: target, kind: 'save', ability, bonus: tv.save[ability], vs: dc, against: conditionsInNodes(tx, n.onFail, ctx.entryKey),
     label: `${ABIL_CN[ability]}豁免（${ctx.actionName}）`, cause: forced,
   });
   const ok = r.outcome === 'success';
