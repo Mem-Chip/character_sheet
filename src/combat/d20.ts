@@ -1,5 +1,6 @@
 import { Dice, Unknown, runBool, runDice, runInt, type Ability, type Question, type Value } from '../expr';
 import { auraGate, rollModsOf, type Declared } from './collect';
+import { markAction } from './instance';
 import { makeEnv, nameOf, type ScopeData } from './scope';
 import { fireWindow } from './triggers';
 import type { Tx } from './tx';
@@ -199,6 +200,7 @@ export function d20Test(tx: Tx, req: RollRequest): RollResult {
     }
   }
   const { active, assumptions } = evaluateMods(tx, cands, req.roller, req.label);
+  for (const { d } of active) if (d.item.mark) markAction(tx, d.item.mark, true);
 
   // ③ 合成
   const mods: AppliedMod[] = [];

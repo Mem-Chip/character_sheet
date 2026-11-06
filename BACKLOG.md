@@ -5,6 +5,9 @@
 
 ## 刚做完、待实战检验（用的时候留意，出问题记下来）
 
+- 动作实例第一期（`tests/combat/action-instance.test.ts`，COMBAT-DESIGN §16.11）：`action.*`、豁免结果窗口、`mark` / `runBranch` / `refund`、
+  非攻击伤害的修正（写了 `on.spell` 的）。强力戏法、强效塑能、德鲁伊 / 牧师强力施法改成了不问人。已知：区域每回合造成的伤害（月华之光）不在动作里，读不到 `action`，算不上「法术伤害」。
+
 - 战斗中改先攻（`tests/combat/initiative.test.ts`）：DM 在先攻条 / 参与者列表里拖动排序；右键「移出先攻」「改先攻值…」「掷先攻加入」「填先攻加入…」；
   战斗中加的怪物 / 角色自动掷先攻、按数值插队（召唤物照旧跟着主人）。已知：顺序被手动打乱后，按数值插队只看「第一个比它低的人」，位置可能不直观。
 - 战争迷雾（地图工具「迷雾」，只有 DM 有）：按格子揭开 / 盖上，玩家那边没揭开的全黑、迷雾里别人的棋子不显示，DM 看到半透明的。
@@ -55,10 +58,13 @@
 
 ## 中的
 
-- **动作实例**（引擎）：一次动作 / 施法从开始到结算完是一个实例，它引起的每个窗口都带着它；触发器能读它的字段（法术环阶、学派、伤害骰、每个目标的结果…），
-  能对它做几种通用操作（改字段、跑它的某一支并只取伤害 / 乘倍数、加骰、做记号）。现在每种窗口只挑几样放进作用域，`CastPlan` 也只有 DC / 攻击加值 / 伤害类型 / 打断，
-  所以强力戏法（失手 / 豁免成功仍受一半伤害）、强效塑能（要问人是不是塑能法术）这类做不了。**先审再定形状**：外包包在 `datafy/instance-audit/`（1010 条，26 份），
-  答案收回来跑 `npx tsx tools/factory/instance-audit.ts merge`。在哪：`src/combat/castplan.ts`、`src/combat/triggers.ts`（`WindowSpec.scope`）、`src/combat/exec.ts`（`runAttack` / `runSave`）。
+- **动作实例第二期**（引擎，第一期见 COMBAT-DESIGN §16.11）：按 `datafy/instance-audit/report.generated.md` 的统计补
+  每个目标的结果 `action.result.*`、伤害骰 `action.damage.dice`（再掷一颗同骰、重掷、偷袭扣骰）、`repeat`（孪生法术、繁彩球）、
+  改字段（目标、射程、环阶、动作经济）、「用了一个动作之后」的事件（58 条）。在哪：`src/combat/instance.ts`、`exec.ts`（`runAttack` / `runSave` / `runDamageNodes`）。
+- **按动作实例重写数据**：审查里 `now: true` 的 35 条（现在就能写）、只用到现有能力的 61 条，以及第一期能做的
+  （超限导能、超魔法、法术塑形、预言专家…：读 `action.spell.*` 就不用再问人）。列表在 `datafy/instance-audit/report.generated.md`。
+- **菜单选择**（审查里卡在 `choice` 上的 77 条，动作实例之后最大的一类）：施法 / 命中时让人在几项里挑（附加效果、伤害类型、给谁），
+  现在的 `choose` 节点只能写死选项或从自己法术里挑。在哪：`src/combat/exec.ts`（`choose`）、`app/pages/combat/Dialogs.tsx`。
 - **批量 AI 数据化**：从启用的书里勾一批条目，排队跑单条的 AI 循环，失败的列出来、可以重试；结果进账户资料库（或某个战役）。
   在哪：`app/lib/ai.ts`（`partsJobForKey`、`checkParts`）、`src/factory/ai.ts`、`app/pages/CampaignHub.tsx`（战役页「资料」）。
 - **临时武器和武器附魔**（神圣武器、魔石术、幽影刃，改用施法属性攻击）：物品栏有了，规则还没接。

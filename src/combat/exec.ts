@@ -2,6 +2,7 @@ import { ABIL_CN, Dice, Unknown, run, runBool, runDice, runInt, type ExprSrc, ty
 import { applyDamagePacket, applyHeal, grantTempHp, maxDiceFor, normType, rollComponent, type DamageComponent, type DamagePacket } from './damage';
 import { controllerOf, d20Test, rollValue } from './d20';
 import { newCastPlan, type CastPlan } from './castplan';
+import { currentAction, markAction, spellMetaOf, type ActionInstance } from './instance';
 import { activeTemplates, applyEffect, effectiveView, effectsOf, endConcentration, endEffect, skillBonus, startConcentration } from './effects';
 import { makeEnv, nameOf, type ScopeData } from './scope';
 import { entryOf } from './collect';
@@ -185,6 +186,14 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
       return;
     }
     case 'damage': return runDamageNodes(tx, [n], ctx);
+    case 'mark': {
+      const v = n.value === undefined ? true : run(n.value, env(tx, ctx));
+      if (v instanceof Unknown) throw new Error('mark：值依赖一个还没回答的问题');
+      markAction(tx, n.name, v);
+      return;
+    }
+    case 'runBranch': return runBranch(tx, n, ctx);
+    case 'refund': return refund(tx, n, ctx);
     case 'addDamage': {
       if (!ctx.packet) throw new Error('addDamage 只能用在命中窗口里（偷袭、至圣斩这类）');
       ctx.packet.components.push({ dice: dice(tx, ctx, n.dice, ctx.actionName), type: typeOf(tx, ctx, n.type), from: ctx.actionName });
@@ -739,11 +748,15 @@ function runAttack(tx: Tx, n: Extract<Node, { kind: 'attack' }>, ctx: ExecCtx): 
     label: `${ctx.actionName} 攻击检定`, cause: ctx.cause,
   });
   const hctx: ExecCtx = { ...ctx, attack, attacker: ctx.self, roll: rollValue(r), cause: r.seq };
+  const inst = currentAction(tx);
+  if (inst) inst.attack = attack;
 
   const miss = (why?: string) => {
     const seq = tx.emit('attackMissed', { attacker: ctx.self, target, label: ctx.actionName, total: r.total, vs: r.vs, why }, r.seq);
-    runNodes(tx, n.onMiss, { ...hctx, target, cause: seq });
-    fireWindow(tx, { event: 'attackMissed', window: 'after', actor: ctx.self, target, scope: { attack, roll: rollValue(r) }, cause: seq });
+    const mctx = { ...hctx, target, cause: seq };
+    runNodes(tx, n.onMiss, mctx);
+    withPending(inst, { kind: 'attack', target, node: n, ran: 'onMiss', ctx: mctx }, () =>
+      fireWindow(tx, { event: 'attackMissed', window: 'after', actor: ctx.self, target, scope: { attack, roll: rollValue(r) }, cause: seq }));
   };
   if (r.outcome !== 'hit') { miss(); return; }
 
@@ -849,7 +862,67 @@ function runSave(tx: Tx, n: Extract<Node, { kind: 'save' }>, ctx: ExecCtx): void
   const seq = tx.emit(ok ? 'saveSucceeded' : 'saveFailed', { actor: ctx.self, target, ability, dc, label: ctx.actionName }, r.seq);
   // 成功分支里有减半的伤害 = 「豁免成功只受一半」（反射闪避据此把成功改成不受伤害、失败改成一半）
   const half = (n.onSuccess ?? []).some((x) => x.kind === 'damage' && x.scale === 0.5);
-  runNodes(tx, ok ? n.onSuccess : n.onFail, { ...ctx, target, roll: rollValue(r), cause: seq, dc, save: { ability, success: ok, half } });
+  const sctx: ExecCtx = { ...ctx, target, roll: rollValue(r), cause: seq, dc, save: { ability, success: ok, half } };
+  runNodes(tx, ok ? n.onSuccess : n.onFail, sctx);
+  // 结果窗口：强力戏法这类「豁免成功时…」挂这里；runBranch 能改跑另一支
+  withPending(currentAction(tx), { kind: 'save', target, node: n, ran: ok ? 'onSuccess' : 'onFail', ctx: sctx }, () =>
+    fireWindow(tx, { event: ok ? 'saveSucceeded' : 'saveFailed', window: 'after', actor: ctx.self, target, scope: { roll: rollValue(r) }, cause: seq }));
+}
+
+/** 开窗口期间把「停在哪个结果上」挂到动作实例上（窗口关了就撤，免得后面的窗口误用） */
+function withPending(inst: ActionInstance | null, p: NonNullable<ActionInstance['pending']>, fn: () => void): void {
+  if (!inst) { fn(); return; }
+  const outer = inst.pending;
+  inst.pending = p;
+  try { fn(); } finally { inst.pending = outer; }
+}
+
+const BRANCH_CN: Record<string, string> = { onHit: '命中', onMiss: '未命中', onFail: '豁免失败', onSuccess: '豁免成功' };
+
+/**
+ * runBranch：在攻击 / 豁免的结果窗口里，改跑那个节点的另一支（强力戏法：失手也跑命中那一支的伤害，减半）。
+ * 用的是原节点本来的执行上下文（施法者、环阶、共享掷骰都一样）。
+ */
+function runBranch(tx: Tx, n: Extract<Node, { kind: 'runBranch' }>, ctx: ExecCtx): void {
+  const p = currentAction(tx)?.pending;
+  if (!p) throw new Error('runBranch 只能用在攻击 / 豁免的结果窗口里（attackMissed、saveSucceeded、saveFailed）');
+  const branch = (b: string) => ((p.node as unknown as Record<string, unknown>)[b] as Node[] | undefined) ?? [];
+  // 「原本那支没有伤害才用」（强力戏法：豁免成功本来就有一半伤害的法术不管）
+  if (n.ifNoDamage && branch(p.ran).some((x) => x.kind === 'damage')) return;
+  let nodes = branch(n.branch);
+  if (n.damageOnly) nodes = nodes.filter((x) => x.kind === 'damage');
+  const k = n.scale;
+  if (k !== undefined) nodes = nodes.map((x) => (x.kind === 'damage' ? { ...x, scale: (x.scale ?? 1) * k } : x));
+  if (!nodes.length) return;
+  const base = p.ctx as ExecCtx;
+  // 上一行日志已经写了是哪项能力触发的，这里只说改成了什么
+  const how = [n.damageOnly ? '只取伤害' : '', k !== undefined && k !== 1 ? `×${k}` : ''].filter(Boolean).join('、');
+  tx.emit('note', { text: `「${inst0(tx)}」改按「${BRANCH_CN[n.branch]}」结算${how ? `（${how}）` : ''}`, owner: ctx.self, target: p.target }, ctx.cause);
+  runNodes(tx, nodes, { ...base, target: p.target, save: undefined, cause: ctx.cause ?? base.cause });
+}
+
+const inst0 = (tx: Tx) => currentAction(tx)?.name ?? '';
+
+/** refund：退还触发这个窗口的那次动作花掉的法术位 / 资源 */
+function refund(tx: Tx, n: Extract<Node, { kind: 'refund' }>, ctx: ExecCtx): void {
+  const inst = currentAction(tx);
+  if (!inst) throw new Error('refund 只能用在动作结算期间（施法、攻击的窗口里）');
+  const c = tx.state.combatants[inst.by];
+  if (!c) return;
+  if (n.what === 'slot') {
+    const lv = inst.paid.slot;
+    if (lv === undefined) return;
+    inst.paid.slot = undefined;
+    tx.emit('slotUsed', { id: inst.by, level: lv, used: Math.max(0, (c.live.slotsUsed[lv] ?? 1) - 1) }, ctx.cause);
+    if (inCombat(tx)) tx.emit('economyChanged', { id: inst.by, patch: { slotSpellCast: false } }, ctx.cause);
+    tx.emit('note', { text: `${ctx.actionName}：退还「${inst.name}」的 ${lv} 环法术位`, owner: inst.by }, ctx.cause);
+    return;
+  }
+  const i = inst.paid.resources.findIndex((r) => !n.id || r.id === n.id);
+  if (i < 0) return;
+  const [r] = inst.paid.resources.splice(i, 1);
+  tx.emit('resourceUsed', { id: inst.by, resource: r.id, used: Math.max(0, (c.live.resourcesUsed[r.id] ?? r.n) - r.n) }, ctx.cause);
+  tx.emit('note', { text: `${ctx.actionName}：退还「${inst.name}」花的 ${r.id} ${r.n} 次`, owner: inst.by }, ctx.cause);
 }
 
 /* ------------------------------ 伤害节点 ------------------------------ */
@@ -894,8 +967,12 @@ function runDamageNodes(tx: Tx, nodes: Array<Extract<Node, { kind: 'damage' }>>,
   }
   const ignoreResist = nodes.some((n) => n.ignoreResist);
   const ignoreImmunity = nodes.some((n) => n.ignoreImmunity);
+  // 共享掷骰（火球术）：这一组用的是哪次掷骰 —— 同一次掷骰的各个目标算「一次伤害掷骰」（hideMarksOfRoll）
+  const shared = nodes.find((n) => n.id || n.ref);
+  const rollKey = shared ? String(shared.id ?? shared.ref) : undefined;
   for (const [id, comps] of byRecipient) {
     applyDamagePacket(tx, {
+      rollKey,
       source: ctx.self, target: id, components: comps.map((c) => ({ ...c })), crit: false, label: ctx.actionName,
       scale, reduce: [], save: ctx.save, max: maxDmg() || undefined,
       ...(ignoreResist ? { ignoreResist: true } : {}),
@@ -960,7 +1037,7 @@ export function canPay(tx: Tx, id: Id, costs: Cost[]): boolean {
 }
 
 /** 付代价。法术位选环：传入 slotLevel；没传就用能用的最低环（反应型的护盾术就是这样） */
-export function payCosts(tx: Tx, id: Id, costs: Cost[], label: string, cause: number | null, slotLevel?: number): number | undefined {
+export function payCosts(tx: Tx, id: Id, costs: Cost[], label: string, cause: number | null, slotLevel?: number, paid?: ActionInstance['paid']): number | undefined {
   const c = tx.state.combatants[id];
   let usedSlot: number | undefined;
   for (const k of costs) {
@@ -971,6 +1048,7 @@ export function payCosts(tx: Tx, id: Id, costs: Cost[], label: string, cause: nu
     } else if ('resource' in k) {
       const n = k.n === undefined ? 1 : num(tx, { self: id, targets: [], entryKey: '', actionName: label, cause, locals: {} }, k.n, '资源消耗');
       tx.emit('resourceUsed', { id, resource: k.resource, used: (c.live.resourcesUsed[k.resource] ?? 0) + n }, cause);
+      paid?.resources.push({ id: k.resource, n });
     } else if ('slot' in k) {
       const level = slotLevel ?? lowestSlot(tx, id, k.slot.min, k.slot.max);
       if (level === null || level < k.slot.min || !slotAvailable(tx, id, level)) throw new Rejected(`${label}：没有可用的 ${slotLevel ?? k.slot.min} 环法术位`);
@@ -1183,6 +1261,33 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
     actor, action: action.name, key: o.actionKey, targets: o.targets, activation: act, slotLevel: slotLevel0 ?? null,
   }, o.cause);
 
+  // 动作实例：这次动作结算期间，所有窗口和表达式都能用 action.* 读到它（instance.ts）
+  const tags = action.tags ?? [];
+  const meta = isSpell ? spellMetaOf(entryKey, entryOf(tx, actor, entryKey), action) : null;
+  const inst: ActionInstance = {
+    seq, by: actor, name: action.name, key: entryKey,
+    kind: isSpell ? 'spell' : tags.includes('weapon') ? 'weapon' : tags.includes('item') ? 'item' : 'feature',
+    economy: act,
+    onMyTurn: !inCombat(tx) || tx.state.order[tx.state.turnIndex] === actor,
+    spell: meta ? { ...meta, slot: slotLevel0 ?? meta.level } : null,
+    attack: null, targets: o.targets.slice(), marks: {}, markRoll: {}, paid: { resources: [] },
+    parent: currentAction(tx), pending: null,
+  };
+  tx.actions.push(inst);
+  try {
+    runAction(tx, o, { action, actor, c, isSpell, costs, slotLevel0, entryKey, quick, seq, inst });
+  } finally {
+    tx.actions.pop();
+  }
+}
+
+/** executeAction 做完前置检查、压好实例之后的部分 */
+function runAction(tx: Tx, o: ExecuteOpts, x: {
+  action: Action; actor: Id; c: Tx['state']['combatants'][string]; isSpell: boolean; costs: Cost[];
+  slotLevel0: number | undefined; entryKey: string; quick: ActiveEffect | undefined; seq: number; inst: ActionInstance;
+}): void {
+  const { action, actor, c, isSpell, costs, slotLevel0, entryKey, quick, seq, inst } = x;
+
   // 武器攻击：消耗「攻击」动作给的攻击次数（额外攻击）
   if (inCombat(tx) && costs.some((k) => 'economy' in k && k.economy === 'attack')) {
     if (c.economy.attacksLeft > 0) {
@@ -1212,7 +1317,9 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
       slotLevel = levels.includes(picked) ? picked : levels[0];
     }
   }
-  const slot = payCosts(tx, actor, costs, action.name, seq, slotLevel);
+  const slot = payCosts(tx, actor, costs, action.name, seq, slotLevel, inst.paid);
+  inst.paid.slot = slot;
+  if (inst.spell && slot !== undefined) inst.spell.slot = slot;
   if (quick) endEffect(tx, quick.id, `用在了「${action.name}」上（附赠动作施放）`, seq);
   if (slot !== undefined && inCombat(tx) && isSpell) tx.emit('economyChanged', { id: actor, patch: { slotSpellCast: true } }, seq);
   let castPlan: CastPlan | null = null;

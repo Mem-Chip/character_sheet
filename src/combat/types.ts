@@ -43,6 +43,8 @@ export interface RollMod {
   op: RollOp;
   value?: ExprSrc;
   label: string;
+  /** 生效时在当前动作上做这个记号（配合 when 里的 `action.marks.<名字> != true`：每次施法只加一次） */
+  mark?: string;
 }
 
 /** 静态修正（与原项目 mods 同形，只收动态层需要的几种）。值可以是表达式（在承受者作用域里求值） */
@@ -320,6 +322,19 @@ export type Node =
       kind: 'modifyCast'; cancel?: boolean; refundSlot?: boolean;
       dc?: ExprSrc; attackBonus?: ExprSrc; damageType?: string; note?: string;
     }
+  /**
+   * **在触发这个窗口的那次动作上做记号**（动作实例的 marks），`action.marks.<name>` 读。
+   * 「每次施法 / 每次攻击只能一次」用它；value 缺省 true。
+   */
+  | { kind: 'mark'; name: string; value?: ExprSrc }
+  /**
+   * **改跑那次攻击 / 豁免的另一支**：只能在 attackMissed、saveSucceeded、saveFailed 窗口里用。
+   * branch = onHit / onMiss / onFail / onSuccess；damageOnly = 只取那一支的伤害（不带其他效果）；scale = 伤害倍数；
+   * ifNoDamage = 实际跑的那一支本来没有伤害才执行（强力戏法：豁免成功本来就减半的法术不管）。
+   */
+  | { kind: 'runBranch'; branch: 'onHit' | 'onMiss' | 'onFail' | 'onSuccess'; damageOnly?: boolean; scale?: number; ifNoDamage?: boolean }
+  /** **退还**触发这个窗口的那次动作花掉的法术位（what: 'slot'）或资源（what: 'resource'，id 缺省 = 它花的第一种资源） */
+  | { kind: 'refund'; what: 'slot' | 'resource'; id?: string }
   | { kind: 'resource'; id: string; delta: ExprSrc }
   | { kind: 'economy'; action?: number; bonus?: number; reaction?: number; attacks?: number; move?: ExprSrc }
   /** var：把选中项的 value（没写就是 label）放进 `vars.<var>`，后面的节点可以用（伤害类型 `type: 'vars.elem'`） */

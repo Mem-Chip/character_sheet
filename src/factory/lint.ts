@@ -19,7 +19,7 @@ const KEYS = {
   action: ['id', 'name', 'activation', 'trigger', 'cost', 'requires', 'targeting', 'concentration', 'root', 'tags', 'text'],
   triggerSpec: ['on', 'role', 'window', 'deferTo', 'when', 'aim'],
   trigger: ['id', 'on', 'role', 'window', 'deferTo', 'when', 'aim', 'optional', 'limit', 'cost', 'do', 'modify', 'label'],
-  rollMod: ['on', 'who', 'when', 'op', 'value', 'label'],
+  rollMod: ['on', 'who', 'when', 'op', 'value', 'label', 'mark'],
   rollFilter: ['kind', 'ability', 'skill', 'attack', 'spell'],
   attackFilter: ['melee', 'ranged', 'weapon', 'spell'],
   template: ['name', 'duration', 'statics', 'rollMods', 'triggers', 'aura', 'flags', 'implies', 'stackKey', 'stack', 'deathAtLevel', 'onApply', 'onEnd', 'tags', 'text'],
@@ -58,6 +58,9 @@ const NODE_KEYS: Record<string, readonly string[]> = {
   moveZone: ['key'],
   summon: ['name', 'count', 'size', 'type', 'creatureType', 'ac', 'hp', 'speed', 'pb', 'score', 'attacksPerAction', 'attacks', 'actions', 'triggers', 'rollMods', 'resist', 'immune', 'conditionImmune', 'notes', 'link', 'group'],
   note: ['text'],
+  mark: ['name', 'value'],
+  runBranch: ['branch', 'damageOnly', 'scale', 'ifNoDamage'],
+  refund: ['what', 'id'],
 };
 
 const STATIC_KEYS: Record<string, readonly string[]> = {

@@ -22,7 +22,9 @@ export const GROUPS: Group[] = ['武器攻击', '法术', '法术（未自动化
 /** 触发时机的说法（「时机到了会问」那一组用） */
 const EVENT_CN: Record<string, string> = {
   attackHit: '命中时', attackMissed: '未命中时', d20Rolled: '掷出 d20 后', damageIncoming: '将要受伤时', damageTaken: '受伤后',
-  saveForced: '迫使豁免时', turnStart: '回合开始时', turnEnd: '回合结束时', spellCast: '施法后',
+  saveForced: '迫使豁免时', saveSucceeded: '豁免成功后', saveFailed: '豁免失败后',
+  turnStarted: '回合开始时', turnEnded: '回合结束时', spellCast: '施法后', reducedTo0: '降到 0 时',
+  restCompleted: '休息后', leftReach: '离开触及时', initiativeRolled: '掷先攻时',
 };
 
 export interface ActItem {

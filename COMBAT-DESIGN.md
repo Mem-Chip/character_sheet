@@ -1417,3 +1417,24 @@ type OverridePatch =
 | 资源池 | 狂暴次数、功力、圣疗能量池、诗人激励 | 职业表的列 + 能力数据的 `resources` 声明，同名合并；已用次数存在 `char.resources[键].used`；进战斗时按 id 映射成 `view.resources`，结束时写回 |
 | 战斗中每次用的时候选 | 用不用偷袭、至圣斩用几环、圣疗用多少点、治疗还是解毒 | 引擎的决定：`optionalTrigger` / `slotLevel` / `number` / `choose` / `ask`，结算停下来等回答，回答写进事务（可撤销、可重放） |
 
+
+### 16.11 动作实例（第一期）
+
+起因：触发器只能读到窗口挑着放进作用域的几样东西（`attack`、`roll`…），读不到「触发它的那次动作」是什么、也不能对它做事，
+所以强力戏法（戏法失手 / 豁免成功仍受一半伤害）、强效塑能（要问人「这是不是塑能法术」）这类做不了。
+先审再定形状：`datafy/instance-audit/` 审了 1010 条没完全自动化的条目，统计每条要读什么、做什么（`report.md`、`report.generated.md`）。
+
+| 项 | 内容 |
+|---|---|
+| 实例 | `src/combat/instance.ts`。`executeAction` 压进 `tx.actions`（栈），结束弹出。只活在一次事务里，重放时重建，不进状态、不进事件 |
+| 读 | 所有作用域都有 `action`（不在动作里 = null，读字段得空值）：`kind`、`name`、`key`、`by`、`economy`、`onMyTurn`、`spell.{level, slot, school, lists, concentration, ritual, range, components}`、`attack`、`targets`、`targetCount`、`marks`、`parent`。触发器的 do 不压新实例，读到的就是触发它的那次；反应动作进 root 后读自己，触发它的在 `parent` |
+| 法术元数据 | `data/spell-meta.json`（`tools/build-spell-meta.ts` 从 5etools 生成，进 git：引擎在浏览器和服务器都跑）。查不到的（自制法术）环阶按法术位推，学派为空 |
+| 新窗口 | `saveSucceeded` / `saveFailed`（after，豁免节点的分支跑完之后） |
+| 新节点 | `mark`（在实例上做记号）、`runBranch`（attackMissed / 豁免结果窗口里改跑那个节点的另一支，可只取伤害、乘倍数、`ifNoDamage`）、`refund`（退还实例花的法术位 / 资源） |
+| `rollMod.mark` | 修正生效时做记号；配 `when` 里 `action.marks.x != true` 做「每次施法只一次」。**共享掷骰**（伤害节点的 id / ref）算一次伤害掷骰：同一次掷骰的其他目标看不见这次掷骰自己做的记号（`hideMarksOfRoll`），所以火球术每个目标都加、灼热射线三道只加一次 |
+| 非攻击伤害的修正 | 以前伤害的 rollMod 只对攻击造成的伤害生效。现在写了 `on.spell` 的也对豁免法术的伤害生效（这时 `attack.*` 全 false）；没写 `on.spell` 的照旧只管攻击，免得「近战伤害 +2」这类跑到法术上 |
+| 用上的数据 | 强力戏法、强效塑能、德鲁伊 / 牧师的强力施法（手写，`data/dyn/features.json`），不再问人 |
+
+还没做（审查统计里的第二期）：每个目标的结果（`action.result.*`：命中、重击、豁免成功、伤害、降到 0）、
+伤害骰本身（`action.damage.dice`：再掷一颗同骰、重掷、偷袭扣骰）、`repeat`（孪生法术、繁彩球）、改字段（目标、射程、环阶、动作经济）、
+「用了一个动作之后」这个事件（审查里 58 条）。

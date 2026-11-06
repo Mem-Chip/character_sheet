@@ -1811,6 +1811,99 @@
      ]
     }
    ]
+  },
+  "XPHB:法师:强力戏法:3": {
+   "name": "强力戏法",
+   "automation": "full",
+   "text": "你的戏法攻击失手，或目标对抗你的戏法豁免成功时，目标仍受这道戏法一半的伤害（若有），但不受它的其他效果影响。",
+   "triggers": [
+    {
+     "id": "miss",
+     "on": "attackMissed",
+     "role": "actor",
+     "when": "action.kind == 'spell' && action.spell.level == 0",
+     "do": [
+      {
+       "kind": "runBranch",
+       "branch": "onHit",
+       "damageOnly": true,
+       "scale": 0.5
+      }
+     ],
+     "label": "强力戏法：失手仍受一半伤害"
+    },
+    {
+     "id": "save",
+     "on": "saveSucceeded",
+     "role": "actor",
+     "when": "action.kind == 'spell' && action.spell.level == 0",
+     "do": [
+      {
+       "kind": "runBranch",
+       "branch": "onFail",
+       "damageOnly": true,
+       "scale": 0.5,
+       "ifNoDamage": true
+      }
+     ],
+     "label": "强力戏法：豁免成功仍受一半伤害"
+    }
+   ]
+  },
+  "XPHB:法师:强效塑能:10": {
+   "name": "强效塑能",
+   "automation": "full",
+   "text": "施展法师法术列表里的塑能学派法术时，可以把智力调整值加到这次施法的其中一次伤害掷骰上（火球术这种一次掷骰打多个目标的，每个目标都加）。",
+   "rollMods": [
+    {
+     "on": {
+      "kind": "damage",
+      "spell": true
+     },
+     "who": "bearer",
+     "when": "action.kind == 'spell' && action.spell.school == '塑能' && includes(action.spell.lists, '法师') && action.marks.empoweredEvocation != true",
+     "op": "add",
+     "value": "self.mod.int",
+     "label": "强效塑能：加智力调整值",
+     "mark": "empoweredEvocation"
+    }
+   ]
+  },
+  "XPHB:德鲁伊:强力施法:7": {
+   "name": "强力施法",
+   "automation": "full",
+   "text": "德鲁伊戏法造成的伤害加上感知调整值。",
+   "rollMods": [
+    {
+     "on": {
+      "kind": "damage",
+      "spell": true
+     },
+     "who": "bearer",
+     "when": "action.kind == 'spell' && action.spell.level == 0 && includes(action.spell.lists, '德鲁伊')",
+     "op": "add",
+     "value": "self.mod.wis",
+     "label": "强力施法：德鲁伊戏法伤害加感知调整值"
+    }
+   ]
+  },
+  "XPHB:牧师:强力施法:7": {
+   "name": "强力施法",
+   "automation": "full",
+   "text": "牧师戏法造成的伤害加上感知调整值。",
+   "rollMods": [
+    {
+     "on": {
+      "kind": "damage",
+      "spell": true
+     },
+     "who": "bearer",
+     "when": "action.kind == 'spell' && action.spell.level == 0 && includes(action.spell.lists, '牧师')",
+     "op": "add",
+     "value": "self.mod.wis",
+     "label": "强力施法：牧师戏法伤害加感知调整值"
+    }
+   ]
   }
  }
 }

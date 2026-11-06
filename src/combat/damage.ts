@@ -1,5 +1,6 @@
 import { Dice, Unknown, runDice, runInt, type Value } from '../expr';
 import { rollModsOf } from './collect';
+import { currentAction, hideMarksOfRoll, markAction } from './instance';
 import { controllerOf, d20Test, evaluateMods, filterMatches } from './d20';
 import { applyEffect, concentrationOf, effectiveView, effectsOf, endConcentration, endEffect } from './effects';
 import { makeEnv, nameOf } from './scope';
@@ -38,6 +39,8 @@ export interface DamagePacket {
   save?: { ability: string; success: boolean; half: boolean };
   /** 伤害骰全部取最大值（超限导能） */
   max?: boolean;
+  /** 共享掷骰的 id（火球术各目标同一次掷骰）：同一次掷骰算一次「伤害掷骰」 */
+  rollKey?: string;
   /** 这次伤害无视抗性 / 免疫（damage 节点的 ignoreResist / ignoreImmunity） */
   ignoreResist?: boolean;
   ignoreImmunity?: boolean;
@@ -90,26 +93,38 @@ export function rollComponent(tx: Tx, c: DamageComponent, crit: boolean, user: s
   return { faces: adj, total };
 }
 
+/** 不是攻击造成的伤害：表达式里的 attack.* 都是 false（`!attack.weapon` 这种写法不至于报错） */
+const NO_ATTACK: AttackInfo = {
+  melee: false, ranged: false, weapon: false, spell: false, unarmed: false, finesse: false, reach: false,
+  ability: null, damageType: '', item: null, mastery: null,
+};
+
 export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null): DamageResult {
   const user = p.source ? controllerOf(tx, p.source) : 'dm';
 
   // ① 攻击者的伤害修正（狂暴伤害、巨武器战斗…）
+  //    攻击造成的伤害：所有 damage 修正都看；不是攻击的伤害（火球术这类豁免法术）：只看写了 on.spell 的
+  //    （强效塑能、强力施法），免得「近战伤害 +2」这类没写攻击过滤的修正跑到法术伤害上
   let minDie = 0;
   if (p.source && tx.state.combatants[p.source]) {
     const primary = p.components[0]?.type ?? '';
     const req = { kind: 'attack' as const, attack: p.attack };
+    const inst = currentAction(tx);
+    const fromSpell = p.attack ? !!p.attack.spell : !!inst && inst.kind === 'spell' && inst.by === p.source;
     const cands = rollModsOf(tx, p.source)
       .filter((d) => d.item.who === 'bearer' && d.item.on.kind !== undefined && [d.item.on.kind].flat().includes('damage')
-        && filterMatches({ ...d.item.on, kind: 'attack' }, req))
+        && (p.attack ? filterMatches({ ...d.item.on, kind: 'attack' }, req) : d.item.on.spell !== undefined && !d.item.on.attack)
+        && (d.item.on.spell === undefined || d.item.on.spell === fromSpell))
       .map((d) => ({
         d,
         scope: {
-          self: p.source!, source: d.source, target: p.target, attacker: p.source!, attack: p.attack, effect: d.effect,
+          self: p.source!, source: d.source, target: p.target, attacker: p.source!, attack: p.attack ?? NO_ATTACK, effect: d.effect,
           damage: { type: primary, amount: 0, crit: p.crit } as Record<string, Value>,
         },
       }));
-    if (p.attack && cands.length) {
-      const { active } = evaluateMods(tx, cands, p.source, `${p.label} 伤害`);
+    if (cands.length) {
+      const { active } = hideMarksOfRoll(tx, p.rollKey, () => evaluateMods(tx, cands, p.source!, `${p.label} 伤害`));
+      for (const { d } of active) if (d.item.mark) markAction(tx, d.item.mark, true, p.rollKey);
       for (const { d, value } of active) {
         if (d.item.op === 'minDie' && typeof value === 'number') minDie = Math.max(minDie, value);
         if (d.item.op === 'maxDice' && (d.item.on.spell === undefined || d.item.on.spell === !!p.attack?.spell)) p.max = true;

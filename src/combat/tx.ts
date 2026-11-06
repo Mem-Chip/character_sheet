@@ -1,6 +1,7 @@
 import { diceSig, type DiceRequest, type DiceSource, type RollKind } from './dice';
 import { applyEvent } from './reducer';
 import type { CastPlan } from './castplan';
+import type { ActionInstance } from './instance';
 import type { RuleBook } from './rulebook';
 import type { Command, Decision, DecisionKind, EncounterState, GameEvent, OverridePatch, UserId } from './types';
 
@@ -109,6 +110,8 @@ export class Tx {
   casts = new Map<number, CastPlan>();
   /** 当前正开着的窗口属于哪次施法（窗口里的能力改的就是它） */
   windowPlan: CastPlan | null = null;
+  /** 正在结算的动作实例（栈：反应动作压在触发它的那次上面）。见 instance.ts */
+  actions: ActionInstance[] = [];
 
   constructor(
     readonly state: EncounterState,

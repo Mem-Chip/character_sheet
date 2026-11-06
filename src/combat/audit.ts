@@ -17,13 +17,13 @@ import type { Action, EffectTemplate, Entry, Node, RollMod, Trigger } from './ty
 /** 引擎会打开窗口的事件（触发器只能挂这些） */
 export const WINDOW_EVENTS = new Set([
   'turnStarted', 'turnEnded', 'initiativeRolled', 'spellCast', 'd20Rolled', 'attackHit', 'attackMissed',
-  'saveForced', 'damageIncoming', 'damageTaken', 'reducedTo0', 'restCompleted', 'leftReach',
+  'saveForced', 'saveSucceeded', 'saveFailed', 'damageIncoming', 'damageTaken', 'reducedTo0', 'restCompleted', 'leftReach',
 ]);
 
 /** 引擎会发出的事件（endsOn 能监听的） */
 export const EMITTED_EVENTS = new Set([
   ...WINDOW_EVENTS,
-  'actionUsed', 'actionDone', 'saveFailed', 'saveSucceeded', 'damageApplied', 'damageRolled', 'healed', 'tempHpGained',
+  'actionUsed', 'actionDone', 'damageApplied', 'damageRolled', 'healed', 'tempHpGained',
   'effectApplied', 'effectEnded', 'turnEnding', 'roundStarted', 'combatStarted', 'combatEnded', 'died', 'timeAdvanced',
   'moved', 'zoneHit', 'entryGranted', 'entryRevoked',
 ]);
@@ -31,6 +31,7 @@ export const EMITTED_EVENTS = new Set([
 const NODE_KINDS = new Set([
   'attack', 'save', 'check', 'damage', 'addDamage', 'heal', 'tempHp', 'applyEffect', 'removeEffect', 'extendEffect', 'endConcentration', 'grantAction', 'removeGrant', 'castFrom', 'modifyCast',
   'resource', 'economy', 'choose', 'if', 'forEach', 'repeat', 'move', 'note', 'number', 'modify', 'zone', 'moveZone', 'summon',
+  'mark', 'runBranch', 'refund',
 ]);
 const ROLL_OPS = new Set(['adv', 'disadv', 'noAdv', 'add', 'addDice', 'autoFail', 'autoSucceed', 'critRange', 'autoCritOnHit', 'minD20', 'minDie', 'targetAdd', 'maxDice']);
 const MODIFY_OPS = new Set(['reroll', 'addToRoll', 'reduceDamage', 'halveDamage', 'doubleDamage', 'setHp', 'cancel', 'evasion', 'succeed', 'redirect', 'absorb', 'clearAdv', 'cancelUnlessSave', 'unlessSave', 'setDc', 'setAttackBonus', 'setDamageType']);
@@ -130,6 +131,16 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
         if (n.dc !== undefined) expr(n.dc, 'node', NUM, `${at}.dc`);
         if (n.attackBonus !== undefined) expr(n.attackBonus, 'node', NUM, `${at}.attackBonus`);
         if (!n.cancel && n.dc === undefined && n.attackBonus === undefined && !n.damageType) out.push(`${where(at)}：modifyCast 什么也没改（cancel / dc / attackBonus / damageType 至少写一个）`);
+        break;
+      case 'mark':
+        if (!n.name) out.push(`${where(at)}：mark 缺少 name（记号叫什么）`);
+        expr(n.value, 'node', T.any, `${at}.value`);
+        break;
+      case 'runBranch':
+        if (!['onHit', 'onMiss', 'onFail', 'onSuccess'].includes(n.branch)) out.push(`${where(at)}：runBranch 的 branch 只认 onHit / onMiss / onFail / onSuccess`);
+        break;
+      case 'refund':
+        if (n.what !== 'slot' && n.what !== 'resource') out.push(`${where(at)}：refund 的 what 只认 slot / resource`);
         break;
       case 'castFrom':
         if (!n.from && !n.fromVar) out.push(`${where(at)}：castFrom 要写 from 或 fromVar（施展哪一条动作）`);

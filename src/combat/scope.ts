@@ -3,6 +3,7 @@ import {
   type CmpOp, type EvalEnv, type FnImpl, type FnSig, type Question, type RefShape, type RefValue, type ScopeDef, type Ty, type Value,
 } from '../expr';
 import { effectiveView, exhaustionOf, findEffect, hasCondition, concentrationOf } from './effects';
+import { actionValue, currentAction } from './instance';
 import type { Tx } from './tx';
 import type { ActiveEffect, AttackInfo, Id } from './types';
 
@@ -56,6 +57,7 @@ const FUNCS: Record<string, FnSig> = {
   ask: { params: [T.str], returns: T.bool, doc: '显式询问' },
   abilityMod: { params: [T.str], returns: T.num, doc: "self 某属性的调整值：abilityMod(attack.ability)" },
   combatant: { params: [T.str], returns: T.ref, doc: '按 id 取参与者（事件载荷里只有 id）' },
+  includes: { params: [T.list(T.any), T.any], returns: T.bool, doc: "列表里有没有某个值：includes(action.spell.lists, '法师')" },
 };
 
 const ROLL_FULL = T.obj({
@@ -67,6 +69,12 @@ const ATTACK = T.obj({
   melee: T.bool, ranged: T.bool, weapon: T.bool, spell: T.bool, unarmed: T.bool, finesse: T.bool, reach: T.bool,
   ability: T.str, damageType: T.str, item: T.str, mastery: T.str,
 });
+/** 动作实例（instance.ts）：正在结算的那次动作；不在动作里 = null */
+const ACTION = T.obj({
+  name: T.str, key: T.str, kind: T.str, economy: T.str, onMyTurn: T.bool, by: T.ref,
+  spell: T.obj({ level: T.num, slot: T.num, school: T.str, lists: T.list(T.str), concentration: T.bool, ritual: T.bool, range: T.any, components: T.str }),
+  attack: ATTACK, targets: T.list(T.ref), targetCount: T.num, marks: T.open, parent: T.open,
+});
 const DAMAGE = T.obj({ type: T.str, amount: T.num, crit: T.bool, save: T.str, saved: T.bool });
 
 const COMMON: Record<string, Ty> = {
@@ -75,6 +83,7 @@ const COMMON: Record<string, Ty> = {
   ...Object.fromEntries(ABILS.map((a) => [a, T.num])),
   round: T.num,
   turn: T.obj({ isMine: T.bool, of: T.ref }),
+  action: ACTION,
   core: T.open,
 };
 
@@ -317,6 +326,11 @@ export function makeEnv(tx: Tx, d: ScopeData, assumptions?: string[]): EvalEnv {
       if (!isAbility(ab)) throw new Error(`abilityMod：「${ab}」不是属性名`);
       return view().mod[ab];
     },
+    includes: (a) => {
+      const [list, x] = a;
+      if (!Array.isArray(list)) return false;
+      return list.some((v) => (isRef(v) && isRef(x) ? v.id === x.id : v === x));
+    },
     combatant: (a) => {
       const id = String(a[0]);
       if (!tx.state.combatants[id]) throw new Error(`combatant：没有参与者 ${id}`);
@@ -345,6 +359,7 @@ export function makeEnv(tx: Tx, d: ScopeData, assumptions?: string[]): EvalEnv {
           return { id: e.id, name: e.name, key: e.key, state: e.state as Record<string, Value>, source: e.source };
         }
         case 'vars': return { ...(d.vars ?? {}) };
+        case 'action': return actionValue(tx, currentAction(tx));
         case 'round': return tx.state.round ?? 0;
         case 'turn': {
           const cur = tx.state.order[tx.state.turnIndex];

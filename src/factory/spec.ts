@@ -53,8 +53,9 @@ const WINDOWS: Array<[string, string, string, string, string]> = [
   ['d20Rolled', 'after', '同上', 'roll（已判定）、attack', '—'],
   ['attackHit', 'before', '攻击者 / 被命中者', 'attack、roll。先问防守方，再问进攻方', '防守方：halveDamage、cancel（改为未命中）、redirect（改攻击目标）；进攻方：doubleDamage，或用 do 里的 addDamage 加伤害'],
   ['attackHit', 'after', '同上', 'attack、roll、damage（已结算）', '—'],
-  ['attackMissed', 'after', '攻击者 / 目标', 'attack、roll', '—'],
+  ['attackMissed', 'after', '攻击者 / 目标', 'attack、roll', '—（do 里能用 runBranch 改跑命中那一支）'],
   ['saveForced', 'after', '迫使豁免的人 / 豁免的人', '—', '—'],
+  ['saveSucceeded / saveFailed', 'after', '迫使豁免的人 / 豁免的人（豁免节点的分支已经跑完）', 'roll', '—（do 里能用 runBranch 改跑另一支）'],
   ['damageIncoming', 'before', '伤害来源 / 承受者', 'damage（掷出来的总数）、attack', 'reduceDamage（值可以带骰子，掷一次）、halveDamage、doubleDamage、cancel、evasion、redirect（整包伤害转给自己）、absorb（用自己的临时生命值或生命值替盟友承伤）'],
   ['damageTaken', 'after', '来源 / 承受者', 'damage', '—'],
   ['reducedTo0', 'before', '来源 / 承受者', 'damage', 'setHp（「改为降到 1」这类）'],
@@ -173,6 +174,29 @@ ${funcs}
 ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
 
 反应类能力想「看到伤害再决定」（直觉闪避）：挂在 \`attackHit\` before，再写 \`deferTo: 'damageIncoming'\`。
+
+**动作实例 \`action\`**：一次动作（施法、武器攻击、用特性）结算期间，**所有**表达式（触发器条件、检定修正、效果节点）都能用 \`action.*\` 读到**正在结算的那次动作**：
+\`action.kind\`（spell / weapon / item / feature）、\`action.name\`、\`action.key\`、\`action.by\`（谁用的）、\`action.economy\`（action / bonus / reaction…）、\`action.onMyTurn\`、
+\`action.spell.level\`（基础环阶，戏法 0）、\`action.spell.slot\`（实际用的环阶）、\`action.spell.school\`（中文学派名：塑能、防护…）、\`action.spell.lists\`（在哪些职业的法术列表里，用 \`includes(action.spell.lists, '法师')\`）、
+\`action.spell.concentration\` / \`ritual\` / \`range\` / \`components\`（'VSM' 的子集）、\`action.attack\`（最近一次攻击的性质）、\`action.targets\`、\`action.targetCount\`、\`action.marks.<名字>\`、\`action.parent\`（外层那次动作）。
+不在动作里（回合开始、区域每回合生效）时 \`action\` 是 null，读它的字段得到空值：\`action.spell.level == 0\` 为假。
+触发器的 do 读到的就是**触发它的那次动作**；带 \`trigger\` 的反应动作进了 root 之后读到的是它自己，触发它的那次在 \`action.parent\`。
+
+- **「每次施法 / 每次攻击只能一次」**：rollMod 写 \`mark: 'once'\`、when 里加 \`action.marks.once != true\`（生效一次就做上记号；**记号名只能用英文字母和数字**）；触发器的 do 里用 \`{ kind: 'mark', name: 'once' }\`。
+  共享掷骰（伤害节点的 \`id\` / \`ref\`，火球术各目标同一次掷骰）算**一次**伤害掷骰：第一个目标做的记号，同一次掷骰的其他目标看不见，照样生效。
+- **不是攻击造成的伤害**（豁免法术）：damage 的 rollMod 要写 \`on: { kind: 'damage', spell: true }\` 才会对它生效（不写 \`spell\` 的只管攻击造成的伤害），这时 \`attack.*\` 全是 false。
+- **改跑另一支**（\`runBranch\`）：在 \`attackMissed\` / \`saveSucceeded\` / \`saveFailed\` 窗口里，让那次攻击 / 豁免改跑 onHit / onMiss / onFail / onSuccess，
+  \`damageOnly\` 只取伤害，\`scale\` 倍数，\`ifNoDamage\` = 实际跑的那支本来没伤害才执行。强力戏法：
+
+\`\`\`json
+{ "triggers": [
+  { "id": "miss", "on": "attackMissed", "role": "actor", "when": "action.kind == 'spell' && action.spell.level == 0",
+    "do": [{ "kind": "runBranch", "branch": "onHit", "damageOnly": true, "scale": 0.5 }] },
+  { "id": "save", "on": "saveSucceeded", "role": "actor", "when": "action.kind == 'spell' && action.spell.level == 0",
+    "do": [{ "kind": "runBranch", "branch": "onFail", "damageOnly": true, "scale": 0.5, "ifNoDamage": true }] }
+] }
+\`\`\`
+- **退还代价**（\`refund\`）：退还触发窗口的那次动作花的法术位（\`what: 'slot'\`）或资源。
 
 **某人开始 / 结束回合时**（「敌人在你 10 尺内开始回合时」）：\`on: 'turnStarted'\`、\`role: 'enemy'\`（或 ally / any），\`when: 'dist(self, target) <= 10'\` —— 回合窗口里 \`target\` 就是回合的主人；
 写在效应里、只管承受者自己回合的用 \`role: 'actor'\`。灵光（aura）授予的触发器也一样。
