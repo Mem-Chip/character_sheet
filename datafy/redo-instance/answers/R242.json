@@ -1,0 +1,241 @@
+{
+  "resources": [
+    {
+      "id": "物品次数:雷霆法杖:电闪",
+      "name": "雷霆法杖：电闪",
+      "formula": 1,
+      "recovery": "long"
+    },
+    {
+      "id": "物品次数:雷霆法杖:雷鸣",
+      "name": "雷霆法杖：雷鸣",
+      "formula": 1,
+      "recovery": "long"
+    },
+    {
+      "id": "物品次数:雷霆法杖:雷霆",
+      "name": "雷霆法杖：雷霆",
+      "formula": 1,
+      "recovery": "long"
+    },
+    {
+      "id": "物品次数:雷霆法杖:闪电打击",
+      "name": "雷霆法杖：闪电打击",
+      "formula": 1,
+      "recovery": "long"
+    },
+    {
+      "id": "物品次数:雷霆法杖:惊雷",
+      "name": "雷霆法杖：惊雷",
+      "formula": 1,
+      "recovery": "long"
+    }
+  ],
+  "name": "雷霆法杖",
+  "automation": "full",
+  "text": "+2 长棍（固定加值人物卡已处理）。包含电闪、雷鸣、雷霆、闪电打击、惊雷 5 项词条，每项长休恢复 1 次。\n【电闪】：近战武器命中时额外造成 2d6 闪电伤害。\n【雷鸣】：近战武器命中时目标进行 DC 17 体质豁免，失败陷入震慑至你下回合结束。\n【雷霆】：近战武器命中时以附赠动作同时触发电闪与雷鸣，仅消耗雷霆词条自身次数。\n【闪电打击】：以动作射出 120 尺长 5 尺宽闪电线，DC 17 敏捷豁免受 9d6 闪电伤害（成功半数）。\n【惊雷】：以动作制造 60 尺光环雷响，范围内生物 DC 17 体质豁免受 2d6 雷鸣伤害并耳聋 1 分钟（成功半数且不耳聋）。",
+  "triggers": [
+    {
+      "id": "lightning",
+      "label": "雷霆法杖：电闪",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "attack.melee && attack.weapon",
+      "cost": [
+        {
+          "resource": "物品次数:雷霆法杖:电闪"
+        }
+      ],
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "2d6",
+          "type": "闪电"
+        }
+      ]
+    },
+    {
+      "id": "thunder",
+      "label": "雷霆法杖：雷鸣",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "attack.melee && attack.weapon",
+      "cost": [
+        {
+          "resource": "物品次数:雷霆法杖:雷鸣"
+        }
+      ],
+      "do": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": 17,
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "XPHB:condition:震慑",
+              "to": "target",
+              "duration": {
+                "until": {
+                  "at": "turnEnd",
+                  "of": "source",
+                  "nth": 1
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lightning-and-thunder",
+      "label": "雷霆法杖：雷霆（电闪+雷鸣）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "attack.melee && attack.weapon",
+      "cost": [
+        {
+          "resource": "物品次数:雷霆法杖:雷霆"
+        },
+        {
+          "economy": "bonus"
+        }
+      ],
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "2d6",
+          "type": "闪电"
+        },
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": 17,
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "XPHB:condition:震慑",
+              "to": "target",
+              "duration": {
+                "until": {
+                  "at": "turnEnd",
+                  "of": "source",
+                  "nth": 1
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "lightning-strike",
+      "name": "雷霆法杖：闪电打击",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "物品次数:雷霆法杖:闪电打击"
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "line",
+          "length": 120,
+          "width": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": 17,
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "ls",
+                  "dice": "9d6",
+                  "type": "闪电"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "ls",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "thunderclap",
+      "name": "雷霆法杖：惊雷",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "物品次数:雷霆法杖:惊雷"
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "sphere",
+          "radius": 60
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": 17,
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "tc",
+                  "dice": "2d6",
+                  "type": "雷鸣"
+                },
+                {
+                  "kind": "applyEffect",
+                  "template": "XPHB:condition:耳聋",
+                  "to": "target",
+                  "duration": {
+                    "minutes": 1
+                  }
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "tc",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

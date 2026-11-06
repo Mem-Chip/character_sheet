@@ -1,0 +1,72 @@
+{
+ "name": "咒能爆发之恩惠",
+ "automation": "partial",
+ "text": "【法术过载】当你使用法术位施展一道造成伤害的法术时，你可以令其魔法能量爆发涌动。该法术伤害骰投出的1和2都视为3，且受到该法术伤害的生物陷入倒地状态。每短休、长休或投掷先攻时恢复一次。（受损生物倒地需手动处理）",
+ "actions": [
+  {
+   "id": "use",
+   "name": "咒能爆发：法术过载",
+   "activation": "free",
+   "trigger": {
+    "on": "spellCast",
+    "role": "actor",
+    "window": "before",
+    "when": "action.kind == 'spell' && action.spell.slot > 0"
+   },
+   "cost": [
+    {
+     "resource": "spell-overload"
+    }
+   ],
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "name": "法术过载",
+     "inline": {
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       }
+      },
+      "rollMods": [
+       {
+        "on": {
+         "kind": "damage",
+         "spell": true
+        },
+        "who": "bearer",
+        "op": "minDie",
+        "value": 3,
+        "label": "法术过载：伤害骰1和2视为3"
+       }
+      ]
+     }
+    },
+    {
+     "kind": "note",
+     "text": "法术过载：本次法术伤害骰中1和2视为3（已自动生效）；受到该法术伤害的生物陷入倒地状态，请手动处理。"
+    }
+   ]
+  }
+ ],
+ "triggers": [
+  {
+   "id": "regain-on-initiative",
+   "label": "法术过载：投掷先攻重获使用次数",
+   "on": "initiativeRolled",
+   "role": "actor",
+   "window": "after",
+   "when": "self.resource('spell-overload') < 1",
+   "do": [
+    {
+     "kind": "resource",
+     "id": "spell-overload",
+     "delta": 1
+    }
+   ]
+  }
+ ]
+}

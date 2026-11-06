@@ -1,0 +1,72 @@
+{
+ "name": "擒握触手",
+ "automation": "full",
+ "text": "习得法术艾伐黑触手（魔契师法术且不计入已知上限）。每次长休可无需法术位施展一次。每当你施展艾伐黑触手时，获得等同于魔契师等级的临时生命值；对你造成的伤害无法破坏你对该法术的专注。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "擒握触手：艾伐黑触手",
+   "activation": "action",
+   "cost": [
+    {
+     "resource": "grasping-tentacles"
+    }
+   ],
+   "text": "无需消耗法术位施展艾伐黑触手一次（长休恢复）。",
+   "root": [
+    {
+     "kind": "grantAction",
+     "from": "XPHB:spell:艾伐黑触手#cast",
+     "cost": [],
+     "activation": "free",
+     "until": "turnEnd"
+    }
+   ]
+  }
+ ],
+ "triggers": [
+  {
+   "id": "grasping-tentacles-cast",
+   "label": "擒握触手：施展艾伐黑触手",
+   "on": "spellCast",
+   "role": "actor",
+   "window": "after",
+   "when": "action.name == '艾伐黑触手' || action.key == 'XPHB:spell:艾伐黑触手'",
+   "do": [
+    {
+     "kind": "tempHp",
+     "to": "self",
+     "amount": "self.levelOf('魔契师')"
+    },
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "擒握触手：专注保护"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "擒握触手：专注保护": {
+   "text": "受到伤害无法破坏你对艾伐黑触手的专注。",
+   "duration": {
+    "endsOn": [
+     {
+      "event": "effectEnded",
+      "when": "event.bearer == self.id && (event.name == '艾伐黑触手' || event.name == '专注')"
+     }
+    ]
+   },
+   "rollMods": [
+    {
+     "on": {
+      "kind": "concentration"
+     },
+     "who": "bearer",
+     "op": "autoSucceed",
+     "label": "擒握触手：专注不被打断"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,94 @@
+{
+ "name": "真菌感染",
+ "automation": "partial",
+ "text": "你周围 10 尺内一个小型或中型的野兽或类人生物降到 0 生命值时，你可以用反应（消耗一次「真菌感染」次数）把它的尸体活化成丧尸：生命值 1 点、AC 8、速度 20 尺、猛击 +3 命中 1d8+1 钝击，免疫毒素伤害、力竭与中毒状态，持续 1 小时后崩解。次数等于感知调整值（至少 1 次），长休恢复（丧尸限制仅能攻击由人工遵守）。",
+ "triggers": [
+  {
+   "id": "infest",
+   "label": "真菌感染：活化尸体",
+   "on": "reducedTo0",
+   "role": "any",
+   "window": "before",
+   "optional": true,
+   "cost": [
+    {
+     "economy": "reaction"
+    },
+    {
+     "resource": "fungal-infestation"
+    }
+   ],
+   "when": "dist(self, target) <= 10 && (target.type == '野兽' || target.type == '类人生物') && (target.size == 'S' || target.size == 'M' || target.size == '小型' || target.size == '中型')",
+   "do": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "inline": {
+      "name": "真菌感染：丧尸",
+      "text": "被活化的一具丧尸（生命值 1）跟随召唤者，1 小时后崩解。",
+      "duration": {
+       "hours": 1
+      },
+      "onApply": [
+       {
+        "kind": "summon",
+        "name": "丧尸",
+        "size": "M",
+        "creatureType": "undead",
+        "ac": 8,
+        "hp": 1,
+        "speed": 20,
+        "pb": 2,
+        "attacksPerAction": 1,
+        "score": {
+         "str": 13,
+         "dex": 6,
+         "con": 16,
+         "int": 3,
+         "wis": 6,
+         "cha": 5
+        },
+        "immune": [
+         "毒素"
+        ],
+        "conditionImmune": [
+         "力竭",
+         "中毒"
+        ],
+        "attacks": [
+         {
+          "name": "猛击",
+          "bonus": 3,
+          "damage": "1d8 + 1",
+          "damageType": "钝击"
+         }
+        ],
+        "triggers": [
+         {
+          "id": "undead-fortitude",
+          "label": "丧尸：不死坚韧",
+          "on": "reducedTo0",
+          "role": "target",
+          "window": "before",
+          "optional": true,
+          "when": "damage.type != '光耀' && !damage.crit && ask('不死坚韧：让丧尸做一次体质豁免（DC 5 + 这次所受伤害）。豁免成功了吗？成功则改为 1 点生命值。')",
+          "modify": [
+           {
+            "op": "setHp",
+            "value": "1"
+           }
+          ]
+         }
+        ],
+        "notes": [
+         "丧尸：黑暗视觉 60 尺；免疫毒素伤害与力竭 / 中毒状态；会「不死坚韧」（降到 0 时体质豁免 DC 5 + 所受伤害，成功改为 1 点生命值，光耀伤害或重击不适用）。",
+         "它只会执行攻击动作做一次猛击——引擎的动作栏里还有疾走等通用动作，请只用攻击。"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

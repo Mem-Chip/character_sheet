@@ -1,0 +1,38 @@
+{
+ "name": "精灵",
+ "automation": "partial",
+ "text": "黑暗视觉、精灵血系的速度与戏法、敏锐感官、出神这些都是静态层的东西（人物卡已经算好；出神只在长休时有用）。已自动：妖精血统对抗避免或结束魅惑状态的豁免提供优势；3 级 / 5 级习得的血系法术每日一次免法术位施展，已支持在施法后消耗「习得法术（无需法术位）」资源并自动退还法术位（若非血系法术请勿触发）。",
+ "rollMods": [
+  {
+   "on": {
+    "kind": "save"
+   },
+   "who": "bearer",
+   "when": "ask('这次豁免是为了避免或结束魅惑状态吗？（妖精血统：是则该次豁免有优势）')",
+   "op": "adv",
+   "label": "妖精血统：魅惑豁免"
+  }
+ ],
+ "triggers": [
+  {
+   "id": "refund-elf-spell",
+   "label": "精灵血系：免费施展血系法术（退还法术位）",
+   "on": "spellCast",
+   "role": "actor",
+   "window": "after",
+   "optional": true,
+   "when": "action.kind == 'spell' && action.spell.slot > 0 && self.resource('elf-learned-spell') > 0",
+   "cost": [
+    {
+     "resource": "elf-learned-spell"
+    }
+   ],
+   "do": [
+    {
+     "kind": "refund",
+     "what": "slot"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,78 @@
+{
+ "name": "巨人之力",
+ "automation": "full",
+ "text": "以附赠动作获得巨人之力，持续 1 分钟。体型变为大型（18 级可为巨型，若无足够空间则不变）；力量检定和力量豁免具有优势；每回合一次，武器攻击或徒手打击命中时可造成额外 1d6 伤害（10 级 1d8，18 级 1d10）。次数等于熟练加值，长休恢复。",
+ "resources": [
+  {
+   "id": "giants-might",
+   "name": "巨人之力",
+   "formula": "pb",
+   "recovery": "long"
+  }
+ ],
+ "actions": [
+  {
+   "id": "use",
+   "name": "巨人之力",
+   "activation": "bonus",
+   "cost": [
+    {
+     "resource": "giants-might"
+    }
+   ],
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "巨人之力"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "巨人之力": {
+   "duration": {
+    "minutes": 1
+   },
+   "rollMods": [
+    {
+     "on": {
+      "kind": "check",
+      "ability": "str"
+     },
+     "who": "bearer",
+     "op": "adv",
+     "label": "巨人之力：力量检定优势"
+    },
+    {
+     "on": {
+      "kind": "save",
+      "ability": "str"
+     },
+     "who": "bearer",
+     "op": "adv",
+     "label": "巨人之力：力量豁免优势"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "giant-damage",
+     "label": "巨人之力：额外伤害",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "limit": "oncePerTurn",
+     "optional": true,
+     "when": "turn.isMine && (attack.weapon || attack.unarmed)",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "cond(self.levelOf('战士') >= 18, 1d10, cond(self.levelOf('战士') >= 10, 1d8, 1d6))",
+       "type": "attack.damageType"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

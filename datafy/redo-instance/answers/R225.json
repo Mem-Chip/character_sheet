@@ -1,0 +1,97 @@
+{
+  "resources": [
+    {
+      "id": "物品次数:波涛:法术无效结界",
+      "name": "波涛：法术无效结界",
+      "formula": 1,
+      "recovery": "long"
+    }
+  ],
+  "name": "波涛",
+  "automation": "partial",
+  "text": "+3 三叉戟。攻击检定掷出 20 时额外造成 21 点黯蚀伤害。先攻检定具有优势。水下可如常呼吸。消耗 1 充能对有游泳速度的野兽施展支配野兽（DC 20）。长休恢复 1 次 9 环法术无效结界。固定加值已在人物卡处理。",
+  "rollMods": [
+    {
+      "on": {
+        "kind": "initiative"
+      },
+      "who": "bearer",
+      "op": "adv",
+      "label": "波涛：先攻优势"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "crit20",
+      "label": "波涛：暴击额外黯蚀伤害",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "attack.weapon && roll.natural == 20",
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": 21,
+          "type": "黯蚀"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "dominate-beast",
+      "name": "波涛：支配野兽",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "物品充能:波涛",
+          "n": 1
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": 20,
+          "onFail": [
+            {
+              "kind": "note",
+              "text": "目标野兽（须具有游泳速度）陷入魅惑，施法者可通过心灵感应下达指令。受到伤害时可重掷豁免。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "globe-of-invulnerability",
+      "name": "波涛：法术无效结界（9环）",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "物品次数:波涛:法术无效结界"
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "self"
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "以自身为中心创造 10 尺半径屏障，阻止 8 环及以下法术进入或在其内施展，持续至多 1 分钟（专注）。"
+        }
+      ]
+    }
+  ]
+}

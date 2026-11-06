@@ -1,0 +1,78 @@
+{
+ "name": "一体共生",
+ "automation": "full",
+ "text": "以一个动作消耗一次荒野形态使用次数，获得等同于德鲁伊等级 4 倍的临时生命值，并进入「一体共生」状态 10 分钟。激活期间：近战武器攻击命中时额外造成 1d6 黯蚀伤害；孢子环绕造成伤害时额外增加一枚伤害骰。失去全部临时生命值或再次使用荒野形态时提前结束。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "一体共生",
+   "activation": "action",
+   "text": "消耗一次荒野形态使用次数唤醒孢子（不变成野兽形态）。",
+   "cost": [
+    {
+     "resource": "wildshape-uses"
+    }
+   ],
+   "root": [
+    {
+     "kind": "tempHp",
+     "amount": "self.levelOf('德鲁伊') * 4",
+     "to": "self"
+    },
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "一体共生"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "一体共生": {
+   "text": "一体共生激活中：近战武器攻击命中额外造成 1d6 黯蚀伤害；孢子环绕额外增加一枚伤害骰。失去全部临时生命值或再次使用荒野形态时提前结束。",
+   "duration": {
+    "minutes": 10,
+    "endsOn": [
+     {
+      "event": "damageApplied",
+      "when": "event.target == self.id && self.tempHp > 0 && event.tempAbsorbed >= self.tempHp"
+     },
+     {
+      "event": "effectApplied",
+      "when": "event.bearer == self.id && (event.key == 'XPHB:德鲁伊:荒野形态:2#荒野形态' || event.name == '荒野形态')"
+     }
+    ]
+   },
+   "triggers": [
+    {
+     "id": "extra-damage",
+     "label": "一体共生：近战武器额外黯蚀伤害",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "when": "attack.melee && attack.weapon",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "1d6",
+       "type": "黯蚀"
+      }
+     ]
+    }
+   ],
+   "rollMods": [
+    {
+     "on": {
+      "kind": "damage",
+      "spell": false
+     },
+     "who": "bearer",
+     "when": "action.name == '孢子环绕'",
+     "op": "addDice",
+     "value": "cond(self.levelOf('德鲁伊') >= 14, 1d10, cond(self.levelOf('德鲁伊') >= 10, 1d8, cond(self.levelOf('德鲁伊') >= 6, 1d6, 1d4)))",
+     "label": "一体共生：孢子环绕额外伤害骰"
+    }
+   ]
+  }
+ }
+}

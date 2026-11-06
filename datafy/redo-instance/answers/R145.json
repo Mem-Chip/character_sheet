@@ -1,0 +1,221 @@
+{
+ "name": "野兽之形",
+ "automation": "partial",
+ "text": "进入狂暴时长出一种天生武器，直到狂暴结束：啃咬 1d8 穿刺（生命低于一半命中回 pb 命中）、爪击 1d6 挥砍（每回合用爪击攻击后可多攻击一次爪击）、尾击 1d8 穿刺（触及 10 尺，被 10 尺内可见生物命中时反应加 1d8 AC 防御）。",
+ "actions": [
+  {
+   "id": "bite",
+   "name": "野兽之形：啃咬",
+   "activation": "none",
+   "cost": [
+    {
+     "economy": "attack"
+    }
+   ],
+   "requires": "self.hasEffect('狂暴')",
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 5
+   },
+   "root": [
+    {
+     "kind": "attack",
+     "bonus": "self.pb + self.mod.str",
+     "attack": {
+      "melee": true,
+      "weapon": true,
+      "ability": "str",
+      "damageType": "穿刺",
+      "item": "野兽之形·啃咬"
+     },
+     "onHit": [
+      {
+       "kind": "damage",
+       "dice": "1d8 + self.mod.str",
+       "type": "穿刺"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "claw",
+   "name": "野兽之形：爪击",
+   "activation": "none",
+   "cost": [
+    {
+     "economy": "attack"
+    }
+   ],
+   "requires": "self.hasEffect('狂暴')",
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 5
+   },
+   "root": [
+    {
+     "kind": "attack",
+     "bonus": "self.pb + self.mod.str",
+     "attack": {
+      "melee": true,
+      "weapon": true,
+      "ability": "str",
+      "damageType": "挥砍",
+      "item": "野兽之形·爪击"
+     },
+     "onHit": [
+      {
+       "kind": "damage",
+       "dice": "1d6 + self.mod.str",
+       "type": "挥砍"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "tail",
+   "name": "野兽之形：尾击",
+   "activation": "none",
+   "cost": [
+    {
+     "economy": "attack"
+    }
+   ],
+   "requires": "self.hasEffect('狂暴')",
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 10
+   },
+   "root": [
+    {
+     "kind": "attack",
+     "bonus": "self.pb + self.mod.str",
+     "attack": {
+      "melee": true,
+      "weapon": true,
+      "ability": "str",
+      "damageType": "穿刺",
+      "reach": true,
+      "item": "野兽之形·尾击"
+     },
+     "onHit": [
+      {
+       "kind": "damage",
+       "dice": "1d8 + self.mod.str",
+       "type": "穿刺"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "tail-guard",
+   "name": "野兽之形：尾击防御",
+   "activation": "reaction",
+   "trigger": {
+    "on": "attackHit",
+    "role": "target",
+    "window": "before",
+    "when": "self.hasEffect('狂暴') && dist(self, attacker) <= 10 && canSee(self, attacker) && ask('本次狂暴你选的是野兽之形·尾击吗？')"
+   },
+   "root": [
+    {
+     "kind": "number",
+     "prompt": "尾击防御：自己掷 1d8，把点数填进来（这次攻击的 AC 会加上它）",
+     "var": "tailAc",
+     "min": 1,
+     "max": 8,
+     "default": 4
+    },
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "尾击防御",
+     "state": {
+      "bonus": "vars.tailAc"
+     }
+    },
+    {
+     "kind": "if",
+     "when": "!roll.crit && roll.total < self.ac + vars.tailAc",
+     "then": [
+      {
+       "kind": "modify",
+       "modify": [
+        {
+         "op": "cancel"
+        }
+       ]
+      },
+      {
+       "kind": "note",
+       "text": "尾击防御：AC 增加成功使该次攻击失手！"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "triggers": [
+  {
+   "id": "bite-heal",
+   "label": "野兽之形：啃咬回血",
+   "on": "attackHit",
+   "role": "actor",
+   "window": "after",
+   "limit": "oncePerTurn",
+   "optional": true,
+   "when": "self.hasEffect('狂暴') && attack.item == '野兽之形·啃咬' && self.hp * 2 < self.hpMax",
+   "do": [
+    {
+     "kind": "heal",
+     "amount": "self.pb",
+     "to": "self"
+    }
+   ]
+  },
+  {
+   "id": "claw-extra",
+   "label": "野兽之形：追加爪击",
+   "on": "d20Rolled",
+   "role": "actor",
+   "window": "after",
+   "limit": "oncePerTurn",
+   "optional": true,
+   "when": "turn.isMine && self.hasEffect('狂暴') && roll.kind == 'attack' && attack.item == '野兽之形·爪击'",
+   "do": [
+    {
+     "kind": "economy",
+     "attacks": 1
+    },
+    {
+     "kind": "note",
+     "text": "追加爪击：本回合多 1 次攻击机会，作为这次攻击动作的一部分（只能用爪击）。"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "尾击防御": {
+   "text": "对抗这次攻击的 AC 加上掷出的 1d8 点数，可能让这次攻击打失。",
+   "statics": [
+    {
+     "kind": "ac",
+     "bonus": "effect.state.bonus"
+    }
+   ],
+   "duration": {
+    "rounds": 1,
+    "endsOn": [
+     {
+      "event": "actionDone"
+     }
+    ]
+   }
+  }
+ }
+}

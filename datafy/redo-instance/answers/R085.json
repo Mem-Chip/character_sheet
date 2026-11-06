@@ -1,0 +1,52 @@
+{
+ "name": "汲纳法术",
+ "automation": "full",
+ "text": "你始终准备法术反制。当一个目标在对抗你所施展的法术反制的豁免中失败时，你重获 1d4 术法点。",
+ "triggers": [
+  {
+   "id": "counterspell-absorb",
+   "label": "汲纳法术：重获术法点",
+   "on": "saveFailed",
+   "role": "any",
+   "window": "after",
+   "when": "action.by == self && (action.name == '法术反制' || action.key == 'XPHB:spell:法术反制')",
+   "do": [
+    {
+     "kind": "number",
+     "prompt": "汲纳法术：目标对抗法术反制失败，掷 1d4 获得多少术法点？",
+     "var": "pts",
+     "min": 1,
+     "max": 4,
+     "default": 2
+    },
+    {
+     "kind": "resource",
+     "id": "sorcery_points",
+     "delta": "vars.pts"
+    }
+   ]
+  }
+ ],
+ "actions": [
+  {
+   "id": "use",
+   "name": "汲纳法术：重获术法点",
+   "activation": "free",
+   "root": [
+    {
+     "kind": "number",
+     "prompt": "输入掷出的 1d4 结果，重获相应术法点",
+     "var": "pts",
+     "min": 1,
+     "max": 4,
+     "default": 2
+    },
+    {
+     "kind": "resource",
+     "id": "sorcery_points",
+     "delta": "vars.pts"
+    }
+   ]
+  }
+ ]
+}

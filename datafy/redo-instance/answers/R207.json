@@ -1,0 +1,43 @@
+{
+  "name": "魔法使的克星",
+  "automation": "partial",
+  "text": "当你看见周围 60 尺内有生物施展法术或传送时，可以用反应阻止它。施展法术时引擎会自动迫使施法者进行感知豁免（DC 等于你的法术豁免 DC），失败则法术被打断并消耗法术位；生物传送时的打断需由 DM 手动处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "魔法使的克星",
+      "activation": "reaction",
+      "trigger": {
+        "on": "spellCast",
+        "role": "any",
+        "window": "before",
+        "aim": "actor",
+        "when": "within(self, attacker, 60) && canSee(self, attacker)"
+      },
+      "cost": [
+        {
+          "resource": "magic-users-nemesis"
+        }
+      ],
+      "root": [
+        {
+          "kind": "save",
+          "to": "attacker",
+          "ability": "wis",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "modify",
+              "modify": [
+                {
+                  "op": "cancel",
+                  "refundSlot": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

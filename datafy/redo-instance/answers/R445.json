@@ -1,0 +1,63 @@
+{
+  "name": "猎杀技艺",
+  "automation": "partial",
+  "text": "二选一（短休或长休后可替换）。①巨像屠夫：每回合一次，用武器命中生命值不满的生物时额外造成 1d8 同类型伤害。②灭族者：每个你的回合一次，当你用武器攻击时（命中或失手），可对原目标 5 尺内另一生物用同一武器再攻击一次。",
+  "triggers": [
+    {
+      "id": "colossus",
+      "label": "猎杀技艺：巨像屠夫（额外 1d8）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "limit": "oncePerTurn",
+      "when": "attack.weapon && target.hp < target.hpMax && ask('猎杀技艺选的是巨像屠夫吗？')",
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "1d8",
+          "type": "attack.damageType"
+        }
+      ]
+    },
+    {
+      "id": "horde-breaker-hit",
+      "label": "猎杀技艺：灭族者（命中后额外攻击）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "limit": "oncePerTurn",
+      "optional": true,
+      "when": "turn.isMine && attack.weapon && ask('猎杀技艺选的是灭族者吗？')",
+      "do": [
+        {
+          "kind": "repeatAction",
+          "prompt": "灭族者：选择原目标5尺内的另一生物发动另一次武器攻击",
+          "within": {
+            "ft": 5,
+            "of": "target"
+          }
+        }
+      ]
+    },
+    {
+      "id": "horde-breaker-miss",
+      "label": "猎杀技艺：灭族者（未命中后额外攻击）",
+      "on": "attackMissed",
+      "role": "actor",
+      "window": "after",
+      "limit": "oncePerTurn",
+      "optional": true,
+      "when": "turn.isMine && attack.weapon && ask('猎杀技艺选的是灭族者吗？')",
+      "do": [
+        {
+          "kind": "repeatAction",
+          "prompt": "灭族者：选择原目标5尺内的另一生物发动另一次武器攻击",
+          "within": {
+            "ft": 5,
+            "of": "target"
+          }
+        }
+      ]
+    }
+  ]
+}

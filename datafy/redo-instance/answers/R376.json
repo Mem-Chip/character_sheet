@@ -1,0 +1,108 @@
+{
+  "name": "至圣光轮",
+  "automation": "partial",
+  "text": "附赠动作盈满守护灵光，持续 10 分钟，每次长休一次；可随时（无需动作）提前结束，也可消耗一个五环法术位重置使用权。至圣守护：被邪魔或不死生物迫使的豁免具有优势。光耀伤害：敌人在灵光（30 尺）内开始回合时受到 魅力调整值 + 熟练加值 的光耀伤害。灵光内为明亮光照、视为阳光（引擎不模拟光照，请人工判定）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "至圣光轮",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "holyNimbus"
+        }
+      ],
+      "requires": "!self.hasEffect('至圣光轮')",
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "至圣光轮"
+        }
+      ]
+    },
+    {
+      "id": "end",
+      "name": "结束至圣光轮",
+      "activation": "free",
+      "requires": "self.hasEffect('至圣光轮')",
+      "root": [
+        {
+          "kind": "removeEffect",
+          "from": "self",
+          "match": {
+            "name": "至圣光轮"
+          }
+        }
+      ]
+    },
+    {
+      "id": "reset",
+      "name": "至圣光轮：重置使用权（五环法术位）",
+      "activation": "free",
+      "cost": [
+        {
+          "slot": {
+            "min": 5,
+            "max": 5
+          }
+        }
+      ],
+      "requires": "self.resource('holyNimbus') < 1",
+      "root": [
+        {
+          "kind": "resource",
+          "id": "holyNimbus",
+          "delta": 1
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "至圣光轮": {
+      "text": "10 分钟内：被邪魔或不死生物迫使的豁免具有优势；敌人在你的守护灵光（30 尺）内开始回合时受到 魅力调整值 + 熟练加值 的光耀伤害；灵光内为明亮光照、视为阳光（引擎不处理光照，请人工）。",
+      "duration": {
+        "minutes": 10
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save"
+          },
+          "who": "bearer",
+          "when": "attacker.type == '邪魔' || attacker.type == '不死生物' || (action.by != null && (action.by.type == '邪魔' || action.by.type == '不死生物'))",
+          "op": "adv",
+          "label": "至圣光轮：至圣守护"
+        }
+      ],
+      "aura": {
+        "id": "nimbus",
+        "radius": 30,
+        "affects": "enemies",
+        "includeSelf": false,
+        "requires": "!self.has('失能')",
+        "stackKey": "至圣光轮",
+        "grant": {
+          "triggers": [
+            {
+              "id": "radiance",
+              "label": "至圣光轮：光耀伤害",
+              "on": "turnStarted",
+              "role": "actor",
+              "window": "after",
+              "when": "dist(source, self) <= 30",
+              "do": [
+                {
+                  "kind": "damage",
+                  "dice": "source.mod.cha + source.pb",
+                  "type": "光耀",
+                  "to": "self"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

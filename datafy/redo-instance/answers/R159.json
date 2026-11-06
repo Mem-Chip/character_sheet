@@ -1,0 +1,55 @@
+{
+ "name": "念力突刺",
+ "automation": "partial",
+ "text": "使用灵能打击命中并造成伤害后，可迫使目标进行力量豁免（DC = 8 + 智力调整值 + 熟练加值）；失败则选择令其倒地，或将其在任意方向水平移动至多 10 尺。是否使用了灵能打击需确认；位移需在地图上手动调整。",
+ "triggers": [
+  {
+   "id": "thrust",
+   "label": "念力突刺",
+   "on": "attackHit",
+   "role": "actor",
+   "window": "after",
+   "optional": true,
+   "when": "attack.weapon && damage.amount > 0 && ask('这次命中使用了灵能打击造成伤害吗？')",
+   "do": [
+    {
+     "kind": "save",
+     "ability": "str",
+     "dc": "8 + pb + self.mod.int",
+     "onFail": [
+      {
+       "kind": "choose",
+       "prompt": "念力突刺：选择豁免失败的效应",
+       "options": [
+        {
+         "label": "令目标倒地",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "XPHB:condition:倒地"
+          }
+         ]
+        },
+        {
+         "label": "水平移动目标至多 10 尺",
+         "do": [
+          {
+           "kind": "move",
+           "mode": "push",
+           "ft": 10
+          },
+          {
+           "kind": "note",
+           "text": "念力突刺：将目标在任意方向水平移动至多 10 尺（请在地图上手动调整）。"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,74 @@
+{
+ "name": "伊尔明斯特的法术闪避",
+ "automation": "full",
+ "text": "专注至多 10 分钟。持续时间内对抗法术和其他魔法效应时进行的豁免检定具有优势。此外，若对抗豁免成功受半数伤害的法术或魔法效应时豁免成功，则不受伤害。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "伊尔明斯特的法术闪避",
+   "activation": "bonus",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 2
+     }
+    }
+   ],
+   "concentration": {
+    "minutes": 10
+   },
+   "targeting": {
+    "type": "self"
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "伊尔明斯特的法术闪避"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "伊尔明斯特的法术闪避": {
+   "tags": [
+    "magical",
+    "spell"
+   ],
+   "duration": {
+    "minutes": 10
+   },
+   "rollMods": [
+    {
+     "on": {
+      "kind": "save"
+     },
+     "who": "bearer",
+     "when": "action.kind == 'spell' || ask('此次豁免是对抗法术或其他魔法效应吗？')",
+     "op": "adv",
+     "label": "伊尔明斯特的法术闪避：对抗魔法豁免优势"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "spell-dodge-evasion",
+     "label": "伊尔明斯特的法术闪避：豁免成功免伤",
+     "on": "damageIncoming",
+     "role": "target",
+     "window": "before",
+     "when": "(action.kind == 'spell' || ask('这次豁免是对抗法术或其他魔法效应吗？')) && damage.save != '' && damage.saved",
+     "modify": [
+      {
+       "op": "evasion"
+      }
+     ]
+    }
+   ],
+   "text": "对抗法术和其他魔法效应时的豁免检定具有优势；若对抗豁免成功受半数伤害的法术或魔法效应时豁免成功，则不受伤害。"
+  }
+ }
+}

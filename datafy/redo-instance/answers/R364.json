@@ -1,0 +1,112 @@
+{
+ "name": "刃之魔契",
+ "automation": "partial",
+ "text": "以附赠动作咒唤或连结一把近战武器，连结期间拥有其熟练且可作为施法法器。用连结的武器攻击时，可用魅力代替力量/敏捷进行攻击检定和伤害掷骰（通过加值差额实现）。已自动：攻击命中时可选择将武器伤害类型替换为黯蚀、心灵或光耀伤害。具体武器装备实体绑定与熟练加值需在人物卡配置。",
+ "actions": [
+  {
+   "id": "bond",
+   "name": "刃之魔契：咒唤 / 连结武器",
+   "activation": "bonus",
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "刃之魔契",
+     "duration": {
+      "manual": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "unbond",
+   "name": "刃之魔契：结束连结（方便操作）",
+   "activation": "bonus",
+   "requires": "self.hasEffect('刃之魔契')",
+   "root": [
+    {
+     "kind": "removeEffect",
+     "from": "self",
+     "match": {
+      "name": "刃之魔契"
+     }
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "刃之魔契": {
+   "tags": [
+    "magical"
+   ],
+   "text": "连结的武器：你可以用魅力代替力量 / 敏捷做攻击检定和伤害掷骰，并可以用它作为施法法器。命中时可将伤害类型替换为黯蚀、心灵或光耀。",
+   "duration": {
+    "manual": true
+   },
+   "rollMods": [
+    {
+     "on": {
+      "kind": "attack",
+      "attack": {
+       "weapon": true
+      }
+     },
+     "who": "bearer",
+     "when": "ask('这次攻击用的是你连结的那把武器吗？')",
+     "op": "add",
+     "value": "self.mod.cha - cond(attack.ability == 'str', self.mod.str, cond(attack.ability == 'dex', self.mod.dex, 0))",
+     "label": "刃之魔契：用魅力攻击"
+    },
+    {
+     "on": {
+      "kind": "damage",
+      "attack": {
+       "weapon": true
+      }
+     },
+     "who": "bearer",
+     "when": "ask('这次伤害来自你连结的那把武器吗？')",
+     "op": "add",
+     "value": "self.mod.cha - cond(attack.ability == 'str', self.mod.str, cond(attack.ability == 'dex', self.mod.dex, 0))",
+     "label": "刃之魔契：用魅力伤害"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "retype-damage",
+     "label": "刃之魔契：替换伤害类型",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "when": "attack.weapon && ask('这次攻击用的是你连结的那把契约武器吗？')",
+     "do": [
+      {
+       "kind": "choose",
+       "prompt": "选择契约武器造成的伤害类型",
+       "var": "pactType",
+       "options": [
+        {
+         "label": "黯蚀",
+         "value": "黯蚀"
+        },
+        {
+         "label": "心灵",
+         "value": "心灵"
+        },
+        {
+         "label": "光耀",
+         "value": "光耀"
+        }
+       ]
+      },
+      {
+       "kind": "retype",
+       "value": "vars.pactType"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

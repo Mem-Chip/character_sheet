@@ -1,0 +1,73 @@
+{
+ "name": "血肉启示",
+ "automation": "partial",
+ "text": "以一个附赠动作，消耗 1 点或更多术法点魔法性转变形态，持续 10 分钟。每消耗 1 术法点可选择获得一项增益：看见 60 尺内隐形生物；获得等同步行速度的飞行速度且能悬浮；获得两倍步行速度的游泳速度且能水下呼吸；穿过窄至 1 寸空间且消耗 5 尺移动力脱离非魔法束缚或受擒。特殊移动模式与感官需手动配合判定。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "血肉启示",
+   "activation": "bonus",
+   "cost": [
+    {
+     "resource": "sorcery_points"
+    }
+   ],
+   "targeting": {
+    "type": "self"
+   },
+   "root": [
+    {
+     "kind": "number",
+     "prompt": "血肉启示：额外消耗多少点术法点（0~3点，每额外消耗 1 点多选一项增益）？",
+     "var": "extra",
+     "min": 0,
+     "max": "min(3, self.resource('sorcery_points'))",
+     "default": 0
+    },
+    {
+     "kind": "if",
+     "when": "vars.extra > 0",
+     "then": [
+      {
+       "kind": "resource",
+       "id": "sorcery_points",
+       "delta": "-vars.extra"
+      }
+     ]
+    },
+    {
+     "kind": "choose",
+     "prompt": "选择获得的血肉启示增益",
+     "count": "1 + vars.extra",
+     "options": [
+      {
+       "label": "识破隐形：看见 60 尺内隐形生物"
+      },
+      {
+       "label": "飞行悬浮：获得等同步行速度的飞行速度且能悬浮"
+      },
+      {
+       "label": "游泳呼吸：获得两倍步行速度的游泳速度且能水下呼吸"
+      },
+      {
+       "label": "柔韧粘滑：穿过 1 寸狭缝，花 5 尺移动速度脱离非魔法束缚或受擒"
+      }
+     ]
+    },
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "血肉启示"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "血肉启示": {
+   "text": "转变形态持续 10 分钟。获得的自选增益（看破隐形/飞行悬浮/游泳水下呼吸/狭窄穿行脱离束缚受擒）生效中。",
+   "duration": {
+    "minutes": 10
+   }
+  }
+ }
+}

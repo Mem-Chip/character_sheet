@@ -1,0 +1,60 @@
+{
+ "name": "熠熠生辉之恩惠",
+ "automation": "partial",
+ "text": "【永恒安眠】被你降至 0 生命值的生物无法变成亡灵（叙事限制由人工处理）。\n【磊落光明】造成光耀伤害的伤害掷骰时，可以把每颗骰子取最大值，长休恢复 1 次。在造成光耀伤害前点击动作「磊落光明」，获得该效应，下一次造成光耀伤害掷骰全部取最大值后结束。",
+ "actions": [
+  {
+   "id": "open-light",
+   "name": "磊落光明：下一包伤害骰取最大",
+   "activation": "free",
+   "cost": [
+    {
+     "resource": "open-light"
+    }
+   ],
+   "requires": "!self.hasEffect('磊落光明')",
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "磊落光明"
+    }
+   ],
+   "text": "造成光耀伤害前点击：你造成的下一次光耀伤害骰全部取最大值（长休 1 次）。"
+  }
+ ],
+ "effects": {
+  "磊落光明": {
+   "duration": {
+    "endsOn": [
+     {
+      "event": "damageRolled",
+      "when": "event.source == self.id && (action.damage.type == '光耀' || action.attack.damageType == '光耀')"
+     }
+    ]
+   },
+   "rollMods": [
+    {
+     "on": {
+      "kind": "damage"
+     },
+     "who": "bearer",
+     "when": "attack.damageType == '光耀' || action.damage.type == '光耀'",
+     "op": "maxDice",
+     "label": "磊落光明：光耀伤害骰取最大"
+    },
+    {
+     "on": {
+      "kind": "damage",
+      "spell": true
+     },
+     "who": "bearer",
+     "when": "attack.damageType == '光耀' || action.damage.type == '光耀'",
+     "op": "maxDice",
+     "label": "磊落光明：光耀法术伤害骰取最大"
+    }
+   ],
+   "text": "你造成的下一次光耀伤害骰全部取最大值。"
+  }
+ }
+}

@@ -1,0 +1,59 @@
+{
+ "name": "寒心复仇",
+ "automation": "full",
+ "text": "当你被一次攻击检定命中时，可用反应迫使攻击你的生物进行感知豁免（DC 为你的法术豁免 DC）。豁免失败陷入震慑状态直到你的下个回合结束，且速度降至 0。次数等同于感知调整值（至少 1 次），长休恢复。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "寒心复仇",
+   "activation": "reaction",
+   "trigger": {
+    "on": "attackHit",
+    "role": "target",
+    "aim": "actor",
+    "window": "after"
+   },
+   "cost": [
+    {
+     "resource": "coldhearted-vengeance"
+    }
+   ],
+   "root": [
+    {
+     "kind": "save",
+     "to": "attacker",
+     "ability": "wis",
+     "dc": "self.spell.dc",
+     "onFail": [
+      {
+       "kind": "applyEffect",
+       "to": "attacker",
+       "template": "寒心复仇：震慑"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "寒心复仇：震慑": {
+   "text": "陷入震慑状态直到游侠的下个回合结束，且速度降至 0。",
+   "implies": [
+    "XPHB:condition:震慑"
+   ],
+   "statics": [
+    {
+     "kind": "speedSet",
+     "value": 0
+    }
+   ],
+   "duration": {
+    "until": {
+     "at": "turnEnd",
+     "of": "source",
+     "nth": 1
+    }
+   }
+  }
+ }
+}

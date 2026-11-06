@@ -1,0 +1,87 @@
+{
+ "name": "闪电箭矢",
+ "automation": "partial",
+ "text": "使用武器发动远程攻击命中或失手后立即以附赠动作施展。替代该次攻击的原有伤害与效果，命中时目标受到 (1 + slot.level)d8 闪电伤害，失手受到半数伤害；无论命中与否，目标周围 10 尺内的每个生物须进行敏捷豁免，失败受到 (slot.level - 1)d8 闪电伤害，成功半数。原攻击伤害替代需手动处理。",
+ "actions": [
+  {
+   "id": "cast",
+   "name": "闪电箭矢",
+   "activation": "bonus",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "trigger": {
+    "on": [
+     "attackHit",
+     "attackMissed"
+    ],
+    "role": "actor",
+    "when": "attack.ranged && attack.weapon"
+   },
+   "requires": "turn.isMine",
+   "cost": [
+    {
+     "slot": {
+      "min": 3
+     }
+    }
+   ],
+   "root": [
+    {
+     "kind": "if",
+     "when": "!roll.failing",
+     "then": [
+      {
+       "kind": "damage",
+       "dice": "(1 + slot.level)d8",
+       "type": "闪电"
+      }
+     ],
+     "else": [
+      {
+       "kind": "damage",
+       "dice": "(1 + slot.level)d8",
+       "scale": 0.5,
+       "type": "闪电"
+      }
+     ]
+    },
+    {
+     "kind": "chooseTargets",
+     "prompt": "闪电箭矢：选择目标周围 10 尺内的生物",
+     "within": {
+      "ft": "10",
+      "of": "target"
+     },
+     "exclude": [
+      "target"
+     ],
+     "count": 20,
+     "do": [
+      {
+       "kind": "save",
+       "ability": "dex",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "id": "splash",
+         "dice": "(slot.level - 1)d8",
+         "type": "闪电"
+        }
+       ],
+       "onSuccess": [
+        {
+         "kind": "damage",
+         "ref": "splash",
+         "scale": 0.5
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

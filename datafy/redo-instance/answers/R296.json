@@ -1,0 +1,84 @@
+{
+ "name": "术法爆发",
+ "automation": "partial",
+ "text": "远程法术攻击，命中造成 (1 + floor((self.level + 1) / 6))d8 自选类型伤害（强酸、寒冷、火焰、闪电、毒素、心灵、雷鸣）。若任一 d8 掷出 8 可追加 d8 伤害（至多等同于施法属性调整值个）。追加爆骰确认需手动输入。",
+ "actions": [
+  {
+   "id": "cast",
+   "name": "术法爆发",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 120
+   },
+   "root": [
+    {
+     "kind": "choose",
+     "prompt": "选择伤害类型",
+     "var": "elem",
+     "options": [
+      {
+       "label": "强酸"
+      },
+      {
+       "label": "寒冷"
+      },
+      {
+       "label": "火焰"
+      },
+      {
+       "label": "闪电"
+      },
+      {
+       "label": "毒素"
+      },
+      {
+       "label": "心灵"
+      },
+      {
+       "label": "雷鸣"
+      }
+     ]
+    },
+    {
+     "kind": "attack",
+     "attack": {
+      "ranged": true,
+      "spell": true
+     },
+     "onHit": [
+      {
+       "kind": "damage",
+       "dice": "(1 + floor((self.level + 1) / 6))d8",
+       "type": "vars.elem"
+      },
+      {
+       "kind": "if",
+       "when": "ask('是否有任意 d8 掷出了 8？')",
+       "then": [
+        {
+         "kind": "number",
+         "prompt": "术法爆发：掷出 8 的额外 d8 数量（至多施法属性调整值）",
+         "var": "extraDice",
+         "min": 1,
+         "max": "max(1, self.spell.mod)",
+         "default": 1
+        },
+        {
+         "kind": "damage",
+         "dice": "(vars.extraDice)d8",
+         "type": "vars.elem"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

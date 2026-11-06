@@ -1,0 +1,46 @@
+{
+ "name": "亡灵仆役",
+ "automation": "partial",
+ "text": "【活化死尸】你始终准备着法术活化死尸，每长休可免法术位施展一次，施展时可使其有效环阶提升一环。【不死坚韧】施展创造或召唤亡灵的死灵法术时，该亡灵生命值上限和当前生命值增加（智力调整值 + 法师等级的一半，向下取整）。（需手动调整召唤物生命值）【凋零打击】位于你60尺内由你操控的亡灵以攻击检定命中时，造成等同于你智力调整值的额外黯蚀伤害（至少1点）。",
+ "actions": [
+  {
+   "id": "free-animate-dead",
+   "name": "亡灵仆役：无需法术位施展活化死尸",
+   "activation": {
+    "minutes": 1
+   },
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "resource": "undead-thralls"
+    }
+   ],
+   "root": [
+    {
+     "kind": "note",
+     "text": "无需法术位施展活化死尸（施法时间1分钟；可将有效环阶提升一环）。召唤生物请按法术手动放置，并将智力调整值+法师等级一半加至其生命上限与当前生命。"
+    }
+   ]
+  }
+ ],
+ "triggers": [
+  {
+   "id": "withering-strike",
+   "label": "亡灵仆役：凋零打击（额外黯蚀伤害）",
+   "on": "attackHit",
+   "role": "any",
+   "window": "before",
+   "when": "attacker.id != self.id && attacker.type == '不死生物' && self.isAllyOf(attacker) && dist(self, attacker) <= 60",
+   "do": [
+    {
+     "kind": "addDamage",
+     "dice": "max(1, self.mod.int)",
+     "type": "黯蚀"
+    }
+   ]
+  }
+ ]
+}

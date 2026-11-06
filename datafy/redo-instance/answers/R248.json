@@ -1,0 +1,79 @@
+{
+  "resources": [
+    {
+      "id": "物品次数:闪电标枪",
+      "name": "闪电标枪",
+      "formula": 1,
+      "recovery": "long"
+    }
+  ],
+  "name": "闪电标枪",
+  "automation": "full",
+  "text": "用该武器攻击命中时可选择将伤害转为闪电伤害。投掷时可用动作化为闪电束，形成 120 尺长、5 尺宽的线状区域，除你之外的生物进行 DC 13 敏捷豁免，失败受 4d6 闪电伤害，成功减半；造成伤害后标枪立即飞回手中。每日黎明前限用一次。",
+  "triggers": [
+    {
+      "id": "retype-lightning",
+      "label": "闪电标枪：转为闪电伤害",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "attack.weapon",
+      "do": [
+        {
+          "kind": "retype",
+          "value": "闪电"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "lightningBolt",
+      "name": "闪电束",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "物品次数:闪电标枪"
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "line",
+          "length": 120,
+          "width": 5
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "dex",
+              "dc": 13,
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "d",
+                  "dice": "4d6",
+                  "type": "闪电"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "d",
+                  "scale": 0.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+ "name": "宗师射术",
+ "automation": "partial",
+ "text": "当一名你可见的生物对你进行攻击检定并失手时，你能以反应向远离攻击者的方向移动至多等于你速度一半的距离，且不会因此引发借机攻击。其后作为该反应的一部分，若攻击者还处在你的武器射程范围内，你可以对其进行一次远程攻击检定。（远程反击需在武器行手动发起）",
+ "actions": [
+  {
+   "id": "use",
+   "name": "宗师射术",
+   "activation": "reaction",
+   "trigger": {
+    "on": "attackMissed",
+    "role": "target",
+    "window": "after",
+    "aim": "actor",
+    "when": "canSee(self, attacker)"
+   },
+   "root": [
+    {
+     "kind": "economy",
+     "move": "floor(self.speed / 2)"
+    },
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "XPHB:action:撤离#撤离"
+    },
+    {
+     "kind": "note",
+     "text": "宗师射术：向远离攻击者的方向移动至多半速且不引发借机攻击；若攻击者仍在武器射程内，请在武器行对其进行一次远程攻击。"
+    }
+   ]
+  }
+ ]
+}

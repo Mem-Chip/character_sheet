@@ -1,0 +1,74 @@
+{
+ "name": "精通受祝击",
+ "automation": "partial",
+ "text": "受祝击进阶：①若 7 级选了神圣打击，武器命中额外伤害提升至 2d8（已提供触发器额外追加 1d8 光耀/黯蚀伤害）；②若 7 级选了强力施法，施展牧师戏法造成伤害时，已提供触发器为自己或 60 尺内另一生物赋予「感知调整值 × 2」点临时生命值。请根据 7 级所选特性使用对应触发器。",
+ "triggers": [
+  {
+   "id": "smite-up",
+   "label": "精通受祝击：神圣打击额外 1d8",
+   "on": "attackHit",
+   "role": "actor",
+   "window": "before",
+   "optional": true,
+   "limit": "oncePerTurn",
+   "when": "attack.weapon",
+   "do": [
+    {
+     "kind": "choose",
+     "prompt": "神圣打击（精通）：造成光耀还是黯蚀伤害？",
+     "options": [
+      {
+       "label": "光耀",
+       "do": [
+        {
+         "kind": "addDamage",
+         "dice": "1d8",
+         "type": "光耀"
+        }
+       ]
+      },
+      {
+       "label": "黯蚀",
+       "do": [
+        {
+         "kind": "addDamage",
+         "dice": "1d8",
+         "type": "黯蚀"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "potent-spellcasting",
+   "label": "精通受祝击：强力施法（赋予临时生命值）",
+   "on": "damageIncoming",
+   "role": "actor",
+   "window": "before",
+   "optional": true,
+   "when": "action.kind == 'spell' && action.spell.level == 0 && includes(action.spell.lists, '牧师') && damage.amount > 0",
+   "do": [
+    {
+     "kind": "chooseTargets",
+     "prompt": "强力施法：为你自己或 60 尺内的另一个生物赋予临时生命值",
+     "from": "allies",
+     "within": {
+      "ft": 60,
+      "of": "self"
+     },
+     "count": 1,
+     "min": 1,
+     "do": [
+      {
+       "kind": "tempHp",
+       "amount": "2 * self.mod.wis",
+       "to": "target"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

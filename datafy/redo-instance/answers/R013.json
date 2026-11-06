@@ -1,0 +1,83 @@
+{
+ "name": "地颤",
+ "automation": "full",
+ "text": "以你为中心 10 尺半径内引发地面颤动。处于该区域除你之外的其他生物必须进行敏捷豁免，失败受 (slot.level)d6 钝击伤害并倒地（1 环 1d6，每高一环 +1d6）。若地表为松软土壤或石头，该区域成为困难地形。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "地颤",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 1
+     }
+    }
+   ],
+   "targeting": {
+    "type": "area",
+    "range": "self",
+    "area": {
+     "shape": "sphere",
+     "radius": 10
+    }
+   },
+   "root": [
+    {
+     "kind": "forEach",
+     "in": "area",
+     "do": [
+      {
+       "kind": "if",
+       "when": "target.id != self.id",
+       "then": [
+        {
+         "kind": "save",
+         "ability": "dex",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "tremor",
+           "dice": "(slot.level)d6",
+           "type": "钝击"
+          },
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "地颤：倒地"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "if",
+     "when": "ask('地表是否为松软的土壤或石头？')",
+     "then": [
+      {
+       "kind": "zone",
+       "name": "地颤：困难地形",
+       "difficult": true
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "地颤：倒地": {
+   "name": "地颤：倒地",
+   "implies": [
+    "XPHB:condition:倒地"
+   ],
+   "text": "受到地颤冲击陷入倒地状态。"
+  }
+ }
+}

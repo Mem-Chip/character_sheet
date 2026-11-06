@@ -1,0 +1,102 @@
+{
+ "name": "混乱箭",
+ "automation": "full",
+ "text": "对 120 尺内一名生物进行远程法术攻击。命中造成 2d8 + (slot.level)d6 点伤害。选择一颗 d8 投出的数字来决定伤害类型（1酸 2冷 3火 4力 5电 6毒 7心 8雷）；两颗 d8 点数相同时混乱能量跳跃至 30 尺内另一生物并发动新的攻击检定与伤害掷骰（每个生物只能被选作目标一次）。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "混乱箭",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 1
+     }
+    }
+   ],
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 120
+   },
+   "root": [
+    {
+     "kind": "attack",
+     "attack": {
+      "ranged": true,
+      "spell": true
+     },
+     "onHit": [
+      {
+       "kind": "choose",
+       "prompt": "选择伤害类型（根据 d8 掷出的点数）",
+       "var": "dtype",
+       "options": [
+        {
+         "label": "1: 强酸",
+         "value": "强酸"
+        },
+        {
+         "label": "2: 寒冷",
+         "value": "寒冷"
+        },
+        {
+         "label": "3: 火焰",
+         "value": "火焰"
+        },
+        {
+         "label": "4: 力场",
+         "value": "力场"
+        },
+        {
+         "label": "5: 闪电",
+         "value": "闪电"
+        },
+        {
+         "label": "6: 毒素",
+         "value": "毒素"
+        },
+        {
+         "label": "7: 心灵",
+         "value": "心灵"
+        },
+        {
+         "label": "8: 雷鸣",
+         "value": "雷鸣"
+        }
+       ]
+      },
+      {
+       "kind": "damage",
+       "dice": "2d8 + (slot.level)d6",
+       "type": "vars.dtype"
+      },
+      {
+       "kind": "if",
+       "when": "ask('两颗 d8 投出的数字是否相同？')",
+       "then": [
+        {
+         "kind": "repeatAction",
+         "prompt": "选择 30 尺内另一生物（混乱箭跳跃）",
+         "within": {
+          "ft": "30",
+          "of": "target"
+         },
+         "exclude": [
+          "self",
+          "target"
+         ],
+         "filter": "!includes(action.targets, target.id)"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

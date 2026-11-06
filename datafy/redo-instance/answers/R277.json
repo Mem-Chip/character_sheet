@@ -1,0 +1,88 @@
+{
+ "name": "庇护术",
+ "automation": "partial",
+ "text": "受守护生物被指定为攻击时，攻击者需进行感知豁免，失败则必须改选目标或失去该次攻击；被指定为伤害性法术目标时需手动处理。受保护生物发动攻击、施展法术或造成伤害时法术终止。",
+ "actions": [
+  {
+   "id": "cast",
+   "name": "庇护术",
+   "activation": "bonus",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 1
+     }
+    }
+   ],
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 30
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "target",
+     "template": "庇护术"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "庇护术": {
+   "tags": [
+    "magical",
+    "spell"
+   ],
+   "duration": {
+    "minutes": 1,
+    "endsOn": [
+     {
+      "event": "d20Rolled",
+      "when": "event.roller == self.id && event.kind == 'attack'"
+     },
+     {
+      "event": "spellCast",
+      "when": "event.actor == self.id"
+     },
+     {
+      "event": "damageApplied",
+      "when": "event.source == self.id"
+     }
+    ]
+   },
+   "triggers": [
+    {
+     "id": "ward",
+     "label": "庇护术：避难守御",
+     "on": "attackHit",
+     "role": "target",
+     "window": "before",
+     "do": [
+      {
+       "kind": "save",
+       "to": "attacker",
+       "ability": "wis",
+       "dc": "source.spell.dc",
+       "onFail": [
+        {
+         "kind": "modify",
+         "modify": [
+          {
+           "op": "redirect",
+           "to": "choose"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

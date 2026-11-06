@@ -1,0 +1,99 @@
+{
+ "name": "心灵之刃",
+ "automation": "partial",
+ "text": "执行攻击动作时可在空闲手中塑造出心灵之刃攻击（简易近战武器，灵巧、投掷 60 尺，造成 1d6 + 属性调整值的心灵伤害）。本回合使用心灵之刃攻击后，只要另一只手空闲，可以附赠动作塑造第二把念刃发动一次近战或远程武器攻击（伤害骰为 1d4）。该刀刃命中或失手后立即消失。空手状态需人工确认。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "心灵之刃",
+   "activation": "none",
+   "cost": [
+    {
+     "economy": "attack"
+    }
+   ],
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 60
+   },
+   "tags": [
+    "weapon"
+   ],
+   "root": [
+    {
+     "kind": "attack",
+     "bonus": "pb + max(self.mod.str, self.mod.dex)",
+     "attack": {
+      "melee": true,
+      "ranged": true,
+      "finesse": true,
+      "weapon": true,
+      "ability": "dex",
+      "damageType": "心灵",
+      "item": "心灵之刃"
+     },
+     "onHit": [
+      {
+       "kind": "damage",
+       "dice": "1d6 + max(self.mod.str, self.mod.dex)",
+       "type": "心灵"
+      }
+     ]
+    },
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "心灵之刃：本回合已化刃"
+    }
+   ]
+  },
+  {
+   "id": "bonus",
+   "name": "心灵之刃（附赠攻击）",
+   "activation": "bonus",
+   "requires": "turn.isMine && self.hasEffect('心灵之刃：本回合已化刃') && ask('另一只手空闲吗？')",
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 60
+   },
+   "tags": [
+    "weapon"
+   ],
+   "root": [
+    {
+     "kind": "attack",
+     "bonus": "pb + max(self.mod.str, self.mod.dex)",
+     "attack": {
+      "melee": true,
+      "ranged": true,
+      "finesse": true,
+      "weapon": true,
+      "ability": "dex",
+      "damageType": "心灵",
+      "item": "心灵之刃"
+     },
+     "onHit": [
+      {
+       "kind": "damage",
+       "dice": "1d4 + max(self.mod.str, self.mod.dex)",
+       "type": "心灵"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "心灵之刃：本回合已化刃": {
+   "text": "本回合已用心灵之刃攻击，可以用附赠动作再化出一把发动攻击。",
+   "duration": {
+    "until": {
+     "at": "turnEnd",
+     "of": "bearer"
+    }
+   }
+  }
+ }
+}

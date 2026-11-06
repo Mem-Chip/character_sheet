@@ -1,0 +1,167 @@
+{
+ "name": "伊尔明斯特的绚丽光球",
+ "automation": "partial",
+ "text": "持续 1 小时。创造 6 枚彩色光球环绕自身。光球存在期间可消耗光球：【吸收能量】受到强酸/寒冷/火焰/闪电/雷鸣伤害时以反应消耗 1 枚光球，令该次伤害减半并获得对该伤害类型的抗性直至你的下个回合开始；【光能爆】以附赠动作消耗 1 枚光球对 120 尺内目标发动远程法术攻击，命中造成 3d6 点强酸、寒冷、火焰、闪电或雷鸣伤害（自选）。升环施法时法术位每高一环多创造 1 枚光球。消耗完全部光球后法术提前结束（光球计数与法术提前结束需手动处理）。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "伊尔明斯特的绚丽光球",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 6
+     }
+    }
+   ],
+   "targeting": {
+    "type": "self"
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "伊尔明斯特的绚丽光球"
+    }
+   ]
+  },
+  {
+   "id": "blast",
+   "name": "伊尔明斯特的绚丽光球：光能爆",
+   "activation": "bonus",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "requires": "self.hasEffect('伊尔明斯特的绚丽光球')",
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 120
+   },
+   "root": [
+    {
+     "kind": "choose",
+     "prompt": "选择光能爆的伤害类型",
+     "var": "elem",
+     "options": [
+      {
+       "label": "强酸",
+       "value": "强酸"
+      },
+      {
+       "label": "寒冷",
+       "value": "寒冷"
+      },
+      {
+       "label": "火焰",
+       "value": "火焰"
+      },
+      {
+       "label": "闪电",
+       "value": "闪电"
+      },
+      {
+       "label": "雷鸣",
+       "value": "雷鸣"
+      }
+     ]
+    },
+    {
+     "kind": "attack",
+     "attack": {
+      "ranged": true,
+      "spell": true
+     },
+     "onHit": [
+      {
+       "kind": "damage",
+       "dice": "3d6",
+       "type": "vars.elem"
+      }
+     ]
+    },
+    {
+     "kind": "note",
+     "text": "无论命中与否消耗 1 枚光球（光球耗尽时请手动结束法术）。"
+    }
+   ]
+  },
+  {
+   "id": "absorb",
+   "name": "伊尔明斯特的绚丽光球：吸收能量",
+   "activation": "reaction",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "requires": "self.hasEffect('伊尔明斯特的绚丽光球')",
+   "trigger": {
+    "on": "damageIncoming",
+    "role": "target",
+    "window": "before",
+    "when": "includes(['强酸', '寒冷', '火焰', '闪电', '雷鸣'], damage.type)"
+   },
+   "root": [
+    {
+     "kind": "modify",
+     "modify": [
+      {
+       "op": "halveDamage"
+      }
+     ]
+    },
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "绚丽光球：元素抗性",
+     "state": {
+      "type": "damage.type"
+     }
+    },
+    {
+     "kind": "note",
+     "text": "消耗 1 枚光球（光球耗尽时请手动结束法术）。"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "伊尔明斯特的绚丽光球": {
+   "tags": [
+    "magical",
+    "spell"
+   ],
+   "duration": {
+    "hours": 1
+   },
+   "text": "6 枚彩色光球环绕自身；可通过附赠动作发动光能爆，或通过反应消耗光球获得元素抗性；光球耗尽法术结束。"
+  },
+  "绚丽光球：元素抗性": {
+   "tags": [
+    "magical",
+    "spell"
+   ],
+   "duration": {
+    "until": {
+     "at": "turnStart",
+     "of": "bearer",
+     "nth": 1
+    }
+   },
+   "statics": [
+    {
+     "kind": "resist",
+     "values": [
+      "effect.state.type"
+     ]
+    }
+   ],
+   "text": "获得对触发该反应的元素伤害类型的抗性，持续至你的下个回合开始。"
+  }
+ }
+}

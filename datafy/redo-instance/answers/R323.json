@@ -1,0 +1,59 @@
+{
+ "name": "破法者",
+ "automation": "partial",
+ "text": "始终准备法术反制与解除魔法（静态）。可以用附赠动作施展解除魔法（消耗 3 环或更高法术位）；其施法属性检定加入熟练加值（已自动识别解除魔法）。若消耗法术位施展法术反制或解除魔法后未能成功阻止或解除，已提供可选触发器退还法术位；若成功生效请勿点击退还。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "破法者：解除魔法（附赠）",
+   "activation": "bonus",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 3
+     }
+    }
+   ],
+   "root": [
+    {
+     "kind": "note",
+     "text": "选择 120 尺内的目标（生物、物件或法术效应）进行解除魔法；成败与 DC 由人判断。"
+    }
+   ]
+  }
+ ],
+ "rollMods": [
+  {
+   "on": {
+    "kind": "check",
+    "ability": "int"
+   },
+   "who": "bearer",
+   "when": "action.name == '解除魔法' || action.name == '破法者：解除魔法（附赠）' || ask('这是解除魔法的施法属性检定吗？')",
+   "op": "add",
+   "value": "pb",
+   "label": "破法者：解除魔法检定加熟练"
+  }
+ ],
+ "triggers": [
+  {
+   "id": "refund-slot",
+   "label": "破法者：退还法术位（若法术未能成功阻止或解除）",
+   "on": "spellCast",
+   "role": "actor",
+   "window": "after",
+   "optional": true,
+   "when": "action.kind == 'spell' && (action.name == '法术反制' || action.name == '解除魔法' || action.name == '破法者：解除魔法（附赠）' || ask('刚才施展的是法术反制或解除魔法吗？')) && action.spell.slot > 0",
+   "do": [
+    {
+     "kind": "refund",
+     "what": "slot"
+    }
+   ]
+  }
+ ]
+}

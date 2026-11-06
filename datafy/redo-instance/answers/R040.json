@@ -1,0 +1,47 @@
+{
+ "name": "死灵魔典",
+ "automation": "partial",
+ "text": "【暗蚀抗性】你获得黯蚀伤害抗性（若人物卡未包含请手动记录）。【亡灵魔宠】施展寻获魔宠时可选择骷髅或丧尸形态，或将通常形态类型改为亡灵。执行攻击动作时可放弃一次攻击让魔宠用反应攻击一次。【亡灵生机】当你使用法术位施展一道死灵法术时，你可以选择60尺内一名你可见的亡灵，使其恢复等同于所消耗法术位环阶加你的法师等级的生命值。",
+ "actions": [
+  {
+   "id": "familiar-attack",
+   "name": "死灵魔典：魔宠攻击",
+   "activation": "none",
+   "cost": [
+    {
+     "economy": "attack"
+    }
+   ],
+   "root": [
+    {
+     "kind": "note",
+     "text": "死灵魔典：放弃你攻击动作中的一次攻击，让你的魔宠用它的反应发动一次攻击（魔宠的攻击请手动在它的卡上结算）。"
+    }
+   ]
+  },
+  {
+   "id": "undead-vitality",
+   "name": "死灵魔典：亡灵生机（施法后补治疗）",
+   "activation": "free",
+   "trigger": {
+    "on": "spellCast",
+    "role": "actor",
+    "window": "after",
+    "when": "action.kind == 'spell' && action.spell.school == '死灵' && action.spell.slot > 0"
+   },
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 60,
+    "filter": "target.type == '不死生物' && canSee(self, target)"
+   },
+   "root": [
+    {
+     "kind": "heal",
+     "amount": "action.parent.spell.slot + self.levelOf('法师')",
+     "to": "target"
+    }
+   ]
+  }
+ ]
+}

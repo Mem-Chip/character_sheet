@@ -1,0 +1,99 @@
+{
+ "name": "觉醒魔典",
+ "automation": "full",
+ "text": "法术书可作为法器。消耗法术位施展法师法术时，可将伤害类型替换为法术书中同环阶另一法术的伤害类型。能以正常施法时间进行一次仪式施法而不额外增加 10 分钟，长休恢复 1 次。短休时可用法师笔将魔典转移至新书。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "觉醒魔典：快速仪式",
+   "activation": "none",
+   "cost": [
+    {
+     "resource": "awakened-spellbook-ritual"
+    }
+   ],
+   "root": [
+    {
+     "kind": "note",
+     "text": "觉醒魔典：以正常施法时间施展一个法师仪式法术，不额外增加 10 分钟。长休恢复 1 次。"
+    }
+   ]
+  }
+ ],
+ "triggers": [
+  {
+   "id": "replace-damage-type",
+   "label": "觉醒魔典：替换伤害类型",
+   "on": "spellCast",
+   "role": "actor",
+   "window": "before",
+   "optional": true,
+   "when": "action.kind == 'spell' && includes(action.spell.lists, '法师') && action.spell.slot > 0",
+   "do": [
+    {
+     "kind": "choose",
+     "prompt": "觉醒魔典：替换为你法术书中同环法术的哪种伤害类型？",
+     "var": "dmgType",
+     "options": [
+      {
+       "label": "强酸",
+       "value": "强酸"
+      },
+      {
+       "label": "寒冷",
+       "value": "寒冷"
+      },
+      {
+       "label": "火焰",
+       "value": "火焰"
+      },
+      {
+       "label": "力场",
+       "value": "力场"
+      },
+      {
+       "label": "闪电",
+       "value": "闪电"
+      },
+      {
+       "label": "黯蚀",
+       "value": "黯蚀"
+      },
+      {
+       "label": "毒素",
+       "value": "毒素"
+      },
+      {
+       "label": "心灵",
+       "value": "心灵"
+      },
+      {
+       "label": "光耀",
+       "value": "光耀"
+      },
+      {
+       "label": "雷鸣",
+       "value": "雷鸣"
+      },
+      {
+       "label": "钝击",
+       "value": "钝击"
+      },
+      {
+       "label": "穿刺",
+       "value": "穿刺"
+      },
+      {
+       "label": "挥砍",
+       "value": "挥砍"
+      }
+     ]
+    },
+    {
+     "kind": "retype",
+     "value": "vars.dmgType"
+    }
+   ]
+  }
+ ]
+}

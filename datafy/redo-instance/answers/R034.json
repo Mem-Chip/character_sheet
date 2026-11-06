@@ -1,0 +1,40 @@
+{
+ "name": "分裂惑控",
+ "automation": "full",
+ "text": "消耗法术位施展一道惑控法术时，若该法术能通过升环施法额外指定一个生物为目标，你可以使该法术的有效环阶提升一环（按高一环结算且让你挑选多出来的目标，不多花法术位）。可用次数等于智力调整值，长休恢复。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "分裂惑控",
+   "activation": "free",
+   "trigger": {
+    "on": "spellCast",
+    "role": "actor",
+    "window": "before",
+    "when": "action.kind == 'spell' && action.spell.school == '惑控' && action.spell.slot > 0 && ask('这道惑控法术能通过升环施法额外指定一个生物为目标吗？')"
+   },
+   "cost": [
+    {
+     "resource": "split-enchantment"
+    }
+   ],
+   "root": [
+    {
+     "kind": "modifyCast",
+     "slotDelta": "1",
+     "note": "分裂惑控：有效环阶+1"
+    },
+    {
+     "kind": "chooseTargets",
+     "prompt": "分裂惑控：多出来的目标",
+     "min": "1",
+     "exclude": [
+      "self"
+     ],
+     "filter": "!includes(action.targets, target)",
+     "addTo": "cast"
+    }
+   ]
+  }
+ ]
+}

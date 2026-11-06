@@ -1,0 +1,66 @@
+{
+  "name": "位面战士",
+  "automation": "full",
+  "text": "以附赠动作指定 30 尺内可见的一名生物，本回合对其下一次武器攻击命中时，本次攻击的伤害转化为力场伤害，且目标额外受到 1d8（11 级起 2d8）点力场伤害。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "位面战士",
+      "activation": "bonus",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "位面战士",
+          "state": {
+            "mark": "target"
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "位面战士": {
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 0
+        }
+      },
+      "triggers": [
+        {
+          "id": "hit",
+          "label": "位面战士：命中造成额外力场伤害",
+          "on": "attackHit",
+          "role": "actor",
+          "window": "before",
+          "when": "attack.weapon && target.id == effect.state.mark",
+          "do": [
+            {
+              "kind": "retype",
+              "value": "力场"
+            },
+            {
+              "kind": "addDamage",
+              "dice": "cond(self.levelOf('游侠') >= 11, 2d8, 1d8)",
+              "type": "力场"
+            },
+            {
+              "kind": "removeEffect",
+              "match": {
+                "name": "位面战士"
+              },
+              "from": "self"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

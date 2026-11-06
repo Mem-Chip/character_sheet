@@ -1,0 +1,113 @@
+{
+ "name": "吸收元素",
+ "automation": "partial",
+ "text": "受到强酸、寒冷、火焰、闪电或雷鸣伤害时用反应施放：获得触发法术的那个伤害类型的抗性（这次伤害也随之减半），持续到你的下个回合开始；在你的下个回合中，近战攻击首次命中时额外造成 (slot.level)d6 点同类型伤害（1 环 1d6，每高一环 +1d6），之后法术结束。一次伤害包里有多种伤害类型时只认第一种。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "吸收元素",
+   "activation": "reaction",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 1
+     }
+    }
+   ],
+   "trigger": {
+    "on": "damageIncoming",
+    "role": "target",
+    "window": "before",
+    "when": "includes(['强酸', '寒冷', '火焰', '闪电', '雷鸣'], damage.type)"
+   },
+   "targeting": {
+    "type": "self"
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "吸收元素·抗性",
+     "state": {
+      "type": "damage.type"
+     }
+    },
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "吸收元素·蓄能",
+     "state": {
+      "type": "damage.type",
+      "lvl": "slot.level"
+     }
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "吸收元素·抗性": {
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "duration": {
+    "until": {
+     "at": "turnStart",
+     "of": "bearer",
+     "nth": 1
+    }
+   },
+   "statics": [
+    {
+     "kind": "resist",
+     "values": [
+      "effect.state.type"
+     ]
+    }
+   ],
+   "text": "获得触发法术的那个伤害类型的抗性，直到你的下个回合开始。"
+  },
+  "吸收元素·蓄能": {
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "duration": {
+    "until": {
+     "at": "turnEnd",
+     "of": "bearer",
+     "nth": 1
+    }
+   },
+   "triggers": [
+    {
+     "id": "absorb-hit",
+     "label": "吸收元素：释放能量",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "when": "turn.isMine && attack.melee",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "(effect.state.lvl)d6",
+       "type": "effect.state.type"
+      },
+      {
+       "kind": "removeEffect",
+       "match": {
+        "name": "吸收元素·蓄能"
+       },
+       "from": "self"
+      }
+     ]
+    }
+   ],
+   "text": "蓄着触发法术的那个伤害类型的能量：你的下个回合里近战攻击首次命中时额外造成 1d6（每高一环 +1d6）同类型伤害，然后法术结束。"
+  }
+ }
+}

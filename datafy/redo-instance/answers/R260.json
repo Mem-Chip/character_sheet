@@ -1,0 +1,43 @@
+{
+  "name": "吸矢盾",
+  "automation": "full",
+  "text": "持握此盾牌期间，你对抗远程攻击的 AC 具有 +2 加值。当攻击者对你周围 5 尺内的目标发动远程攻击命中时，可以用反应代替该目标成为攻击目标（按你的 AC 重新判定）。",
+  "rollMods": [
+    {
+      "on": {
+        "kind": "attack",
+        "attack": {
+          "ranged": true
+        }
+      },
+      "who": "against",
+      "op": "add",
+      "value": -2,
+      "label": "吸矢盾：对抗远程攻击 AC+2"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "吸矢",
+      "activation": "reaction",
+      "trigger": {
+        "on": "attackHit",
+        "role": "ally",
+        "window": "before",
+        "when": "attack.ranged && within(self, target, 5)"
+      },
+      "root": [
+        {
+          "kind": "modify",
+          "modify": [
+            {
+              "op": "redirect",
+              "to": "self"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

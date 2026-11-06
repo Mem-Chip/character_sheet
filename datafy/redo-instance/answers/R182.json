@@ -1,0 +1,48 @@
+{
+ "name": "兽人狂怒",
+ "automation": "partial",
+ "text": "【怒火追加】用简易或军用武器攻击命中时，可消耗使用次数（短休或长休恢复 1 次）额外投掷一枚该武器的伤害骰加入本次攻击伤害中。【坚韧反击】使用坚韧不屈种族特质后，可以反应立即进行一次武器攻击（反击攻击请手动发起）。",
+ "triggers": [
+  {
+   "id": "extra-damage",
+   "label": "兽人狂怒：追加武器伤害骰",
+   "on": "attackHit",
+   "role": "actor",
+   "window": "before",
+   "optional": true,
+   "when": "attack.weapon",
+   "cost": [
+    {
+     "resource": "orcish-fury-damage"
+    }
+   ],
+   "do": [
+    {
+     "kind": "addDamage",
+     "dice": "action.damage.die",
+     "type": "action.damage.type"
+    }
+   ]
+  },
+  {
+   "id": "relentless-retaliation",
+   "label": "兽人狂怒：坚韧反击",
+   "on": "reducedTo0",
+   "role": "target",
+   "window": "after",
+   "optional": true,
+   "cost": [
+    {
+     "economy": "reaction"
+    }
+   ],
+   "when": "ask('刚才是否使用了「坚韧不屈」特质将生命值维持在1点？')",
+   "do": [
+    {
+     "kind": "note",
+     "text": "兽人狂怒：触发坚韧不屈后以反应立即发动一次武器攻击。"
+    }
+   ]
+  }
+ ]
+}

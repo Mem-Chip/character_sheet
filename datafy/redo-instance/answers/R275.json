@@ -1,0 +1,103 @@
+{
+ "name": "燃油",
+ "automation": "partial",
+ "text": "你能将燃油泼在一个生物、物件或一处空间上，或作为燃料使用。①泼洒生物/物件：替换一次攻击掷向20尺内目标，目标须通过DC 8+敏捷调整值+熟练加值的敏捷豁免，否则被油覆盖1分钟；在油干燥前受到火焰伤害时，额外受到5点火焰伤害。②泼洒空间：以操作动作覆盖5尺方形区域，点燃后燃烧2轮，进入或在该区域结束回合的生物受到5点火焰伤害（每回合限一次）。③燃料：可供油灯或提灯燃烧6小时。场地燃烧与手动计时需玩家处理。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "燃油",
+   "activation": "action",
+   "cost": [
+    {
+     "resource": "物品:燃油"
+    }
+   ],
+   "root": [
+    {
+     "kind": "choose",
+     "prompt": "选择燃油使用方式",
+     "options": [
+      {
+       "label": "泼洒生物或物件（20尺投掷）",
+       "do": [
+        {
+         "kind": "chooseTargets",
+         "prompt": "选择20尺内的目标生物或物件",
+         "count": 1,
+         "within": {
+          "ft": 20,
+          "of": "self"
+         },
+         "do": [
+          {
+           "kind": "save",
+           "ability": "dex",
+           "dc": "8 + self.mod.dex + self.pb",
+           "onFail": [
+            {
+             "kind": "applyEffect",
+             "to": "target",
+             "template": "覆油"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "泼洒地面（5尺方形区域）",
+       "do": [
+        {
+         "kind": "note",
+         "text": "将燃油泼在地面上覆盖5尺方形区域。点燃后持续燃烧2轮，任何进入该区域或在该区域结束回合的生物受到5点火焰伤害（同一生物每回合只受一次）。"
+        }
+       ]
+      },
+      {
+       "label": "作为燃料注入油灯/提灯",
+       "do": [
+        {
+         "kind": "note",
+         "text": "倒入油灯或提灯中作为燃料，点着后可累计持续燃烧6小时。"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "覆油": {
+   "duration": {
+    "minutes": 1
+   },
+   "triggers": [
+    {
+     "id": "oil-burn",
+     "label": "覆油：火焰伤害引燃额外伤害",
+     "on": "damageTaken",
+     "role": "target",
+     "when": "damage.type == '火焰' || damage.type == 'fire'",
+     "do": [
+      {
+       "kind": "damage",
+       "to": "self",
+       "dice": "5",
+       "type": "火焰"
+      },
+      {
+       "kind": "removeEffect",
+       "from": "self",
+       "match": {
+        "name": "覆油"
+       }
+      }
+     ]
+    }
+   ],
+   "text": "被油覆盖。在油干燥前若受到火焰伤害，额外受到 5 点火焰伤害。"
+  }
+ }
+}

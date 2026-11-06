@@ -1,0 +1,70 @@
+{
+  "name": "恐惧伏击",
+  "automation": "full",
+  "text": "精通伏击：①伏击者之跃：战斗首个回合开始时速度增加10尺，直到该回合结束。②恐惧打击：每回合一次，武器命中生物时可消耗一次恐惧打击造成额外2d6心灵伤害（次数等同于感知调整值，长休恢复）。③先攻加值：先攻掷骰加入感知调整值。全部机制均已自动处理。",
+  "triggers": [
+    {
+      "id": "ambusher-leap",
+      "label": "伏击者之跃：首回合速度+10",
+      "on": "turnStarted",
+      "role": "actor",
+      "when": "round == 1",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "inline": {
+            "name": "伏击者之跃",
+            "text": "战斗首个回合速度增加 10 尺",
+            "statics": [
+              {
+                "kind": "speed",
+                "bonus": 10
+              }
+            ]
+          },
+          "duration": {
+            "until": {
+              "at": "turnEnd",
+              "of": "bearer",
+              "nth": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "dread-strike",
+      "label": "恐惧伏击：恐惧打击（额外 2d6 心灵伤害）",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "attack.weapon",
+      "cost": [
+        {
+          "resource": "恐惧打击"
+        }
+      ],
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "2d6",
+          "type": "心灵"
+        }
+      ]
+    }
+  ],
+  "rollMods": [
+    {
+      "on": {
+        "kind": "initiative"
+      },
+      "who": "bearer",
+      "op": "add",
+      "value": "max(0, self.mod.wis)",
+      "label": "恐惧伏击：先攻加感知调整值"
+    }
+  ]
+}

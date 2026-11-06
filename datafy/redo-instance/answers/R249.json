@@ -1,0 +1,75 @@
+{
+  "name": "圣洁之书",
+  "automation": "partial",
+  "text": "共鸣并研读后获得增益：免疫魅惑与恐慌，心灵抗性；力量+2（至多24）；消耗法术位施法时自动视为高一环；附赠动作开启/解除神光（散发光照，游说优势，10 尺内恶魔与亡灵对你攻击具有劣势）。恶魔/亡灵/下层界仆从翻阅受 24d6 光耀伤害（无视抗性免疫）。固定加值已在人物卡处理。",
+  "triggers": [
+    {
+      "id": "magical-enlightenment",
+      "label": "圣洁之书：魔法启迪（法术位升阶）",
+      "on": "spellCast",
+      "role": "actor",
+      "window": "before",
+      "when": "action.spell.slot > 0",
+      "do": [
+        {
+          "kind": "modifyCast",
+          "slotDelta": 1
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "halo",
+      "name": "圣洁之书：神光",
+      "activation": "bonus",
+      "root": [
+        {
+          "kind": "if",
+          "when": "self.hasEffect('圣洁之书：神光')",
+          "then": [
+            {
+              "kind": "removeEffect",
+              "from": "self",
+              "match": {
+                "name": "圣洁之书：神光"
+              }
+            }
+          ],
+          "else": [
+            {
+              "kind": "applyEffect",
+              "to": "self",
+              "template": "圣洁之书：神光"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "圣洁之书：神光": {
+      "text": "神光光环存在：散发 10 尺明亮光照与额外 10 尺微光光照；游说检定优势；10 尺内恶魔与亡灵对你攻击具有劣势。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "check",
+            "skill": "游说"
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "圣洁之书：神光游说优势"
+        },
+        {
+          "on": {
+            "kind": "attack"
+          },
+          "who": "against",
+          "when": "(attacker.type == '邪魔' || attacker.type == '不死生物') && within(self, attacker, 10)",
+          "op": "disadv",
+          "label": "圣洁之书：神光（恶魔/亡灵攻击劣势）"
+        }
+      ]
+    }
+  }
+}

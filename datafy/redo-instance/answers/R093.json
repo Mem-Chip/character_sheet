@@ -1,0 +1,150 @@
+{
+ "name": "明月激励",
+ "automation": "partial",
+ "text": "【月隐启迪】以附赠动作赋予诗人激励时，可获得隐形状态并传送至 30 尺内可见未占据空间，隐形持续至下回合开始或攻击、造成伤害、施法时终止（传送在地图上点落点）。\n【月辉活力】每回合一次，使用法术恢复生物生命值时，可消耗一枚诗人激励骰使本次恢复增加等同激励骰出目的生命值，且目标速度提升 10 尺至下回合结束（施法治疗后点击「明月激励：月辉活力」生效）。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "明月激励：月隐启迪",
+   "activation": "bonus",
+   "cost": [
+    {
+     "resource": "诗人激励"
+    }
+   ],
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 60,
+    "filter": "target.id != self.id"
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "template": "诗人激励",
+     "duration": {
+      "hours": 1
+     },
+     "state": {
+      "die": "classTable('诗人骰')"
+     }
+    },
+    {
+     "kind": "move",
+     "mode": "teleport",
+     "ft": 30
+    },
+    {
+     "kind": "applyEffect",
+     "template": "月隐启迪",
+     "to": "self"
+    }
+   ]
+  },
+  {
+   "id": "vitality",
+   "name": "明月激励：月辉活力",
+   "activation": "free",
+   "cost": [
+    {
+     "resource": "诗人激励"
+    }
+   ],
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 60
+   },
+   "root": [
+    {
+     "kind": "heal",
+     "amount": "classTable('诗人骰')"
+    },
+    {
+     "kind": "applyEffect",
+     "template": "月辉活力",
+     "to": "target"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "诗人激励": {
+   "stackKey": "诗人激励",
+   "text": "1 小时内，D20 检定失败时可以掷这颗骰子加到结果上，可能把失败变成成功。用掉即消失。",
+   "triggers": [
+    {
+     "id": "use",
+     "label": "诗人激励",
+     "on": "d20Rolled",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "when": "roll.failing",
+     "modify": [
+      {
+       "op": "addToRoll",
+       "value": "effect.state.die"
+      }
+     ],
+     "do": [
+      {
+       "kind": "removeEffect",
+       "match": {
+        "name": "诗人激励"
+       },
+       "from": "self"
+      }
+     ]
+    }
+   ]
+  },
+  "月隐启迪": {
+   "implies": [
+    "XPHB:condition:隐形"
+   ],
+   "text": "处于隐形状态。持续至你的下个回合开始，或在你发动攻击、造成伤害、施展法术时终止。",
+   "duration": {
+    "until": {
+     "at": "turnStart",
+     "of": "bearer",
+     "nth": 1
+    },
+    "endsOn": [
+     {
+      "event": "attackHit",
+      "when": "event.actor == self.id"
+     },
+     {
+      "event": "attackMissed",
+      "when": "event.actor == self.id"
+     },
+     {
+      "event": "spellCast",
+      "when": "event.actor == self.id"
+     },
+     {
+      "event": "damageTaken",
+      "when": "event.source == self.id"
+     }
+    ]
+   }
+  },
+  "月辉活力": {
+   "text": "速度提升 10 尺，持续至施法者下个回合结束。",
+   "duration": {
+    "until": {
+     "at": "turnEnd",
+     "of": "source",
+     "nth": 1
+    }
+   },
+   "statics": [
+    {
+     "kind": "speed",
+     "bonus": 10
+    }
+   ]
+  }
+ }
+}

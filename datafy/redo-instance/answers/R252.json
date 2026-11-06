@@ -1,0 +1,56 @@
+{
+ "name": "偷袭之眼",
+ "automation": "partial",
+ "text": "以动作附着于额头（附赠动作摘下）。附着期间获得 30 尺黑暗视觉，且游荡者偷袭伤害增加 1d6。黑暗视觉已由人物卡处理或手动调整。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "附着/摘下偷袭之眼",
+   "activation": "action",
+   "root": [
+    {
+     "kind": "if",
+     "when": "self.hasEffect('偷袭之眼')",
+     "then": [
+      {
+       "kind": "removeEffect",
+       "match": {
+        "name": "偷袭之眼"
+       },
+       "from": "self"
+      }
+     ],
+     "else": [
+      {
+       "kind": "applyEffect",
+       "template": "偷袭之眼",
+       "to": "self"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "偷袭之眼": {
+   "text": "附着于额头：具有 30 尺黑暗视觉，偷袭伤害增加 1d6。",
+   "triggers": [
+    {
+     "id": "sneak-bonus",
+     "label": "偷袭之眼：额外1d6偷袭伤害",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "when": "ask('这次命中是否触发了偷袭伤害？')",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "1d6",
+       "type": "attack.damageType"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,99 @@
+{
+  "name": "坚韧复仇",
+  "automation": "partial",
+  "text": "你以借机攻击命中一个生物时，可以将其速度降为 0（直到当前回合结束），并在该攻击后立刻移动至多相当于你速度一半的距离（属于原反应、不引发借机攻击）。速度降为 0 自动生效；移动部分引擎挂上「坚韧复仇之步」效应（免借机）并请手动在战图上移动。",
+  "triggers": [
+    {
+      "id": "oaMark",
+      "label": "坚韧复仇：借机攻击时机",
+      "on": "leftReach",
+      "role": "target",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "借机攻击时机"
+        }
+      ]
+    },
+    {
+      "id": "relentless",
+      "label": "坚韧复仇",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "optional": true,
+      "when": "attack.melee && (self.hasEffect('借机攻击时机') || action.name == '借机攻击' || (!turn.isMine && action.economy == 'reaction'))",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "坚韧复仇"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "坚韧复仇之步"
+        },
+        {
+          "kind": "note",
+          "text": "坚韧复仇：你立刻移动至多你速度的一半（属于原反应、不引发借机攻击）——请手动在战图上移动。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "借机攻击时机": {
+      "text": "此刻算作借机攻击的时机（坚韧复仇据此生效）；那次移动结束或你的下一回合开始时消失。",
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "bearer",
+          "nth": 1
+        },
+        "endsOn": [
+          {
+            "event": "moved"
+          }
+        ]
+      }
+    },
+    "坚韧复仇": {
+      "text": "速度降为 0，直到当前回合结束。",
+      "statics": [
+        {
+          "kind": "speedSet",
+          "value": 0
+        }
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 0
+        }
+      }
+    },
+    "坚韧复仇之步": {
+      "text": "这段来自坚韧复仇的移动不引发借机攻击；移动结束（moved）或你的下一回合开始时消失。",
+      "flags": {
+        "cannot": [
+          "provoke"
+        ]
+      },
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "bearer",
+          "nth": 1
+        },
+        "endsOn": [
+          {
+            "event": "moved",
+            "when": "event.id == self.id"
+          }
+        ]
+      }
+    }
+  }
+}

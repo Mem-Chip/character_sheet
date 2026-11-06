@@ -109,35 +109,21 @@
   },
   "XDMG:item:矮人飞锤": {
    "name": "矮人飞锤",
-   "automation": "partial",
+   "automation": "full",
    "text": "+3 武器加值与投掷属性已在人物卡处理。用此武器发动远程攻击命中时，造成 1d8 额外力场伤害；若目标为巨人，额外伤害提升为 2d8。攻击后武器立即飞回手中。",
    "triggers": [
     {
      "id": "dwarven-thrower-hit",
+     "label": "矮人飞锤：投掷命中额外力场伤害",
      "on": "attackHit",
      "role": "actor",
-     "window": "after",
+     "window": "before",
      "when": "attack.ranged && attack.weapon",
      "do": [
       {
-       "kind": "if",
-       "when": "target.type == '巨人' || target.type == 'giant'",
-       "then": [
-        {
-         "kind": "damage",
-         "dice": "2d8",
-         "type": "力场",
-         "to": "target"
-        }
-       ],
-       "else": [
-        {
-         "kind": "damage",
-         "dice": "1d8",
-         "type": "力场",
-         "to": "target"
-        }
-       ]
+       "kind": "addDamage",
+       "dice": "cond(target.type == '巨人', 2d8, 1d8)",
+       "type": "力场"
       }
      ]
     }
@@ -164,7 +150,39 @@
    ],
    "name": "矮人王圣斧",
    "automation": "partial",
-   "text": "+3 战斧。攻击掷出20时额外造成20挥砍伤害。投掷（20/60尺），远程命中额外1d8力场伤害（巨人2d8），命中或失手后立即飞回手中。同调获得黑暗视觉+60尺、体质+2（至多20）、铁匠/酿酒/石匠工具熟练、毒素免疫与火焰抗性、命中物件最大伤害。次日黎明前可召唤土元素一次。三日内可施展传送术一次（地下无事故）。固定加值与属性已在人物卡处理。",
+   "text": "+3 战斧。攻击检定掷出 20 时额外造成 20 点挥砍伤害。投掷（20/60 尺）远程命中额外造成 1d8 力场伤害（巨人改为 2d8）。可召唤土元素一次（长休恢复）；可施展传送术一次（地下无意外事故）。固定加值与属性抗性已在人物卡处理。",
+   "triggers": [
+    {
+     "id": "crit20",
+     "label": "矮人王圣斧：暴击额外挥砍伤害",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "when": "attack.weapon && roll.natural == 20",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": 20,
+       "type": "挥砍"
+      }
+     ]
+    },
+    {
+     "id": "throw",
+     "label": "矮人王圣斧：投掷命中额外力场伤害",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "when": "attack.weapon && attack.ranged",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "cond(target.type == '巨人', 2d8, 1d8)",
+       "type": "力场"
+      }
+     ]
+    }
+   ],
    "actions": [
     {
      "id": "summon-elemental",
@@ -259,7 +277,7 @@
   "XDMG:item:艾恩石, 高等吸收": {
    "name": "艾恩石, 高等吸收",
    "automation": "partial",
-   "text": "艾恩石环绕头顶期间，你可以用一个反应使一名你能看到的生物即将施展的一道八环或更低环阶的法术无效化。被无效化的法术不会产生任何效应且其施法资源被浪费。此石无效化了总计 20 环的法术后，变成黯淡的灰色并失去魔力。无效化判定与总环数消耗需手动记录。",
+   "text": "艾恩石环绕头顶期间，可以用反应使一名你能看到的生物即将施展的一道 8 环或更低环阶法术无效化（法术直接打断且施法资源被浪费）。总计无效化 20 环法术后艾恩石失去魔力，累计吸收的法术环阶需手动记录。",
    "actions": [
     {
      "id": "use",
@@ -267,12 +285,20 @@
      "activation": "reaction",
      "trigger": {
       "on": "spellCast",
-      "role": "any"
+      "role": "any",
+      "window": "before",
+      "aim": "actor",
+      "when": "canSee(self, attacker) && action.spell.slot <= 8"
      },
      "root": [
       {
-       "kind": "note",
-       "text": "用反应使一名你能看到的生物即将施展的八环或更低环阶法术无效化（法术无效应，消耗资源浪费）。总计无效化 20 环法术后永久失去魔力，需手动追踪扣除环数。"
+       "kind": "modify",
+       "modify": [
+        {
+         "op": "cancel",
+         "refundSlot": false
+        }
+       ]
       }
      ]
     }
@@ -314,7 +340,7 @@
   "XDMG:item:艾恩石, 吸收": {
    "name": "艾恩石, 吸收",
    "automation": "partial",
-   "text": "需同调。以一个反应使一名能见生物即将施展的4环或更低环阶法术无效化。此石总计无效化20环法术后失去魔力（需手动记录环数）。",
+   "text": "艾恩石环绕头顶期间，可以用反应使一名你能看到的生物即将施展的一道 4 环或更低环阶法术无效化（法术直接打断且施法资源被浪费）。总计无效化 20 环法术后艾恩石失去魔力，累计吸收的法术环阶需手动记录。",
    "actions": [
     {
      "id": "absorb",
@@ -322,12 +348,20 @@
      "activation": "reaction",
      "trigger": {
       "on": "spellCast",
-      "role": "any"
+      "role": "any",
+      "window": "before",
+      "aim": "actor",
+      "when": "canSee(self, attacker) && action.spell.slot <= 4"
      },
      "root": [
       {
-       "kind": "note",
-       "text": "以反应使一名能见生物施展的4环或更低环阶法术无效化。累计吸收20环法术后石块失去魔力。"
+       "kind": "modify",
+       "modify": [
+        {
+         "op": "cancel",
+         "refundSlot": false
+        }
+       ]
       }
      ]
     }
@@ -389,7 +423,7 @@
    ],
    "name": "奥喀斯之杖",
    "automation": "partial",
-   "text": "+3 魔法硬头锤。命中额外造成 2d12 暗蚀伤害。AC+3（固定加值人物卡已处理）。非奥喀斯生物同调需 DC 17 体质豁免（成功受 10d6 暗蚀，失败死亡）。次日黎明前可魔法动作召唤 15 丧尸和 15 骷髅。消耗充能施法（DC 18）：活化死尸（1充能）、死者交谈（1充能）、枯萎术（2充能）、死亡法阵（3充能）、死亡一指（3充能）、律令死亡（4充能）。",
+   "text": "+3 魔法硬头锤。命中额外造成 2d12 黯蚀伤害。AC+3（固定加值人物卡已处理）。非奥喀斯生物同调需 DC 17 体质豁免（成功受 10d6 黯蚀，失败死亡）。次日黎明前可魔法动作召唤 15 丧尸和 15 骷髅。消耗充能施法（DC 18）：活化死尸（1充能）、死者交谈（1充能）、枯萎术（2充能）、死亡法阵（3充能）、死亡一指（3充能）、律令死亡（4充能）。",
    "actions": [
     {
      "id": "animate-undead",
@@ -466,7 +500,7 @@
          "kind": "damage",
          "id": "d",
          "dice": "8d8",
-         "type": "暗蚀"
+         "type": "黯蚀"
         }
        ],
        "onSuccess": [
@@ -511,7 +545,7 @@
            "kind": "damage",
            "id": "d",
            "dice": "8d8",
-           "type": "暗蚀"
+           "type": "黯蚀"
           }
          ],
          "onSuccess": [
@@ -552,7 +586,7 @@
          "kind": "damage",
          "id": "d",
          "dice": "7d8 + 30",
-         "type": "暗蚀"
+         "type": "黯蚀"
         },
         {
          "kind": "note",
@@ -595,16 +629,16 @@
    "triggers": [
     {
      "id": "necrotic-strike",
-     "label": "奥喀斯之杖：额外暗蚀伤害",
+     "label": "奥喀斯之杖：额外黯蚀伤害",
      "on": "attackHit",
      "role": "actor",
      "window": "before",
-     "when": "attack.melee",
+     "when": "attack.melee && attack.weapon",
      "do": [
       {
        "kind": "addDamage",
        "dice": "2d12",
-       "type": "暗蚀"
+       "type": "黯蚀"
       }
      ]
     }
@@ -1236,7 +1270,34 @@
    ],
    "name": "波涛",
    "automation": "partial",
-   "text": "+3 三叉戟。攻击掷出 20 时额外造成 21 点暗蚀伤害。先攻检定具有优势。水下可正常呼吸。消耗 1 充能对有游泳速度的野兽施展支配野兽（DC 20）。次日黎明前可施展一次 9 环法术无效结界。固定加值已在人物卡处理。",
+   "text": "+3 三叉戟。攻击检定掷出 20 时额外造成 21 点黯蚀伤害。先攻检定具有优势。水下可如常呼吸。消耗 1 充能对有游泳速度的野兽施展支配野兽（DC 20）。长休恢复 1 次 9 环法术无效结界。固定加值已在人物卡处理。",
+   "rollMods": [
+    {
+     "on": {
+      "kind": "initiative"
+     },
+     "who": "bearer",
+     "op": "adv",
+     "label": "波涛：先攻优势"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "crit20",
+     "label": "波涛：暴击额外黯蚀伤害",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "when": "attack.weapon && roll.natural == 20",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": 21,
+       "type": "黯蚀"
+      }
+     ]
+    }
+   ],
    "actions": [
     {
      "id": "dominate-beast",
@@ -1283,22 +1344,15 @@
      "concentration": {
       "minutes": 1
      },
+     "targeting": {
+      "type": "self"
+     },
      "root": [
       {
        "kind": "note",
-       "text": "施展 9 环法术无效结界（以自身为中心半径 10 尺的光障，完全阻挡 8 环及以下的法术效应进入，需专注至多 1 分钟）。直至次日黎明无法再次施展。"
+       "text": "以自身为中心创造 10 尺半径屏障，阻止 8 环及以下法术进入或在其内施展，持续至多 1 分钟（专注）。"
       }
      ]
-    }
-   ],
-   "rollMods": [
-    {
-     "on": {
-      "kind": "initiative"
-     },
-     "who": "bearer",
-     "op": "adv",
-     "label": "战斗预备：先攻检定优势"
     }
    ],
    "tags": [
@@ -2072,14 +2126,14 @@
   "XDMG:item:打击之锤": {
    "name": "打击之锤",
    "automation": "partial",
-   "text": "+1魔法武器（已在人物卡处理）。攻击构装生物时加值提升为+3（额外+2攻击与伤害）。攻击检定掷出20时目标额外受7钝击伤害；若目标为构装生物则受14钝击伤害，且若生命值降至25及以下直接被摧毁（摧毁需手动处理）。",
+   "text": "+1 魔法武器（已在人物卡处理）。攻击构装生物时加值提升为 +3（攻击与伤害额外 +2）。攻击检定掷出 20 时目标额外受 7 点钝击伤害；若目标为构装生物则受 14 点钝击伤害，且若生命值降至 25 及以下直接被摧毁（摧毁需手动处理）。",
    "rollMods": [
     {
      "on": {
       "kind": "attack"
      },
      "who": "bearer",
-     "when": "attack.weapon && (target.type == '构装生物' || target.type == 'construct')",
+     "when": "attack.weapon && target.type == '构装生物'",
      "op": "add",
      "value": 2,
      "label": "打击之锤（构装生物）：攻击检定额外+2"
@@ -2089,7 +2143,7 @@
       "kind": "damage"
      },
      "who": "bearer",
-     "when": "attack.weapon && (target.type == '构装生物' || target.type == 'construct')",
+     "when": "attack.weapon && target.type == '构装生物'",
      "op": "add",
      "value": 2,
      "label": "打击之锤（构装生物）：伤害掷骰额外+2"
@@ -2098,32 +2152,24 @@
    "triggers": [
     {
      "id": "smiting-crit",
+     "label": "打击之锤：暴击额外钝击伤害",
      "on": "attackHit",
      "role": "actor",
-     "window": "after",
+     "window": "before",
      "when": "attack.weapon && roll.natural == 20",
      "do": [
       {
+       "kind": "addDamage",
+       "dice": "cond(target.type == '构装生物', 14, 7)",
+       "type": "钝击"
+      },
+      {
        "kind": "if",
-       "when": "target.type == '构装生物' || target.type == 'construct'",
+       "when": "target.type == '构装生物'",
        "then": [
         {
-         "kind": "damage",
-         "dice": 14,
-         "type": "钝击",
-         "to": "target"
-        },
-        {
          "kind": "note",
-         "text": "打击之锤：构装生物受到该伤害后生命值若降至25及以下，则直接被摧毁。"
-        }
-       ],
-       "else": [
-        {
-         "kind": "damage",
-         "dice": 7,
-         "type": "钝击",
-         "to": "target"
+         "text": "打击之锤：构装生物受到该伤害后生命值若降至 25 及以下，则直接被摧毁。"
         }
        ]
       }
@@ -2602,14 +2648,14 @@
   "XDMG:item:法术反转戒指": {
    "name": "法术反转戒指",
    "automation": "partial",
-   "text": "着装此戒指期间，你对抗法术所进行的豁免具有优势。若你对抗不超过七环的法术豁免成功，该法术不对你产生任何效应；若该法术仅以你为目标且不创造区域效应，可用反应将法术反弹回原施法者（原施法者以其自身法术豁免 DC 对抗该法术）。",
+   "text": "着装此戒指期间，你对抗法术所进行的豁免自动具有优势。若你对抗不超过七环的法术豁免成功，该法术不对你产生任何效应；若该法术仅以你为目标且不创造区域效应，可用反应将法术反弹回原施法者（原施法者以其自身法术豁免 DC 对抗该法术，需手动处理）。",
    "rollMods": [
     {
      "on": {
       "kind": "save"
      },
      "who": "bearer",
-     "when": "ask('是否为对抗法术的豁免？')",
+     "when": "action.kind == 'spell'",
      "op": "adv",
      "label": "法术反转：对抗法术豁免优势"
     }
@@ -2658,8 +2704,8 @@
   },
   "XDMG:item:反射闪避戒指": {
    "name": "反射闪避戒指",
-   "automation": "partial",
-   "text": "戒指具有 3 充能，每日黎明重获 1d3 充能。着装戒指期间，当你敏捷豁免失败时，可以执行反应消耗 1 充能，来让该豁免改为成功（豁免结果改成功需手动处理）。",
+   "automation": "full",
+   "text": "戒指具有 3 充能，每日黎明重获 1d3 充能。着装戒指期间，敏捷豁免失败时可以用反应消耗 1 充能，直接将该豁免改为成功。",
    "actions": [
     {
      "id": "use",
@@ -2679,8 +2725,12 @@
      ],
      "root": [
       {
-       "kind": "note",
-       "text": "消耗 1 充能，使本次失败的敏捷豁免改为成功（需手动在豁免判定中按成功结算）"
+       "kind": "modify",
+       "modify": [
+        {
+         "op": "succeed"
+        }
+       ]
       }
      ]
     }
@@ -2692,15 +2742,29 @@
   },
   "XDMG:item:防护圣甲虫": {
    "name": "防护圣甲虫",
-   "automation": "partial",
-   "text": "【防御】AC +1（人物卡已处理）。\n【存护】圣甲虫具有 12 充能，若在对抗死灵系法术或亡灵造成的有害效应时豁免失败，可以反应消耗 1 充能令此次豁免改为成功。充能耗尽时化为灰烬。\n【法术抗性】你对法术进行的豁免具有优势（需手动处理）。",
+   "automation": "full",
+   "text": "【防御】AC +1（人物卡已处理）。\n【法术抗性】对法术进行的豁免具有优势。\n【存护】圣甲虫具有 12 充能，对抗死灵系法术或亡灵造成的有害效应豁免失败时，可用反应消耗 1 充能直接将豁免改为成功。充能耗尽时圣甲虫化为灰烬。",
+   "rollMods": [
+    {
+     "on": {
+      "kind": "save"
+     },
+     "who": "bearer",
+     "when": "action.kind == 'spell'",
+     "op": "adv",
+     "label": "防护圣甲虫：法术豁免优势"
+    }
+   ],
    "actions": [
     {
      "id": "use",
      "name": "防护圣甲虫：存护",
      "activation": "reaction",
      "trigger": {
-      "on": "d20Rolled"
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "when": "roll.kind == 'save' && roll.failing && ((action.kind == 'spell' && action.spell.school == '死灵') || (attacker != null && attacker.type == '不死生物') || ask('这次豁免是对抗死灵系法术或亡灵的有害效应吗？'))"
      },
      "cost": [
       {
@@ -2710,8 +2774,12 @@
      ],
      "root": [
       {
-       "kind": "note",
-       "text": "在对抗死灵系法术或亡灵造成的有害效应豁免失败时使用反应，消耗 1 充能令此次豁免改为成功。充能耗尽时，圣甲虫化为灰烬。"
+       "kind": "modify",
+       "modify": [
+        {
+         "op": "succeed"
+        }
+       ]
       }
      ]
     }
@@ -3653,8 +3721,46 @@
     }
    ],
    "name": "黑刃",
-   "automation": "partial",
-   "text": "+3 巨剑。命中亡灵时自身受到 1d10 暗蚀伤害，亡灵恢复 1d10 生命值；若该暗蚀伤害使你降至 0，灵魂将被黑刃吞噬。持握时免疫魅惑和恐慌，具有 30 尺盲视。将非亡灵非构装生物降至 0 时吞噬其灵魂（只能被祈愿术复活），并获得等于该生物生命值上限的临时生命值。黑刃次日黎明前可施展一次加速术（无需专注，持续 1 分钟）。固定加值已在人物卡处理。",
+   "automation": "full",
+   "text": "+3 巨剑。命中亡灵时自身受到 1d10 黯蚀伤害，亡灵恢复 1d10 生命值。持握时免疫魅惑和恐慌，具有 30 尺盲视。以此武器将非亡灵非构装生物降至 0 时吞噬其灵魂（仅能被祈愿术复活），并获得等同于该生物生命值上限的临时生命值。黑刃长休前可施展一次加速术（无需专注，持续 1 分钟）。固定加值已在人物卡处理。",
+   "triggers": [
+    {
+     "id": "undead-recoil",
+     "label": "黑刃：命中亡灵反噬",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "after",
+     "when": "attack.weapon && target.type == '不死生物'",
+     "do": [
+      {
+       "kind": "damage",
+       "to": "self",
+       "dice": "1d10",
+       "type": "黯蚀"
+      },
+      {
+       "kind": "heal",
+       "to": "target",
+       "amount": "1d10"
+      }
+     ]
+    },
+    {
+     "id": "soul-devour",
+     "label": "黑刃：吞噬灵魂获取临时生命值",
+     "on": "reducedTo0",
+     "role": "actor",
+     "window": "after",
+     "when": "action != null && action.attack.weapon && target.type != '不死生物' && target.type != '构装生物'",
+     "do": [
+      {
+       "kind": "tempHp",
+       "to": "self",
+       "amount": "target.hpMax"
+      }
+     ]
+    }
+   ],
    "actions": [
     {
      "id": "haste",
@@ -3759,7 +3865,7 @@
   "XDMG:item:轰天震雷鲁特琴": {
    "name": "轰天震雷鲁特琴",
    "automation": "partial",
-   "text": "作为魔法短棒持用，命中时额外造成 2d8 雷鸣伤害。若为吟游诗人，发动攻击检定时可用魅力调整值代替力量调整值（手动调整）。",
+   "text": "作为魔法短棒持用，近战武器命中时额外造成 2d8 雷鸣伤害。若为吟游诗人，发动攻击检定时可用魅力调整值代替力量调整值（属性调整需手动处理）。",
    "triggers": [
     {
      "id": "extra-damage",
@@ -3767,11 +3873,12 @@
      "on": "attackHit",
      "role": "actor",
      "window": "before",
+     "when": "attack.melee && attack.weapon",
      "do": [
       {
        "kind": "addDamage",
        "dice": "2d8",
-       "type": "thunder"
+       "type": "雷鸣"
       }
      ]
     }
@@ -5464,7 +5571,7 @@
   "XDMG:item:劲敌硬币": {
    "name": "劲敌硬币",
    "automation": "partial",
-   "text": "使用一个魔法动作抛掷硬币并消耗 1 发充能。掷一枚任意骰子决定硬币朝向：正面（偶数）令 60 尺内可见生物进行 DC 13 感知豁免，失败受 2d4 心灵伤害并在其下一回合结束前进行的下一次攻击检定具有劣势，成功受半伤；背面（奇数）自身受到 1d4 心灵伤害。每日黎明重获充能。",
+   "text": "以动作抛掷硬币并指定 60 尺内可见生物，掷 1d20。若为偶数（正面），目标进行 DC 13 感知豁免，失败受 2d4 心灵伤害且下次攻击检定具有劣势（下回合结束前），成功伤害减半；若为奇数（背面）自身受到 1d4 心灵伤害。每日黎明重获充能。",
    "actions": [
     {
      "id": "use",
@@ -5922,7 +6029,45 @@
    ],
    "name": "凯斯之剑",
    "automation": "partial",
-   "text": "+3 长剑。19~20 产生重击。对亡灵额外造成 2d10 挥砍伤害。先攻检定 +1d10。获得暗蚀伤害抗性。发动攻击时可将至多 +3 攻击加值转移为 AC 至下回合开始。出鞘后 1 分钟未见血需 DC 15 魅力豁免，成功受 3d6 心灵伤害，失败被剑控制。施展法术（豁免 DC 18，每个法术次日黎明前限一次）：召雷术、圣言术、死亡一指。固定加值已在人物卡处理。",
+   "text": "+3 巨剑。攻击检定 19-20 暴击；对不死生物命中额外造成 2d10 挥砍伤害。先攻检定 +1d10。每日可施展召雷术、圣言术、死亡一指各一次（DC 18，长休恢复）。出鞘 1 分钟未见血需 DC 15 魅力豁免。发动攻击时可将攻击加值转移给 AC（手动调整）。固定加值与暗蚀抗性已在人物卡处理。",
+   "rollMods": [
+    {
+     "on": {
+      "kind": "attack"
+     },
+     "who": "bearer",
+     "when": "attack.weapon",
+     "op": "critRange",
+     "value": 19,
+     "label": "凯斯之剑：19-20 暴击"
+    },
+    {
+     "on": {
+      "kind": "initiative"
+     },
+     "who": "bearer",
+     "op": "addDice",
+     "value": "1d10",
+     "label": "凯斯之剑：战斗饥渴"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "undead-slayer",
+     "label": "凯斯之剑：对亡灵额外挥砍伤害",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "when": "attack.weapon && target.type == '不死生物'",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "2d10",
+       "type": "挥砍"
+      }
+     ]
+    }
+   ],
    "actions": [
     {
      "id": "call-lightning",
@@ -5937,37 +6082,27 @@
       "minutes": 10
      },
      "targeting": {
-      "type": "area",
-      "range": 120,
-      "area": {
-       "shape": "cylinder",
-       "radius": 5
-      }
+      "type": "point",
+      "range": 120
      },
      "root": [
       {
-       "kind": "forEach",
-       "in": "area",
-       "do": [
+       "kind": "save",
+       "ability": "dex",
+       "dc": 18,
+       "onFail": [
         {
-         "kind": "save",
-         "ability": "dex",
-         "dc": 18,
-         "onFail": [
-          {
-           "kind": "damage",
-           "id": "d",
-           "dice": "3d10",
-           "type": "闪电"
-          }
-         ],
-         "onSuccess": [
-          {
-           "kind": "damage",
-           "ref": "d",
-           "scale": 0.5
-          }
-         ]
+         "kind": "damage",
+         "id": "cl",
+         "dice": "3d10",
+         "type": "闪电"
+        }
+       ],
+       "onSuccess": [
+        {
+         "kind": "damage",
+         "ref": "cl",
+         "scale": 0.5
         }
        ]
       }
@@ -5984,9 +6119,9 @@
      ],
      "targeting": {
       "type": "area",
-      "range": "self",
+      "range": 30,
       "area": {
-       "shape": "emanation",
+       "shape": "sphere",
        "radius": 30
       }
      },
@@ -6002,7 +6137,7 @@
          "onFail": [
           {
            "kind": "note",
-           "text": "豁免失败者按当前生命值受到惩戒：<=50 耳聋1分钟；<=40 耳聋且目盲10分钟；<=30 耳聋、目盲且震慑1小时；<=20 立即死亡。非本位面天界生物、元素、邪魔、妖精被驱逐回原籍位面。"
+           "text": "圣言术：生命值≤50 耳聋 1 分钟；≤40 目盲并耳聋 10 分钟；≤30 震慑 1 小时；≤20 立即死亡。天界生物/元素生物/精类/邪魔被驱逐回原籍位面。"
           }
          ]
         }
@@ -6033,64 +6168,24 @@
        "onFail": [
         {
          "kind": "damage",
-         "id": "d",
+         "id": "fd",
          "dice": "7d8 + 30",
-         "type": "暗蚀"
+         "type": "黯蚀"
         },
         {
          "kind": "note",
-         "text": "死亡一指：若目标类人生物被杀死，在施法者下一回合开始时将其唤起为一只受控丧尸。"
+         "text": "死亡一指：若杀死类人生物，下回合开始将其唤起为受控丧尸。"
         }
        ],
        "onSuccess": [
         {
          "kind": "damage",
-         "ref": "d",
+         "ref": "fd",
          "scale": 0.5
         }
        ]
       }
      ]
-    }
-   ],
-   "triggers": [
-    {
-     "id": "undead-slayer",
-     "label": "凯斯之剑：对亡灵额外伤害",
-     "on": "attackHit",
-     "role": "actor",
-     "window": "before",
-     "when": "target.type == '亡灵' || target.type == 'undead'",
-     "do": [
-      {
-       "kind": "addDamage",
-       "dice": "2d10",
-       "type": "挥砍"
-      }
-     ]
-    }
-   ],
-   "rollMods": [
-    {
-     "on": {
-      "kind": "initiative"
-     },
-     "who": "bearer",
-     "op": "addDice",
-     "value": "1d10",
-     "label": "战斗饥渴：先攻 +1d10"
-    },
-    {
-     "on": {
-      "kind": "attack",
-      "attack": {
-       "weapon": true
-      }
-     },
-     "who": "bearer",
-     "op": "critRange",
-     "value": 19,
-     "label": "凯斯之剑：19-20 重击"
     }
    ],
    "tags": [
@@ -6675,8 +6770,8 @@
     }
    ],
    "name": "雷霆法杖",
-   "automation": "partial",
-   "text": "+2 长棍（固定加值人物卡已处理）。包含电闪、雷鸣、雷霆、闪电打击、惊雷5项词条，每项直至次日黎明前限用一次。\n【电闪】：近战攻击命中时额外造成 2d6 闪电伤害。\n【雷鸣】：近战攻击命中时使法杖发出300尺雷响，目标进行 DC 17 体质豁免，失败陷入震慑至你下回合结束。\n【雷霆】：近战命中时以附赠动作同时触发电闪与雷鸣，仅消耗雷霆词条自身次数。\n【闪电打击】：以动作射出 120 尺长 5 尺宽闪电线，DC 17 敏捷豁免受 9d6 闪电伤害（成功半数）。\n【惊雷】：以动作制造 600 尺雷响，60 尺光环内生物 DC 17 体质豁免受 2d6 雷鸣伤害并耳聋 1 分钟（成功半数且不耳聋）。",
+   "automation": "full",
+   "text": "+2 长棍（固定加值人物卡已处理）。包含电闪、雷鸣、雷霆、闪电打击、惊雷 5 项词条，每项长休恢复 1 次。\n【电闪】：近战武器命中时额外造成 2d6 闪电伤害。\n【雷鸣】：近战武器命中时目标进行 DC 17 体质豁免，失败陷入震慑至你下回合结束。\n【雷霆】：近战武器命中时以附赠动作同时触发电闪与雷鸣，仅消耗雷霆词条自身次数。\n【闪电打击】：以动作射出 120 尺长 5 尺宽闪电线，DC 17 敏捷豁免受 9d6 闪电伤害（成功半数）。\n【惊雷】：以动作制造 60 尺光环雷响，范围内生物 DC 17 体质豁免受 2d6 雷鸣伤害并耳聋 1 分钟（成功半数且不耳聋）。",
    "triggers": [
     {
      "id": "lightning",
@@ -6685,7 +6780,7 @@
      "role": "actor",
      "window": "before",
      "optional": true,
-     "when": "attack.melee",
+     "when": "attack.melee && attack.weapon",
      "cost": [
       {
        "resource": "物品次数:雷霆法杖:电闪"
@@ -6706,7 +6801,7 @@
      "role": "actor",
      "window": "before",
      "optional": true,
-     "when": "attack.melee",
+     "when": "attack.melee && attack.weapon",
      "cost": [
       {
        "resource": "物品次数:雷霆法杖:雷鸣"
@@ -6725,7 +6820,7 @@
          "duration": {
           "until": {
            "at": "turnEnd",
-           "of": "self",
+           "of": "source",
            "nth": 1
           }
          }
@@ -6741,7 +6836,7 @@
      "role": "actor",
      "window": "before",
      "optional": true,
-     "when": "attack.melee",
+     "when": "attack.melee && attack.weapon",
      "cost": [
       {
        "resource": "物品次数:雷霆法杖:雷霆"
@@ -6768,7 +6863,7 @@
          "duration": {
           "until": {
            "at": "turnEnd",
-           "of": "self",
+           "of": "source",
            "nth": 1
           }
          }
@@ -7757,7 +7852,7 @@
    ],
    "name": "魅惑法杖",
    "automation": "partial",
-   "text": "具有10充能。每日黎明重获1d8+2充能，充能耗尽时掷d20出1摧毁。\n【施法】消耗1充能施展魅惑类人、命令术或通晓语言（使用自身法术豁免DC）。\n【惑控反射】若仅以你为目标的惑控法术豁免成功，可以反应消耗1充能将法术反射给原施法者。\n【惑控抵抗】若仅以你为目标的惑控法术豁免失败，可将其改为成功（次日黎明前限用一次）。",
+   "text": "具有 10 充能，每日黎明重获 1d8+2 充能。充能耗尽时掷 d20 出 1 摧毁。\n【施法】消耗 1 充能施展魅惑类人、命令术或通晓语言（使用自身法术豁免 DC）。\n【惑控反射】若仅以你为目标的惑控法术豁免成功，可用反应消耗 1 充能将法术反射给原施法者（需手动处理）。\n【惑控抵抗】若仅以你为目标的惑控法术豁免失败，可直接将该失败豁免改为成功（长休恢复 1 次）。",
    "actions": [
     {
      "id": "charm-person",
@@ -7840,7 +7935,10 @@
      "name": "魅惑法杖：惑控反射",
      "activation": "reaction",
      "trigger": {
-      "on": "d20Rolled"
+      "on": "saveSucceeded",
+      "role": "target",
+      "window": "after",
+      "when": "action != null && action.kind == 'spell' && action.spell.school == '惑控' && action.targetCount == 1"
      },
      "cost": [
       {
@@ -7851,7 +7949,7 @@
      "root": [
       {
        "kind": "note",
-       "text": "若一道惑控学派法术仅以你为目标且你豁免成功，反应消耗1充能将法术反射给原施法者，如同你施展了该法术（使用自身法术DC）。"
+       "text": "若一道惑控学派法术仅以你为目标且你豁免成功，反应消耗 1 充能将法术反射给原施法者，如同你施展了该法术（使用自身法术 DC）。"
       }
      ]
     },
@@ -7859,6 +7957,12 @@
      "id": "enchantment-resistance",
      "name": "魅惑法杖：惑控抵抗",
      "activation": "none",
+     "trigger": {
+      "on": "d20Rolled",
+      "role": "actor",
+      "window": "before",
+      "when": "roll.kind == 'save' && roll.failing && action != null && action.kind == 'spell' && action.spell.school == '惑控' && action.targetCount == 1"
+     },
      "cost": [
       {
        "resource": "物品次数:魅惑法杖"
@@ -7866,8 +7970,12 @@
      ],
      "root": [
       {
-       "kind": "note",
-       "text": "若一道惑控学派法术仅以你为目标且你豁免失败，可将失败的豁免改为成功。次日黎明前无法再次使用。"
+       "kind": "modify",
+       "modify": [
+        {
+         "op": "succeed"
+        }
+       ]
       }
      ]
     }
@@ -10280,8 +10388,25 @@
     }
    ],
    "name": "闪电标枪",
-   "automation": "partial",
-   "text": "用该武器攻击命中时可转为闪电伤害（需人手动调整）。投掷时可用动作化为闪电束，形成 120 尺长、5 尺宽的线状区域，除你之外的生物进行 DC 13 敏捷豁免，失败受 4d6 闪电伤害，成功减半；造成伤害后标枪立即飞回手中。每日黎明前限用一次。",
+   "automation": "full",
+   "text": "用该武器攻击命中时可选择将伤害转为闪电伤害。投掷时可用动作化为闪电束，形成 120 尺长、5 尺宽的线状区域，除你之外的生物进行 DC 13 敏捷豁免，失败受 4d6 闪电伤害，成功减半；造成伤害后标枪立即飞回手中。每日黎明前限用一次。",
+   "triggers": [
+    {
+     "id": "retype-lightning",
+     "label": "闪电标枪：转为闪电伤害",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "when": "attack.weapon",
+     "do": [
+      {
+       "kind": "retype",
+       "value": "闪电"
+      }
+     ]
+    }
+   ],
    "actions": [
     {
      "id": "lightningBolt",
@@ -10535,7 +10660,23 @@
   "XDMG:item:圣洁之书": {
    "name": "圣洁之书",
    "automation": "partial",
-   "text": "共鸣并花费80小时研读后获得增益：属性值提升已在人物卡处理；免疫魅惑和恐慌，获得心灵伤害抗性；施法时消耗的法术位视为高一阶（需手动调整）；附赠动作开启或解除神光（10尺明亮光照+10尺微光），神光开启时游说检定优势，10尺内恶魔与亡灵对你攻击检定劣势。恶魔、亡灵或下层位面神仆阅读受24d6光耀伤害（不可减少或避免）。",
+   "text": "共鸣并研读后获得增益：免疫魅惑与恐慌，心灵抗性；力量+2（至多24）；消耗法术位施法时自动视为高一环；附赠动作开启/解除神光（散发光照，游说优势，10 尺内恶魔与亡灵对你攻击具有劣势）。恶魔/亡灵/下层界仆从翻阅受 24d6 光耀伤害（无视抗性免疫）。固定加值已在人物卡处理。",
+   "triggers": [
+    {
+     "id": "magical-enlightenment",
+     "label": "圣洁之书：魔法启迪（法术位升阶）",
+     "on": "spellCast",
+     "role": "actor",
+     "window": "before",
+     "when": "action.spell.slot > 0",
+     "do": [
+      {
+       "kind": "modifyCast",
+       "slotDelta": 1
+      }
+     ]
+    }
+   ],
    "actions": [
     {
      "id": "halo",
@@ -10543,24 +10684,53 @@
      "activation": "bonus",
      "root": [
       {
-       "kind": "note",
-       "text": "开启或解除神光（10尺明亮光照+额外10尺微光）。开启期间魅力（游说）检定具有优势，光环10尺内的恶魔和亡灵对你进行的攻击检定具有劣势。"
+       "kind": "if",
+       "when": "self.hasEffect('圣洁之书：神光')",
+       "then": [
+        {
+         "kind": "removeEffect",
+         "from": "self",
+         "match": {
+          "name": "圣洁之书：神光"
+         }
+        }
+       ],
+       "else": [
+        {
+         "kind": "applyEffect",
+         "to": "self",
+         "template": "圣洁之书：神光"
+        }
+       ]
       }
      ]
     }
    ],
-   "rollMods": [
-    {
-     "on": {
-      "kind": "check",
-      "ability": "cha",
-      "skill": "persuasion"
-     },
-     "who": "bearer",
-     "op": "adv",
-     "label": "圣洁之书：游说检定优势（神光开启时）"
+   "effects": {
+    "圣洁之书：神光": {
+     "text": "神光光环存在：散发 10 尺明亮光照与额外 10 尺微光光照；游说检定优势；10 尺内恶魔与亡灵对你攻击具有劣势。",
+     "rollMods": [
+      {
+       "on": {
+        "kind": "check",
+        "skill": "游说"
+       },
+       "who": "bearer",
+       "op": "adv",
+       "label": "圣洁之书：神光游说优势"
+      },
+      {
+       "on": {
+        "kind": "attack"
+       },
+       "who": "against",
+       "when": "(attacker.type == '邪魔' || attacker.type == '不死生物') && within(self, attacker, 10)",
+       "op": "disadv",
+       "label": "圣洁之书：神光（恶魔/亡灵攻击劣势）"
+      }
+     ]
     }
-   ],
+   },
    "tags": [
     "ai",
     "未审"
@@ -11327,41 +11497,47 @@
   "XDMG:item:速度之靴": {
    "resources": [
     {
-     "id": "物品次数:速度之靴",
-     "name": "速度之靴",
-     "formula": 1,
+     "id": "物品资源:速度之靴:分钟",
+     "name": "速度之靴：可用分钟",
+     "formula": 10,
      "recovery": "long"
     }
    ],
    "name": "速度之靴",
    "automation": "partial",
-   "text": "以附赠动作互击脚后跟激活，速度加倍，且任何生物对你发动借机攻击时都具有劣势。持续至多10分钟，再次互击脚后跟可提前终止。共计使用10分钟后需长休恢复。",
+   "text": "以附赠动作碰撞鞋跟激活，步行速度翻倍，敌人的借机攻击具有劣势。每回合结束时若处于倒地则停止运作。最多运作10分钟，每次至少扣除1分钟；不使用时每2分钟恢复1分钟使用时间（长休完全恢复）。",
    "actions": [
     {
      "id": "use",
-     "name": "速度之靴：互击脚后跟",
+     "name": "速度之靴：激活/停止",
      "activation": "bonus",
-     "cost": [
-      {
-       "resource": "物品次数:速度之靴"
-      }
-     ],
-     "targeting": {
-      "type": "self"
-     },
      "root": [
       {
-       "kind": "applyEffect",
-       "template": "速度之靴"
+       "kind": "if",
+       "when": "self.hasEffect('速度之靴')",
+       "then": [
+        {
+         "kind": "removeEffect",
+         "match": {
+          "name": "速度之靴"
+         },
+         "from": "self"
+        }
+       ],
+       "else": [
+        {
+         "kind": "applyEffect",
+         "template": "速度之靴",
+         "to": "self"
+        }
+       ]
       }
      ]
     }
    ],
    "effects": {
     "速度之靴": {
-     "duration": {
-      "minutes": 10
-     },
+     "text": "步行速度翻倍，任何生物对你发动的借机攻击遭受劣势。回合结束若倒地则停止运作。",
      "statics": [
       {
        "kind": "speed",
@@ -11374,12 +11550,29 @@
         "kind": "attack"
        },
        "who": "against",
-       "when": "ask('这是对你的借机攻击吗？')",
+       "when": "ask('这次攻击是对速度之靴穿戴者发动的借机攻击吗？')",
        "op": "disadv",
        "label": "速度之靴：借机攻击劣势"
       }
      ],
-     "text": "你的速度加倍，且任何生物对你发动借机攻击时都具有劣势。再次以附赠动作互击脚后跟可提前终止。"
+     "triggers": [
+      {
+       "id": "prone-stop",
+       "label": "倒地停止运作",
+       "on": "turnEnded",
+       "role": "actor",
+       "when": "self.has('倒地')",
+       "do": [
+        {
+         "kind": "removeEffect",
+         "match": {
+          "name": "速度之靴"
+         },
+         "from": "self"
+        }
+       ]
+      }
+     ]
     }
    },
    "tags": [
@@ -11620,45 +11813,32 @@
    ]
   },
   "XDMG:item:统御权杖": {
-   "resources": [
-    {
-     "id": "物品次数:统御权杖",
-     "name": "统御权杖",
-     "formula": 1,
-     "recovery": "long"
-    }
-   ],
-   "name": "统御权杖",
+   "name": "偷袭之眼",
    "automation": "partial",
-   "text": "以动作展示权杖，令 120 尺内可见且指定的生物进行 DC 15 感知豁免，失败则陷入魅惑 8 小时并视你为领袖（次日黎明前限一次）。伤害目标或命令违反天性时终止。复杂服从与终止判定需手动处理。",
+   "text": "以动作附着于额头（附赠动作摘下）。附着期间获得 30 尺黑暗视觉，且游荡者偷袭伤害增加 1d6。黑暗视觉已由人物卡处理或手动调整。",
    "actions": [
     {
      "id": "use",
-     "name": "下令服从",
+     "name": "附着/摘下偷袭之眼",
      "activation": "action",
-     "tags": [
-      "magical"
-     ],
-     "cost": [
-      {
-       "resource": "物品次数:统御权杖"
-      }
-     ],
-     "targeting": {
-      "type": "creature",
-      "range": 120,
-      "filter": "canSee(self, target)"
-     },
      "root": [
       {
-       "kind": "save",
-       "ability": "wis",
-       "dc": 15,
-       "onFail": [
+       "kind": "if",
+       "when": "self.hasEffect('偷袭之眼')",
+       "then": [
+        {
+         "kind": "removeEffect",
+         "match": {
+          "name": "偷袭之眼"
+         },
+         "from": "self"
+        }
+       ],
+       "else": [
         {
          "kind": "applyEffect",
-         "template": "统御魅惑",
-         "to": "target"
+         "template": "偷袭之眼",
+         "to": "self"
         }
        ]
       }
@@ -11666,17 +11846,25 @@
     }
    ],
    "effects": {
-    "统御魅惑": {
-     "duration": {
-      "hours": 8
-     },
-     "tags": [
-      "magical"
-     ],
-     "implies": [
-      "XPHB:condition:魅惑"
-     ],
-     "text": "视施法者为值得托付信赖的领袖。受到施法者或其盟友伤害、或被命令违反天性时终止。"
+    "偷袭之眼": {
+     "text": "附着于额头：具有 30 尺黑暗视觉，偷袭伤害增加 1d6。",
+     "triggers": [
+      {
+       "id": "sneak-bonus",
+       "label": "偷袭之眼：额外1d6偷袭伤害",
+       "on": "attackHit",
+       "role": "actor",
+       "window": "before",
+       "when": "ask('这次命中是否触发了偷袭伤害？')",
+       "do": [
+        {
+         "kind": "addDamage",
+         "dice": "1d6",
+         "type": "attack.damageType"
+        }
+       ]
+      }
+     ]
     }
    },
    "tags": [
@@ -11908,7 +12096,7 @@
    ],
    "name": "王者权杖",
    "automation": "partial",
-   "text": "作为魔法硬头锤具有攻击和伤害检定 +3（人物卡已处理）。附赠动作可按压六个按钮切换形态：火焰刀刃（+2d6 火焰伤害）、战斧、长矛、爬杆、攻城锤、磁北与深度高度指示。近战命中可汲取生命（DC 17 体质豁免，受 4d6 暗蚀伤害并恢复一半伤害生命值）或麻痹目标（DC 17 体质豁免，麻痹 1 分钟）；以动作可令 30 尺内生物陷入恐慌（DC 17 感知豁免，持续 1 分钟）。三种特性直至次日黎明各限一次。",
+   "text": "作为魔法硬头锤具有攻击和伤害检定 +3（人物卡已处理）。附赠动作可按压六个按钮切换形态：火焰刀刃（+2d6 火焰伤害）、战斧、长矛、爬杆、攻城锤、磁北与深度高度指示。近战命中可汲取生命（DC 17 体质豁免，受 4d6 黯蚀伤害并恢复一半伤害生命值）或麻痹目标（DC 17 体质豁免，麻痹 1 分钟）；以动作可令 30 尺内生物陷入恐慌（DC 17 感知豁免，持续 1 分钟）。三种特性直至次日黎明各限一次。",
    "triggers": [
     {
      "id": "drain-life",
@@ -11916,6 +12104,7 @@
      "on": "attackHit",
      "role": "actor",
      "optional": true,
+     "when": "attack.melee && attack.weapon",
      "cost": [
       {
        "resource": "物品次数:王者权杖:汲取生命"
@@ -11930,7 +12119,7 @@
         {
          "kind": "damage",
          "dice": "4d6",
-         "type": "暗蚀"
+         "type": "黯蚀"
         },
         {
          "kind": "heal",
@@ -11947,6 +12136,7 @@
      "on": "attackHit",
      "role": "actor",
      "optional": true,
+     "when": "attack.melee && attack.weapon",
      "cost": [
       {
        "resource": "物品次数:王者权杖:麻痹"
@@ -12548,9 +12738,34 @@
    ]
   },
   "XDMG:item:维克那魔掌": {
+   "resources": [
+    {
+     "id": "物品充能:维克那魔掌",
+     "name": "维克那魔掌",
+     "formula": 8,
+     "recovery": "long"
+    }
+   ],
    "name": "维克那魔掌",
    "automation": "partial",
-   "text": "同调需切断左手压在断肢上，取下立即死亡。阵营变为中立邪恶。力量属性变为 20（已在人物卡处理）。以魔掌进行的近战法术攻击或以魔掌持握武器进行的近战攻击命中时，额外造成 2d8 寒冷伤害。消耗充能施法（豁免 DC 18，每次施法后魔掌对你施展暗示术要求犯下恶行）：睡眠术（1充能）、缓慢术（2充能）、传送术（3充能）、死亡一指（5充能）。",
+   "text": "同调需切断左手压在断肢上，取下立即死亡。阵营变为中立邪恶。力量属性变为 20（已在人物卡处理）。以魔掌进行的近战法术攻击或以魔掌持握武器进行的近战攻击命中时，额外造成 2d8 寒冷伤害。消耗充能施法（豁免 DC 18）：睡眠术（1充能）、缓慢术（2充能）、传送术（3充能）、死亡一指（5充能）。每次以此法施法时魔掌会对自身施展暗示术（DC 18）要求犯下恶行。",
+   "triggers": [
+    {
+     "id": "cold-touch",
+     "label": "维克那魔掌：极寒之抚",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "when": "attack.melee",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "2d8",
+       "type": "寒冷"
+      }
+     ]
+    }
+   ],
    "actions": [
     {
      "id": "sleep",
@@ -12563,17 +12778,13 @@
       }
      ],
      "targeting": {
-      "type": "area",
-      "range": 90,
-      "area": {
-       "shape": "sphere",
-       "radius": 5
-      }
+      "type": "point",
+      "range": 90
      },
      "root": [
       {
        "kind": "note",
-       "text": "施展睡眠术（DC 18）。施法后魔掌对你施展暗示术（DC 18 感知豁免，无需专注）要求你犯下恶行。"
+       "text": "以目标点为中心 20 尺球状区域，总计 5d8 生命值的生物陷入昏睡状态。施法后受魔掌暗示术影响（DC 18 感知豁免，需犯下恶行）。"
       }
      ]
     },
@@ -12600,13 +12811,19 @@
      },
      "root": [
       {
-       "kind": "save",
-       "ability": "wis",
-       "dc": 18,
-       "onFail": [
+       "kind": "forEach",
+       "in": "area",
+       "do": [
         {
-         "kind": "note",
-         "text": "目标速度减半，AC与敏捷豁免-2，无法使用反应，回合中动作或附赠动作二选一且无法发动多于一次攻击。施法后魔掌对你施展暗示术（DC 18 感知豁免，无需专注）要求你犯下恶行。"
+         "kind": "save",
+         "ability": "wis",
+         "dc": 18,
+         "onFail": [
+          {
+           "kind": "note",
+           "text": "目标速度减半，AC 和敏捷豁免受到 -2 减值，无法使用反应，动作受限。施法后受魔掌暗示术影响（DC 18 感知豁免，需犯下恶行）。"
+          }
+         ]
         }
        ]
       }
@@ -12625,7 +12842,7 @@
      "root": [
       {
        "kind": "note",
-       "text": "施展传送术（Teleport）。施法后魔掌对你施展暗示术（DC 18 感知豁免，无需专注）要求你犯下恶行。"
+       "text": "施展传送术（Teleport）。施法后受魔掌暗示术影响（DC 18 感知豁免，需犯下恶行）。"
       }
      ]
     },
@@ -12653,43 +12870,22 @@
        "onFail": [
         {
          "kind": "damage",
-         "id": "d",
+         "id": "fd",
          "dice": "7d8 + 30",
-         "type": "暗蚀"
+         "type": "黯蚀"
         },
         {
          "kind": "note",
-         "text": "死亡一指：若目标类人生物被杀死，在施法者下一回合开始时将其唤起为一只受控丧尸。"
+         "text": "死亡一指：若杀死类人生物，下回合开始将其唤起为受控丧尸。施法后受魔掌暗示术影响（DC 18 感知豁免，需犯下恶行）。"
         }
        ],
        "onSuccess": [
         {
          "kind": "damage",
-         "ref": "d",
+         "ref": "fd",
          "scale": 0.5
         }
        ]
-      },
-      {
-       "kind": "note",
-       "text": "施法后魔掌对你施展暗示术（DC 18 感知豁免，无需专注）要求你犯下恶行。"
-      }
-     ]
-    }
-   ],
-   "triggers": [
-    {
-     "id": "cold-touch",
-     "label": "维克那魔掌：极寒之抚",
-     "on": "attackHit",
-     "role": "actor",
-     "window": "before",
-     "when": "attack.melee",
-     "do": [
-      {
-       "kind": "addDamage",
-       "dice": "2d8",
-       "type": "寒冷"
       }
      ]
     }
@@ -12923,8 +13119,8 @@
   },
   "XDMG:item:无踪粉": {
    "name": "无踪粉",
-   "automation": "partial",
-   "text": "用操作动作将粉末洒向空中，让你和以你为源点的10尺光环内的每个生物和物件变为隐形2d4分钟。受影响生物发动攻击或施展法术时隐形终止（需手动处理提前终止）。",
+   "automation": "full",
+   "text": "用操作动作将粉末洒向空中，让你和以你为源点的 10 尺光环内的每个生物和物件变为隐形 2d4 分钟。受影响生物发动攻击或施展法术时隐形自动终止。",
    "actions": [
     {
      "id": "use",
@@ -12971,7 +13167,19 @@
      "implies": [
       "XPHB:condition:隐形"
      ],
-     "text": "处于隐形状态（持续 2d4 分钟）。如果发动攻击或施展法术，隐形提前终止。"
+     "duration": {
+      "endsOn": [
+       {
+        "event": "d20Rolled",
+        "when": "event.kind == 'attack' && event.roller == self.id"
+       },
+       {
+        "event": "spellCast",
+        "when": "event.actor == self.id"
+       }
+      ]
+     },
+     "text": "处于隐形状态（持续 2d4 分钟）。如果发动攻击或施展法术，隐形自动终止。"
     }
    },
    "tags": [
@@ -12981,23 +13189,42 @@
   },
   "XDMG:item:吸矢盾": {
    "name": "吸矢盾",
-   "automation": "partial",
-   "text": "持握此盾牌期间，你对抗远程攻击的AC具有+2加值。当一个攻击者对你周围5尺内的目标发动远程攻击时，你可以执行反应以替代该目标成为此次攻击的目标（需手动处理替代目标和对抗远程攻击的AC加值）。",
+   "automation": "full",
+   "text": "持握此盾牌期间，你对抗远程攻击的 AC 具有 +2 加值。当攻击者对你周围 5 尺内的目标发动远程攻击命中时，可以用反应代替该目标成为攻击目标（按你的 AC 重新判定）。",
+   "rollMods": [
+    {
+     "on": {
+      "kind": "attack",
+      "attack": {
+       "ranged": true
+      }
+     },
+     "who": "against",
+     "op": "add",
+     "value": -2,
+     "label": "吸矢盾：对抗远程攻击 AC+2"
+    }
+   ],
    "actions": [
     {
      "id": "use",
      "name": "吸矢",
      "activation": "reaction",
      "trigger": {
-      "on": "d20Rolled",
+      "on": "attackHit",
       "role": "ally",
       "window": "before",
-      "when": "roll.kind == 'attack' && attack.ranged && within(self, target, 5)"
+      "when": "attack.ranged && within(self, target, 5)"
      },
      "root": [
       {
-       "kind": "note",
-       "text": "你替代5尺内的目标成为此次远程攻击的目标"
+       "kind": "modify",
+       "modify": [
+        {
+         "op": "redirect",
+         "to": "self"
+        }
+       ]
       }
      ]
     }
@@ -13018,9 +13245,20 @@
      "activation": "reaction",
      "trigger": {
       "on": "spellCast",
-      "role": "any"
+      "window": "before",
+      "role": "target",
+      "when": "action.kind == 'spell' && action.targetCount == 1 && action.zone == ''"
      },
      "root": [
+      {
+       "kind": "modify",
+       "modify": [
+        {
+         "op": "cancel",
+         "refundSlot": false
+        }
+       ]
+      },
       {
        "kind": "note",
        "text": "反应吸收一道仅以你为目标且无范围效应的法术：法术被解除无效，施法资源浪费。权杖储存等同于法术环阶的能量（权杖终生至多吸收50环，手动记录吸收的环阶总数与当前储存能量；施法者可将储存能量转化为至多5环法术位施法）。"
@@ -13082,12 +13320,24 @@
      "name": "贤者法杖：法术吸收",
      "activation": "reaction",
      "trigger": {
-      "on": "spellCast"
+      "on": "spellCast",
+      "window": "before",
+      "role": "target",
+      "when": "action.kind == 'spell' && action.targetCount == 1 && action.zone == ''"
      },
      "root": [
       {
+       "kind": "modify",
+       "modify": [
+        {
+         "op": "cancel",
+         "refundSlot": false
+        }
+       ]
+      },
+      {
        "kind": "note",
-       "text": "另一个生物施放仅以你为目标的法术时，吸收该法术取消其效应，法杖获得等同于该法术环数的充能。若导致充能超过50则法杖爆炸（如同触发复仇打击）。"
+       "text": "法术被吸收取消效应，法术位不退还。法杖获得等同于该法术环数的充能；若充能超过50则法杖爆炸（触发复仇打击）。请手动记录法杖充能。"
       }
      ]
     },
@@ -13266,6 +13516,17 @@
        "text": "可施展：秘法锁(0)、咒唤元素(7)、侦测魔法(0)、变巨/缩小术(0)、炽焰法球(2)、隐形术(2)、敲击术(2)、光亮术(0)、法师之手(0)、穿墙术(5)、位面转移(7)、防护善恶(0)、心灵遥控(5)、火墙术(4)、蛛网术(2)。请扣除相应充能。"
       }
      ]
+    }
+   ],
+   "rollMods": [
+    {
+     "on": {
+      "kind": "save"
+     },
+     "who": "bearer",
+     "when": "action.kind == 'spell'",
+     "op": "adv",
+     "label": "贤者法杖：对抗法术豁免优势"
     }
    ],
    "tags": [
@@ -13656,7 +13917,7 @@
      "on": "attackHit",
      "role": "actor",
      "window": "before",
-     "when": "attack.weapon && (target.type == '亡灵' || target.type == 'undead')",
+     "when": "attack.weapon && (target.type == '亡灵' || target.type == '不死生物' || target.type == 'undead')",
      "do": [
       {
        "kind": "addDamage",
@@ -13899,12 +14160,10 @@
     },
     {
      "on": {
-      "kind": "damage",
-      "attack": {
-       "spell": true
-      }
+      "kind": "damage"
      },
      "who": "bearer",
+     "when": "action.kind == 'spell' && (target.type == '邪魔' || target.type == 'fiend' || target.type == '恶魔')",
      "op": "maxDice",
      "label": "鞭笞邪魔：对恶魔施法伤害骰取最大值"
     }
@@ -13916,7 +14175,7 @@
   },
   "XDMG:item:移位斗篷": {
    "name": "移位斗篷",
-   "automation": "partial",
+   "automation": "full",
    "text": "投射出你的幻影，生物对你的攻击检定具有劣势。受到伤害时失效直至下一回合开始恢复；速度为0时被压制。",
    "rollMods": [
     {
@@ -15852,7 +16111,7 @@
       "kind": "save"
      },
      "who": "bearer",
-     "when": "ask('这次豁免是对抗龙类的战栗威仪或吐息武器吗？')",
+     "when": "action.by != null && (action.by.type == '龙类' || action.by.type == 'dragon') && (action.name == '战栗威仪' || action.name == '吐息武器' || ask('这次豁免是对抗战栗威仪或吐息武器吗？'))",
      "op": "adv",
      "label": "银龙鳞甲：对抗龙类威仪/吐息"
     }
@@ -15963,8 +16222,8 @@
   },
   "XDMG:item:隐形药水": {
    "name": "隐形药水",
-   "automation": "partial",
-   "text": "饮用后获得隐形状态，持续 1 小时。若进行攻击检定、造成伤害或施展法术，效应提前结束（提前终止需手动处理或使用解除动作）。",
+   "automation": "full",
+   "text": "饮用后获得隐形状态，持续 1 小时。若进行攻击检定、造成伤害或施展法术，效应提前结束。",
    "actions": [
     {
      "id": "use",
@@ -16004,7 +16263,21 @@
       "magical"
      ],
      "duration": {
-      "hours": 1
+      "hours": 1,
+      "endsOn": [
+       {
+        "event": "d20Rolled",
+        "when": "event.kind == 'attack' && event.roller == self.id"
+       },
+       {
+        "event": "spellCast",
+        "when": "event.actor == self.id"
+       },
+       {
+        "event": "damageTaken",
+        "when": "action != null && action.by.id == self.id"
+       }
+      ]
      },
      "implies": [
       "XPHB:condition:隐形"
@@ -16477,7 +16750,7 @@
    ],
    "name": "杂技长棍",
    "automation": "partial",
-   "text": "敏捷（特技）检定具有优势。被攻击命中时可以消耗反应使该次攻击中 AC+5（每短休/长休一次）。可以附赠动作在短杆、长杆和长棍形态间转化及发光。长棍形态具有投掷(30/120)且攻击后飞回手中。固定加值已在人物卡处理。",
+   "text": "敏捷（特技）检定具有优势。被攻击命中时可以消耗反应使该次攻击中 AC+5（每短休/长休一次），若因此低于 AC 则取消命中。可以附赠动作在短杆、长杆和长棍形态间转化及发光。长棍形态具有投掷(30/120)且攻击后飞回手中。固定加值已在人物卡处理。",
    "rollMods": [
     {
      "on": {
@@ -16506,8 +16779,24 @@
      ],
      "root": [
       {
-       "kind": "note",
-       "text": "针对触发此反应的攻击，护甲等级+5，可能导致该攻击变为未命中。"
+       "kind": "if",
+       "when": "!roll.crit && roll.total < self.ac + 5",
+       "then": [
+        {
+         "kind": "modify",
+         "modify": [
+          {
+           "op": "cancel"
+          }
+         ]
+        }
+       ],
+       "else": [
+        {
+         "kind": "note",
+         "text": "AC+5后仍未超过攻击检定，攻击依然命中。"
+        }
+       ]
       }
      ]
     }
@@ -16899,6 +17188,36 @@
    "name": "征服",
    "automation": "partial",
    "text": "+3 战锤。具有投掷（60/180尺），命中额外 1d8 力场伤害（构装、元素或巨人改为 4d8 力场），命中或失手后立即飞回手中。持握时揭示 30 尺内密门/隐藏门位置。次日黎明前可以魔法动作重击地面发出震荡波（60尺内自选生物 DC 20 体质豁免，失败陷入震慑 1 分钟）。次日黎明前可施展一次侦测善恶或物件定位术。固定加值已在人物卡处理。",
+   "triggers": [
+    {
+     "id": "whelm-thrown",
+     "label": "征服：猛投额外伤害",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "when": "attack.weapon && attack.ranged",
+     "do": [
+      {
+       "kind": "if",
+       "when": "target.type == '构装生物' || target.type == '构装' || target.type == '元素生物' || target.type == '元素' || target.type == '巨人' || target.type == 'construct' || target.type == 'elemental' || target.type == 'giant'",
+       "then": [
+        {
+         "kind": "addDamage",
+         "dice": "4d8",
+         "type": "力场"
+        }
+       ],
+       "else": [
+        {
+         "kind": "addDamage",
+         "dice": "1d8",
+         "type": "力场"
+        }
+       ]
+      }
+     ]
+    }
+   ],
    "actions": [
     {
      "id": "shockwave",
@@ -16989,6 +17308,13 @@
      "implies": [
       "XPHB:condition:震慑"
      ],
+     "duration": {
+      "saveEnds": {
+       "ability": "con",
+       "dc": 20,
+       "at": "turnEnd"
+      }
+     },
      "text": "陷入震慑状态。回合结束时可重复体质豁免，成功则终止。"
     }
    },
@@ -17902,20 +18228,25 @@
          "label": "泼洒生物或物件（20尺投掷）",
          "do": [
           {
-           "kind": "save",
-           "ability": "dex",
-           "dc": "8 + self.mod.dex + self.pb",
-           "onFail": [
+           "kind": "chooseTargets",
+           "prompt": "选择20尺内的目标生物或物件",
+           "count": 1,
+           "within": {
+            "ft": 20,
+            "of": "self"
+           },
+           "do": [
             {
-             "kind": "applyEffect",
-             "to": "target",
-             "inline": {
-              "name": "覆油",
-              "duration": {
-               "minutes": 1
-              },
-              "text": "被油覆盖。在油干燥前若受到火焰伤害，额外受到 5 点火焰伤害。"
-             }
+             "kind": "save",
+             "ability": "dex",
+             "dc": "8 + self.mod.dex + self.pb",
+             "onFail": [
+              {
+               "kind": "applyEffect",
+               "to": "target",
+               "template": "覆油"
+              }
+             ]
             }
            ]
           }
@@ -17944,6 +18275,38 @@
      ]
     }
    ],
+   "effects": {
+    "覆油": {
+     "duration": {
+      "minutes": 1
+     },
+     "triggers": [
+      {
+       "id": "oil-burn",
+       "label": "覆油：火焰伤害引燃额外伤害",
+       "on": "damageTaken",
+       "role": "target",
+       "when": "damage.type == '火焰' || damage.type == 'fire'",
+       "do": [
+        {
+         "kind": "damage",
+         "to": "self",
+         "dice": "5",
+         "type": "火焰"
+        },
+        {
+         "kind": "removeEffect",
+         "from": "self",
+         "match": {
+          "name": "覆油"
+         }
+        }
+       ]
+      }
+     ],
+     "text": "被油覆盖。在油干燥前若受到火焰伤害，额外受到 5 点火焰伤害。"
+    }
+   },
    "tags": [
     "ai",
     "未审"

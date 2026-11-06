@@ -1,0 +1,26 @@
+{
+ "name": "炽焰鼓舞",
+ "automation": "partial",
+ "text": "在你的回合中作为魔法动作或附赠动作的一部分消耗至少1术法点时使用（每回合限一次）。你或30尺内可见的一名生物获得1d4+魅力调整值（14级起+术士等级）的临时生命值。是否满足触发条件及每回合一次限制由玩家自行遵守。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "炽焰鼓舞",
+   "activation": "free",
+   "requires": "turn.isMine",
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 30,
+    "filter": "canSee(self, target) || target.id == self.id"
+   },
+   "root": [
+    {
+     "kind": "tempHp",
+     "to": "target",
+     "amount": "cond(self.levelOf('术士') >= 14, 1d4 + self.mod.cha + self.levelOf('术士'), 1d4 + self.mod.cha)"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,149 @@
+{
+ "resources": [
+  {
+   "id": "物品次数:征服:震荡波",
+   "name": "征服：震荡波",
+   "formula": 1,
+   "recovery": "long"
+  },
+  {
+   "id": "物品次数:征服:施法",
+   "name": "征服：施法",
+   "formula": 1,
+   "recovery": "long"
+  }
+ ],
+ "name": "征服",
+ "automation": "partial",
+ "text": "+3 战锤。具有投掷（60/180尺），命中额外 1d8 力场伤害（构装、元素或巨人改为 4d8 力场），命中或失手后立即飞回手中。持握时揭示 30 尺内密门/隐藏门位置。次日黎明前可以魔法动作重击地面发出震荡波（60尺内自选生物 DC 20 体质豁免，失败陷入震慑 1 分钟）。次日黎明前可施展一次侦测善恶或物件定位术。固定加值已在人物卡处理。",
+ "triggers": [
+  {
+   "id": "whelm-thrown",
+   "label": "征服：猛投额外伤害",
+   "on": "attackHit",
+   "role": "actor",
+   "window": "before",
+   "when": "attack.weapon && attack.ranged",
+   "do": [
+    {
+     "kind": "if",
+     "when": "target.type == '构装生物' || target.type == '构装' || target.type == '元素生物' || target.type == '元素' || target.type == '巨人' || target.type == 'construct' || target.type == 'elemental' || target.type == 'giant'",
+     "then": [
+      {
+       "kind": "addDamage",
+       "dice": "4d8",
+       "type": "力场"
+      }
+     ],
+     "else": [
+      {
+       "kind": "addDamage",
+       "dice": "1d8",
+       "type": "力场"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "actions": [
+  {
+   "id": "shockwave",
+   "name": "征服：震荡波",
+   "activation": "action",
+   "cost": [
+    {
+     "resource": "物品次数:征服:震荡波"
+    }
+   ],
+   "targeting": {
+    "type": "area",
+    "range": "self",
+    "area": {
+     "shape": "emanation",
+     "radius": 60
+    }
+   },
+   "root": [
+    {
+     "kind": "forEach",
+     "in": "area",
+     "do": [
+      {
+       "kind": "save",
+       "ability": "con",
+       "dc": 20,
+       "onFail": [
+        {
+         "kind": "applyEffect",
+         "template": "震慑",
+         "duration": {
+          "minutes": 1,
+          "saveEnds": {
+           "ability": "con",
+           "dc": 20,
+           "at": "turnEnd"
+          }
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "detect-evil-and-good",
+   "name": "征服：侦测善恶",
+   "activation": "action",
+   "cost": [
+    {
+     "resource": "物品次数:征服:施法"
+    }
+   ],
+   "concentration": {
+    "minutes": 10
+   },
+   "root": [
+    {
+     "kind": "note",
+     "text": "施展侦测善恶（持续专注至多 10 分钟）。施展后直至次日黎明无法再次从中施展法术。"
+    }
+   ]
+  },
+  {
+   "id": "locate-object",
+   "name": "征服：物件定位术",
+   "activation": "action",
+   "cost": [
+    {
+     "resource": "物品次数:征服:施法"
+    }
+   ],
+   "concentration": {
+    "minutes": 10
+   },
+   "root": [
+    {
+     "kind": "note",
+     "text": "施展物件定位术（感应 1000 尺内某一熟悉或已知物件的方向，持续专注至多 10 分钟）。施展后直至次日黎明无法再次从中施展法术。"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "震慑": {
+   "implies": [
+    "XPHB:condition:震慑"
+   ],
+   "duration": {
+    "saveEnds": {
+     "ability": "con",
+     "dc": 20,
+     "at": "turnEnd"
+    }
+   },
+   "text": "陷入震慑状态。回合结束时可重复体质豁免，成功则终止。"
+  }
+ }
+}

@@ -1,0 +1,135 @@
+{
+ "name": "冰结恶灵",
+ "automation": "partial",
+ "text": "施展猎人印记时可化身为幽灵形态直至法术结束。长休恢复 1 次（亦可消耗 4 环或更高法术位重置）。处于该形态时：免疫寒冷伤害；免疫受擒、倒地和束缚状态；化身为该形态及后续每个回合开始时，15 尺光环内由你选择的生物受到 2d4 点寒冷伤害；可如同困难地形般穿过生物与物件（穿行及物体内停下受伤害由人工处理）。",
+ "actions": [
+  {
+   "id": "reset",
+   "name": "冰结恶灵：重置使用权（四环+法术位）",
+   "activation": "free",
+   "cost": [
+    {
+     "slot": {
+      "min": 4
+     }
+    }
+   ],
+   "requires": "self.resource('rime-wraith') < 1",
+   "root": [
+    {
+     "kind": "resource",
+     "id": "rime-wraith",
+     "delta": 1
+    }
+   ]
+  }
+ ],
+ "triggers": [
+  {
+   "id": "rime-wraith-form",
+   "label": "冰结恶灵：化身幽灵形态",
+   "on": "spellCast",
+   "role": "actor",
+   "window": "after",
+   "optional": true,
+   "when": "action.name == '猎人印记' || action.key == 'XPHB:spell:猎人印记'",
+   "cost": [
+    {
+     "resource": "rime-wraith"
+    }
+   ],
+   "do": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "冰结恶灵"
+    },
+    {
+     "kind": "chooseTargets",
+     "prompt": "冰结恶灵：选择 15 尺内受到 2d4 寒冷伤害的生物",
+     "from": "all",
+     "within": {
+      "ft": 15,
+      "of": "self"
+     },
+     "exclude": [
+      "self"
+     ],
+     "min": 0,
+     "count": 10,
+     "do": [
+      {
+       "kind": "damage",
+       "dice": "2d4",
+       "type": "寒冷",
+       "to": "target"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "冰结恶灵": {
+   "text": "幽灵形态：免疫寒冷伤害；免疫受擒、倒地和束缚状态；后续每回合开始时 15 尺光环内选定生物受 2d4 寒冷伤害；穿行生物与物件。持续至猎人印记结束。",
+   "statics": [
+    {
+     "kind": "immune",
+     "values": [
+      "寒冷"
+     ]
+    },
+    {
+     "kind": "conditionImmune",
+     "values": [
+      "受擒",
+      "倒地",
+      "束缚"
+     ]
+    }
+   ],
+   "duration": {
+    "endsOn": [
+     {
+      "event": "effectEnded",
+      "when": "(event.name == '猎人印记' && event.bearer == self.id) || (event.bearer == self.id && event.name == '专注')"
+     }
+    ]
+   },
+   "triggers": [
+    {
+     "id": "rime-aura-damage",
+     "label": "冰结恶灵：寒冷光环",
+     "on": "turnStarted",
+     "role": "actor",
+     "window": "after",
+     "when": "turn.isMine",
+     "do": [
+      {
+       "kind": "chooseTargets",
+       "prompt": "冰结恶灵：选择 15 尺内受到 2d4 寒冷伤害的生物",
+       "from": "all",
+       "within": {
+        "ft": 15,
+        "of": "self"
+       },
+       "exclude": [
+        "self"
+       ],
+       "min": 0,
+       "count": 10,
+       "do": [
+        {
+         "kind": "damage",
+         "dice": "2d4",
+         "type": "寒冷",
+         "to": "target"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,82 @@
+{
+  "name": "元素亲和",
+  "automation": "full",
+  "text": "选择强酸、寒冷、火焰、闪电或毒素之一：你获得该伤害类型的抗性；施展造成该类型伤害的法术时，你可以把魅力调整值加到那个法术的其中一次伤害掷骰中（无论是攻击检定还是豁免法术均自动生效）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "元素亲和",
+      "activation": "free",
+      "text": "选定你的元素亲和伤害类型（只选一次）。",
+      "requires": "!self.hasEffect('元素亲和')",
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "元素亲和：选择伤害类型",
+          "var": "elem",
+          "options": [
+            {
+              "label": "强酸",
+              "value": "强酸"
+            },
+            {
+              "label": "寒冷",
+              "value": "寒冷"
+            },
+            {
+              "label": "火焰",
+              "value": "火焰"
+            },
+            {
+              "label": "闪电",
+              "value": "闪电"
+            },
+            {
+              "label": "毒素",
+              "value": "毒素"
+            }
+          ]
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "元素亲和",
+          "state": {
+            "type": "vars.elem"
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "元素亲和": {
+      "name": "元素亲和",
+      "text": "拥有所选伤害类型的抗性；施展造成该类型伤害的法术时，可把魅力调整值加到其中一次伤害掷骰上。",
+      "duration": {
+        "manual": true
+      },
+      "statics": [
+        {
+          "kind": "resist",
+          "values": [
+            "effect.state.type"
+          ]
+        }
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": "damage",
+            "spell": true
+          },
+          "who": "bearer",
+          "when": "action.kind == 'spell' && action.damage.type == effect.state.type && action.marks.elementalAffinity != true",
+          "op": "add",
+          "value": "self.mod.cha",
+          "label": "元素亲和：加魅力调整值",
+          "mark": "elementalAffinity"
+        }
+      ]
+    }
+  }
+}

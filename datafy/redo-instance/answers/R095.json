@@ -1,0 +1,59 @@
+{
+ "name": "恶毒灵光",
+ "automation": "partial",
+ "text": "每当你使用嗜血特性并传送时，传送离开或传送目标空间 10 尺内的每个你所选生物承受等同于智力调整值的伤害（心灵、毒素或黯蚀，与敬怖之忠所选神明抗性类型相同），该伤害无视抗性（无视抗性与若选起点空间请人工处理）。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "恶毒灵光",
+   "activation": "free",
+   "trigger": {
+    "on": "actionDone",
+    "role": "actor",
+    "when": "action.name == '嗜血'"
+   },
+   "root": [
+    {
+     "kind": "choose",
+     "prompt": "恶毒灵光：所选神明的伤害类型？",
+     "options": [
+      {
+       "label": "心灵（班恩）",
+       "value": "心灵"
+      },
+      {
+       "label": "毒素（巴尔）",
+       "value": "毒素"
+      },
+      {
+       "label": "黯蚀（米尔寇）",
+       "value": "黯蚀"
+      }
+     ],
+     "var": "dmgType"
+    },
+    {
+     "kind": "chooseTargets",
+     "prompt": "恶毒灵光：选择 10 尺内承受伤害的生物",
+     "within": {
+      "ft": 10,
+      "of": "self"
+     },
+     "exclude": [
+      "self"
+     ],
+     "min": 0,
+     "count": 10,
+     "do": [
+      {
+       "kind": "damage",
+       "dice": "max(1, self.mod.int)",
+       "type": "vars.dmgType",
+       "to": "target"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

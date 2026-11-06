@@ -1,0 +1,59 @@
+{
+  "name": "不破威仪",
+  "automation": "partial",
+  "text": "以附赠动作展现威严存在，持续 1 分钟（陷入失能时提前结束）。持续时间内，任何生物在每回合中首次试图攻击你时，须进行对抗你法术豁免 DC 的魅力豁免。豁免失败时该生物本回合无法攻击你且须重选目标或放弃攻击（手动处理）；豁免成功时对其施加「不破威仪：豁免劣势」，其在你的下个回合结束前对抗你的法术豁免自动具有劣势。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "不破威仪",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "不破威仪"
+        }
+      ],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "不破威仪"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "不破威仪": {
+      "text": "展现魔法性的威严存在，持续 1 分钟（失能时提前结束）。每回合中任何生物首次试图攻击你时，须进行对抗你法术豁免 DC 的魅力豁免（手动处理）。",
+      "duration": {
+        "minutes": 1,
+        "endsOn": [
+          {
+            "event": "effectApplied",
+            "when": "self.has('失能')"
+          }
+        ]
+      }
+    },
+    "不破威仪：豁免劣势": {
+      "text": "在不破威仪施加者的下个回合结束前，对抗其法术所做的任何豁免检定具有劣势。",
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "source",
+          "nth": 1
+        }
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save"
+          },
+          "who": "bearer",
+          "when": "action.kind == 'spell' && action.by.id == source.id",
+          "op": "disadv",
+          "label": "不破威仪：法术豁免劣势"
+        }
+      ]
+    }
+  }
+}

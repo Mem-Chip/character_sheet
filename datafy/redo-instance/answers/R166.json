@@ -1,0 +1,67 @@
+{
+ "name": "魔力潮涌",
+ "automation": "partial",
+ "text": "储存魔力潮涌（上限为智力调整值，至少 1）。长休时重置为 1 股；没有潮涌时完成短休获 1 股；成功以解除魔法或法术反制打断法术时获 1 股（提供充能动作）。每回合一次，法师法术攻击命中造成伤害时可消耗 1 股潮涌造成等同于法师等级一半的额外力场伤害（豁免类法术加伤需手动处理）。",
+ "resources": [
+  {
+   "id": "power-surge",
+   "name": "魔力潮涌",
+   "formula": "max(1, self.mod.int)",
+   "recovery": "long"
+  }
+ ],
+ "actions": [
+  {
+   "id": "gain-surge",
+   "name": "魔力潮涌：充能（打断/解除法术）",
+   "activation": "free",
+   "requires": "self.resource('power-surge') < max(1, self.mod.int)",
+   "root": [
+    {
+     "kind": "resource",
+     "id": "power-surge",
+     "delta": 1
+    }
+   ]
+  }
+ ],
+ "triggers": [
+  {
+   "id": "surge-damage-hit",
+   "label": "魔力潮涌：法术攻击命中追加伤害",
+   "on": "attackHit",
+   "role": "actor",
+   "window": "before",
+   "optional": true,
+   "limit": "oncePerTurn",
+   "when": "action.kind == 'spell' && includes(action.spell.lists, '法师')",
+   "cost": [
+    {
+     "resource": "power-surge"
+    }
+   ],
+   "do": [
+    {
+     "kind": "addDamage",
+     "dice": "floor(self.levelOf('法师') / 2)",
+     "type": "力场"
+    }
+   ]
+  },
+  {
+   "id": "surge-short-rest",
+   "label": "魔力潮涌：短休补充",
+   "on": "restCompleted",
+   "role": "actor",
+   "window": "after",
+   "when": "event.kind == 'short' && self.resource('power-surge') == 0",
+   "do": [
+    {
+     "kind": "resource",
+     "id": "power-surge",
+     "delta": 1
+    }
+   ]
+  }
+ ]
+}

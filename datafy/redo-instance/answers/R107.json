@@ -1,0 +1,125 @@
+{
+ "name": "闪耀星座",
+ "automation": "partial",
+ "text": "每个你的回合开始时，若处于星耀形态，可以更换身上闪耀的星座。射手座与圣杯座的数值提升已在 2 级对应条目中通过等级判断实现；巨龙座激活期间获得 20 尺飞行速度并可悬浮（飞行速度由人工处理）。",
+ "triggers": [
+  {
+   "id": "swap",
+   "label": "闪耀星座：更换星座",
+   "on": "turnStarted",
+   "role": "actor",
+   "optional": true,
+   "when": "self.hasEffect('星耀形态')",
+   "do": [
+    {
+     "kind": "choose",
+     "prompt": "更换身上闪耀的星座",
+     "options": [
+      {
+       "label": "射手座",
+       "when": "!self.hasEffect('星耀形态：射手座')",
+       "do": [
+        {
+         "kind": "removeEffect",
+         "from": "self",
+         "match": {
+          "tag": "starry-constellation"
+         }
+        },
+        {
+         "kind": "applyEffect",
+         "to": "self",
+         "inline": {
+          "name": "星耀形态：射手座",
+          "tags": [
+           "starry-form",
+           "starry-constellation"
+          ],
+          "text": "射手座在你身上亮起：可以用附赠动作发射光箭。",
+          "duration": {
+           "minutes": 10,
+           "endsOn": [
+            {
+             "event": "effectApplied",
+             "when": "event.bearer == self.id && self.has('失能')"
+            }
+           ]
+          }
+         }
+        }
+       ]
+      },
+      {
+       "label": "圣杯座",
+       "when": "!self.hasEffect('星耀形态：圣杯座')",
+       "do": [
+        {
+         "kind": "removeEffect",
+         "from": "self",
+         "match": {
+          "tag": "starry-constellation"
+         }
+        },
+        {
+         "kind": "applyEffect",
+         "to": "self",
+         "inline": {
+          "name": "星耀形态：圣杯座",
+          "tags": [
+           "starry-form",
+           "starry-constellation"
+          ],
+          "text": "圣杯座在你身上亮起：施展恢复生命值的法术时可额外治疗。",
+          "duration": {
+           "minutes": 10,
+           "endsOn": [
+            {
+             "event": "effectApplied",
+             "when": "event.bearer == self.id && self.has('失能')"
+            }
+           ]
+          }
+         }
+        }
+       ]
+      },
+      {
+       "label": "巨龙座",
+       "when": "!self.hasEffect('星耀形态：巨龙座')",
+       "do": [
+        {
+         "kind": "removeEffect",
+         "from": "self",
+         "match": {
+          "tag": "starry-constellation"
+         }
+        },
+        {
+         "kind": "applyEffect",
+         "to": "self",
+         "inline": {
+          "name": "星耀形态：巨龙座",
+          "tags": [
+           "starry-form",
+           "starry-constellation"
+          ],
+          "text": "巨龙座在你身上亮起：智力/感知检定及专注体质豁免 d20 低于 10 视为 10；获得 20 尺飞行速度并可悬浮。",
+          "duration": {
+           "minutes": 10,
+           "endsOn": [
+            {
+             "event": "effectApplied",
+             "when": "event.bearer == self.id && self.has('失能')"
+            }
+           ]
+          }
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

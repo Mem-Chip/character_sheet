@@ -1,0 +1,33 @@
+{
+  "name": "创生圣言",
+  "automation": "full",
+  "text": "施展律令医疗或律令死亡时，可以选择位于第一个目标 10 尺内的第二个生物作为目标，引擎通过 chooseTargets 自动将所选目标追加至本次施法。",
+  "triggers": [
+    {
+      "id": "twin-word",
+      "label": "创生圣言：追加第二目标",
+      "on": "spellCast",
+      "window": "before",
+      "role": "actor",
+      "optional": true,
+      "when": "action.kind == 'spell' && (action.name == '律令医疗' || action.name == '律令死亡' || event.key == 'XPHB:spell:律令医疗' || event.key == 'XPHB:spell:律令死亡')",
+      "do": [
+        {
+          "kind": "chooseTargets",
+          "prompt": "创生圣言：选择第二名目标（位于第一目标 10 尺内）",
+          "min": 1,
+          "count": 1,
+          "from": "all",
+          "within": {
+            "ft": 10,
+            "of": "target"
+          },
+          "exclude": [
+            "target"
+          ],
+          "addTo": "cast"
+        }
+      ]
+    }
+  ]
+}

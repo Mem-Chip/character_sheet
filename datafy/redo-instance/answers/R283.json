@@ -1,0 +1,103 @@
+{
+ "name": "缓慢术",
+ "automation": "partial",
+ "text": "专注至多 1 分钟。指定 120 尺内 40 尺立方区域至多 6 个生物进行感知豁免，失败速度减半、AC 和敏捷豁免-2、不能执行反应。其每回合只能在动作或附赠动作中二选一、攻击动作只能发动一次攻击、施展带姿势成分法术有 25% 概率失败。受术者在其每回合结束时可再进行一次感知豁免，成功则终止效应。单次攻击与动作限制需手动处理。",
+ "actions": [
+  {
+   "id": "cast",
+   "name": "缓慢术",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 3
+     }
+    }
+   ],
+   "concentration": {
+    "minutes": 1
+   },
+   "targeting": {
+    "type": "creature",
+    "count": 6,
+    "range": 120
+   },
+   "root": [
+    {
+     "kind": "save",
+     "ability": "wis",
+     "dc": "self.spell.dc",
+     "onFail": [
+      {
+       "kind": "applyEffect",
+       "template": "缓慢",
+       "duration": {
+        "minutes": 1,
+        "saveEnds": {
+         "ability": "wis",
+         "at": "turnEnd"
+        }
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "缓慢": {
+   "tags": [
+    "magical",
+    "spell"
+   ],
+   "text": "速度减半；AC 和敏捷豁免-2；不能执行反应；每回合仅可执行一个动作或一个附赠动作；执行攻击动作时只能发动一次攻击；施展带姿势成分法术有 25% 概率施展失败。",
+   "statics": [
+    {
+     "kind": "speed",
+     "bonus": "-floor(self.speed / 2)"
+    },
+    {
+     "kind": "ac",
+     "bonus": -2
+    }
+   ],
+   "rollMods": [
+    {
+     "on": {
+      "kind": "save",
+      "ability": "dex"
+     },
+     "who": "bearer",
+     "op": "add",
+     "value": -2,
+     "label": "缓慢术：敏捷豁免-2"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "spell-fail",
+     "label": "缓慢术：姿势成分施法失败",
+     "on": "spellCast",
+     "role": "actor",
+     "window": "before",
+     "when": "ask('该法术是否包含姿势成分且在 25% 判定中施法失败？')",
+     "modify": [
+      {
+       "op": "cancel",
+       "refundSlot": false
+      }
+     ]
+    }
+   ],
+   "flags": {
+    "blocks": [
+     "reaction"
+    ]
+   }
+  }
+ }
+}

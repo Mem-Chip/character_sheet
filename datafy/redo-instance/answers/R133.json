@@ -1,0 +1,117 @@
+{
+ "name": "现世传说",
+ "automation": "full",
+ "text": "以附赠动作获得 1 分钟增益，每次长休 1 次（可消耗 5 环法术位重置）。在与魅力相关的所有属性检定上获得优势。每个自己的回合一次，武器攻击失手时可直接改为命中。豁免检定失败时，可用反应重掷且必须使用新结果。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "现世传说",
+   "activation": "bonus",
+   "cost": [
+    {
+     "resource": "livingLegend"
+    }
+   ],
+   "requires": "!self.hasEffect('现世传说')",
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "现世传说"
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "name": "结束现世传说",
+   "activation": "free",
+   "requires": "self.hasEffect('现世传说')",
+   "root": [
+    {
+     "kind": "removeEffect",
+     "from": "self",
+     "match": {
+      "name": "现世传说"
+     }
+    }
+   ]
+  },
+  {
+   "id": "reset",
+   "name": "现世传说：重置使用权（五环法术位）",
+   "activation": "free",
+   "cost": [
+    {
+     "slot": {
+      "min": 5,
+      "max": 5
+     }
+    }
+   ],
+   "requires": "self.resource('livingLegend') < 1",
+   "root": [
+    {
+     "kind": "resource",
+     "id": "livingLegend",
+     "delta": 1
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "现世传说": {
+   "duration": {
+    "minutes": 1
+   },
+   "rollMods": [
+    {
+     "on": {
+      "kind": "check",
+      "ability": "cha"
+     },
+     "who": "bearer",
+     "op": "adv",
+     "label": "现世传说：魅力检定优势"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "guaranteed-hit",
+     "label": "现世传说：失手改为命中",
+     "on": "d20Rolled",
+     "role": "actor",
+     "window": "before",
+     "limit": "oncePerTurn",
+     "optional": true,
+     "when": "turn.isMine && attack.weapon && roll.failing",
+     "modify": [
+      {
+       "op": "succeed"
+      }
+     ]
+    },
+    {
+     "id": "reroll-save",
+     "label": "现世传说：重骰失败豁免",
+     "on": "d20Rolled",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "cost": [
+      {
+       "economy": "reaction"
+      }
+     ],
+     "when": "roll.kind == 'save' && roll.failing",
+     "modify": [
+      {
+       "op": "reroll",
+       "die": "d20",
+       "keep": "new"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,33 @@
+{
+ "name": "圣杯座",
+ "automation": "partial",
+ "text": "星耀形态·圣杯座期间：消耗法术位施展为生物恢复生命值的法术后，可为自己或 30 尺内另一生物恢复 1d8（10 级起 2d8）+ 感知调整值点生命值。是否为治疗法术需弹窗确认，目标与治疗量由引擎自动结算。",
+ "triggers": [
+  {
+   "id": "grail",
+   "label": "圣杯座：恢复生命值",
+   "on": "spellCast",
+   "role": "actor",
+   "window": "after",
+   "when": "self.hasEffect('星耀形态：圣杯座') && action.spell.slot > 0 && ask('刚施展的法术是为生物恢复生命值的法术吗？')",
+   "do": [
+    {
+     "kind": "chooseTargets",
+     "prompt": "圣杯座：选择自己或 30 尺内的一名生物恢复生命值",
+     "within": {
+      "ft": "30",
+      "of": "self"
+     },
+     "count": 1,
+     "do": [
+      {
+       "kind": "heal",
+       "to": "target",
+       "amount": "cond(self.levelOf('德鲁伊') >= 10, 2d8, 1d8) + self.mod.wis"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

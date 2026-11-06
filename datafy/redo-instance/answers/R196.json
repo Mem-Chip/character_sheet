@@ -1,0 +1,27 @@
+{
+  "name": "精魂之盾",
+  "automation": "full",
+  "text": "狂暴期间，你周围 30 尺内你能看到的其他生物受到伤害时，可以用反应为其降低 2d6 点伤害（10 级起 3d6，14 级起 4d6）。",
+  "triggers": [
+    {
+      "id": "spiritShield",
+      "label": "精魂之盾：降低伤害",
+      "on": "damageIncoming",
+      "role": "any",
+      "window": "before",
+      "optional": true,
+      "cost": [
+        {
+          "economy": "reaction"
+        }
+      ],
+      "when": "self.hasEffect('狂暴') && target.id != self.id && within(self, target, 30) && canSee(self, target)",
+      "modify": [
+        {
+          "op": "reduceDamage",
+          "value": "cond(self.levelOf('野蛮人') >= 14, 4d6, cond(self.levelOf('野蛮人') >= 10, 3d6, 2d6))"
+        }
+      ]
+    }
+  ]
+}

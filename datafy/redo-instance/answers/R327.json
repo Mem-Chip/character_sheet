@@ -1,0 +1,49 @@
+{
+ "name": "招牌法术",
+ "automation": "partial",
+ "text": "建卡时选定两道三环法术作为招牌法术。每次短休或长休内，两道法术可以不消耗法术位各以三环施展一次（资源池 signature，上限 2）；升环施展仍需消耗法术位。已自动：以 3 环施展 3 环法术后，可选择消耗 1 次招牌法术次数并退还所消耗的 3 环法术位；若非所选招牌法术请勿触发。也可以使用主动动作记录次数。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "招牌法术（不消耗法术位）",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "resource": "signature"
+    }
+   ],
+   "root": [
+    {
+     "kind": "note",
+     "text": "以三环施展所选的招牌法术之一，不消耗法术位；法术效果由人处理。"
+    }
+   ]
+  }
+ ],
+ "triggers": [
+  {
+   "id": "refund-signature",
+   "label": "招牌法术：消耗招牌次数退还 3 环法术位",
+   "on": "spellCast",
+   "role": "actor",
+   "window": "after",
+   "optional": true,
+   "when": "action.kind == 'spell' && action.spell.slot == 3 && action.spell.level == 3 && self.resource('signature') > 0",
+   "cost": [
+    {
+     "resource": "signature"
+    }
+   ],
+   "do": [
+    {
+     "kind": "refund",
+     "what": "slot"
+    }
+   ]
+  }
+ ]
+}

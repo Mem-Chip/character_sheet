@@ -1,0 +1,56 @@
+{
+ "name": "云雾符文",
+ "automation": "full",
+ "text": "穿着或携带着铭刻此符文的物品时：敏捷（巧手）与魅力（欺瞒）检定具有优势。当你或你周围 30 尺内你可见的生物被一次攻击检定命中时，你可以用反应激活此符文，把这次攻击的目标改为另一个距你 30 尺内、除攻击者以外的生物，使用同样的检定值重新判定。短休或长休恢复使用次数。",
+ "rollMods": [
+  {
+   "on": {
+    "kind": "check",
+    "ability": "dex",
+    "skill": "巧手"
+   },
+   "who": "bearer",
+   "op": "adv",
+   "label": "云雾符文：敏捷（巧手）优势"
+  },
+  {
+   "on": {
+    "kind": "check",
+    "ability": "cha",
+    "skill": "欺瞒"
+   },
+   "who": "bearer",
+   "op": "adv",
+   "label": "云雾符文：魅力（欺瞒）优势"
+  }
+ ],
+ "actions": [
+  {
+   "id": "use",
+   "name": "云雾符文：欺诈转移",
+   "activation": "reaction",
+   "trigger": {
+    "on": "attackHit",
+    "role": "any",
+    "window": "before",
+    "when": "attacker.id != self.id && (target.id == self.id || (canSee(self, target) && dist(self, target) <= 30))"
+   },
+   "cost": [
+    {
+     "resource": "云雾符文"
+    }
+   ],
+   "root": [
+    {
+     "kind": "modify",
+     "modify": [
+      {
+       "op": "redirect",
+       "to": "choose"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

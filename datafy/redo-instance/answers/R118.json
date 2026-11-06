@@ -1,0 +1,84 @@
+{
+ "name": "快手投掷",
+ "automation": "partial",
+ "text": "以附赠动作消耗一枚卓越骰，获得一次额外的攻击次数并附加「快手投掷」状态；使用具有投掷属性的武器发动远程攻击，命中时卓越骰自动计入伤害掷骰。攻击结算后状态自动移除（拔出武器由口头处理）。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "快手投掷",
+   "activation": "bonus",
+   "cost": [
+    {
+     "resource": "卓越骰"
+    }
+   ],
+   "root": [
+    {
+     "kind": "economy",
+     "attacks": 1
+    },
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "快手投掷"
+    },
+    {
+     "kind": "note",
+     "text": "快手投掷：现在用具有投掷属性的武器发动一次远程武器攻击，命中时卓越骰自动计入伤害。"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "快手投掷": {
+   "text": "下一次远程武器攻击命中时，消耗的卓越骰计入伤害（类型同武器）；该次攻击结算后消失。",
+   "duration": {
+    "until": {
+     "at": "turnEnd",
+     "of": "bearer",
+     "nth": 0
+    }
+   },
+   "triggers": [
+    {
+     "id": "toss-hit",
+     "label": "快手投掷：卓越骰计入伤害",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "when": "attack.weapon && attack.ranged",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))",
+       "type": "attack.damageType"
+      },
+      {
+       "kind": "removeEffect",
+       "from": "self",
+       "match": {
+        "name": "快手投掷"
+       }
+      }
+     ]
+    },
+    {
+     "id": "toss-miss",
+     "label": "快手投掷：攻击失手",
+     "on": "attackMissed",
+     "role": "actor",
+     "when": "attack.weapon && attack.ranged",
+     "do": [
+      {
+       "kind": "removeEffect",
+       "from": "self",
+       "match": {
+        "name": "快手投掷"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

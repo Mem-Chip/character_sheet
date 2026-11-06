@@ -1,0 +1,89 @@
+{
+ "name": "巨灵贵胄",
+ "automation": "partial",
+ "text": "以附赠动作获得增益持续 10 分钟（每长休一次，也可消耗五环及以上法术位重置）。获得 60 尺飞行速度且能悬浮（需手动处理）。当你或处于守护灵光范围内的盟友 D20 检定失败时，可用反应将其直接改为成功。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "巨灵贵胄",
+   "activation": "bonus",
+   "cost": [
+    {
+     "resource": "scion-of-the-genie"
+    }
+   ],
+   "requires": "!self.hasEffect('巨灵贵胄')",
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "巨灵贵胄"
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "name": "结束巨灵贵胄",
+   "activation": "free",
+   "requires": "self.hasEffect('巨灵贵胄')",
+   "root": [
+    {
+     "kind": "removeEffect",
+     "from": "self",
+     "match": {
+      "name": "巨灵贵胄"
+     }
+    }
+   ]
+  },
+  {
+   "id": "reset",
+   "name": "巨灵贵胄：重置使用权（五环法术位）",
+   "activation": "free",
+   "cost": [
+    {
+     "slot": {
+      "min": 5
+     }
+    }
+   ],
+   "requires": "self.resource('scion-of-the-genie') < 1",
+   "root": [
+    {
+     "kind": "resource",
+     "id": "scion-of-the-genie",
+     "delta": 1
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "巨灵贵胄": {
+   "text": "持续 10 分钟：获得 60 尺飞行速度且能悬浮（三维移动由人手动处理）；当你或守护灵光范围内的盟友 D20 检定失败时，可用反应将其改为成功。",
+   "duration": {
+    "minutes": 10
+   },
+   "triggers": [
+    {
+     "id": "lesser-wish",
+     "label": "次级祈愿术：改为成功",
+     "on": "d20Rolled",
+     "role": "any",
+     "window": "before",
+     "optional": true,
+     "when": "roll.failing && (combatant(roll.roller) == self || (combatant(roll.roller).isAllyOf(self) && within(self, combatant(roll.roller), cond(self.levelOf('圣武士') >= 18, 30, 10))))",
+     "cost": [
+      {
+       "economy": "reaction"
+      }
+     ],
+     "modify": [
+      {
+       "op": "succeed"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

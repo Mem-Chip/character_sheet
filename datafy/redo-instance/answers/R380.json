@@ -1,0 +1,67 @@
+{
+  "name": "混沌之潮",
+  "automation": "partial",
+  "text": "掷 d20 之前使用：下一次 D20 检定（攻击、属性检定或豁免）具有优势，直到你下一次掷 d20。使用法术位施展一道术士法术会自动恢复使用权，并提示在狂野魔法浪涌表上掷骰（浪涌效果由人工处理）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "混沌之潮",
+      "activation": "free",
+      "cost": [
+        {
+          "resource": "tides-of-chaos"
+        }
+      ],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "混沌之潮"
+        }
+      ]
+    }
+  ],
+  "triggers": [
+    {
+      "id": "restore",
+      "label": "混沌之潮：施法恢复（需狂野魔法浪涌掷骰）",
+      "on": "spellCast",
+      "role": "actor",
+      "when": "self.resource('tides-of-chaos') == 0 && action.kind == 'spell' && action.spell.slot > 0 && includes(action.spell.lists, '术士')",
+      "do": [
+        {
+          "kind": "resource",
+          "id": "tides-of-chaos",
+          "delta": 1
+        },
+        {
+          "kind": "note",
+          "text": "混沌之潮：已恢复使用权，请在狂野魔法浪涌表上掷骰（人工）"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "混沌之潮": {
+      "text": "下一次 D20 检定具有优势，直到你下一次掷 d20。",
+      "rollMods": [
+        {
+          "on": {
+            "kind": "d20"
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "混沌之潮：优势"
+        }
+      ],
+      "duration": {
+        "endsOn": [
+          {
+            "event": "d20Rolled",
+            "when": "event.roller == self.id"
+          }
+        ]
+      }
+    }
+  }
+}

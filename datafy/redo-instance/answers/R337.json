@@ -1,0 +1,27 @@
+{
+ "name": "魔法学徒",
+ "automation": "partial",
+ "text": "起源专长：从牧师 / 德鲁伊 / 法师法术列表里选一个，习得两道戏法（建卡时选定，静态）；再从该列表选一道一环法术始终准备。已自动：以 1 环法术位施展法术后，可选择消耗「魔法学徒 · 免费施放 1 环法术」（freeCast）资源并退还法术位（若非魔法学徒所选法术请勿触发）。也可以照常消耗法术位施展。",
+ "triggers": [
+  {
+   "id": "refund-freecast",
+   "label": "魔法学徒：免费施展 1 环法术（退还法术位）",
+   "on": "spellCast",
+   "role": "actor",
+   "window": "after",
+   "optional": true,
+   "when": "action.kind == 'spell' && action.spell.slot == 1 && self.resource('freeCast') > 0",
+   "cost": [
+    {
+     "resource": "freeCast"
+    }
+   ],
+   "do": [
+    {
+     "kind": "refund",
+     "what": "slot"
+    }
+   ]
+  }
+ ]
+}

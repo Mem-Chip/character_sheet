@@ -1,0 +1,76 @@
+{
+ "name": "黯冰狱铠",
+ "automation": "full",
+ "text": "施法获得 5×环阶 点临时生命值；具有临时生命值时受到近战攻击检定命中反弹等同于 5×环阶 的寒冷伤害；临时生命值耗尽时法术结束。",
+ "actions": [
+  {
+   "id": "cast",
+   "name": "黯冰狱铠",
+   "activation": "bonus",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 1
+     }
+    }
+   ],
+   "targeting": {
+    "type": "self"
+   },
+   "root": [
+    {
+     "kind": "tempHp",
+     "amount": "5 * slot.level",
+     "to": "self"
+    },
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "黯冰狱铠",
+     "state": {
+      "damage": "5 * slot.level"
+     }
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "黯冰狱铠": {
+   "tags": [
+    "magical",
+    "spell"
+   ],
+   "duration": {
+    "hours": 1,
+    "endsOn": [
+     {
+      "event": "damageApplied",
+      "when": "self.tempHp <= 0"
+     }
+    ]
+   },
+   "triggers": [
+    {
+     "id": "retaliate",
+     "label": "黯冰狱铠：寒冷反噬",
+     "on": "attackHit",
+     "role": "target",
+     "window": "after",
+     "when": "attack.melee && self.tempHp > 0",
+     "do": [
+      {
+       "kind": "damage",
+       "dice": "effect.state.damage",
+       "type": "寒冷",
+       "to": "attacker"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,64 @@
+{
+ "name": "镜影术",
+ "automation": "partial",
+ "text": "持续 1 分钟。创造 3 个幻象分身。受到攻击命中时（攻击者目盲或具有盲视/真实视觉时无效），为每个剩余分身掷 1d6，任一骰出 3+ 则分身代受命中并取消该次攻击；3 个分身全部摧毁时法术终止。分身数量维护需手动处理。",
+ "actions": [
+  {
+   "id": "cast",
+   "name": "镜影术",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 2
+     }
+    }
+   ],
+   "targeting": {
+    "type": "self"
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "镜影术",
+     "duration": {
+      "minutes": 1
+     }
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "镜影术": {
+   "tags": [
+    "magical",
+    "spell"
+   ],
+   "duration": {
+    "minutes": 1
+   },
+   "text": "存在至多 3 个幻象分身。被攻击命中时每个分身投掷 1d6，任一骰出 3+ 则分身代受命中被摧毁。分身全部摧毁后法术终止。攻击者目盲或具盲视/真实视觉时无效。",
+   "triggers": [
+    {
+     "id": "duplicate_intercept",
+     "label": "镜影术：分身代受命中",
+     "on": "attackHit",
+     "role": "target",
+     "window": "before",
+     "optional": true,
+     "when": "!attacker.has('目盲') && !ask('攻击者是否拥有盲视或真实视觉？')",
+     "modify": [
+      {
+       "op": "cancel"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

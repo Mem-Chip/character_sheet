@@ -1,0 +1,54 @@
+{
+  "name": "奥法打击",
+  "automation": "full",
+  "text": "用武器命中一个生物后，直到你的下个回合结束为止，该生物在对抗你法术所进行的下一次豁免检定中具有劣势。已自动化：武器命中后对目标施加「奥法打击」状态，目标对抗你施展的法术豁免具有劣势，并在豁免检定完成后自动消耗解除（至多持续至你下个回合结束）。",
+  "triggers": [
+    {
+      "id": "arcane-strike",
+      "label": "奥法打击：施加豁免劣势",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.weapon",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "奥法打击"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "奥法打击": {
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save"
+          },
+          "who": "bearer",
+          "when": "action.by == source && action.kind == 'spell'",
+          "op": "disadv",
+          "label": "奥法打击：对施法者法术的豁免具有劣势"
+        }
+      ],
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "source",
+          "nth": 1
+        },
+        "endsOn": [
+          {
+            "event": "saveSucceeded",
+            "when": "action.by == source && action.kind == 'spell'"
+          },
+          {
+            "event": "saveFailed",
+            "when": "action.by == source && action.kind == 'spell'"
+          }
+        ]
+      }
+    }
+  }
+}

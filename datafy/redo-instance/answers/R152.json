@@ -1,0 +1,117 @@
+{
+ "name": "蜂聚集群",
+ "automation": "partial",
+ "text": "每个你的回合一次，当你攻击命中一个生物后，可选一项：造成 1d6（11级时1d8）穿刺伤害；迫使目标进行力量豁免（DC为法术豁免DC），失败被水平移动最多15尺（11级时还可使其倒地）；或将你自己水平移动5尺（11级时至你下回合开始获得半身掩护）。位移需在地图上手动调整棋子。",
+ "triggers": [
+  {
+   "id": "swarm-gather",
+   "label": "蜂聚集群",
+   "on": "attackHit",
+   "role": "actor",
+   "window": "before",
+   "optional": true,
+   "limit": "oncePerTurn",
+   "when": "turn.isMine",
+   "do": [
+    {
+     "kind": "choose",
+     "prompt": "蜂聚集群：选择集群的协助方式",
+     "options": [
+      {
+       "label": "额外穿刺伤害",
+       "do": [
+        {
+         "kind": "addDamage",
+         "dice": "cond(self.levelOf('游侠') >= 11, 1d8, 1d6)",
+         "type": "穿刺"
+        }
+       ]
+      },
+      {
+       "label": "力量豁免：水平移动目标至多15尺",
+       "do": [
+        {
+         "kind": "save",
+         "ability": "str",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "move",
+           "mode": "push",
+           "ft": 15
+          },
+          {
+           "kind": "note",
+           "text": "目标被集群水平移动最多 15 尺（方向由你选择，请在地图上手动移动目标）。"
+          },
+          {
+           "kind": "if",
+           "when": "self.levelOf('游侠') >= 11",
+           "then": [
+            {
+             "kind": "applyEffect",
+             "to": "target",
+             "template": "XPHB:condition:倒地"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "自身水平移动5尺",
+       "do": [
+        {
+         "kind": "note",
+         "text": "你被集群水平移动 5 尺（方向由你选择，请在地图上手动移动自身）。"
+        },
+        {
+         "kind": "if",
+         "when": "self.levelOf('游侠') >= 11",
+         "then": [
+          {
+           "kind": "applyEffect",
+           "to": "self",
+           "template": "壮大集群掩护"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "壮大集群掩护": {
+   "text": "半身掩护：AC 和敏捷豁免获得 +2 加值，持续至你的下个回合开始。",
+   "statics": [
+    {
+     "kind": "ac",
+     "bonus": 2
+    }
+   ],
+   "rollMods": [
+    {
+     "on": {
+      "kind": "save",
+      "ability": "dex"
+     },
+     "who": "bearer",
+     "op": "add",
+     "value": 2,
+     "label": "壮大集群掩护：敏捷豁免+2"
+    }
+   ],
+   "duration": {
+    "until": {
+     "at": "turnStart",
+     "of": "source",
+     "nth": 1
+    }
+   }
+  }
+ }
+}

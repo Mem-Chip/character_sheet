@@ -333,7 +333,7 @@ function mergeDeclaredResources(decls: Array<{ key: string; resources: ResourceD
       n++;
     }
   }
-  writeFileSync(ABILITIES_FILE, JSON.stringify(data) + (raw.endsWith('\n') ? '\n' : ''));
+  writeFileSync(ABILITIES_FILE, JSON.stringify(data, null, 1) + (raw.endsWith('\n') ? '\n' : ''));
   return n;
 }
 

@@ -1,0 +1,76 @@
+{
+ "name": "光冕",
+ "automation": "partial",
+ "text": "以一个魔法动作散发出日光组成的灵光：半径 60 尺明亮光照 + 额外 30 尺微光，持续 1 分钟或直到你解除。身处明亮光照里的敌人，在抵抗你的黎明曙光特性以及任何造成火焰 / 光耀伤害的法术而做的豁免检定上具有劣势。已自动：动作开启 60 尺灵光并自动识别黎明曙光与火焰/光耀法术对范围内敌人施加豁免劣势；未识别时提示确认。光照环境与障碍物请人工判断。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "光冕",
+   "activation": "action",
+   "tags": [
+    "magical"
+   ],
+   "cost": [
+    {
+     "resource": "光冕"
+    }
+   ],
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "光冕"
+    },
+    {
+     "kind": "note",
+     "text": "光冕：半径 60 尺明亮光照、额外 30 尺微光（地图上不画光照，请按距离判断谁在范围里）；范围内的敌人已在豁免上带劣势"
+    }
+   ]
+  },
+  {
+   "id": "dismiss",
+   "name": "光冕（熄灭）",
+   "activation": "free",
+   "requires": "self.hasEffect('光冕')",
+   "root": [
+    {
+     "kind": "removeEffect",
+     "from": "self",
+     "match": {
+      "name": "光冕"
+     }
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "光冕": {
+   "text": "你散发出半径 60 尺的明亮光照与额外 30 尺的微光，持续 1 分钟或直至解除。",
+   "duration": {
+    "minutes": 1
+   }
+  }
+ },
+ "auras": [
+  {
+   "id": "corona",
+   "radius": 60,
+   "affects": "enemies",
+   "includeSelf": false,
+   "requires": "self.hasEffect('光冕')",
+   "grant": {
+    "rollMods": [
+     {
+      "on": {
+       "kind": "save"
+      },
+      "who": "bearer",
+      "when": "action.key == 'XPHB:牧师:黎明曙光:2' || (action.kind == 'spell' && (action.damage.type == '火焰' || action.damage.type == '光耀')) || ask('这次豁免是抵抗黎明曙光，或一道造成火焰 / 光耀伤害的法术吗？')",
+      "op": "disadv",
+      "label": "光冕：明亮光照中的敌人"
+     }
+    ]
+   }
+  }
+ ]
+}

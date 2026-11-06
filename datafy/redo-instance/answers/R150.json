@@ -1,0 +1,88 @@
+{
+ "name": "撕裂心智",
+ "automation": "partial",
+ "text": "当你使用心灵之刃对一个生物造成偷袭攻击伤害时，可迫使其进行感知豁免（DC = 8 + 熟练加值 + 敏捷调整值）。豁免失败则陷入震慑 1 分钟，目标每回合结束时可重复豁免。长休恢复 1 次免费使用；没有使用次数时可消耗三枚灵能骰使用。是否包含偷袭伤害需确认。",
+ "triggers": [
+  {
+   "id": "rend-mind",
+   "label": "撕裂心智",
+   "on": "attackHit",
+   "role": "actor",
+   "window": "after",
+   "optional": true,
+   "cost": [
+    {
+     "resource": "撕裂心智"
+    }
+   ],
+   "when": "(attack.item == '心灵之刃' || action.name == '心灵之刃') && ask('这次心灵之刃攻击造成了偷袭伤害吗？')",
+   "do": [
+    {
+     "kind": "save",
+     "ability": "wis",
+     "dc": "8 + pb + self.mod.dex",
+     "onFail": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "撕裂心智",
+       "duration": {
+        "minutes": 1,
+        "saveEnds": {
+         "ability": "wis",
+         "dc": "8 + source.pb + source.mod.dex",
+         "at": "turnEnd"
+        }
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "rend-mind-psionic",
+   "label": "撕裂心智（消耗3枚灵能骰）",
+   "on": "attackHit",
+   "role": "actor",
+   "window": "after",
+   "optional": true,
+   "cost": [
+    {
+     "resource": "灵能力量",
+     "n": 3
+    }
+   ],
+   "when": "(attack.item == '心灵之刃' || action.name == '心灵之刃') && ask('这次心灵之刃攻击造成了偷袭伤害吗？')",
+   "do": [
+    {
+     "kind": "save",
+     "ability": "wis",
+     "dc": "8 + pb + self.mod.dex",
+     "onFail": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "撕裂心智",
+       "duration": {
+        "minutes": 1,
+        "saveEnds": {
+         "ability": "wis",
+         "dc": "8 + source.pb + source.mod.dex",
+         "at": "turnEnd"
+        }
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "撕裂心智": {
+   "implies": [
+    "XPHB:condition:震慑"
+   ],
+   "text": "陷入震慑状态，持续至多 1 分钟。回合结束时可重复感知豁免，成功则终止该效应。"
+  }
+ }
+}

@@ -1,0 +1,147 @@
+{
+  "resources": [
+    {
+      "id": "物品次数:黑刃:加速术",
+      "name": "黑刃：加速术",
+      "formula": 1,
+      "recovery": "long"
+    }
+  ],
+  "name": "黑刃",
+  "automation": "full",
+  "text": "+3 巨剑。命中亡灵时自身受到 1d10 黯蚀伤害，亡灵恢复 1d10 生命值。持握时免疫魅惑和恐慌，具有 30 尺盲视。以此武器将非亡灵非构装生物降至 0 时吞噬其灵魂（仅能被祈愿术复活），并获得等同于该生物生命值上限的临时生命值。黑刃长休前可施展一次加速术（无需专注，持续 1 分钟）。固定加值已在人物卡处理。",
+  "triggers": [
+    {
+      "id": "undead-recoil",
+      "label": "黑刃：命中亡灵反噬",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "when": "attack.weapon && target.type == '不死生物'",
+      "do": [
+        {
+          "kind": "damage",
+          "to": "self",
+          "dice": "1d10",
+          "type": "黯蚀"
+        },
+        {
+          "kind": "heal",
+          "to": "target",
+          "amount": "1d10"
+        }
+      ]
+    },
+    {
+      "id": "soul-devour",
+      "label": "黑刃：吞噬灵魂获取临时生命值",
+      "on": "reducedTo0",
+      "role": "actor",
+      "window": "after",
+      "when": "action != null && action.attack.weapon && target.type != '不死生物' && target.type != '构装生物'",
+      "do": [
+        {
+          "kind": "tempHp",
+          "to": "self",
+          "amount": "target.hpMax"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "haste",
+      "name": "黑刃：加速术",
+      "activation": "free",
+      "cost": [
+        {
+          "resource": "物品次数:黑刃:加速术"
+        }
+      ],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "template": "加速",
+          "to": "self",
+          "duration": {
+            "minutes": 1
+          }
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "加速": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "黑刃施展的加速术（无需专注）。速度翻倍；AC+2；敏捷豁免具有优势；每回合获得一个额外动作（仅用于发动一次攻击、或疾走、撤离、躲藏和操作动作）。法术终止时陷入失能且速度为 0 直至下一回合结束。",
+      "statics": [
+        {
+          "kind": "speed",
+          "bonus": "self.speed"
+        },
+        {
+          "kind": "ac",
+          "bonus": 2
+        }
+      ],
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save",
+            "ability": "dex"
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "加速术：敏捷豁免优势"
+        }
+      ],
+      "triggers": [
+        {
+          "id": "haste-action",
+          "label": "加速术：额外动作",
+          "on": "turnStarted",
+          "role": "actor",
+          "do": [
+            {
+              "kind": "economy",
+              "action": 1
+            }
+          ]
+        }
+      ],
+      "onEnd": [
+        {
+          "kind": "applyEffect",
+          "template": "加速倦意",
+          "to": "self",
+          "duration": {
+            "until": {
+              "at": "turnEnd",
+              "of": "bearer",
+              "nth": 1
+            }
+          }
+        }
+      ]
+    },
+    "加速倦意": {
+      "tags": [
+        "magical",
+        "spell"
+      ],
+      "text": "法术终止时泛起倦意，陷入失能并且速度为 0，持续至下一回合结束。",
+      "implies": [
+        "XPHB:condition:失能"
+      ],
+      "statics": [
+        {
+          "kind": "speedSet",
+          "value": 0
+        }
+      ]
+    }
+  }
+}

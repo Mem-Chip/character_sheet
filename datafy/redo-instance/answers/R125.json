@@ -1,0 +1,32 @@
+{
+ "name": "权威之音",
+ "automation": "partial",
+ "text": "当你消耗法术位施展 1 环或更高环阶法术且指定盟友为目标时，该盟友（若有多名则由你选择其中一名）可以立即使用反应对你指定且能看见的目标发动一次武器攻击（盟友发动武器攻击由其角色卡执行）。",
+ "triggers": [
+  {
+   "id": "voice-of-authority",
+   "label": "权威之音：驱使盟友反击",
+   "on": "spellCast",
+   "role": "actor",
+   "window": "after",
+   "optional": true,
+   "when": "action.kind == 'spell' && action.spell.slot >= 1",
+   "do": [
+    {
+     "kind": "chooseTargets",
+     "prompt": "权威之音：选择获得反应攻击的盟友",
+     "from": "targets",
+     "filter": "target.isAllyOf(self)",
+     "count": 1,
+     "min": 1,
+     "do": [
+      {
+       "kind": "note",
+       "text": "权威之音：该盟友可立即使用反应对你指定且能看见的目标发动一次武器攻击。"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

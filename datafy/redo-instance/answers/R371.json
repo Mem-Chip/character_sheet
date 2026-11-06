@@ -1,0 +1,46 @@
+{
+  "name": "鼓舞斩",
+  "automation": "partial",
+  "text": "当你施展至圣斩后，可以立即消耗一次引导神力次数，为 30 尺内由你选择的生物或你自身分配 2d8 + 圣武士等级的临时生命值。引擎会提示输入掷骰点数，并可逐个选择生物分配临时生命值。",
+  "triggers": [
+    {
+      "id": "inspire",
+      "label": "鼓舞斩：临时生命值",
+      "on": "spellCast",
+      "role": "actor",
+      "optional": true,
+      "when": "action.name == '至圣斩' || event.key == 'XPHB:spell:至圣斩'",
+      "cost": [
+        {
+          "resource": "channel-divinity"
+        }
+      ],
+      "do": [
+        {
+          "kind": "number",
+          "prompt": "请掷 2d8 加上圣武士等级，输入获得的总临时生命值：",
+          "var": "total",
+          "min": 3,
+          "max": "16 + self.levelOf('圣武士')"
+        },
+        {
+          "kind": "allocate",
+          "prompt": "鼓舞斩：分配临时生命值",
+          "total": "vars.total",
+          "from": "all",
+          "within": {
+            "ft": "30"
+          },
+          "var": "thp",
+          "do": [
+            {
+              "kind": "tempHp",
+              "amount": "vars.thp",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

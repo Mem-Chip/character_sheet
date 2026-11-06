@@ -1,0 +1,35 @@
+{
+  "name": "狂野魔法浪涌",
+  "automation": "partial",
+  "text": "一回合一次，消耗法术位施展一道术士法术后可以立刻骰一次 1d20；骰出 20 则在狂野魔法浪涌表上掷骰（1d100）确定随机魔法效应。引擎自动识别消耗法术位的术士法术并掷 1d20 判定；浪涌表上的随机效应由人工查表处理。",
+  "triggers": [
+    {
+      "id": "surge",
+      "label": "狂野魔法浪涌：骰 1d20",
+      "on": "spellCast",
+      "role": "actor",
+      "window": "after",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "action.kind == 'spell' && action.spell.slot > 0 && includes(action.spell.lists, '术士')",
+      "do": [
+        {
+          "kind": "if",
+          "when": "1d20 == 20",
+          "then": [
+            {
+              "kind": "note",
+              "text": "狂野魔法浪涌：骰出 20！在狂野魔法浪涌表上掷 1d100 确定随机魔法效应（若是法术，不受超魔法影响），手动处理"
+            }
+          ],
+          "else": [
+            {
+              "kind": "note",
+              "text": "狂野魔法浪涌：没有骰出 20，无事发生"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

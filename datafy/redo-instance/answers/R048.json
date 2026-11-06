@@ -1,0 +1,50 @@
+{
+ "name": "驱法复原",
+ "automation": "partial",
+ "text": "在你使用法术位施展了一道恢复生物生命值或终止生物身上状态的法术时，作为该动作、附赠动作或反应的一部分，你可以立即无需消耗法术位地施展解除魔法。每短休或长休一次，或消耗一次引导神力次数重置使用权。",
+ "actions": [
+  {
+   "id": "reset",
+   "name": "驱法复原：消耗引导神力重置",
+   "activation": "free",
+   "requires": "self.resource('spell-breaking-recovery') == 0",
+   "cost": [
+    {
+     "resource": "引导神力"
+    }
+   ],
+   "root": [
+    {
+     "kind": "resource",
+     "id": "spell-breaking-recovery",
+     "delta": 1
+    }
+   ]
+  }
+ ],
+ "triggers": [
+  {
+   "id": "spell-breaking-recovery",
+   "label": "驱法复原：施展解除魔法",
+   "on": "spellCast",
+   "role": "actor",
+   "window": "after",
+   "optional": true,
+   "cost": [
+    {
+     "resource": "spell-breaking-recovery"
+    }
+   ],
+   "when": "action.kind == 'spell' && action.spell.slot > 0 && ask('刚施展的法术是恢复生命值或终止状态的法术吗？')",
+   "do": [
+    {
+     "kind": "grantAction",
+     "from": "XPHB:spell:解除魔法#cast",
+     "activation": "free",
+     "cost": [],
+     "until": "turnEnd"
+    }
+   ]
+  }
+ ]
+}

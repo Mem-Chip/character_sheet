@@ -1,0 +1,84 @@
+{
+ "name": "妖思魅缕",
+ "automation": "partial",
+ "text": "你在对抗陷入魅惑或恐慌的豁免检定上具有优势。当你或 120 尺内你可见的生物成功通过对抗魅惑或恐慌的豁免时，你可以用反应迫使 120 尺内另一个你可见的生物进行感知豁免，失败则被你魅惑或恐慌 1 分钟（每回合结束可重复豁免）。是否对抗魅惑/恐慌需询问确认。",
+ "rollMods": [
+  {
+   "on": {
+    "kind": "save"
+   },
+   "who": "bearer",
+   "when": "ask('这次豁免是对抗或终止魅惑或恐慌状态的吗？')",
+   "op": "adv",
+   "label": "妖思魅缕：对抗魅惑/恐慌优势"
+  }
+ ],
+ "actions": [
+  {
+   "id": "use",
+   "name": "妖思魅缕",
+   "activation": "reaction",
+   "trigger": {
+    "on": "saveSucceeded",
+    "role": "any",
+    "window": "after",
+    "when": "(target.id == self.id || (dist(self, target) <= 120 && canSee(self, target))) && ask('这次成功通过的豁免是对抗魅惑或恐慌的吗？')"
+   },
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 120,
+    "filter": "target.id != self.id && canSee(self, target)"
+   },
+   "root": [
+    {
+     "kind": "save",
+     "ability": "wis",
+     "dc": "self.spell.dc",
+     "onFail": [
+      {
+       "kind": "choose",
+       "prompt": "妖思魅缕：目标陷入哪种状态？",
+       "options": [
+        {
+         "label": "魅惑",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "template": "XPHB:condition:魅惑",
+           "duration": {
+            "minutes": 1,
+            "saveEnds": {
+             "ability": "wis",
+             "dc": "source.spell.dc",
+             "at": "turnEnd"
+            }
+           }
+          }
+         ]
+        },
+        {
+         "label": "恐慌",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "template": "XPHB:condition:恐慌",
+           "duration": {
+            "minutes": 1,
+            "saveEnds": {
+             "ability": "wis",
+             "dc": "source.spell.dc",
+             "at": "turnEnd"
+            }
+           }
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

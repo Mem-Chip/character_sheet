@@ -1,0 +1,65 @@
+{
+ "name": "灵能面纱",
+ "automation": "full",
+ "text": "以一个动作，你连同你所穿或携带的任何东西可以魔法性地隐形至多 1 小时。若你主动解除隐形（无需动作）、发动攻击、或迫使一个生物进行豁免检定，此隐形状态将会提前结束。长休恢复 1 次免费使用；没有使用次数时可消耗一枚灵能骰使用。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "灵能面纱",
+   "activation": "action",
+   "cost": [
+    {
+     "resource": "灵能面纱"
+    }
+   ],
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "灵能面纱"
+    }
+   ]
+  },
+  {
+   "id": "use-psionic",
+   "name": "灵能面纱（消耗灵能骰）",
+   "activation": "action",
+   "cost": [
+    {
+     "resource": "灵能力量"
+    }
+   ],
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "灵能面纱"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "灵能面纱": {
+   "implies": [
+    "XPHB:condition:隐形"
+   ],
+   "duration": {
+    "hours": 1,
+    "endsOn": [
+     {
+      "event": "attackHit",
+      "when": "action.by.id == self.id"
+     },
+     {
+      "event": "attackMissed",
+      "when": "action.by.id == self.id"
+     },
+     {
+      "event": "saveForced",
+      "when": "action.by.id == self.id"
+     }
+    ]
+   }
+  }
+ }
+}

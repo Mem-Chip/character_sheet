@@ -1,0 +1,104 @@
+{
+  "name": "无影步",
+  "automation": "partial",
+  "text": "使用暗影步时可消耗 1 点功力，移除开始与结束时对微光光照或黑暗的要求；此外，作为同一个附赠动作的一部分，传送后可立即进行一次徒手打击（通过 chooseTargets 挑选 5 尺内目标结算）。传送落点需在战图上操作。",
+  "actions": [
+    {
+      "id": "ki",
+      "name": "无影步：暗影步（消耗 1 点功力）",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "功力"
+        }
+      ],
+      "requires": "turn.isMine",
+      "root": [
+        {
+          "kind": "move",
+          "mode": "teleport",
+          "ft": 60
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "暗影步"
+        },
+        {
+          "kind": "chooseTargets",
+          "prompt": "无影步：选择传送后徒手打击的目标（可不选）",
+          "min": 0,
+          "count": 1,
+          "from": "enemies",
+          "within": {
+            "ft": 5
+          },
+          "do": [
+            {
+              "kind": "attack",
+              "bonus": "self.pb + max(self.mod.str, self.mod.dex)",
+              "attack": {
+                "melee": true,
+                "unarmed": true,
+                "ability": "dex",
+                "damageType": "钝击",
+                "item": "徒手打击"
+              },
+              "onHit": [
+                {
+                  "kind": "damage",
+                  "dice": "classTable('武艺') + max(self.mod.str, self.mod.dex)",
+                  "type": "钝击"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "暗影步": {
+      "text": "下一次近战攻击具有优势，直到当前回合结束。",
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 0
+        }
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "attack",
+            "attack": {
+              "melee": true
+            }
+          },
+          "who": "bearer",
+          "op": "adv",
+          "label": "暗影步：下一次近战攻击"
+        }
+      ],
+      "triggers": [
+        {
+          "id": "used",
+          "label": "暗影步：用掉优势",
+          "on": "d20Rolled",
+          "role": "actor",
+          "window": "after",
+          "when": "roll.kind == 'attack' && attack.melee",
+          "do": [
+            {
+              "kind": "removeEffect",
+              "from": "self",
+              "match": {
+                "name": "暗影步"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

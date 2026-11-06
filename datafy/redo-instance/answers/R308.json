@@ -1,0 +1,38 @@
+{
+ "name": "穿刺者",
+ "automation": "full",
+ "text": "每回合一次，造成穿刺伤害的攻击命中时可重骰其中一枚伤害骰并必须采用新结果；造成穿刺伤害的攻击掷出重击时，额外多投一个伤害骰。",
+ "triggers": [
+  {
+   "id": "piercer-reroll",
+   "label": "穿刺者：重掷一枚伤害骰",
+   "on": "damageIncoming",
+   "window": "before",
+   "role": "actor",
+   "optional": true,
+   "limit": "oncePerTurn",
+   "when": "attack.damageType == '穿刺'",
+   "modify": [
+    {
+     "op": "rerollDamage",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "id": "piercer-crit",
+   "label": "穿刺者：重击额外伤害骰",
+   "on": "attackHit",
+   "window": "before",
+   "role": "actor",
+   "when": "roll.crit && attack.damageType == '穿刺'",
+   "do": [
+    {
+     "kind": "addDamage",
+     "dice": "action.damage.die",
+     "type": "穿刺"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,71 @@
+{
+ "name": "莫伊之影",
+ "automation": "partial",
+ "text": "持续至多 1 分钟（专注）。暗影笼罩使你对其他人视为处于重度遮蔽，并将周围 10 尺内明亮照明转为微光、微光转为黑暗。期间获得光耀伤害抗性；当 10 尺内的生物用攻击命中你时，暗影对攻击者造成 2d8 点黯蚀伤害（重度遮蔽与照明变化需手动处理）。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "莫伊之影",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 4
+     }
+    }
+   ],
+   "concentration": {
+    "minutes": 1
+   },
+   "targeting": {
+    "type": "self"
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "template": "莫伊之影",
+     "to": "self"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "莫伊之影": {
+   "tags": [
+    "magical",
+    "spell"
+   ],
+   "statics": [
+    {
+     "kind": "resist",
+     "values": [
+      "光耀"
+     ]
+    }
+   ],
+   "triggers": [
+    {
+     "id": "shadow-retaliate",
+     "label": "莫伊之影：暗影反噬",
+     "on": "attackHit",
+     "role": "target",
+     "window": "after",
+     "when": "within(self, attacker, 10)",
+     "do": [
+      {
+       "kind": "damage",
+       "dice": "2d8",
+       "type": "黯蚀",
+       "to": "attacker"
+      }
+     ]
+    }
+   ],
+   "text": "具有光耀伤害抗性；对其他人视为处于重度遮蔽；10 尺内生物攻击命中你时，受 2d8 黯蚀伤害。"
+  }
+ }
+}

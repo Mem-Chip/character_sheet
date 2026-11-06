@@ -1,0 +1,44 @@
+{
+ "name": "变化专家",
+ "automation": "full",
+ "text": "额外法术属于人物卡静态层授予。魔法增幅：在你的回合内，当你使用法术位施展变化学派法术时，你的速度提升等于所消耗法术位环阶五倍的尺数，持续至该回合结束。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "魔法增幅",
+   "activation": "free",
+   "trigger": {
+    "on": "spellCast",
+    "role": "actor",
+    "window": "after",
+    "when": "turn.isMine && action.kind == 'spell' && action.spell.school == '变化' && action.spell.slot > 0"
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "name": "变化专家：魔法增幅",
+     "inline": {
+      "statics": [
+       {
+        "kind": "speed",
+        "bonus": "effect.state.bonus"
+       }
+      ],
+      "duration": {
+       "until": {
+        "at": "turnEnd",
+        "of": "bearer",
+        "nth": 0
+       }
+      },
+      "text": "速度提升等于所消耗法术位环阶×5尺，持续至该回合结束。"
+     },
+     "state": {
+      "bonus": "action.spell.slot * 5"
+     }
+    }
+   ]
+  }
+ ]
+}

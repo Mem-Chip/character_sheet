@@ -1,0 +1,207 @@
+{
+ "name": "精魂图腾",
+ "automation": "partial",
+ "text": "以附赠动作消耗一次特性使用次数（短休或长休恢复），在周围 60 尺内召唤虚体精魂并形成半径 30 尺光环，持续 1 分钟或直到失能。可选熊精魂（光环内选定生物获 5+德鲁伊等级 临时生命，盟友力量检定与豁免具优势）、鹰精魂（盟友察觉具优势，可用反应赋予攻击优势）、独角兽精魂（施展法术位治疗法术时为光环内选定生物恢复德鲁伊等级点生命）。移动精魂（附赠动作）需在地图上手动处理。",
+ "resources": [
+  {
+   "id": "spirit-totem",
+   "name": "精魂图腾",
+   "formula": 1,
+   "recovery": "short"
+  }
+ ],
+ "actions": [
+  {
+   "id": "use",
+   "name": "精魂图腾",
+   "activation": "bonus",
+   "cost": [
+    {
+     "resource": "spirit-totem"
+    }
+   ],
+   "root": [
+    {
+     "kind": "choose",
+     "prompt": "精魂图腾：选择召唤的精魂类别",
+     "options": [
+      {
+       "label": "熊精魂（临时生命与力量优势）",
+       "do": [
+        {
+         "kind": "applyEffect",
+         "to": "self",
+         "template": "熊精魂"
+        },
+        {
+         "kind": "chooseTargets",
+         "prompt": "选择精魂光环内获得临时生命值的生物",
+         "within": {
+          "ft": 30
+         },
+         "do": [
+          {
+           "kind": "tempHp",
+           "amount": "5 + self.levelOf('德鲁伊')",
+           "to": "target"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "鹰精魂（察觉优势与反应赋优）",
+       "do": [
+        {
+         "kind": "applyEffect",
+         "to": "self",
+         "template": "鹰精魂"
+        }
+       ]
+      },
+      {
+       "label": "独角兽精魂（法术协同治疗）",
+       "do": [
+        {
+         "kind": "applyEffect",
+         "to": "self",
+         "template": "独角兽精魂"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "熊精魂": {
+   "text": "半径 30 尺光环内，你和盟友进行的力量检定和力量豁免具有优势。",
+   "duration": {
+    "minutes": 1,
+    "endsOn": [
+     {
+      "event": "effectApplied",
+      "when": "self.has('失能')"
+     }
+    ]
+   },
+   "aura": {
+    "id": "bear-spirit-aura",
+    "radius": 30,
+    "affects": "allies",
+    "includeSelf": true,
+    "requires": "!self.has('失能')",
+    "grant": {
+     "rollMods": [
+      {
+       "on": {
+        "kind": [
+         "check",
+         "save"
+        ],
+        "ability": "str"
+       },
+       "who": "bearer",
+       "op": "adv",
+       "label": "熊精魂：力量检定与豁免优势"
+      }
+     ]
+    }
+   }
+  },
+  "鹰精魂": {
+   "text": "半径 30 尺光环内，你和盟友进行的感知（察觉）检定具有优势。当生物对光环内目标发动攻击检定时，可用反应令该攻击具有优势。",
+   "duration": {
+    "minutes": 1,
+    "endsOn": [
+     {
+      "event": "effectApplied",
+      "when": "self.has('失能')"
+     }
+    ]
+   },
+   "aura": {
+    "id": "hawk-spirit-aura",
+    "radius": 30,
+    "affects": "allies",
+    "includeSelf": true,
+    "requires": "!self.has('失能')",
+    "grant": {
+     "rollMods": [
+      {
+       "on": {
+        "kind": "check",
+        "skill": "察觉"
+       },
+       "who": "bearer",
+       "op": "adv",
+       "label": "鹰精魂：察觉检定优势"
+      }
+     ]
+    }
+   },
+   "triggers": [
+    {
+     "id": "hawk-reaction",
+     "label": "鹰精魂：赋予攻击优势",
+     "on": "d20Rolled",
+     "role": "any",
+     "window": "before",
+     "optional": true,
+     "cost": [
+      {
+       "economy": "reaction"
+      }
+     ],
+     "when": "roll.kind == 'attack' && dist(self, combatant(roll.target)) <= 30",
+     "modify": [
+      {
+       "op": "reroll",
+       "die": "d20",
+       "keep": "higher"
+      }
+     ]
+    }
+   ]
+  },
+  "独角兽精魂": {
+   "text": "半径 30 尺光环内，侦测生物的属性检定具有优势。施法者以法术位施展恢复生命值的法术时，光环内选定生物同时恢复等同于德鲁伊等级的生命值。",
+   "duration": {
+    "minutes": 1,
+    "endsOn": [
+     {
+      "event": "effectApplied",
+      "when": "self.has('失能')"
+     }
+    ]
+   },
+   "triggers": [
+    {
+     "id": "unicorn-heal",
+     "label": "独角兽精魂：协同治疗",
+     "on": "spellCast",
+     "role": "actor",
+     "window": "after",
+     "when": "action.kind == 'spell' && slot.level >= 1 && ask('这个法术为生物恢复了生命值吗？')",
+     "do": [
+      {
+       "kind": "chooseTargets",
+       "prompt": "选择精魂光环内获得协同治疗的生物",
+       "within": {
+        "ft": 30
+       },
+       "do": [
+        {
+         "kind": "heal",
+         "amount": "self.levelOf('德鲁伊')",
+         "to": "target"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,79 @@
+{
+ "name": "原力法阵",
+ "automation": "partial",
+ "text": "专注至多 10 分钟。以你为中心 30 尺灵光内的你与盟友：对抗法术或其他魔法效应进行的豁免检定具有优势；对抗成功受半数伤害的法术或魔法效应且豁免成功时，完全不受伤害（法术类豁免与伤害自动免除，其他魔法效应需弹窗确认）。",
+ "actions": [
+  {
+   "id": "cast",
+   "name": "原力法阵",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 5
+     }
+    }
+   ],
+   "concentration": {
+    "minutes": 10
+   },
+   "targeting": {
+    "type": "self"
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "原力法阵"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "原力法阵": {
+   "tags": [
+    "magical",
+    "spell"
+   ],
+   "aura": {
+    "id": "circle-of-power",
+    "radius": 30,
+    "affects": "allies",
+    "includeSelf": true,
+    "grant": {
+     "rollMods": [
+      {
+       "on": {
+        "kind": "save"
+       },
+       "who": "bearer",
+       "when": "action.kind == 'spell' || ask('这次豁免是为了对抗法术或其他魔法效应吗？')",
+       "op": "adv",
+       "label": "原力法阵：对抗法术与魔法效应的豁免优势"
+      }
+     ],
+     "triggers": [
+      {
+       "id": "warded-save",
+       "label": "原力法阵：豁免成功则不受伤害",
+       "on": "damageIncoming",
+       "role": "target",
+       "window": "before",
+       "when": "(action.kind == 'spell' || ask('这是法术或其他魔法效应造成的伤害吗？')) && damage.save != '' && damage.saved",
+       "modify": [
+        {
+         "op": "cancel"
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "text": "30 尺灵光内的你与盟友：对抗法术或其他魔法效应的豁免具有优势；对抗「成功只受半数伤害」的法术或魔法效应且豁免成功时，完全不受伤害。"
+  }
+ }
+}

@@ -1,0 +1,177 @@
+{
+ "name": "变巨/缩小术",
+ "automation": "partial",
+ "text": "使 30 尺内可见的一个生物或物件大小发生改变（专注至多 1 分钟）。非自愿生物可进行体质豁免对抗。变巨：体型增大一级，力量检定与豁免具有优势，使用变巨的武器或徒手打击命中时额外造成 1d4 伤害。缩小：体型缩小一级，力量检定与豁免具有劣势，使用缩小的武器或徒手打击命中时伤害减少 1d4（降至 1 以下时需手动保底为 1）。体型变化及针对物件需手动处理。",
+ "actions": [
+  {
+   "id": "cast",
+   "name": "变巨/缩小术",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 2
+     }
+    }
+   ],
+   "concentration": {
+    "minutes": 1
+   },
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 30,
+    "filter": "canSee(self, target)"
+   },
+   "root": [
+    {
+     "kind": "choose",
+     "prompt": "变巨/缩小术：选择效应",
+     "options": [
+      {
+       "label": "变巨",
+       "do": [
+        {
+         "kind": "if",
+         "when": "ask('目标是非自愿生物吗？')",
+         "then": [
+          {
+           "kind": "save",
+           "ability": "con",
+           "dc": "self.spell.dc",
+           "onFail": [
+            {
+             "kind": "applyEffect",
+             "template": "变巨",
+             "to": "target"
+            }
+           ]
+          }
+         ],
+         "else": [
+          {
+           "kind": "applyEffect",
+           "template": "变巨",
+           "to": "target"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "label": "缩小",
+       "do": [
+        {
+         "kind": "if",
+         "when": "ask('目标是非自愿生物吗？')",
+         "then": [
+          {
+           "kind": "save",
+           "ability": "con",
+           "dc": "self.spell.dc",
+           "onFail": [
+            {
+             "kind": "applyEffect",
+             "template": "缩小",
+             "to": "target"
+            }
+           ]
+          }
+         ],
+         "else": [
+          {
+           "kind": "applyEffect",
+           "template": "缩小",
+           "to": "target"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "变巨": {
+   "tags": [
+    "magical",
+    "spell"
+   ],
+   "rollMods": [
+    {
+     "on": {
+      "kind": [
+       "check",
+       "save"
+      ],
+      "ability": "str"
+     },
+     "who": "bearer",
+     "op": "adv",
+     "label": "变巨：力量检定与豁免优势"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "enlarge-dmg",
+     "label": "变巨：额外武器伤害",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "when": "attack.weapon || attack.unarmed",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "1d4",
+       "type": "attack.damageType"
+      }
+     ]
+    }
+   ],
+   "text": "体型增大一级；力量检定和力量豁免具有优势；使用变巨武器或徒手打击命中时额外造成 1d4 伤害。"
+  },
+  "缩小": {
+   "tags": [
+    "magical",
+    "spell"
+   ],
+   "rollMods": [
+    {
+     "on": {
+      "kind": [
+       "check",
+       "save"
+      ],
+      "ability": "str"
+     },
+     "who": "bearer",
+     "op": "disadv",
+     "label": "缩小：力量检定与豁免劣势"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "shrink-dmg",
+     "label": "缩小：减少武器伤害",
+     "on": "damageIncoming",
+     "role": "actor",
+     "window": "before",
+     "when": "attack.weapon || attack.unarmed",
+     "modify": [
+      {
+       "op": "reduceDamage",
+       "value": "1d4"
+      }
+     ]
+    }
+   ],
+   "text": "体型缩小一级；力量检定和力量豁免具有劣势；使用缩小的武器或徒手打击命中时伤害减少 1d4（降至 1 以下需手动保底为 1）。"
+  }
+ }
+}

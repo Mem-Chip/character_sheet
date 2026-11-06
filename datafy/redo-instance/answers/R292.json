@@ -1,0 +1,83 @@
+{
+ "name": "强令对决",
+ "automation": "partial",
+ "text": "目标感知豁免失败陷入强令对决：对施法者之外的目标进行攻击检定时具有劣势。目标不能自主移动到距离施法者超过 30 尺（需在地图上手动限制）。施法者攻击其他生物、施法者在距目标超过 30 尺处结束回合、或施法者盟友伤害目标时法术提前终止。",
+ "actions": [
+  {
+   "id": "cast",
+   "name": "强令对决",
+   "activation": "bonus",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 1
+     }
+    }
+   ],
+   "concentration": {
+    "minutes": 1
+   },
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 30,
+    "filter": "target.id != self.id && canSee(self, target)"
+   },
+   "root": [
+    {
+     "kind": "save",
+     "ability": "wis",
+     "dc": "self.spell.dc",
+     "onFail": [
+      {
+       "kind": "applyEffect",
+       "template": "强令对决",
+       "to": "target"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "强令对决": {
+   "tags": [
+    "magical",
+    "spell"
+   ],
+   "duration": {
+    "minutes": 1,
+    "endsOn": [
+     {
+      "event": "d20Rolled",
+      "when": "event.roller == source.id && event.kind == 'attack' && event.target != self.id"
+     },
+     {
+      "event": "turnEnded",
+      "when": "event.id == source.id && dist(self, source) > 30"
+     },
+     {
+      "event": "damageApplied",
+      "when": "event.target == self.id && event.source != source.id && ask('伤害来源是否为施法者的盟友？')"
+     }
+    ]
+   },
+   "rollMods": [
+    {
+     "on": {
+      "kind": "attack"
+     },
+     "who": "bearer",
+     "when": "target != null && source != null && target.id != source.id",
+     "op": "disadv",
+     "label": "强令对决：攻击决斗者之外的目标具有劣势"
+    }
+   ],
+   "text": "对决斗者以外的目标发动攻击检定具有劣势；不能自主移动到距离决斗者超过 30 尺处。"
+  }
+ }
+}

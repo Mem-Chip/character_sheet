@@ -1,0 +1,71 @@
+{
+  "name": "战术转进",
+  "automation": "full",
+  "text": "每当你使用附赠动作进行回气时，你可以移动至多相当于你速度一半的距离，且这次移动不会引发借机攻击。已自动化：使用「回气」动作后自动触发获得半速移动预算，并施加「战术转进」效应（接下来一次移动不引发借机攻击，移动后或回合结束失效）；亦可通过动作按钮手动使用。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "战术转进",
+      "activation": "free",
+      "requires": "turn.isMine && !self.hasEffect('战术转进')",
+      "root": [
+        {
+          "kind": "economy",
+          "move": "floor(self.speed / 2)"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "战术转进"
+        },
+        {
+          "kind": "note",
+          "text": "战术转进：你可以移动至多一半速度，这次移动不引发借机攻击（请一次性拖完）。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "战术转进": {
+      "text": "回气之后的这次移动不引发借机攻击；动过一次或你的回合结束就失效。",
+      "flags": {
+        "cannot": [
+          "provoke"
+        ]
+      },
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 0
+        },
+        "endsOn": [
+          {
+            "event": "moved",
+            "when": "event.id == self.id"
+          }
+        ]
+      }
+    }
+  },
+  "triggers": [
+    {
+      "id": "second-wind-move",
+      "label": "战术转进",
+      "on": "actionDone",
+      "role": "actor",
+      "when": "action.name == '回气'",
+      "do": [
+        {
+          "kind": "economy",
+          "move": "floor(self.speed / 2)"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "战术转进"
+        }
+      ]
+    }
+  ]
+}

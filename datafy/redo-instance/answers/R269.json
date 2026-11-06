@@ -1,0 +1,66 @@
+{
+ "name": "隐形药水",
+ "automation": "full",
+ "text": "饮用后获得隐形状态，持续 1 小时。若进行攻击检定、造成伤害或施展法术，效应提前结束。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "饮用隐形药水",
+   "activation": "bonus",
+   "cost": [
+    {
+     "resource": "物品:隐形药水"
+    }
+   ],
+   "root": [
+    {
+     "kind": "applyEffect",
+     "template": "隐形",
+     "to": "self"
+    }
+   ]
+  },
+  {
+   "id": "dismiss",
+   "name": "解除隐形",
+   "activation": "free",
+   "root": [
+    {
+     "kind": "removeEffect",
+     "match": {
+      "name": "隐形"
+     },
+     "from": "self"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "隐形": {
+   "tags": [
+    "magical"
+   ],
+   "duration": {
+    "hours": 1,
+    "endsOn": [
+     {
+      "event": "d20Rolled",
+      "when": "event.kind == 'attack' && event.roller == self.id"
+     },
+     {
+      "event": "spellCast",
+      "when": "event.actor == self.id"
+     },
+     {
+      "event": "damageTaken",
+      "when": "action != null && action.by.id == self.id"
+     }
+    ]
+   },
+   "implies": [
+    "XPHB:condition:隐形"
+   ],
+   "text": "获得隐形状态，持续 1 小时。若进行攻击检定、造成伤害或施展法术，效应提前结束。"
+  }
+ }
+}

@@ -1,0 +1,62 @@
+{
+  "name": "返本还元",
+  "automation": "full",
+  "text": "在每次自己的回合结束时，可以移除你身上的魅惑、恐慌或中毒状态之一。（不吃不喝免除力竭等级属于探索规则）。",
+  "triggers": [
+    {
+      "id": "clear",
+      "label": "返本还元：移除魅惑、恐慌或中毒",
+      "on": "turnEnded",
+      "role": "actor",
+      "optional": true,
+      "when": "self.has('魅惑') || self.has('恐慌') || self.has('中毒')",
+      "do": [
+        {
+          "kind": "choose",
+          "prompt": "返本还元：移除哪个状态？",
+          "options": [
+            {
+              "label": "移除魅惑",
+              "when": "self.has('魅惑')",
+              "do": [
+                {
+                  "kind": "removeEffect",
+                  "match": {
+                    "key": "XPHB:condition:魅惑"
+                  },
+                  "from": "self"
+                }
+              ]
+            },
+            {
+              "label": "移除恐慌",
+              "when": "self.has('恐慌')",
+              "do": [
+                {
+                  "kind": "removeEffect",
+                  "match": {
+                    "key": "XPHB:condition:恐慌"
+                  },
+                  "from": "self"
+                }
+              ]
+            },
+            {
+              "label": "移除中毒",
+              "when": "self.has('中毒')",
+              "do": [
+                {
+                  "kind": "removeEffect",
+                  "match": {
+                    "key": "XPHB:condition:中毒"
+                  },
+                  "from": "self"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

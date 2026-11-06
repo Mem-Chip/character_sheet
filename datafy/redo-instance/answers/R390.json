@@ -1,0 +1,46 @@
+{
+  "name": "无敌攻势之恩惠",
+  "automation": "partial",
+  "text": "无阻打击（攻击检定掷出天然 20 时，额外造成等于所选属性值的伤害，类型与攻击相同且无视抗性）已自动化。摧坚破甲（造成的钝击、挥砍、穿刺伤害始终无视抗性）对常规攻击的被动无视抗性引擎尚不支持全局修正，需人工处理。",
+  "triggers": [
+    {
+      "id": "unstoppable-crit",
+      "label": "无敌攻势之恩惠：无阻打击",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "optional": true,
+      "when": "roll.natural == 20",
+      "do": [
+        {
+          "kind": "choose",
+          "prompt": "无阻打击：额外伤害取哪项属性的属性值？",
+          "options": [
+            {
+              "label": "力量",
+              "do": [
+                {
+                  "kind": "addDamage",
+                  "dice": "score.str",
+                  "type": "attack.damageType",
+                  "ignoreResist": true
+                }
+              ]
+            },
+            {
+              "label": "敏捷",
+              "do": [
+                {
+                  "kind": "addDamage",
+                  "dice": "score.dex",
+                  "type": "attack.damageType",
+                  "ignoreResist": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

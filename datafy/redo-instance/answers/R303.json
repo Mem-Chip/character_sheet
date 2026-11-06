@@ -1,0 +1,112 @@
+{
+ "name": "月光涌泉",
+ "automation": "partial",
+ "text": "专注至多 10 分钟。散发 20 尺明亮与 20 尺微光光照（光照需手动处理）。获得光耀伤害抗性，近战攻击命中时额外造成 2d6 点光耀伤害。受到 60 尺内可见生物伤害后，可以反应迫使其进行体质豁免，失败则目盲至你的下个回合结束。",
+ "actions": [
+  {
+   "id": "cast",
+   "name": "月光涌泉",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 4
+     }
+    }
+   ],
+   "concentration": {
+    "minutes": 10
+   },
+   "targeting": {
+    "type": "self"
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "template": "月光涌泉",
+     "to": "self"
+    }
+   ]
+  },
+  {
+   "id": "use",
+   "name": "月光涌泉：致盲反击",
+   "activation": "reaction",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "requires": "self.hasEffect('月光涌泉')",
+   "trigger": {
+    "on": "damageTaken",
+    "role": "target",
+    "window": "after",
+    "aim": "actor",
+    "when": "damage.amount > 0 && attacker != null && attacker.id != self.id && within(self, attacker, 60) && canSee(self, attacker)"
+   },
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 60
+   },
+   "root": [
+    {
+     "kind": "save",
+     "ability": "con",
+     "dc": "self.spell.dc",
+     "onFail": [
+      {
+       "kind": "applyEffect",
+       "template": "XPHB:condition:目盲",
+       "to": "target",
+       "duration": {
+        "until": {
+         "at": "turnEnd",
+         "of": "source",
+         "nth": 1
+        }
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "月光涌泉": {
+   "tags": [
+    "magical",
+    "spell"
+   ],
+   "statics": [
+    {
+     "kind": "resist",
+     "values": [
+      "光耀"
+     ]
+    }
+   ],
+   "triggers": [
+    {
+     "id": "extra-damage",
+     "label": "月光涌泉：额外光耀伤害",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "when": "attack.melee",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "2d6",
+       "type": "光耀"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

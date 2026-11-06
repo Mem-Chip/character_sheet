@@ -1,0 +1,154 @@
+{
+  "name": "渗透劲",
+  "automation": "partial",
+  "text": "以徒手打击命中时可消耗 4 点功力打入暗劲（持续天数为武僧等级，需手动结束）。在同一时间只能有一名生物处于此效应中。你可以用一个动作，或在攻击动作中消耗一次攻击结束暗劲：目标进行体质豁免，失败受 10d12 力场伤害，成功受半；也可以无需动作直接结束暗劲不造成伤害。",
+  "triggers": [
+    {
+      "id": "strike",
+      "label": "渗透劲：打入暗劲",
+      "on": "attackHit",
+      "role": "actor",
+      "optional": true,
+      "when": "attack.unarmed",
+      "cost": [
+        {
+          "resource": "功力",
+          "n": 4
+        }
+      ],
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "target",
+          "template": "暗劲"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "渗透劲：结束暗劲",
+      "activation": "action",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "filter": "target.hasEffect('暗劲')"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": "8 + self.pb + max(self.mod.dex, self.mod.wis)",
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "ki",
+              "dice": "10d12",
+              "type": "力场"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "ki",
+              "scale": 0.5
+            }
+          ]
+        },
+        {
+          "kind": "removeEffect",
+          "match": {
+            "name": "暗劲"
+          },
+          "from": "target"
+        }
+      ]
+    },
+    {
+      "id": "attack",
+      "name": "渗透劲：以一次攻击结束暗劲",
+      "activation": "none",
+      "cost": [
+        {
+          "economy": "attack"
+        }
+      ],
+      "requires": "turn.isMine",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "filter": "target.hasEffect('暗劲')"
+      },
+      "text": "在自己的回合执行攻击动作时，可以将其中一次攻击替换为此动作。若如此做，你和目标必须处于同一个存在位面（由人确认）。",
+      "root": [
+        {
+          "kind": "if",
+          "when": "ask('你和目标是否处于同一个存在位面？')",
+          "then": [
+            {
+              "kind": "save",
+              "ability": "con",
+              "dc": "8 + self.pb + max(self.mod.dex, self.mod.wis)",
+              "onFail": [
+                {
+                  "kind": "damage",
+                  "id": "ki",
+                  "dice": "10d12",
+                  "type": "力场"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "kind": "damage",
+                  "ref": "ki",
+                  "scale": 0.5
+                }
+              ]
+            },
+            {
+              "kind": "removeEffect",
+              "match": {
+                "name": "暗劲"
+              },
+              "from": "target"
+            }
+          ],
+          "else": [
+            {
+              "kind": "note",
+              "text": "你和目标不在同一个存在位面，不能用攻击结束暗劲"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "release",
+      "name": "渗透劲：结束暗劲（不造成伤害）",
+      "activation": "free",
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "filter": "target.hasEffect('暗劲')"
+      },
+      "root": [
+        {
+          "kind": "removeEffect",
+          "match": {
+            "name": "暗劲"
+          },
+          "from": "target"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "暗劲": {
+      "text": "在你使用动作结束之前是无害的。同一时间只能有一名生物处于此效应中。持续时间为武僧等级的天数（手动结束）。",
+      "duration": {
+        "manual": true
+      }
+    }
+  }
+}

@@ -1,0 +1,81 @@
+{
+ "name": "月光祝福",
+ "automation": "full",
+ "text": "你总是准备着法术月华之光。施展月华之光时可消耗一次本特性使用权进行调整：自身散发 5 尺微光光照（光照由人工处理）；在此期间，每当有生物未能通过该月华之光的豁免，可选 60 尺内一名可见生物恢复 2d4 生命值。完成长休恢复（1 次）。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "月光祝福：调整月华之光",
+   "activation": "free",
+   "cost": [
+    {
+     "resource": "blessing-of-moonlight"
+    }
+   ],
+   "trigger": {
+    "on": "spellCast",
+    "role": "actor",
+    "window": "before",
+    "when": "action.name == '月华之光' || action.key == 'XPHB:spell:月华之光'"
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "template": "月光祝福",
+     "to": "self"
+    }
+   ]
+  },
+  {
+   "id": "heal",
+   "name": "月光祝福：月华疗愈",
+   "activation": "none",
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 60,
+    "filter": "canSee(self, target)"
+   },
+   "root": [
+    {
+     "kind": "heal",
+     "amount": "2d4"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "月光祝福": {
+   "text": "身体散发 5 尺微光光照；每当有生物未能通过你的月华之光豁免，可选择 60 尺内一名可见生物恢复 2d4 生命值。",
+   "triggers": [
+    {
+     "id": "moonlight-heal",
+     "label": "月光祝福：月华疗愈",
+     "on": "saveFailed",
+     "role": "actor",
+     "when": "action.name == '月华之光' || action.key == 'XPHB:spell:月华之光'",
+     "do": [
+      {
+       "kind": "chooseTargets",
+       "prompt": "月光祝福：选择 60 尺内一名生物恢复 2d4 生命值",
+       "from": "all",
+       "within": {
+        "ft": 60,
+        "of": "self"
+       },
+       "count": 1,
+       "min": 0,
+       "do": [
+        {
+         "kind": "heal",
+         "amount": "2d4",
+         "to": "target"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

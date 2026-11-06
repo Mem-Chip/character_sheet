@@ -1,0 +1,71 @@
+{
+  "name": "时械矩阵",
+  "automation": "partial",
+  "text": "魔法动作：召唤精魂覆盖以你为源点的 30 尺立方，同时产生三种效应：治愈（合计至多 100 生命值，随意分配）、修复（范围内损坏的物件立刻修复）、破法（范围内任意生物或物件承受的六环或以下法术结束）。每次长休一次；也可以消耗 7 点术法点（无需动作）恢复使用权。治愈通过 allocate 节点自动分配与结算扣减；修复物件与解除六环及以下法术需人工处理。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "时械矩阵",
+      "activation": "action",
+      "tags": [
+        "magical"
+      ],
+      "cost": [
+        {
+          "resource": "clockwork-cavalcade"
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "cube",
+          "size": 30
+        }
+      },
+      "root": [
+        {
+          "kind": "allocate",
+          "prompt": "时械矩阵：分配治愈生命值",
+          "total": 100,
+          "from": "all",
+          "within": {
+            "ft": 30
+          },
+          "maxEach": "target.hpMax - target.hp",
+          "var": "n",
+          "do": [
+            {
+              "kind": "heal",
+              "amount": "vars.n",
+              "to": "target"
+            }
+          ]
+        },
+        {
+          "kind": "note",
+          "text": "时械矩阵：范围内损坏的物件立刻修复；范围内你选择的生物或物件承受的六环或以下法术结束（请人工处理）。"
+        }
+      ]
+    },
+    {
+      "id": "restore",
+      "name": "时械矩阵：恢复使用权（7 术法点）",
+      "activation": "free",
+      "cost": [
+        {
+          "resource": "sorcery_points",
+          "n": 7
+        }
+      ],
+      "requires": "self.resource('clockwork-cavalcade') < 1",
+      "root": [
+        {
+          "kind": "resource",
+          "id": "clockwork-cavalcade",
+          "delta": 1
+        }
+      ]
+    }
+  ]
+}

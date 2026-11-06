@@ -1,0 +1,44 @@
+{
+ "name": "癫狂巫咒",
+ "automation": "full",
+ "text": "以附赠动作对 30 尺内可见的受咒目标造成等同于魅力调整值（最低 1 点）的心灵伤害，并对其周围 5 尺内由你选择的生物造成等量心灵伤害。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "癫狂巫咒",
+   "activation": "bonus",
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 30,
+    "filter": "canSee(self, target) && (target.hasEffect('脆弱诅咒') || target.hasEffect('咒剑诅咒') || ask('该生物处于你的诅咒影响下吗？'))"
+   },
+   "root": [
+    {
+     "kind": "damage",
+     "dice": "max(1, self.mod.cha)",
+     "type": "心灵"
+    },
+    {
+     "kind": "chooseTargets",
+     "prompt": "选择受咒目标周围 5 尺内受到波及心灵伤害的生物",
+     "from": "all",
+     "within": {
+      "ft": 5,
+      "of": "target"
+     },
+     "exclude": [
+      "target"
+     ],
+     "do": [
+      {
+       "kind": "damage",
+       "dice": "max(1, self.mod.cha)",
+       "type": "心灵"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

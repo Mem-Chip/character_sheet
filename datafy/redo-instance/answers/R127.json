@@ -1,0 +1,56 @@
+{
+ "name": "引导神力：秩序之令",
+ "automation": "partial",
+ "text": "以一个动作消耗一次引导神力：展示圣徽，30尺内你指定的每个能看到或听到你的生物必须进行一次感知豁免。豁免失败将被你魅惑，直到你下个回合结束或受到伤害为止。当生物豁免失败时，你还可以指定其扔掉手中所持物（丢弃物品需人工处理）。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "引导神力：秩序之令",
+   "activation": "action",
+   "cost": [
+    {
+     "resource": "引导神力"
+    }
+   ],
+   "targeting": {
+    "type": "creature",
+    "range": 30,
+    "filter": "target.id != self.id"
+   },
+   "root": [
+    {
+     "kind": "save",
+     "ability": "wis",
+     "dc": "self.spell.dc",
+     "onFail": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "秩序之令：魅惑",
+       "duration": {
+        "until": {
+         "at": "turnEnd",
+         "of": "source",
+         "nth": 1
+        },
+        "endsOn": [
+         {
+          "event": "damageTaken"
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "秩序之令：魅惑": {
+   "text": "被秩序领域牧师魅惑。受到伤害或施加者的下个回合结束时提前结束。",
+   "implies": [
+    "XPHB:condition:魅惑"
+   ]
+  }
+ }
+}

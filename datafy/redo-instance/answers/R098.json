@@ -1,0 +1,62 @@
+{
+ "name": "袭杀恐惧",
+ "automation": "full",
+ "text": "诡诈打击选项【震怖】：对造成偷袭伤害的目标花费 1d6 偷袭伤害，目标须通过感知豁免（DC = 8 + 熟练加值 + 敏捷调整值），否则陷入恐慌 1 分钟。你对其进行的攻击检定具有优势。目标每回合结束时可重复感知豁免。",
+ "triggers": [
+  {
+   "id": "dread",
+   "label": "诡诈打击：震怖",
+   "on": "attackHit",
+   "role": "actor",
+   "window": "before",
+   "optional": true,
+   "when": "attack.finesse || attack.ranged",
+   "do": [
+    {
+     "kind": "trimDamage",
+     "from": "偷袭",
+     "dice": "1"
+    },
+    {
+     "kind": "save",
+     "ability": "wis",
+     "dc": "8 + self.pb + self.mod.dex",
+     "onFail": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "震怖",
+       "duration": {
+        "minutes": 1,
+        "saveEnds": {
+         "ability": "wis",
+         "dc": "8 + source.pb + source.mod.dex",
+         "at": "turnEnd"
+        }
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "震怖": {
+   "implies": [
+    "XPHB:condition:恐慌"
+   ],
+   "text": "陷入恐慌状态，且来源游荡者对其进行的攻击检定具有优势。目标在其每个回合结束时可重复感知豁免。",
+   "rollMods": [
+    {
+     "on": {
+      "kind": "attack"
+     },
+     "who": "against",
+     "when": "attacker != null && attacker.id == source.id",
+     "op": "adv",
+     "label": "震怖：对目标攻击具有优势"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,153 @@
+{
+ "name": "奥术偏斜",
+ "automation": "full",
+ "text": "当你被一次攻击击中或豁免失败时，可以用反应使对抗该次攻击的 AC+2（若使攻击检定低于新 AC 则自动失手），或在该次豁免检定中获得 +4 加值。使用后直到你下个回合结束不能施展戏法以外的法术。14 级起（偏斜罩幕），使用此特性时可令 60 尺内至多 3 个可见目标各受法师等级一半的力场伤害。",
+ "triggers": [
+  {
+   "id": "deflect-attack",
+   "label": "奥术偏斜：对抗攻击（AC+2）",
+   "on": "attackHit",
+   "role": "target",
+   "window": "before",
+   "optional": true,
+   "cost": [
+    {
+     "economy": "reaction"
+    }
+   ],
+   "do": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "奥术偏斜：护盾"
+    },
+    {
+     "kind": "if",
+     "when": "!roll.crit && roll.total < self.ac + 2",
+     "then": [
+      {
+       "kind": "modify",
+       "modify": [
+        {
+         "op": "cancel"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "奥术偏斜：法术限制"
+    },
+    {
+     "kind": "if",
+     "when": "self.levelOf('法师') >= 14",
+     "then": [
+      {
+       "kind": "chooseTargets",
+       "prompt": "偏斜罩幕：选择至多 3 个 60 尺内可见目标受到力场伤害",
+       "count": 3,
+       "min": 0,
+       "within": {
+        "ft": 60
+       },
+       "filter": "canSee(self, target)",
+       "exclude": [
+        "self"
+       ],
+       "do": [
+        {
+         "kind": "damage",
+         "dice": "floor(self.levelOf('法师') / 2)",
+         "type": "力场"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "deflect-save",
+   "label": "奥术偏斜：豁免检定（+4）",
+   "on": "d20Rolled",
+   "role": "actor",
+   "window": "before",
+   "optional": true,
+   "cost": [
+    {
+     "economy": "reaction"
+    }
+   ],
+   "when": "roll.kind == 'save' && roll.failing",
+   "modify": [
+    {
+     "op": "addToRoll",
+     "value": 4
+    }
+   ],
+   "do": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "奥术偏斜：法术限制"
+    },
+    {
+     "kind": "if",
+     "when": "self.levelOf('法师') >= 14",
+     "then": [
+      {
+       "kind": "chooseTargets",
+       "prompt": "偏斜罩幕：选择至多 3 个 60 尺内可见目标受到力场伤害",
+       "count": 3,
+       "min": 0,
+       "within": {
+        "ft": 60
+       },
+       "filter": "canSee(self, target)",
+       "exclude": [
+        "self"
+       ],
+       "do": [
+        {
+         "kind": "damage",
+         "dice": "floor(self.levelOf('法师') / 2)",
+         "type": "力场"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "奥术偏斜：护盾": {
+   "text": "对抗这次攻击的 AC 获得 +2 加值。",
+   "statics": [
+    {
+     "kind": "ac",
+     "bonus": 2
+    }
+   ],
+   "duration": {
+    "endsOn": [
+     {
+      "event": "actionDone"
+     }
+    ]
+   }
+  },
+  "奥术偏斜：法术限制": {
+   "text": "直到你的下个回合结束为止，你都不能施展戏法之外的法术。",
+   "duration": {
+    "until": {
+     "at": "turnEnd",
+     "of": "bearer",
+     "nth": 2
+    }
+   }
+  }
+ }
+}

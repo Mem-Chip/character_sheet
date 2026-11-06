@@ -1,0 +1,48 @@
+{
+ "name": "暴风骤岚之恩惠",
+ "automation": "partial",
+ "text": "【暴风之眼】对闪电与雷鸣伤害具有抗性；浴血期间对闪电与雷鸣伤害免疫。【风暴之力】生物对抗你造成闪电或雷鸣伤害的法术时，豁免检定具有劣势。",
+ "triggers": [
+  {
+   "id": "storm-eye-resist",
+   "label": "暴风之眼：闪电与雷鸣抗性",
+   "on": "damageIncoming",
+   "role": "target",
+   "window": "before",
+   "when": "self.hp > floor(self.hpMax / 2) && (damage.type == '闪电' || damage.type == '雷鸣')",
+   "modify": [
+    {
+     "op": "halveDamage"
+    }
+   ]
+  },
+  {
+   "id": "storm-eye-immunity",
+   "label": "暴风之眼：浴血免疫闪电与雷鸣",
+   "on": "damageIncoming",
+   "role": "target",
+   "window": "before",
+   "when": "self.hp <= floor(self.hpMax / 2) && (damage.type == '闪电' || damage.type == '雷鸣')",
+   "modify": [
+    {
+     "op": "cancel"
+    }
+   ]
+  },
+  {
+   "id": "storm-power",
+   "label": "风暴之力：对抗电鸣法术豁免劣势",
+   "on": "d20Rolled",
+   "role": "any",
+   "window": "before",
+   "when": "roll.kind == 'save' && !roll.disadv && action.kind == 'spell' && action.by == self && (action.damage.type == '闪电' || action.damage.type == '雷鸣' || ask('该法术是否造成闪电或雷鸣伤害？'))",
+   "modify": [
+    {
+     "op": "reroll",
+     "die": "d20",
+     "keep": "lower"
+    }
+   ]
+  }
+ ]
+}

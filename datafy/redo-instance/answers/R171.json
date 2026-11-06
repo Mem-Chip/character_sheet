@@ -1,0 +1,39 @@
+{
+ "name": "天界韧性",
+ "automation": "full",
+ "text": "每当你完成一次长休或短休后，你获得等同于你的魔契师等级 + 你的魅力调整值的临时生命值。此外，完成休息时你还可以选择最多五个可见生物，各自获得等同于你的魔契师等级一半 + 你的魅力调整值的临时生命值。",
+ "triggers": [
+  {
+   "id": "celestial-resilience",
+   "label": "天界韧性：临时生命值",
+   "on": "restCompleted",
+   "role": "actor",
+   "window": "after",
+   "do": [
+    {
+     "kind": "tempHp",
+     "amount": "self.levelOf('魔契师') + self.mod.cha",
+     "to": "self"
+    },
+    {
+     "kind": "chooseTargets",
+     "prompt": "天界韧性：选择最多 5 名可见生物获得临时生命值",
+     "count": 5,
+     "min": 0,
+     "from": "allies",
+     "filter": "canSee(self, target)",
+     "exclude": [
+      "self"
+     ],
+     "do": [
+      {
+       "kind": "tempHp",
+       "amount": "floor(self.levelOf('魔契师') / 2) + self.mod.cha",
+       "to": "target"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

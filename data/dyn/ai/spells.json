@@ -295,8 +295,8 @@
   },
   "XPHB:spell:黯冰狱铠": {
    "name": "黯冰狱铠",
-   "automation": "partial",
-   "text": "施法获得 5×环阶 点临时生命值；具有临时生命值时受到近战攻击检定命中反弹等同于 5×环阶 的寒冷伤害（反弹伤害需手动处理）；临时生命值耗尽时法术结束。",
+   "automation": "full",
+   "text": "施法获得 5×环阶 点临时生命值；具有临时生命值时受到近战攻击检定命中反弹等同于 5×环阶 的寒冷伤害；临时生命值耗尽时法术结束。",
    "actions": [
     {
      "id": "cast",
@@ -325,7 +325,10 @@
       {
        "kind": "applyEffect",
        "to": "self",
-       "template": "黯冰狱铠"
+       "template": "黯冰狱铠",
+       "state": {
+        "damage": "5 * slot.level"
+       }
       }
      ]
     }
@@ -355,8 +358,10 @@
        "when": "attack.melee && self.tempHp > 0",
        "do": [
         {
-         "kind": "note",
-         "text": "黯冰狱铠：命中的近战攻击者受到寒冷伤害（数值等于 5×环阶）"
+         "kind": "damage",
+         "dice": "effect.state.damage",
+         "type": "寒冷",
+         "to": "attacker"
         }
        ]
       }
@@ -793,7 +798,7 @@
   "XPHB:spell:庇护术": {
    "name": "庇护术",
    "automation": "partial",
-   "text": "受守护生物被指定为攻击或伤害性法术目标时，攻击者需进行感知豁免，失败则必须改选目标或失去该次攻击/法术（手动处理）；受保护生物发动攻击、施展法术或造成伤害时法术终止。",
+   "text": "受守护生物被指定为攻击时，攻击者需进行感知豁免，失败则必须改选目标或失去该次攻击；被指定为伤害性法术目标时需手动处理。受保护生物发动攻击、施展法术或造成伤害时法术终止。",
    "actions": [
     {
      "id": "cast",
@@ -847,7 +852,34 @@
        }
       ]
      },
-     "text": "将受守护生物选为攻击或伤害性法术目标前需通过感知豁免"
+     "triggers": [
+      {
+       "id": "ward",
+       "label": "庇护术：避难守御",
+       "on": "attackHit",
+       "role": "target",
+       "window": "before",
+       "do": [
+        {
+         "kind": "save",
+         "to": "attacker",
+         "ability": "wis",
+         "dc": "source.spell.dc",
+         "onFail": [
+          {
+           "kind": "modify",
+           "modify": [
+            {
+             "op": "redirect",
+             "to": "choose"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
     }
    },
    "tags": [
@@ -858,7 +890,7 @@
   "XPHB:spell:变巨/缩小术": {
    "name": "变巨/缩小术",
    "automation": "partial",
-   "text": "使 30 尺内可见的一个生物或物件大小发生改变（专注至多 1 分钟）。非自愿生物可进行体质豁免对抗。变巨：体型增大一级，力量检定与豁免具有优势，使用变巨的武器或徒手打击命中时额外造成 1d4 伤害。缩小：体型缩小一级，力量检定与豁免具有劣势，使用缩小的武器或徒手打击命中时伤害减少 1d4（无法降至 1 以下）。体型变化、针对物件及缩小伤害减少底线需手动处理。",
+   "text": "使 30 尺内可见的一个生物或物件大小发生改变（专注至多 1 分钟）。非自愿生物可进行体质豁免对抗。变巨：体型增大一级，力量检定与豁免具有优势，使用变巨的武器或徒手打击命中时额外造成 1d4 伤害。缩小：体型缩小一级，力量检定与豁免具有劣势，使用缩小的武器或徒手打击命中时伤害减少 1d4（降至 1 以下时需手动保底为 1）。体型变化及针对物件需手动处理。",
    "actions": [
     {
      "id": "cast",
@@ -1012,7 +1044,23 @@
        "label": "缩小：力量检定与豁免劣势"
       }
      ],
-     "text": "体型缩小一级；力量检定和力量豁免具有劣势；使用缩小的武器或徒手打击命中时伤害减少 1d4（但无法降至 1 以下，需手动处理）。"
+     "triggers": [
+      {
+       "id": "shrink-dmg",
+       "label": "缩小：减少武器伤害",
+       "on": "damageIncoming",
+       "role": "actor",
+       "window": "before",
+       "when": "attack.weapon || attack.unarmed",
+       "modify": [
+        {
+         "op": "reduceDamage",
+         "value": "1d4"
+        }
+       ]
+      }
+     ],
+     "text": "体型缩小一级；力量检定和力量豁免具有劣势；使用缩小的武器或徒手打击命中时伤害减少 1d4（降至 1 以下需手动保底为 1）。"
     }
    },
    "tags": [
@@ -3576,7 +3624,7 @@
   "XPHB:spell:繁彩球": {
    "name": "繁彩球",
    "automation": "partial",
-   "text": "选择强酸/寒冷/火焰/闪电/毒素/雷鸣发动远程法术攻击，命中造成 (2 + slot.level)d8 伤害；若伤害骰出现两枚或更多相同点数时的跳跃攻击（至多跳跃环阶次、30 尺内新目标）需手动处理。",
+   "text": "选择强酸/寒冷/火焰/闪电/毒素/雷鸣发动远程法术攻击，命中造成 (2 + slot.level)d8 伤害。若伤害骰出现两枚或更多相同点数，能量球可跳跃至原目标 30 尺内的新目标再发动一次攻击（至多跳跃环阶次，每名生物只能被指定一次）。跳跃判定的相同骰面需确认。",
    "actions": [
     {
      "id": "cast",
@@ -3602,126 +3650,61 @@
       {
        "kind": "choose",
        "prompt": "选择繁彩球的伤害类型",
+       "var": "elem",
        "options": [
         {
-         "label": "强酸",
-         "do": [
-          {
-           "kind": "attack",
-           "attack": {
-            "ranged": true,
-            "spell": true
-           },
-           "onHit": [
-            {
-             "kind": "damage",
-             "dice": "(2 + slot.level)d8",
-             "type": "强酸"
-            }
-           ]
-          }
-         ]
+         "label": "强酸"
         },
         {
-         "label": "寒冷",
-         "do": [
-          {
-           "kind": "attack",
-           "attack": {
-            "ranged": true,
-            "spell": true
-           },
-           "onHit": [
-            {
-             "kind": "damage",
-             "dice": "(2 + slot.level)d8",
-             "type": "寒冷"
-            }
-           ]
-          }
-         ]
+         "label": "寒冷"
         },
         {
-         "label": "火焰",
-         "do": [
-          {
-           "kind": "attack",
-           "attack": {
-            "ranged": true,
-            "spell": true
-           },
-           "onHit": [
-            {
-             "kind": "damage",
-             "dice": "(2 + slot.level)d8",
-             "type": "火焰"
-            }
-           ]
-          }
-         ]
+         "label": "火焰"
         },
         {
-         "label": "闪电",
-         "do": [
-          {
-           "kind": "attack",
-           "attack": {
-            "ranged": true,
-            "spell": true
-           },
-           "onHit": [
-            {
-             "kind": "damage",
-             "dice": "(2 + slot.level)d8",
-             "type": "闪电"
-            }
-           ]
-          }
-         ]
+         "label": "闪电"
         },
         {
-         "label": "毒素",
-         "do": [
-          {
-           "kind": "attack",
-           "attack": {
-            "ranged": true,
-            "spell": true
-           },
-           "onHit": [
-            {
-             "kind": "damage",
-             "dice": "(2 + slot.level)d8",
-             "type": "毒素"
-            }
-           ]
-          }
-         ]
+         "label": "毒素"
         },
         {
-         "label": "雷鸣",
-         "do": [
-          {
-           "kind": "attack",
-           "attack": {
-            "ranged": true,
-            "spell": true
-           },
-           "onHit": [
-            {
-             "kind": "damage",
-             "dice": "(2 + slot.level)d8",
-             "type": "雷鸣"
-            }
-           ]
-          }
-         ]
+         "label": "雷鸣"
         }
        ]
       },
       {
-       "kind": "note",
-       "text": "若伤害骰有两枚或更多相同数字，能量球可跳跃至 30 尺内新目标再发动一次攻击（至多跳跃所消耗法术位的环阶次，手动处理）"
+       "kind": "attack",
+       "attack": {
+        "ranged": true,
+        "spell": true
+       },
+       "onHit": [
+        {
+         "kind": "damage",
+         "dice": "(2 + slot.level)d8",
+         "type": "vars.elem"
+        },
+        {
+         "kind": "if",
+         "when": "cond(action.marks.jump != null, action.marks.jump, 0) < slot.level && ask('伤害骰中是否有两枚或更多掷出了相同的数字？')",
+         "then": [
+          {
+           "kind": "mark",
+           "name": "jump",
+           "value": "cond(action.marks.jump != null, action.marks.jump, 0) + 1"
+          },
+          {
+           "kind": "repeatAction",
+           "prompt": "繁彩球：选择 30 尺内跳跃的新目标",
+           "within": {
+            "ft": "30",
+            "of": "target"
+           },
+           "count": 1
+          }
+         ]
+        }
+       ]
       }
      ]
     }
@@ -4416,7 +4399,7 @@
   "XPHB:spell:放逐斩": {
    "name": "放逐斩",
    "automation": "partial",
-   "text": "使用近战武器或徒手打击命中后以附赠动作施展，额外造成 5d10 点力场伤害（专注至多 1 分钟）。若此次攻击将目标生命值削减至 50 点或更低，目标须进行魅力豁免，失败被放逐至半位面并陷入失能状态。50 生命值门槛判断与移出/重返战场需手动处理。",
+   "text": "使用近战武器或徒手打击命中后以附赠动作施展，额外造成 5d10 点力场伤害（专注至多 1 分钟）。若此次攻击将目标生命值削减至 50 点或更低，目标须进行魅力豁免，失败被放逐至半位面并陷入失能状态。移出/重返战场需手动处理。",
    "actions": [
     {
      "id": "cast",
@@ -4450,14 +4433,20 @@
        "type": "力场"
       },
       {
-       "kind": "save",
-       "ability": "cha",
-       "dc": "self.spell.dc",
-       "onFail": [
+       "kind": "if",
+       "when": "ask('此次攻击是否将目标生命值削减至 50 点或更低？')",
+       "then": [
         {
-         "kind": "applyEffect",
-         "template": "放逐斩：放逐",
-         "to": "target"
+         "kind": "save",
+         "ability": "cha",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "applyEffect",
+           "template": "放逐斩：放逐",
+           "to": "target"
+          }
+         ]
         }
        ]
       }
@@ -6190,7 +6179,7 @@
   "XPHB:spell:缓慢术": {
    "name": "缓慢术",
    "automation": "partial",
-   "text": "专注至多 1 分钟。指定 120 尺内 40 尺立方区域至多 6 个生物进行感知豁免，失败速度减半、AC 和敏捷豁免-2、不能执行反应。其每回合只能在动作或附赠动作中二选一、攻击动作只能发动一次攻击、施展带姿势成分法术有 25% 概率失败（需手动判定）。受术者在其每回合结束时可再进行一次感知豁免，成功则终止效应。",
+   "text": "专注至多 1 分钟。指定 120 尺内 40 尺立方区域至多 6 个生物进行感知豁免，失败速度减半、AC 和敏捷豁免-2、不能执行反应。其每回合只能在动作或附赠动作中二选一、攻击动作只能发动一次攻击、施展带姿势成分法术有 25% 概率失败。受术者在其每回合结束时可再进行一次感知豁免，成功则终止效应。单次攻击与动作限制需手动处理。",
    "actions": [
     {
      "id": "cast",
@@ -6264,6 +6253,22 @@
        "op": "add",
        "value": -2,
        "label": "缓慢术：敏捷豁免-2"
+      }
+     ],
+     "triggers": [
+      {
+       "id": "spell-fail",
+       "label": "缓慢术：姿势成分施法失败",
+       "on": "spellCast",
+       "role": "actor",
+       "window": "before",
+       "when": "ask('该法术是否包含姿势成分且在 25% 判定中施法失败？')",
+       "modify": [
+        {
+         "op": "cancel",
+         "refundSlot": false
+        }
+       ]
       }
      ],
      "flags": {
@@ -6670,8 +6675,8 @@
   },
   "XPHB:spell:活力灵光": {
    "name": "活力灵光",
-   "automation": "partial",
-   "text": "专注至多 1 分钟。以自身为中心发散 30 尺灵光。施法创造灵光时为区域内一名生物恢复 2d6 生命值；持续期间每个自己回合开始时，可为区域内一名生物恢复 2d6 生命值（后续回合的治疗需手动结算）。",
+   "automation": "full",
+   "text": "专注至多 1 分钟。以自身为中心发散 30 尺灵光。施法创造灵光时为区域内一名生物恢复 2d6 生命值；持续期间每个自己回合开始时，可为区域内一名生物恢复 2d6 生命值。",
    "actions": [
     {
      "id": "cast",
@@ -6723,10 +6728,23 @@
        "label": "活力灵光：回合开始恢复生命值",
        "on": "turnStarted",
        "role": "actor",
+       "optional": true,
        "do": [
         {
-         "kind": "note",
-         "text": "活力灵光：回合开始，你可以为 30 尺灵光内的一名生物恢复 2d6 生命值。"
+         "kind": "chooseTargets",
+         "prompt": "活力灵光：选择 30 尺内的一名生物恢复生命值",
+         "count": 1,
+         "within": {
+          "ft": "30",
+          "of": "self"
+         },
+         "do": [
+          {
+           "kind": "heal",
+           "amount": "2d6",
+           "to": "target"
+          }
+         ]
         }
        ]
       }
@@ -7015,8 +7033,8 @@
   },
   "XPHB:spell:火焰护盾": {
    "name": "火焰护盾",
-   "automation": "partial",
-   "text": "持续 10 分钟。选择温暖护盾（寒冷抗性）或冻寒护盾（火焰抗性），抗性自动生效。散发 10 尺明亮与 10 尺微光光照。每当 5 尺内生物以近战攻击命中你时，温暖护盾对其造成 2d8 火焰伤害，冻寒护盾对其造成 2d8 寒冷伤害（反弹伤害需手动处理）。",
+   "automation": "full",
+   "text": "持续 10 分钟。选择温暖护盾（寒冷抗性）或冻寒护盾（火焰抗性），抗性自动生效。散发 10 尺明亮与 10 尺微光光照。每当 5 尺内生物以近战攻击命中你时，温暖护盾对其造成 2d8 火焰伤害，冻寒护盾对其造成 2d8 寒冷伤害。",
    "actions": [
     {
      "id": "cast",
@@ -7083,6 +7101,24 @@
        ]
       }
      ],
+     "triggers": [
+      {
+       "id": "retaliate-warm",
+       "label": "温暖护盾：火焰反噬",
+       "on": "attackHit",
+       "role": "target",
+       "window": "after",
+       "when": "attack.melee && within(self, attacker, 5)",
+       "do": [
+        {
+         "kind": "damage",
+         "dice": "2d8",
+         "type": "火焰",
+         "to": "attacker"
+        }
+       ]
+      }
+     ],
      "text": "具有寒冷伤害抗性。每当 5 尺内生物以近战攻击命中你时受到 2d8 火焰伤害。散发 10 尺明亮光照及额外 10 尺微光光照。"
     },
     "火焰护盾：冻寒护盾": {
@@ -7098,6 +7134,24 @@
        "kind": "resist",
        "values": [
         "火焰"
+       ]
+      }
+     ],
+     "triggers": [
+      {
+       "id": "retaliate-chill",
+       "label": "冻寒护盾：寒冷反噬",
+       "on": "attackHit",
+       "role": "target",
+       "window": "after",
+       "when": "attack.melee && within(self, attacker, 5)",
+       "do": [
+        {
+         "kind": "damage",
+         "dice": "2d8",
+         "type": "寒冷",
+         "to": "attacker"
+        }
        ]
       }
      ],
@@ -7221,8 +7275,8 @@
   },
   "XPHB:spell:棘雹术": {
    "name": "棘雹术",
-   "automation": "partial",
-   "text": "远程武器命中后立即以附赠动作施展。目标及目标 5 尺内的每个生物必须进行一次敏捷豁免，失败受到 1d10（每升一环 +1d10）穿刺伤害，成功受到半数伤害。引擎自动结算被命中目标的豁免与伤害，其周围 5 尺内其他生物的豁免与伤害需手动处理。",
+   "automation": "full",
+   "text": "远程武器命中后立即以附赠动作施展。目标及目标 5 尺内的每个生物必须进行敏捷豁免，失败受到 (slot.level)d10 穿刺伤害，成功受到半数伤害。",
    "actions": [
     {
      "id": "cast",
@@ -7264,6 +7318,38 @@
          "kind": "damage",
          "ref": "d",
          "scale": 0.5
+        }
+       ]
+      },
+      {
+       "kind": "chooseTargets",
+       "prompt": "棘雹术：选择目标周围 5 尺内的生物",
+       "within": {
+        "ft": "5",
+        "of": "target"
+       },
+       "exclude": [
+        "target"
+       ],
+       "count": 20,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "dex",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "ref": "d"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "d",
+           "scale": 0.5
+          }
+         ]
         }
        ]
       }
@@ -7923,7 +8009,7 @@
   "XPHB:spell:降咒": {
    "name": "降咒",
    "automation": "partial",
-   "text": "专注至多 1 分钟。触碰生物进行感知豁免，失败被诅咒并承受四种效应之一：1. 对施法者攻击劣势；2. 某属性检定与豁免劣势；3. 每回合开始感知豁免，失败被迫回避；4. 施法者伤害目标时额外 1d8 暗蚀伤害。升环施法可延长专注或免除专注（需手动调整专注与持续时间；属性选定与被迫回避需人工裁定）。",
+   "text": "专注至多 1 分钟。触碰生物进行感知豁免，失败被诅咒并承受四种效应之一：1. 对施法者攻击劣势；2. 所选属性检定与豁免劣势；3. 每回合开始感知豁免，失败被迫回避；4. 施法者攻击命中时额外 1d8 暗蚀伤害（无攻击检定的伤害法术需手动追加；被迫回避需人工裁定）。",
    "actions": [
     {
      "id": "cast",
@@ -7972,9 +8058,43 @@
            "label": "属性劣势：选择属性的检定和豁免劣势",
            "do": [
             {
+             "kind": "choose",
+             "prompt": "降咒：选择劣势属性",
+             "var": "abil",
+             "options": [
+              {
+               "label": "力量",
+               "value": "str"
+              },
+              {
+               "label": "敏捷",
+               "value": "dex"
+              },
+              {
+               "label": "体质",
+               "value": "con"
+              },
+              {
+               "label": "智力",
+               "value": "int"
+              },
+              {
+               "label": "感知",
+               "value": "wis"
+              },
+              {
+               "label": "魅力",
+               "value": "cha"
+              }
+             ]
+            },
+            {
              "kind": "applyEffect",
              "template": "降咒：属性劣势",
-             "to": "target"
+             "to": "target",
+             "state": {
+              "ability": "vars.abil"
+             }
             }
            ]
           },
@@ -8029,7 +8149,7 @@
       "magical",
       "spell"
      ],
-     "text": "目标使用所选属性进行的属性检定和豁免检定具有劣势（需手动选择属性）。",
+     "text": "目标使用所选属性进行的属性检定和豁免检定具有劣势。",
      "rollMods": [
       {
        "on": {
@@ -8039,7 +8159,7 @@
         ]
        },
        "who": "bearer",
-       "when": "ask('这是被降咒指定属性的检定或豁免吗？')",
+       "when": "effect.state.ability != null && roll.ability == effect.state.ability",
        "op": "disadv",
        "label": "降咒：属性检定/豁免劣势"
       }
@@ -8078,19 +8198,20 @@
       "magical",
       "spell"
      ],
-     "text": "若施法者的攻击检定或法术对目标造成了伤害，则目标还会额外受到 1d8 暗蚀伤害（需手动添加或通过触发器结算）。",
+     "text": "施法者的攻击检定命中目标时，额外造成 1d8 暗蚀伤害。",
      "triggers": [
       {
        "id": "extra-damage",
        "label": "降咒：额外暗蚀伤害",
-       "on": "damageTaken",
+       "on": "attackHit",
        "role": "target",
+       "window": "before",
        "when": "source != null && attacker != null && attacker.id == source.id",
-       "limit": "oncePerTurn",
        "do": [
         {
-         "kind": "note",
-         "text": "降咒：受到来自施法者的伤害，额外受到 1d8 暗蚀伤害。"
+         "kind": "addDamage",
+         "dice": "1d8",
+         "type": "暗蚀"
         }
        ]
       }
@@ -8656,7 +8777,7 @@
   "XPHB:spell:镜影术": {
    "name": "镜影术",
    "automation": "partial",
-   "text": "持续 1 分钟。创造 3 个幻象分身。每当受到攻击命中时，为每个剩余分身掷 1d6，只要有任一结果为 3 或以上，一个分身代受本次命中并被摧毁（可通过触发器取消命中）；3 个分身全部摧毁时法术终止。分身计数及攻击者目盲/盲视/真实视觉免疫需手动处理。",
+   "text": "持续 1 分钟。创造 3 个幻象分身。受到攻击命中时（攻击者目盲或具有盲视/真实视觉时无效），为每个剩余分身掷 1d6，任一骰出 3+ 则分身代受命中并取消该次攻击；3 个分身全部摧毁时法术终止。分身数量维护需手动处理。",
    "actions": [
     {
      "id": "cast",
@@ -8697,7 +8818,7 @@
      "duration": {
       "minutes": 1
      },
-     "text": "存在至多 3 个幻象分身。被攻击命中时每个分身投掷 1d6，任一骰出 3+ 则分身代受命中被摧毁。分身全部摧毁后法术终止。",
+     "text": "存在至多 3 个幻象分身。被攻击命中时每个分身投掷 1d6，任一骰出 3+ 则分身代受命中被摧毁。分身全部摧毁后法术终止。攻击者目盲或具盲视/真实视觉时无效。",
      "triggers": [
       {
        "id": "duplicate_intercept",
@@ -8706,6 +8827,7 @@
        "role": "target",
        "window": "before",
        "optional": true,
+       "when": "!attacker.has('目盲') && !ask('攻击者是否拥有盲视或真实视觉？')",
        "modify": [
         {
          "op": "cancel"
@@ -12762,7 +12884,7 @@
   "XPHB:spell:强令对决": {
    "name": "强令对决",
    "automation": "partial",
-   "text": "目标感知豁免失败陷入强令对决：对施法者之外的目标进行攻击检定时具有劣势。目标不能自主移动到距离施法者超过 30 尺（需在地图上手动限制）。施法者攻击其他生物、施法者盟友伤害目标、或回合结束相距超过 30 尺时法术提前终止。",
+   "text": "目标感知豁免失败陷入强令对决：对施法者之外的目标进行攻击检定时具有劣势。目标不能自主移动到距离施法者超过 30 尺（需在地图上手动限制）。施法者攻击其他生物、施法者在距目标超过 30 尺处结束回合、或施法者盟友伤害目标时法术提前终止。",
    "actions": [
     {
      "id": "cast",
@@ -12810,6 +12932,23 @@
       "magical",
       "spell"
      ],
+     "duration": {
+      "minutes": 1,
+      "endsOn": [
+       {
+        "event": "d20Rolled",
+        "when": "event.roller == source.id && event.kind == 'attack' && event.target != self.id"
+       },
+       {
+        "event": "turnEnded",
+        "when": "event.id == source.id && dist(self, source) > 30"
+       },
+       {
+        "event": "damageApplied",
+        "when": "event.target == self.id && event.source != source.id && ask('伤害来源是否为施法者的盟友？')"
+       }
+      ]
+     },
      "rollMods": [
       {
        "on": {
@@ -13581,7 +13720,7 @@
   "XPHB:spell:闪电箭矢": {
    "name": "闪电箭矢",
    "automation": "partial",
-   "text": "使用武器发动远程攻击命中或失手后立即以附赠动作施展。替代该次攻击的原有伤害与效果，命中时目标受到 4d8（每升一环 +1d8）闪电伤害，失手时受到半数伤害；无论命中与否，目标周围 10 尺内的每个生物须进行敏捷豁免，失败受到 2d8（每升一环 +1d8）闪电伤害，成功半数。原攻击伤害替代与周围生物溅射豁免伤害需手动处理。",
+   "text": "使用武器发动远程攻击命中或失手后立即以附赠动作施展。替代该次攻击的原有伤害与效果，命中时目标受到 (1 + slot.level)d8 闪电伤害，失手受到半数伤害；无论命中与否，目标周围 10 尺内的每个生物须进行敏捷豁免，失败受到 (slot.level - 1)d8 闪电伤害，成功半数。原攻击伤害替代需手动处理。",
    "actions": [
     {
      "id": "cast",
@@ -13628,8 +13767,38 @@
        ]
       },
       {
-       "kind": "note",
-       "text": "闪电箭矢：目标周围 10 尺内的每个生物必须进行敏捷豁免对抗法术 DC，失败受到等同于 (slot.level - 1)d8 的闪电伤害，成功受到半数伤害。"
+       "kind": "chooseTargets",
+       "prompt": "闪电箭矢：选择目标周围 10 尺内的生物",
+       "within": {
+        "ft": "10",
+        "of": "target"
+       },
+       "exclude": [
+        "target"
+       ],
+       "count": 20,
+       "do": [
+        {
+         "kind": "save",
+         "ability": "dex",
+         "dc": "self.spell.dc",
+         "onFail": [
+          {
+           "kind": "damage",
+           "id": "splash",
+           "dice": "(slot.level - 1)d8",
+           "type": "闪电"
+          }
+         ],
+         "onSuccess": [
+          {
+           "kind": "damage",
+           "ref": "splash",
+           "scale": 0.5
+          }
+         ]
+        }
+       ]
       }
      ]
     }
@@ -15428,7 +15597,7 @@
   "XPHB:spell:术法爆发": {
    "name": "术法爆发",
    "automation": "partial",
-   "text": "远程法术攻击，命中造成 1d8（随等级成长）自选类型伤害（强酸、寒冷、火焰、闪电、毒素、心灵、雷鸣）。若掷出 8 可追加 d8 伤害（最多等同于施法属性调整值个额外 d8 伤害骰，需手动处理）。",
+   "text": "远程法术攻击，命中造成 (1 + floor((self.level + 1) / 6))d8 自选类型伤害（强酸、寒冷、火焰、闪电、毒素、心灵、雷鸣）。若任一 d8 掷出 8 可追加 d8 伤害（至多等同于施法属性调整值个）。追加爆骰确认需手动输入。",
    "actions": [
     {
      "id": "cast",
@@ -15447,137 +15616,59 @@
       {
        "kind": "choose",
        "prompt": "选择伤害类型",
+       "var": "elem",
        "options": [
         {
-         "label": "强酸",
-         "do": [
-          {
-           "kind": "attack",
-           "attack": {
-            "ranged": true,
-            "spell": true
-           },
-           "onHit": [
-            {
-             "kind": "damage",
-             "dice": "(1 + floor((self.level + 1) / 6))d8",
-             "type": "强酸"
-            }
-           ]
-          }
-         ]
+         "label": "强酸"
         },
         {
-         "label": "寒冷",
-         "do": [
-          {
-           "kind": "attack",
-           "attack": {
-            "ranged": true,
-            "spell": true
-           },
-           "onHit": [
-            {
-             "kind": "damage",
-             "dice": "(1 + floor((self.level + 1) / 6))d8",
-             "type": "寒冷"
-            }
-           ]
-          }
-         ]
+         "label": "寒冷"
         },
         {
-         "label": "火焰",
-         "do": [
-          {
-           "kind": "attack",
-           "attack": {
-            "ranged": true,
-            "spell": true
-           },
-           "onHit": [
-            {
-             "kind": "damage",
-             "dice": "(1 + floor((self.level + 1) / 6))d8",
-             "type": "火焰"
-            }
-           ]
-          }
-         ]
+         "label": "火焰"
         },
         {
-         "label": "闪电",
-         "do": [
-          {
-           "kind": "attack",
-           "attack": {
-            "ranged": true,
-            "spell": true
-           },
-           "onHit": [
-            {
-             "kind": "damage",
-             "dice": "(1 + floor((self.level + 1) / 6))d8",
-             "type": "闪电"
-            }
-           ]
-          }
-         ]
+         "label": "闪电"
         },
         {
-         "label": "毒素",
-         "do": [
-          {
-           "kind": "attack",
-           "attack": {
-            "ranged": true,
-            "spell": true
-           },
-           "onHit": [
-            {
-             "kind": "damage",
-             "dice": "(1 + floor((self.level + 1) / 6))d8",
-             "type": "毒素"
-            }
-           ]
-          }
-         ]
+         "label": "毒素"
         },
         {
-         "label": "心灵",
-         "do": [
-          {
-           "kind": "attack",
-           "attack": {
-            "ranged": true,
-            "spell": true
-           },
-           "onHit": [
-            {
-             "kind": "damage",
-             "dice": "(1 + floor((self.level + 1) / 6))d8",
-             "type": "心灵"
-            }
-           ]
-          }
-         ]
+         "label": "心灵"
         },
         {
-         "label": "雷鸣",
-         "do": [
+         "label": "雷鸣"
+        }
+       ]
+      },
+      {
+       "kind": "attack",
+       "attack": {
+        "ranged": true,
+        "spell": true
+       },
+       "onHit": [
+        {
+         "kind": "damage",
+         "dice": "(1 + floor((self.level + 1) / 6))d8",
+         "type": "vars.elem"
+        },
+        {
+         "kind": "if",
+         "when": "ask('是否有任意 d8 掷出了 8？')",
+         "then": [
           {
-           "kind": "attack",
-           "attack": {
-            "ranged": true,
-            "spell": true
-           },
-           "onHit": [
-            {
-             "kind": "damage",
-             "dice": "(1 + floor((self.level + 1) / 6))d8",
-             "type": "雷鸣"
-            }
-           ]
+           "kind": "number",
+           "prompt": "术法爆发：掷出 8 的额外 d8 数量（至多施法属性调整值）",
+           "var": "extraDice",
+           "min": 1,
+           "max": "max(1, self.spell.mod)",
+           "default": 1
+          },
+          {
+           "kind": "damage",
+           "dice": "(vars.extraDice)d8",
+           "type": "vars.elem"
           }
          ]
         }
@@ -16210,8 +16301,8 @@
   },
   "XPHB:spell:塔莎狂笑术": {
    "name": "塔莎狂笑术",
-   "automation": "partial",
-   "text": "专注至多 1 分钟。目标感知豁免失败则陷入倒地和失能，且无法凭自己结束倒地状态（在界面上点「起立」不会真的起来，只会白扣一半移动力，请留意）。目标在其每回合结束时、以及受到伤害时各可再做一次感知豁免，成功即结束法术。因受到伤害而做的这次豁免具有优势——引擎分不清这次豁免是不是因受伤而来，掷骰时会弹窗确认，答「是」才加优势。",
+   "automation": "full",
+   "text": "专注至多 1 分钟。目标感知豁免失败则陷入倒地和失能，且无法凭自己结束倒地状态。目标在其每回合结束时、以及受到伤害时各可再做一次感知豁免（因受伤害所致豁免具有优势），成功即结束法术。",
    "actions": [
     {
      "id": "cast",
@@ -16278,7 +16369,7 @@
         "ability": "wis"
        },
        "who": "bearer",
-       "when": "ask('这是因受到伤害而进行的豁免吗？')",
+       "when": "action.marks.fromDmg == true",
        "op": "adv",
        "label": "塔莎狂笑术：受伤害豁免具有优势"
       }
@@ -16289,7 +16380,12 @@
        "label": "塔莎狂笑术：受伤害豁免",
        "on": "damageTaken",
        "role": "target",
+       "when": "damage.amount > 0",
        "do": [
+        {
+         "kind": "mark",
+         "name": "fromDmg"
+        },
         {
          "kind": "save",
          "ability": "wis",
@@ -16304,8 +16400,7 @@
           }
          ]
         }
-       ],
-       "when": "damage.amount > 0"
+       ]
       }
      ],
      "text": "陷入倒地和失能状态，无法凭自己结束倒地。每回合结束或受到伤害时可再次进行感知豁免（因伤害所致有优势），成功则法术终止。"
@@ -17173,7 +17268,7 @@
   "XPHB:spell:橡棍术": {
    "name": "橡棍术",
    "automation": "partial",
-   "text": "附赠动作，持续 1 分钟（不专注）。自动部分：用灌注了自然之力的短棒或长棍进行近战攻击时，攻击检定与伤害掷骰改用你的施法属性调整值代替力量调整值（引擎问一句「是不是那件武器」，答是就把力量调整值换成施法属性调整值）。手动部分（引擎改不了武器的伤害骰与伤害类型）：① 该武器的伤害骰变为 d8，5 级 d10、11 级 d12、17 级 2d6；② 造成伤害时可以选择改为力场伤害或维持原类型；③ 丢掉该武器时法术终止（再次施展会自动结束上一次，不会叠加）。",
+   "text": "附赠动作，持续 1 分钟（不专注）。用灌注自然之力的短棒或长棍近战攻击时，命中与伤害可用施法属性调整值代替力量，造成伤害时可选改为力场伤害。武器基础伤害骰提升（1级d8、5级d10、11级d12、17级2d6）需手动处理；再次施展自动覆盖前次。",
    "actions": [
     {
      "id": "cast",
@@ -17221,7 +17316,7 @@
         }
        },
        "who": "bearer",
-       "when": "attack.ability == 'str' && ask('这次近战攻击用的是灌注橡棍术的短棒或长棍吗？')",
+       "when": "attack.ability == 'str' && (attack.item == '短棒' || attack.item == '长棍' || ask('这次近战攻击用的是灌注橡棍术的短棒或长棍吗？'))",
        "op": "add",
        "value": "self.spell.mod - self.mod.str",
        "label": "橡棍术：用施法属性攻击"
@@ -17235,13 +17330,30 @@
         }
        },
        "who": "bearer",
-       "when": "attack.ability == 'str' && ask('这次近战伤害用的是灌注橡棍术的短棒或长棍吗？')",
+       "when": "attack.ability == 'str' && (attack.item == '短棒' || attack.item == '长棍' || ask('这次近战伤害用的是灌注橡棍术的短棒或长棍吗？'))",
        "op": "add",
        "value": "self.spell.mod - self.mod.str",
        "label": "橡棍术：用施法属性伤害"
       }
      ],
-     "text": "用灌注的短棒或长棍进行近战攻击：攻击检定与伤害掷骰用施法属性代替力量。伤害骰应为 d8（5 级 d10、11 级 d12、17 级 2d6）、可以改成力场伤害 —— 这两项请手动处理；丢掉武器时法术终止。"
+     "triggers": [
+      {
+       "id": "force-dmg",
+       "label": "橡棍术：改为力场伤害",
+       "on": "attackHit",
+       "role": "actor",
+       "window": "before",
+       "optional": true,
+       "when": "attack.melee && attack.weapon && (attack.item == '短棒' || attack.item == '长棍' || ask('这次攻击用的是灌注橡棍术的短棒或长棍吗？'))",
+       "do": [
+        {
+         "kind": "retype",
+         "value": "力场"
+        }
+       ]
+      }
+     ],
+     "text": "用灌注的短棒或长棍进行近战攻击：攻击与伤害检定用施法属性代替力量，可选择改为力场伤害。伤害骰应为 d8（5 级 d10、11 级 d12、17 级 2d6，需手动调整）。"
     }
    },
    "tags": [
@@ -19550,8 +19662,8 @@
   },
   "XPHB:spell:隐形术": {
    "name": "隐形术",
-   "automation": "partial",
-   "text": "触碰至多 (slot.level - 1) 个生物使其获得隐形状态，持续至多 1 小时（专注）。目标若进行攻击检定、造成伤害或施展法术则其隐形提前终止（个体提前终止需手动处理）。",
+   "automation": "full",
+   "text": "触碰至多 (slot.level - 1) 个生物使其获得隐形状态，持续至多 1 小时（专注）。目标若进行攻击检定、造成伤害或施展法术，其身上的隐形效应提前终止。",
    "actions": [
     {
      "id": "cast",
@@ -19594,6 +19706,23 @@
      "implies": [
       "XPHB:condition:隐形"
      ],
+     "duration": {
+      "hours": 1,
+      "endsOn": [
+       {
+        "event": "d20Rolled",
+        "when": "event.roller == self.id && event.kind == 'attack'"
+       },
+       {
+        "event": "spellCast",
+        "when": "event.actor == self.id"
+       },
+       {
+        "event": "damageApplied",
+        "when": "event.source == self.id"
+       }
+      ]
+     },
      "text": "处于隐形状态。如果进行攻击检定、造成伤害或施展法术，此效应提前终止。"
     }
    },
@@ -19938,7 +20067,7 @@
   "XPHB:spell:诱捕打击": {
    "name": "诱捕打击",
    "automation": "partial",
-   "text": "武器命中后以附赠动作施展（专注至多 1 分钟）。目标进行力量豁免：体型为大型或更大时，这次豁免具有优势（引擎按目标体型自动给优势，不询问；实现上是在施法时给目标挂一个只活到这次豁免的短效应，日志里会看到它出现又消失，那是正常的）。豁免成功则藤蔓枯萎、法术结束，引擎会连同专注一起收掉。失败则陷入束缚状态（束缚的减速、被打有优势这些由「束缚」状态条目负责），束缚期间在其每回合开始时受到 1d6 点穿刺伤害（升环每比一环高一级 +1d6）。挣脱要由目标或其他位于其触及内的生物花一个动作做一次力量（运动）检定对抗你的法术豁免 DC：「由别的生物花动作解除某个效应」引擎没有入口，这一步请由人掷检定，成功后点「诱捕打击：挣脱」——它会把目标身上的效应和你的专注一起收掉（原文就是「挣脱则法术结束」；引擎不会因为效应被移除就自动结束专注，多目标法术里一个目标摆脱不代表法术结束，所以这一步写成显式动作）。",
+   "text": "武器命中后以附赠动作施展（专注至多 1 分钟）。目标进行力量豁免：体型为大型或更大时，这次豁免具有优势。豁免成功则藤蔓枯萎、法术结束。失败陷入束缚状态，束缚期间在其每回合开始时受到 (slot.level)d10 穿刺伤害。目标或触及内生物可用动作进行力量（运动）检定对抗法术 DC，检定成功后点击「诱捕打击：挣脱」动作解除束缚并结束专注。",
    "actions": [
     {
      "id": "cast",
@@ -19990,11 +20119,7 @@
        "dc": "self.spell.dc",
        "onSuccess": [
         {
-         "kind": "removeEffect",
-         "from": "self",
-         "match": {
-          "key": "concentration"
-         }
+         "kind": "endConcentration"
         }
        ],
        "onFail": [
@@ -20090,7 +20215,7 @@
        ]
       }
      ],
-     "text": "陷入束缚状态；在每回合开始时受到 1d6 点穿刺伤害（升环后为 环阶 d6）。可由目标或触及内的生物用一个动作做力量（运动）检定对抗豁免 DC 解除：这一步引擎不会替人掷，成功请手动移除本效应。"
+     "text": "陷入束缚状态；在每回合开始时受到 1d6 点穿刺伤害（升环后为 环阶 d6）。可由目标或触及内的生物用一个动作做力量（运动）检定对抗豁免 DC 解除。"
     }
    },
    "tags": [
@@ -20209,78 +20334,33 @@
       {
        "kind": "choose",
        "prompt": "元素武器：选择伤害类型",
+       "var": "elem",
        "options": [
         {
-         "label": "强酸",
-         "do": [
-          {
-           "kind": "applyEffect",
-           "template": "元素武器",
-           "to": "target",
-           "state": {
-            "type": "'强酸'",
-            "slot": "slot.level"
-           }
-          }
-         ]
+         "label": "强酸"
         },
         {
-         "label": "寒冷",
-         "do": [
-          {
-           "kind": "applyEffect",
-           "template": "元素武器",
-           "to": "target",
-           "state": {
-            "type": "'寒冷'",
-            "slot": "slot.level"
-           }
-          }
-         ]
+         "label": "寒冷"
         },
         {
-         "label": "火焰",
-         "do": [
-          {
-           "kind": "applyEffect",
-           "template": "元素武器",
-           "to": "target",
-           "state": {
-            "type": "'火焰'",
-            "slot": "slot.level"
-           }
-          }
-         ]
+         "label": "火焰"
         },
         {
-         "label": "闪电",
-         "do": [
-          {
-           "kind": "applyEffect",
-           "template": "元素武器",
-           "to": "target",
-           "state": {
-            "type": "'闪电'",
-            "slot": "slot.level"
-           }
-          }
-         ]
+         "label": "闪电"
         },
         {
-         "label": "雷鸣",
-         "do": [
-          {
-           "kind": "applyEffect",
-           "template": "元素武器",
-           "to": "target",
-           "state": {
-            "type": "'雷鸣'",
-            "slot": "slot.level"
-           }
-          }
-         ]
+         "label": "雷鸣"
         }
        ]
+      },
+      {
+       "kind": "applyEffect",
+       "template": "元素武器",
+       "to": "target",
+       "state": {
+        "type": "vars.elem",
+        "slot": "slot.level"
+       }
       }
      ]
     }
@@ -20300,6 +20380,7 @@
         }
        },
        "who": "bearer",
+       "when": "ask('这次攻击使用的是受元素武器加持的武器吗？')",
        "op": "add",
        "value": "cond(effect.state.slot >= 7, 3, cond(effect.state.slot >= 5, 2, 1))",
        "label": "元素武器：攻击加值"
@@ -20312,7 +20393,7 @@
        "on": "attackHit",
        "role": "actor",
        "window": "before",
-       "when": "attack.weapon",
+       "when": "attack.weapon && ask('这次伤害来自受元素武器加持的武器吗？')",
        "do": [
         {
          "kind": "addDamage",
@@ -20372,7 +20453,7 @@
   "XPHB:spell:原力法阵": {
    "name": "原力法阵",
    "automation": "partial",
-   "text": "专注至多 10 分钟。以你为中心 30 尺灵光内的你与你的盟友（灵光随你移动，有地图时按地图算距离，没有地图时按「都在范围内」处理）：① 为对抗法术或其他魔法效应而进行的豁免检定具有优势 —— 引擎分不出这次豁免是不是对抗法术 / 魔法效应，会问你一句；② 对抗「豁免成功只受半数伤害」的法术或魔法效应并豁免成功时完全不受伤害（已自动：豁免成功的那次伤害直接归零；这不是原文里的反射闪避，所以失败时照常受全额伤害；灵光范围外的盟友不该受这条保护，引擎会在没有地图时问一句他在不在范围内）。",
+   "text": "专注至多 10 分钟。以你为中心 30 尺灵光内的你与盟友：对抗法术或其他魔法效应进行的豁免检定具有优势；对抗成功受半数伤害的法术或魔法效应且豁免成功时，完全不受伤害（法术类豁免与伤害自动免除，其他魔法效应需弹窗确认）。",
    "actions": [
     {
      "id": "cast",
@@ -20422,7 +20503,7 @@
           "kind": "save"
          },
          "who": "bearer",
-         "when": "ask('这次豁免是为了对抗法术或其他魔法效应吗？')",
+         "when": "action.kind == 'spell' || ask('这次豁免是为了对抗法术或其他魔法效应吗？')",
          "op": "adv",
          "label": "原力法阵：对抗法术与魔法效应的豁免优势"
         }
@@ -20434,10 +20515,10 @@
          "on": "damageIncoming",
          "role": "target",
          "window": "before",
-         "when": "ask('这次豁免是为了对抗法术或其他魔法效应吗？') && damage.save != '' && damage.saved && (self.id == source.id || within(source, self, 30))",
+         "when": "(action.kind == 'spell' || ask('这是法术或其他魔法效应造成的伤害吗？')) && damage.save != '' && damage.saved",
          "modify": [
           {
-           "op": "evasion"
+           "op": "cancel"
           }
          ]
         }
@@ -20506,7 +20587,7 @@
   "XPHB:spell:月光涌泉": {
    "name": "月光涌泉",
    "automation": "partial",
-   "text": "散发 20 尺明亮光照与 20 尺微光光照（光照需手动处理）。获得光耀伤害抗性，近战攻击命中时额外造成 2d6 点光耀伤害。受到 60 尺内可见生物伤害后，可以反应迫使其进行体质豁免，失败则目盲至你的下个回合结束。",
+   "text": "专注至多 10 分钟。散发 20 尺明亮与 20 尺微光光照（光照需手动处理）。获得光耀伤害抗性，近战攻击命中时额外造成 2d6 点光耀伤害。受到 60 尺内可见生物伤害后，可以反应迫使其进行体质豁免，失败则目盲至你的下个回合结束。",
    "actions": [
     {
      "id": "cast",
@@ -20550,6 +20631,7 @@
       "on": "damageTaken",
       "role": "target",
       "window": "after",
+      "aim": "actor",
       "when": "damage.amount > 0 && attacker != null && attacker.id != self.id && within(self, attacker, 60) && canSee(self, attacker)"
      },
      "targeting": {
@@ -22334,48 +22416,26 @@
         {
          "kind": "choose",
          "prompt": "选择咒唤微元素群的额外伤害类型",
+         "var": "elem",
          "options": [
           {
-           "label": "强酸",
-           "do": [
-            {
-             "kind": "addDamage",
-             "dice": "effect.state.dice",
-             "type": "强酸"
-            }
-           ]
+           "label": "强酸"
           },
           {
-           "label": "寒冷",
-           "do": [
-            {
-             "kind": "addDamage",
-             "dice": "effect.state.dice",
-             "type": "寒冷"
-            }
-           ]
+           "label": "寒冷"
           },
           {
-           "label": "火焰",
-           "do": [
-            {
-             "kind": "addDamage",
-             "dice": "effect.state.dice",
-             "type": "火焰"
-            }
-           ]
+           "label": "火焰"
           },
           {
-           "label": "闪电",
-           "do": [
-            {
-             "kind": "addDamage",
-             "dice": "effect.state.dice",
-             "type": "闪电"
-            }
-           ]
+           "label": "闪电"
           }
          ]
+        },
+        {
+         "kind": "addDamage",
+         "dice": "effect.state.dice",
+         "type": "vars.elem"
         }
        ]
       }

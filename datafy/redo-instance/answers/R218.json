@@ -1,0 +1,85 @@
+{
+  "resources": [
+    {
+      "id": "物品次数:矮人王圣斧:咒唤土元素",
+      "name": "矮人王圣斧：咒唤土元素",
+      "formula": 1,
+      "recovery": "long"
+    },
+    {
+      "id": "物品次数:矮人王圣斧:地幔潜游",
+      "name": "矮人王圣斧：地幔潜游",
+      "formula": 1,
+      "recovery": "long"
+    }
+  ],
+  "name": "矮人王圣斧",
+  "automation": "partial",
+  "text": "+3 战斧。攻击检定掷出 20 时额外造成 20 点挥砍伤害。投掷（20/60 尺）远程命中额外造成 1d8 力场伤害（巨人改为 2d8）。可召唤土元素一次（长休恢复）；可施展传送术一次（地下无意外事故）。固定加值与属性抗性已在人物卡处理。",
+  "triggers": [
+    {
+      "id": "crit20",
+      "label": "矮人王圣斧：暴击额外挥砍伤害",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "attack.weapon && roll.natural == 20",
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": 20,
+          "type": "挥砍"
+        }
+      ]
+    },
+    {
+      "id": "throw",
+      "label": "矮人王圣斧：投掷命中额外力场伤害",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "attack.weapon && attack.ranged",
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "cond(target.type == '巨人', 2d8, 1d8)",
+          "type": "力场"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "summon-elemental",
+      "name": "矮人王圣斧：咒唤土元素",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "物品次数:矮人王圣斧:咒唤土元素"
+        }
+      ],
+      "root": [
+        {
+          "kind": "note",
+          "text": "召唤一个土元素出现在30尺内未占据空间，服从你的命令，在你的先攻后立即行动，持续24小时或至死亡/以附赠动作解散。直至次日黎明无法再次使用。"
+        }
+      ]
+    },
+    {
+      "id": "teleport",
+      "name": "矮人王圣斧：地幔潜游",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "物品次数:矮人王圣斧:地幔潜游"
+        }
+      ],
+      "root": [
+        {
+          "kind": "note",
+          "text": "施展传送术（Teleport）。若目标地点在地下，传送不会出现意外事故或地点错误。三日之内无法再次使用。"
+        }
+      ]
+    }
+  ]
+}

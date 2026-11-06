@@ -1,0 +1,130 @@
+{
+  "name": "上古斗士",
+  "automation": "partial",
+  "text": "附赠动作盈满守护灵光，持续 1 分钟，每次长休一次；可随时（无需动作）提前结束，也可消耗一个五环法术位重置使用权。瓦解反抗：灵光（30 尺）内的敌人对抗你法术或引导神力的豁免具有劣势。复生：你每个自己的回合开始时恢复 10 点生命值。迅捷法术：施展施法时间为动作的法术时可改为附赠动作（扣除附赠动作并返还动作）。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "上古斗士",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "elderChampion"
+        }
+      ],
+      "requires": "!self.hasEffect('上古斗士')",
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "上古斗士"
+        }
+      ]
+    },
+    {
+      "id": "end",
+      "name": "结束上古斗士",
+      "activation": "free",
+      "requires": "self.hasEffect('上古斗士')",
+      "root": [
+        {
+          "kind": "removeEffect",
+          "from": "self",
+          "match": {
+            "name": "上古斗士"
+          }
+        }
+      ]
+    },
+    {
+      "id": "reset",
+      "name": "上古斗士：重置使用权（五环法术位）",
+      "activation": "free",
+      "cost": [
+        {
+          "slot": {
+            "min": 5,
+            "max": 5
+          }
+        }
+      ],
+      "requires": "self.resource('elderChampion') < 1",
+      "root": [
+        {
+          "kind": "resource",
+          "id": "elderChampion",
+          "delta": 1
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "上古斗士": {
+      "text": "1 分钟内：灵光内的敌人对抗你法术/引导神力的豁免具有劣势；你每个自己的回合开始时恢复 10 点生命值；施法时间为动作的法术可改为附赠动作施展。",
+      "duration": {
+        "minutes": 1
+      },
+      "aura": {
+        "id": "champion",
+        "radius": 30,
+        "affects": "enemies",
+        "includeSelf": false,
+        "requires": "!self.has('失能')",
+        "stackKey": "上古斗士",
+        "grant": {
+          "rollMods": [
+            {
+              "on": {
+                "kind": "save"
+              },
+              "who": "bearer",
+              "when": "action.by == source && (action.kind == 'spell' || action.name == '引导神力' || action.name == '自然之怒')",
+              "op": "disadv",
+              "label": "上古斗士：瓦解反抗"
+            }
+          ]
+        }
+      },
+      "triggers": [
+        {
+          "id": "regen",
+          "label": "上古斗士：复生",
+          "on": "turnStarted",
+          "role": "actor",
+          "window": "after",
+          "do": [
+            {
+              "kind": "heal",
+              "to": "self",
+              "amount": 10
+            }
+          ]
+        },
+        {
+          "id": "quicken",
+          "label": "上古斗士：迅捷法术",
+          "on": "spellCast",
+          "role": "actor",
+          "window": "after",
+          "optional": true,
+          "when": "action.kind == 'spell' && action.economy == 'action'",
+          "cost": [
+            {
+              "economy": "bonus"
+            }
+          ],
+          "do": [
+            {
+              "kind": "economy",
+              "action": 1
+            },
+            {
+              "kind": "note",
+              "text": "上古斗士：迅捷法术——已改为附赠动作施展，退还了一个动作"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

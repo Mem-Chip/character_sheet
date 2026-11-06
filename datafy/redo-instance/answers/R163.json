@@ -1,0 +1,56 @@
+{
+ "name": "隐匿通途",
+ "automation": "partial",
+ "text": "在你的回合中，你可以以一个附赠动作传送到 60 尺内一处未被占据的可见空间；或者以一个动作接触一个自愿生物，将其传送至 30 尺内一处未被占据的可见空间。可使用次数等同于感知调整值（至少 1 次），长休恢复。棋子位移需在地图上手动调整。",
+ "resources": [
+  {
+   "id": "hidden-paths",
+   "name": "隐匿通途",
+   "formula": "max(1, self.mod.wis)",
+   "recovery": "long"
+  }
+ ],
+ "actions": [
+  {
+   "id": "use",
+   "name": "隐匿通途：传送自身",
+   "activation": "bonus",
+   "requires": "turn.isMine",
+   "cost": [
+    {
+     "resource": "hidden-paths"
+    }
+   ],
+   "root": [
+    {
+     "kind": "move",
+     "mode": "teleport",
+     "ft": 60
+    }
+   ]
+  },
+  {
+   "id": "teleport-ally",
+   "name": "隐匿通途：传送自愿生物",
+   "activation": "action",
+   "requires": "turn.isMine",
+   "cost": [
+    {
+     "resource": "hidden-paths"
+    }
+   ],
+   "targeting": {
+    "type": "creature",
+    "range": "touch",
+    "filter": "target.id != self.id"
+   },
+   "root": [
+    {
+     "kind": "move",
+     "mode": "teleport",
+     "ft": 30
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,70 @@
+{
+ "name": "加速药水",
+ "automation": "partial",
+ "text": "以附赠动作饮下药水，获得加速术效应持续 1 分钟（无需专注），且效应结束时不会泛起倦意。速度翻倍，AC+2，敏捷豁免优势，每回合获得一个额外动作（仅限攻击/疾走/撤离/躲藏/操作）。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "饮用加速药水",
+   "activation": "bonus",
+   "cost": [
+    {
+     "resource": "物品:加速药水"
+    }
+   ],
+   "root": [
+    {
+     "kind": "applyEffect",
+     "template": "加速药水",
+     "to": "self"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "加速药水": {
+   "duration": {
+    "minutes": 1
+   },
+   "tags": [
+    "magical"
+   ],
+   "text": "速度翻倍；AC+2；敏捷豁免具有优势；每回合获得一个额外动作（仅用于发动一次攻击、或疾走、撤离、躲藏和操作动作）。",
+   "statics": [
+    {
+     "kind": "speed",
+     "bonus": "self.speed"
+    },
+    {
+     "kind": "ac",
+     "bonus": 2
+    }
+   ],
+   "rollMods": [
+    {
+     "on": {
+      "kind": "save",
+      "ability": "dex"
+     },
+     "who": "bearer",
+     "op": "adv",
+     "label": "加速药水：敏捷豁免优势"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "haste-action",
+     "label": "加速药水：额外动作",
+     "on": "turnStarted",
+     "role": "actor",
+     "do": [
+      {
+       "kind": "economy",
+       "action": 1
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

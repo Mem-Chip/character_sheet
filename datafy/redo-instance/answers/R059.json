@@ -1,0 +1,70 @@
+{
+ "name": "预言专家",
+ "automation": "full",
+ "text": "【先见干预】当一名位于你60尺内你可见的生物进行D20检定时，你能以反应令那名生物的那次掷骰获得优势或劣势（每长休一次）。当你使用法术位施展一道预言学派法术时，自动恢复此特性的使用次数。",
+ "triggers": [
+  {
+   "id": "adv",
+   "label": "预言专家：先见干预（优势）",
+   "on": "d20Rolled",
+   "role": "any",
+   "window": "before",
+   "optional": true,
+   "cost": [
+    {
+     "economy": "reaction"
+    },
+    {
+     "resource": "glimpse-intervention"
+    }
+   ],
+   "when": "(roll.vs == null || roll.failing) && !roll.adv && (roll.roller == self.id || (self.isAllyOf(combatant(roll.roller)) && within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))))",
+   "modify": [
+    {
+     "op": "reroll",
+     "die": "d20",
+     "keep": "higher"
+    }
+   ]
+  },
+  {
+   "id": "disadv",
+   "label": "预言专家：先见干预（劣势）",
+   "on": "d20Rolled",
+   "role": "any",
+   "window": "before",
+   "optional": true,
+   "cost": [
+    {
+     "economy": "reaction"
+    },
+    {
+     "resource": "glimpse-intervention"
+    }
+   ],
+   "when": "(roll.vs == null || !roll.failing) && !roll.failing && !roll.disadv && self.isEnemyOf(combatant(roll.roller)) && within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))",
+   "modify": [
+    {
+     "op": "reroll",
+     "die": "d20",
+     "keep": "lower"
+    }
+   ]
+  },
+  {
+   "id": "regain-intervention",
+   "label": "预言专家：恢复先见干预",
+   "on": "spellCast",
+   "role": "actor",
+   "window": "after",
+   "when": "action.kind == 'spell' && action.spell.school == '预言' && action.spell.slot > 0 && self.resource('glimpse-intervention') < 1",
+   "do": [
+    {
+     "kind": "resource",
+     "id": "glimpse-intervention",
+     "delta": 1
+    }
+   ]
+  }
+ ]
+}

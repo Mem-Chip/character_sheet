@@ -1,0 +1,129 @@
+{
+ "name": "潜能微尘",
+ "automation": "partial",
+ "text": "给予诗人激励时创造一团潜能微尘。当承受者将该激励骰用于属性检定、攻击检定或豁免检定时产生额外效果：属性检定可重掷激励骰取其一；攻击检定使目标及 5 尺内生物过体质豁免受雷鸣伤害（需手动处理）；豁免检定自动获得激励骰 + 魅力调整值点临时生命值。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "潜能微尘：赋予激励",
+   "activation": "bonus",
+   "cost": [
+    {
+     "resource": "诗人激励"
+    }
+   ],
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 60,
+    "filter": "target.id != self.id"
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "target",
+     "template": "潜能微尘",
+     "duration": {
+      "hours": 1
+     },
+     "state": {
+      "die": "classTable('诗人骰')"
+     }
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "潜能微尘": {
+   "stackKey": "诗人激励",
+   "text": "环绕着潜能微尘的诗人激励。用于属性检定可重掷激励骰；用于攻击检定对目标及 5 尺内生物造成雷鸣伤害；用于豁免检定获得临时生命值。",
+   "triggers": [
+    {
+     "id": "mote-check",
+     "label": "潜能微尘：增益属性检定",
+     "on": "d20Rolled",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "when": "roll.kind == 'check' && roll.failing",
+     "modify": [
+      {
+       "op": "addToRoll",
+       "value": "effect.state.die"
+      }
+     ],
+     "do": [
+      {
+       "kind": "note",
+       "text": "潜能微尘：用于属性检定时，你可以重投一次激励骰并选择其中一个结果使用。"
+      },
+      {
+       "kind": "removeEffect",
+       "match": {
+        "name": "潜能微尘"
+       },
+       "from": "self"
+      }
+     ]
+    },
+    {
+     "id": "mote-attack",
+     "label": "潜能微尘：增益攻击检定",
+     "on": "d20Rolled",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "when": "roll.kind == 'attack' && roll.failing",
+     "modify": [
+      {
+       "op": "addToRoll",
+       "value": "effect.state.die"
+      }
+     ],
+     "do": [
+      {
+       "kind": "note",
+       "text": "潜能微尘：攻击目标及目标周围 5 尺内由你选择的可见生物必须通过体质豁免，失败承受等同于激励骰点数的雷鸣伤害（请手动结算）。"
+      },
+      {
+       "kind": "removeEffect",
+       "match": {
+        "name": "潜能微尘"
+       },
+       "from": "self"
+      }
+     ]
+    },
+    {
+     "id": "mote-save",
+     "label": "潜能微尘：增益豁免检定",
+     "on": "d20Rolled",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "when": "roll.kind == 'save' && roll.failing",
+     "modify": [
+      {
+       "op": "addToRoll",
+       "value": "effect.state.die"
+      }
+     ],
+     "do": [
+      {
+       "kind": "tempHp",
+       "amount": "effect.state.die + max(1, source.mod.cha)",
+       "to": "self"
+      },
+      {
+       "kind": "removeEffect",
+       "match": {
+        "name": "潜能微尘"
+       },
+       "from": "self"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,82 @@
+{
+ "resources": [
+  {
+   "id": "物品资源:速度之靴:分钟",
+   "name": "速度之靴：可用分钟",
+   "formula": 10,
+   "recovery": "long"
+  }
+ ],
+ "name": "速度之靴",
+ "automation": "partial",
+ "text": "以附赠动作碰撞鞋跟激活，步行速度翻倍，敌人的借机攻击具有劣势。每回合结束时若处于倒地则停止运作。最多运作10分钟，每次至少扣除1分钟；不使用时每2分钟恢复1分钟使用时间（长休完全恢复）。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "速度之靴：激活/停止",
+   "activation": "bonus",
+   "root": [
+    {
+     "kind": "if",
+     "when": "self.hasEffect('速度之靴')",
+     "then": [
+      {
+       "kind": "removeEffect",
+       "match": {
+        "name": "速度之靴"
+       },
+       "from": "self"
+      }
+     ],
+     "else": [
+      {
+       "kind": "applyEffect",
+       "template": "速度之靴",
+       "to": "self"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "速度之靴": {
+   "text": "步行速度翻倍，任何生物对你发动的借机攻击遭受劣势。回合结束若倒地则停止运作。",
+   "statics": [
+    {
+     "kind": "speed",
+     "bonus": "self.speed"
+    }
+   ],
+   "rollMods": [
+    {
+     "on": {
+      "kind": "attack"
+     },
+     "who": "against",
+     "when": "ask('这次攻击是对速度之靴穿戴者发动的借机攻击吗？')",
+     "op": "disadv",
+     "label": "速度之靴：借机攻击劣势"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "prone-stop",
+     "label": "倒地停止运作",
+     "on": "turnEnded",
+     "role": "actor",
+     "when": "self.has('倒地')",
+     "do": [
+      {
+       "kind": "removeEffect",
+       "match": {
+        "name": "速度之靴"
+       },
+       "from": "self"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,91 @@
+{
+ "name": "咒唤微元素群",
+ "automation": "partial",
+ "text": "专注至多 10 分钟。在自身身周 15 尺光环内咒唤微元素群。你进行的任何攻击检定命中光环内的生物时，额外造成 (slot.level - 2)d8 点（4 环 2d8，每高一环 +1d8）强酸、寒冷、火焰或闪电伤害（攻击时自选）；光环内地面视为敌人的困难地形（随身移动的困难地形光环引擎暂不支持，需人工多扣敌方移动力）。",
+ "actions": [
+  {
+   "id": "cast",
+   "name": "咒唤微元素群",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 4
+     }
+    }
+   ],
+   "concentration": {
+    "minutes": 10
+   },
+   "targeting": {
+    "type": "self"
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "template": "咒唤微元素群",
+     "to": "self",
+     "state": {
+      "dice": "(slot.level - 2)d8"
+     }
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "咒唤微元素群": {
+   "tags": [
+    "magical",
+    "spell"
+   ],
+   "aura": {
+    "id": "conjure-minor-elementals",
+    "radius": 15,
+    "affects": "enemies",
+    "includeSelf": false,
+    "grant": {}
+   },
+   "triggers": [
+    {
+     "id": "extra-damage",
+     "label": "咒唤微元素群：额外元素伤害",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "when": "within(self, target, 15)",
+     "do": [
+      {
+       "kind": "choose",
+       "prompt": "选择咒唤微元素群的额外伤害类型",
+       "var": "elem",
+       "options": [
+        {
+         "label": "强酸"
+        },
+        {
+         "label": "寒冷"
+        },
+        {
+         "label": "火焰"
+        },
+        {
+         "label": "闪电"
+        }
+       ]
+      },
+      {
+       "kind": "addDamage",
+       "dice": "effect.state.dice",
+       "type": "vars.elem"
+      }
+     ]
+    }
+   ],
+   "text": "15 尺光环；命中光环内生物时额外造成 (slot.level - 2)d8 强酸、寒冷、火焰或闪电伤害；光环内地面为敌人困难地形（需人工处理）。"
+  }
+ }
+}

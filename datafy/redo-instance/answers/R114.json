@@ -1,0 +1,36 @@
+{
+ "name": "符令责斥",
+ "automation": "partial",
+ "text": "当护身符的佩戴者被一个位于你 30 尺以内、你能看见的攻击者命中时，你可以用反应对该攻击者造成等同于你熟练加值的心灵伤害，并把它推离佩戴者至多 10 尺（佩戴者不是你时推离方向请手动在地图上校正）。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "符令责斥",
+   "activation": "reaction",
+   "trigger": {
+    "on": "attackHit",
+    "role": "any",
+    "window": "after",
+    "aim": "actor",
+    "when": "(target.id == self.id || target.isAllyOf(self)) && dist(self, attacker) <= 30 && canSee(self, attacker)"
+   },
+   "root": [
+    {
+     "kind": "damage",
+     "to": "attacker",
+     "dice": "self.pb",
+     "type": "心灵"
+    },
+    {
+     "kind": "move",
+     "mode": "push",
+     "ft": 10
+    },
+    {
+     "kind": "note",
+     "text": "符令责斥：攻击者受到等同于熟练加值的心灵伤害，并被推离佩戴者至多 10 尺。"
+    }
+   ]
+  }
+ ]
+}

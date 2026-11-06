@@ -1,0 +1,131 @@
+{
+ "name": "灵魂牢笼",
+ "automation": "partial",
+ "text": "1 反应（60 尺内看见类人生物死去时使用）。将死者灵魂困在笼中至多 8 小时。被困灵魂至多可被利用 6 次，用尽后法术结束。可进行的利用方式包括：【窃取生命】附赠动作恢复 2d8 生命值；【灵魂质问】无需动作提问并获得如实简短回答；【借鉴经验】附赠动作使下一次攻击检定、属性检定或豁免检定具优势（下回合开始前生效）；【亡者之眼】动作在死者生前见过的地点创造隐形传感器，专注至多 10 分钟。施法时机（看见类人生物死去）与亡者之眼/灵魂质问效果需人工处理。",
+ "actions": [
+  {
+   "id": "steal-life",
+   "name": "灵魂牢笼：窃取生命",
+   "activation": "bonus",
+   "cost": [
+    {
+     "resource": "灵魂利用次数"
+    }
+   ],
+   "requires": "self.hasEffect('灵魂牢笼')",
+   "root": [
+    {
+     "kind": "heal",
+     "amount": "2d8",
+     "to": "self"
+    }
+   ]
+  },
+  {
+   "id": "borrow-experience",
+   "name": "灵魂牢笼：借鉴经验",
+   "activation": "bonus",
+   "cost": [
+    {
+     "resource": "灵魂利用次数"
+    }
+   ],
+   "requires": "self.hasEffect('灵魂牢笼')",
+   "root": [
+    {
+     "kind": "applyEffect",
+     "template": "借鉴经验",
+     "to": "self"
+    }
+   ]
+  },
+  {
+   "id": "eyes-of-the-dead",
+   "name": "灵魂牢笼：亡者之眼",
+   "activation": "action",
+   "cost": [
+    {
+     "resource": "灵魂利用次数"
+    }
+   ],
+   "concentration": {
+    "minutes": 10
+   },
+   "requires": "self.hasEffect('灵魂牢笼')",
+   "root": [
+    {
+     "kind": "note",
+     "text": "灵魂牢笼：在死者生前见过的地点创造隐形传感器，从传感器接受视听信息，专注至多 10 分钟。"
+    }
+   ]
+  },
+  {
+   "id": "query-soul",
+   "name": "灵魂牢笼：灵魂质问",
+   "activation": "free",
+   "cost": [
+    {
+     "resource": "灵魂利用次数"
+    }
+   ],
+   "requires": "self.hasEffect('灵魂牢笼')",
+   "root": [
+    {
+     "kind": "note",
+     "text": "灵魂牢笼：向灵魂提问并获得如实简短回答（无需动作）。"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "灵魂牢笼": {
+   "tags": [
+    "magical",
+    "spell"
+   ],
+   "duration": {
+    "hours": 8
+   },
+   "text": "困有类人生物灵魂，最多可利用 6 次（窃取生命、借鉴经验、亡者之眼、灵魂质问）。"
+  },
+  "借鉴经验": {
+   "tags": [
+    "magical",
+    "spell",
+    "buff"
+   ],
+   "duration": {
+    "until": {
+     "at": "turnStart",
+     "of": "bearer",
+     "nth": 1
+    },
+    "endsOn": [
+     {
+      "event": "d20Rolled",
+      "when": "event.roller == self.id"
+     }
+    ]
+   },
+   "rollMods": [
+    {
+     "on": {
+      "kind": "d20"
+     },
+     "who": "bearer",
+     "op": "adv",
+     "label": "借鉴经验：下一次检定优势"
+    }
+   ],
+   "text": "下一次攻击检定、属性检定或豁免检定具有优势。若下回合开始前未使用则失效。"
+  }
+ },
+ "resources": [
+  {
+   "id": "灵魂利用次数",
+   "name": "灵魂利用次数",
+   "formula": 6,
+   "recovery": "long"
+  }
+ ]
+}

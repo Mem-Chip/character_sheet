@@ -1,0 +1,64 @@
+{
+ "name": "直觉魅惑",
+ "automation": "full",
+ "text": "当一个位于你30尺内且你能看见的生物以攻击检定命中你时，你可以用一个反应，迫使攻击者进行一次对抗你法术豁免DC的感知豁免。豁免失败时，该攻击改为未命中你，并由你选择该攻击范围内另一生物承受这次攻击（沿用同次攻击检定判定）。每长休一次，消耗法术位施展惑控法术可自动恢复使用机会。",
+ "triggers": [
+  {
+   "id": "charm",
+   "label": "直觉魅惑（反应：让这次攻击落空 / 改打别人）",
+   "on": "attackHit",
+   "role": "target",
+   "window": "before",
+   "optional": true,
+   "cost": [
+    {
+     "economy": "reaction"
+    },
+    {
+     "resource": "instinctive-charm"
+    }
+   ],
+   "when": "within(self, attacker, 30) && canSee(self, attacker)",
+   "do": [
+    {
+     "kind": "save",
+     "ability": "wis",
+     "dc": "self.spell.dc",
+     "to": "attacker",
+     "onFail": [
+      {
+       "kind": "modify",
+       "modify": [
+        {
+         "op": "redirect",
+         "to": "choose"
+        }
+       ]
+      }
+     ],
+     "onSuccess": [
+      {
+       "kind": "note",
+       "text": "直觉魅惑：攻击者的感知豁免成功，这次攻击照常命中你。"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "regain-on-enchantment",
+   "label": "直觉魅惑：消耗法术位施展惑控法术恢复使用机会",
+   "on": "spellCast",
+   "role": "actor",
+   "window": "after",
+   "when": "action.kind == 'spell' && action.spell.school == '惑控' && action.spell.slot > 0 && self.resource('instinctive-charm') < 1",
+   "do": [
+    {
+     "kind": "resource",
+     "id": "instinctive-charm",
+     "delta": 1
+    }
+   ]
+  }
+ ]
+}

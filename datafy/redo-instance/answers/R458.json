@@ -1,0 +1,70 @@
+{
+  "name": "运动健将",
+  "automation": "full",
+  "text": "先攻检定和力量（运动）检定具有优势。当你造成一次重击时，自动获得相当于速度一半的移动力，且该次移动不引发借机攻击。",
+  "rollMods": [
+    {
+      "on": {
+        "kind": "initiative"
+      },
+      "who": "bearer",
+      "op": "adv",
+      "label": "运动健将：先攻"
+    },
+    {
+      "on": {
+        "kind": "check",
+        "ability": "str",
+        "skill": "运动"
+      },
+      "who": "bearer",
+      "op": "adv",
+      "label": "运动健将：力量（运动）"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "crit-move",
+      "label": "运动健将：重击后移动",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "optional": true,
+      "when": "roll.crit",
+      "do": [
+        {
+          "kind": "economy",
+          "move": "floor(self.speed / 2)"
+        },
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "运动健将：重击移动"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "运动健将：重击移动": {
+      "text": "重击之后的这次移动不引发借机攻击；移动结束后失效。",
+      "flags": {
+        "cannot": [
+          "provoke"
+        ]
+      },
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 0
+        },
+        "endsOn": [
+          {
+            "event": "moved",
+            "when": "event.id == self.id"
+          }
+        ]
+      }
+    }
+  }
+}

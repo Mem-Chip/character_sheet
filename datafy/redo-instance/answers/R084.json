@@ -1,0 +1,47 @@
+{
+ "name": "辉耀之火",
+ "automation": "partial",
+ "text": "在你的回合中作为魔法动作或附赠动作的一部分消耗至少1术法点时使用（每回合限一次）。一名你可见的30尺内的生物受到1d4（14级起1d8）火焰或光耀伤害（由你选择）。是否满足触发条件及每回合一次限制由玩家自行遵守。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "辉耀之火",
+   "activation": "free",
+   "requires": "turn.isMine",
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 30,
+    "filter": "canSee(self, target)"
+   },
+   "root": [
+    {
+     "kind": "choose",
+     "prompt": "辉耀之火：选择伤害类型",
+     "options": [
+      {
+       "label": "火焰伤害",
+       "do": [
+        {
+         "kind": "damage",
+         "dice": "cond(self.levelOf('术士') >= 14, '1d8', '1d4')",
+         "type": "火焰"
+        }
+       ]
+      },
+      {
+       "label": "光耀伤害",
+       "do": [
+        {
+         "kind": "damage",
+         "dice": "cond(self.levelOf('术士') >= 14, '1d8', '1d4')",
+         "type": "光耀"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

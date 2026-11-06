@@ -1,0 +1,48 @@
+{
+  "name": "引导闪避",
+  "automation": "full",
+  "text": "当你受到允许你进行敏捷豁免来只承受一半伤害的效应影响时，豁免成功不受伤害，豁免失败只承受一半伤害；位于你 5 尺内的盟友同样享受此增益。你陷入失能状态时无法使用。",
+  "triggers": [
+    {
+      "id": "evasion",
+      "label": "引导闪避",
+      "on": "damageIncoming",
+      "role": "target",
+      "window": "before",
+      "when": "damage.save == 'dex' && !self.has('失能')",
+      "modify": [
+        {
+          "op": "evasion"
+        }
+      ]
+    }
+  ],
+  "auras": [
+    {
+      "id": "evasion-share",
+      "radius": 5,
+      "affects": "allies",
+      "includeSelf": false,
+      "requires": "!self.has('失能')",
+      "stackKey": "引导闪避",
+      "grant": {
+        "triggers": [
+          {
+            "id": "evasion-share",
+            "label": "引导闪避（吟游诗人分享）",
+            "on": "damageIncoming",
+            "role": "target",
+            "window": "before",
+            "optional": true,
+            "when": "damage.save == 'dex' && within(self, source, 5) && !source.has('失能')",
+            "modify": [
+              {
+                "op": "evasion"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

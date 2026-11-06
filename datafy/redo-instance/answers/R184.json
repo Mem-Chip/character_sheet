@@ -1,0 +1,51 @@
+{
+ "name": "暴风魔法",
+ "automation": "partial",
+ "text": "在你的回合中施展 1 环或更高环阶法术时，可用附赠动作飞行至多 10 尺，这次移动不引发借机攻击。自动的部分：附赠动作、+10 尺移动力，以及「你这个回合的下一次移动免除借机攻击」（移动一次即失效，或到本回合结束）。飞行本身（越过障碍/悬空）请人工判断。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "暴风魔法",
+   "activation": "bonus",
+   "trigger": {
+    "on": "spellCast",
+    "role": "actor",
+    "when": "action.spell.slot >= 1 && action.onMyTurn"
+   },
+   "root": [
+    {
+     "kind": "economy",
+     "move": 10
+    },
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "暴风魔法：御风"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "暴风魔法：御风": {
+   "name": "暴风魔法：御风",
+   "flags": {
+    "cannot": [
+     "provoke"
+    ]
+   },
+   "duration": {
+    "until": {
+     "at": "turnEnd",
+     "of": "bearer",
+     "nth": 0
+    },
+    "endsOn": [
+     {
+      "event": "moved",
+      "when": "event.id == self.id"
+     }
+    ]
+   }
+  }
+ }
+}

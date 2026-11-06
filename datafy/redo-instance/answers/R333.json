@@ -1,0 +1,39 @@
+{
+ "name": "酒馆斗殴者",
+ "automation": "partial",
+ "text": "推离已自动化（命中后每回合一次推离 5 尺）。徒手打击伤害骰重掷（掷出 1 时重掷 1 颗）已由受害结算前触发器支持。强化徒手打击（伤害改为 1d4 + 力量调整值的钝击伤害）引擎暂无法直接改写徒手打击基础骰，请手动按 1d4 结算。临时武器熟练为静态，人物卡已算。",
+ "triggers": [
+  {
+   "id": "push",
+   "label": "酒馆斗殴者：推离",
+   "on": "attackHit",
+   "role": "actor",
+   "window": "after",
+   "optional": true,
+   "limit": "oncePerTurn",
+   "when": "attack.unarmed && turn.isMine",
+   "do": [
+    {
+     "kind": "move",
+     "mode": "push",
+     "ft": 5
+    }
+   ]
+  },
+  {
+   "id": "reroll-damage",
+   "label": "酒馆斗殴者：重掷伤害骰中的 1",
+   "on": "damageIncoming",
+   "role": "actor",
+   "window": "before",
+   "optional": true,
+   "when": "attack.unarmed && ask('徒手打击伤害骰掷出了 1 吗？')",
+   "modify": [
+    {
+     "op": "rerollDamage",
+     "count": 1
+    }
+   ]
+  }
+ ]
+}

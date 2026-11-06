@@ -1,0 +1,102 @@
+{
+ "name": "咒缚幽灵",
+ "automation": "partial",
+ "text": "杀死一个类人生物时（每长休一次），你可以用反应让它的灵魂变成一个恶灵为你服务：恶灵获得等于你魔契师等级一半的临时生命值，在战斗中独立投掷先攻，攻击检定获得等同于你魅力调整值（最低 +0）的加值，为你服务到你完成下一次长休。",
+ "resources": [
+  {
+   "id": "accursed-specter",
+   "name": "咒缚幽灵",
+   "formula": 1,
+   "recovery": "long"
+  }
+ ],
+ "actions": [
+  {
+   "id": "use",
+   "name": "咒缚幽灵：唤醒恶灵",
+   "activation": "reaction",
+   "trigger": {
+    "on": "reducedTo0",
+    "role": "actor",
+    "when": "target.type == '类人生物' || target.type == 'humanoid' || ask('被杀死的生物是类人生物吗？')"
+   },
+   "cost": [
+    {
+     "resource": "accursed-specter"
+    }
+   ],
+   "targeting": {
+    "type": "self"
+   },
+   "root": [
+    {
+     "kind": "summon",
+     "name": "恶灵",
+     "size": "M",
+     "type": "undead",
+     "ac": 12,
+     "hp": 22,
+     "speed": 30,
+     "pb": 2,
+     "score": {
+      "str": 1,
+      "dex": 14,
+      "con": 11,
+      "int": 10,
+      "wis": 10,
+      "cha": 11
+     },
+     "attacksPerAction": 1,
+     "attacks": [
+      {
+       "id": "drain",
+       "name": "吸取生命",
+       "melee": true,
+       "bonus": "4 + max(0, self.mod.cha)",
+       "damage": "2d6",
+       "damageType": "黯蚀"
+      }
+     ],
+     "conditionImmune": [
+      "魅惑",
+      "力竭",
+      "受擒",
+      "麻痹",
+      "石化",
+      "中毒",
+      "倒地",
+      "束缚",
+      "昏迷"
+     ],
+     "resist": [
+      "强酸",
+      "钝击",
+      "寒冷",
+      "火焰",
+      "闪电",
+      "穿刺",
+      "挥砍",
+      "雷鸣"
+     ],
+     "immune": [
+      "黯蚀",
+      "毒素"
+     ],
+     "notes": [
+      {
+       "group": "特性",
+       "name": "临时生命值",
+       "text": "出现时立刻获得「魔契师等级一半（向下取整）」点临时生命值，请在召唤物上手动加上。"
+      },
+      {
+       "group": "特性",
+       "name": "服务期限",
+       "text": "为你服务至你完成下一次长休为止。"
+      }
+     ],
+     "link": false
+    }
+   ]
+  }
+ ]
+}

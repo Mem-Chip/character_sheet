@@ -1,0 +1,94 @@
+{
+  "name": "散打技巧",
+  "automation": "partial",
+  "text": "每当你疾风连击中的一次攻击命中一个生物时，可以迫使其承受下列效应之一：【慌神】直到它的下个回合开始不能使用借机攻击（引擎无禁止借机攻击标记，弹窗提示选不攻击）；【推离】力量豁免失败被推离 15 尺；【失衡】敏捷豁免失败陷入倒地状态。",
+  "triggers": [
+    {
+      "id": "open-hand",
+      "label": "散打技巧（疾风连击命中）",
+      "on": "attackHit",
+      "role": "actor",
+      "optional": true,
+      "when": "action.name == '疾风连击' && attack.unarmed",
+      "do": [
+        {
+          "kind": "choose",
+          "prompt": "散打技巧：选择一种效果",
+          "options": [
+            {
+              "label": "慌神",
+              "do": [
+                {
+                  "kind": "applyEffect",
+                  "to": "target",
+                  "template": "散打技巧：慌神"
+                }
+              ]
+            },
+            {
+              "label": "推离 15 尺",
+              "do": [
+                {
+                  "kind": "save",
+                  "ability": "str",
+                  "dc": "8 + self.pb + max(self.mod.dex, self.mod.wis)",
+                  "onFail": [
+                    {
+                      "kind": "move",
+                      "mode": "push",
+                      "ft": 15
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "失衡",
+              "do": [
+                {
+                  "kind": "save",
+                  "ability": "dex",
+                  "dc": "8 + self.pb + max(self.mod.dex, self.mod.wis)",
+                  "onFail": [
+                    {
+                      "kind": "applyEffect",
+                      "to": "target",
+                      "template": "XPHB:condition:倒地"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "散打技巧：慌神": {
+      "text": "不能使用借机攻击，直至其下个回合开始。引擎没有禁止借机攻击的标记，被问到借机攻击时请选「不攻击」。",
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "triggers": [
+        {
+          "id": "no-oa",
+          "label": "散打技巧：慌神（不能借机攻击）",
+          "on": "leftReach",
+          "role": "target",
+          "window": "after",
+          "do": [
+            {
+              "kind": "note",
+              "text": "慌神：这个生物不能发动借机攻击，请在借机攻击弹窗里选「不攻击」。"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

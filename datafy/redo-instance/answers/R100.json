@@ -1,0 +1,45 @@
+{
+ "name": "冬猎霜寒",
+ "automation": "partial",
+ "text": "当你施展猎人印记法术时，获得 1d10 + 游侠等级 点临时生命值。此外，被你的猎人印记标记的生物不可执行撤离动作（标记生物无法撤离由效应提示，请遵守规则）。",
+ "triggers": [
+  {
+   "id": "winter-chill-temphp",
+   "label": "冬猎霜寒",
+   "on": "spellCast",
+   "role": "actor",
+   "window": "after",
+   "when": "action.name == '猎人印记' || action.key == 'XPHB:spell:猎人印记'",
+   "do": [
+    {
+     "kind": "tempHp",
+     "amount": "1d10 + self.levelOf('游侠')",
+     "to": "self"
+    },
+    {
+     "kind": "applyEffect",
+     "template": "冬猎霜寒：无法撤离",
+     "to": "target"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "冬猎霜寒：无法撤离": {
+   "text": "被猎人印记标记期间，不可执行撤离动作。",
+   "duration": {
+    "endsOn": [
+     {
+      "event": "effectEnded",
+      "when": "event.name == '猎人印记' || (event.bearer == source.id && event.name == '专注')"
+     }
+    ]
+   },
+   "flags": {
+    "cannot": [
+     "disengage"
+    ]
+   }
+  }
+ }
+}

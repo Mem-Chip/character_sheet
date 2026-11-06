@@ -1,0 +1,74 @@
+{
+ "name": "感染之怒",
+ "automation": "partial",
+ "text": "狂暴时用天生武器命中敌人时，可消耗 1 次感染之怒迫使目标进行感知豁免（DC = 8 + 体质调整值 + 熟练加值）。失败时由你选择：受到 2d12 心灵伤害，或用反应对你选择且可见的一个生物发动一次近战攻击（受控攻击需手动由目标发起）。次数等同于熟练加值，长休恢复。",
+ "resources": [
+  {
+   "id": "infectious-fury",
+   "name": "感染之怒",
+   "formula": "pb",
+   "recovery": "long"
+  }
+ ],
+ "triggers": [
+  {
+   "id": "infectious-fury",
+   "label": "感染之怒：诅咒目标",
+   "on": "attackHit",
+   "role": "actor",
+   "window": "after",
+   "optional": true,
+   "cost": [
+    {
+     "resource": "infectious-fury"
+    }
+   ],
+   "when": "self.hasEffect('狂暴') && attack.melee && (action.name == '咬击' || action.name == '爪击' || action.name == '尾刺' || action.name == '尾击' || ask('这次命中是天生武器吗？'))",
+   "do": [
+    {
+     "kind": "save",
+     "ability": "wis",
+     "dc": "8 + self.mod.con + pb",
+     "onFail": [
+      {
+       "kind": "choose",
+       "prompt": "感染之怒：选择豁免失败的效应",
+       "options": [
+        {
+         "label": "受到 2d12 心灵伤害",
+         "do": [
+          {
+           "kind": "damage",
+           "dice": "2d12",
+           "type": "心灵"
+          }
+         ]
+        },
+        {
+         "label": "目标用反应对指定生物发动一次近战攻击",
+         "do": [
+          {
+           "kind": "chooseTargets",
+           "prompt": "选择目标要用反应攻击的生物（必须为你可见的生物）",
+           "count": 1,
+           "filter": "canSee(self, target)",
+           "exclude": [
+            "target"
+           ],
+           "do": [
+            {
+             "kind": "note",
+             "text": "感染之怒：原目标受控用反应对该生物发动一次近战攻击（请手动结算这次攻击）。"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

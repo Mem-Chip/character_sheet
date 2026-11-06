@@ -1,0 +1,72 @@
+{
+ "name": "水巨灵之激流",
+ "automation": "full",
+ "text": "施展至圣斩后，可消耗 1 次引导神力：至圣斩目标及你 10 尺内指定的每个生物进行一次力量豁免，豁免失败的生物被直线推开 15 尺并陷入倒地状态。",
+ "triggers": [
+  {
+   "id": "marid-torrent",
+   "label": "水巨灵之激流",
+   "on": "spellCast",
+   "role": "actor",
+   "window": "after",
+   "optional": true,
+   "when": "action.kind == 'spell' && (action.name == '至圣斩' || action.key == 'XPHB:spell:至圣斩')",
+   "cost": [
+    {
+     "resource": "channel-divinity"
+    }
+   ],
+   "do": [
+    {
+     "kind": "save",
+     "ability": "str",
+     "dc": "self.spell.dc",
+     "onFail": [
+      {
+       "kind": "move",
+       "mode": "push",
+       "ft": 15
+      },
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "XPHB:condition:倒地"
+      }
+     ]
+    },
+    {
+     "kind": "chooseTargets",
+     "prompt": "水巨灵之激流：选择 10 尺内指定的其他生物",
+     "from": "all",
+     "within": {
+      "ft": 10,
+      "of": "self"
+     },
+     "exclude": [
+      "self",
+      "target"
+     ],
+     "do": [
+      {
+       "kind": "save",
+       "ability": "str",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "move",
+         "mode": "push",
+         "ft": 15
+        },
+        {
+         "kind": "applyEffect",
+         "to": "target",
+         "template": "XPHB:condition:倒地"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

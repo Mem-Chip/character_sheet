@@ -1,0 +1,93 @@
+{
+ "name": "咒火冠冕",
+ "automation": "partial",
+ "text": "【咒火冠冕】使用先天术法时，可消耗1次咒火冠冕将其转换为咒火冠冕，持续至先天术法结束。每长休一次，或消耗5点术法点重置使用权。【燃尽】每回合一次，被攻击检定命中时减免伤害。【飞行】获得60尺飞行速度且能悬浮（需手动处理）。【法术闪避】受到允许豁免减半伤害的法术或魔法效应影响时，豁免成功不受伤害，失败只承受一半伤害（失能时无效）。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "咒火冠冕",
+   "activation": "none",
+   "requires": "self.hasEffect('先天术法') && !self.hasEffect('咒火冠冕')",
+   "cost": [
+    {
+     "resource": "spellfire-crown"
+    }
+   ],
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "咒火冠冕"
+    },
+    {
+     "kind": "note",
+     "text": "咒火冠冕：先天术法激活期间你获得 60 尺飞行速度并可悬浮（请手动移动棋子）。"
+    }
+   ]
+  },
+  {
+   "id": "restore",
+   "name": "咒火冠冕：恢复使用次数",
+   "activation": "none",
+   "cost": [
+    {
+     "resource": "sorcery_points",
+     "n": 5
+    }
+   ],
+   "root": [
+    {
+     "kind": "resource",
+     "id": "spellfire-crown",
+     "delta": 1
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "咒火冠冕": {
+   "text": "先天术法激活期间额外获得法术闪避、燃尽与60尺飞行悬浮。",
+   "duration": {
+    "minutes": 1,
+    "endsOn": [
+     {
+      "event": "effectEnded",
+      "when": "event.bearer == self.id && event.name == '先天术法'"
+     }
+    ]
+   },
+   "triggers": [
+    {
+     "id": "spellfire-evasion",
+     "label": "咒火冠冕：法术闪避",
+     "on": "damageIncoming",
+     "role": "target",
+     "window": "before",
+     "optional": true,
+     "when": "damage.save != '' && !self.has('失能') && (action.kind == 'spell' || ask('该伤害是否来自法术或魔法效应？'))",
+     "modify": [
+      {
+       "op": "evasion"
+      }
+     ]
+    },
+    {
+     "id": "spellfire-ember",
+     "label": "咒火冠冕：燃尽",
+     "on": "damageIncoming",
+     "role": "target",
+     "window": "before",
+     "optional": true,
+     "limit": "oncePerTurn",
+     "when": "ask('这次伤害来自一次攻击检定命中吗？')",
+     "modify": [
+      {
+       "op": "reduceDamage",
+       "value": "(max(1, self.mod.cha))d6"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,160 @@
+{
+ "name": "西风打击",
+ "automation": "full",
+ "text": "附赠动作，专注至多 1 分钟。持续时间内你的移动不会引发借机攻击。此外在法术结束前仅一次，你可以在自己的回合让自己的一次武器攻击检定获得优势：这次攻击若击中额外造成 1d8 力场伤害；无论是否击中，你的步行速度都增加 30 尺直到这个回合结束。",
+ "actions": [
+  {
+   "id": "cast",
+   "name": "西风打击",
+   "activation": "bonus",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 1
+     }
+    }
+   ],
+   "concentration": {
+    "minutes": 1
+   },
+   "targeting": {
+    "type": "self"
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "西风打击"
+    },
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "西风打击：蓄势"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "西风打击": {
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "flags": {
+    "cannot": [
+     "provoke"
+    ]
+   },
+   "text": "法术持续期间，你的移动不会引发借机攻击。"
+  },
+  "西风打击：蓄势": {
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "rollMods": [
+    {
+     "on": {
+      "kind": "attack",
+      "attack": {
+       "weapon": true
+      }
+     },
+     "who": "bearer",
+     "when": "turn.isMine && ask('是否在这次武器攻击检定中使用西风打击？')",
+     "op": "adv",
+     "label": "西风打击：武器攻击优势",
+     "mark": "zephyr"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "zephyr-dmg",
+     "label": "西风打击：额外力场伤害与疾风（命中）",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "when": "action.marks.zephyr == true",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "1d8",
+       "type": "力场"
+      },
+      {
+       "kind": "removeEffect",
+       "match": {
+        "name": "西风打击：蓄势"
+       },
+       "from": "self"
+      },
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "name": "西风打击：疾风",
+       "inline": {
+        "statics": [
+         {
+          "kind": "speed",
+          "bonus": 30
+         }
+        ],
+        "duration": {
+         "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 0
+         }
+        },
+        "text": "步行速度 +30 尺，直到本回合结束。"
+       }
+      }
+     ]
+    },
+    {
+     "id": "zephyr-spent-miss",
+     "label": "西风打击：用掉这次优势（未命中）",
+     "on": "attackMissed",
+     "role": "actor",
+     "window": "after",
+     "when": "action.marks.zephyr == true",
+     "do": [
+      {
+       "kind": "removeEffect",
+       "match": {
+        "name": "西风打击：蓄势"
+       },
+       "from": "self"
+      },
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "name": "西风打击：疾风",
+       "inline": {
+        "statics": [
+         {
+          "kind": "speed",
+          "bonus": 30
+         }
+        ],
+        "duration": {
+         "until": {
+          "at": "turnEnd",
+          "of": "bearer",
+          "nth": 0
+         }
+        },
+        "text": "步行速度 +30 尺，直到本回合结束。"
+       }
+      }
+     ]
+    }
+   ],
+   "text": "法术结束前仅一次：你在自己回合的一次武器攻击检定可获得优势，击中额外造成 1d8 力场伤害；无论是否击中，步行速度 +30 尺直到本回合结束。"
+  }
+ }
+}

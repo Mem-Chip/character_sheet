@@ -1,0 +1,78 @@
+{
+ "name": "奥术守御",
+ "automation": "partial",
+ "text": "结界用临时生命值近似：创建时获得「法师等级 × 2 + 智力调整值」点临时生命值，伤害先由它承受（先结算抗性与易伤，溢出部分由你承受），与别的临时生命值混在同一个池里。「奥术守御」效应只是个标记，表示结界已创建（到长休结束，期间不能再创建；结界生命值降到 0 时标记仍在）。施展防护学派法术时消耗法术位已自动检测并为结界恢复环阶两倍的生命值（不超过上限）；也可以用附赠动作消耗法术位恢复。",
+ "triggers": [
+  {
+   "id": "create",
+   "label": "奥术守御：创建结界",
+   "on": "spellCast",
+   "role": "actor",
+   "window": "after",
+   "when": "!self.hasEffect('奥术守御') && action.kind == 'spell' && action.spell.school == '防护' && action.spell.slot > 0",
+   "do": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "奥术守御"
+    },
+    {
+     "kind": "tempHp",
+     "to": "self",
+     "amount": "2 * self.levelOf('法师') + self.mod.int"
+    }
+   ]
+  },
+  {
+   "id": "regain",
+   "label": "奥术守御：施展防护法术，结界恢复生命值",
+   "on": "spellCast",
+   "role": "actor",
+   "window": "after",
+   "when": "self.hasEffect('奥术守御') && action.kind == 'spell' && action.spell.school == '防护' && action.spell.slot > 0",
+   "do": [
+    {
+     "kind": "tempHp",
+     "to": "self",
+     "amount": "min(2 * self.levelOf('法师') + self.mod.int, self.tempHp + 2 * action.spell.slot)"
+    }
+   ]
+  }
+ ],
+ "actions": [
+  {
+   "id": "use",
+   "name": "奥术守御：消耗法术位恢复结界",
+   "activation": "bonus",
+   "requires": "self.hasEffect('奥术守御')",
+   "cost": [
+    {
+     "slot": {
+      "min": 1
+     }
+    }
+   ],
+   "root": [
+    {
+     "kind": "tempHp",
+     "to": "self",
+     "amount": "min(2 * self.levelOf('法师') + self.mod.int, self.tempHp + 2 * slot.level)"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "奥术守御": {
+   "text": "你已经创建了奥术守御，直到长休结束都不能再次创建。结界的生命值用临时生命值近似。",
+   "duration": {
+    "manual": true,
+    "endsOn": [
+     {
+      "event": "restCompleted",
+      "when": "event.kind == 'long'"
+     }
+    ]
+   }
+  }
+ }
+}

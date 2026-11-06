@@ -1,0 +1,52 @@
+{
+ "name": "集结如潮",
+ "automation": "partial",
+ "text": "使用动作如潮时，可选择 30 尺内至多魅力调整值（至少 1）个盟友，每一个所选盟友都可以立即执行一次反应来进行一次武器/徒手攻击，或移动其速度一半且不触发借机攻击（盟友的反应行动由其自行执行）。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "集结如潮",
+   "activation": "free",
+   "trigger": {
+    "on": "actionDone",
+    "role": "actor",
+    "when": "action.name == '动作如潮' || action.key == 'XPHB:战士:动作如潮:2#use'"
+   },
+   "text": "使用动作如潮时，选择 30 尺内至多魅力调整值（至少 1）个盟友，各可用反应发动一次攻击或半速移动免借机。",
+   "root": [
+    {
+     "kind": "chooseTargets",
+     "prompt": "集结如潮：选择 30 尺内至多魅力调整值个盟友",
+     "from": "allies",
+     "within": {
+      "ft": 30,
+      "of": "self"
+     },
+     "exclude": [
+      "self"
+     ],
+     "count": "max(1, self.mod.cha)",
+     "min": 0,
+     "do": [
+      {
+       "kind": "note",
+       "text": "集结如潮：该盟友可立即执行一次反应，发动一次武器/徒手攻击，或移动半速且不触发借机攻击。"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "动作如潮": {
+   "text": "本回合已经用过动作如潮。额外的动作不能用来执行魔法动作。",
+   "duration": {
+    "until": {
+     "at": "turnEnd",
+     "of": "bearer",
+     "nth": 0
+    }
+   }
+  }
+ }
+}

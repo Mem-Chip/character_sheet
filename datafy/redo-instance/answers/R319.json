@@ -1,0 +1,45 @@
+{
+ "name": "超限导能",
+ "automation": "partial",
+ "text": "在你要施展法术的那个回合里，施法前先用一个自由动作开启超限导能：本回合你用 1–5 环法术位施展、会造成伤害的法师法术，其伤害骰全部取最大值（已自动：引擎检测法师法术与 1–5 环法术位；效果到你的回合结束自动消失）。反噬需人工处理：长休前第一次使用没有负面效应；之后每次使用，都在施法后立刻受到每环阶 2d12 黯蚀伤害，长休前每多用一次每环阶再加 1d12，无视抗性与免疫 —— 引擎暂不支持跨回合长休内使用次数追踪与无视抗性的自伤结算，这部分请 DM 手动处理。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "超限导能",
+   "activation": "free",
+   "requires": "!self.hasEffect('超限导能')",
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "超限导能"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "超限导能": {
+   "name": "超限导能",
+   "text": "本回合内：你用 1–5 环法术位施展的、造成伤害的法师法术，伤害骰取最大值；反噬另算。",
+   "duration": {
+    "until": {
+     "at": "turnEnd",
+     "of": "bearer",
+     "nth": 0
+    }
+   },
+   "rollMods": [
+    {
+     "on": {
+      "kind": "damage",
+      "spell": true
+     },
+     "who": "bearer",
+     "op": "maxDice",
+     "when": "action.spell.slot >= 1 && action.spell.slot <= 5 && includes(action.spell.lists, '法师')",
+     "label": "超限导能：伤害骰取最大"
+    }
+   ]
+  }
+ }
+}

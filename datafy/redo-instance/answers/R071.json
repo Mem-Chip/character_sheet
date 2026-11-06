@@ -1,0 +1,67 @@
+{
+ "name": "领主联盟特工",
+ "automation": "partial",
+ "text": "【激励打击】每回合一次，对生物造成重击时，可令30尺内能见听且无英雄激励的一名盟友获得英雄激励（手动授予）。【重获荣誉】可见敌人对你5尺内盟友造成伤害时，你的下个回合结束前，你对该敌人的下次攻击检定具有优势。",
+ "triggers": [
+  {
+   "id": "inspiring-strike",
+   "label": "激励打击",
+   "on": "attackHit",
+   "role": "actor",
+   "limit": "oncePerTurn",
+   "when": "roll.crit",
+   "do": [
+    {
+     "kind": "note",
+     "text": "激励打击：选择一名30尺内能看见或听见你且没有英雄激励的盟友，该盟友获得英雄激励。"
+    }
+   ]
+  },
+  {
+   "id": "reclaim-honor",
+   "label": "重获荣誉",
+   "on": "damageTaken",
+   "role": "ally",
+   "when": "target.id != self.id && within(target, self, 5) && source != null && source.isEnemyOf(self) && canSee(self, source)",
+   "do": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "重获荣誉",
+     "state": {
+      "enemyId": "source.id"
+     }
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "重获荣誉": {
+   "text": "你的下个回合结束前，对伤害你5尺内盟友的该敌人的下次攻击检定具有优势。",
+   "duration": {
+    "until": {
+     "at": "turnEnd",
+     "of": "bearer",
+     "nth": 1
+    },
+    "endsOn": [
+     {
+      "event": "d20Rolled",
+      "when": "event.kind == 'attack' && event.roller == self.id && event.target == effect.state.enemyId"
+     }
+    ]
+   },
+   "rollMods": [
+    {
+     "on": {
+      "kind": "attack"
+     },
+     "who": "bearer",
+     "when": "target.id == effect.state.enemyId",
+     "op": "adv",
+     "label": "重获荣誉：对该敌人的攻击具有优势"
+    }
+   ]
+  }
+ }
+}

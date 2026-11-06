@@ -1,0 +1,155 @@
+{
+ "name": "诱捕打击",
+ "automation": "partial",
+ "text": "武器命中后以附赠动作施展（专注至多 1 分钟）。目标进行力量豁免：体型为大型或更大时，这次豁免具有优势。豁免成功则藤蔓枯萎、法术结束。失败陷入束缚状态，束缚期间在其每回合开始时受到 (slot.level)d10 穿刺伤害。目标或触及内生物可用动作进行力量（运动）检定对抗法术 DC，检定成功后点击「诱捕打击：挣脱」动作解除束缚并结束专注。",
+ "actions": [
+  {
+   "id": "cast",
+   "name": "诱捕打击",
+   "activation": "bonus",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "trigger": {
+    "on": "attackHit",
+    "role": "actor",
+    "window": "before",
+    "when": "attack.weapon"
+   },
+   "requires": "turn.isMine",
+   "cost": [
+    {
+     "slot": {
+      "min": 1
+     }
+    }
+   ],
+   "concentration": {
+    "minutes": 1
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "target",
+     "template": "体型豁免优势",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      },
+      "endsOn": [
+       {
+        "event": "d20Rolled",
+        "when": "event.roller == self.id && event.kind == 'save' && event.ability == 'str'"
+       }
+      ]
+     }
+    },
+    {
+     "kind": "save",
+     "ability": "str",
+     "dc": "self.spell.dc",
+     "onSuccess": [
+      {
+       "kind": "endConcentration"
+      }
+     ],
+     "onFail": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "诱捕打击",
+       "state": {
+        "dice": "(slot.level)d6"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "escape",
+   "name": "诱捕打击：挣脱（检定成功后点这个）",
+   "activation": "free",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 30
+   },
+   "root": [
+    {
+     "kind": "removeEffect",
+     "from": "target",
+     "match": {
+      "name": "诱捕打击"
+     }
+    },
+    {
+     "kind": "endConcentration"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "体型豁免优势": {
+   "name": "诱捕打击：体型豁免优势",
+   "duration": {
+    "until": {
+     "at": "turnEnd",
+     "of": "bearer",
+     "nth": 0
+    },
+    "endsOn": [
+     {
+      "event": "d20Rolled",
+      "when": "event.roller == self.id && event.kind == 'save' && event.ability == 'str'"
+     }
+    ]
+   },
+   "rollMods": [
+    {
+     "on": {
+      "kind": "save",
+      "ability": "str"
+     },
+     "who": "bearer",
+     "when": "self.size == '大型' || self.size == '巨型' || self.size == '超巨型'",
+     "op": "adv",
+     "label": "诱捕打击：体型为大型或更大，豁免具有优势"
+    }
+   ],
+   "text": "只活到这次力量豁免掷完：体型为大型或更大时，这次豁免具有优势。"
+  },
+  "诱捕打击": {
+   "tags": [
+    "magical",
+    "spell"
+   ],
+   "implies": [
+    "XPHB:condition:束缚"
+   ],
+   "triggers": [
+    {
+     "id": "turnStartDamage",
+     "label": "诱捕打击：缠绕伤害",
+     "on": "turnStarted",
+     "role": "actor",
+     "do": [
+      {
+       "kind": "damage",
+       "dice": "effect.state.dice",
+       "type": "穿刺"
+      }
+     ]
+    }
+   ],
+   "text": "陷入束缚状态；在每回合开始时受到 1d6 点穿刺伤害（升环后为 环阶 d6）。可由目标或触及内的生物用一个动作做力量（运动）检定对抗豁免 DC 解除。"
+  }
+ }
+}

@@ -1,0 +1,70 @@
+{
+  "name": "不破威仪",
+  "automation": "full",
+  "text": "以附赠动作呈现庄严姿态，持续 1 分钟或在你陷入失能状态时结束。在此期间，任何生物在每回合首次命中你时，必须进行魅力豁免（DC 对抗你的法术豁免 DC），失败则该次攻击因畏缩而失手。完成短休或长休后重获使用权。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "不破威仪",
+      "activation": "bonus",
+      "cost": [
+        {
+          "resource": "不破威仪"
+        }
+      ],
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "不破威仪"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "不破威仪": {
+      "text": "生物在每回合首次命中你时必须通过魅力豁免，失败则攻击失手。持续 1 分钟或直到失能。",
+      "duration": {
+        "minutes": 1,
+        "endsOn": [
+          {
+            "event": "effectApplied",
+            "when": "event.bearer == self.id && self.has('失能')"
+          }
+        ]
+      },
+      "triggers": [
+        {
+          "id": "majesty",
+          "label": "不破威仪：攻击者须通过魅力豁免",
+          "on": "attackHit",
+          "role": "target",
+          "window": "before",
+          "when": "action.marks.unbreakableMajesty != true",
+          "do": [
+            {
+              "kind": "mark",
+              "name": "unbreakableMajesty"
+            },
+            {
+              "kind": "save",
+              "to": "attacker",
+              "ability": "cha",
+              "dc": "self.spell.dc",
+              "onFail": [
+                {
+                  "kind": "modify",
+                  "modify": [
+                    {
+                      "op": "cancel"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+ "name": "巫咒大师",
+ "automation": "partial",
+ "text": "当被你咒剑诅咒的生物死亡时，如果你未处于失能状态，可将该诅咒转移到距离你 30 尺内另一个可见生物身上。以此法转移诅咒时，无法从先前受咒目标的死亡中获得生命值回复。若选择转移诅咒，请在先前目标死亡时放弃回复生命，并对新目标使用此特性施加诅咒。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "巫咒大师：转移诅咒",
+   "activation": "none",
+   "requires": "!self.has('失能')",
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 30,
+    "filter": "canSee(self, target) && target.id != self.id"
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "target",
+     "inline": {
+      "name": "咒剑诅咒",
+      "duration": {
+       "minutes": 1,
+       "endsOn": [
+        {
+         "event": "died"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

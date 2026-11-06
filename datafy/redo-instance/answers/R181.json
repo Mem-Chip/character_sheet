@@ -1,0 +1,41 @@
+{
+ "name": "轻蔑呵斥",
+ "automation": "full",
+ "text": "只要你未处于失能，当一个生物以一次攻击击中你时，该生物受到等同于你魅力调整值（至少 1 点）的心灵伤害。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "轻蔑呵斥：心灵反伤",
+   "activation": "none",
+   "targeting": {
+    "type": "creature",
+    "range": "reach"
+   },
+   "root": [
+    {
+     "kind": "damage",
+     "dice": "max(1, self.mod.cha)",
+     "type": "心灵"
+    }
+   ]
+  }
+ ],
+ "triggers": [
+  {
+   "id": "scornfulRebuke",
+   "label": "轻蔑呵斥",
+   "on": "attackHit",
+   "role": "target",
+   "window": "after",
+   "when": "!self.has('失能') && attacker != null",
+   "do": [
+    {
+     "kind": "damage",
+     "to": "attacker",
+     "dice": "max(1, self.mod.cha)",
+     "type": "心灵"
+    }
+   ]
+  }
+ ]
+}

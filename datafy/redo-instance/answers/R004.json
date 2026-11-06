@@ -1,0 +1,72 @@
+{
+ "name": "反冲术",
+ "automation": "full",
+ "text": "反应（当你受到伤害时）：令这次你受到的伤害降低 (slot.level)d6 + 你的施法属性调整值点。若这次伤害来自一名位于 60 尺内的生物，你可以迫使该生物进行一次体质豁免：失败受到 (slot.level)d6 力场伤害，成功只受一半。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "反冲术",
+   "activation": "reaction",
+   "trigger": {
+    "on": "damageIncoming",
+    "role": "target",
+    "window": "before",
+    "aim": "actor"
+   },
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 4
+     }
+    }
+   ],
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 60
+   },
+   "root": [
+    {
+     "kind": "modify",
+     "modify": [
+      {
+       "op": "reduceDamage",
+       "value": "(slot.level)d6 + self.spell.mod"
+      }
+     ]
+    },
+    {
+     "kind": "if",
+     "when": "attacker != null && within(self, attacker, 60)",
+     "then": [
+      {
+       "kind": "save",
+       "ability": "con",
+       "dc": "self.spell.dc",
+       "to": "attacker",
+       "onFail": [
+        {
+         "kind": "damage",
+         "dice": "(slot.level)d6",
+         "type": "力场"
+        }
+       ],
+       "onSuccess": [
+        {
+         "kind": "damage",
+         "dice": "(slot.level)d6",
+         "type": "力场",
+         "scale": 0.5
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

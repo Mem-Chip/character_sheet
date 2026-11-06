@@ -1,0 +1,38 @@
+{
+ "name": "暴风狂怒",
+ "automation": "full",
+ "text": "当你被一次近战攻击命中时，可以用反应对攻击者造成等同于你术士等级的闪电伤害，且攻击者必须通过力量豁免（对抗你的术士法术豁免 DC），失败则被直线推开至多 20 尺。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "暴风狂怒",
+   "activation": "reaction",
+   "trigger": {
+    "on": "attackHit",
+    "role": "target",
+    "window": "after",
+    "aim": "actor",
+    "when": "attack.melee"
+   },
+   "root": [
+    {
+     "kind": "damage",
+     "dice": "self.levelOf('术士')",
+     "type": "闪电"
+    },
+    {
+     "kind": "save",
+     "ability": "str",
+     "dc": "self.spell.dc",
+     "onFail": [
+      {
+       "kind": "move",
+       "mode": "push",
+       "ft": 20
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

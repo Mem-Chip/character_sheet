@@ -1,0 +1,66 @@
+{
+ "name": "自然恢复",
+ "automation": "partial",
+ "text": "免环施法：施展大地结社准备的一环及以上法术时，可通过触发器消耗次数并自动退还法术位。短休恢复法术位：可恢复的法术位总环阶不超过德鲁伊等级一半（向上取整），需手动调整法术位。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "自然恢复（免环施法）",
+   "activation": "free",
+   "cost": [
+    {
+     "resource": "natural-recovery"
+    }
+   ],
+   "text": "施展一个以大地结社准备的一环及以上法术时无须消耗法术位（施法时触发器会自动询问并退还法术位）。",
+   "root": [
+    {
+     "kind": "note",
+     "text": "自然恢复：已消耗使用次数。接下来施展结社法术时退还法术位消耗。"
+    }
+   ]
+  }
+ ],
+ "triggers": [
+  {
+   "id": "free-circle-spell",
+   "label": "自然恢复：免除法术位",
+   "on": "spellCast",
+   "role": "actor",
+   "window": "after",
+   "optional": true,
+   "when": "action.spell.slot > 0 && ask('这是使用「自然恢复」免位施展的结社法术吗？')",
+   "cost": [
+    {
+     "resource": "natural-recovery"
+    }
+   ],
+   "do": [
+    {
+     "kind": "refund",
+     "what": "slot"
+    }
+   ]
+  },
+  {
+   "id": "slot-recovery",
+   "label": "自然恢复：短休恢复法术位",
+   "on": "restCompleted",
+   "role": "actor",
+   "window": "after",
+   "optional": true,
+   "when": "event.kind == 'short'",
+   "cost": [
+    {
+     "resource": "natural-recovery-slot"
+    }
+   ],
+   "do": [
+    {
+     "kind": "note",
+     "text": "选择恢复消耗的法术位：环阶总和不超过德鲁伊等级的一半（向上取整），且不能是 6 环或更高；手动恢复。"
+    }
+   ]
+  }
+ ]
+}

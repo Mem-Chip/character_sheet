@@ -1,0 +1,77 @@
+{
+  "name": "法术窃贼",
+  "automation": "partial",
+  "text": "别人施展的法术以你为目标、或效应范围涵盖你之后，你可以用反应迫使该生物做一次智力豁免（DC = 你的法术豁免 DC）。失败：这个法术对你的影响被消除，你偷走它 —— 接下来 8 小时你准备着它（至少 1 环、你能施展的环阶），施法者 8 小时内无法再施展它。已自动：扣一次「法术窃贼」（每长休一次）、检测法术以你为目标且至少 1 环、向施法者要豁免、失败时给施法者挂 8 小时的「法术被窃」；如果这个法术只以你为目标，自动取消这次施法（消耗法术位）。要人处理：范围/多目标法术只对你一人消除需手动撤销承受效果；偷来的法术请手动记入人物卡；施法者身上的「法术被窃」为状态标记，需靠人监督避免其施展。",
+  "actions": [
+    {
+      "id": "steal",
+      "name": "法术窃贼",
+      "activation": "reaction",
+      "trigger": {
+        "on": "spellCast",
+        "role": "any",
+        "window": "before",
+        "aim": "actor",
+        "when": "attacker != self && (target == self || includes(action.targets, self)) && action.spell.slot >= 1"
+      },
+      "cost": [
+        {
+          "resource": "spell-thief"
+        }
+      ],
+      "root": [
+        {
+          "kind": "save",
+          "ability": "int",
+          "dc": "self.spell.dc",
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "to": "attacker",
+              "template": "法术被窃"
+            },
+            {
+              "kind": "if",
+              "when": "action.targetCount == 1",
+              "then": [
+                {
+                  "kind": "modify",
+                  "modify": [
+                    {
+                      "op": "cancel",
+                      "refundSlot": false
+                    }
+                  ]
+                }
+              ],
+              "else": [
+                {
+                  "kind": "note",
+                  "text": "法术窃贼：这个法术对你的影响请你手动撤销（引擎不能只让一个目标脱离范围法术，范围里的其他生物照常受影响）"
+                }
+              ]
+            },
+            {
+              "kind": "note",
+              "text": "法术窃贼：接下来 8 小时你准备着这个法术，施法者 8 小时内无法再施展它（请手动加到人物卡上 / 记下来）"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "note",
+              "text": "法术窃贼：施法者豁免成功，法术照常生效（反应已经用掉）"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "法术被窃": {
+      "text": "法术窃贼：你被偷走了刚施展的那个法术，8 小时内无法再施展它。",
+      "duration": {
+        "hours": 8
+      }
+    }
+  }
+}

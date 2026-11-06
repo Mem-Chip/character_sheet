@@ -1,0 +1,68 @@
+{
+ "name": "弗莱格索斯之焰",
+ "automation": "partial",
+ "text": "施展造成火焰伤害的法术时，可选让火焰环绕你直到下个回合结束：5 尺内用近战攻击命中你的生物受到 1d4 火焰伤害。为你施展法术投掷火焰伤害时，可重掷骰值为 1 的火焰伤害骰（必须接受新结果，由系统提示或手动重掷）。光照（30 尺明亮 + 30 尺微光）需口头处理。",
+ "triggers": [
+  {
+   "id": "wreath-of-flame",
+   "label": "弗莱格索斯之焰：唤起火环",
+   "on": "spellCast",
+   "role": "actor",
+   "window": "after",
+   "optional": true,
+   "when": "action.damage.type == '火焰' || ask('这道法术造成火焰伤害吗？')",
+   "do": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "弗莱格索斯之焰：火环"
+    }
+   ]
+  },
+  {
+   "id": "reroll-fire",
+   "label": "弗莱格索斯之焰：重掷火焰伤害骰",
+   "on": "damageIncoming",
+   "role": "actor",
+   "window": "before",
+   "optional": true,
+   "when": "action.kind == 'spell' && (action.damage.type == '火焰' || ask('这次法术伤害包含火焰伤害吗？'))",
+   "modify": [
+    {
+     "op": "rerollDamage",
+     "count": 1
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "弗莱格索斯之焰：火环": {
+   "text": "火焰环绕你：30 尺明亮光照与额外 30 尺微光。火焰存在时，任何在 5 尺内用近战攻击命中你的生物受到 1d4 点火焰伤害。",
+   "duration": {
+    "until": {
+     "at": "turnEnd",
+     "of": "bearer",
+     "nth": 1
+    }
+   },
+   "triggers": [
+    {
+     "id": "retaliate",
+     "label": "火环：近战反伤 1d4 火焰",
+     "on": "attackHit",
+     "role": "target",
+     "window": "after",
+     "when": "attack.melee && dist(self, attacker) <= 5",
+     "do": [
+      {
+       "kind": "damage",
+       "to": "attacker",
+       "dice": "1d4",
+       "type": "火焰"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

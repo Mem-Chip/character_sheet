@@ -1,0 +1,57 @@
+{
+  "name": "灵巧格挡",
+  "automation": "partial",
+  "text": "在你的回合内执行攻击动作并发动徒手打击时，若你持握着一柄剑圣武器且未处于失能，AC +2 直至你的下一回合开始。持握剑圣武器由弹窗确认；武器脱手或陷入失能提前结束需手动处理。",
+  "triggers": [
+    {
+      "id": "on_hit",
+      "label": "灵巧格挡：徒手打击命中",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "after",
+      "optional": true,
+      "when": "action.onMyTurn && attack.unarmed && !self.has('失能') && ask('你正持握一柄近战剑圣武器吗？')",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "灵巧格挡"
+        }
+      ]
+    },
+    {
+      "id": "on_miss",
+      "label": "灵巧格挡：徒手打击失手",
+      "on": "attackMissed",
+      "role": "actor",
+      "window": "after",
+      "optional": true,
+      "when": "action.onMyTurn && attack.unarmed && !self.has('失能') && ask('你正持握一柄近战剑圣武器吗？')",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "灵巧格挡"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "灵巧格挡": {
+      "name": "灵巧格挡",
+      "duration": {
+        "until": {
+          "at": "turnStart",
+          "of": "bearer",
+          "nth": 1
+        }
+      },
+      "statics": [
+        {
+          "kind": "ac",
+          "bonus": 2
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,131 @@
+{
+  "name": "元素同调",
+  "automation": "partial",
+  "text": "回合开始时可消耗 1 点功力让元素能量浸润己身，持续 10 分钟或直至失能。持续期间徒手打击触及提升 10 尺（需人工判定距离）。元素注拳：徒手打击命中时可通过 retype 节点自由转为强酸/寒冷/火焰/闪电/雷鸣伤害；造成上述元素伤害时自动迫使目标进行力量豁免，失败则选择推离或拉近 10 尺。",
+  "triggers": [
+    {
+      "id": "infuse",
+      "label": "元素同调（回合开始：消耗 1 点功力）",
+      "on": "turnStarted",
+      "role": "actor",
+      "optional": true,
+      "when": "turn.isMine && !self.hasEffect('元素同调')",
+      "cost": [
+        {
+          "resource": "功力"
+        }
+      ],
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "元素同调"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "元素同调": {
+      "text": "持续 10 分钟或直至失能；徒手打击触及提升 10 尺；徒手命中可转为元素伤害并附加推拉豁免。",
+      "tags": [
+        "magical"
+      ],
+      "duration": {
+        "minutes": 10,
+        "endsOn": [
+          {
+            "event": "effectApplied",
+            "when": "event.bearer == self.id && self.has('失能')"
+          }
+        ]
+      },
+      "triggers": [
+        {
+          "id": "elemental-strike",
+          "label": "元素同调：元素注拳",
+          "on": "attackHit",
+          "role": "actor",
+          "window": "before",
+          "optional": true,
+          "when": "attack.unarmed",
+          "do": [
+            {
+              "kind": "choose",
+              "prompt": "元素注拳：将伤害类型转为哪种元素？",
+              "var": "elem",
+              "options": [
+                {
+                  "label": "不转换（保持钝击）",
+                  "value": "钝击"
+                },
+                {
+                  "label": "强酸",
+                  "value": "强酸"
+                },
+                {
+                  "label": "寒冷",
+                  "value": "寒冷"
+                },
+                {
+                  "label": "火焰",
+                  "value": "火焰"
+                },
+                {
+                  "label": "闪电",
+                  "value": "闪电"
+                },
+                {
+                  "label": "雷鸣",
+                  "value": "雷鸣"
+                }
+              ]
+            },
+            {
+              "kind": "if",
+              "when": "vars.elem != '钝击'",
+              "then": [
+                {
+                  "kind": "retype",
+                  "value": "vars.elem"
+                },
+                {
+                  "kind": "save",
+                  "ability": "str",
+                  "dc": "8 + self.pb + max(self.mod.dex, self.mod.wis)",
+                  "onFail": [
+                    {
+                      "kind": "choose",
+                      "prompt": "将目标推离还是拉近 10 尺？",
+                      "options": [
+                        {
+                          "label": "推离 10 尺",
+                          "do": [
+                            {
+                              "kind": "move",
+                              "mode": "push",
+                              "ft": 10
+                            }
+                          ]
+                        },
+                        {
+                          "label": "拉近 10 尺",
+                          "do": [
+                            {
+                              "kind": "move",
+                              "mode": "pull",
+                              "ft": 10
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

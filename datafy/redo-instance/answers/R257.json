@@ -1,0 +1,154 @@
+{
+  "resources": [
+    {
+      "id": "物品充能:维克那魔掌",
+      "name": "维克那魔掌",
+      "formula": 8,
+      "recovery": "long"
+    }
+  ],
+  "name": "维克那魔掌",
+  "automation": "partial",
+  "text": "同调需切断左手压在断肢上，取下立即死亡。阵营变为中立邪恶。力量属性变为 20（已在人物卡处理）。以魔掌进行的近战法术攻击或以魔掌持握武器进行的近战攻击命中时，额外造成 2d8 寒冷伤害。消耗充能施法（豁免 DC 18）：睡眠术（1充能）、缓慢术（2充能）、传送术（3充能）、死亡一指（5充能）。每次以此法施法时魔掌会对自身施展暗示术（DC 18）要求犯下恶行。",
+  "triggers": [
+    {
+      "id": "cold-touch",
+      "label": "维克那魔掌：极寒之抚",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "when": "attack.melee",
+      "do": [
+        {
+          "kind": "addDamage",
+          "dice": "2d8",
+          "type": "寒冷"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "sleep",
+      "name": "维克那魔掌：睡眠术",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "物品充能:维克那魔掌",
+          "n": 1
+        }
+      ],
+      "targeting": {
+        "type": "point",
+        "range": 90
+      },
+      "root": [
+        {
+          "kind": "note",
+          "text": "以目标点为中心 20 尺球状区域，总计 5d8 生命值的生物陷入昏睡状态。施法后受魔掌暗示术影响（DC 18 感知豁免，需犯下恶行）。"
+        }
+      ]
+    },
+    {
+      "id": "slow",
+      "name": "维克那魔掌：缓慢术",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "物品充能:维克那魔掌",
+          "n": 2
+        }
+      ],
+      "concentration": {
+        "minutes": 1
+      },
+      "targeting": {
+        "type": "area",
+        "range": 120,
+        "area": {
+          "shape": "cube",
+          "size": 40
+        }
+      },
+      "root": [
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "save",
+              "ability": "wis",
+              "dc": 18,
+              "onFail": [
+                {
+                  "kind": "note",
+                  "text": "目标速度减半，AC 和敏捷豁免受到 -2 减值，无法使用反应，动作受限。施法后受魔掌暗示术影响（DC 18 感知豁免，需犯下恶行）。"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "teleport",
+      "name": "维克那魔掌：传送术",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "物品充能:维克那魔掌",
+          "n": 3
+        }
+      ],
+      "root": [
+        {
+          "kind": "note",
+          "text": "施展传送术（Teleport）。施法后受魔掌暗示术影响（DC 18 感知豁免，需犯下恶行）。"
+        }
+      ]
+    },
+    {
+      "id": "finger-of-death",
+      "name": "维克那魔掌：死亡一指",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "物品充能:维克那魔掌",
+          "n": 5
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "count": 1,
+        "range": 60,
+        "filter": "canSee(self, target)"
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": 18,
+          "onFail": [
+            {
+              "kind": "damage",
+              "id": "fd",
+              "dice": "7d8 + 30",
+              "type": "黯蚀"
+            },
+            {
+              "kind": "note",
+              "text": "死亡一指：若杀死类人生物，下回合开始将其唤起为受控丧尸。施法后受魔掌暗示术影响（DC 18 感知豁免，需犯下恶行）。"
+            }
+          ],
+          "onSuccess": [
+            {
+              "kind": "damage",
+              "ref": "fd",
+              "scale": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

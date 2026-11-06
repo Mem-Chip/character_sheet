@@ -1,0 +1,45 @@
+{
+  "name": "防护圣甲虫",
+  "automation": "full",
+  "text": "【防御】AC +1（人物卡已处理）。\n【法术抗性】对法术进行的豁免具有优势。\n【存护】圣甲虫具有 12 充能，对抗死灵系法术或亡灵造成的有害效应豁免失败时，可用反应消耗 1 充能直接将豁免改为成功。充能耗尽时圣甲虫化为灰烬。",
+  "rollMods": [
+    {
+      "on": {
+        "kind": "save"
+      },
+      "who": "bearer",
+      "when": "action.kind == 'spell'",
+      "op": "adv",
+      "label": "防护圣甲虫：法术豁免优势"
+    }
+  ],
+  "actions": [
+    {
+      "id": "use",
+      "name": "防护圣甲虫：存护",
+      "activation": "reaction",
+      "trigger": {
+        "on": "d20Rolled",
+        "role": "actor",
+        "window": "before",
+        "when": "roll.kind == 'save' && roll.failing && ((action.kind == 'spell' && action.spell.school == '死灵') || (attacker != null && attacker.type == '不死生物') || ask('这次豁免是对抗死灵系法术或亡灵的有害效应吗？'))"
+      },
+      "cost": [
+        {
+          "resource": "物品充能:防护圣甲虫",
+          "n": 1
+        }
+      ],
+      "root": [
+        {
+          "kind": "modify",
+          "modify": [
+            {
+              "op": "succeed"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

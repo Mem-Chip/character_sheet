@@ -1,0 +1,46 @@
+{
+  "name": "诡术伏击",
+  "automation": "full",
+  "text": "处于隐形状态期间你对生物施展法术时，目标在该回合中为对抗该法术而进行的豁免检定具有劣势。已自动化：处于隐形状态施法时，自动为法术的所有受术目标施加「诡术伏击」状态，其对抗施法者来源的豁免检定具有劣势，持续至回合结束。",
+  "triggers": [
+    {
+      "id": "ambush",
+      "label": "诡术伏击",
+      "on": "spellCast",
+      "role": "actor",
+      "window": "after",
+      "when": "self.has('隐形')",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "each",
+          "template": "诡术伏击"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "诡术伏击": {
+      "name": "诡术伏击",
+      "text": "本回合内为对抗这道法术而进行的豁免检定具有劣势。",
+      "duration": {
+        "until": {
+          "at": "turnEnd",
+          "of": "source",
+          "nth": 0
+        }
+      },
+      "rollMods": [
+        {
+          "on": {
+            "kind": "save"
+          },
+          "who": "bearer",
+          "op": "disadv",
+          "label": "诡术伏击：对抗该法术的豁免具有劣势",
+          "when": "action.by == source"
+        }
+      ]
+    }
+  }
+}

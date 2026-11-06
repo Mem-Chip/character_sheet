@@ -1,0 +1,140 @@
+{
+ "name": "神圣武器",
+ "automation": "full",
+ "text": "以附赠动作触碰一把武器为其注入神圣力量，持续至多 1 小时（专注）。武器发散 30 尺明亮 + 30 尺微光照明，且武器攻击命中时额外造成 2d8 光耀伤害，非魔法武器暂时转变为魔法武器。法术期间在你自己的回合可以附赠动作解散法术，使武器周围 30 尺内所选可见生物进行体质豁免，失败受 4d8 光耀伤害且陷入目盲 1 分钟（回合结束可重复豁免以解除），成功受半伤且不目盲。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "神圣武器",
+   "activation": "bonus",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 5
+     }
+    }
+   ],
+   "concentration": {
+    "hours": 1
+   },
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": "touch"
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "template": "神圣武器",
+     "to": "target"
+    }
+   ]
+  },
+  {
+   "id": "burst",
+   "name": "神圣武器：光耀爆发",
+   "activation": "bonus",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "requires": "turn.isMine && self.concentrating",
+   "targeting": {
+    "type": "area",
+    "range": "self",
+    "area": {
+     "shape": "emanation",
+     "radius": 30
+    }
+   },
+   "root": [
+    {
+     "kind": "forEach",
+     "in": "area",
+     "do": [
+      {
+       "kind": "save",
+       "ability": "con",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "id": "hwBurstDmg",
+         "dice": "4d8",
+         "type": "光耀"
+        },
+        {
+         "kind": "applyEffect",
+         "template": "神圣武器：目盲",
+         "to": "target",
+         "state": {
+          "dc": "self.spell.dc"
+         }
+        }
+       ],
+       "onSuccess": [
+        {
+         "kind": "damage",
+         "ref": "hwBurstDmg",
+         "scale": 0.5
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "endConcentration"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "神圣武器": {
+   "tags": [
+    "magical",
+    "spell",
+    "buff"
+   ],
+   "text": "武器发散 30 尺明亮+30 尺微光照明，击中时额外造成 2d8 光耀伤害，非魔法武器视作魔法武器。",
+   "triggers": [
+    {
+     "id": "holyWeaponDmg",
+     "on": "attackHit",
+     "role": "actor",
+     "when": "attack.weapon",
+     "do": [
+      {
+       "kind": "addDamage",
+       "dice": "2d8",
+       "type": "光耀"
+      }
+     ],
+     "label": "神圣武器：额外 2d8 光耀伤害"
+    }
+   ]
+  },
+  "神圣武器：目盲": {
+   "tags": [
+    "magical",
+    "spell",
+    "debuff"
+   ],
+   "duration": {
+    "minutes": 1,
+    "saveEnds": {
+     "ability": "con",
+     "dc": "effect.state.dc",
+     "at": "turnEnd"
+    }
+   },
+   "implies": [
+    "XPHB:condition:目盲"
+   ],
+   "text": "受到神圣武器爆发影响陷入目盲。在其每个回合结束时可重新进行体质豁免，成功则结束目盲。"
+  }
+ }
+}

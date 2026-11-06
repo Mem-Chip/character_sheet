@@ -1,0 +1,45 @@
+{
+ "name": "凝神击",
+ "automation": "partial",
+ "text": "当你使用震慑拳时，无论目标是否豁免成功，直至你下个回合开始，目标在对抗你法术的豁免检定上具有劣势。",
+ "triggers": [
+  {
+   "id": "focusedStrike",
+   "label": "凝神击",
+   "on": "attackHit",
+   "role": "actor",
+   "window": "after",
+   "optional": true,
+   "when": "turn.isMine && ask('本次命中是否使用了震慑拳？')",
+   "do": [
+    {
+     "kind": "applyEffect",
+     "to": "target",
+     "template": "凝神击"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "凝神击": {
+   "duration": {
+    "until": {
+     "at": "turnStart",
+     "of": "source",
+     "nth": 1
+    }
+   },
+   "rollMods": [
+    {
+     "on": {
+      "kind": "save"
+     },
+     "who": "bearer",
+     "when": "action.kind == 'spell' && action.by == source",
+     "op": "disadv",
+     "label": "凝神击：对抗法术豁免劣势"
+    }
+   ]
+  }
+ }
+}

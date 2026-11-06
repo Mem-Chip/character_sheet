@@ -1,0 +1,35 @@
+{
+  "name": "高阶猎杀技艺",
+  "automation": "full",
+  "text": "每回合一次，当你对被你的猎人印记所标记的生物造成伤害时，你可以对位于这个生物 30 尺范围内的另一名生物，同样施加猎人印记造成的额外伤害（1d6力场）。已自动化：命中猎人印记目标时，自动触发选定30尺内另一名生物，对其造成1d6力场伤害。",
+  "triggers": [
+    {
+      "id": "hm-extra",
+      "label": "高阶猎杀技艺：额外猎人印记伤害",
+      "on": "attackHit",
+      "role": "actor",
+      "optional": true,
+      "limit": "oncePerTurn",
+      "when": "self.hasEffect('猎人印记') && target.id == self.effect('猎人印记').state.mark",
+      "do": [
+        {
+          "kind": "chooseTargets",
+          "prompt": "高阶猎杀技艺：选择该目标30尺内的另一名生物施加猎人印记额外伤害",
+          "count": 1,
+          "within": {
+            "ft": 30,
+            "of": "target"
+          },
+          "filter": "target.id != self.id",
+          "do": [
+            {
+              "kind": "damage",
+              "dice": "1d6",
+              "type": "力场"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

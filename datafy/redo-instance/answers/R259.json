@@ -1,0 +1,66 @@
+{
+  "name": "无踪粉",
+  "automation": "full",
+  "text": "用操作动作将粉末洒向空中，让你和以你为源点的 10 尺光环内的每个生物和物件变为隐形 2d4 分钟。受影响生物发动攻击或施展法术时隐形自动终止。",
+  "actions": [
+    {
+      "id": "use",
+      "name": "撒布无踪粉",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "物品:无踪粉"
+        }
+      ],
+      "targeting": {
+        "type": "area",
+        "range": "self",
+        "area": {
+          "shape": "emanation",
+          "radius": 10
+        }
+      },
+      "root": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "template": "无踪粉"
+        },
+        {
+          "kind": "forEach",
+          "in": "area",
+          "do": [
+            {
+              "kind": "applyEffect",
+              "to": "target",
+              "template": "无踪粉"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "无踪粉": {
+      "tags": [
+        "magical"
+      ],
+      "implies": [
+        "XPHB:condition:隐形"
+      ],
+      "duration": {
+        "endsOn": [
+          {
+            "event": "d20Rolled",
+            "when": "event.kind == 'attack' && event.roller == self.id"
+          },
+          {
+            "event": "spellCast",
+            "when": "event.actor == self.id"
+          }
+        ]
+      },
+      "text": "处于隐形状态（持续 2d4 分钟）。如果发动攻击或施展法术，隐形自动终止。"
+    }
+  }
+}

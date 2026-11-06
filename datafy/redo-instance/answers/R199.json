@@ -1,0 +1,59 @@
+{
+  "name": "乱击剑舞",
+  "automation": "full",
+  "text": "在你的回合内以攻击动作进行武器攻击命中时，可以消耗一次诗人激励（每回合限一次剑舞）。对命中的目标造成等同于激励骰结果的额外同类型伤害，且你周围 5 尺内由你选择的另一名可见生物也受到等同于该激励骰结果的伤害。",
+  "triggers": [
+    {
+      "id": "slashing-flourish",
+      "label": "乱击剑舞：消耗激励横扫加伤",
+      "on": "attackHit",
+      "role": "actor",
+      "window": "before",
+      "limit": "oncePerTurn",
+      "optional": true,
+      "cost": [
+        {
+          "resource": "诗人激励"
+        }
+      ],
+      "when": "turn.isMine && attack.weapon",
+      "do": [
+        {
+          "kind": "number",
+          "prompt": "乱击剑舞：请掷诗人激励骰（classTable('诗人骰')），输入掷出的点数作为额外伤害",
+          "var": "flourishRoll",
+          "min": 1,
+          "max": 12,
+          "default": 4
+        },
+        {
+          "kind": "addDamage",
+          "dice": "vars.flourishRoll",
+          "type": "attack.damageType"
+        },
+        {
+          "kind": "chooseTargets",
+          "prompt": "乱击剑舞：选择你周围 5 尺内另一名可见生物",
+          "count": 1,
+          "within": {
+            "ft": "5",
+            "of": "self"
+          },
+          "exclude": [
+            "self",
+            "target"
+          ],
+          "filter": "canSee(self, target)",
+          "do": [
+            {
+              "kind": "damage",
+              "dice": "vars.flourishRoll",
+              "type": "attack.damageType",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

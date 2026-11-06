@@ -1,0 +1,71 @@
+{
+ "name": "创造篝火",
+ "automation": "full",
+ "text": "专注至多 1 分钟。在 60 尺内燃起一堆占满 5 尺立方的魔法篝火；施放时空间内的生物敏捷豁免，失败受 (1 + floor((self.level + 1) / 6))d8 火焰伤害。篝火留在地图上：生物在其回合中第一次进入、或在其中结束回合时同样进行该豁免（每回合限一次），随专注结束消失。篝火可点燃区域内未被穿戴或携带的可燃物体。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "创造篝火",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "concentration": {
+    "minutes": 1
+   },
+   "targeting": {
+    "type": "area",
+    "range": 60,
+    "area": {
+     "shape": "cube",
+     "size": 5
+    }
+   },
+   "root": [
+    {
+     "kind": "forEach",
+     "in": "area",
+     "do": [
+      {
+       "kind": "save",
+       "ability": "dex",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "dice": "(1 + floor((self.level + 1) / 6))d8",
+         "type": "火焰"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "zone",
+     "on": [
+      "enter",
+      "turnEnd"
+     ],
+     "affects": "all",
+     "oncePerTurn": true,
+     "do": [
+      {
+       "kind": "save",
+       "ability": "dex",
+       "dc": "self.spell.dc",
+       "onFail": [
+        {
+         "kind": "damage",
+         "dice": "(1 + floor((self.level + 1) / 6))d8",
+         "type": "火焰"
+        }
+       ]
+      }
+     ],
+     "name": "创造篝火"
+    }
+   ]
+  }
+ ]
+}

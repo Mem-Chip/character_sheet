@@ -1,0 +1,42 @@
+{
+ "name": "归复平衡",
+ "automation": "full",
+ "text": "当 60 尺内你可见的生物即将带着优势或劣势进行 d20 检定时，你可以用反应使这次检定免受优势或劣势的影响（保留第一颗 d20 的结果）。使用次数等同于你的熟练加值，长休恢复全部使用次数。",
+ "resources": [
+  {
+   "id": "restore-balance",
+   "name": "归复平衡",
+   "formula": "pb",
+   "recovery": "long"
+  }
+ ],
+ "actions": [
+  {
+   "id": "use",
+   "name": "归复平衡",
+   "activation": "reaction",
+   "trigger": {
+    "on": "d20Rolled",
+    "role": "any",
+    "window": "before",
+    "when": "(roll.adv || roll.disadv) && (roll.roller == self.id || (dist(self, combatant(roll.roller)) <= 60 && canSee(self, combatant(roll.roller))))"
+   },
+   "cost": [
+    {
+     "resource": "restore-balance"
+    }
+   ],
+   "root": [
+    {
+     "kind": "modify",
+     "modify": [
+      {
+       "op": "clearAdv",
+       "which": "both"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

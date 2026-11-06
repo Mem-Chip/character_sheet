@@ -1,0 +1,92 @@
+{
+ "name": "橡棍术",
+ "automation": "partial",
+ "text": "附赠动作，持续 1 分钟（不专注）。用灌注自然之力的短棒或长棍近战攻击时，命中与伤害可用施法属性调整值代替力量，造成伤害时可选改为力场伤害。武器基础伤害骰提升（1级d8、5级d10、11级d12、17级2d6）需手动处理；再次施展自动覆盖前次。",
+ "actions": [
+  {
+   "id": "cast",
+   "name": "橡棍术",
+   "activation": "bonus",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "targeting": {
+    "type": "self"
+   },
+   "root": [
+    {
+     "kind": "removeEffect",
+     "match": {
+      "name": "橡棍术"
+     },
+     "from": "self"
+    },
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "橡棍术"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "橡棍术": {
+   "tags": [
+    "magical",
+    "spell"
+   ],
+   "duration": {
+    "minutes": 1
+   },
+   "rollMods": [
+    {
+     "on": {
+      "kind": "attack",
+      "attack": {
+       "melee": true,
+       "weapon": true
+      }
+     },
+     "who": "bearer",
+     "when": "attack.ability == 'str' && (attack.item == '短棒' || attack.item == '长棍' || ask('这次近战攻击用的是灌注橡棍术的短棒或长棍吗？'))",
+     "op": "add",
+     "value": "self.spell.mod - self.mod.str",
+     "label": "橡棍术：用施法属性攻击"
+    },
+    {
+     "on": {
+      "kind": "damage",
+      "attack": {
+       "melee": true,
+       "weapon": true
+      }
+     },
+     "who": "bearer",
+     "when": "attack.ability == 'str' && (attack.item == '短棒' || attack.item == '长棍' || ask('这次近战伤害用的是灌注橡棍术的短棒或长棍吗？'))",
+     "op": "add",
+     "value": "self.spell.mod - self.mod.str",
+     "label": "橡棍术：用施法属性伤害"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "force-dmg",
+     "label": "橡棍术：改为力场伤害",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "before",
+     "optional": true,
+     "when": "attack.melee && attack.weapon && (attack.item == '短棒' || attack.item == '长棍' || ask('这次攻击用的是灌注橡棍术的短棒或长棍吗？'))",
+     "do": [
+      {
+       "kind": "retype",
+       "value": "力场"
+      }
+     ]
+    }
+   ],
+   "text": "用灌注的短棒或长棍进行近战攻击：攻击与伤害检定用施法属性代替力量，可选择改为力场伤害。伤害骰应为 d8（5 级 d10、11 级 d12、17 级 2d6，需手动调整）。"
+  }
+ }
+}

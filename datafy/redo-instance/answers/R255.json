@@ -1,0 +1,157 @@
+{
+  "resources": [
+    {
+      "id": "物品次数:王者权杖:汲取生命",
+      "name": "王者权杖：汲取生命",
+      "formula": 1,
+      "recovery": "long"
+    },
+    {
+      "id": "物品次数:王者权杖:麻痹",
+      "name": "王者权杖：麻痹",
+      "formula": 1,
+      "recovery": "long"
+    },
+    {
+      "id": "物品次数:王者权杖:惊骇",
+      "name": "王者权杖：惊骇",
+      "formula": 1,
+      "recovery": "long"
+    }
+  ],
+  "name": "王者权杖",
+  "automation": "partial",
+  "text": "作为魔法硬头锤具有攻击和伤害检定 +3（人物卡已处理）。附赠动作可按压六个按钮切换形态：火焰刀刃（+2d6 火焰伤害）、战斧、长矛、爬杆、攻城锤、磁北与深度高度指示。近战命中可汲取生命（DC 17 体质豁免，受 4d6 黯蚀伤害并恢复一半伤害生命值）或麻痹目标（DC 17 体质豁免，麻痹 1 分钟）；以动作可令 30 尺内生物陷入恐慌（DC 17 感知豁免，持续 1 分钟）。三种特性直至次日黎明各限一次。",
+  "triggers": [
+    {
+      "id": "drain-life",
+      "label": "王者权杖：汲取生命",
+      "on": "attackHit",
+      "role": "actor",
+      "optional": true,
+      "when": "attack.melee && attack.weapon",
+      "cost": [
+        {
+          "resource": "物品次数:王者权杖:汲取生命"
+        }
+      ],
+      "do": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": 17,
+          "onFail": [
+            {
+              "kind": "damage",
+              "dice": "4d6",
+              "type": "黯蚀"
+            },
+            {
+              "kind": "heal",
+              "amount": "floor(damage.amount / 2)",
+              "to": "self"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "paralyze",
+      "label": "王者权杖：麻痹",
+      "on": "attackHit",
+      "role": "actor",
+      "optional": true,
+      "when": "attack.melee && attack.weapon",
+      "cost": [
+        {
+          "resource": "物品次数:王者权杖:麻痹"
+        }
+      ],
+      "do": [
+        {
+          "kind": "save",
+          "ability": "con",
+          "dc": 17,
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "王者权杖：麻痹",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "terrify",
+      "name": "王者权杖：惊骇",
+      "activation": "action",
+      "cost": [
+        {
+          "resource": "物品次数:王者权杖:惊骇"
+        }
+      ],
+      "targeting": {
+        "type": "creature",
+        "range": 30
+      },
+      "root": [
+        {
+          "kind": "save",
+          "ability": "wis",
+          "dc": 17,
+          "onFail": [
+            {
+              "kind": "applyEffect",
+              "template": "王者权杖：恐慌",
+              "to": "target"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "transform",
+      "name": "王者权杖：按压按钮",
+      "activation": "bonus",
+      "root": [
+        {
+          "kind": "note",
+          "text": "以附赠动作按压按钮切换形态：按钮1（火焰长剑/短剑，命中额外造成 2d6 火焰伤害，发光 40/40 尺）；按钮2（战斧 +3）；按钮3（长矛 +3）；按钮4（至多 50 尺长爬杆梯子）；按钮5（攻城锤，破坏障碍运动检定 +10）；按钮6（指示地磁北极与深度/高度）。再次按压变回通常形态。"
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "王者权杖：麻痹": {
+      "duration": {
+        "minutes": 1,
+        "saveEnds": {
+          "ability": "con",
+          "dc": 17,
+          "at": "turnEnd"
+        }
+      },
+      "implies": [
+        "XPHB:condition:麻痹"
+      ],
+      "text": "陷入麻痹状态，持续至多 1 分钟。每回合结束时可重新进行 DC 17 体质豁免，成功结束效应。"
+    },
+    "王者权杖：恐慌": {
+      "duration": {
+        "minutes": 1,
+        "saveEnds": {
+          "ability": "wis",
+          "dc": 17,
+          "at": "turnEnd"
+        }
+      },
+      "implies": [
+        "XPHB:condition:恐慌"
+      ],
+      "text": "陷入恐慌状态，持续至多 1 分钟。每回合结束时可重新进行 DC 17 感知豁免，成功结束效应。"
+    }
+  }
+}

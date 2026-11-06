@@ -1,0 +1,31 @@
+{
+ "name": "法术抗性",
+ "automation": "partial",
+ "text": "你抵抗法术时进行的豁免检定具有优势，且你对法术造成的伤害具有抗性。已自动：当动作来源为法术时自动赋予豁免优势并使承受伤害减半；非直接施法动作（如持续性效应）未能自动识别为法术时，会弹出提示确认。",
+ "rollMods": [
+  {
+   "on": {
+    "kind": "save"
+   },
+   "who": "bearer",
+   "when": "action.kind == 'spell' || ask('这次豁免是在抵抗法术吗？')",
+   "op": "adv",
+   "label": "法术抗性：抵抗法术的豁免具有优势"
+  }
+ ],
+ "triggers": [
+  {
+   "id": "resist",
+   "label": "法术抗性：法术伤害减半",
+   "on": "damageIncoming",
+   "role": "target",
+   "window": "before",
+   "when": "action.kind == 'spell' || ask('这伤害来自法术吗？')",
+   "modify": [
+    {
+     "op": "halveDamage"
+    }
+   ]
+  }
+ ]
+}

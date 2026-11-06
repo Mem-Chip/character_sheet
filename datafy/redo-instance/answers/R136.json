@@ -1,0 +1,120 @@
+{
+ "name": "律令之壁",
+ "automation": "partial",
+ "text": "以一个动作消耗 1~5 点术法点，为你自己或 30 尺内一个你能看见的生物造出屏障：屏障里有等量的 d8。被守护者每次受到伤害时，可以选择消耗其中几颗 d8、掷出并把合计从这次伤害里减掉（上限是屏障里剩下的颗数）；颗数消完屏障结束。屏障持续到施加者完成长休，或再次使用这个特性。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "律令之壁",
+   "activation": "action",
+   "tags": [
+    "magical"
+   ],
+   "requires": "self.resource('sorcery_points') > 0",
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 30,
+    "filter": "canSee(self, target) || target.id == self.id"
+   },
+   "root": [
+    {
+     "kind": "number",
+     "prompt": "律令之壁：消耗几点术法点（获得等量 d8）？",
+     "var": "n",
+     "min": 1,
+     "max": "min(5, self.resource('sorcery_points'))"
+    },
+    {
+     "kind": "resource",
+     "id": "sorcery_points",
+     "delta": "-vars.n"
+    },
+    {
+     "kind": "applyEffect",
+     "to": "target",
+     "template": "律令之壁",
+     "state": {
+      "dice": "vars.n"
+     }
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "律令之壁": {
+   "tags": [
+    "magical"
+   ],
+   "stackKey": "律令之壁",
+   "text": "屏障里有若干 d8；受到伤害时可以消耗任意几颗，把掷出的合计从伤害里减掉。持续到施加者长休或再次使用律令之壁。",
+   "duration": {
+    "manual": true,
+    "endsOn": [
+     {
+      "event": "restCompleted",
+      "when": "event.kind == 'long'"
+     }
+    ]
+   },
+   "triggers": [
+    {
+     "id": "ward",
+     "label": "律令之壁：消耗 d8 减伤",
+     "on": "damageIncoming",
+     "role": "target",
+     "window": "before",
+     "optional": true,
+     "when": "damage.amount > 0",
+     "do": [
+      {
+       "kind": "number",
+       "prompt": "律令之壁：这次伤害要消耗几颗 d8？（上限是屏障里剩下的颗数）",
+       "var": "n",
+       "min": 1,
+       "max": "effect.state.dice"
+      },
+      {
+       "kind": "if",
+       "when": "vars.n > 0",
+       "then": [
+        {
+         "kind": "modify",
+         "modify": [
+          {
+           "op": "reduceDamage",
+           "value": "(vars.n)d8"
+          }
+         ]
+        },
+        {
+         "kind": "if",
+         "when": "effect.state.dice - vars.n > 0",
+         "then": [
+          {
+           "kind": "applyEffect",
+           "to": "self",
+           "template": "律令之壁",
+           "state": {
+            "dice": "effect.state.dice - vars.n"
+           }
+          }
+         ],
+         "else": [
+          {
+           "kind": "removeEffect",
+           "from": "self",
+           "match": {
+            "name": "律令之壁"
+           }
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

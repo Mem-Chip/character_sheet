@@ -1,0 +1,52 @@
+{
+ "name": "火巨灵之狂怒",
+ "automation": "full",
+ "text": "施展至圣斩后，可消耗 1 次引导神力：至圣斩的目标额外受到 2d4 点火焰伤害，且火焰弹射至你 30 尺内另一可见生物，对其造成 2d4 点火焰伤害。",
+ "triggers": [
+  {
+   "id": "efreeti-fury",
+   "label": "火巨灵之狂怒",
+   "on": "spellCast",
+   "role": "actor",
+   "window": "after",
+   "optional": true,
+   "when": "action.kind == 'spell' && (action.name == '至圣斩' || action.key == 'XPHB:spell:至圣斩')",
+   "cost": [
+    {
+     "resource": "channel-divinity"
+    }
+   ],
+   "do": [
+    {
+     "kind": "damage",
+     "dice": "2d4",
+     "type": "火焰",
+     "to": "target"
+    },
+    {
+     "kind": "chooseTargets",
+     "prompt": "火巨灵之狂怒：选择30尺内被弹射的另一生物",
+     "count": 1,
+     "min": 1,
+     "within": {
+      "ft": 30,
+      "of": "self"
+     },
+     "exclude": [
+      "self",
+      "target"
+     ],
+     "filter": "canSee(self, target)",
+     "do": [
+      {
+       "kind": "damage",
+       "dice": "2d4",
+       "type": "火焰",
+       "to": "target"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

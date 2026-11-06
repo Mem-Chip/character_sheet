@@ -1,0 +1,89 @@
+{
+ "name": "繁彩球",
+ "automation": "partial",
+ "text": "选择强酸/寒冷/火焰/闪电/毒素/雷鸣发动远程法术攻击，命中造成 (2 + slot.level)d8 伤害。若伤害骰出现两枚或更多相同点数，能量球可跳跃至原目标 30 尺内的新目标再发动一次攻击（至多跳跃环阶次，每名生物只能被指定一次）。跳跃判定的相同骰面需确认。",
+ "actions": [
+  {
+   "id": "cast",
+   "name": "繁彩球",
+   "activation": "action",
+   "tags": [
+    "spell",
+    "magical"
+   ],
+   "cost": [
+    {
+     "slot": {
+      "min": 1
+     }
+    }
+   ],
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 90
+   },
+   "root": [
+    {
+     "kind": "choose",
+     "prompt": "选择繁彩球的伤害类型",
+     "var": "elem",
+     "options": [
+      {
+       "label": "强酸"
+      },
+      {
+       "label": "寒冷"
+      },
+      {
+       "label": "火焰"
+      },
+      {
+       "label": "闪电"
+      },
+      {
+       "label": "毒素"
+      },
+      {
+       "label": "雷鸣"
+      }
+     ]
+    },
+    {
+     "kind": "attack",
+     "attack": {
+      "ranged": true,
+      "spell": true
+     },
+     "onHit": [
+      {
+       "kind": "damage",
+       "dice": "(2 + slot.level)d8",
+       "type": "vars.elem"
+      },
+      {
+       "kind": "if",
+       "when": "cond(action.marks.jump != null, action.marks.jump, 0) < slot.level && ask('伤害骰中是否有两枚或更多掷出了相同的数字？')",
+       "then": [
+        {
+         "kind": "mark",
+         "name": "jump",
+         "value": "cond(action.marks.jump != null, action.marks.jump, 0) + 1"
+        },
+        {
+         "kind": "repeatAction",
+         "prompt": "繁彩球：选择 30 尺内跳跃的新目标",
+         "within": {
+          "ft": "30",
+          "of": "target"
+         },
+         "count": 1
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,97 @@
+{
+ "name": "风暴符文",
+ "automation": "partial",
+ "text": "穿着或携带着铭刻此符文的物品时：你进行的智力（奥秘）检定具有优势；只要你未处于失能状态就不会被突袭（引擎不结算突袭，请人工处理）。附赠动作激活符文进入先知形态，持续 1 分钟，陷入失能会提前结束；短休或长休后恢复。形态期间，每当你或你周围 60 尺内可见的另一生物进行攻击检定、豁免检定或属性检定时，你可以用反应让这次检定获得优势或劣势（按再掷一颗取高/取低近似）。为了不打扰，只在会改变结果时问：自己或盟友检定失败时问是否给优势，敌人检定成功时问是否给劣势。",
+ "rollMods": [
+  {
+   "on": {
+    "kind": "check",
+    "skill": "奥秘"
+   },
+   "who": "bearer",
+   "op": "adv",
+   "label": "风暴符文：智力（奥秘）检定优势"
+  }
+ ],
+ "actions": [
+  {
+   "id": "use",
+   "name": "风暴符文：先知形态",
+   "activation": "bonus",
+   "cost": [
+    {
+     "resource": "风暴符文"
+    }
+   ],
+   "requires": "!self.hasEffect('先知形态')",
+   "targeting": {
+    "type": "self"
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "self",
+     "template": "先知形态"
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "先知形态": {
+   "duration": {
+    "minutes": 1,
+    "endsOn": [
+     {
+      "event": "effectApplied",
+      "when": "event.bearer == self.id && self.has('失能')"
+     }
+    ]
+   },
+   "triggers": [
+    {
+     "id": "prophecy-adv",
+     "label": "风暴符文：让这次检定获得优势",
+     "on": "d20Rolled",
+     "role": "any",
+     "window": "before",
+     "optional": true,
+     "cost": [
+      {
+       "economy": "reaction"
+      }
+     ],
+     "when": "roll.sub != 'initiative' && roll.failing && !roll.adv && !roll.disadv && !combatant(roll.roller).isEnemyOf(self) && (roll.roller == self.id || (within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))))",
+     "modify": [
+      {
+       "op": "reroll",
+       "die": "d20",
+       "keep": "higher"
+      }
+     ]
+    },
+    {
+     "id": "prophecy-disadv",
+     "label": "风暴符文：让这次检定获得劣势",
+     "on": "d20Rolled",
+     "role": "any",
+     "window": "before",
+     "optional": true,
+     "cost": [
+      {
+       "economy": "reaction"
+      }
+     ],
+     "when": "roll.sub != 'initiative' && !roll.failing && !roll.adv && !roll.disadv && combatant(roll.roller).isEnemyOf(self) && within(self, combatant(roll.roller), 60) && canSee(self, combatant(roll.roller))",
+     "modify": [
+      {
+       "op": "reroll",
+       "die": "d20",
+       "keep": "lower"
+      }
+     ]
+    }
+   ],
+   "text": "持续 1 分钟（失能提前结束）：你或你周围 60 尺内可见的生物掷 d20 时，可以用反应让这次检定获得优势（按再掷一颗取高近似）或劣势（按再掷一颗取低近似）。"
+  }
+ }
+}

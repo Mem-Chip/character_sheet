@@ -1,0 +1,102 @@
+{
+ "name": "竖琴手协同",
+ "automation": "partial",
+ "text": "【妙语连珠】执行协助动作辅助盟友对敌人的攻击检定时，该敌人在你的下个回合开始前的下次豁免检定也具有劣势。【意志激励】若你成功通过结束自身恐慌或麻痹状态的豁免检定，可令30尺内可见的一名具有相同状态的盟友立即结束该状态。",
+ "actions": [
+  {
+   "id": "use",
+   "name": "协助（妙语连珠）",
+   "activation": "action",
+   "targeting": {
+    "type": "creature",
+    "count": 1,
+    "range": 30
+   },
+   "root": [
+    {
+     "kind": "applyEffect",
+     "to": "target",
+     "template": "XPHB:action:协助#协助攻击"
+    },
+    {
+     "kind": "applyEffect",
+     "to": "target",
+     "template": "妙语连珠"
+    }
+   ]
+  }
+ ],
+ "triggers": [
+  {
+   "id": "will-inspire",
+   "label": "意志激励：解除盟友状态",
+   "on": "saveSucceeded",
+   "role": "actor",
+   "window": "after",
+   "when": "ask('这次豁免成功是否结束了你身上的恐慌或麻痹状态？')",
+   "do": [
+    {
+     "kind": "chooseTargets",
+     "prompt": "意志激励：选择30尺内具有相同状态的盟友",
+     "from": "allies",
+     "within": {
+      "ft": 30,
+      "of": "self"
+     },
+     "exclude": [
+      "self"
+     ],
+     "filter": "canSee(self, target) && (target.has('恐慌') || target.has('麻痹'))",
+     "do": [
+      {
+       "kind": "removeEffect",
+       "match": {
+        "tag": "恐慌"
+       },
+       "from": "target"
+      },
+      {
+       "kind": "removeEffect",
+       "match": {
+        "tag": "麻痹"
+       },
+       "from": "target"
+      },
+      {
+       "kind": "note",
+       "text": "意志激励：该盟友身上的恐慌或麻痹状态已结束。"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "effects": {
+  "妙语连珠": {
+   "text": "你的下个回合开始前进行的下次豁免检定具有劣势。",
+   "duration": {
+    "until": {
+     "at": "turnStart",
+     "of": "source",
+     "nth": 1
+    },
+    "endsOn": [
+     {
+      "event": "d20Rolled",
+      "when": "event.kind == 'save' && event.roller == self.id"
+     }
+    ]
+   },
+   "rollMods": [
+    {
+     "on": {
+      "kind": "save"
+     },
+     "who": "bearer",
+     "op": "disadv",
+     "label": "妙语连珠"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,122 @@
+{
+  "name": "战斗魔法",
+  "automation": "partial",
+  "text": "在你施展一道施法时间为一动作的法术后，你能够以一个附赠动作，使用一把武器发动一次攻击。已自动化：当你施展一动作法术后自动获得「战斗魔法」状态，解锁此附赠动作武器攻击。选目标、掷攻击检定、掷伤害都由引擎做（弹窗里按你用的武器选伤害骰和伤害类型），伤害里含属性调整值。要人处理：武器是哪一把、够不够得着由你判断；用远程武器时这次攻击在引擎里仍按近战攻击标记，少数按「近战 / 远程」区分的加值可能记错，介意的话直接用那把武器自己的动作手动打。",
+  "actions": [
+    {
+      "id": "weapon",
+      "name": "战斗魔法：附赠动作武器攻击",
+      "activation": "bonus",
+      "tags": [
+        "weapon"
+      ],
+      "requires": "turn.isMine && self.hasEffect('战斗魔法')",
+      "targeting": {
+        "type": "creature",
+        "count": 1
+      },
+      "root": [
+        {
+          "kind": "choose",
+          "prompt": "战斗魔法：这次用的是哪把武器的伤害骰？",
+          "var": "die",
+          "options": [
+            {
+              "label": "1d4（匕首、短棒、轻锤、投石索…）",
+              "value": "1d4"
+            },
+            {
+              "label": "1d6（短剑、手斧、钉头锤、长矛、短弓…）",
+              "value": "1d6"
+            },
+            {
+              "label": "1d8（长剑、战斧、细剑、长弓、轻弩…）",
+              "value": "1d8"
+            },
+            {
+              "label": "1d10（长戟、战锤、重弩…）",
+              "value": "1d10"
+            },
+            {
+              "label": "1d12（巨斧、巨剑…）",
+              "value": "1d12"
+            }
+          ]
+        },
+        {
+          "kind": "choose",
+          "prompt": "战斗魔法：这次攻击的伤害类型？",
+          "var": "dtype",
+          "options": [
+            {
+              "label": "挥砍",
+              "value": "挥砍"
+            },
+            {
+              "label": "穿刺",
+              "value": "穿刺"
+            },
+            {
+              "label": "钝击",
+              "value": "钝击"
+            }
+          ]
+        },
+        {
+          "kind": "attack",
+          "bonus": "self.pb + max(self.mod.str, self.mod.dex)",
+          "attack": {
+            "melee": true,
+            "weapon": true
+          },
+          "onHit": [
+            {
+              "kind": "damage",
+              "dice": "vars.die",
+              "type": "vars.dtype"
+            },
+            {
+              "kind": "damage",
+              "dice": "max(self.mod.str, self.mod.dex)",
+              "type": "vars.dtype"
+            }
+          ]
+        },
+        {
+          "kind": "removeEffect",
+          "from": "self",
+          "match": {
+            "name": "战斗魔法"
+          }
+        }
+      ]
+    }
+  ],
+  "triggers": [
+    {
+      "id": "on-spell",
+      "label": "战斗魔法：施法触发",
+      "on": "spellCast",
+      "role": "actor",
+      "when": "action.kind == 'spell' && action.economy == 'action'",
+      "do": [
+        {
+          "kind": "applyEffect",
+          "to": "self",
+          "name": "战斗魔法",
+          "duration": {
+            "until": {
+              "at": "turnEnd",
+              "of": "bearer",
+              "nth": 0
+            }
+          },
+          "inline": {
+            "name": "战斗魔法",
+            "text": "本回合施展了一动作法术，可以以附赠动作进行一次武器攻击。"
+          }
+        }
+      ]
+    }
+  ]
+}

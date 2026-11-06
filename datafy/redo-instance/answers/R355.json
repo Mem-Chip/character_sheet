@@ -1,0 +1,27 @@
+{
+ "name": "神圣干预",
+ "automation": "partial",
+ "text": "以一个魔法动作选择一道 5 环或更低、施法时间不为 1 反应的牧师法术施展，无需法术位与施法材料，长休恢复（资源池「神圣干预」）。已自动：施展 5 环或更低非反应牧师法术时，可选择消耗「神圣干预」次数并退还所消耗的法术位；若不使用神圣干预请勿确认。",
+ "triggers": [
+  {
+   "id": "divine-intervention",
+   "label": "神圣干预：免消耗施法（退还法术位并扣除神圣干预次数）",
+   "on": "spellCast",
+   "role": "actor",
+   "window": "after",
+   "optional": true,
+   "when": "action.kind == 'spell' && action.spell.level <= 5 && action.spell.slot > 0 && action.economy != 'reaction' && includes(action.spell.lists, '牧师') && self.resource('神圣干预') > 0",
+   "cost": [
+    {
+     "resource": "神圣干预"
+    }
+   ],
+   "do": [
+    {
+     "kind": "refund",
+     "what": "slot"
+    }
+   ]
+  }
+ ]
+}
