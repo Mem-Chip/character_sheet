@@ -8,6 +8,10 @@
  * 纯逻辑，浏览器和 Node 共用。
  */
 import { RuleBook, auditRuleBook, type Entry, type RuleFile } from '../combat';
+import type { Modify, Node } from '../combat/types';
+
+/** 联合类型里 tag 为 K 的那几种合起来有哪些字段（分配律：每一种各自取 keyof） */
+type FieldsOf<U, Tag extends string, K> = U extends Record<Tag, K> ? Exclude<keyof U, Tag> : never;
 
 type Obj = Record<string, unknown>;
 const isObj = (x: unknown): x is Obj => !!x && typeof x === 'object' && !Array.isArray(x);
@@ -35,11 +39,11 @@ const KEYS = {
   attackInfo: ['melee', 'ranged', 'weapon', 'spell', 'unarmed', 'finesse', 'reach', 'ability', 'damageType', 'item', 'mastery'],
 } as const;
 
-const NODE_KEYS: Record<string, readonly string[]> = {
+const NODE_KEYS = {
   attack: ['bonus', 'attack', 'critRange', 'onHit', 'onMiss'],
   save: ['ability', 'dc', 'to', 'onFail', 'onSuccess'],
   check: ['ability', 'skill', 'dc', 'onFail', 'onSuccess'],
-  damage: ['dice', 'type', 'id', 'ref', 'scale', 'to'],
+  damage: ['dice', 'type', 'id', 'ref', 'scale', 'to', 'ignoreResist', 'ignoreImmunity'],
   addDamage: ['dice', 'type', 'ignoreResist', 'ignoreImmunity'],
   modify: ['modify'],
   heal: ['amount', 'to'],
@@ -66,7 +70,12 @@ const NODE_KEYS: Record<string, readonly string[]> = {
   retype: ['value'],
   trimDamage: ['from', 'dice'],
   repeatAction: ['prompt', 'count', 'min', 'from', 'within', 'filter', 'exclude'],
-};
+} as const satisfies { [K in Node['kind']]: readonly FieldsOf<Node, 'kind', K>[] };
+// 清单要和 types.ts 一字不差：节点加了字段而这里没跟上，typecheck 在这一行报出漏掉的字段名
+// （外包按类型写的合法数据会被 lint 拒掉 —— damage 的 ignoreResist 就这样漏过）
+type MissingNodeFields = { [K in Node['kind']]: Exclude<FieldsOf<Node, 'kind', K>, (typeof NODE_KEYS)[K][number]> }[Node['kind']];
+const nodeKeysComplete: [MissingNodeFields] extends [never] ? true : `lint 清单漏了字段：${MissingNodeFields & string}` = true;
+void nodeKeysComplete;
 
 const STATIC_KEYS: Record<string, readonly string[]> = {
   ac: ['bonus'], speed: ['bonus'], hpMax: ['bonus'], spellDc: ['bonus'], speedSet: ['value', 'lock'],
@@ -75,11 +84,15 @@ const STATIC_KEYS: Record<string, readonly string[]> = {
 const COST_KEYS: Array<[string, readonly string[]]> = [
   ['economy', ['economy', 'n']], ['resource', ['resource', 'n']], ['slot', ['slot']], ['recharge', ['recharge', 'id']], ['charges', ['charges', 'n']],
 ];
-const MODIFY_KEYS: Record<string, readonly string[]> = {
+/** 外包能写的修改（写计划书的几种、先豁免的两种不开放）；列了的字段要和 types.ts 一致 */
+const MODIFY_KEYS = {
   reroll: ['die', 'keep'], addToRoll: ['value'], setD20: ['value'], succeed: [],
   reduceDamage: ['value', 'types'], halveDamage: [], doubleDamage: [], evasion: [],
   setHp: ['value'], cancel: ['refundSlot'], redirect: ['to'], absorb: ['from'], clearAdv: ['which'], rerollDamage: ['count'],
-};
+} as const satisfies { [K in Modify['op']]?: readonly FieldsOf<Modify, 'op', K>[] };
+type MissingModifyFields = { [K in keyof typeof MODIFY_KEYS]: Exclude<FieldsOf<Modify, 'op', K>, (typeof MODIFY_KEYS)[K][number]> }[keyof typeof MODIFY_KEYS];
+const modifyKeysComplete: [MissingModifyFields] extends [never] ? true : `lint 清单漏了字段：${MissingModifyFields & string}` = true;
+void modifyKeysComplete;
 
 /** 结构检查：未知字段、该是数组 / 对象的不是 */
 export function lintShape(entry: unknown): string[] {
@@ -95,14 +108,14 @@ export function lintShape(entry: unknown): string[] {
     x.forEach((y, i) => each(y, `${at}[${i}]`));
   };
   const modifyItem = (m: unknown, a: string) => {
-    const allowed = isObj(m) ? MODIFY_KEYS[String(m.op)] : undefined;
+    const allowed = isObj(m) ? (MODIFY_KEYS as Record<string, readonly string[]>)[String(m.op)] : undefined;
     if (!allowed) out.push(`${a}：未知修改「${isObj(m) ? String(m.op) : m}」（可用：${Object.keys(MODIFY_KEYS).join(' ')}）`);
     else keys(m, ['op', ...allowed], a);
   };
   const nodes = (x: unknown, at: string) => list(x, at, node);
   const node = (n: unknown, at: string) => {
     if (!isObj(n)) { out.push(`${at}：节点应该是对象`); return; }
-    const allowed = NODE_KEYS[String(n.kind)];
+    const allowed = (NODE_KEYS as Record<string, readonly string[]>)[String(n.kind)];
     if (!allowed) { out.push(`${at}：未知节点类型「${String(n.kind)}」（可用：${Object.keys(NODE_KEYS).join(' ')}）`); return; }
     keys(n, ['kind', ...allowed], `${at}（${n.kind}）`);
     if (n.attack !== undefined) keys(n.attack, KEYS.attackInfo, `${at}.attack`);
@@ -278,3 +291,4 @@ export function lintEntry(key: string, entry: unknown, ctx: LintContext): string
   }
   return out;
 }
+
