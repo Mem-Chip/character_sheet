@@ -1456,3 +1456,17 @@ type OverridePatch =
 | 一次花几次攻击 | `cost: [{ economy: 'attack', n: 2 }]`（精通战争魔法：两次攻击换一道 1～2 环法术）；这个攻击动作剩的不够就拒绝 |
 
 | 疾风连击里换徒手打击 | 疾风连击不走攻击次数（附赠动作的 root 里 repeat 几次徒手打击）：开头一个 `choose`（选项带 `when: self.hasSource(…)`，没有这项能力就只剩「不换」、不问），repeat 次数减去换掉的。予命之手这么写了 |
+
+### 16.12 不打洞：缺口都归到几个通用概念上
+
+外包时记下的缺口，每一个都先找它背后缺的通用概念，再补那个概念，不为单条规则加特别处理：
+
+| 概念 | 做法 | 解决的 |
+|---|---|---|
+| 状态变化都有前后窗口 | 移动：`moved` before（`cancel` 拦下）/ after（`event.ft` 实际几尺）；每一步算触及关系的变化，`leftReach` / `enteredReach` 成对；召唤完 `summoned`（承受者 = 召唤物） | 新锻臂铠、轰雷剑、长柄武器大师、强韧召唤 |
+| 选择池统一 | `choose.pool.from`：`ownSpells` / `ownCantrips` / `spells`（规则书里所有法术，按职业列表 / 学派 / 环阶筛）/ `attacks`（自己的武器攻击，value 是 `weapon:<id>`），挑到的交给 `castFrom` 跑；`castFrom.with` = 这一次自带的修正（挂真效应、结算完摘掉） | 巫术帽、应答之剑 |
+| 借机攻击是规则数据 | 引擎只报 `leftReach`（`event.provokes`）；攻击是 rules-2024「借机攻击」里的反应（池子挑近战武器 + `castFrom`），`core.opportunityAttack` 指向它；界面「用反应攻击」也走它。「这次是借机攻击」= `action.parent.key`；`flags.cannot` 写动作 id = 不能用，`<id>:source` = 不能对来源用 | 哨兵、坚韧复仇、坚守战线、战地施法者、梦幻舞步、散打技巧 |
+| 结算自己说清楚是什么 | `roll.against`（检定防的状态：失败那一支挂的、摆脱的那个效应带的，从数据里扫出来）；`damage.parts` / `action.damage.parts`（伤害各项的来源名）；伤害修正 `on.part` 只管那几项 | 抗毒剂、恐怖化身 |
+| 清单和类型一致 | lint 的字段清单由类型系统对着 types.ts 校验，漏了 / 多了字段 typecheck 报错 | damage 漏的 ignoreResist |
+
+召唤之前的计划书（改召唤数量这类）没有数据要用，先不做。
