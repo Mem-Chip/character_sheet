@@ -114,8 +114,11 @@ describe.skipIf(!hasLocalData())('真实角色卡进战斗', () => {
     dice.push(14);
     const d = pending(s.dispatch({ type: 'useAction', actor: 'r', action: 'weapon:刺剑#0', targets: ['g'] }));
     expect(d.options[0].label).toContain('偷袭');
+    const cs = pending(s.decide(['0']));
+    // 5 级起偷袭后问诡诈打击：选「不用」
+    expect(cs.prompt).toContain('诡诈打击');
     dice.push(5, 1, 2, 3);
-    done(s.decide(['0']));
+    done(s.decide([cs.options.find((o) => o.label === '不用')!.id]));
     expect(last(s, 'd20Rolled').total).toBe(20);
     expect(last(s, 'damageApplied').total).toBe(5 + 3 + 6);
     expect(Object.values(s.state.effects).some((e) => e.name === '侵扰' && e.bearer === 'r')).toBe(true);

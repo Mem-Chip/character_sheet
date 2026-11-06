@@ -204,6 +204,18 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
 \`\`\`
 - **退还代价**（\`refund\`）：退还触发窗口的那次动作花的法术位（\`what: 'slot'\`）或资源。
 
+**菜单选择**（要人在结算中途挑东西）：
+- **挑生物** \`chooseTargets\`：候选按 \`from\`（all / enemies / allies / targets = 这次动作的目标）、\`within\`（离自己或当前目标几尺）、\`filter\`（target = 候选）、\`exclude\` 筛，
+  挑 \`min\`～\`count\` 个，对每个执行 \`do\`（target = 它）。必须挑的写 \`min: '1'\`（候选不多于下限时不问，直接全要）。没有地图时不按距离筛，提示里会写「N 尺内」让人自己把握。
+  「5 尺内另一个生物」：\`within: { ft: '5', of: 'target' }, exclude: ['self', 'target']\`；「法术的目标之一」：\`from: 'targets'\`。
+  在 \`spellCast\` before 窗口里写 \`addTo: 'cast'\`：把挑中的加进这次施法的目标（孪生法术，配 \`modifyCast\` 的 \`slotDelta: '1'\` 按高一环算）。
+- **分配点数** \`allocate\`：总共 \`total\` 点，候选同上（先挑给谁），再逐个问给多少（每个最多 \`maxEach\`，表达式里 target = 那个生物），分到的数在 \`vars.<var>\`。维持生命、鼓舞斩用它。
+- **几选一** \`choose\`：\`count\` 可以是表达式（11 级起选两种）；\`pool\` 可以按学派 / 职业列表筛（\`school: '预言'\`、\`list: '牧师'\`）。
+- **改伤害类型** \`retype\`：命中窗口 / 受伤窗口里改正在结算的伤害；施法窗口里改这次施法的。配 \`choose\` 的 \`var\`：\`{ kind: 'retype', value: 'vars.elem' }\`。
+- **扣骰子** \`trimDamage\`：命中窗口里从伤害包的某一项去掉几颗骰（诡诈打击：\`from: '偷袭'\`，那一项的来源名就是加伤害的那个能力的 label）。
+- **重掷伤害骰**：\`damageIncoming\` before 窗口里 \`modify: [{ op: 'rerollDamage', count: 'max(1, self.mod.cha)' }]\`（role: 'actor'），重掷点数最小的几颗；共享掷骰只重掷一次。
+- **对另一目标再来一次** \`repeatAction\`：结算期间（命中 / 失手窗口里）对挑中的目标再执行一次这次动作，不再付代价。要配记号限制次数，不然会一直跳。
+
 **某人开始 / 结束回合时**（「敌人在你 10 尺内开始回合时」）：\`on: 'turnStarted'\`、\`role: 'enemy'\`（或 ally / any），\`when: 'dist(self, target) <= 10'\` —— 回合窗口里 \`target\` 就是回合的主人；
 写在效应里、只管承受者自己回合的用 \`role: 'actor'\`。灵光（aura）授予的触发器也一样。
 

@@ -29,6 +29,8 @@ export interface CastPlan {
   canceled: { by: string; refundSlot: boolean } | null;
   /** 窗口里做过哪些修改（给日志用） */
   notes: string[];
+  /** 有效环阶加几（孪生法术、分裂惑控）；不多花法术位 */
+  slotDelta: number;
 }
 
 export function newCastPlan(o: {
@@ -37,6 +39,6 @@ export function newCastPlan(o: {
 }): CastPlan {
   return {
     seq: o.seq, caster: o.caster, spell: o.spell, key: o.key, level: o.level, targets: o.targets.slice(),
-    dc: o.dc ?? null, attackBonus: o.attackBonus ?? null, damageType: null, canceled: null, notes: [],
+    dc: o.dc ?? null, attackBonus: o.attackBonus ?? null, damageType: null, canceled: null, notes: [], slotDelta: 0,
   };
 }

@@ -10,7 +10,7 @@ import { placeSummon, placeZone, relocateZone, shove } from './space';
 import { blockedEconomy, fireWindow } from './triggers';
 import { Rejected, type Tx } from './tx';
 import { makeCombatant, makeView } from './view';
-import type { Action, ActiveEffect, AttackInfo, AttackRow, CombatantView, Cost, Duration, EffectId, Entry, Id, Modify, Node, Zone } from './types';
+import type { Action, ActiveEffect, AttackInfo, AttackRow, CombatantView, Cost, Duration, EffectId, Entry, Id, Modify, Node, TargetPick, Zone } from './types';
 
 /**
  * 效果树解释器 + 动作执行（COMBAT-DESIGN §4.1 / §4.2）。
@@ -194,6 +194,64 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
     }
     case 'runBranch': return runBranch(tx, n, ctx);
     case 'refund': return refund(tx, n, ctx);
+    case 'chooseTargets': {
+      const picks = pickTargets(tx, ctx, n, n.prompt);
+      if (n.var) (ctx.vars ??= {})[n.var] = picks.length;
+      if (n.addTo === 'cast') {
+        const plan = ctx.interrupting ?? tx.windowPlan;
+        if (!plan) {
+          tx.emit('note', { text: `${ctx.actionName}：这里没有正在施展的法术，挑的目标加不进去`, owner: ctx.self }, ctx.cause);
+        } else {
+          for (const id of picks) if (!plan.targets.includes(id)) plan.targets.push(id);
+          if (picks.length) plan.notes.push(`${ctx.actionName}：目标加上 ${picks.map((id) => nameOf(tx, id)).join('、')}`);
+        }
+      }
+      for (const id of picks) runNodes(tx, n.do, { ...ctx, target: id });
+      return;
+    }
+    case 'allocate': return allocate(tx, n, ctx);
+    case 'retype': {
+      const t = /^[a-z]+\./.test(n.value) ? normType(String(run(n.value, env(tx, ctx)) ?? '')) : normType(n.value);
+      if (!t) return;
+      if (ctx.packet && ctx.packet.components.length) {
+        const base = normType(ctx.packet.components[0].type);
+        for (const c of ctx.packet.components) if (normType(c.type) === base) c.type = t;
+        tx.emit('note', { text: `${ctx.actionName}：这次伤害改为${t}`, owner: ctx.self, target: ctx.packet.target }, ctx.cause);
+        return;
+      }
+      const plan = ctx.interrupting ?? tx.windowPlan ?? ctx.cast;
+      if (plan) { plan.damageType = t; plan.notes.push(`${ctx.actionName}：伤害类型改为${t}`); return; }
+      tx.emit('note', { text: `${ctx.actionName}：这里没有正在结算的伤害可改（改成${t}请手动处理）`, owner: ctx.self }, ctx.cause);
+      return;
+    }
+    case 'trimDamage': {
+      const p = ctx.packet;
+      const c = p?.components.find((x) => x.from.includes(n.from) && !x.dice.isConstant);
+      if (!p || !c) {
+        tx.emit('note', { text: `${ctx.actionName}：这次伤害里没有「${n.from}」的骰子可扣`, owner: ctx.self }, ctx.cause);
+        return;
+      }
+      let k = Math.max(0, num(tx, ctx, n.dice, '扣掉几颗骰子'));
+      const terms = c.dice.terms.map((t) => ({ ...t }));
+      for (const t of terms) { const d = Math.min(t.count, k); t.count -= d; k -= d; }
+      const left = terms.filter((t) => t.count > 0);
+      c.dice = new Dice(left, c.dice.flat);
+      if (!left.length && !c.dice.flat) p.components.splice(p.components.indexOf(c), 1);
+      tx.emit('note', { text: `「${c.from}」少掷 ${num(tx, ctx, n.dice, '扣掉几颗骰子')} 颗骰子（剩 ${c.dice.toString() || '0'}）`, owner: ctx.self, target: p.target }, ctx.cause);
+      return;
+    }
+    case 'repeatAction': {
+      const inst = currentAction(tx);
+      if (!inst?.rerun) throw new Error('repeatAction 只能用在一次动作结算期间（命中、失手、豁免这些窗口里）');
+      if ((inst.repeats ?? 0) >= 10) { tx.emit('note', { text: `${ctx.actionName}：连续再执行太多次，停下`, owner: ctx.self }, ctx.cause); return; }
+      const picks = pickTargets(tx, ctx, { exclude: ['self', 'target'], ...n }, n.prompt);
+      for (const id of picks) {
+        inst.repeats = (inst.repeats ?? 0) + 1;
+        tx.emit('note', { text: `${ctx.actionName}：「${inst.name}」对 ${nameOf(tx, id)} 再来一次`, owner: ctx.self, target: id }, ctx.cause);
+        inst.rerun(id);
+      }
+      return;
+    }
     case 'addDamage': {
       if (!ctx.packet) throw new Error('addDamage 只能用在命中窗口里（偷袭、至圣斩这类）');
       ctx.packet.components.push({ dice: dice(tx, ctx, n.dice, ctx.actionName), type: typeOf(tx, ctx, n.type), from: ctx.actionName });
@@ -261,6 +319,7 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
       if (n.dc !== undefined) plan.dc = num(tx, ctx, n.dc, '改写后的豁免 DC');
       if (n.attackBonus !== undefined) plan.attackBonus = num(tx, ctx, n.attackBonus, '改写后的攻击加值');
       if (n.damageType) plan.damageType = normType(n.damageType);
+      if (n.slotDelta !== undefined) plan.slotDelta += num(tx, ctx, n.slotDelta, '有效环阶加值');
       if (n.note) plan.notes.push(String(n.note));
       return;
     }
@@ -346,12 +405,14 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
         tx.emit('note', { text: `${ctx.actionName}：${n.prompt}——眼下没有可选的项`, owner: ctx.self }, ctx.cause);
         return;
       }
-      const picked = open.length === 1 && (n.count ?? 1) === 1 ? [String(open[0].i)] : tx.decide({
-        kind: 'choose', to: controllerOf(tx, ctx.self), prompt: n.prompt, multi: (n.count ?? 1) > 1,
+      // count 可以是表达式（进阶诡诈打击：11 级起选两种）
+      const count = n.count === undefined ? 1 : Math.max(1, num(tx, ctx, n.count, `${n.prompt} 选几项`));
+      const picked = open.length === 1 && count === 1 ? [String(open[0].i)] : tx.decide({
+        kind: 'choose', to: controllerOf(tx, ctx.self), prompt: count > 1 ? `${n.prompt}（最多 ${count} 项）` : n.prompt, multi: count > 1,
         options: open.map(({ o, i }) => ({ id: String(i), label: o.label })),
         default: [String(open[0].i)],
       });
-      const list = (Array.isArray(picked) ? picked : [picked]).map(String).slice(0, n.count ?? 1);
+      const list = (Array.isArray(picked) ? picked : [picked]).map(String).slice(0, count);
       for (const i of list) {
         const o = options[Number(i)] ?? options.find((x) => x.label === i || x.value === i);
         if (!o) continue;
@@ -526,7 +587,7 @@ function grantActionNode(tx: Tx, n: Extract<Node, { kind: 'grantAction' }>, ctx:
  */
 function spellPoolOptions(
   tx: Tx, ctx: ExecCtx,
-  pool: { from: 'ownSpells' | 'ownCantrips'; maxLevel?: ExprSrc; minLevel?: ExprSrc; castTime?: 'action' | 'bonus' | 'reaction'; singleTarget?: boolean },
+  pool: { from: 'ownSpells' | 'ownCantrips'; maxLevel?: ExprSrc; minLevel?: ExprSrc; castTime?: 'action' | 'bonus' | 'reaction'; singleTarget?: boolean; school?: string; list?: string },
 ): Array<{ label: string; value: string }> {
   const max = pool.maxLevel !== undefined ? num(tx, ctx, pool.maxLevel, '法术最高环阶') : Infinity;
   const min = pool.minLevel !== undefined ? num(tx, ctx, pool.minLevel, '法术最低环阶') : 0;
@@ -541,6 +602,11 @@ function spellPoolOptions(
     // 「施法时间是动作」「只打一个生物」：战地施法者这类原文限制，能在池子这层筛掉就先筛掉
     if (pool.castTime && act.activation !== pool.castTime) continue;
     if (pool.singleTarget && !(act.targeting?.type === 'creature' && Number(act.targeting.count ?? 1) === 1)) continue;
+    if (pool.school || pool.list) {
+      const meta = spellMetaOf(key, entry, act);
+      if (pool.school && meta.school !== pool.school) continue;
+      if (pool.list && !meta.lists.includes(pool.list)) continue;
+    }
     out.push({ label: entry.name ?? key.split(':spell:')[1] ?? key, value: key });
   }
   return out.sort((a, b) => a.label.localeCompare(b.label, 'zh'));
@@ -885,6 +951,74 @@ function withPending(inst: ActionInstance | null, p: NonNullable<ActionInstance[
   const outer = inst.pending;
   inst.pending = p;
   try { fn(); } finally { inst.pending = outer; }
+}
+
+/**
+ * 「挑生物」：按 TargetPick 筛候选，再让控制者挑（只有不多于下限的候选时不问，直接全要）。
+ * 距离：有地图就按地图筛；没有地图时不筛，选项后面注明「N 尺内」让人自己把握。
+ */
+function pickTargets(tx: Tx, ctx: ExecCtx, pick: TargetPick, prompt: string): Id[] {
+  const me = tx.state.combatants[ctx.self];
+  const max = pick.count !== undefined ? num(tx, ctx, pick.count, `${prompt} 最多几个`) : 1;
+  const min = Math.min(max, pick.min !== undefined ? num(tx, ctx, pick.min, `${prompt} 至少几个`) : 0);
+  if (max <= 0) return [];
+  const ex = new Set(pick.exclude ?? []);
+  const base = pick.from === 'targets' ? (currentAction(tx)?.targets ?? ctx.targets) : Object.keys(tx.state.combatants);
+  const ft = pick.within ? num(tx, ctx, pick.within.ft, `${prompt} 的距离`) : null;
+  const of = pick.within?.of === 'target' ? ctx.target ?? ctx.self : ctx.self;
+  let unsure = false;
+  const cands: Id[] = [];
+  for (const id of [...new Set(base)]) {
+    const c = tx.state.combatants[id];
+    if (!c || c.live.dead) continue;
+    if (ex.has('self') && id === ctx.self) continue;
+    if (ex.has('target') && id === ctx.target) continue;
+    if (pick.from === 'enemies' && c.side === me?.side) continue;
+    if (pick.from === 'allies' && c.side !== me?.side) continue;
+    if (ft !== null && id !== of) {
+      const d = tx.spatial?.distance(of, id);
+      if (typeof d === 'number') { if (d > ft) continue; } else unsure = true;
+    }
+    if (pick.filter !== undefined && !resolveBool(tx, pick.filter, { ...scopeOf(tx, ctx), target: id }, ctx.self, prompt)) continue;
+    cands.push(id);
+  }
+  if (!cands.length) {
+    tx.emit('note', { text: `${ctx.actionName}：${prompt}——没有符合条件的生物`, owner: ctx.self }, ctx.cause);
+    return [];
+  }
+  if (cands.length <= min) return cands;
+  const where = ft !== null && unsure ? `（${of === ctx.self ? '你' : nameOf(tx, of)} ${ft} 尺内的才算，没有地图请自己把握）` : '';
+  const options = cands.map((id) => ({ id, label: nameOf(tx, id) }));
+  if (max === 1 && min === 0) options.push({ id: '__none', label: '不选' });
+  const picked = tx.decide({
+    kind: 'choose', to: controllerOf(tx, ctx.self), multi: max > 1,
+    prompt: `${ctx.actionName}：${prompt}${max > 1 ? `（最多 ${max} 个${min ? `，至少 ${min} 个` : ''}）` : ''}${where}`,
+    options, default: cands.slice(0, Math.max(1, min)),
+  });
+  let list = (Array.isArray(picked) ? picked : [picked]).map(String).filter((id) => cands.includes(id)).slice(0, max);
+  if (list.length < min) list = [...list, ...cands.filter((id) => !list.includes(id))].slice(0, min);
+  return list;
+}
+
+/** 分配点数：按候选逐个问给多少（剩下的点数用完就停），对分到的执行 do */
+function allocate(tx: Tx, n: Extract<Node, { kind: 'allocate' }>, ctx: ExecCtx): void {
+  let left = num(tx, ctx, n.total, `${n.prompt} 的总数`);
+  const cap = n.maxEach !== undefined ? n.maxEach : undefined;
+  const who = pickTargets(tx, ctx, { ...n, count: n.count ?? 99, min: n.min ?? 0 }, n.prompt);
+  const share: Array<[Id, number]> = [];
+  for (const id of who) {
+    if (left <= 0) break;
+    const most = Math.min(left, cap !== undefined ? num(tx, { ...ctx, target: id }, cap, `${n.prompt} 每个最多`) : left);
+    if (most <= 0) continue;
+    const v = Number(tx.decide({
+      kind: 'number', to: controllerOf(tx, ctx.self), prompt: `${ctx.actionName}：${n.prompt}——给 ${nameOf(tx, id)} 多少（还剩 ${left}）`,
+      options: [], min: 0, max: most, default: most,
+    }));
+    const got = Number.isFinite(v) ? Math.max(0, Math.min(most, Math.floor(v))) : 0;
+    left -= got;
+    if (got > 0) share.push([id, got]);
+  }
+  for (const [id, got] of share) runNodes(tx, n.do, { ...ctx, target: id, vars: { ...(ctx.vars ?? {}), [n.var]: got } });
 }
 
 const BRANCH_CN: Record<string, string> = { onHit: '命中', onMiss: '未命中', onFail: '豁免失败', onSuccess: '豁免成功' };
@@ -1389,12 +1523,17 @@ function runAction(tx: Tx, o: ExecuteOpts, x: {
   const form = o.options?.form as CombatantView | undefined;
   // 「只对自己」的动作（免位施放护盾类：targeting.type = 'self'）没点目标也当成选了自己，
   // 否则复制来的法术 root 里 `to: 'target'` 会报「需要目标」
-  const targets = o.targets.length ? o.targets.slice() : action.targeting?.type === 'self' ? [actor] : [];
+  const asked = castPlan ? castPlan.targets : o.targets;
+  const targets = asked.length ? asked.slice() : action.targeting?.type === 'self' ? [actor] : [];
+  // 孪生法术这类：有效环阶加几（不多花法术位）
+  const effSlot = castPlan && castPlan.slotDelta > 0 ? (slot ?? inst.spell?.level ?? 0) + castPlan.slotDelta : slot;
+  if (castPlan && castPlan.slotDelta > 0 && inst.spell) inst.spell.slot = effSlot ?? inst.spell.slot;
+  inst.targets = targets.slice();
   const ctx: ExecCtx = {
     self: actor,
     targets,
     target: targets.length === 1 ? targets[0] : undefined,
-    slot,
+    slot: effSlot,
     entryKey,
     actionName: action.name,
     cause: seq,
@@ -1410,6 +1549,8 @@ function runAction(tx: Tx, o: ExecuteOpts, x: {
     ...(form ? { form } : {}),
     ...o.window,
   };
+  // repeatAction：对另一个目标再执行一次（共享掷骰另起，环阶、选项照旧）
+  inst.rerun = (t: Id) => runNodes(tx, action.root, { ...ctx, targets: [t], target: t, locals: {}, vars: { ...(ctx.vars ?? {}) } });
   runNodes(tx, action.root, ctx);
   const doneSeq = tx.emit('actionDone', { actor, action: action.name }, seq);
   // 「用完一个动作之后」（施法后传送、攻击后附赠动作…）：只开给最外层的动作 —— 反应、窗口里用的动作不再触发一轮

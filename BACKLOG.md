@@ -58,13 +58,13 @@
 
 ## 中的
 
-- **动作实例剩下的**（引擎，已做的见 COMBAT-DESIGN §16.11：action.*、结果、伤害骰、actionDone 窗口、区域）：
-  重掷这次的伤害骰（强效法术）、偷袭扣骰（游荡者诡诈打击 7 条）、`repeat`（对另一目标再来一次：孪生法术、繁彩球）、
-  改字段（目标、射程、环阶、动作经济：远程法术、孪生法术、瞬发…）。在哪：`src/combat/instance.ts`、`exec.ts`（`runAttack` / `runSave` / `runDamageNodes`）、选目标的流程。
-- **按动作实例重写数据**：审查里 `now: true` 的 35 条（现在就能写）、只用到现有能力的 61 条，以及第一期能做的
-  （超限导能、超魔法、法术塑形、预言专家…：读 `action.spell.*` 就不用再问人）。列表在 `datafy/instance-audit/report.generated.md`。
-- **菜单选择**（审查里卡在 `choice` 上的 77 条，动作实例之后最大的一类）：施法 / 命中时让人在几项里挑（附加效果、伤害类型、给谁），
-  现在的 `choose` 节点只能写死选项或从自己法术里挑。在哪：`src/combat/exec.ts`（`choose`）、`app/pages/combat/Dialogs.tsx`。
+- **按动作实例 / 菜单选择重写数据**（引擎都有了，COMBAT-DESIGN §16.11；已经重写的样板：偷袭 + 诡诈打击、维持生命、横扫攻击、
+  强效 / 转化 / 孪生 / 谨慎 / 升阶法术、强力戏法、强效塑能、强力施法，都在 `data/dyn/features.json`）：
+  审查里 `now: true` 的 35 条、只用到现有能力的 61 条、卡在 `choice` 上的那批（风暴之心、高阶猎杀技艺、火巨灵之狂怒、巩固法术、鼓舞斩、法术塑形、繁彩球、灭族者…），
+  以及读 `action.spell.*` 就不用再问人的（超限导能、预言专家、法术精通…）。列表在 `datafy/instance-audit/report.generated.md`，适合外包（说明书按现在的代码 refresh 一下）。
+  注意：手写的盖 AI 的是**逐字段合并**，要去掉 AI 那份的触发器得显式写 `triggers: []`。
+- **引擎还缺的两样**（审查里各几条）：① 改射程（远程法术、魔能长枪：射程检查在界面选目标那一步，引擎不管）；
+  ② 把攻击动作里的一次攻击换成施法（额外攻击 / 战争魔法 / 秘法战斗风格 / 予命之手，约 9 条）。在哪：`app/pages/combat/`（选目标）、`src/combat/exec.ts`（攻击次数）。
 - **批量 AI 数据化**：从启用的书里勾一批条目，排队跑单条的 AI 循环，失败的列出来、可以重试；结果进账户资料库（或某个战役）。
   在哪：`app/lib/ai.ts`（`partsJobForKey`、`checkParts`）、`src/factory/ai.ts`、`app/pages/CampaignHub.tsx`（战役页「资料」）。
 - **临时武器和武器附魔**（神圣武器、魔石术、幽影刃，改用施法属性攻击）：物品栏有了，规则还没接。

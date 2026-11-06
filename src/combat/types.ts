@@ -194,7 +194,12 @@ export type Modify =
    */
   | { op: 'absorb'; from?: 'tempHp' | 'hp' }
   /** 消除这次 d20 检定的优势 / 劣势，改用第一颗 d20（归复平衡 which 缺省 'both'，醉汉机运 which: 'disadv'） */
-  | { op: 'clearAdv'; which?: 'both' | 'adv' | 'disadv' };
+  | { op: 'clearAdv'; which?: 'both' | 'adv' | 'disadv' }
+  /**
+   * **重掷这次伤害里最小的几颗骰子**（damageIncoming before，伤害来源那边用：强效法术）。count 可以是表达式（魅力调整值）。
+   * 共享掷骰（火球术）的其他目标跟着用重掷后的骰面。
+   */
+  | { op: 'rerollDamage'; count: ExprSrc };
 
 export interface Trigger extends TriggerSpec {
   id: string;
@@ -275,6 +280,22 @@ export interface SummonAttackSpec {
   extra?: Array<{ dice: ExprSrc; type: string }>;
 }
 
+/** 「挑生物」的候选怎么筛（chooseTargets / allocate / repeatAction 共用） */
+export interface TargetPick {
+  /** 最多挑几个（缺省 1） */
+  count?: ExprSrc;
+  /** 至少挑几个（缺省 0：可以不挑） */
+  min?: ExprSrc;
+  /** 候选：all（所有活着的，缺省）/ enemies / allies（相对 self，含自己）/ targets（这次动作的目标） */
+  from?: 'all' | 'enemies' | 'allies' | 'targets';
+  /** 离谁多少尺以内：of 缺省 self，'target' = 当前目标；没有地图时不筛，问人时在选项里注明 */
+  within?: { ft: ExprSrc; of?: 'self' | 'target' };
+  /** 额外条件，表达式里 target = 候选 */
+  filter?: ExprSrc;
+  /** 排除：self、target（当前目标） */
+  exclude?: Array<'self' | 'target'>;
+}
+
 export type Node =
   | { kind: 'attack'; bonus?: ExprSrc; attack?: Partial<AttackInfo>; critRange?: ExprSrc; onHit?: Node[]; onMiss?: Node[] }
   /** ability 写成数组 = 由目标选择（引擎替目标选加值高的那个，例如擒抱：力量或敏捷）；to: 'attacker' = 迫使攻击者豁免（庇护术、不破威仪） */
@@ -320,6 +341,8 @@ export type Node =
    */
   | {
       kind: 'modifyCast'; cancel?: boolean; refundSlot?: boolean;
+      /** 这次施法的有效环阶加几（孪生法术、分裂惑控：多一个目标 = 按高一环算）；不多花法术位 */
+      slotDelta?: ExprSrc;
       dc?: ExprSrc; attackBonus?: ExprSrc; damageType?: string; note?: string;
     }
   /**
@@ -335,6 +358,29 @@ export type Node =
   | { kind: 'runBranch'; branch: 'onHit' | 'onMiss' | 'onFail' | 'onSuccess'; damageOnly?: boolean; scale?: number; ifNoDamage?: boolean }
   /** **退还**触发这个窗口的那次动作花掉的法术位（what: 'slot'）或资源（what: 'resource'，id 缺省 = 它花的第一种资源） */
   | { kind: 'refund'; what: 'slot' | 'resource'; id?: string }
+  /**
+   * **让人挑生物**（菜单选择）：从候选里挑 min～count 个，对每个执行 do（do 里 target = 挑中的那个）。
+   * 横扫攻击「5 尺内另一个生物」、风暴之心「10 尺内你选择的生物」、巩固法术「法术的目标之一」用它。
+   * 候选的筛法见 `TargetPick`；`addTo: 'cast'` = 把挑中的加进这次施法的目标（spellCast before 窗口里：孪生法术这类）。
+   */
+  | ({ kind: 'chooseTargets'; prompt: string; do?: Node[]; addTo?: 'cast'; var?: string } & TargetPick)
+  /**
+   * **分配点数**：总共 total 点，按候选逐个问给多少（每个最多 maxEach），对分到点数的执行 do，
+   * 分到的数在 `vars.<var>` 里（维持生命「分配治疗」、鼓舞斩「分配临时生命值」）。候选的筛法同 chooseTargets。
+   */
+  | ({ kind: 'allocate'; prompt: string; total: ExprSrc; maxEach?: ExprSrc; var: string; do: Node[] } & TargetPick)
+  /**
+   * **改这次伤害的类型**：在命中窗口 / 受伤窗口里改正在结算的伤害包（和它第一项同类型的部分都改）；
+   * 在施法窗口里改这次施法的伤害类型。value 是类型名，或 `vars.x` 这类表达式（前面 choose 选的）。
+   */
+  | { kind: 'retype'; value: string }
+  /** **去掉正在结算的伤害包里某一项的几颗骰子**（诡诈打击「放弃若干偷袭骰换效果」）：from = 那一项的来源名里含这几个字 */
+  | { kind: 'trimDamage'; from: string; dice: ExprSrc }
+  /**
+   * **对另一个目标再执行一次这次动作**（不再付代价）：繁彩球跳到新目标、灭族者用同一把武器再攻击一次。
+   * 候选的筛法同 chooseTargets（缺省：不含 self 和当前目标）。
+   */
+  | ({ kind: 'repeatAction'; prompt: string } & TargetPick)
   | { kind: 'resource'; id: string; delta: ExprSrc }
   | { kind: 'economy'; action?: number; bonus?: number; reaction?: number; attacks?: number; move?: ExprSrc }
   /** var：把选中项的 value（没写就是 label）放进 `vars.<var>`，后面的节点可以用（伤害类型 `type: 'vars.elem'`） */
@@ -350,8 +396,10 @@ export type Node =
       pool?: {
         from: 'ownSpells' | 'ownCantrips'; maxLevel?: ExprSrc; minLevel?: ExprSrc;
         castTime?: 'action' | 'bonus' | 'reaction'; singleTarget?: boolean;
+        /** 只要某个学派的（中文名：预言、塑能…） / 只要在某个职业法术列表里的 */
+        school?: string; list?: string;
       };
-      count?: number; var?: string;
+      count?: ExprSrc; var?: string;
     }
   /**
    * **直接施展**前面挑中的那个动作（`fromVar` / `from`），打完不留任何东西 ——

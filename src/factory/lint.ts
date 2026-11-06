@@ -45,7 +45,7 @@ const NODE_KEYS: Record<string, readonly string[]> = {
   heal: ['amount', 'to'],
   tempHp: ['amount', 'to'],
   applyEffect: ['template', 'inline', 'name', 'to', 'duration', 'link', 'potency', 'state', 'whileInZone'],
-  removeEffect: ['match', 'from'],  extendEffect: ['template'], endConcentration: [], grantAction: ['key', 'from', 'fromVar', 'action', 'name', 'text', 'cost', 'activation', 'targeting', 'until'], removeGrant: ['key'], castFrom: ['from', 'fromVar', 'to', 'cost', 'activation'], modifyCast: ['cancel', 'refundSlot', 'dc', 'attackBonus', 'damageType', 'note'],
+  removeEffect: ['match', 'from'],  extendEffect: ['template'], endConcentration: [], grantAction: ['key', 'from', 'fromVar', 'action', 'name', 'text', 'cost', 'activation', 'targeting', 'until'], removeGrant: ['key'], castFrom: ['from', 'fromVar', 'to', 'cost', 'activation'], modifyCast: ['cancel', 'refundSlot', 'dc', 'attackBonus', 'damageType', 'note', 'slotDelta'],
   resource: ['id', 'delta'],
   economy: ['action', 'bonus', 'reaction', 'attacks', 'move'],
   choose: ['prompt', 'var', 'options', 'pool', 'count'],
@@ -61,6 +61,11 @@ const NODE_KEYS: Record<string, readonly string[]> = {
   mark: ['name', 'value'],
   runBranch: ['branch', 'damageOnly', 'scale', 'ifNoDamage'],
   refund: ['what', 'id'],
+  chooseTargets: ['prompt', 'do', 'addTo', 'var', 'count', 'min', 'from', 'within', 'filter', 'exclude'],
+  allocate: ['prompt', 'total', 'maxEach', 'var', 'do', 'count', 'min', 'from', 'within', 'filter', 'exclude'],
+  retype: ['value'],
+  trimDamage: ['from', 'dice'],
+  repeatAction: ['prompt', 'count', 'min', 'from', 'within', 'filter', 'exclude'],
 };
 
 const STATIC_KEYS: Record<string, readonly string[]> = {
@@ -73,7 +78,7 @@ const COST_KEYS: Array<[string, readonly string[]]> = [
 const MODIFY_KEYS: Record<string, readonly string[]> = {
   reroll: ['die', 'keep'], addToRoll: ['value'], succeed: [],
   reduceDamage: ['value', 'types'], halveDamage: [], doubleDamage: [], evasion: [],
-  setHp: ['value'], cancel: ['refundSlot'], redirect: ['to'], absorb: ['from'], clearAdv: ['which'],
+  setHp: ['value'], cancel: ['refundSlot'], redirect: ['to'], absorb: ['from'], clearAdv: ['which'], rerollDamage: ['count'],
 };
 
 /** 结构检查：未知字段、该是数组 / 对象的不是 */

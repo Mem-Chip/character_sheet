@@ -20,10 +20,195 @@
        "kind": "addDamage",
        "dice": "classTable('偷袭')",
        "type": "attack.damageType"
+      },
+      {
+       "kind": "choose",
+       "prompt": "诡诈打击：放弃几颗偷袭骰换一个效果？（11 级起可以选两种）",
+       "count": "cond(self.levelOf('游荡者') >= 11, 2, 1)",
+       "options": [
+        {
+         "label": "不用"
+        },
+        {
+         "label": "投毒（1d6）：体质豁免，失败中毒 1 分钟",
+         "when": "self.levelOf('游荡者') >= 5",
+         "do": [
+          {
+           "kind": "trimDamage",
+           "from": "偷袭",
+           "dice": "1"
+          },
+          {
+           "kind": "save",
+           "ability": "con",
+           "dc": "8 + self.pb + self.mod.dex",
+           "onFail": [
+            {
+             "kind": "applyEffect",
+             "to": "target",
+             "template": "XPHB:condition:中毒",
+             "duration": {
+              "minutes": 1,
+              "saveEnds": {
+               "ability": "con",
+               "at": "turnEnd"
+              }
+             }
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "摔绊（1d6）：敏捷豁免，失败倒地（大型及以下）",
+         "when": "self.levelOf('游荡者') >= 5 && target.size != '巨型' && target.size != '超巨型'",
+         "do": [
+          {
+           "kind": "trimDamage",
+           "from": "偷袭",
+           "dice": "1"
+          },
+          {
+           "kind": "save",
+           "ability": "dex",
+           "dc": "8 + self.pb + self.mod.dex",
+           "onFail": [
+            {
+             "kind": "applyEffect",
+             "to": "target",
+             "template": "XPHB:condition:倒地",
+             "duration": {
+              "manual": true
+             }
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "撤步（1d6）：攻击后移动至多半速，不引发借机攻击",
+         "when": "self.levelOf('游荡者') >= 5",
+         "do": [
+          {
+           "kind": "trimDamage",
+           "from": "偷袭",
+           "dice": "1"
+          },
+          {
+           "kind": "economy",
+           "move": "floor(self.speed / 2)"
+          },
+          {
+           "kind": "applyEffect",
+           "to": "self",
+           "template": "XPHB:action:撤离#撤离"
+          }
+         ]
+        },
+        {
+         "label": "恍惚（2d6）：体质豁免，失败下回合只能移动、动作、附赠动作三选一",
+         "when": "self.levelOf('游荡者') >= 14",
+         "do": [
+          {
+           "kind": "trimDamage",
+           "from": "偷袭",
+           "dice": "2"
+          },
+          {
+           "kind": "save",
+           "ability": "con",
+           "dc": "8 + self.pb + self.mod.dex",
+           "onFail": [
+            {
+             "kind": "applyEffect",
+             "to": "target",
+             "inline": {
+              "name": "恍惚",
+              "text": "下一回合只能在移动、执行一个动作、执行一个附赠动作中选一项（引擎不限制，请自己遵守）。",
+              "duration": {
+               "until": {
+                "at": "turnEnd",
+                "of": "bearer",
+                "nth": 1
+               }
+              }
+             }
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "击昏（6d6）：体质豁免，失败昏迷 1 分钟",
+         "when": "self.levelOf('游荡者') >= 14",
+         "do": [
+          {
+           "kind": "trimDamage",
+           "from": "偷袭",
+           "dice": "6"
+          },
+          {
+           "kind": "save",
+           "ability": "con",
+           "dc": "8 + self.pb + self.mod.dex",
+           "onFail": [
+            {
+             "kind": "applyEffect",
+             "to": "target",
+             "template": "XPHB:condition:昏迷",
+             "duration": {
+              "minutes": 1,
+              "saveEnds": {
+               "ability": "con",
+               "at": "turnEnd"
+              },
+              "endsOn": [
+               {
+                "event": "damageTaken"
+               }
+              ]
+             }
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "隐翳（3d6）：敏捷豁免，失败目盲到你下回合结束",
+         "when": "self.levelOf('游荡者') >= 14",
+         "do": [
+          {
+           "kind": "trimDamage",
+           "from": "偷袭",
+           "dice": "3"
+          },
+          {
+           "kind": "save",
+           "ability": "dex",
+           "dc": "8 + self.pb + self.mod.dex",
+           "onFail": [
+            {
+             "kind": "applyEffect",
+             "to": "target",
+             "template": "XPHB:condition:目盲",
+             "duration": {
+              "until": {
+               "at": "turnEnd",
+               "of": "source",
+               "nth": 1
+              }
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
       }
      ]
     }
-   ]
+   ],
+   "text": "每回合一次，以灵巧或远程武器攻击命中、且有优势（或目标 5 尺内有你没失能的盟友、你也没有劣势）时，加偷袭骰的伤害。5 级起加完偷袭骰会问要不要用诡诈打击（放弃几颗偷袭骰换效果，DC = 8 + 熟练加值 + 敏捷调整值），11 级起可以选两种。投毒需要随身带着毒药工具，请自己确认。"
   },
   "XPHB:游荡者:直觉闪避:5": {
    "name": "直觉闪避",
@@ -1904,6 +2089,453 @@
      "label": "强力施法：牧师戏法伤害加感知调整值"
     }
    ]
+  },
+  "XPHB:游荡者:诡诈打击:5": {
+   "name": "诡诈打击",
+   "automation": "full",
+   "text": "诡诈打击：已经合进「偷袭」——命中加完偷袭骰时会问用哪种诡诈打击，扣骰、豁免都自动结算。",
+   "triggers": [],
+   "actions": [],
+   "rollMods": [],
+   "effects": {}
+  },
+  "XPHB:游荡者:进阶诡诈打击:11": {
+   "name": "进阶诡诈打击",
+   "automation": "full",
+   "text": "进阶诡诈打击：已经合进「偷袭」——命中加完偷袭骰时会问用哪种诡诈打击，扣骰、豁免都自动结算。",
+   "triggers": [],
+   "actions": [],
+   "rollMods": [],
+   "effects": {}
+  },
+  "XPHB:游荡者:撤步（花费：1d6）:5": {
+   "name": "撤步",
+   "automation": "full",
+   "text": "撤步：已经合进「偷袭」——命中加完偷袭骰时会问用哪种诡诈打击，扣骰、豁免都自动结算。",
+   "triggers": [],
+   "actions": [],
+   "rollMods": [],
+   "effects": {}
+  },
+  "XPHB:游荡者:摔绊（花费：1d6）:5": {
+   "name": "摔绊",
+   "automation": "full",
+   "text": "摔绊：已经合进「偷袭」——命中加完偷袭骰时会问用哪种诡诈打击，扣骰、豁免都自动结算。",
+   "triggers": [],
+   "actions": [],
+   "rollMods": [],
+   "effects": {}
+  },
+  "XPHB:游荡者:投毒（花费：1d6）:5": {
+   "name": "投毒",
+   "automation": "full",
+   "text": "投毒：已经合进「偷袭」——命中加完偷袭骰时会问用哪种诡诈打击，扣骰、豁免都自动结算。",
+   "triggers": [],
+   "actions": [],
+   "rollMods": [],
+   "effects": {}
+  },
+  "XPHB:游荡者:恍惚（花费：2d6）:14": {
+   "name": "恍惚",
+   "automation": "full",
+   "text": "恍惚：已经合进「偷袭」——命中加完偷袭骰时会问用哪种诡诈打击，扣骰、豁免都自动结算。",
+   "triggers": [],
+   "actions": [],
+   "rollMods": [],
+   "effects": {}
+  },
+  "XPHB:游荡者:击昏（花费：6d6）:14": {
+   "name": "击昏",
+   "automation": "full",
+   "text": "击昏：已经合进「偷袭」——命中加完偷袭骰时会问用哪种诡诈打击，扣骰、豁免都自动结算。",
+   "triggers": [],
+   "actions": [],
+   "rollMods": [],
+   "effects": {}
+  },
+  "XPHB:牧师:维持生命:3": {
+   "name": "维持生命",
+   "automation": "full",
+   "text": "用一次引导神力，把 5 × 牧师等级 点治疗分给 30 尺内任意数量的浴血生物（生命值不超过上限一半的），每个最多治疗到它生命值上限的一半。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "维持生命",
+     "activation": "action",
+     "tags": [
+      "magical"
+     ],
+     "cost": [
+      {
+       "resource": "引导神力"
+      }
+     ],
+     "root": [
+      {
+       "kind": "allocate",
+       "prompt": "分配治疗量",
+       "total": "5 * self.levelOf('牧师')",
+       "count": "99",
+       "from": "all",
+       "within": {
+        "ft": "30"
+       },
+       "filter": "target.hp * 2 <= target.hpMax && target.type != '不死生物' && target.type != '构装生物'",
+       "maxEach": "floor(target.hpMax / 2) - target.hp",
+       "var": "n",
+       "do": [
+        {
+         "kind": "heal",
+         "amount": "vars.n",
+         "to": "target"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:横扫攻击": {
+   "name": "横扫攻击",
+   "automation": "full",
+   "tags": [
+    "maneuver"
+   ],
+   "text": "近战武器攻击或徒手打击命中后，花一枚卓越骰：初始目标 5 尺内、你触及范围内的另一个生物，如果原来的攻击检定也能命中它，就受到等于卓越骰点数的伤害（和原攻击同类型）。没有地图时触及范围请自己把握。",
+   "triggers": [
+    {
+     "id": "cleave",
+     "label": "横扫攻击",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "after",
+     "optional": true,
+     "when": "attack.melee && (attack.weapon || attack.unarmed)",
+     "cost": [
+      {
+       "resource": "卓越骰"
+      }
+     ],
+     "do": [
+      {
+       "kind": "chooseTargets",
+       "prompt": "横扫到谁（初始目标 5 尺内）",
+       "min": "1",
+       "within": {
+        "ft": "5",
+        "of": "target"
+       },
+       "exclude": [
+        "self",
+        "target"
+       ],
+       "filter": "roll.total >= target.ac",
+       "do": [
+        {
+         "kind": "damage",
+         "dice": "cond(self.levelOf('战士') >= 18, 1d12, cond(self.levelOf('战士') >= 10, 1d10, 1d8))",
+         "type": "attack.damageType",
+         "to": "target"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:强效法术": {
+   "name": "强效法术",
+   "automation": "full",
+   "tags": [
+    "metamagic"
+   ],
+   "text": "超魔法：为法术掷伤害时，花 1 术法点，重掷至多魅力调整值颗（至少 1 颗）伤害骰，必须用新结果。引擎重掷的是点数最小的那几颗；火球术这类一次掷骰打多个目标的，重掷一次、所有目标都用新骰面。",
+   "triggers": [
+    {
+     "id": "empower",
+     "label": "强效法术：重掷伤害骰",
+     "on": "damageIncoming",
+     "window": "before",
+     "role": "actor",
+     "optional": true,
+     "cost": [
+      {
+       "resource": "sorcery_points",
+       "n": 1
+      }
+     ],
+     "when": "action.kind == 'spell' && action.marks.empoweredSpell != true",
+     "do": [
+      {
+       "kind": "mark",
+       "name": "empoweredSpell"
+      }
+     ],
+     "modify": [
+      {
+       "op": "rerollDamage",
+       "count": "max(1, self.mod.cha)"
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:转化法术": {
+   "name": "转化法术",
+   "automation": "full",
+   "tags": [
+    "metamagic"
+   ],
+   "text": "超魔法：施展造成强酸、寒冷、火焰、闪电、毒素或雷鸣伤害的法术时，花 1 术法点，把这种伤害改成列表里的另一种。施法时会问用不用、改成什么（法术本来不是这几种伤害就别用）。",
+   "triggers": [
+    {
+     "id": "transmute",
+     "label": "转化法术",
+     "on": "spellCast",
+     "window": "before",
+     "role": "actor",
+     "optional": true,
+     "cost": [
+      {
+       "resource": "sorcery_points",
+       "n": 1
+      }
+     ],
+     "when": "action.kind == 'spell'",
+     "do": [
+      {
+       "kind": "choose",
+       "prompt": "转化法术：改成哪种伤害？",
+       "var": "elem",
+       "options": [
+        {
+         "label": "强酸",
+         "value": "强酸"
+        },
+        {
+         "label": "寒冷",
+         "value": "寒冷"
+        },
+        {
+         "label": "火焰",
+         "value": "火焰"
+        },
+        {
+         "label": "闪电",
+         "value": "闪电"
+        },
+        {
+         "label": "毒素",
+         "value": "毒素"
+        },
+        {
+         "label": "雷鸣",
+         "value": "雷鸣"
+        }
+       ]
+      },
+      {
+       "kind": "retype",
+       "value": "vars.elem"
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:孪生法术": {
+   "name": "孪生法术",
+   "automation": "full",
+   "tags": [
+    "metamagic"
+   ],
+   "text": "超魔法：施展一道升环能多一个目标的法术时，花 1 术法点，这次按高一环施展（不多花法术位）。引擎会让你挑多出来的那个目标。",
+   "triggers": [
+    {
+     "id": "twin",
+     "label": "孪生法术",
+     "on": "spellCast",
+     "window": "before",
+     "role": "actor",
+     "optional": true,
+     "cost": [
+      {
+       "resource": "sorcery_points",
+       "n": 1
+      }
+     ],
+     "when": "action.kind == 'spell' && action.spell.level >= 1 && ask('这道法术升环能多一个目标吗？')",
+     "do": [
+      {
+       "kind": "modifyCast",
+       "slotDelta": "1",
+       "note": "孪生法术：按高一环施展"
+      },
+      {
+       "kind": "chooseTargets",
+       "prompt": "孪生法术：多出来的目标",
+       "min": "1",
+       "exclude": [
+        "self"
+       ],
+       "filter": "!includes(action.targets, target)",
+       "addTo": "cast"
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:谨慎法术": {
+   "name": "谨慎法术",
+   "automation": "full",
+   "tags": [
+    "metamagic"
+   ],
+   "text": "超魔法：施展迫使豁免的法术时，花 1 术法点，挑至多魅力调整值个（至少 1 个）生物，它们这次豁免自动成功；豁免成功仍受一半伤害的，它们不受伤害。",
+   "triggers": [
+    {
+     "id": "careful",
+     "label": "谨慎法术",
+     "on": "spellCast",
+     "window": "before",
+     "role": "actor",
+     "optional": true,
+     "cost": [
+      {
+       "resource": "sorcery_points",
+       "n": 1
+      }
+     ],
+     "when": "action.kind == 'spell'",
+     "do": [
+      {
+       "kind": "chooseTargets",
+       "prompt": "谨慎法术：保护谁",
+       "from": "targets",
+       "min": "1",
+       "count": "max(1, self.mod.cha)",
+       "do": [
+        {
+         "kind": "applyEffect",
+         "to": "target",
+         "template": "谨慎"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "谨慎": {
+     "name": "谨慎法术：这次豁免自动成功",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "source",
+       "nth": 0
+      },
+      "endsOn": [
+       {
+        "event": "actionDone",
+        "when": "event.actor == effect.source"
+       }
+      ]
+     },
+     "rollMods": [
+      {
+       "on": {
+        "kind": "save"
+       },
+       "who": "bearer",
+       "op": "autoSucceed",
+       "label": "谨慎法术"
+      }
+     ],
+     "triggers": [
+      {
+       "id": "nohalf",
+       "on": "damageIncoming",
+       "window": "before",
+       "role": "target",
+       "modify": [
+        {
+         "op": "evasion"
+        }
+       ],
+       "label": "谨慎法术：成功不受伤害"
+      }
+     ],
+     "text": "这道法术的豁免自动成功，成功仍受一半伤害的改为不受伤害（法术结算完就散）。"
+    }
+   }
+  },
+  "XPHB:升阶法术": {
+   "name": "升阶法术",
+   "automation": "full",
+   "tags": [
+    "metamagic"
+   ],
+   "text": "超魔法：施展迫使豁免的法术时，花 2 术法点，挑法术的一个目标，它对这次豁免具有劣势。",
+   "triggers": [
+    {
+     "id": "heighten",
+     "label": "升阶法术",
+     "on": "spellCast",
+     "window": "before",
+     "role": "actor",
+     "optional": true,
+     "cost": [
+      {
+       "resource": "sorcery_points",
+       "n": 2
+      }
+     ],
+     "when": "action.kind == 'spell'",
+     "do": [
+      {
+       "kind": "chooseTargets",
+       "prompt": "升阶法术：让谁豁免劣势",
+       "from": "targets",
+       "min": "1",
+       "do": [
+        {
+         "kind": "applyEffect",
+         "to": "target",
+         "template": "升阶：豁免劣势"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "升阶：豁免劣势": {
+     "name": "升阶法术：这次豁免劣势",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      },
+      "endsOn": [
+       {
+        "event": "d20Rolled",
+        "when": "event.roller == self.id && event.kind == 'save'"
+       }
+      ]
+     },
+     "rollMods": [
+      {
+       "on": {
+        "kind": "save"
+       },
+       "who": "bearer",
+       "op": "disadv",
+       "label": "升阶法术"
+      }
+     ],
+     "text": "对这道法术的这次豁免具有劣势（掷完即散）。"
+    }
+   }
   }
  }
 }

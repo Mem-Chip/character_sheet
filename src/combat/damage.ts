@@ -1,4 +1,4 @@
-import { Dice, Unknown, runDice, runInt, type Value } from '../expr';
+import { Dice, Unknown, runDice, runInt, type ExprSrc, type Value } from '../expr';
 import { rollModsOf } from './collect';
 import { currentAction, hideMarksOfRoll, markAction, resultOf } from './instance';
 import { controllerOf, d20Test, evaluateMods, filterMatches } from './d20';
@@ -6,7 +6,7 @@ import { applyEffect, concentrationOf, effectiveView, effectsOf, endConcentratio
 import { makeEnv, nameOf } from './scope';
 import { fireWindow } from './triggers';
 import type { Tx } from './tx';
-import type { AttackInfo, Id } from './types';
+import type { ActiveEffect, AttackInfo, Id } from './types';
 
 /**
  * 伤害管线（COMBAT-DESIGN §七）：
@@ -99,6 +99,47 @@ const NO_ATTACK: AttackInfo = {
   ability: null, damageType: '', item: null, mastery: null,
 };
 
+/**
+ * rerollDamage：把这次伤害里最小的几颗骰子重掷（按「点数 / 面数」排，1 点的 d12 比 1 点的 d4 先重掷），
+ * 改写伤害包的骰面并重算各类型的合计；共享掷骰记到动作实例上，同一次掷骰的其他目标照用。
+ */
+function rerollLowest(tx: Tx, p: DamagePacket, count: ExprSrc, by: { owner: Id; source: Id | null; effect?: ActiveEffect; label: string }, byType: Record<string, number>, cause: number): void {
+  // 共享掷骰（火球术）已经重掷过：同一次掷骰不再重掷（骰面在 ② 已经换成重掷后的了）
+  if (p.rollKey && currentAction(tx)?.rerolled?.[p.rollKey]) return;
+  const k = runInt(count, makeEnv(tx, { self: by.owner, source: by.source, effect: by.effect }));
+  if (typeof k !== 'number' || k <= 0) return;
+  const mode = tx.rules.coreParam<string>('critDamage');
+  const slots: Array<{ ci: number; ti: number; fi: number; faces: number; v: number }> = [];
+  p.components.forEach((c, ci) => {
+    const r = c.rolled;
+    if (!r || c.dice.isConstant) return;
+    const dice = r.crit && mode === 'doubleDice' ? c.dice.doubled() : c.dice;
+    r.faces.forEach((fs, ti) => fs.forEach((v, fi) => { const f = dice.terms[ti]?.faces; if (f) slots.push({ ci, ti, fi, faces: f, v }); }));
+  });
+  if (!slots.length) return;
+  slots.sort((a, b) => a.v / a.faces - b.v / b.faces);
+  const pickd = slots.slice(0, k);
+  const user = controllerOf(tx, by.owner);
+  const fresh = tx.roll(pickd.map((s) => ({ faces: s.faces, count: 1 })), user, `${by.label}：重掷伤害骰`, 'damage');
+  pickd.forEach((s, i) => { p.components[s.ci].rolled!.faces[s.ti][s.fi] = fresh[i][0]; });
+  // 重算每一项的合计、各类型合计
+  for (const ci of new Set(pickd.map((s) => s.ci))) {
+    const c = p.components[ci];
+    const r = c.rolled!;
+    const dice = r.crit && mode === 'doubleDice' ? c.dice.doubled() : c.dice;
+    let total = dice.flat;
+    dice.terms.forEach((t, ti) => { total += t.sign * sum(r.faces[ti] ?? []); });
+    if (r.crit && mode === 'maxPlusRoll') for (const t of c.dice.terms) total += t.sign * t.count * t.faces;
+    r.total = total;
+  }
+  for (const key of Object.keys(byType)) delete byType[key];
+  for (const c of p.components) { const t = normType(c.type); byType[t] = (byType[t] ?? 0) + Math.max(0, c.rolled?.total ?? 0); }
+  if (p.scale !== undefined) for (const key of Object.keys(byType)) byType[key] = Math.floor(byType[key] * p.scale);
+  const inst = currentAction(tx);
+  if (inst && p.rollKey) (inst.rerolled ??= {})[p.rollKey] = p.components.map((c) => (c.rolled ? { faces: c.rolled.faces.map((f) => f.slice()), total: c.rolled.total, crit: !!c.rolled.crit } : undefined));
+  tx.emit('note', { text: `${by.label}：重掷 ${pickd.length} 颗伤害骰（${pickd.map((s) => s.v).join('、')} → ${fresh.map((f) => f[0]).join('、')}）`, owner: by.owner, target: p.target }, cause);
+}
+
 export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null): DamageResult {
   const user = p.source ? controllerOf(tx, p.source) : 'dm';
 
@@ -139,6 +180,8 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
   // ② 掷骰与合计
   const rolledParts: Array<{ from: string; type: string; dice: string; faces: number[]; total: number }> = [];
   const byType: Record<string, number> = {};
+  const rer = p.rollKey ? currentAction(tx)?.rerolled?.[p.rollKey] : undefined;
+  p.components.forEach((c, i) => { const x = rer?.[i]; if (x && c.rolled) c.rolled = { faces: x.faces.map((f) => f.slice()), total: x.total, crit: x.crit }; });
   for (const c of p.components) {
     const r = c.rolled ?? { ...rollComponent(tx, c, p.crit, user, minDie, p.max), crit: p.crit };
     c.rolled = r;
@@ -194,6 +237,8 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
         }
       } else if (m.op === 'absorb') {
         (p.absorbers ??= []).push({ id: by.owner, from: m.from ?? 'tempHp', label: by.label });
+      } else if (m.op === 'rerollDamage') {
+        rerollLowest(tx, p, m.count, by, byType, rolledSeq);
       }
     },
   });

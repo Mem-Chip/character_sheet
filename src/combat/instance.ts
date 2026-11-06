@@ -73,6 +73,12 @@ export interface ActionInstance {
   last: Id | null;
   /** 最近一次伤害掷骰：骰子（文本）、类型、掷出的总数 */
   damage: { dice: string; type: string; total: number } | null;
+  /** 共享掷骰被重掷过（rerollDamage）：掷骰 id → 每一项重掷后的骰面，同一次掷骰的其他目标照用 */
+  rerolled?: Record<string, Array<{ faces: number[][]; total: number; crit: boolean } | undefined>>;
+  /** 对另一个目标再执行一次这次动作（repeatAction 用；executeAction 搭好，区域没有） */
+  rerun?: (target: Id) => void;
+  /** 已经再执行了几次（防止数据写成无限连跳） */
+  repeats?: number;
 }
 
 export interface TargetResult {

@@ -31,10 +31,10 @@ export const EMITTED_EVENTS = new Set([
 const NODE_KINDS = new Set([
   'attack', 'save', 'check', 'damage', 'addDamage', 'heal', 'tempHp', 'applyEffect', 'removeEffect', 'extendEffect', 'endConcentration', 'grantAction', 'removeGrant', 'castFrom', 'modifyCast',
   'resource', 'economy', 'choose', 'if', 'forEach', 'repeat', 'move', 'note', 'number', 'modify', 'zone', 'moveZone', 'summon',
-  'mark', 'runBranch', 'refund',
+  'mark', 'runBranch', 'refund', 'chooseTargets', 'allocate', 'retype', 'trimDamage', 'repeatAction',
 ]);
 const ROLL_OPS = new Set(['adv', 'disadv', 'noAdv', 'add', 'addDice', 'autoFail', 'autoSucceed', 'critRange', 'autoCritOnHit', 'minD20', 'minDie', 'targetAdd', 'maxDice']);
-const MODIFY_OPS = new Set(['reroll', 'addToRoll', 'reduceDamage', 'halveDamage', 'doubleDamage', 'setHp', 'cancel', 'evasion', 'succeed', 'redirect', 'absorb', 'clearAdv', 'cancelUnlessSave', 'unlessSave', 'setDc', 'setAttackBonus', 'setDamageType']);
+const MODIFY_OPS = new Set(['reroll', 'addToRoll', 'reduceDamage', 'halveDamage', 'doubleDamage', 'setHp', 'cancel', 'evasion', 'succeed', 'redirect', 'absorb', 'clearAdv', 'cancelUnlessSave', 'unlessSave', 'setDc', 'setAttackBonus', 'setDamageType', 'rerollDamage']);
 const STATIC_KINDS = new Set(['ac', 'speed', 'hpMax', 'speedSet', 'spellDc', 'resist', 'resistAll', 'immune', 'vuln', 'conditionImmune']);
 
 const NUM = T.num;
@@ -130,7 +130,8 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
       case 'modifyCast':
         if (n.dc !== undefined) expr(n.dc, 'node', NUM, `${at}.dc`);
         if (n.attackBonus !== undefined) expr(n.attackBonus, 'node', NUM, `${at}.attackBonus`);
-        if (!n.cancel && n.dc === undefined && n.attackBonus === undefined && !n.damageType) out.push(`${where(at)}：modifyCast 什么也没改（cancel / dc / attackBonus / damageType 至少写一个）`);
+        if (n.slotDelta !== undefined) expr(n.slotDelta, 'node', NUM, `${at}.slotDelta`);
+        if (!n.cancel && n.dc === undefined && n.attackBonus === undefined && !n.damageType && n.slotDelta === undefined) out.push(`${where(at)}：modifyCast 什么也没改（cancel / dc / attackBonus / damageType / slotDelta 至少写一个）`);
         break;
       case 'mark':
         if (!n.name) out.push(`${where(at)}：mark 缺少 name（记号叫什么）`);
@@ -141,6 +142,30 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
         break;
       case 'refund':
         if (n.what !== 'slot' && n.what !== 'resource') out.push(`${where(at)}：refund 的 what 只认 slot / resource`);
+        break;
+      case 'chooseTargets':
+      case 'allocate':
+      case 'repeatAction':
+        if (!n.prompt) out.push(`${where(at)}：${n.kind} 缺少 prompt（问人时说什么）`);
+        expr(n.count, 'node', NUM, `${at}.count`);
+        expr(n.min, 'node', NUM, `${at}.min`);
+        if (n.within) expr(n.within.ft, 'node', NUM, `${at}.within.ft`);
+        expr(n.filter, 'node', BOOL, `${at}.filter`);
+        if (n.from && !['all', 'enemies', 'allies', 'targets'].includes(n.from)) out.push(`${where(at)}：from 只认 all / enemies / allies / targets`);
+        if (n.kind === 'allocate') {
+          if (!n.var) out.push(`${where(at)}：allocate 缺少 var（分到的数放在哪）`);
+          expr(n.total, 'node', NUM, `${at}.total`);
+          expr(n.maxEach, 'node', NUM, `${at}.maxEach`);
+        }
+        if (n.kind !== 'repeatAction') nodes(n.do, `${at}.do`);
+        break;
+      case 'retype':
+        if (!n.value) out.push(`${where(at)}：retype 缺少 value（改成什么类型）`);
+        else if (/^[a-z]+\./.test(n.value)) expr(n.value, 'node', T.str, `${at}.value`);
+        break;
+      case 'trimDamage':
+        if (!n.from) out.push(`${where(at)}：trimDamage 缺少 from（扣哪一项的骰子）`);
+        expr(n.dice, 'node', NUM, `${at}.dice`);
         break;
       case 'castFrom':
         if (!n.from && !n.fromVar) out.push(`${where(at)}：castFrom 要写 from 或 fromVar（施展哪一条动作）`);
@@ -154,6 +179,7 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
       case 'choose':
         if (!n.options && !n.pool) out.push(`${where(at)}：choose 要么写 options（写死的选项），要么写 pool（引擎现算的池子）`);
         if (n.pool && !['ownSpells', 'ownCantrips'].includes(n.pool.from)) out.push(`${where(at)}：choose 的 pool.from 只认 ownSpells / ownCantrips`);
+        expr(n.count, 'node', NUM, `${at}.count`);
         if (n.pool) {
           expr(n.pool.maxLevel, 'node', NUM, `${at}.pool.maxLevel`);
           expr(n.pool.minLevel, 'node', NUM, `${at}.pool.minLevel`);
