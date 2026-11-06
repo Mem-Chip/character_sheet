@@ -1,0 +1,533 @@
+[
+  {
+    "key": "XPHB:刃之魔契",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled, rollMod:damage",
+    "reads": [
+      "action.attack.ability",
+      "action.attack.weapon"
+    ],
+    "does": [
+      "set:damageType"
+    ],
+    "otherGap": "item",
+    "now": false,
+    "note": "契约武器用魅力进行攻击和伤害掷骰并可替换为黯蚀/心灵/光耀伤害，卡在装备实体与攻击属性/伤害类型改写"
+  },
+  {
+    "key": "XPHB:融身入影",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "vision",
+    "now": false,
+    "note": "微光或黑暗中免法术位施展隐形术，卡在光照环境判断与隐形状态打破条件"
+  },
+  {
+    "key": "XPHB:哨兵",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit, leftReach",
+    "reads": [
+      "action.attack.melee",
+      "action.economy",
+      "action.targets"
+    ],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "借机攻击命中令敌人速度变0、撤离离开触及或5尺内攻击盟友时反应借机攻击，需感知借机攻击动作与攻击目标"
+  },
+  {
+    "key": "XPHB:神射手",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled",
+    "reads": [
+      "action.attack.ranged",
+      "action.attack.weapon"
+    ],
+    "does": [],
+    "otherGap": "vision",
+    "now": false,
+    "note": "远程武器攻击无视掩护、贴身无劣势、远距离无劣势，需在攻击检定时读取远程武器属性并配合掩护与距离引擎"
+  },
+  {
+    "key": "XPHB:升阶法术",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.save.ability",
+      "action.targets"
+    ],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "消耗2术法点使法术影响的目标之一首轮豁免带劣势，需在施法窗口读取豁免属性并支持在多目标中指定受影响生物"
+  },
+  {
+    "key": "XPHB:圣武士:不灭哨卫:15",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "reducedTo0",
+    "reads": [
+      "action.result.killed"
+    ],
+    "does": [],
+    "otherGap": null,
+    "now": false,
+    "note": "生命值降至0且未直接致死时改为恢复1+3×等级生命值，需读取是否直接致死判定"
+  },
+  {
+    "key": "XPHB:圣武士:仇敌誓言:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed, reducedTo0",
+    "reads": [
+      "action.kind",
+      "action.targets"
+    ],
+    "does": [],
+    "otherGap": "remember",
+    "now": false,
+    "note": "攻击动作时立誓对目标攻击获优势，誓言目标降至0时转移给新目标，需在动作中选择目标并在目标归零时转移"
+  },
+  {
+    "key": "XPHB:圣武士:奉献灵光:7",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "灵光范围内盟友免疫魅惑并暂时压制已有魅惑，卡在光环下状态动态压制与灵光半径成长"
+  },
+  {
+    "key": "XPHB:圣武士:复仇天使:20",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "附赠动作化身复仇天使获得飞行速度与恐惧灵光，卡在状态/速度动态授予与恐惧光环自动化"
+  },
+  {
+    "key": "XPHB:圣武士:复仇之魂:15",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit, attackMissed",
+    "reads": [
+      "action.by"
+    ],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "仇敌誓言目标发动攻击后反应进行近战武器反击，需读取攻击者身份并卡在装备武器触及与反击动作"
+  },
+  {
+    "key": "XPHB:圣武士:复原之触:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.key",
+      "action.targets"
+    ],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "使用圣疗时可选消耗5点治疗能量终止指定异常状态且不回血，卡在圣疗动作的分支选项与状态清除"
+  },
+  {
+    "key": "XPHB:圣武士:鼓舞斩:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.key"
+    ],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "施展至圣斩后消耗引导神力分配临时生命值，需监听至圣斩施法并卡在多目标点数分配"
+  },
+  {
+    "key": "XPHB:圣武士:辉煌防御:15",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit, attackMissed",
+    "reads": [
+      "action.by",
+      "action.result.hit",
+      "action.targets"
+    ],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "反应为10尺内被命中者提升AC，若攻击因此失手且攻击者在触及内则对其武器反击，需读取攻击目标与重判后的失手结果"
+  },
+  {
+    "key": "XPHB:圣武士:坚韧复仇:7",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.melee",
+      "action.economy"
+    ],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "借机攻击命中后使目标速度归零并立刻免借机移动半速，需识别借机攻击动作，卡在反应内移动流程"
+  },
+  {
+    "key": "XPHB:圣武士:绝伦健将:3",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "消耗引导神力获得运动与体操检定优势及跳跃距离增加，卡在跳跃规则自动化"
+  },
+  {
+    "key": "XPHB:圣武士:灵光增效:18",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "zone",
+    "now": false,
+    "note": "将守护灵光及派生灵光半径提升至30尺，卡在灵光半径参数化与子职灵光联动"
+  },
+  {
+    "key": "XPHB:圣武士:弃绝众敌:9",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "引导神力使多目标恐慌且其每回合只能在移动/动作/附赠中三选一，卡在状态对动作经济的限制"
+  },
+  {
+    "key": "XPHB:圣武士:上古斗士:20",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast, rollMod:d20",
+    "reads": [
+      "action.economy",
+      "action.kind",
+      "action.spell.list"
+    ],
+    "does": [
+      "set:economy"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "灵光内敌人抗法豁免劣势、每回合回血10点并将动作法术改为附赠施展，需读取法术动作类型并修改施法经济，且需识别自身法术来源"
+  },
+  {
+    "key": "XPHB:圣武士:神圣感知:3",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "vision",
+    "now": false,
+    "note": "消耗引导神力探测60尺内特定生物类型与圣居区域，属于探索侦测类能力"
+  },
+  {
+    "key": "XPHB:圣武士:现世传说:20",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled, attackMissed",
+    "reads": [
+      "action.attack.weapon",
+      "action.result.hit"
+    ],
+    "does": [
+      "set:hit"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "化身传说获得魅力优势、重掷豁免及每回合一次武器失手直接改命中，需在攻击失手时改写命中判定"
+  },
+  {
+    "key": "XPHB:圣武士:信实坐骑:5",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "免法术位施展寻获坐骑召唤异界坐骑，卡在坐骑实体召唤、骑乘互动与生命连接同步"
+  },
+  {
+    "key": "XPHB:圣武士:迅捷灵光:7",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "turnStarted, NEW:enteredAura",
+    "reads": [],
+    "does": [],
+    "otherGap": "zone",
+    "now": false,
+    "note": "灵光内盟友回合开始或首次进入时增加10尺速度，卡在移动灵光进入事件（enteredAura）自动化"
+  },
+  {
+    "key": "XPHB:圣武士:勇气灵光:10",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "灵光内自身与盟友免疫恐慌并暂时压制恐慌状态，卡在跟随灵光的静态状态免疫与压制"
+  },
+  {
+    "key": "XPHB:圣武士:至圣光轮:20",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:d20, turnStarted",
+    "reads": [
+      "action.by"
+    ],
+    "does": [],
+    "otherGap": "vision",
+    "now": false,
+    "note": "对抗邪魔/不死生物豁免优势、30尺灵光敌人回合开始受光耀伤害且散发阳光，需在豁免窗口判断来源生物类型，卡在阳光光照模拟"
+  },
+  {
+    "key": "XPHB:守护馈赠",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "reducedTo0",
+    "reads": [
+      "action.result.killed"
+    ],
+    "does": [],
+    "otherGap": "remember",
+    "now": false,
+    "note": "书页上记录的生物生命值归零且未直接致死时改为生命值变为1，需判断未直接致死，卡在名单记忆与单次触发限制"
+  },
+  {
+    "key": "XPHB:术士:奥术登神:20",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.marks.超魔法",
+      "action.onMyTurn"
+    ],
+    "does": [
+      "refund:resource"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "先天术法激活时每自己回合一次免术法点使用超魔法，需在施法窗口退还术法点并标记回合单次限制"
+  },
+  {
+    "key": "XPHB:术士:超魔法:2",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.marks.超魔法",
+      "action.spell.level"
+    ],
+    "does": [
+      "mark:超魔法"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "施法时消耗术法点应用超魔法且每道法术限制一种（强效法术除外），需在施法窗口打标记并管理消耗"
+  },
+  {
+    "key": "XPHB:术士:传心谈话:3",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "附赠动作与30尺生物建立心灵感应链接，属于探索社交向能力，卡在等级关联分钟数持续时间与单目标替换"
+  },
+  {
+    "key": "XPHB:术士:混沌之潮:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.list",
+      "action.spell.slot"
+    ],
+    "does": [
+      "refund:resource"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "消耗法术位施展术士法术时恢复混沌之潮使用权并触发狂野魔法浪涌，需在施法窗口校验术士法术位消耗"
+  },
+  {
+    "key": "XPHB:术士:狂野魔法浪涌:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.list",
+      "action.spell.slot"
+    ],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "消耗法术位施展术士法术后每回合一次掷d20判定狂野浪涌，需在 spellCast 窗口读取法术来源与法术位消耗"
+  },
+  {
+    "key": "XPHB:术士:灵能术法:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.key",
+      "action.spell.components",
+      "action.spell.level"
+    ],
+    "does": [
+      "refund:slot",
+      "NEW:setComponents"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "施展灵能法术时改消耗术法点替代法术位并免除V/S及无价值M成分，需在施法窗口改写消耗与成分"
+  },
+  {
+    "key": "XPHB:术士:龙伴:18",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.key",
+      "action.spell.concentration"
+    ],
+    "does": [
+      "refund:slot",
+      "NEW:setConcentration"
+    ],
+    "otherGap": "summon",
+    "now": false,
+    "note": "免法术位施展龙类召唤术且无需专注、持续1分钟，需在施法窗口修改法术专注属性与消耗"
+  },
+  {
+    "key": "XPHB:术士:龙翼:14",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "附赠动作展开龙翼获得60尺飞行速度与悬浮，卡在效应系统中飞行速度属性的支持"
+  },
+  {
+    "key": "XPHB:术士:律令之壁:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "damageIncoming",
+    "reads": [
+      "action.result.damage"
+    ],
+    "does": [
+      "NEW:reduceDamage"
+    ],
+    "otherGap": "remember",
+    "now": false,
+    "note": "受到伤害时消耗屏障内的d8减免伤害，需在伤害结算前减免伤害并动态追踪剩余骰子池"
+  },
+  {
+    "key": "XPHB:术士:魔力泉涌:2",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "术法点与法术位双向转化，卡在法术位资源池的动态增加与临时法术位追踪"
+  },
+  {
+    "key": "XPHB:术士:扭曲爆裂:18",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "动作传送并迫使起点周围生物力量豁免受伤并拉近原位，卡在战图精准传送与强制位移落点计算"
+  },
+  {
+    "key": "XPHB:术士:时械矩阵:18",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "动作创造30尺立方精魂分配100点治疗、修复物件及驱散6环以下法术，卡在多目标治疗分配与范围法术解除自动化"
+  },
+  {
+    "key": "XPHB:术士:术法化身:7",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.marks.超魔法"
+    ],
+    "does": [
+      "mark:超魔法"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "先天术法激活期间每道法术可应用两种超魔法，需在施法窗口追踪超魔法使用次数放宽至2次"
+  },
+  {
+    "key": "XPHB:术士:血肉启示:14",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "消耗术法点变身获得飞行/游泳速度、识破隐形与钻缝脱擒，卡在特殊移动速度与感知状态机制"
+  },
+  {
+    "key": "XPHB:术士:驯服浪涌:18",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.list",
+      "action.spell.slot"
+    ],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "用法术位施展术士法术后自选狂野魔法浪涌效应代替随机掷骰，需读取法术位消耗并支持浪涌效果选单"
+  }
+]

@@ -1,0 +1,559 @@
+[
+  {
+    "key": "XPHB:术士:元素亲和:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit, NEW:damageRolled",
+    "reads": [
+      "action.spell.*",
+      "action.damage.types",
+      "action.marks.元素亲和"
+    ],
+    "does": [
+      "addDamage",
+      "mark:元素亲和"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "施展对应属性法术造成伤害时，豁免类等非攻击检定法术伤害无法读取法术信息并追加魅力调整值伤害"
+  },
+  {
+    "key": "XPHB:术士:掌控混沌:14",
+    "scope": "rare",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "NEW:tableRoll",
+    "now": false,
+    "note": "狂野魔法浪涌掷表机制属于表格查找与重掷选择，引擎缺乏掷表与多选一机制"
+  },
+  {
+    "key": "XPHB:双持客",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.kind",
+      "action.attack.weapon",
+      "action.economy"
+    ],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "需读取本回合此前是否执行过攻击动作且使用了轻型武器攻击，并处理副手武器装备与拔刀交互"
+  },
+  {
+    "key": "XPHB:提夫林",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "种族特性赋予的每日免费施法次数无法直接关联法术施放动作并扣减对应的独立资源池"
+  },
+  {
+    "key": "XPHB:徒手战斗",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit, turnStarted",
+    "reads": [
+      "action.attack.unarmed"
+    ],
+    "does": [
+      "NEW:replaceDamageDice"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "徒手打击命中时需替换伤害骰，且回合开始时需定位被自身擒抱的目标并造成伤害"
+  },
+  {
+    "key": "XPHB:无敌攻势之恩惠",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit, damageIncoming",
+    "reads": [
+      "action.damage.types"
+    ],
+    "does": [
+      "NEW:ignoreResistance"
+    ],
+    "otherGap": "other",
+    "now": false,
+    "note": "摧坚破甲需要攻击动作附带忽略钝击、穿刺、挥砍伤害抗性标记，引擎缺少无视抗性结算机制"
+  },
+  {
+    "key": "XPHB:武僧:暗影步:6",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "vision",
+    "now": false,
+    "note": "附赠动作传送依赖自身所处位置与目标落点的战场光照等级（微光/黑暗）及视线检测"
+  },
+  {
+    "key": "XPHB:武僧:拨挡攻击:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "damageIncoming, attackHit",
+    "reads": [
+      "action.kind",
+      "action.attack.*",
+      "action.damage.types"
+    ],
+    "does": [
+      "reduceDamage",
+      "remember"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "需识别伤害成因是否为攻击及原攻击伤害类型，且伤害降至 0 时需支持向新目标发起重新定向豁免与伤害"
+  },
+  {
+    "key": "XPHB:武僧:反射闪避:7",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "damageIncoming",
+    "reads": [],
+    "does": [],
+    "otherGap": null,
+    "now": true,
+    "note": "现有 spec 已支持：damageIncoming before 下 when: \"damage.save == 'dex' && !self.has('失能')\" 配合 modify: [{ op: 'evasion' }] 即可"
+  },
+  {
+    "key": "XPHB:武僧:返本还元:10",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "turnEnded",
+    "reads": [],
+    "does": [],
+    "otherGap": null,
+    "now": true,
+    "note": "战斗内回合结束移除魅惑/恐慌/中毒已用 turnEnded 触发器完整实现；不吃不喝免力竭属于探索规则无需战斗自动化"
+  },
+  {
+    "key": "XPHB:武僧:飞檐走壁:9",
+    "scope": "rare",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "在垂直表面与液体表面移动不坠落属于三维空间与特殊地形移动物理，引擎暂无此类机制"
+  },
+  {
+    "key": "XPHB:武僧:黑暗术:3",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "vision",
+    "now": false,
+    "note": "黑暗术区域与移动已实现，缺失自身看穿以此特性施展的魔法黑暗的特定视线豁免判定"
+  },
+  {
+    "key": "XPHB:武僧:疾步如风:2",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "疾走与撤离动作已支持，缺少本回合跳跃距离翻倍与跳跃移动力机制"
+  },
+  {
+    "key": "XPHB:武僧:流星步:11",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.economy",
+      "action.key"
+    ],
+    "does": [
+      "NEW:grantAction"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "需感知前置动作的消耗类型为附赠动作且非疾步如风，并在该动作完成后立即触发疾步如风"
+  },
+  {
+    "key": "XPHB:武僧:敏捷攻击:1",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "other",
+    "now": false,
+    "note": "徒手与武僧武器攻防改敏捷已自动，擒抱与推撞通用基础动作的豁免 DC 尚不支持替换为敏捷属性"
+  },
+  {
+    "key": "XPHB:武僧:命极之手:17",
+    "scope": "rare",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "主动复活类动作，卡在对已死亡目标的目标选取判定与死亡状态的自动清除机制"
+  },
+  {
+    "key": "XPHB:武僧:轻身坠:4",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "damageIncoming",
+    "reads": [
+      "action.kind"
+    ],
+    "does": [
+      "reduceDamage"
+    ],
+    "otherGap": "other",
+    "now": false,
+    "note": "伤害流入窗口缺少伤害成因标识（无法自动区分坠落伤害与普通钝击攻击伤害），需读取动作或伤害类型"
+  },
+  {
+    "key": "XPHB:武僧:散打技巧:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.name",
+      "action.parent"
+    ],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "需读取命中攻击实例是否来自于「疾风连击」动作，且慌神效果缺少禁止借机攻击的状态标记"
+  },
+  {
+    "key": "XPHB:武僧:渗透劲:17",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit, NEW:actionUsed",
+    "reads": [
+      "action.attack.unarmed",
+      "action.economy"
+    ],
+    "does": [
+      "NEW:replaceAttackWithAction"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "徒手命中打入暗劲，且以攻击动作中其中一次攻击替换结算暗劲需要动作替换与唯一目标追踪"
+  },
+  {
+    "key": "XPHB:武僧:升阶专注:10",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.key",
+      "action.cost"
+    ],
+    "does": [
+      "NEW:grantTempHp"
+    ],
+    "otherGap": "move",
+    "now": false,
+    "note": "需在消耗功力使用坚强防御或疾步如风时触发额外临时生命值与携友移动效果"
+  },
+  {
+    "key": "XPHB:武僧:生杀予夺:11",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit, NEW:actionUsed",
+    "reads": [
+      "action.parent",
+      "action.name",
+      "action.attack.unarmed",
+      "action.marks.生杀予夺"
+    ],
+    "does": [
+      "addDamage",
+      "mark:生杀予夺",
+      "NEW:replaceAttackWithAction"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "需识别疾风连击动作实例以替换攻击为予命之手，并在疾风连击命中时追加免费夺命之手伤害"
+  },
+  {
+    "key": "XPHB:武僧:生死之触:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.key"
+    ],
+    "does": [
+      "applyEffect",
+      "NEW:removeCondition"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "需挂接在予命之手与夺命之手的动作结算上，追加状态清除选择与施加中毒效果"
+  },
+  {
+    "key": "XPHB:武僧:四象遁术:11",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "元素同调期间赋予飞行与游泳速度，属于移动模式与速度类型支持缺失"
+  },
+  {
+    "key": "XPHB:武僧:四象神通:17",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:enteredReach",
+    "reads": [
+      "action.name"
+    ],
+    "does": [
+      "runBranch:damage"
+    ],
+    "otherGap": "move",
+    "now": false,
+    "note": "破灭奔行需在疾步如风移动经过敌人 5 尺范围时对每个目标造成武艺骰伤害，缺少动态移动碰撞触发与频次限制"
+  },
+  {
+    "key": "XPHB:武僧:无影步:11",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.name",
+      "action.economy"
+    ],
+    "does": [
+      "repeat",
+      "NEW:chainAttack"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "使用消耗功力的暗影步后需在同一个附赠动作内链式触发一次徒手打击"
+  },
+  {
+    "key": "XPHB:武僧:武艺骰:1",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:damage",
+    "reads": [
+      "action.attack.weapon",
+      "action.damage.dice"
+    ],
+    "does": [
+      "set:dice"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "武僧武器造成伤害时需支持动态比较并将武器原始伤害骰替换为武艺骰"
+  },
+  {
+    "key": "XPHB:武僧:幽影斗篷:17",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "turnEnded",
+    "reads": [],
+    "does": [],
+    "otherGap": "vision",
+    "now": false,
+    "note": "依赖微光/黑暗光照前置检测，且穿过已占据生物空间在回合结束时的挤出位移缺乏引擎支持"
+  },
+  {
+    "key": "XPHB:武僧:予命之手:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.parent",
+      "action.economy",
+      "action.name"
+    ],
+    "does": [
+      "NEW:replaceAttackWithAction"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "需支持在疾风连击动作序列中将其中一次徒手打击替换为免消耗的予命之手"
+  },
+  {
+    "key": "XPHB:武僧:元素同调:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.unarmed"
+    ],
+    "does": [
+      "set:damageType"
+    ],
+    "otherGap": "other",
+    "now": false,
+    "note": "徒手打击命中需支持动态修改伤害类型为所选元素，且缺少徒手打击触及距离增加机制"
+  },
+  {
+    "key": "XPHB:武僧:真力注拳:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit, rollMod:damage",
+    "reads": [
+      "action.attack.unarmed"
+    ],
+    "does": [
+      "set:damageType"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "徒手打击命中结算伤害时需支持弹窗选择将伤害类型替换为力场伤害"
+  },
+  {
+    "key": "XPHB:凶蛮打手",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit, rollMod:damage",
+    "reads": [
+      "action.attack.weapon",
+      "action.damage.dice"
+    ],
+    "does": [
+      "rerollDamage"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "武器命中伤害掷骰时需支持重掷整组武器伤害骰并选择取较高结果，每回合限一次"
+  },
+  {
+    "key": "XPHB:延效法术",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.duration",
+      "action.spell.concentration"
+    ],
+    "does": [
+      "set:duration"
+    ],
+    "otherGap": "other",
+    "now": false,
+    "note": "施法时需读取法术持续时间并将其翻倍改写，同时为需要专注的法术附加专注豁免优势效应"
+  },
+  {
+    "key": "XPHB:演员",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "拟声与伪装识破属于社交探索对抗检定，不属于即时战斗自动化范畴"
+  },
+  {
+    "key": "XPHB:妖精触碰",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "专长自选一环法术无法动态绑入独立免位施法池，且多个法术共用池子计数上限无法拆分"
+  },
+  {
+    "key": "XPHB:野蛮人:报偿:10",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "damageTaken",
+    "reads": [
+      "action.by",
+      "action.attack.*"
+    ],
+    "does": [
+      "NEW:invokeWeaponAttack"
+    ],
+    "otherGap": "item",
+    "now": false,
+    "note": "受伤反应反击已自动化徒手攻击，但无法直接调用角色装备库中的近战武器实体发起攻击"
+  },
+  {
+    "key": "XPHB:野蛮人:持久狂暴:15",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "turnStarted, initiativeRolled",
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "需改写狂暴状态的提前结束触发条件（免疫因失能导致的狂暴终止，仅保留昏迷与重甲）"
+  },
+  {
+    "key": "XPHB:野蛮人:根击千钧:10",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.weapon",
+      "action.attack.weaponProperties"
+    ],
+    "does": [],
+    "otherGap": "other",
+    "now": false,
+    "note": "需读取武器属性标签（重型/多用）自动免问触发推离/失衡，且引擎缺乏近战触及距离加值机制"
+  },
+  {
+    "key": "XPHB:野蛮人:灵树枝杈:6",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "turnStarted",
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "回合开始反应迫使豁免与减速已支持，传送敌方至自身周围未占据格子缺少棋盘落点算法"
+  },
+  {
+    "key": "XPHB:野蛮人:莽驰:7",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.key"
+    ],
+    "does": [
+      "grantAction"
+    ],
+    "otherGap": "move",
+    "now": false,
+    "note": "需在激活狂暴动作使用时作为该动作一部分联动赋予半速移动预算，无法感知激活狂暴动作"
+  },
+  {
+    "key": "XPHB:野蛮人:神之狂暴:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.key"
+    ],
+    "does": [
+      "applyEffect"
+    ],
+    "otherGap": "move",
+    "now": false,
+    "note": "需在激活狂暴时自动附带激活圣斗士姿态，且引擎缺少飞行速度与悬浮机制"
+  }
+]

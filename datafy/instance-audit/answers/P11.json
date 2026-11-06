@@ -1,0 +1,563 @@
+[
+  {
+    "key": "XPHB:战士:勇战英豪:10",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "turnStarted",
+    "reads": [],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "回合开始时若无英雄激励则获得英雄激励，卡在英雄激励状态与资源自动化"
+  },
+  {
+    "key": "XPHB:战士:运动健将:3",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "attackHit",
+    "reads": [],
+    "does": [],
+    "otherGap": null,
+    "now": true,
+    "note": "现有 spec 已支持（attackHit 读 roll.crit 加移动力并附加 cannot:['provoke'] 效应），移除提示性 note 即可"
+  },
+  {
+    "key": "XPHB:战士:战术主宰:9",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled",
+    "reads": [
+      "action.attack.mastery",
+      "action.attack.weapon"
+    ],
+    "does": [
+      "set:mastery"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "发动武器攻击时将武器精通属性替换为推离、削弱或缓速之一，需在攻击检定前读取并修改 mastery"
+  },
+  {
+    "key": "XPHB:战士:战术转进:5",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.key"
+    ],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "使用回气附赠动作后触发半速移动且免借机，需 actionUsed 窗口感知回气动作"
+  },
+  {
+    "key": "XPHB:战士:战争联结:3",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "以附赠动作召唤联结武器到手中及防缴械，属物品栏与装备管理"
+  },
+  {
+    "key": "XPHB:战士:战争魔法:7",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.kind",
+      "action.economy"
+    ],
+    "does": [
+      "NEW:replaceAttackWithSpell"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "执行攻击动作时将其中一次攻击替换为施展动作戏法，需动作实例支持嵌套或替换单次攻击"
+  },
+  {
+    "key": "XPHB:长柄武器大师",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:enterReach,actionDone",
+    "reads": [
+      "action.kind",
+      "action.attack.item"
+    ],
+    "does": [],
+    "otherGap": null,
+    "now": false,
+    "note": "生物进入触及范围触发借机攻击（缺 enterReach），以及附赠打击需校验前置动作为长柄武器攻击"
+  },
+  {
+    "key": "XPHB:指挥官奇袭",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.kind",
+      "action.attack.weapon"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "指挥盟友用反应发动武器攻击并在命中时追加卓越骰伤害，需关联盟友攻击动作与追加伤害"
+  },
+  {
+    "key": "XPHB:中甲大师",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "other",
+    "now": false,
+    "note": "中甲敏捷加值上限提升至3及消除隐匿劣势，属人物卡静态计算规则"
+  },
+  {
+    "key": "XPHB:侏儒",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "发条装置制造与激活属探索社交小道具，手动处理正常"
+  },
+  {
+    "key": "XPHB:转化法术",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.damage.types"
+    ],
+    "does": [
+      "set:damageType"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "施法时改变法术伤害类型为酸冷火电毒雷之一，需在 spellCast 窗口修改 damageType"
+  },
+  {
+    "key": "AU:奥法殡葬师",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "协助稳定伤势获得英雄激励，属探索急救与英雄激励资源管理"
+  },
+  {
+    "key": "AU:奥法超负荷",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:damage",
+    "reads": [
+      "action.spell.school",
+      "action.damage.dice"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "施展塑能法术造成伤害时追加熟练加值伤害，豁免法术缺伤害掷骰时读取学派并追加伤害"
+  },
+  {
+    "key": "AU:奥法护佑者",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.name",
+      "action.targets"
+    ],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "协助盟友检定时提供临时生命值需识别协助动作与目标，附赠施法可用 grantAction 实现"
+  },
+  {
+    "key": "AU:奥法艺术家",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.school"
+    ],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "施展幻术法术后给30尺内可见盟友英雄激励，需在 spellCast 窗口读取学派"
+  },
+  {
+    "key": "AU:爆裂弹",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.ranged",
+      "action.attack.weapon",
+      "action.targets"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": "zone",
+    "now": false,
+    "note": "远程武器攻击命中时主目标加力场伤害，并对周围10尺内生物造成同等伤害"
+  },
+  {
+    "key": "AU:变化专家",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.school",
+      "action.spell.slot"
+    ],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "消耗法术位施展变化法术时按法术位环阶×5提升速度，需在 spellCast 读取学派与环阶"
+  },
+  {
+    "key": "AU:缠绕弹",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.ranged",
+      "action.attack.weapon"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "远程武器攻击命中时追加挥砍伤害并迫使力量豁免陷入束缚，卡在命中追加效果与挣脱动作"
+  },
+  {
+    "key": "AU:穿梭弹",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": null,
+    "reads": [
+      "action.damage.dice",
+      "action.attack.item"
+    ],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "替换远程攻击为线状豁免射击，需读取当前武器的基础伤害骰与加值"
+  },
+  {
+    "key": "AU:法师:变化宗师:14",
+    "scope": "rare",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "消耗变化师之石施展四选一大招或消耗高环法术位保石，卡在物品管理与复杂叙事法术"
+  },
+  {
+    "key": "AU:法师:变形生物:10",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.name",
+      "action.targets"
+    ],
+    "does": [
+      "NEW:modifyPolymorph"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "施展变形术自指时保留心智属性与施法能力，需拦截自身施法并修改变形状态规则"
+  },
+  {
+    "key": "AU:法师:分裂惑控:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.school",
+      "action.spell.slot"
+    ],
+    "does": [
+      "set:slot",
+      "set:targets"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "消耗法术位施展升环多目标的惑控法术时有效环阶+1，需在 spellCast 窗口修改 slot 或 targets"
+  },
+  {
+    "key": "AU:法师:坟冢之力:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:damage",
+    "reads": [
+      "action.spell.list",
+      "action.damage.types"
+    ],
+    "does": [
+      "NEW:ignoreResist"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "法师法术与特性的伤害无视暗蚀抗性，需在伤害检定时读取法术来源并设置无视抗性"
+  },
+  {
+    "key": "AU:法师:裂分召唤:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.school",
+      "action.spell.slot"
+    ],
+    "does": [
+      "NEW:modifySummonCount",
+      "NEW:modifySummonHp"
+    ],
+    "otherGap": "summon",
+    "now": false,
+    "note": "施展咒法召唤法术时改为召唤两个生命值减半的生物，需拦截施法修改召唤参数"
+  },
+  {
+    "key": "AU:法师:妙法化形:3",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "变身术水下附赠疾走与天生武器伤害提升至2d6，卡在变身术效应强化"
+  },
+  {
+    "key": "AU:法师:强力变化:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.school",
+      "action.spell.slot",
+      "action.attack.*",
+      "action.save.*"
+    ],
+    "does": [
+      "set:slot"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "消耗法术位施展无攻击无豁免的变化法术时有效环阶提升一环，需在施法窗口判断并修改 slot"
+  },
+  {
+    "key": "AU:法师:强韧召唤:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.school",
+      "action.spell.slot"
+    ],
+    "does": [
+      "NEW:buffSummon"
+    ],
+    "otherGap": "summon",
+    "now": false,
+    "note": "消耗法术位施展咒法召唤法术时为新召唤物赋予临时生命值与抗性，需在施法时读取并作用于召唤物"
+  },
+  {
+    "key": "AU:法师:收割亡灵:10",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "damageTaken",
+    "reads": [
+      "action.result.damage"
+    ],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "受伤陷入浴血时用反应牺牲一只受控亡灵回复生命值，卡在浴血触发窗口与对目标致死/清零生命值"
+  },
+  {
+    "key": "AU:法师:死灵魔典:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.school",
+      "action.spell.slot"
+    ],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "施展死灵法术时按法术位环阶+法师等级治疗60尺内可见亡灵，需在 spellCast 窗口读取学派与环阶"
+  },
+  {
+    "key": "AU:法师:死之尊主:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "reducedTo0",
+    "reads": [
+      "action.result.reducedTo0"
+    ],
+    "does": [],
+    "otherGap": "zone",
+    "now": false,
+    "note": "可见亡灵生命值降到0时用反应引爆产生范围暗蚀伤害，需在 reducedTo0 窗口捕获阵亡目标并结算范围伤害"
+  },
+  {
+    "key": "AU:法师:亡灵仆役:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit,spellCast",
+    "reads": [
+      "action.by",
+      "action.attack.*",
+      "action.spell.school"
+    ],
+    "does": [
+      "addDamage",
+      "NEW:modifySummonHp"
+    ],
+    "otherGap": "summon",
+    "now": false,
+    "note": "施法召唤亡灵时增加生命上限，且操控的亡灵攻击命中时追加暗蚀伤害"
+  },
+  {
+    "key": "AU:法师:王车易位:3",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "附赠动作传送或与自愿生物交换位置，卡在地图像素传送与多生物位置交换"
+  },
+  {
+    "key": "AU:法师:直觉魅惑:10",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit,spellCast",
+    "reads": [
+      "action.attack.range",
+      "action.attack.reach",
+      "action.spell.school",
+      "action.spell.slot"
+    ],
+    "does": [
+      "set:targets",
+      "refund:resource"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "被攻击命中时反应迫使豁免并将攻击改打射程内另一目标，以及施展惑控法术恢复使用次数"
+  },
+  {
+    "key": "AU:法术诡计",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.economy",
+      "action.spell.slot",
+      "action.spell.components"
+    ],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "消耗法术位施展动作法术后附赠疾走躲藏，且隐形施法不破隐，需读取施法动作经济与成分并与隐形状态联动"
+  },
+  {
+    "key": "AU:放逐弹",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.ranged",
+      "action.attack.weapon"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "远程武器攻击命中时追加心灵伤害并迫使魅力豁免陷入放逐状态，需在命中窗口追加伤害与豁免放逐"
+  },
+  {
+    "key": "AU:魔宠密友",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "rollMod:check",
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "魔宠在5尺内时技能检定优势及魔宠血量加成，卡在魔宠实体状态与距离判断"
+  },
+  {
+    "key": "AU:魔法行家",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "专长自选一二环法术免位施展与准备，属人物卡静态法术与法术位管理"
+  },
+  {
+    "key": "AU:魔契师:拟态生命:14",
+    "scope": "rare",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "以魔法动作让契灵变形为对应召唤灵魄数据卡，卡在随从数据卡动态替换与临时生命"
+  },
+  {
+    "key": "AU:魔契师:契灵复苏:10",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "reducedTo0",
+    "reads": [
+      "action.targets",
+      "action.result.reducedTo0"
+    ],
+    "does": [
+      "set:hpMax"
+    ],
+    "otherGap": "move",
+    "now": false,
+    "note": "契灵将降至0时用反应消耗法术位使其生命值回满并传送，需在 reducedTo0 拦截并修改目标生命值"
+  },
+  {
+    "key": "AU:魔契师:契灵伙伴:3",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "召唤与指挥契灵随从伙伴行动，卡在随从独立参战与指挥控制体系"
+  }
+]

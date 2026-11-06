@@ -1,0 +1,574 @@
+[
+  {
+    "key": "FRHoF:毒手殁心之恩惠",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:damage,damageIncoming",
+    "reads": [
+      "action.damage.types"
+    ],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "每回合一次毒素伤害骰取最大值，需在伤害掷骰时读取伤害类型是否包含毒素"
+  },
+  {
+    "key": "FRHoF:法师:额外攻击:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.kind",
+      "action.economy"
+    ],
+    "does": [
+      "NEW:replaceAttackWithSpell"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "攻击动作中将一次额外攻击替换为施展动作戏法，需动作实例支持嵌套施法或替换单次攻击"
+  },
+  {
+    "key": "FRHoF:法师:剑歌:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit,NEW:actionUsed",
+    "reads": [
+      "action.attack.*",
+      "action.name"
+    ],
+    "does": [
+      "NEW:endEffect",
+      "refund:resource"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "剑歌在双手武器攻击时结束且奥术回想时恢复次数，需读取攻击武器性质与特性动作"
+  },
+  {
+    "key": "FRHoF:法师:胜利之歌:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.economy",
+      "action.kind"
+    ],
+    "does": [],
+    "otherGap": null,
+    "now": false,
+    "note": "施展动作法术后解锁附赠动作武器攻击，需在 spellCast 窗口读取施法动作经济"
+  },
+  {
+    "key": "FRHoF:贵族信念",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "附赠动作唤起执旗者移除倒地并赋予抗魅惑恐慌，卡在附身非标准状态与反应起身"
+  },
+  {
+    "key": "FRHoF:街头正义",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled",
+    "reads": [
+      "action.targets"
+    ],
+    "does": [
+      "NEW:grantAdv"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "盟友攻击被你擒抱的目标具有优势，需在检定窗口识别擒抱来源并赋予优势"
+  },
+  {
+    "key": "FRHoF:惊魂落魄之恩惠",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "turnStarted",
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "恐慌生物在60尺内开始回合时以反应迫使豁免逃离，卡在逃跑强制位移逻辑"
+  },
+  {
+    "key": "FRHoF:巨灵魔法",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "专长自选一环术士动作法术免位施展并随等级升环，卡在自选法术池与动态升环"
+  },
+  {
+    "key": "FRHoF:领主联盟特工",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit,damageTaken",
+    "reads": [
+      "action.result.crit",
+      "action.by",
+      "action.targets"
+    ],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "重击给盟友英雄激励，以及敌人对5尺内盟友造成伤害后反击获优势，需关联伤害来源"
+  },
+  {
+    "key": "FRHoF:迷锁触碰",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit,d20Rolled",
+    "reads": [
+      "action.attack.spell",
+      "action.kind"
+    ],
+    "does": [],
+    "otherGap": "other",
+    "now": false,
+    "note": "受法术攻击命中或对抗法术豁免失败时以反应触发密斯特拉之触随机表，需判断触发动作为法术"
+  },
+  {
+    "key": "FRHoF:牧师:思维魔法:3",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "消耗引导神力免位施展知识领域预言法术，卡在法术池动态筛选与免位施展"
+  },
+  {
+    "key": "FRHoF:散塔林会暴徒",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:damage,initiativeRolled",
+    "reads": [
+      "action.marks.借机攻击",
+      "action.damage.dice"
+    ],
+    "does": [
+      "rerollDamage"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "借机攻击重掷伤害骰取高，需识别借机攻击并在伤害骰掷骰时支持重掷"
+  },
+  {
+    "key": "FRHoF:散塔林会战术",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.melee",
+      "action.by"
+    ],
+    "does": [],
+    "otherGap": null,
+    "now": false,
+    "note": "5尺内生物近战命中你后用反应对其发动借机攻击，需捕获近战攻击命中及攻击者"
+  },
+  {
+    "key": "FRHoF:生机勃发之恩惠",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:tempHpGained,rollMod:heal",
+    "reads": [
+      "action.damage.dice"
+    ],
+    "does": [
+      "NEW:addTempHp:5"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "获得临时生命值时+5且消耗生命骰治疗骰取最大值，需拦截获得临时生命值事件与生命骰最大化"
+  },
+  {
+    "key": "FRHoF:圣武士:火巨灵之狂怒:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.name",
+      "action.targets"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "施展至圣斩后消耗引导神力为目标及30尺内另一生物各追加2d4火焰伤害，需关联至圣斩目标"
+  },
+  {
+    "key": "FRHoF:圣武士:巨灵贵胄:20",
+    "scope": "rare",
+    "needsInstance": true,
+    "on": "d20Rolled",
+    "reads": [
+      "action.result.*"
+    ],
+    "does": [
+      "NEW:succeed"
+    ],
+    "otherGap": "move",
+    "now": false,
+    "note": "灵光内自身或盟友D20检定失败时以反应改为成功，需在 d20Rolled 窗口直接判定为成功"
+  },
+  {
+    "key": "FRHoF:圣武士:气巨灵之遁形:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.name"
+    ],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "施展至圣斩后消耗引导神力传送30尺并化为半虚体抗性，需在至圣斩施法后触发传送与效应"
+  },
+  {
+    "key": "FRHoF:圣武士:水巨灵之激流:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.name",
+      "action.targets"
+    ],
+    "does": [],
+    "otherGap": "zone",
+    "now": false,
+    "note": "施展至圣斩后迫使目标及10尺光环内其他生物力量豁免推开并倒地，需读取至圣斩目标及自身光环"
+  },
+  {
+    "key": "FRHoF:圣武士:土巨灵之碾压:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.name",
+      "action.targets"
+    ],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "施展至圣斩后消耗引导神力使目标陷入受擒与束缚，需关联至圣斩目标并附加复合状态"
+  },
+  {
+    "key": "FRHoF:圣武士:元素守御灵光:7",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "守护灵光内赋予自选元素伤害抗性且每回合可切换，卡在灵光动态选择与范围升级"
+  },
+  {
+    "key": "FRHoF:术士:炽焰鼓舞:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:resourceSpent,spellCast",
+    "reads": [
+      "action.economy",
+      "action.kind"
+    ],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "在动作或附赠中消耗术法点时为自身或30尺内生物提供临时生命值，需感知动作中消耗术法点事件"
+  },
+  {
+    "key": "FRHoF:术士:辉耀之火:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:resourceSpent,spellCast",
+    "reads": [
+      "action.economy",
+      "action.kind"
+    ],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "在动作或附赠中消耗术法点时对30尺内生物造成火/光伤害，需感知动作中消耗术法点事件"
+  },
+  {
+    "key": "FRHoF:术士:汲纳法术:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled",
+    "reads": [
+      "action.name",
+      "action.result.saved"
+    ],
+    "does": [
+      "refund:resource"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "目标对抗你的法术反制豁免失败时恢复1d4术法点，需在豁免窗口关联法术反制来源"
+  },
+  {
+    "key": "FRHoF:术士:咒火冠冕:18",
+    "scope": "rare",
+    "needsInstance": true,
+    "on": "damageIncoming,attackHit",
+    "reads": [
+      "action.kind",
+      "action.damage.dice"
+    ],
+    "does": [
+      "NEW:evasion",
+      "NEW:reduceDamage"
+    ],
+    "otherGap": "move",
+    "now": false,
+    "note": "受法术伤害时获得反射闪避及被命中时减伤，需在伤害窗口读取动作类型为法术/魔法"
+  },
+  {
+    "key": "FRHoF:竖琴手协同",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed,d20Rolled",
+    "reads": [
+      "action.name",
+      "action.targets",
+      "action.result.saved"
+    ],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "协助动作附赠使敌人下次豁免劣势，且豁免解除自身恐慌麻痹时解除盟友相同状态"
+  },
+  {
+    "key": "FRHoF:新锻臂铠",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:forcedMove,NEW:actionUsed",
+    "reads": [
+      "action.name",
+      "action.targets"
+    ],
+    "does": [
+      "cancel"
+    ],
+    "otherGap": "move",
+    "now": false,
+    "note": "反应阻止5尺内盟友被强制位移（缺 forcedMove 窗口），及执行预备动作后赋予受击劣势"
+  },
+  {
+    "key": "FRHoF:新晋龙巫教徒",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled",
+    "reads": [
+      "action.result.saved"
+    ],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "使生物陷入恐慌时获得英雄激励，需在豁免失败窗口捕获状态施加并奖励激励"
+  },
+  {
+    "key": "FRHoF:旭日骄阳之恩惠",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "turnStarted",
+    "reads": [],
+    "does": [],
+    "otherGap": "vision",
+    "now": false,
+    "note": "附赠开启阳光光环每回合赋予盟友临时生命并驱散黑暗，卡在光照与黑暗互动"
+  },
+  {
+    "key": "FRHoF:妖精诡术",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit,NEW:actionUsed",
+    "reads": [
+      "action.name",
+      "action.attack.*"
+    ],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "攻击命中时迫使感知豁免使目标所有豁免劣势，及撤离动作忽略困难地形"
+  },
+  {
+    "key": "FRHoF:夜宴狂欢之恩惠",
+    "scope": "rare",
+    "needsInstance": true,
+    "on": "d20Rolled,damageTaken",
+    "reads": [
+      "action.name",
+      "action.spell.concentration"
+    ],
+    "does": [
+      "NEW:preventBreakConcentration"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "施展奥图迷舞受伤不破专注且受魅惑目标无法言语法术，需在受伤窗口豁免专注打断"
+  },
+  {
+    "key": "FRHoF:熠熠生辉之恩惠",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:damage",
+    "reads": [
+      "action.damage.types"
+    ],
+    "does": [],
+    "otherGap": null,
+    "now": false,
+    "note": "造成光耀伤害时每颗骰子取最大值，需在伤害掷骰窗口读取伤害类型是否包含光耀"
+  },
+  {
+    "key": "FRHoF:吟游诗人:明月激励:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast,NEW:healApplied",
+    "reads": [
+      "action.spell.slot",
+      "action.kind",
+      "action.damage.dice"
+    ],
+    "does": [
+      "NEW:addHeal"
+    ],
+    "otherGap": "move",
+    "now": false,
+    "note": "消耗法术位施法治疗时消耗激励骰追加恢复量与速度，需读取施法消耗法术位及治疗掷骰"
+  },
+  {
+    "key": "FRHoF:吟游诗人:月光祝福:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled",
+    "reads": [
+      "action.name",
+      "action.result.saved"
+    ],
+    "does": [],
+    "otherGap": "remember",
+    "now": false,
+    "note": "生物未通过月华之光豁免时触发治疗60尺内生物2d4，需关联区域/法术豁免失败事件"
+  },
+  {
+    "key": "FRHoF:游荡者:恶毒灵光:13",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.name"
+    ],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "使用嗜血传送时对起点与终点10尺内所选生物造成无视抗性伤害，需感知嗜血动作并以落点为中心范围伤害"
+  },
+  {
+    "key": "FRHoF:游荡者:恐怖化身:17",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:damage",
+    "reads": [
+      "action.marks.偷袭",
+      "action.damage.dice"
+    ],
+    "does": [
+      "NEW:minDie:3"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "投掷偷袭伤害骰时1和2视为3，需在伤害掷骰窗口读取偷袭标记并设置伤害骰保底"
+  },
+  {
+    "key": "FRHoF:游荡者:嗜血:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "damageTaken",
+    "reads": [
+      "action.targets",
+      "action.result.damage"
+    ],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "30尺内可见敌人受伤害陷入浴血时用反应传送至其5尺内发动近战攻击，需在 damageTaken 检测目标浴血"
+  },
+  {
+    "key": "FRHoF:游荡者:袭杀恐惧:9",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.marks.偷袭",
+      "action.damage.dice"
+    ],
+    "does": [
+      "NEW:deductSneakDice:1d6"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "诡诈打击花费1d6偷袭骰迫使感知豁免陷入恐慌并获攻击优势，需在命中窗口扣减伤害骰并附加状态"
+  },
+  {
+    "key": "FRHoF:游侠:冰结恶灵:15",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.name"
+    ],
+    "does": [
+      "remember"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "施展猎人印记时激活幽灵形态及寒冷光环，需在 spellCast 窗口联动猎人印记持续时间"
+  },
+  {
+    "key": "FRHoF:游侠:冬猎霜寒:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.name",
+      "action.targets"
+    ],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "施展猎人印记获得临时生命值且使目标无法撤离，需在 spellCast 读取法术名与目标并施加限制"
+  },
+  {
+    "key": "FRHoF:游侠:冻原探索者:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit,rollMod:damage",
+    "reads": [
+      "action.attack.weapon",
+      "action.spell.list",
+      "action.damage.types"
+    ],
+    "does": [
+      "addDamage",
+      "NEW:ignoreResist"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "极地打击每目标每回合一次额外寒冷伤害，且武器与游侠法术无视寒冷抗性"
+  }
+]

@@ -1,0 +1,553 @@
+[
+  {
+    "key": "XPHB:法师:超限导能:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:damage, spellCast",
+    "reads": [
+      "action.spell.slot",
+      "action.spell.list"
+    ],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "1-5环法师伤害法术骰取最大值需读取施法位环阶与法术来源职业，且后续反噬伤害需读取环阶并追踪长休内使用次数"
+  },
+  {
+    "key": "XPHB:法师:法术精通:18",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.key",
+      "action.spell.level",
+      "action.spell.slot"
+    ],
+    "does": [
+      "refund:slot"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "以最低环施展选定的1环或2环法术时不消耗法术位，需在施法窗口判断法术与环阶并退还法术位"
+  },
+  {
+    "key": "XPHB:法师:法术抗性:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled, damageIncoming",
+    "reads": [
+      "action.kind"
+    ],
+    "does": [],
+    "otherGap": null,
+    "now": false,
+    "note": "抵抗法术时的豁免具有优势，以及对法术造成的伤害具有抗性，需在豁免与受伤害窗口识别动作来源是否为法术"
+  },
+  {
+    "key": "XPHB:法师:法术塑形:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.school",
+      "action.spell.slot",
+      "action.targets"
+    ],
+    "does": [
+      "mark:法术塑形"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "施展塑能法术时选择至多1+环阶个生物，其豁免自动成功且半伤法术不受伤害，需读取学派环阶并标记受保护目标"
+  },
+  {
+    "key": "XPHB:法师:魅影生物:6",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "免法术位施展半血版野兽召唤术与妖精召唤术，属于主动召唤动作，卡在召唤物数据生成与随从控制"
+  },
+  {
+    "key": "XPHB:法师:破法者:10",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:d20, spellCast",
+    "reads": [
+      "action.name",
+      "action.spell.slot"
+    ],
+    "does": [
+      "refund:slot"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "解除魔法施法属性检定加熟练加值需识别法术名，且法术反制或解除魔法失败时不消耗法术位需在施法窗口退还法术位"
+  },
+  {
+    "key": "XPHB:法师:强化幻术:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.name",
+      "action.spell.school",
+      "action.spell.components",
+      "action.spell.range"
+    ],
+    "does": [
+      "set:components",
+      "set:range",
+      "set:economy"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "幻术法术免除言语成分、射程增加60尺且次级幻象可附赠动作施展，需在施法窗口修改成分、射程与动作经济"
+  },
+  {
+    "key": "XPHB:法师:强力戏法:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackMissed, saveSucceeded",
+    "reads": [
+      "action.spell.level"
+    ],
+    "does": [
+      "runBranch:onHit:damageOnly:x0.5",
+      "runBranch:onFail:damageOnly:x0.5"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "戏法失手或豁免成功时，把命中或豁免失败那一支的伤害减半结算，不带其他效果"
+  },
+  {
+    "key": "XPHB:法师:强效塑能:10",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:damage",
+    "reads": [
+      "action.spell.school",
+      "action.spell.list",
+      "action.marks.强效塑能"
+    ],
+    "does": [
+      "mark:强效塑能"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "塑能学派法师法术的其中一次伤害掷骰加智力调整值，需读取学派来源并通过记号保证一次施法只生效一次"
+  },
+  {
+    "key": "XPHB:法师:天眼通:10",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "vision",
+    "now": false,
+    "note": "附赠动作从黑暗视觉、识破隐形和读懂语言中三选一，属于自身增益选择，卡在特殊感官自动化"
+  },
+  {
+    "key": "XPHB:法师:亦真亦幻:14",
+    "scope": "rare",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "other",
+    "now": false,
+    "note": "附赠动作使法术位施展的幻术法术内的非魔法物件具象化，属于叙事物体生成，与动作实例无关"
+  },
+  {
+    "key": "XPHB:法师:预言专家:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.school",
+      "action.spell.slot"
+    ],
+    "does": [
+      "refund:slot"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "消耗法术位施展2环或更高预言法术后恢复一个更低环阶且不超过5环的法术位，需读取学派环阶并恢复法术位"
+  },
+  {
+    "key": "XPHB:法师:预兆:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled",
+    "reads": [],
+    "does": [
+      "set:roll"
+    ],
+    "otherGap": "remember",
+    "now": false,
+    "note": "长休掷骰记录2颗预言骰，并在自身或可见生物掷D20前用预言骰点数替换该次检定结果，需记录预言骰点数并改写检定骰值"
+  },
+  {
+    "key": "XPHB:法师:招牌法术:20",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.key",
+      "action.spell.level",
+      "action.spell.slot"
+    ],
+    "does": [
+      "refund:slot"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "每次短休或长休可不消耗法术位各以3环施展一次选定的两道招牌法术，需在施法窗口识别法术并退还法术位"
+  },
+  {
+    "key": "XPHB:法术射手",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.range",
+      "action.attack.*"
+    ],
+    "does": [
+      "set:range"
+    ],
+    "otherGap": "vision",
+    "now": false,
+    "note": "法术攻击无视半身与四分之三掩护（卡在掩护系统），且至少10尺射程的法术攻击射程增加60尺需在施法窗口改写射程"
+  },
+  {
+    "key": "XPHB:法术溯回之恩惠",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.slot"
+    ],
+    "does": [
+      "refund:slot"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "使用1至4环法术位施法后投1d4，若点数等于法术位环阶则不消耗该法术位，需在施法窗口读取消耗环阶并退还法术位"
+  },
+  {
+    "key": "XPHB:反击",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "attackMissed",
+    "reads": [],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "被近战攻击失手后用反应发动近战反击，触发机制已支持，卡在读取主手装备武器的数据（伤害骰与类型）"
+  },
+  {
+    "key": "XPHB:粉碎者",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "attackHit",
+    "reads": [],
+    "does": [],
+    "otherGap": "other",
+    "now": false,
+    "note": "以钝击伤害命中时推开5尺且重击赋予攻击优势，现有触发与位移已支持，仅卡在生物体型数值化比较"
+  },
+  {
+    "key": "XPHB:歌利亚",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "巨人先祖的各项反应与命中增益已自动化，卡在建卡锁定特定先祖恩惠与大型形态体型改变"
+  },
+  {
+    "key": "XPHB:共视感官",
+    "scope": "rare",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "vision",
+    "now": false,
+    "note": "触碰自愿生物建立感官连接，并允许如同在其位置施法，卡在共享感官视线与借位施法源点定位"
+  },
+  {
+    "key": "XPHB:观察力",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "other",
+    "now": false,
+    "note": "附赠动作执行搜索动作（感知检定），属于探索与非战斗技能检定，与动作实例无关"
+  },
+  {
+    "key": "XPHB:横扫攻击",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.melee",
+      "action.attack.weapon",
+      "action.damage.types"
+    ],
+    "does": [
+      "addDamage:sameType"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "近战命中后消耗卓越骰对5尺内另一生物造成同类型卓越骰伤害，需读取原攻击伤害类型并对副目标追加伤害"
+  },
+  {
+    "key": "XPHB:换位诈术",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "消耗卓越骰与移动力与5尺内自愿生物互换位置且不引发借机，并为一人加AC，卡在棋子对调与免借机移动"
+  },
+  {
+    "key": "XPHB:饥渴魔刃",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "使用契约武器执行攻击动作时攻击两次，属于静态攻击次数与契约武器判定，与动作实例无关"
+  },
+  {
+    "key": "XPHB:缴械攻击",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "attackHit",
+    "reads": [],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "攻击命中加卓越骰伤害并迫使力量豁免，失败丢下手持物品，触发与豁免已完全支持，卡在卸除手持物品自动化"
+  },
+  {
+    "key": "XPHB:谨慎法术",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.save.ability",
+      "action.targets"
+    ],
+    "does": [
+      "mark:谨慎法术"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "施展强迫豁免法术时消耗术法点指定目标豁免自动成功且半伤不受伤害，需在施法窗口读取豁免要求并标记保护目标"
+  },
+  {
+    "key": "XPHB:精灵",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.key",
+      "action.spell.slot"
+    ],
+    "does": [
+      "refund:slot"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "血系习得法术每日一次免法术位施展需在施法窗口退还法术位，妖精血统对抗魅惑豁免优势卡在状态豁免识别"
+  },
+  {
+    "key": "XPHB:精妙法术",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.components"
+    ],
+    "does": [
+      "set:components"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "施法时消耗1术法点移除言语姿势与非耗材材料成分，需在施法窗口改写法术成分"
+  },
+  {
+    "key": "XPHB:警觉",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "initiativeRolled",
+    "reads": [],
+    "does": [],
+    "otherGap": "other",
+    "now": false,
+    "note": "掷先攻后与同战斗自愿盟友交换先攻值，属于战斗遭遇轮转表数值对调，与动作实例无关"
+  },
+  {
+    "key": "XPHB:酒馆斗殴者",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:damage",
+    "reads": [
+      "action.attack.unarmed"
+    ],
+    "does": [
+      "rerollDamage"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "徒手打击伤害骰掷出1时重掷该骰，需在伤害掷骰窗口识别徒手打击并支持单骰重掷"
+  },
+  {
+    "key": "XPHB:巨武器大师",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit, reducedTo0",
+    "reads": [
+      "action.attack.*",
+      "action.parent",
+      "action.onMyTurn"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "重型武器攻击命中加熟练加值伤害需识别攻击动作与重型词条，重击或击倒敌人赋予同武器附赠攻击"
+  },
+  {
+    "key": "XPHB:苦痛魔爆",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:damage",
+    "reads": [
+      "action.key",
+      "action.name",
+      "action.spell.list"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "将魅力调整值加到所选契术师伤害戏法上，目前仅在法术攻击命中时弹窗且不支持豁免型戏法，需在伤害掷骰窗口识别戏法并加伤害"
+  },
+  {
+    "key": "XPHB:链之魔契",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "免法术位召唤特殊形态魔宠并允许攻击动作中指挥魔宠反应攻击，卡在召唤物自动化与魔宠反应联动"
+  },
+  {
+    "key": "XPHB:链主赋能",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "赋予魔宠飞行游泳速度、法术DC继承与攻击伤害类型转换，卡在召唤物属性动态强化与随从数据改写"
+  },
+  {
+    "key": "XPHB:灵动攻击",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "attackHit",
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "攻击命中加卓越骰伤害已自动化，卡在指定盟友消耗反应移动半速且对目标免借机攻击"
+  },
+  {
+    "key": "XPHB:龙裔",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "吐息武器每次需手动选择龙族血统伤害类型，且5级龙族飞翼飞行速度未接入引擎移动追踪"
+  },
+  {
+    "key": "XPHB:孪生法术",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.level",
+      "action.spell.slot",
+      "action.targets"
+    ],
+    "does": [
+      "set:slot"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "施展升环可增加目标的法术时消耗1术法点将有效环阶提升一环，需在施法窗口改写法术有效环阶与目标数"
+  },
+  {
+    "key": "XPHB:灭世魔刃",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "将契约武器攻击动作中的额外攻击次数提升为两次（共三次攻击），属于静态攻击次数叠加，与动作实例无关"
+  },
+  {
+    "key": "XPHB:敏锐心灵",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "other",
+    "now": false,
+    "note": "附赠动作执行研究动作（智力检定），属于探索与知识检定判定，与动作实例无关"
+  },
+  {
+    "key": "XPHB:魔法学徒",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.key",
+      "action.spell.slot"
+    ],
+    "does": [
+      "refund:slot"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "每日一次免法术位施展所选1环法术，需在施法窗口识别所选法术并退还法术位"
+  }
+]

@@ -1,0 +1,136 @@
+[
+  {
+    "key": "XPHB:action:躲藏",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "vision",
+    "now": true,
+    "note": "执行DC 15隐匿检定成功获得隐形状态，规则已在动作树中完全实现，视线与掩护依赖DM判断"
+  },
+  {
+    "key": "XPHB:action:搜索",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "主动进行感知技能检定探索环境或生物信息，纯检定交互"
+  },
+  {
+    "key": "XPHB:action:研究",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "主动进行智力相关知识检定辨识信息，纯检定交互"
+  },
+  {
+    "key": "XPHB:action:影响",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "社交动作进行属性检定改变NPC态度，属于非战斗叙事社交规则"
+  },
+  {
+    "key": "XPHB:action:操作",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "使用非魔法物品的基础动作，具体效果由被操作的具体物品决定"
+  },
+  {
+    "key": "XPHB:action:魔法",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "核心魔法动作，具体效果委托给所施展的法术或所激活的魔法物品"
+  },
+  {
+    "key": "XPHB:action:预备",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:readiedTrigger",
+    "reads": [
+      "action.name",
+      "action.by"
+    ],
+    "does": [
+      "NEW:executeReadiedAction"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "声明触发条件并在满足时消耗反应执行预备的动作，需动态监听触发动作并结算预留动作"
+  },
+  {
+    "key": "XPHB:mastery:横扫",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.melee",
+      "action.attack.weapon",
+      "action.targets",
+      "action.marks.横扫"
+    ],
+    "does": [
+      "repeat",
+      "mark:横扫"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "近战武器命中时每回合一次对5尺内另一生物追加一次不加调整值的攻击，需 repeat 重复攻击并 mark 记录每回合次数"
+  },
+  {
+    "key": "XPHB:mastery:迅击",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:attackAction",
+    "reads": [
+      "action.attack.weapon",
+      "action.marks.迅击"
+    ],
+    "does": [
+      "set:economy",
+      "mark:迅击"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "双持轻型武器的副手额外攻击转为攻击动作的一部分而非附赠动作，需修改额外攻击的动作经济开销"
+  },
+  {
+    "key": "XPHB:spell:猎人印记",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "reducedTo0, rollMod:d20",
+    "reads": [
+      "action.targets",
+      "action.result.reducedTo0"
+    ],
+    "does": [
+      "NEW:enableMarkTransfer"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "目标生命值降至0时解锁附赠动作转移印记，需在 reducedTo0 捕获印记目标倒下并允许附赠动作转移而不重置专注时长"
+  }
+]

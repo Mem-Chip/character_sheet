@@ -1,0 +1,531 @@
+[
+  {
+    "key": "XGE:野蛮人:冻原:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.name"
+    ],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "激活风暴灵光时迫使灵光内可见生物进行力量豁免，失败速度降为0，需识别风暴灵光激活并施加减速状态"
+  },
+  {
+    "key": "XGE:野蛮人:风暴之盾:10",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "zone",
+    "now": false,
+    "note": "狂暴期间处于风暴灵光内的自选盟友获得对应伤害抗性，卡在自选目标的灵光光环与抗性动态赋予"
+  },
+  {
+    "key": "XGE:野蛮人:精魂之盾:6",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "damageIncoming",
+    "reads": [],
+    "does": [],
+    "otherGap": null,
+    "now": true,
+    "note": "按当前 spec 已支持 damageIncoming before 窗口下的 reduceDamage，自身等级分支与30尺可见条件均已写全，把 automation 改为 full 即可"
+  },
+  {
+    "key": "XGE:野蛮人:怒不畏死:14",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "reducedTo0",
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "狂暴期间生命值降为0不陷入昏迷、累计3次死亡豁免失败不死，卡在生命值为0的昏迷与死亡状态拦截"
+  },
+  {
+    "key": "XGE:吟游诗人:不破威仪:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:attackTargeted",
+    "reads": [
+      "action.targets",
+      "action.by",
+      "action.marks.不破威仪"
+    ],
+    "does": [
+      "cancel",
+      "set:targets",
+      "mark:不破威仪"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "生物回合内首次攻击你时触发魅力豁免，失败则打断攻击或迫使其重选目标且本回合无法攻击你"
+  },
+  {
+    "key": "XGE:吟游诗人:额外攻击:6",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": null,
+    "now": true,
+    "note": "额外攻击已由人物卡内置规则完全自动化支持，无需额外动作实例或触发器"
+  },
+  {
+    "key": "XGE:吟游诗人:灵感织衣:3",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "附赠动作消耗激励给自选盟友临时生命值并允许其立即用反应移动且免借机，卡在非自己回合的反应移动"
+  },
+  {
+    "key": "XGE:吟游诗人:乱击剑舞:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.kind",
+      "action.damage.types",
+      "action.onMyTurn"
+    ],
+    "does": [
+      "addDamage:sameType",
+      "repeat"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "武器攻击命中时消耗激励骰加伤，并对5尺内另一可见生物造成同等伤害，需读取命中动作伤害类型并对次要目标造成伤害"
+  },
+  {
+    "key": "XGE:吟游诗人:推击剑舞:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.kind",
+      "action.damage.types",
+      "action.onMyTurn"
+    ],
+    "does": [
+      "addDamage:sameType"
+    ],
+    "otherGap": "move",
+    "now": false,
+    "note": "武器命中消耗激励加伤并根据掷骰推开目标并反应跟进移动，需读取命中动作并结合移动击退"
+  },
+  {
+    "key": "XGE:吟游诗人:威仪作锦:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "saveForced",
+    "reads": [
+      "action.key"
+    ],
+    "does": [
+      "NEW:setFail"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "被魅惑目标对抗此特性施展的命令术自动豁免失败，需在豁免时识别法术来源并改写豁免结果"
+  },
+  {
+    "key": "XGE:吟游诗人:阴暗学识:14",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "非战斗秘密恐吓与8小时魅惑社交效果，由人工RP处理即可"
+  },
+  {
+    "key": "XGE:永生者赠礼",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:healIncoming",
+    "reads": [
+      "action.kind"
+    ],
+    "does": [
+      "NEW:maxDice"
+    ],
+    "otherGap": "summon",
+    "now": false,
+    "note": "魔宠在100尺内时受到的所有治疗骰取最大值，卡在魔宠距离检测与治疗掷骰最大化"
+  },
+  {
+    "key": "XGE:幽魂凝视",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "vision",
+    "now": false,
+    "note": "穿透固态障碍物的视觉感官效果，适合跑团探索时由DM描述处理"
+  },
+  {
+    "key": "XGE:游荡者:火眼金睛:13",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "vision",
+    "now": false,
+    "note": "侦测周围幻术、变形与欺瞒魔法的感知特性，由DM告知剧情信息手动处理"
+  },
+  {
+    "key": "XGE:游荡者:鉴识之眼:3",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "other",
+    "now": false,
+    "note": "附赠动作进行察觉或调查检定侦测隐蔽线索，属于探索检定手动处理"
+  },
+  {
+    "key": "XGE:游荡者:散兵战术:3",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "turnEnded",
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "敌人在5尺内结束回合时反应移动半速且免借机，卡在他方回合内的反应战棋移动"
+  },
+  {
+    "key": "XGE:游荡者:瞬息打击:17",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.name",
+      "action.targets",
+      "action.onMyTurn"
+    ],
+    "does": [
+      "NEW:allowSneakAttack"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "本回合执行攻击动作后可用附赠动作额外攻击，且即使已偷袭仍可对不同目标再次偷袭，需记录攻击动作与偷袭目标"
+  },
+  {
+    "key": "XGE:游荡者:误导:13",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.targets",
+      "action.by"
+    ],
+    "does": [
+      "set:targets"
+    ],
+    "otherGap": "vision",
+    "now": false,
+    "note": "被攻击命中时以反应将攻击转嫁给5尺内提供掩护的生物，需重设攻击目标并判断掩护状态"
+  },
+  {
+    "key": "XGE:游荡者:潇洒气质:9",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "动作进行游说对抗洞悉并赋予嘲讽或魅惑状态，卡在技能对抗与动态解除条件（队友攻击/超距离）"
+  },
+  {
+    "key": "XGE:游荡者:战术大师:3",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": null,
+    "now": true,
+    "note": "附赠动作协助且距离放宽至30尺，已完整自动化"
+  },
+  {
+    "key": "XGE:游荡者:战术洞悉:3",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "附赠动作洞悉对抗欺瞒并在成功后挂上偷袭资格标记，卡在属性检定对抗流程与偷袭条件放宽"
+  },
+  {
+    "key": "XGE:游侠:猎手感知:3",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "other",
+    "now": false,
+    "note": "动作获知目标抗性与易伤信息，属于信息查询特性，由DM告知玩家"
+  },
+  {
+    "key": "XGE:游侠:灵体防御:15",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "damageIncoming",
+    "reads": [
+      "action.damage.types",
+      "action.attack"
+    ],
+    "does": [
+      "runBranch:damageOnly:x0.5"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "受到攻击伤害时以反应使本次伤害减半并获得该攻击各伤害类型抗性至回合结束，需读取攻击伤害类型并在回合内保持抗性"
+  },
+  {
+    "key": "XGE:游侠:魔法使的克星:11",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast, NEW:teleport",
+    "reads": [
+      "action.kind",
+      "action.by"
+    ],
+    "does": [
+      "cancel"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "60尺内生物施法或传送时反应迫使感知豁免，失败则打断并浪费其动作实例（cancel）"
+  },
+  {
+    "key": "XGE:游侠:杀手反制:15",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "saveForced",
+    "reads": [
+      "action.by",
+      "action.save.ability"
+    ],
+    "does": [
+      "NEW:makeAttack",
+      "set:succeed"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "被猎物迫使豁免时以反应进行武器攻击，若命中则当前动作实例的豁免直接改为成功"
+  },
+  {
+    "key": "XGE:游侠:闪现打击:11",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:beforeAttack",
+    "reads": [
+      "action.targets",
+      "action.parent"
+    ],
+    "does": [
+      "NEW:extraAttack"
+    ],
+    "otherGap": "move",
+    "now": false,
+    "note": "攻击动作每次攻击前传送10尺，且若攻击了两个不同目标则同一动作实例内增加第3次攻击"
+  },
+  {
+    "key": "XGE:游侠:位面战士:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.damage.types",
+      "action.targets",
+      "action.attack.kind"
+    ],
+    "does": [
+      "set:damageType",
+      "addDamage"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "命中时把武器攻击的所有伤害类型转换为力场伤害并增加力场伤害骰，需读取并改写命中动作伤害类型"
+  },
+  {
+    "key": "XGE:游侠:以太漫步:7",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "附赠动作获得以太化状态至回合结束，卡在以太位面穿墙与交互规则"
+  },
+  {
+    "key": "XGE:游侠:阴影视野:3",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "vision",
+    "now": false,
+    "note": "在黑暗中对依赖黑暗视觉的生物隐形，卡在光照与视觉感知判定"
+  },
+  {
+    "key": "XGE:游侠:追猎如风:11",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "attackMissed",
+    "reads": [],
+    "does": [],
+    "otherGap": null,
+    "now": true,
+    "note": "未命中时返还一次攻击机会，按现有 spec 触发器已完全实现（automation: full）"
+  },
+  {
+    "key": "XGE:战士:坚定之印:3",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "attackHit",
+    "reads": [],
+    "does": [],
+    "otherGap": null,
+    "now": true,
+    "note": "命中标记敌人并赋予劣势光环及附赠惩戒攻击加伤，已由现有触发器与效应系统完全实现"
+  },
+  {
+    "key": "XGE:战士:坚守战线:10",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit, NEW:moveWithinReach",
+    "reads": [
+      "action.attack.opportunity"
+    ],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "在触及内移动引发借机攻击，且需在 attackHit 识别借机攻击实例以将目标速度降为0"
+  },
+  {
+    "key": "XGE:战士:警戒守卫:18",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "在每个敌人回合拥有仅能用于借机攻击的特殊反应槽，卡在非自己回合的独立反应动作经济管理"
+  },
+  {
+    "key": "XGE:战士:生死流转:18",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "reducedTo0",
+    "reads": [
+      "action.damage"
+    ],
+    "does": [
+      "cancel"
+    ],
+    "otherGap": "other",
+    "now": false,
+    "note": "受到致0伤害时以反应延缓倒地并立即插入一个额外回合，卡在回合打断插入机制"
+  },
+  {
+    "key": "XGE:战士:守护战技:7",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.roll",
+      "action.targets"
+    ],
+    "does": [
+      "cancel",
+      "runBranch:damageOnly:x0.5"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "被攻击命中时反应掷1d8加进AC，使攻击未命中或使受到的伤害减半，需读取攻击检定结果并动态改变命中状态或减半伤害"
+  },
+  {
+    "key": "XGE:战士:燕返:15",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled",
+    "reads": [
+      "action.targets",
+      "action.kind",
+      "action.onMyTurn"
+    ],
+    "does": [
+      "clearAdv",
+      "NEW:extraAttack"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "检定有优势时放弃优势换取对同一目标的额外攻击，需在 d20 检定中清除优势并赋予限定同一目标的额外攻击"
+  },
+  {
+    "key": "XGE:spell:碧水法球",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "zone",
+    "now": false,
+    "note": "移动水球区域吸入束缚生物、随区域拖动棋子与容纳体型上限，属于区域（zone）与位移机制"
+  },
+  {
+    "key": "XGE:spell:操控风力",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "zone",
+    "now": false,
+    "note": "100尺立方空气区域模式切换、穿过区域的远程攻击劣势与飞行摔落，卡在区域（zone）与三维移动机制"
+  },
+  {
+    "key": "XGE:spell:潮涌",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": null,
+    "now": true,
+    "note": "法术伤害与倒地豁免已完全实现，熄灭环境未受保护火焰属于环境互动，把 automation 改为 full 即可"
+  },
+  {
+    "key": "XGE:spell:虫群孳生",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "体质豁免失败受毒素伤害并朝随机方向移动5尺（免借机），卡在战棋随机方向移动自动化"
+  }
+]

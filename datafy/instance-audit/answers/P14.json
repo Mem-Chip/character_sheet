@@ -1,0 +1,540 @@
+[
+  {
+    "key": "FRHoF:游侠:寒心复仇:11",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.by"
+    ],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "被攻击命中时以反应迫使攻击者感知豁免陷入震慑，需在 attackHit 捕获攻击者并迫使豁免"
+  },
+  {
+    "key": "FRHoF:战士:集结如潮:10",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.name"
+    ],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "使用动作如潮时命令30尺内盟友用反应攻击或半速移动免借机，需感知动作如潮使用"
+  },
+  {
+    "key": "FRHoF:咒火专家",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:damage,damageIncoming",
+    "reads": [
+      "action.kind",
+      "action.damage.types",
+      "action.damage.dice"
+    ],
+    "does": [
+      "addDamage",
+      "NEW:ignoreResist"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "施法造成光耀伤害时消耗生命骰加伤且光耀伤害无视抗性，需在伤害检定中读取法术类型并设置无视抗性"
+  },
+  {
+    "key": "FRHoF:紫龙新兵",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "initiativeRolled",
+    "reads": [],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "先攻掷骰后选择30尺内可见生物赋予英雄激励，卡在英雄激励资源管理"
+  },
+  {
+    "key": "FRHoF:spell:艾拉斯卓的月辉之篷",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled",
+    "reads": [
+      "action.result.saved"
+    ],
+    "does": [
+      "set:succeed",
+      "NEW:endConcentration"
+    ],
+    "otherGap": "vision",
+    "now": false,
+    "note": "豁免失败时以反应改为成功并终止法术，需在 d20Rolled 修改豁免为成功并结束专注"
+  },
+  {
+    "key": "FRHoF:spell:厄难黑潮",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "zone",
+    "now": false,
+    "note": "持续移动黑暗区域法术伴随心灵伤害与豁免减值，卡在区域每回合自动位移与魔法黑暗"
+  },
+  {
+    "key": "FRHoF:spell:反冲术",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "damageIncoming",
+    "reads": [
+      "action.by"
+    ],
+    "does": [
+      "NEW:reduceDamage"
+    ],
+    "otherGap": null,
+    "now": true,
+    "note": "现有 spec 已支持（damageIncoming before 反应结合 reduceDamage 及 aim: 'actor' 体质豁免反击），移除提示用 note 节点即可"
+  },
+  {
+    "key": "FRHoF:spell:桑缟的元灵显圣",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "自身注入元素抗性与飞行，每回合释放元素波动造成伤害倒地，卡在自选抗性与飞行悬浮"
+  },
+  {
+    "key": "FRHoF:spell:希伦的剧毒灵蛇",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "赋予临时生命、攀爬速度及远程法术攻击动作（中毒失能），卡在临时生命耗尽联动结束法术"
+  },
+  {
+    "key": "FRHoF:spell:伊尔明斯特的法术闪避",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:save,damageIncoming",
+    "reads": [
+      "action.kind",
+      "action.save.half"
+    ],
+    "does": [
+      "NEW:evasion"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "对抗法术豁免具有优势且受法术伤害时获得反射闪避（成功免伤），需读取检定动作是否来自法术"
+  },
+  {
+    "key": "FRHoF:spell:伊尔明斯特的绚丽光球",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "damageIncoming",
+    "reads": [
+      "action.damage.types"
+    ],
+    "does": [
+      "NEW:halveDamage"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "受到元素伤害时反应消耗光球获得抗性，需在 damageIncoming 识别元素伤害并减半"
+  },
+  {
+    "key": "FRHoF:spell:噪鸣护盾",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "zone",
+    "now": false,
+    "note": "持续自身护盾并附带随身移动的10尺伤害耳聋光环，卡在随身移动区域"
+  },
+  {
+    "key": "FRHoF:spell:制敌术",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "主动豁免法术造成速度减半与行动受限（动作/附赠二选一），卡在复合动作经济限制状态"
+  },
+  {
+    "key": "FRHoF:spell:咒唤机群",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "咒唤中型机群并以动作指挥其伤害或提供临时生命，卡在召唤物/法术创造物移动与激活"
+  },
+  {
+    "key": "FRHoF:spell:咒火风暴",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.by",
+      "action.targets"
+    ],
+    "does": [
+      "cancel"
+    ],
+    "otherGap": "zone",
+    "now": false,
+    "note": "区域内生物施法时须体质豁免否则打断施法，需在 spellCast 窗口检测生物是否处于区域内并打断"
+  },
+  {
+    "key": "FRHoF:spell:咒火闪焰",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "vision",
+    "now": false,
+    "note": "远程法术攻击忽略掩护且升环多重射线，卡在掩护忽略规则与多目标射线结算"
+  },
+  {
+    "key": "TCE:奥能动力甲",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "奇械师动力装甲与臂铠武器替换，属物品与装备系统"
+  },
+  {
+    "key": "TCE:超魔导师",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "专长提供超魔法选项与独立术法点池，属人物卡静态构建与资源管理"
+  },
+  {
+    "key": "TCE:德鲁伊:孢子环绕:2",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "turnStarted,NEW:enteredRange",
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "生物进入周围10尺或在其中开始回合时以反应迫使体质豁免造成暗蚀伤害，卡在移动进入范围触发时机"
+  },
+  {
+    "key": "TCE:德鲁伊:炽烈回生:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "reducedTo0",
+    "reads": [
+      "action.result.reducedTo0"
+    ],
+    "does": [
+      "NEW:setHp:hpMax/2"
+    ],
+    "otherGap": "summon",
+    "now": false,
+    "note": "自身降至0时用反应牺牲120尺内野火灵魄回复半血并站立，需在 reducedTo0 拦截致死并销毁随从"
+  },
+  {
+    "key": "TCE:德鲁伊:扩散孢子:10",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "zone",
+    "now": false,
+    "note": "一体共生下附赠动作投掷10尺立方孢子区域，卡在区域生命周期与状态互斥"
+  },
+  {
+    "key": "TCE:德鲁伊:强化链接:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:damage,rollMod:heal",
+    "reads": [
+      "action.kind",
+      "action.damage.types",
+      "action.marks.强化链接"
+    ],
+    "does": [
+      "addDamage",
+      "mark:强化链接"
+    ],
+    "otherGap": "summon",
+    "now": false,
+    "note": "野火灵魄存在时施展火焰或治疗法术加1d8掷骰，需读取法术类型与伤害/治疗类型并仅限一次伤害掷骰"
+  },
+  {
+    "key": "TCE:德鲁伊:闪耀星座:10",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "turnStarted",
+    "reads": [],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "星耀形态下回合开始时自由切换星座形态，卡在已有效应的动态切换与飞行"
+  },
+  {
+    "key": "TCE:德鲁伊:一体共生:2",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit,rollMod:damage",
+    "reads": [
+      "action.name",
+      "action.attack.weapon",
+      "action.attack.melee",
+      "action.damage.dice"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "近战武器攻击命中加暗蚀伤害，且孢子环绕伤害多掷一颗骰，需在命中与伤害窗口读取特性并加骰"
+  },
+  {
+    "key": "TCE:德鲁伊:召唤野火精魂:2",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "消耗荒野形态召唤野火灵魄并附带入场范围伤害，卡在随从独立行动与指挥机制"
+  },
+  {
+    "key": "TCE:德鲁伊:真菌感染:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "reducedTo0",
+    "reads": [
+      "action.targets",
+      "action.result.reducedTo0"
+    ],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "10尺内小型中型生物生命降至0时用反应活化为1点生命值丧尸，需在 reducedTo0 捕获死者实体并召唤"
+  },
+  {
+    "key": "TCE:德鲁伊:灼烧烈焰:10",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "reducedTo0,NEW:enteredSpace",
+    "reads": [
+      "action.targets",
+      "action.result.reducedTo0"
+    ],
+    "does": [],
+    "otherGap": "zone",
+    "now": false,
+    "note": "生物死亡时在所在格留下幽火，生物进入时反应造成伤害或治疗，需在 reducedTo0 记录死者坐标并生成触发点"
+  },
+  {
+    "key": "TCE:法师:大书士:10",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "长休制作专属升环法术卷轴并阅读施展，属探索道具制作与卷轴施法"
+  },
+  {
+    "key": "TCE:法师:觉醒魔典:2",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.slot",
+      "action.spell.list",
+      "action.damage.types"
+    ],
+    "does": [
+      "set:damageType"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "消耗法术位施展法师法术时将伤害类型替换为法术书中同环法术的类型，需在 spellCast 窗口修改 damageType"
+  },
+  {
+    "key": "TCE:法师:思维具现:6",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "显现灵体意识并以此为施法源点施展法术，卡在法术射程/视线源点动态替换与随从实体"
+  },
+  {
+    "key": "TCE:法师:一字同心:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "damageIncoming",
+    "reads": [
+      "action.damage.dice"
+    ],
+    "does": [
+      "cancel"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "意识显现时受到伤害以反应驱散意识使伤害归零，需在 damageIncoming 窗口完全抵消伤害并扣除法术位准备"
+  },
+  {
+    "key": "TCE:风暴符文",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled",
+    "reads": [
+      "action.targets"
+    ],
+    "does": [
+      "set:adv",
+      "set:disadv"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "先知形态下用反应使60尺内生物的攻击/豁免/检定获得优势或劣势，需在 d20Rolled 拦截并赋予优劣势"
+  },
+  {
+    "key": "TCE:符令责斥",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.by",
+      "action.targets"
+    ],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "护符佩戴者被命中时用反应对30尺内攻击者造成心灵伤害并推开10尺，需捕获攻击者并执行推离"
+  },
+  {
+    "key": "TCE:符之魔契",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled",
+    "reads": [
+      "action.result.*"
+    ],
+    "does": [
+      "NEW:addToRoll:1d4"
+    ],
+    "otherGap": "item",
+    "now": false,
+    "note": "护符佩戴者属性检定失败时加1d4，需在 d20Rolled 拦截并将修正应用到佩戴者"
+  },
+  {
+    "key": "TCE:护符庇佑",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled",
+    "reads": [
+      "action.result.*"
+    ],
+    "does": [
+      "NEW:addToRoll:1d4"
+    ],
+    "otherGap": "item",
+    "now": false,
+    "note": "护符佩戴者豁免检定失败时加1d4，需在 d20Rolled 拦截并将修正应用到佩戴者"
+  },
+  {
+    "key": "TCE:护符牵绊",
+    "scope": "rare",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "与同一位面护符佩戴者相互传送至身旁，卡在跨地图传送与护符佩戴者绑定"
+  },
+  {
+    "key": "TCE:警戒",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:enterReach,attackHit",
+    "reads": [
+      "action.attack.melee",
+      "action.attack.weapon"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "生物进入触及范围触发借机攻击并在命中时追加卓越骰伤害，缺 enterReach 触发时机"
+  },
+  {
+    "key": "TCE:快手投掷",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.weapon",
+      "action.attack.ranged"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": "item",
+    "now": false,
+    "note": "以附赠动作投掷武器并在命中时将卓越骰计入伤害，需在命中窗口追加卓越骰伤害"
+  },
+  {
+    "key": "TCE:魔法力量护甲",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled,NEW:conditionIncoming",
+    "reads": [
+      "action.save.ability"
+    ],
+    "does": [
+      "cancel"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "力量检定/豁免失败加智力加值，以及受到倒地状态时反应消耗充能抵消倒地"
+  },
+  {
+    "key": "TCE:魔契师:海渊传送:14",
+    "scope": "rare",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "以动作传送自身与至多5名自愿生物至1英里内水域空间，属远距离跨地图群体传送"
+  }
+]

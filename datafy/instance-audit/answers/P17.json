@@ -1,0 +1,570 @@
+[
+  {
+    "key": "XGE:法师:奥术偏斜:2",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit,d20Rolled",
+    "reads": [
+      "action.result.*"
+    ],
+    "does": [
+      "cancel",
+      "NEW:addToAc"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "被命中时反应+2 AC或豁免失败+4且14级反弹力场伤害，需在命中与豁免窗口拦截判定并联动法术施展限制与反伤"
+  },
+  {
+    "key": "XGE:法师:魔力潮涌:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit,rollMod:damage,NEW:spellCountered",
+    "reads": [
+      "action.kind",
+      "action.spell.list",
+      "action.damage.types"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "反制/驱散成功充能潮涌且法师法术造成伤害时追加力场伤害，需读取法术归属与法术反制结算并追加伤害"
+  },
+  {
+    "key": "XGE:飞蝇斗篷",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "turnStarted",
+    "reads": [],
+    "does": [],
+    "otherGap": "zone",
+    "now": false,
+    "note": "附赠动作开启5尺蚊蝇光环赋予威吓优势及回合初毒素伤害，卡在随身移动光环与回合初自动伤敌"
+  },
+  {
+    "key": "XGE:弗莱格索斯之焰",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast,rollMod:damage",
+    "reads": [
+      "action.damage.types",
+      "action.damage.dice"
+    ],
+    "does": [
+      "rerollDamage"
+    ],
+    "otherGap": "vision",
+    "now": false,
+    "note": "施展火系法术唤起烈焰护盾且火系伤害骰重骰1点，需在施法与伤害掷骰窗口读取伤害类型并重掷伤害骰"
+  },
+  {
+    "key": "XGE:高等卓尔魔法",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "随意施展侦测魔法及每日免费施展浮空术与解除魔法，卡在法术授予与免法术位施法管理"
+  },
+  {
+    "key": "XGE:慷慨吉运",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled",
+    "reads": [
+      "action.by"
+    ],
+    "does": [
+      "NEW:reroll"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "30尺内盟友检定骰出1时以反应迫使其重骰，需在 d20Rolled 窗口拦截并触发重骰且暂时封锁自身幸运特质"
+  },
+  {
+    "key": "XGE:莱维斯图斯之墓",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "damageIncoming",
+    "reads": [
+      "action.damage.dice"
+    ],
+    "does": [
+      "NEW:absorb"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "受伤害时以反应化冰自封获得大量临时生命吸收伤害并陷入瘫痪，需在 damageIncoming 前置结算护盾并在到期时清空剩余临时生命"
+  },
+  {
+    "key": "XGE:龙之威怖",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "damageTaken",
+    "reads": [],
+    "does": [],
+    "otherGap": "vision",
+    "now": false,
+    "note": "消耗吐息迫使30尺内选定生物受惊且受伤害时重骰豁免，卡在视听感知判定与受伤害自动重骰豁免"
+  },
+  {
+    "key": "XGE:魔契师:光耀之魂:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:damage,attackHit",
+    "reads": [
+      "action.kind",
+      "action.damage.types",
+      "action.damage.dice"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "施展光耀或火焰法术时将魅力调整值加入伤害掷骰，需在伤害掷骰窗口识别法术伤害类型并追加伤害"
+  },
+  {
+    "key": "XGE:魔契师:天界韧性:10",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "restCompleted",
+    "reads": [],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "休息完成时自身与最多5名可见同伴获得临时生命值，卡在休息完成事件的多目标选择与临时生命分发"
+  },
+  {
+    "key": "XGE:魔契师:巫咒大师:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "reducedTo0",
+    "reads": [
+      "action.targets"
+    ],
+    "does": [
+      "cancel",
+      "NEW:transferEffect"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "受咒目标死亡时放弃回血将诅咒转移至30尺内新目标，需在致死结算时拦截回血并重新施加诅咒"
+  },
+  {
+    "key": "XGE:魔契师:巫咒盔甲:10",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.by"
+    ],
+    "does": [
+      "cancel"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "受咒目标攻击命中时反应掷d6达4+令其直接失手，需在 attackHit 窗口判定掷骰并取消命中"
+  },
+  {
+    "key": "XGE:魔契师:巫咒战士:1",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:attack,rollMod:damage",
+    "reads": [
+      "action.attack.weapon",
+      "action.attack.*"
+    ],
+    "does": [
+      "set:atk",
+      "set:damageType"
+    ],
+    "otherGap": "item",
+    "now": false,
+    "note": "触碰武器使用魅力调整值替代力量或敏捷进行攻击与伤害检定，卡在特定装备绑定与攻击属性动态替换"
+  },
+  {
+    "key": "XGE:魔契师:咒缚幽灵:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "reducedTo0",
+    "reads": [
+      "action.result.killed",
+      "action.targets"
+    ],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "击杀类人生物时将其灵魂唤醒为恶灵随从，需在击杀事件中读取被杀目标生物类型并召唤恶灵"
+  },
+  {
+    "key": "XGE:魔契师:咒剑诅咒:1",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit,reducedTo0,rollMod:attack",
+    "reads": [
+      "action.targets",
+      "action.damage.types"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "附赠动作诅咒目标提供伤害加值、19暴击与死亡回血，需在攻击检定、伤害命中及死亡窗口绑定受诅状态"
+  },
+  {
+    "key": "XGE:魔契师:灼光复仇:14",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "turnStarted",
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "濒死回合开始时放弃死亡豁免直接起身半血复苏并致盲伤敌，卡在死亡豁免拦截与起身复苏触发"
+  },
+  {
+    "key": "XGE:木精灵魔法",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "习得德鲁伊戏法并每日免费施展大步奔行与行动无踪，卡在种族法术授予与免位施法管理"
+  },
+  {
+    "key": "XGE:圣武士:不移胜者:20",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed,rollMod:attack",
+    "reads": [
+      "action.kind",
+      "action.economy"
+    ],
+    "does": [
+      "repeat"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "化身征服化身获得全抗性、19重击且攻击动作提供额外攻击，需感知攻击动作实例并增加攻击次数"
+  },
+  {
+    "key": "XGE:圣武士:叱喝暴力:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "damageTaken,attackHit",
+    "reads": [
+      "action.by",
+      "action.targets",
+      "action.result.*"
+    ],
+    "does": [],
+    "otherGap": null,
+    "now": false,
+    "note": "30尺内生物攻击伤及同伴时反应迫使其受同等光耀反伤，需读取攻击者、目标及本次造成的实际伤害数值"
+  },
+  {
+    "key": "XGE:圣武士:导引打击:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled",
+    "reads": [
+      "action.attack.*"
+    ],
+    "does": [
+      "set:atk"
+    ],
+    "otherGap": null,
+    "now": true,
+    "note": "现有 spec 已完全支持（d20Rolled before 窗口通过 modify addToRoll +10 并消耗引导神力），已全自动"
+  },
+  {
+    "key": "XGE:圣武士:救赎使节:20",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "damageIncoming,damageTaken",
+    "reads": [
+      "action.by",
+      "action.result.*"
+    ],
+    "does": [
+      "NEW:halveDamage"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "常驻全伤害抗性且受击反弹一半光耀伤害，需读取伤害数值与攻击者并维护针对特定生物的失效白名单"
+  },
+  {
+    "key": "XGE:圣武士:轻蔑呵斥:15",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.by"
+    ],
+    "does": [],
+    "otherGap": null,
+    "now": false,
+    "note": "被攻击击中时攻击者承受魅力调整值心灵伤害，需在 attackHit 窗口准确向攻击来源施加反伤"
+  },
+  {
+    "key": "XGE:圣武士:征服灵光:7",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "turnStarted",
+    "reads": [],
+    "does": [],
+    "otherGap": "zone",
+    "now": false,
+    "note": "恐慌生物处于灵光内速度归0且回合开始受心灵伤害，卡在随身灵光对特定状态生物的速度压制"
+  },
+  {
+    "key": "XGE:兽人狂怒",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit,reducedTo0",
+    "reads": [
+      "action.attack.weapon",
+      "action.damage.dice",
+      "action.damage.types"
+    ],
+    "does": [
+      "addDamage:sameDice"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "武器命中追加同款伤害骰且不屈坚毅触发后反应反击，需在 attackHit 读取武器伤害骰并追加同骰加伤"
+  },
+  {
+    "key": "XGE:术士:暴风狂怒:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.melee",
+      "action.by"
+    ],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "被近战命中时反应对攻击者造成闪电伤害并迫使力量豁免击退20尺，需在 attackHit 识别近战性质并反击定位攻击者"
+  },
+  {
+    "key": "XGE:术士:暴风魔法:1",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.slot",
+      "action.onMyTurn"
+    ],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "施展1环及以上法术前后附赠动作飞行10尺免借机，需在 spellCast 窗口检验法术位环阶与回合归属"
+  },
+  {
+    "key": "XGE:术士:风暴之心:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.slot",
+      "action.damage.types"
+    ],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "施展1环以上雷电法术时对周围10尺自选生物造成伤害，需在 spellCast 窗口读取法术位与伤害类型"
+  },
+  {
+    "key": "XGE:术士:强效治疗:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:healRolled",
+    "reads": [
+      "action.kind",
+      "action.targets"
+    ],
+    "does": [
+      "NEW:rerollHeal"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "自身或5尺内盟友掷法术治疗骰时花1术法点重骰，需动作实例支持治疗掷骰窗口拦截与骰子重掷"
+  },
+  {
+    "key": "XGE:术士:清风之灵:18",
+    "scope": "rare",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "以动作降低自身飞行速度并赋予周围同伴30尺飞行速度，卡在多目标飞行能力赋予与三维移动"
+  },
+  {
+    "key": "XGE:术士:异界光翼:14",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "附赠动作展开光翼获得30尺飞行速度，卡在飞行移动模式与失能自动遣散"
+  },
+  {
+    "key": "XGE:武僧:锋锐剑影:11",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "rollMod:attack,rollMod:damage",
+    "reads": [],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "附赠动作消耗功力灌注剑圣武器增加命中与伤害，卡在非魔法武器检测与特定装备状态绑定"
+  },
+  {
+    "key": "XGE:武僧:酣醉若狂:17",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.name",
+      "action.targets"
+    ],
+    "does": [
+      "repeat"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "使用疾风连击时对不同生物追加至多3次额外攻击，需动作实例追踪已攻击目标集合并扩充分支攻击"
+  },
+  {
+    "key": "XGE:武僧:借力打力:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackMissed",
+    "reads": [
+      "action.by",
+      "action.attack.melee",
+      "action.damage.dice",
+      "action.damage.types"
+    ],
+    "does": [
+      "set:targets",
+      "runBranch:onHit"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "近战攻击失手时花1气反应将该次攻击改为击中5尺内另一生物，需在 attackMissed 窗口改写命中并转移结算"
+  },
+  {
+    "key": "XGE:武僧:灵巧格挡:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit,attackMissed",
+    "reads": [
+      "action.attack.unarmed",
+      "action.kind",
+      "action.onMyTurn"
+    ],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "攻击动作中进行徒手打击且持握剑圣武器时AC+2，需在攻击窗口验证徒手攻击、攻击动作归属与持握武器"
+  },
+  {
+    "key": "XGE:武僧:热能袭:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.kind",
+      "action.onMyTurn"
+    ],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "执行攻击动作后附赠动作消耗功力施展及升环燃烧之手，需在动作执行后感知攻击动作并联动施法"
+  },
+  {
+    "key": "XGE:武僧:人剑合一:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.weapon",
+      "action.damage.types"
+    ],
+    "does": [
+      "addDamage:sameType"
+    ],
+    "otherGap": "item",
+    "now": false,
+    "note": "剑圣武器命中追加武艺骰伤害且攻击视为魔法，需在 attackHit 验证剑圣武器并追加伤害及设置魔法属性"
+  },
+  {
+    "key": "XGE:武僧:太阳盾:17",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.melee",
+      "action.by"
+    ],
+    "does": [],
+    "otherGap": "vision",
+    "now": false,
+    "note": "光照开启期间被近战命中反应对攻击者造成反伤，需在 attackHit 识别近战性质并反噬攻击来源"
+  },
+  {
+    "key": "XGE:武僧:焰阳爆:11",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "vision",
+    "now": false,
+    "note": "以动作引爆光球造成体质豁免光耀伤害且不透光掩护免豁免，卡在视线遮挡/掩护免豁免判定"
+  },
+  {
+    "key": "XGE:武僧:耀阳箭:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.kind",
+      "action.attack.item"
+    ],
+    "does": [
+      "repeat"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "在攻击动作中发射耀阳箭且使用后可附赠消耗功力连射两发，需动作实例支持嵌套法术攻击与附赠动作解锁"
+  },
+  {
+    "key": "XGE:武僧:醉拳技巧:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.name"
+    ],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "使用疾风连击时自动获得撤离效果且移速+10尺，需在动作执行窗口识别疾风连击并附加撤离与移速"
+  }
+]

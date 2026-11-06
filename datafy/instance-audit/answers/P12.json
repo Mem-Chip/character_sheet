@@ -1,0 +1,528 @@
+[
+  {
+    "key": "AU:魔契师:契灵神威:6",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "damageIncoming",
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "契灵在30尺内时获得同种伤害类型抗性，卡在随从距离与伤害类型比对"
+  },
+  {
+    "key": "AU:牧师:巩固法术:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.targets"
+    ],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "施法时消耗引导神力为法术目标之一赋予临时生命值，需在 spellCast 窗口读取目标列表"
+  },
+  {
+    "key": "AU:牧师:驱法复原:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.slot",
+      "action.name"
+    ],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "消耗法术位施展治疗或解除状态法术后顺发免位解除魔法，需识别施法性质并联动施展解除魔法"
+  },
+  {
+    "key": "AU:牧师:稳固法术:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled",
+    "reads": [
+      "action.by",
+      "action.save.ability",
+      "action.marks.首次豁免"
+    ],
+    "does": [
+      "mark:首次豁免"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "目标对抗你法术的首次豁免成功时减1d6骰点，需关联豁免所属的施法动作来源与首次豁免标记"
+  },
+  {
+    "key": "AU:欺诈弹",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.ranged",
+      "action.attack.weapon"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "远程武器攻击命中追加心灵伤害并迫使感知豁免陷入魅惑，卡在指定盟友为魅惑者及破魅规则"
+  },
+  {
+    "key": "AU:尚武魔宠",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.targets"
+    ],
+    "does": [
+      "cancel"
+    ],
+    "otherGap": "summon",
+    "now": false,
+    "note": "魔宠用反应使5尺内受击生物AC加PB使攻击失手，需拦截 attackHit 并关联魔宠位置与反应"
+  },
+  {
+    "key": "AU:死灵专家",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.school",
+      "action.spell.slot"
+    ],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "消耗法术位施展死灵法术时消耗生命骰自愈（骰值+环阶），需在施法窗口读取学派和环阶并消耗生命骰"
+  },
+  {
+    "key": "AU:塑能专家",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:damage",
+    "reads": [
+      "action.spell.school",
+      "action.damage.dice"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "施展塑能法术造成伤害时消耗生命骰追加伤害，需在伤害掷骰时读取学派并消耗生命骰追加伤害"
+  },
+  {
+    "key": "AU:慰疗魔宠",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:heal",
+    "reads": [
+      "action.damage.dice"
+    ],
+    "does": [
+      "NEW:minDie:3"
+    ],
+    "otherGap": "summon",
+    "now": false,
+    "note": "盟友在魔宠5尺光环内掷治疗骰时1和2视为3，需支持治疗骰rollMod/minDie及随从灵光"
+  },
+  {
+    "key": "AU:武僧:精通秘法战斗风格:17",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.name",
+      "action.economy"
+    ],
+    "does": [
+      "NEW:replaceAttacksWithSpell"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "疾风连击时将两次徒手打击替换为施展一二环术士动作法术，需动作实例支持嵌套施法或替换多次攻击为施法"
+  },
+  {
+    "key": "AU:武僧:秘法武功:6",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "功力与法术位相互转换，属资源池管理（卡在法术位恢复节点）"
+  },
+  {
+    "key": "AU:武僧:秘法战斗风格:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.kind",
+      "action.economy"
+    ],
+    "does": [
+      "NEW:replaceAttackWithSpell"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "攻击动作中将一次徒手打击替换为施展动作戏法，需动作实例支持嵌套施法或替换单次攻击"
+  },
+  {
+    "key": "AU:武僧:凝神击:11",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit,NEW:actionUsed",
+    "reads": [
+      "action.attack.unarmed",
+      "action.attack.melee"
+    ],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "使用震慑拳时给目标施加对抗自身法术豁免劣势的效应，需识别震慑拳动作或命中标记"
+  },
+  {
+    "key": "AU:虚弱弹",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.ranged",
+      "action.attack.weapon"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "远程武器攻击命中追加黯蚀伤害并迫使体质豁免陷入中毒（伤害扣减），需在命中追加伤害与削弱效应"
+  },
+  {
+    "key": "AU:异界魔宠",
+    "scope": "rare",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "寻获魔宠时赋予魔宠抗性与穿墙相位行走，卡在召唤物属性强化与穿墙位移"
+  },
+  {
+    "key": "AU:预言专家",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled,spellCast",
+    "reads": [
+      "action.spell.school",
+      "action.spell.slot"
+    ],
+    "does": [
+      "refund:resource"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "反应干预60尺内生物D20检定赋予优劣势，且施展预言法术时恢复使用次数，需在施法窗口读取学派"
+  },
+  {
+    "key": "AU:元素魔宠",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "附赠动作指挥魔宠释放元素脉冲与赋能抗性，卡在以魔宠为源点的范围伤害与随从反应"
+  },
+  {
+    "key": "AU:战士:奥术射击:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.ranged",
+      "action.attack.weapon"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "远程武器攻击命中并造成伤害时为攻击赋予奥术射击选项，需在 attackHit 挂载子选项菜单"
+  },
+  {
+    "key": "AU:战士:不屈传送:15",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled",
+    "reads": [
+      "action.marks.不屈",
+      "action.result.saved"
+    ],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "使用不屈特性且豁免成功后传送至多60尺，需在豁免成功窗口识别是否使用了不屈特性标记"
+  },
+  {
+    "key": "AU:战士:注魔弹:7",
+    "scope": "rare",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "以魔法动作射出非战斗环境效用弹（暗幕/解锁/蔓生），卡在环境交互与复杂非战斗效应"
+  },
+  {
+    "key": "AU:战士:宗师射术:18",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackMissed",
+    "reads": [
+      "action.by"
+    ],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "可见生物对你攻击失手时以反应半速后撤免借机并进行远程反击，需在 attackMissed 窗口捕获攻击者并提供反击动作"
+  },
+  {
+    "key": "AU:咒能爆发之恩惠",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast,rollMod:damage",
+    "reads": [
+      "action.damage.dice",
+      "action.spell.slot"
+    ],
+    "does": [
+      "NEW:minDie:3",
+      "NEW:addConditionOnDamage:倒地"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "消耗法术位施法时伤害骰1和2视为3且受损生物倒地，需在施法/伤害窗口修改伤害下限并对受损目标附加状态"
+  },
+  {
+    "key": "AU:追踪弹",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": null,
+    "reads": [
+      "action.damage.dice",
+      "action.attack.item"
+    ],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "替换远程攻击为追踪敏捷豁免伤害，需读取手持武器基础伤害骰与最大射程"
+  },
+  {
+    "key": "AU:spell:步履维艰",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "法术造成速度减半且无法疾走，卡在效应限制疾走动作"
+  },
+  {
+    "key": "AU:spell:负能量洪流",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "主动法术造成伤害，杀死类人生物在下回合召唤丧尸，卡在击杀触发与召唤"
+  },
+  {
+    "key": "AU:spell:魂灵提灯",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "reducedTo0",
+    "reads": [
+      "action.result.reducedTo0"
+    ],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "敌人在60尺光照内阵亡时收集灵魂碎片，需在 reducedTo0 窗口捕获阵亡生物及距离并累加资源"
+  },
+  {
+    "key": "AU:spell:汲能术",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:damageDealt",
+    "reads": [
+      "action.result.damage"
+    ],
+    "does": [],
+    "otherGap": null,
+    "now": false,
+    "note": "法术造成伤害时自身恢复造成伤害数值一半的生命值，需读取本次动作造成的实际伤害值"
+  },
+  {
+    "key": "AU:spell:假寐术",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "使自愿目标昏迷10分钟获得短休增益，属探索短休与昏迷状态"
+  },
+  {
+    "key": "AU:spell:距离失真",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "zone",
+    "now": false,
+    "note": "区域法术提供二选一效果，卡在区域针对单一生物的困难地形"
+  },
+  {
+    "key": "AU:spell:力竭波",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "主动施法赋予锥状豁免施加力竭层数，卡在持续法术授予后续动作与力竭层数叠加"
+  },
+  {
+    "key": "AU:spell:埋骨墓地",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "zone",
+    "now": false,
+    "note": "持续区域法术与伤害减值效应，卡在多方格拼合自定义区域"
+  },
+  {
+    "key": "AU:spell:靡叶生华",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "主动区域法术造成伤害并允许一名生物消耗生命骰治疗，卡在目标消耗自身生命骰"
+  },
+  {
+    "key": "AU:spell:魔邓肯冥思术",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "施法恢复已消耗的低环法术位，卡在法术位恢复节点"
+  },
+  {
+    "key": "AU:spell:友善之域",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": "rollMod:check",
+    "reads": [],
+    "does": [],
+    "otherGap": "other",
+    "now": false,
+    "note": "社交影响生物属性检定保底10，属社交检定上下文判定"
+  },
+  {
+    "key": "AU:spell:战斗魔宠",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "召唤独立参战战斗魔宠或强化已有魔宠，卡在召唤物数据替换与临时生命"
+  },
+  {
+    "key": "AU:spell:植物召唤术",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "召唤植物灵魄随从参战，卡在召唤物特异动作与抗性/易伤属性"
+  },
+  {
+    "key": "FRHoF:暴风骤岚之恩惠",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled",
+    "reads": [
+      "action.by",
+      "action.kind",
+      "action.damage.types"
+    ],
+    "does": [
+      "set:disadv"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "对抗你造成电鸣伤害法术的豁免具劣势，需在豁免掷骰窗口读取法术来源与伤害类型"
+  },
+  {
+    "key": "FRHoF:变幻无常之恩惠",
+    "scope": "rare",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "以魔法动作变形为CR10以下生物形态并加临时生命，卡在玩家数据卡动态变形替换"
+  },
+  {
+    "key": "FRHoF:翠绿闲庭新羽",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.name"
+    ],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "执行协助动作时与5尺内自愿盟友交换位置且免借机，需识别协助动作并支持双生物换位"
+  },
+  {
+    "key": "FRHoF:翠色魔法",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "对野兽影响动作检定优势及每日免位免专注野兽感官，属探索叙事与法术准备"
+  }
+]

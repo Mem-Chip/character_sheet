@@ -1,0 +1,593 @@
+[
+  {
+    "key": "XPHB:野蛮人:神之勇者:3",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "治疗池上限公式无法按野蛮人等级成长动态计算，属于资源池配置上限问题"
+  },
+  {
+    "key": "XPHB:野蛮人:圣树活力:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed, effectEnded",
+    "reads": [
+      "action.key"
+    ],
+    "does": [
+      "grantTempHp"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "需在激活狂暴动作执行时自动赋予野蛮人等级临时生命值，并在狂暴结束时清除剩余临时生命值"
+  },
+  {
+    "key": "XPHB:野蛮人:世界树之奇旅:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.key"
+    ],
+    "does": [
+      "grantAction"
+    ],
+    "otherGap": "move",
+    "now": false,
+    "note": "激活狂暴动作时无法联动触发免费传送，且缺少单次狂暴周期内的独立传送次数追踪与多目标协同传送"
+  },
+  {
+    "key": "XPHB:野蛮人:兽力威能:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed, attackHit",
+    "reads": [
+      "action.key",
+      "action.attack.melee"
+    ],
+    "does": [
+      "remember"
+    ],
+    "otherGap": "move",
+    "now": false,
+    "note": "激活狂暴时需记录选择的兽力形态以避免反复弹窗确认，且猎鹰形态缺乏飞行速度支持"
+  },
+  {
+    "key": "XPHB:野蛮人:兽性狂暴:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.key"
+    ],
+    "does": [
+      "remember",
+      "grantAction"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "需在激活狂暴动作时统合记录形态选择，并在进入狂暴时支持作为同一动作的一部分执行撤离与疾走"
+  },
+  {
+    "key": "XPHB:野蛮人:无我狂暴:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.key"
+    ],
+    "does": [
+      "removeEffect"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "激活狂暴动作时需自动清除自身已有的魅惑与恐慌状态，缺乏激活动作与状态清除联动"
+  },
+  {
+    "key": "XPHB:野蛮人:凶蛮打击:9",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled, attackHit",
+    "reads": [
+      "action.attack.ability",
+      "action.attack.disadvantage"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "需在 d20 检定窗口读取该攻击原本是否已具备劣势以限制宣告，且震撼猛击缺少禁止借机攻击机制"
+  },
+  {
+    "key": "XPHB:医疗师",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:healRolled, NEW:actionUsed",
+    "reads": [
+      "action.kind",
+      "action.name"
+    ],
+    "does": [
+      "NEW:rerollHeal"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "治疗掷骰时缺少针对治疗骰出 1 重掷的机制（rollMod:heal），且缺少消耗物品充能与目标生命骰的追踪"
+  },
+  {
+    "key": "XPHB:吟游诗人:不破威仪:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.by",
+      "action.marks.不破威仪"
+    ],
+    "does": [
+      "cancel",
+      "mark:不破威仪"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "攻击命中时需强制攻击者进行魅力豁免并在失败时将命中改为失手（cancel），且需记录每生物每回合首次命中"
+  },
+  {
+    "key": "XPHB:吟游诗人:创生圣言:20",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.key",
+      "action.targets"
+    ],
+    "does": [
+      "set:targets"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "施展特定九环法术时需支持为法术动态追加符合距离条件的第二目标"
+  },
+  {
+    "key": "XPHB:吟游诗人:额外攻击:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.kind",
+      "action.economy"
+    ],
+    "does": [
+      "NEW:replaceAttackWithSpell"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "攻击动作的多次攻击预算管理及支持将其中的单次攻击替换为一动作戏法"
+  },
+  {
+    "key": "XPHB:吟游诗人:鼓舞之移:6",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "turnEnded",
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "敌方回合结束触发反应位移，涉及非当前行动生物的移动预算与盟友反应位移调度"
+  },
+  {
+    "key": "XPHB:吟游诗人:灵感织衣:3",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "主动附赠动作多目标结算，依赖多个盟友同时消耗反应进行非回合内移动"
+  },
+  {
+    "key": "XPHB:吟游诗人:灵巧打击:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.cost",
+      "action.economy"
+    ],
+    "does": [
+      "NEW:chainAttack"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "需感知任意动作、附赠动作或反应中消耗了诗人激励资源，并作为该动作序列的一部分追加徒手打击"
+  },
+  {
+    "key": "XPHB:吟游诗人:诗人痛击:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit, rollMod:damage",
+    "reads": [
+      "action.attack.unarmed"
+    ],
+    "does": [
+      "set:dice"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "徒手打击造成伤害时需支持将其基础伤害骰替换为诗人激励骰"
+  },
+  {
+    "key": "XPHB:吟游诗人:威仪作锦:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "saveForced",
+    "reads": [
+      "action.spell.key"
+    ],
+    "does": [
+      "runBranch:onFail"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "施展命令术时，若目标魅惑了施法者则其豁免应自动判定失败，需在豁免窗口读取法术来源与魅惑关系"
+  },
+  {
+    "key": "XPHB:吟游诗人:协同舞步:6",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "initiativeRolled",
+    "reads": [],
+    "does": [],
+    "otherGap": "remember",
+    "now": false,
+    "note": "自身先攻加值已实现，无法将同一投掷结果广播给 30 尺内所有盟友的先攻检定"
+  },
+  {
+    "key": "XPHB:吟游诗人:引导闪避:14",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "damageIncoming",
+    "reads": [],
+    "does": [],
+    "otherGap": null,
+    "now": true,
+    "note": "现有 spec 已支持：自身与灵光分享给盟友的 evasion 均在 damageIncoming before 生效，无需额外动作实例"
+  },
+  {
+    "key": "XPHB:吟游诗人:战斗激励:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.damageType"
+    ],
+    "does": [
+      "addDamage",
+      "set:ac"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "被命中时需根据激励骰动态调整防御者 AC 并重新裁决命中，命中时需读取原攻击伤害类型追加激励骰伤害"
+  },
+  {
+    "key": "XPHB:吟游诗人:战斗魔法:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.kind",
+      "action.economy"
+    ],
+    "does": [
+      "grantAction"
+    ],
+    "otherGap": "item",
+    "now": false,
+    "note": "需读取本回合此前使用的动作是否为一动作法术，以此解锁附赠动作武器攻击"
+  },
+  {
+    "key": "XPHB:饮命者",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.weapon"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "需读取攻击是否使用契约武器以自动触发额外伤害，且消耗生命骰回血缺少生命骰资源池支持"
+  },
+  {
+    "key": "XPHB:隐伏者",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackMissed, attackHit",
+    "reads": [
+      "action.kind"
+    ],
+    "does": [
+      "cancel"
+    ],
+    "otherGap": "vision",
+    "now": false,
+    "note": "攻击失手时不破除躲藏隐形状态，需要攻击判定窗口与隐匿/隐形状态解除机制挂接"
+  },
+  {
+    "key": "XPHB:影界触碰",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "专长自选法术准备及多法术独立免费施法资源池机制缺失"
+  },
+  {
+    "key": "XPHB:游荡者:撤步（花费：1d6）:5",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.damage.dice",
+      "action.marks.偷袭"
+    ],
+    "does": [
+      "NEW:reduceSneakDice"
+    ],
+    "otherGap": "move",
+    "now": false,
+    "note": "需在造成偷袭伤害时扣除 1d6 偷袭骰预算，并赋予半速位移与防借机效应"
+  },
+  {
+    "key": "XPHB:游荡者:淬毒武器:13",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit, saveForced",
+    "reads": [
+      "action.marks.淬毒"
+    ],
+    "does": [
+      "addDamage",
+      "NEW:ignoreResistance"
+    ],
+    "otherGap": "other",
+    "now": false,
+    "note": "需挂接在诡诈打击淬毒分支上追加 2d6 毒素伤害，且引擎不支持无视毒素抗性"
+  },
+  {
+    "key": "XPHB:游荡者:法师之手诈术:3",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "法师之手施法动作经济修改与隐形召唤手实体控制属于召唤物扩展"
+  },
+  {
+    "key": "XPHB:游荡者:法术窃贼:17",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.key",
+      "action.spell.level",
+      "action.targets"
+    ],
+    "does": [
+      "cancel",
+      "remember",
+      "NEW:excludeTarget"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "需在 spellCast 窗口读取敌方法术信息，豁免失败时单目标消除/排除自身受术并记忆窃取该法术"
+  },
+  {
+    "key": "XPHB:游荡者:诡术伏击:9",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.targets"
+    ],
+    "does": [
+      "runBranch:disadvOnSave"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "施法时需读取法术全部目标列表，仅针对该法术本身的豁免检定赋予劣势"
+  },
+  {
+    "key": "XPHB:游荡者:诡诈打击:5",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.marks.偷袭",
+      "action.damage.dice"
+    ],
+    "does": [
+      "NEW:reduceSneakDice"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "偷袭命中造成伤害时需支持扣减指定数量偷袭伤害骰并按扣除项分发触发子效应"
+  },
+  {
+    "key": "XPHB:游荡者:恍惚（花费：2d6）:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.marks.偷袭",
+      "action.damage.dice"
+    ],
+    "does": [
+      "NEW:reduceSneakDice"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "需从偷袭伤害中扣除 2d6 骰子，且体质豁免失败后目标陷入行动经济三选一的特殊状态机制缺失"
+  },
+  {
+    "key": "XPHB:游荡者:击昏（花费：6d6）:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.marks.偷袭",
+      "action.damage.dice"
+    ],
+    "does": [
+      "NEW:reduceSneakDice"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "需在偷袭命中时扣除 6d6 伤害骰，体质豁免失败附加昏迷状态已具备基本支持"
+  },
+  {
+    "key": "XPHB:游荡者:极效潜行:9",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.marks.偷袭",
+      "action.damage.dice"
+    ],
+    "does": [
+      "NEW:reduceSneakDice"
+    ],
+    "otherGap": "vision",
+    "now": false,
+    "note": "需挂接诡诈打击扣除 1d6 偷袭骰，且依赖掩护检测以防止攻击后打破躲藏隐形状态"
+  },
+  {
+    "key": "XPHB:游荡者:进阶诡诈打击:11",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.marks.偷袭",
+      "action.damage.dice"
+    ],
+    "does": [
+      "NEW:reduceSneakDice"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "需支持在单次偷袭命中实例中多选两种诡诈打击效果并复合扣除对应的偷袭骰"
+  },
+  {
+    "key": "XPHB:游荡者:可靠才能:7",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:d20",
+    "reads": [
+      "action.check.skill",
+      "action.check.tool",
+      "action.check.proficient"
+    ],
+    "does": [
+      "set:minD20"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "d20Rolled 或 rollMod 窗口需读取检定是否运用了熟练项，以自动保底 10 而无需弹窗人工确认"
+  },
+  {
+    "key": "XPHB:游荡者:快手:3",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "附赠动作换取的额外动作无法限定其仅能用于操作动作或魔法物品动作"
+  },
+  {
+    "key": "XPHB:游荡者:灵振诀窍:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled",
+    "reads": [
+      "action.check.proficient",
+      "action.result.failing"
+    ],
+    "does": [
+      "set:roll",
+      "refund:resource"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "d20 检定窗口无法读取检定是否具备熟练项，且成功后才确认扣减灵能骰需回溯结算"
+  },
+  {
+    "key": "XPHB:游荡者:窃盗本能:17",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "roundStarted",
+    "reads": [],
+    "does": [],
+    "otherGap": "other",
+    "now": false,
+    "note": "战斗首轮在先攻轮次中插入第二个行动回合，属于底层先攻与轮次调度机制缺失"
+  },
+  {
+    "key": "XPHB:游荡者:使用魔法装置:13",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:itemUsed, NEW:resourceSpent",
+    "reads": [
+      "action.item.charges",
+      "action.cost"
+    ],
+    "does": [
+      "refund:resource"
+    ],
+    "otherGap": "item",
+    "now": false,
+    "note": "缺少使用魔法物品充能时的触发窗口以判定 1d6 出 6 返还充能，且同调上限需支持扩展至 4"
+  },
+  {
+    "key": "XPHB:游荡者:摔绊（花费：1d6）:5",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.marks.偷袭",
+      "action.damage.dice"
+    ],
+    "does": [
+      "NEW:reduceSneakDice"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "需挂接在偷袭命中上自动扣除 1d6 偷袭骰，目标敏捷豁免失败施加倒地状态已有支持"
+  },
+  {
+    "key": "XPHB:游荡者:撕裂心智:17",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.marks.偷袭",
+      "action.attack.weapon"
+    ],
+    "does": [],
+    "otherGap": null,
+    "now": false,
+    "note": "需读取本次攻击是否真正触发并造成了偷袭伤害（而非用优势和盟友近似条件判断）"
+  }
+]

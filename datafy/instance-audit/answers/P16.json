@@ -1,0 +1,523 @@
+[
+  {
+    "key": "TCE:野蛮人:无常反冲:10",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "damageTaken,d20Rolled",
+    "reads": [],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "受到伤害或豁免失败时以反应重骰狂野魔法表，卡在狂野魔法效应表随机生成与效果替换"
+  },
+  {
+    "key": "TCE:野蛮人:野兽之形:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit,d20Rolled",
+    "reads": [
+      "action.attack.*",
+      "action.targets"
+    ],
+    "does": [
+      "cancel"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "尾击防御在被命中时掷骰加AC对抗攻击检定可能变失手；爪击在攻击检定后追加一次攻击"
+  },
+  {
+    "key": "TCE:野蛮人:振奋魔法:6",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "以动作赋予10分钟检定+1d3或掷1d3恢复法术位，卡在法术位恢复与单生物每长休一次限制"
+  },
+  {
+    "key": "TCE:吟游诗人:不竭鼓舞:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled",
+    "reads": [
+      "action.result.*"
+    ],
+    "does": [
+      "refund:resource"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "使用诗人激励检定仍失败时保留激励骰不消耗，需感知激励骰使用情况及检定失败结果并退还/保留资源"
+  },
+  {
+    "key": "TCE:吟游诗人:传播鼓舞:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled",
+    "reads": [
+      "action.result.*"
+    ],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "盟友使用诗人激励检定成功后用反应给另一生物激励，需感知激励骰使用及检定成功结果"
+  },
+  {
+    "key": "TCE:吟游诗人:活化表演:6",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "以动作活化物品召唤舞空物品并附赠动作指挥，卡在召唤物控制机制与难抑舞动光环"
+  },
+  {
+    "key": "TCE:吟游诗人:潜能微尘:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled,attackHit",
+    "reads": [
+      "action.targets",
+      "action.attack.*"
+    ],
+    "does": [
+      "addDamage",
+      "NEW:triggerSave"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "消耗激励骰时根据检定类型触发重骰、雷鸣溅射伤害或临时生命，需在检定及命中窗口联动动作与目标"
+  },
+  {
+    "key": "TCE:吟游诗人:造物表演:3",
+    "scope": "rare",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "以动作凭空创造非魔法物品，卡在物品生成与尺寸价值限制系统"
+  },
+  {
+    "key": "TCE:游荡者:灵能面纱:13",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "attackHit,attackMissed,saveForced",
+    "reads": [],
+    "does": [],
+    "otherGap": null,
+    "now": true,
+    "note": "现有 spec 已支持（隐形效应配置 endsOn: attackHit, attackMissed, saveForced），完善 endsOn 条件即可全自动"
+  },
+  {
+    "key": "TCE:游荡者:撕裂心智:17",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.item",
+      "action.damage.dice"
+    ],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "心灵之刃造成偷袭伤害时迫使目标感知豁免陷入震慑，需读取攻击武器为心灵之刃且包含偷袭伤害"
+  },
+  {
+    "key": "TCE:游荡者:心灵传送:9",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "附赠动作掷灵能骰传送至多骰值10倍尺数，卡在动态移动距离与战场传送"
+  },
+  {
+    "key": "TCE:游荡者:心灵低语:3",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "other",
+    "now": false,
+    "note": "以动作掷灵能骰建立多目标跨距离心灵感应，属于非战斗叙事与通信特性"
+  },
+  {
+    "key": "TCE:游荡者:心灵之刃:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.kind",
+      "action.attack.item"
+    ],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "在攻击动作中化出念刃并在其后提供附赠动作次要攻击，需与攻击动作实例与装备空手检测联动"
+  },
+  {
+    "key": "TCE:游侠:翻腾浪涌:7",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "附赠动作获得10尺飞行速度与悬浮，卡在三维飞行与悬浮移动模型"
+  },
+  {
+    "key": "TCE:游侠:蜂聚集群:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.targets"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": "move",
+    "now": false,
+    "note": "攻击命中后自选追加穿刺伤害、迫使力量豁免位移击倒或自身位移掩护，需在 attackHit 读目标并追加伤害或联动位移"
+  },
+  {
+    "key": "TCE:游侠:精宸所与:11",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.name",
+      "action.spell.concentration"
+    ],
+    "does": [
+      "set:spell"
+    ],
+    "otherGap": "summon",
+    "now": false,
+    "note": "施展妖精召唤术时免除专注且持续时间变为1分钟，需在 spellCast 窗口修改法术专注属性与持续时间"
+  },
+  {
+    "key": "TCE:游侠:群逸逃散:15",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "damageIncoming",
+    "reads": [
+      "action.damage.dice"
+    ],
+    "does": [
+      "NEW:halveDamage"
+    ],
+    "otherGap": "move",
+    "now": false,
+    "note": "受到伤害时反应使伤害减半并传送30尺，卡在伤害减半结算与反应传送"
+  },
+  {
+    "key": "TCE:游侠:雾行漫游:15",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.name",
+      "action.targets"
+    ],
+    "does": [
+      "set:targets"
+    ],
+    "otherGap": "move",
+    "now": false,
+    "note": "施展迷踪步时携带5尺内自愿同伴一同传送，需在施法实例中识别迷踪步并扩展传送目标"
+  },
+  {
+    "key": "TCE:游侠:妖思魅缕:7",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "d20Rolled,NEW:saveSucceeded",
+    "reads": [
+      "action.result.saved",
+      "action.save.ability"
+    ],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "自身或盟友通过对抗魅惑/恐慌豁免后反应迫使另一生物受控，需读取豁免结果及其关联状态"
+  },
+  {
+    "key": "TCE:云雾符文",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.targets",
+      "action.by"
+    ],
+    "does": [
+      "set:targets"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "被攻击命中时以反应将攻击重定向至30尺内另一生物，需在 attackHit 窗口修改攻击目标并沿用检定值"
+  },
+  {
+    "key": "TCE:增强奥术法器",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "rollMod:attack",
+    "reads": [],
+    "does": [],
+    "otherGap": "vision",
+    "now": false,
+    "note": "持握法器法术攻击加值且无视半掩护，卡在掩护规则与法器装备静态加值"
+  },
+  {
+    "key": "TCE:战士:巨人之力:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.weapon",
+      "action.damage.types"
+    ],
+    "does": [
+      "addDamage:sameType"
+    ],
+    "otherGap": null,
+    "now": true,
+    "note": "现有 spec 已支持（attackHit before 触发 addDamage 加伤，附魔加优势），体型提示 note 不影响核心自动化"
+  },
+  {
+    "key": "TCE:战士:灵力跃动:7",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "附赠动作获得两倍步行速度的飞行速度至回合结束，卡在飞行移动模式"
+  },
+  {
+    "key": "TCE:战士:念力控物:3",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "以动作强行位移30尺内可见生物或未固定物件，卡在强制位移与物件互动"
+  },
+  {
+    "key": "TCE:战士:念力突刺:7",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.weapon",
+      "action.damage.dice"
+    ],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "灵能打击命中造成伤害后迫使目标力量豁免击倒或推开，需在 attackHit 确认使用了灵能打击并迫使豁免"
+  },
+  {
+    "key": "TCE:战士:念力宗师:18",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "施展心灵遥控并在维持专注期间附赠动作发动武器攻击，卡在心灵遥控法术实现与专注状态联动"
+  },
+  {
+    "key": "TCE:战士:意念守护:10",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "turnStarted",
+    "reads": [],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "回合开始时消耗灵能骰解除自身的魅惑与恐慌状态，卡在灵能骰资源消耗与由法术等外部效应附加状态的解除"
+  },
+  {
+    "key": "TCE:spell:暗影衍体召唤术",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "召唤暗影灵魄并在升环时缩放属性，卡在召唤物形态特质（哀伤之重/暗影潜藏）与每日单次特性"
+  },
+  {
+    "key": "TCE:spell:翠炎剑",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.*",
+      "action.targets"
+    ],
+    "does": [
+      "addDamage",
+      "NEW:secondaryDamage"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "施法发动近战武器攻击且命中后火焰飞跃至第二目标，需动作实例支持武器攻击嵌套及第二目标伤害派生"
+  },
+  {
+    "key": "TCE:spell:轰雷剑",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit,NEW:moved",
+    "reads": [
+      "action.attack.*",
+      "action.targets"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": "move",
+    "now": false,
+    "note": "施法嵌套武器攻击命中包覆雷鸣能量，并在目标主动移动时触发二次伤害，需动作实例与移动事件触发"
+  },
+  {
+    "key": "TCE:spell:魂灵环绕",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.targets"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "命中10尺内生物追加自选类型伤害并禁疗，且光环减速，需在 attackHit 判定目标距离并追加伤害与禁疗效应"
+  },
+  {
+    "key": "TCE:spell:塔莎酸蚀酿",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "turnStarted",
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "线状强酸覆盖导致回合初持续酸伤且可用动作刮除，卡在持续状态回合初伤害与清除动作"
+  },
+  {
+    "key": "TCE:spell:塔莎心灵鞭",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "智力豁免受心灵伤害且下回合反应封锁及移动/动作/附赠三选一行使，卡在复合动作经济限制状态"
+  },
+  {
+    "key": "XGE:矮人坚毅",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.name"
+    ],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "执行回避动作时消耗生命骰自愈，需在动作执行窗口识别回避动作并消耗生命骰恢复生命"
+  },
+  {
+    "key": "XGE:残酷巫咒",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "以附赠动作传送至30尺内受诅目标5尺内未占据空间，卡在依赖受咒目标相对坐标的传送位移"
+  },
+  {
+    "key": "XGE:德鲁伊:精魂图腾:2",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.slot",
+      "action.kind"
+    ],
+    "does": [],
+    "otherGap": "zone",
+    "now": false,
+    "note": "精魂图腾光环提供常驻加值，独角兽图腾在施法位治疗时触发群体协同回血，需在 spellCast 识别消耗法术位的治疗法术"
+  },
+  {
+    "key": "XGE:德鲁伊:全能牧者:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast,NEW:summoned",
+    "reads": [
+      "action.spell.*"
+    ],
+    "does": [
+      "NEW:buffSummon"
+    ],
+    "otherGap": "summon",
+    "now": false,
+    "note": "法术召唤的野兽与精类增加生命值上限且天生武器视为魔法，卡在召唤物生成时属性改写与武器魔法标签"
+  },
+  {
+    "key": "XGE:德鲁伊:隐匿通途:10",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": true,
+    "note": "现有 spec 已支持（已实现自身附赠传送与触碰动作传送自愿生物），移除提示 note 即可全自动"
+  },
+  {
+    "key": "XGE:德鲁伊:忠诚牧畜:14",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "reducedTo0",
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "生命降为0或陷入失能时自动以9环召唤4只野兽护卫，卡在生命归零反应召唤与失能触发时机"
+  },
+  {
+    "key": "XGE:癫狂巫咒",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "附赠动作对受咒目标及周围5尺自选生物造成魅力调整值心灵伤害，卡在基于受咒目标周围5尺的动态选敌"
+  }
+]

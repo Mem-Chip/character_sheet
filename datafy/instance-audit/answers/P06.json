@@ -1,0 +1,567 @@
+[
+  {
+    "key": "XPHB:魔能长枪",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.name",
+      "action.spell.level",
+      "action.spell.range"
+    ],
+    "does": [
+      "set:range"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "施展所选魔契师戏法时射程增加30×等级尺，需在施法窗口读取并修改range"
+  },
+  {
+    "key": "XPHB:魔契师:创造奴仆:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast, attackHit",
+    "reads": [
+      "action.key",
+      "action.spell.concentration",
+      "action.by",
+      "action.targets"
+    ],
+    "does": [
+      "NEW:setConcentration",
+      "addDamage"
+    ],
+    "otherGap": "summon",
+    "now": false,
+    "note": "施展异怪召唤术时免专注、改持续时间与赋予临时生命值，且召唤物命中脆弱诅咒目标时追加心灵伤害，涉及施法实例修改与召唤物攻击联动"
+  },
+  {
+    "key": "XPHB:魔契师:斗转星移:10",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit, damageTaken",
+    "reads": [
+      "action.by",
+      "action.result.damage"
+    ],
+    "does": [
+      "NEW:halveDamage"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "被命中后反应使攻击伤害减半并在承受伤害后反击攻击者，需读取攻击者和实际承受伤害数值"
+  },
+  {
+    "key": "XPHB:魔契师:光耀之魂:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:damage",
+    "reads": [
+      "action.kind",
+      "action.damage.types",
+      "action.targets"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "施展法术造成光耀或火焰伤害时每回合一次对其中一个目标增加魅力调整值伤害，需在伤害掷骰时读取伤害类型与目标并加伤"
+  },
+  {
+    "key": "XPHB:魔契师:骇异恶咒:10",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.key",
+      "action.targets"
+    ],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "施展脆弱诅咒时使目标选定属性豁免带劣势，卡在效应生命周期无法与施法专注绑定"
+  },
+  {
+    "key": "XPHB:魔契师:唤醒心灵:3",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "other",
+    "now": false,
+    "note": "建立双向心灵连结交流，主要用于叙事社交与探索，持续时间随等级变化且含语言距离限制"
+  },
+  {
+    "key": "XPHB:魔契师:锐眼斗士:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.key",
+      "action.targets"
+    ],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "使用唤醒心灵建立连结时联动迫使目标进行感知豁免并随连结持续，卡在动作感知与契约法术位重置资源"
+  },
+  {
+    "key": "XPHB:魔契师:思维之盾:10",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "damageTaken",
+    "reads": [
+      "action.by",
+      "action.damage.types",
+      "action.result.damage"
+    ],
+    "does": [],
+    "otherGap": null,
+    "now": false,
+    "note": "受到心灵伤害时将承受伤害等量反射给伤害来源生物，需在 damageTaken 窗口读取伤害来源与承受数值"
+  },
+  {
+    "key": "XPHB:魔契师:天界韧性:10",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": "restCompleted",
+    "reads": [],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "短休或长休完成时为自身及至多5名可见盟友赋予临时生命值，属于休息后结算，卡在盟友多目标选择"
+  },
+  {
+    "key": "XPHB:魔契师:雾隐遁行:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "damageTaken, spellCast",
+    "reads": [
+      "action.key",
+      "action.name"
+    ],
+    "does": [],
+    "otherGap": "zone",
+    "now": false,
+    "note": "受伤害反应施展迷踪步，且施展迷踪步时强化额外效果（隐形或传送起点/终点5尺范围感知豁免与伤害），卡在反应施法与区域定位"
+  },
+  {
+    "key": "XPHB:魔契师:心灵法术:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.list",
+      "action.damage.types"
+    ],
+    "does": [
+      "set:damageType"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "施展造成伤害的魔契师法术时将伤害类型替换为心灵伤害，需在施法窗口读取并修改 damageType"
+  },
+  {
+    "key": "XPHB:魔契师:玄奥秘法:11",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.key",
+      "action.spell.level"
+    ],
+    "does": [
+      "refund:slot"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "指定高环法术免法术位施展并消耗对应秘法次数，需在施法窗口退还法术位并绑定独立资源池"
+  },
+  {
+    "key": "XPHB:魔契师:妖精步伐:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.key"
+    ],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "施展迷踪步时选择额外效应（复苏步伐选盟友加临时生命、嘲弄步伐传送前5尺豁免施加劣势），卡在施法触发与多目标/区域豁免选择"
+  },
+  {
+    "key": "XPHB:魔契师:直坠噩梦:14",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": "attackHit",
+    "reads": [],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "攻击命中迫使目标魅力豁免并放逐至下层位面一回合，卡在生物移出战图与原位/邻近空格回位自动化"
+  },
+  {
+    "key": "XPHB:魔契师:灼光复仇:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:deathSaveIncoming",
+    "reads": [
+      "action.by"
+    ],
+    "does": [
+      "cancel"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "自身或60尺内盟友将要进行死亡豁免时反应触发，免除豁免并恢复半血站起同时爆发生物范围伤害，卡在死亡豁免拦截窗口与盟友目标选择"
+  },
+  {
+    "key": "XPHB:魔契师:醉心魔法:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.economy",
+      "action.spell.slot",
+      "action.spell.school"
+    ],
+    "does": [],
+    "otherGap": null,
+    "now": false,
+    "note": "以动作消耗法术位施展惑控或幻术法术后免法术位施展迷踪步，需在 spellCast 窗口读取动作类型、法术位消耗与学派"
+  },
+  {
+    "key": "XPHB:牧师:光冕:17",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:d20",
+    "reads": [
+      "action.key",
+      "action.name",
+      "action.damage.types"
+    ],
+    "does": [],
+    "otherGap": "vision",
+    "now": false,
+    "note": "灵光内敌人抵抗黎明曙光或火焰/光耀法术豁免带劣势，需在豁免窗口读取动作来源特性/法术的伤害类型，且卡在光照模拟"
+  },
+  {
+    "key": "XPHB:牧师:诡术祝福:3",
+    "scope": "manual-ok",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "remember",
+    "now": false,
+    "note": "赋予自身或自愿生物隐匿检定优势，属于探索社交向增益，卡在单目标绑定与长休/再次使用时自动移除"
+  },
+  {
+    "key": "XPHB:牧师:诡诈换位:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.key"
+    ],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "以附赠动作创造或移动召现分身时传送互换位置，需 actionUsed 感知对应动作，卡在幻象实体追踪与位移"
+  },
+  {
+    "key": "XPHB:牧师:极效治疗:17",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:damage",
+    "reads": [
+      "action.by",
+      "action.kind"
+    ],
+    "does": [
+      "NEW:maxDice"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "施法或引导神力恢复生命值时治疗骰直接取最大值，需在治疗掷骰窗口读取施放者和动作类型，防止误作用于外部治疗"
+  },
+  {
+    "key": "XPHB:牧师:进阶神圣干预:20",
+    "scope": "rare",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "神圣干预可选祈愿术且消耗后需2d4次长休恢复，卡在多长休冷却计数与动作选项扩展"
+  },
+  {
+    "key": "XPHB:牧师:精通分身:17",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "分身幻象周围盟友攻击优势及幻象消失时治疗附近生物，卡在独立幻象实体位置、光环与销毁事件"
+  },
+  {
+    "key": "XPHB:牧师:精通受祝击:14",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit, spellCast",
+    "reads": [
+      "action.attack.weapon",
+      "action.damage.types",
+      "action.spell.level",
+      "action.spell.list"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "神圣打击武器命中追加2d8伤害，或强力施法在戏法造成伤害时赋予60尺内生物临时生命值，需识别武器攻击与牧师戏法实例"
+  },
+  {
+    "key": "XPHB:牧师:黎明曙光:3",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "zone",
+    "now": false,
+    "note": "主动消耗引导神力造成30尺光环体质豁免伤害并驱散魔法黑暗，卡在区域自动伤害结算与驱散魔法黑暗互动"
+  },
+  {
+    "key": "XPHB:牧师:驱散亡灵:2",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "condition",
+    "now": false,
+    "note": "引导神力驱散30尺亡灵使其恐慌且必须尽可能远离，卡在驱散专属移动行为与状态联动"
+  },
+  {
+    "key": "XPHB:牧师:神圣干预:10",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.economy",
+      "action.spell.level",
+      "action.spell.list"
+    ],
+    "does": [
+      "refund:slot",
+      "NEW:modifyCost"
+    ],
+    "otherGap": "choice",
+    "now": false,
+    "note": "以动作免费施展任意5环或更低非反应牧师法术，需在施法窗口退还法术位、免除材料并校验学派环阶"
+  },
+  {
+    "key": "XPHB:牧师:神佑医者:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.slot",
+      "action.targets"
+    ],
+    "does": [],
+    "otherGap": null,
+    "now": false,
+    "note": "消耗法术位为他人施展治疗法术后自身恢复2+环阶生命值，需在施法/治疗窗口读取法术位环阶与目标"
+  },
+  {
+    "key": "XPHB:牧师:生命门徒:3",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.spell.slot"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "消耗法术位施展法术恢复生命值时追加2+环阶治疗量，需在施法/治疗掷骰窗口读取消耗法术位环阶并追加治疗"
+  },
+  {
+    "key": "XPHB:牧师:维持生命:3",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "消耗引导神力在30尺浴血生物间分配治疗池（至多回至半血），属于主动动作，卡在多目标动态点数分配"
+  },
+  {
+    "key": "XPHB:牧师:战神祝福:6",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.key",
+      "action.spell.concentration"
+    ],
+    "does": [
+      "refund:slot",
+      "NEW:setConcentration"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "用引导神力代替法术位施展虔诚护盾或灵体武器且无需专注、持续1分钟，需在施法窗口改写消耗与专注设置"
+  },
+  {
+    "key": "XPHB:牧师:战争祭司:3",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "以附赠动作消耗次数发动一次装备武器的攻击，卡在物品栏武器动作与攻击动作解耦"
+  },
+  {
+    "key": "XPHB:牧师:召现分身:3",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "summon",
+    "now": false,
+    "note": "创造并移动完美幻象、借幻象位置施法及夹击优势，卡在独立实体召唤、移动与施法源点替换"
+  },
+  {
+    "key": "XPHB:牧师:灼净亡灵:5",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "NEW:actionUsed",
+    "reads": [
+      "action.key",
+      "action.result.saved"
+    ],
+    "does": [
+      "addDamage"
+    ],
+    "otherGap": null,
+    "now": false,
+    "note": "使用驱散亡灵时对豁免失败的亡灵额外造成光耀伤害且不打破驱散，需读取驱散动作与豁免失败目标并结算统一伤害"
+  },
+  {
+    "key": "XPHB:耐性",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "resource",
+    "now": false,
+    "note": "死亡豁免优势已实现，附赠动作消耗生命骰回血卡在生命骰资源池管理"
+  },
+  {
+    "key": "XPHB:能量抗性之恩惠",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "damageTaken",
+    "reads": [
+      "action.damage.types"
+    ],
+    "does": [],
+    "otherGap": "choice",
+    "now": false,
+    "note": "受到所选抗性类型伤害后用反应传导同类型伤害给60尺内生物，需在 damageTaken 窗口读取伤害类型"
+  },
+  {
+    "key": "XPHB:念动力",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "spellCast",
+    "reads": [
+      "action.key",
+      "action.spell.components",
+      "action.spell.range"
+    ],
+    "does": [
+      "set:range",
+      "NEW:setComponents"
+    ],
+    "otherGap": "move",
+    "now": false,
+    "note": "法师之手免成分/隐形/射程+30尺以及附赠动作推撞5尺，卡在法术实例参数修改与强制位移"
+  },
+  {
+    "key": "XPHB:骑乘战斗",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit, damageIncoming",
+    "reads": [
+      "action.save.ability",
+      "action.save.half",
+      "action.targets"
+    ],
+    "does": [
+      "NEW:evasion",
+      "NEW:redirectAttack"
+    ],
+    "otherGap": "condition",
+    "now": false,
+    "note": "骑乘突击攻击优势、坐骑敏捷豁免反射闪避与替坐骑承受攻击，需在攻击/伤害窗口重定向目标并读取豁免减半属性，且卡在骑乘状态与关系"
+  },
+  {
+    "key": "XPHB:强弩专家",
+    "scope": "combat",
+    "needsInstance": false,
+    "on": null,
+    "reads": [],
+    "does": [],
+    "otherGap": "item",
+    "now": false,
+    "note": "无视装填、贴身射击免劣势与副手弩加属性调整值，属于武器装备底层规则与贴身射程规则缺失"
+  },
+  {
+    "key": "XPHB:强效法术",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "rollMod:damage",
+    "reads": [
+      "action.damage.dice",
+      "action.kind"
+    ],
+    "does": [
+      "rerollDamage"
+    ],
+    "otherGap": "resource",
+    "now": false,
+    "note": "法术伤害掷骰时消耗1术法点重掷最多魅力调整值颗伤害骰，需在伤害掷骰窗口读取伤害骰并执行 rerollDamage"
+  },
+  {
+    "key": "XPHB:擒抱者",
+    "scope": "combat",
+    "needsInstance": true,
+    "on": "attackHit",
+    "reads": [
+      "action.attack.unarmed",
+      "action.economy"
+    ],
+    "does": [],
+    "otherGap": "move",
+    "now": false,
+    "note": "徒手打击命中后附赠擒抱与攻击受擒目标优势已实现，需判断攻击动作的徒手打击，高速拖行卡在移动力消耗自动化"
+  }
+]

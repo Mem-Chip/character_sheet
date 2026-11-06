@@ -1,0 +1,790 @@
+# 动作实例需求汇总（自动生成）
+
+共 1010 条：combat 865、rare 85、manual-ok 60。
+不含 manual-ok 的 950 条里，需要动作实例的 448 条；现在就能写（now）的 35 条。
+
+## 挂在哪个事件上（on）
+
+- `attackHit`：163（黯冰狱铠、变巨/缩小术、放逐斩、风墙术、火焰护盾、棘雹术…）
+- `spellCast`：115（庇护术、沉默术、缓慢术、贾拉兹光辉风暴、欧提路克弹力法球、隐形术…）
+- `NEW:actionUsed`：56（暗夜精魂之恩惠、锐眼斗士、诡诈换位、灼净亡灵、仇敌誓言、复原之触…）
+- `d20Rolled`：43（塔莎狂笑术、隐形术、法术抗性、预兆、刃之魔契、神射手…）
+- `rollMod:damage`：40（变巨/缩小术、魔化武器、术法爆发、橡棍术、穿刺者、超限导能…）
+- `damageIncoming`：32（降咒、欧提路克弹力法球、原力法阵、阿斯莫、毒师、盾牌大师…）
+- `reducedTo0`：18（防死结界、巨武器大师、不灭哨卫、仇敌誓言、守护馈赠、死之尊主…）
+- `damageTaken`：18（强令对决、守护之链、月光涌泉、斗转星移、思维之盾、雾隐遁行…）
+- `rollMod:d20`：17（橡棍术、元素武器、破法者、光冕、上古斗士、至圣光轮…）
+- `attackMissed`：13（闪电箭矢、强力戏法、复仇之魂、辉煌防御、现世传说、隐伏者…）
+- `rollMod:attack`：5（魔化武器、巫咒战士、咒剑诅咒、不移胜者、打击之锤）
+- `saveForced`：5（威仪作锦、淬毒武器、威仪作锦、杀手反制、骑士之盾）
+- `rollMod:save`：4（塔莎狂笑术、原力法阵、伊尔明斯特的法术闪避、防护圣甲虫）
+- `NEW:damageDealt`：3（隐形术、汲能术、鼓舞斩）
+- `saveSucceeded`：3（强力戏法、妖思魅缕、法术反转戒指）
+- `NEW:resourceSpent`：3（使用魔法装置、炽焰鼓舞、辉耀之火）
+- `rollMod:heal`：3（慰疗魔宠、生机勃发之恩惠、强化链接）
+- `NEW:damageRolled`：2（繁彩球、元素亲和）
+- `turnStarted`：2（至圣光轮、徒手战斗）
+- `NEW:healRolled`：2（医疗师、强效治疗）
+- `NEW:enterReach`：2（长柄武器大师、警戒）
+- `（不是触发的）`：2（穿梭弹、追踪弹）
+- `NEW:saveSucceeded`：2（妖思魅缕、魅惑法杖）
+- `NEW:targeted`：1（庇护术）
+- `NEW:instakill`：1（防死结界）
+- `NEW:healed`：1（超凡强韧之恩惠）
+- `NEW:actionDone`：1（次元旅行之恩惠）
+- `restCompleted`：1（自然恢复）
+- `NEW:deathSaveIncoming`：1（灼光复仇）
+- `leftReach`：1（哨兵）
+- `NEW:enteredReach`：1（四象神通）
+- `effectEnded`：1（圣树活力）
+- `NEW:itemUsed`：1（使用魔法装置）
+- `actionDone`：1（长柄武器大师）
+- `initiativeRolled`：1（散塔林会暴徒）
+- `NEW:tempHpGained`：1（生机勃发之恩惠）
+- `NEW:forcedMove`：1（新锻臂铠）
+- `NEW:healApplied`：1（明月激励）
+- `NEW:enteredSpace`：1（灼烧烈焰）
+- `NEW:conditionIncoming`：1（魔法力量护甲）
+- `NEW:moved`：1（轰雷剑）
+- `NEW:summoned`：1（全能牧者）
+- `NEW:spellCountered`：1（魔力潮涌）
+- `NEW:attackTargeted`：1（不破威仪）
+- `NEW:healIncoming`：1（永生者赠礼）
+- `NEW:teleport`：1（魔法使的克星）
+- `NEW:beforeAttack`：1（闪现打击）
+- `NEW:moveWithinReach`：1（坚守战线）
+- `NEW:attackMade`：1（烈焰箭矢）
+- `NEW:creatureKilled`：1（灵魂牢笼）
+- `NEW:readiedTrigger`：1（预备）
+- `NEW:attackAction`：1（迅击）
+
+## 要读的字段（reads）
+
+- `action.targets`：100（庇护术、棘雹术、欧提路克弹力法球、强令对决、诱捕打击、咒唤微元素群…）
+- `action.attack.weapon`：70（变巨/缩小术、放逐斩、棘雹术、魔化武器、闪电箭矢、闪耀斩…）
+- `action.by`：59（黯冰狱铠、火焰护盾、降咒、镜影术、强令对决、隐形术…）
+- `action.name`：58（防死结界、破法者、强化幻术、苦痛魔爆、魔能长枪、雾隐遁行…）
+- `action.kind`：55（庇护术、防死结界、隐形术、原力法阵、阿斯莫、次元旅行之恩惠…）
+- `action.spell.slot`：45（闪电箭矢、闪耀斩、诱捕打击、咒唤微元素群、圣杯座、自然恢复…）
+- `action.damage.dice`：44（繁彩球、术法爆发、穿刺者、强效法术、武艺骰、凶蛮打手…）
+- `action.damage.types`：44（穿刺者、进阶结社形态、毒师、横扫攻击、光耀之魂、思维之盾…）
+- `action.key`：34（自然恢复、法术精通、招牌法术、精灵、苦痛魔爆、魔法学徒…）
+- `action.economy`：29（暗夜精魂之恩惠、盾牌大师、醉心魔法、神圣干预、擒抱者、哨兵…）
+- `action.attack.melee`：22（黯冰狱铠、放逐斩、火焰护盾、闪耀斩、月光涌泉、横扫攻击…）
+- `action.spell.school`：22（奥术守御、法术塑形、强化幻术、强效塑能、预言专家、醉心魔法…）
+- `action.spell.level`：19（元素狂怒、法术精通、强力戏法、招牌法术、孪生法术、魔能长枪…）
+- `action.attack.*`：17（法术射手、巨武器大师、拨挡攻击、报偿、强力变化、亡灵仆役…）
+- `action.attack.ranged`：16（风墙术、棘雹术、闪电箭矢、神射手、爆裂弹、缠绕弹…）
+- `action.spell.list`：16（元素狂怒、超限导能、强效塑能、苦痛魔爆、心灵法术、精通受祝击…）
+- `action.attack.unarmed`：15（变巨/缩小术、放逐斩、酒馆斗殴者、擒抱者、徒手战斗、渗透劲…）
+- `action.marks.偷袭`：13（撤步、诡诈打击、恍惚（花费：2d6）、击昏（花费：6d6）、极效潜行、进阶诡诈打击…）
+- `action.result.damage`：12（放逐斩、守护之链、斗转星移、思维之盾、律令之壁、收割亡灵…）
+- `action.result.saved`：11（原力法阵、盾牌大师、灼净亡灵、不屈传送、汲纳法术、竖琴手协同…）
+- `action.onMyTurn`：11（阿斯莫、巨武器大师、奥术登神、暴风魔法、灵巧格挡、热能袭…）
+- `action.spell.components`：10（沉默术、缓慢术、贾拉兹光辉风暴、强化幻术、精妙法术、念动力…）
+- `action.attack.item`：10（橡棍术、元素武器、毒师、长柄武器大师、穿梭弹、追踪弹…）
+- `action.save.ability`：9（盾牌大师、谨慎法术、骑乘战斗、升阶法术、稳固法术、魔法力量护甲…）
+- `action.result.*`：9（巨灵贵胄、符之魔契、护符庇佑、现世传说、不竭鼓舞、传播鼓舞…）
+- `action.spell.concentration`：8（创造奴仆、战神祝福、龙伴、延效法术、精宸所与、夜宴狂欢之恩惠…）
+- `action.result.reducedTo0`：8（死之尊主、契灵复苏、魂灵提灯、炽烈回生、真菌感染、灼烧烈焰…）
+- `action.parent`：7（塔莎狂笑术、盾牌大师、巨武器大师、散打技巧、生杀予夺、予命之手…）
+- `action.spell.range`：6（元素狂怒、强化幻术、法术射手、魔能长枪、念动力、远程法术）
+- `action.result.crit`：5（穿刺者、领主联盟特工、矮人王圣斧、波涛、打击之锤）
+- `action.attack.kind`：5（乱击剑舞、推击剑舞、位面战士、烈焰箭矢、魔石术）
+- `action.save.half`：4（原力法阵、盾牌大师、骑乘战斗、伊尔明斯特的法术闪避）
+- `action.result.killed`：3（不灭哨卫、守护馈赠、咒缚幽灵）
+- `action.result.hit`：3（辉煌防御、现世传说、触须权杖）
+- `action.marks.超魔法`：3（奥术登神、超魔法、术法化身）
+- `action.cost`：3（升阶专注、灵巧打击、使用魔法装置）
+- `action.spell.key`：3（创生圣言、威仪作锦、法术窃贼）
+- `action.area`：3（法术反转戒指、吸收权杖、贤者法杖）
+- `action.attack.ability`：2（刃之魔契、凶蛮打击）
+- `action.spell.*`：2（元素亲和、全能牧者）
+- `action.marks.不破威仪`：2（不破威仪、不破威仪）
+- `action.check.proficient`：2（可靠才能、灵振诀窍）
+- `action.marks.猎人印记`：2（高阶猎杀技艺、屠灭众敌）
+- `action.marks.天界启示`：1（阿斯莫）
+- `NEW:action.heal`：1（超凡强韧之恩惠）
+- `action.marks.穿刺者`：1（穿刺者）
+- `NEW:action.isHealing`：1（圣杯座）
+- `action.marks.强效塑能`：1（强效塑能）
+- `action.marks.元素亲和`：1（元素亲和）
+- `action.marks.生杀予夺`：1（生杀予夺）
+- `action.spell.duration`：1（延效法术）
+- `action.attack.weaponProperties`：1（根击千钧）
+- `action.attack.disadvantage`：1（凶蛮打击）
+- `action.attack.damageType`：1（战斗激励）
+- `action.marks.淬毒`：1（淬毒武器）
+- `action.check.skill`：1（可靠才能）
+- `action.check.tool`：1（可靠才能）
+- `action.result.failing`：1（灵振诀窍）
+- `action.item.charges`：1（使用魔法装置）
+- `action.marks.诡诈打击`：1（万能诡术）
+- `NEW:save.condition`：1（妖思魅缕）
+- `action.marks.恐惧打击`：1（追猎如风）
+- `action.marks.灵能打击`：1（念力突刺）
+- `action.attack.mastery`：1（战术主宰）
+- `action.save.*`：1（强力变化）
+- `action.attack.range`：1（直觉魅惑）
+- `action.attack.reach`：1（直觉魅惑）
+- `action.marks.首次豁免`：1（稳固法术）
+- `action.marks.不屈`：1（不屈传送）
+- `action.attack.spell`：1（迷锁触碰）
+- `action.marks.借机攻击`：1（散塔林会暴徒）
+- `action.marks.强化链接`：1（强化链接）
+- `action.attack`：1（灵体防御）
+- `action.attack.opportunity`：1（坚守战线）
+- `action.damage`：1（生死流转）
+- `action.attack.roll`：1（守护战技）
+- `NEW:action.attack.ammunition`：1（烈焰箭矢）
+- `NEW:action.target.creatureType`：1（灵魂牢笼）
+- `NEW:action.weapon.name`：1（魔石术）
+- `NEW:action.target.lighting`：1（幽影刃）
+- `action.marks.元素灾厄`：1（元素灾厄）
+- `NEW:action.attack.isOpportunity`：1（速度之靴）
+- `NEW:action.save.condition`：1（抗毒剂）
+- `action.marks.横扫`：1（横扫）
+- `action.marks.迅击`：1（迅击）
+
+## 要做的操作（does）
+
+- `addDamage`：72（变巨/缩小术、放逐斩、降咒、闪耀斩、术法爆发、元素武器…）
+- `cancel`：35（庇护术、沉默术、防死结界、风墙术、缓慢术、贾拉兹光辉风暴…）
+- `refund:slot`：16（自然恢复、法术精通、破法者、预言专家、招牌法术、法术溯回之恩惠…）
+- `set:targets`：15（庇护术、创生圣言、万能诡术、法术共享、雾行漫游、分裂惑控…）
+- `set:damageType`：13（橡棍术、进阶结社形态、心灵法术、刃之魔契、元素同调、真力注拳…）
+- `repeat`：10（繁彩球、无影步、猎杀技艺、追猎如风、不移胜者、酣醉若狂…）
+- `refund:resource`：10（奥术登神、混沌之潮、灵振诀窍、使用魔法装置、坚韧、直觉魅惑…）
+- `NEW:reduceDamage`：8（变巨/缩小术、原力法阵、盾牌大师、律令之壁、咒火冠冕、反冲术…）
+- `addDamage:sameType`：7（横扫攻击、巨人之力、人剑合一、乱击剑舞、推击剑舞、吸收元素…）
+- `NEW:reduceSneakDice`：7（撤步、诡诈打击、恍惚（花费：2d6）、击昏（花费：6d6）、极效潜行、进阶诡诈打击…）
+- `rerollDamage`：6（穿刺者、酒馆斗殴者、强效法术、凶蛮打手、散塔林会暴徒、弗莱格索斯之焰）
+- `set:range`：6（元素狂怒、强化幻术、法术射手、魔能长枪、念动力、远程法术）
+- `remember`：6（拨挡攻击、兽力威能、兽性狂暴、法术窃贼、冰结恶灵、吸收元素）
+- `set:slot`：5（孪生法术、分裂惑控、强力变化、圣洁之书、伊格薇尔伏恶魔志）
+- `NEW:halveDamage`：5（斗转星移、伊尔明斯特的绚丽光球、增强联结、群逸逃散、救赎使节）
+- `NEW:evasion`：4（原力法阵、骑乘战斗、咒火冠冕、伊尔明斯特的法术闪避）
+- `NEW:ignoreResist`：4（毒师、坟冢之力、冻原探索者、咒火专家）
+- `set:economy`：4（强化幻术、上古斗士、律法化身、迅击）
+- `grantAction`：4（莽驰、世界树之奇旅、兽性狂暴、战斗魔法）
+- `NEW:replaceAttackWithSpell`：4（额外攻击、战争魔法、秘法战斗风格、额外攻击）
+- `NEW:endEffect`：3（强令对决、剑歌、统御权杖）
+- `set:damage`：3（闪电箭矢、致命一击、屠灭众敌）
+- `set:components`：3（强化幻术、精妙法术、灵能术法）
+- `NEW:setConcentration`：3（创造奴仆、战神祝福、龙伴）
+- `NEW:ignoreResistance`：3（无敌攻势之恩惠、淬毒武器、元素掌控）
+- `reduceDamage`：3（拨挡攻击、轻身坠、辟矢夺箭手套）
+- `NEW:replaceAttackWithAction`：3（渗透劲、生杀予夺、予命之手）
+- `NEW:minDie:3`：3（慰疗魔宠、咒能爆发之恩惠、恐怖化身）
+- `set:adv`：3（风暴符文、西风打击、幽影刃）
+- `runBranch:damageOnly:x0.5`：3（灵体防御、守护战技、吸收元素）
+- `NEW:retaliateDamage`：2（黯冰狱铠、火焰护盾）
+- `runBranch:onHit`：2（闪电箭矢、借力打力）
+- `NEW:addHeal`：2（超凡强韧之恩惠、明月激励）
+- `addDamage:sameDice`：2（穿刺者、兽人狂怒）
+- `set:roll`：2（预兆、灵振诀窍）
+- `NEW:maxDice`：2（极效治疗、永生者赠礼）
+- `NEW:setComponents`：2（念动力、灵能术法）
+- `mark:超魔法`：2（超魔法、术法化身）
+- `applyEffect`：2（生死之触、神之狂暴）
+- `NEW:chainAttack`：2（无影步、灵巧打击）
+- `set:dice`：2（武艺骰、诗人痛击）
+- `NEW:rerollHeal`：2（医疗师、强效治疗）
+- `mark:不破威仪`：2（不破威仪、不破威仪）
+- `NEW:deductSneakDice:1d6`：2（投毒、袭杀恐惧）
+- `NEW:replaceAttacksWithSpell`：2（精通战争魔法、精通秘法战斗风格）
+- `NEW:modifySummonHp`：2（裂分召唤、亡灵仆役）
+- `NEW:buffSummon`：2（强韧召唤、全能牧者）
+- `set:disadv`：2（暴风骤岚之恩惠、风暴符文）
+- `NEW:succeed`：2（巨灵贵胄、现世传说）
+- `NEW:preventBreakConcentration`：2（夜宴狂欢之恩惠、擒握触手）
+- `set:succeed`：2（艾拉斯卓的月辉之篷、杀手反制）
+- `NEW:addToRoll:1d4`：2（符之魔契、护符庇佑）
+- `set:atk`：2（巫咒战士、导引打击）
+- `NEW:extraAttack`：2（闪现打击、燕返）
+- `succeed`：2（反射闪避戒指、防护圣甲虫）
+- `NEW:removeEffect`：2（无踪粉、隐形药水）
+- `NEW:burstArea`：1（棘雹术）
+- `runBranch:onMiss`：1（闪电箭矢）
+- `NEW:setDamageDie`：1（橡棍术）
+- `mark:天界启示`：1（阿斯莫）
+- `mark:穿刺者`：1（穿刺者）
+- `NEW:rechargeWard`：1（奥术守御）
+- `mark:法术塑形`：1（法术塑形）
+- `runBranch:onHit:damageOnly:x0.5`：1（强力戏法）
+- `runBranch:onFail:damageOnly:x0.5`：1（强力戏法）
+- `mark:强效塑能`：1（强效塑能）
+- `mark:谨慎法术`：1（谨慎法术）
+- `NEW:modifyCost`：1（神圣干预）
+- `NEW:redirectAttack`：1（骑乘战斗）
+- `set:hit`：1（现世传说）
+- `mark:元素亲和`：1（元素亲和）
+- `NEW:replaceDamageDice`：1（徒手战斗）
+- `NEW:grantAction`：1（流星步）
+- `NEW:grantTempHp`：1（升阶专注）
+- `mark:生杀予夺`：1（生杀予夺）
+- `NEW:removeCondition`：1（生死之触）
+- `runBranch:damage`：1（四象神通）
+- `set:duration`：1（延效法术）
+- `NEW:invokeWeaponAttack`：1（报偿）
+- `grantTempHp`：1（圣树活力）
+- `removeEffect`：1（无我狂暴）
+- `runBranch:onFail`：1（威仪作锦）
+- `set:ac`：1（战斗激励）
+- `NEW:excludeTarget`：1（法术窃贼）
+- `runBranch:disadvOnSave`：1（诡术伏击）
+- `set:minD20`：1（可靠才能）
+- `NEW:deductSneakDice:3d6`：1（眩目（花费：3d6））
+- `NEW:applyDamageToTarget`：1（高阶猎杀技艺）
+- `set:concentration`：1（精宸所与）
+- `NEW:replaceDie:1d8`：1（坚韧）
+- `set:mastery`：1（战术主宰）
+- `NEW:modifyPolymorph`：1（变形生物）
+- `NEW:modifySummonCount`：1（裂分召唤）
+- `set:hpMax`：1（契灵复苏）
+- `mark:首次豁免`：1（稳固法术）
+- `NEW:addConditionOnDamage:倒地`：1（咒能爆发之恩惠）
+- `NEW:grantAdv`：1（街头正义）
+- `NEW:addTempHp:5`：1（生机勃发之恩惠）
+- `NEW:endConcentration`：1（艾拉斯卓的月辉之篷）
+- `NEW:setHp:hpMax/2`：1（炽烈回生）
+- `mark:强化链接`：1（强化链接）
+- `NEW:redirect`：1（保护联结）
+- `NEW:clearAdv`：1（归复平衡）
+- `NEW:replaceAttackWithHeal`：1（予命之手）
+- `NEW:triggerSave`：1（潜能微尘）
+- `set:spell`：1（精宸所与）
+- `NEW:secondaryDamage`：1（翠炎剑）
+- `NEW:addToAc`：1（奥术偏斜）
+- `NEW:reroll`：1（慷慨吉运）
+- `NEW:absorb`：1（莱维斯图斯之墓）
+- `NEW:transferEffect`：1（巫咒大师）
+- `NEW:setFail`：1（威仪作锦）
+- `NEW:allowSneakAttack`：1（瞬息打击）
+- `NEW:makeAttack`：1（杀手反制）
+- `clearAdv`：1（燕返）
+- `NEW:overrideAtkMod`：1（魔石术）
+- `NEW:overrideDmgMod`：1（魔石术）
+- `runBranch:onHit:NEW:dealDamage`：1（莫伊之影）
+- `NEW:healTarget`：1（生命转换）
+- `NEW:stripResistance`：1（元素灾厄）
+- `mark:元素灾厄`：1（元素灾厄）
+- `NEW:checkMultiHitCount`：1（触须权杖）
+- `NEW:consumePoisonCoat`：1（淬毒匕首）
+- `NEW:destroyCreature`：1（打击之锤）
+- `set:d20:10`：1（发条护符）
+- `NEW:gainTempHpFromTargetMaxHp`：1（黑刃）
+- `set:economy:bonus`：1（静语卷册）
+- `NEW:reflectSpell`：1（魅惑法杖）
+- `NEW:forceSaveAndDestroy`：1（瓦解之锤）
+- `NEW:soulDevourCheck`：1（维克那法眼）
+- `NEW:forceSelfSave`：1（维克那魔掌）
+- `NEW:maxDamage`：1（伊格薇尔伏恶魔志）
+- `halveDamage`：1（引弹盾）
+- `NEW:reactionAttack`：1（应答之剑）
+- `NEW:executeReadiedAction`：1（预备）
+- `mark:横扫`：1（横扫）
+- `mark:迅击`：1（迅击）
+- `NEW:enableMarkTransfer`：1（猎人印记）
+
+## 还卡在别的接口上（otherGap）
+
+- `choice`：77（庇护术、降咒、进阶结社形态、圣杯座、法术精通、法术塑形…）
+- `condition`：68（变巨/缩小术、缓慢术、守护之链、塔莎狂笑术、诱捕打击、骇异恶咒…）
+- `resource`：62（镜影术、超凡强韧之恩惠、自然恢复、奥术守御、超限导能、招牌法术…）
+- `move`：43（强令对决、次元旅行之恩惠、盾牌大师、诡诈换位、念动力、擒抱者…）
+- `item`：25（魔化武器、橡棍术、元素武器、毒师、刃之魔契、复仇之魂…）
+- `summon`：22（创造奴仆、龙伴、万能诡术、法术共享、精宸所与、兽性狂怒…）
+- `zone`：19（沉默术、风墙术、棘雹术、贾拉兹光辉风暴、欧提路克弹力法球、闪电箭矢…）
+- `vision`：19（闪耀斩、隐形术、月光涌泉、阿斯莫、暗夜精魂之恩惠、法术射手…）
+- `other`：11（放逐斩、无敌攻势之恩惠、轻身坠、元素同调、延效法术、根击千钧…）
+- `remember`：8（黯冰狱铠、预兆、仇敌誓言、守护馈赠、律令之壁、月光祝福…）
+
+## 逐条（需要动作实例的）
+
+- 黯冰狱铠（`XPHB:spell:黯冰狱铠`）· attackHit · 读 action.attack.melee action.by · 做 NEW:retaliateDamage：具有临时生命值时受到近战攻击命中反弹寒冷伤害，需读取攻击性质与攻击者，且依赖施法环阶记忆
+- 庇护术（`XPHB:spell:庇护术`）· NEW:targeted,spellCast · 读 action.targets action.kind · 做 set:targets cancel：被选为攻击或有害法术目标时迫使攻击者感知豁免，失败须改选目标或失去该动作，需在目标指定时读取并修改或取消动作
+- 变巨/缩小术（`XPHB:spell:变巨/缩小术`）· attackHit,rollMod:damage · 读 action.attack.weapon action.attack.unarmed · 做 addDamage NEW:reduceDamage：变巨武器额外+1d4伤害，缩小武器命中减少1d4伤害（保底1点），需读取武器/徒手攻击性质并调整伤害骰
+- 沉默术（`XPHB:spell:沉默术`）· spellCast · 读 action.spell.components · 做 cancel：静音区域内完全禁止施展包含言语成分的法术，需在施法时读取法术成分并打断施法，且依赖区域施法检测
+- 繁彩球（`XPHB:spell:繁彩球`）· NEW:damageRolled · 读 action.damage.dice · 做 repeat：伤害掷骰出现两枚或更多相同点数时跳跃攻击30尺内新目标，需读取伤害骰结果并在满足时重复攻击动作
+- 防死结界（`XPHB:spell:防死结界`）· NEW:instakill,reducedTo0 · 读 action.name action.kind · 做 cancel：降至0生命值改为1已自动实现，抵消直接致死而不造成伤害的效应需拦截致死动作并取消其效果
+- 放逐斩（`XPHB:spell:放逐斩`）· attackHit · 读 action.attack.melee action.attack.weapon action.attack.unarmed action.result.damage · 做 addDamage：近战武器/徒手命中后附赠施展追加5d10力场伤害，且攻击后若目标剩余生命值<=50则触发放逐豁免
+- 风墙术（`XPHB:spell:风墙术`）· attackHit · 读 action.attack.ranged · 做 cancel：穿越风墙射向墙后目标的普通远程飞行物直接判定失手，需拦截远程攻击并取消命中，且依赖弹道过墙检测
+- 缓慢术（`XPHB:spell:缓慢术`）· spellCast · 读 action.spell.components · 做 cancel：施展包含姿势成分的法术有25%概率施法失败，需读取施法成分并在检定失败时打断动作，且卡在单次攻击与动作限制
+- 火焰护盾（`XPHB:spell:火焰护盾`）· attackHit · 读 action.attack.melee action.by · 做 NEW:retaliateDamage：5尺内生物以近战攻击命中时反弹2d8火焰或寒冷伤害，需读取攻击性质与攻击者并执行反弹伤害
+- 棘雹术（`XPHB:spell:棘雹术`）· attackHit · 读 action.attack.ranged action.attack.weapon action.targets · 做 NEW:burstArea：远程武器命中后以附赠动作对目标及周围5尺内生物引发敏捷豁免穿刺伤害，需读取攻击类型与目标位置并扩散结算
+- 贾拉兹光辉风暴（`XPHB:spell:贾拉兹光辉风暴`）· spellCast · 读 action.spell.components · 做 cancel：风暴区域内目盲耳聋且禁止施展含言语成分法术，需在施法时读取成分并打断，且受限于3D高度柱状区域
+- 降咒（`XPHB:spell:降咒`）· attackHit,damageIncoming · 读 action.by · 做 addDamage：施法者对受诅咒目标造成伤害时追加1d8暗蚀伤害，需读取伤害来源并在施法者命中/伤害时追加伤害
+- 镜影术（`XPHB:spell:镜影术`）· attackHit · 读 action.by · 做 cancel：受到攻击命中时分身掷骰代受命中并取消该次攻击，需读取攻击者感官判定免疫，并维护分身数量
+- 魔化武器（`XPHB:spell:魔化武器`）· rollMod:attack,rollMod:damage · 读 action.attack.weapon · 做 —：赋予非魔法武器攻击与伤害加值，需在武器攻击与伤害时读取具体武器判断是否受加持，卡在装备槽位系统
+- 欧提路克弹力法球（`XPHB:spell:欧提路克弹力法球`）· damageIncoming,spellCast · 读 action.targets · 做 cancel：法球阻绝一切内外伤害与法术进出，需在承受伤害与进出施法时拦截并取消动作，且依赖屏障阻隔支持
+- 强令对决（`XPHB:spell:强令对决`）· attackHit,damageTaken · 读 action.by action.targets · 做 NEW:endEffect：施法者攻击其他目标或施法者盟友伤害目标时法术提前结束，需读取攻击者与目标判定终止条件，且依赖距离限制位移
+- 闪电箭矢（`XPHB:spell:闪电箭矢`）· attackHit, attackMissed · 读 action.attack.weapon action.attack.ranged action.spell.slot · 做 set:damage runBranch:onHit runBranch:onMiss：远程武器攻击命中或失手后触发，需读取攻击实例替换原伤害并对目标周围10尺生物造成敏捷豁免溅射伤害
+- 闪耀斩（`XPHB:spell:闪耀斩`）· attackHit · 读 action.attack.melee action.attack.weapon action.spell.slot · 做 addDamage：近战武器或徒手打击命中后附赠动作施展，给该次攻击追加光耀伤害并附加发光与破隐效应
+- 守护之链（`XPHB:spell:守护之链`）· damageTaken · 读 action.result.damage · 做 —：目标受到伤害时施法者受到相同伤害，需在 damageTaken 窗口读取目标承受的实际伤害值并同步扣血，且需相距超60尺自动解除机制
+- 术法爆发（`XPHB:spell:术法爆发`）· rollMod:damage · 读 action.damage.dice · 做 addDamage：伤害掷骰掷出8时追加同类型d8伤害骰（上限为施法属性调整值），需伤害掷骰爆骰机制
+- 塔莎狂笑术（`XPHB:spell:塔莎狂笑术`）· rollMod:save, d20Rolled · 读 action.parent · 做 —：受到伤害时的重复感知豁免具有优势，需在豁免检定时感知触发源是否来自受到伤害以自动赋予优势
+- 橡棍术（`XPHB:spell:橡棍术`）· rollMod:d20, rollMod:damage · 读 action.attack.weapon action.attack.item · 做 set:damageType NEW:setDamageDie：将特定短棒/长棍的攻击与伤害属性替换为施法属性、提升基础伤害骰并可改为力场伤害，需动作实例修改伤害骰与伤害类型，并卡在武器物品绑定
+- 隐形术（`XPHB:spell:隐形术`）· d20Rolled, spellCast, NEW:damageDealt · 读 action.by action.kind · 做 —：受术者执行攻击、施法或造成伤害时提前解除其个人隐形状态，需动作事件识别行动者并解除其身上效应
+- 诱捕打击（`XPHB:spell:诱捕打击`）· attackHit · 读 action.attack.weapon action.targets action.spell.slot · 做 —：武器攻击命中后以附赠动作施展，需读取命中攻击的目标施加力量豁免，卡在他人消耗动作检定挣脱束缚
+- 元素武器（`XPHB:spell:元素武器`）· attackHit, rollMod:d20 · 读 action.attack.weapon action.attack.item · 做 addDamage：为指定非魔法武器赋予攻击加值与命中额外元素伤害，需动作实例识别所使用的特定武器，并卡在武器物品绑定
+- 原力法阵（`XPHB:spell:原力法阵`）· rollMod:save, damageIncoming · 读 action.kind action.save.half action.result.saved · 做 NEW:evasion NEW:reduceDamage：对抗法术与魔法效应的豁免具有优势且成功免受半数伤害，需在豁免和伤害窗口读取动作实例是否为法术/魔法效应及豁免结果
+- 月光涌泉（`XPHB:spell:月光涌泉`）· attackHit, damageTaken · 读 action.attack.melee action.by · 做 addDamage：近战攻击附加光耀伤害，且受60尺内可见生物伤害后以反应迫使伤害来源体质豁免致盲，需读取伤害来源实例
+- 咒唤微元素群（`XPHB:spell:咒唤微元素群`）· attackHit · 读 action.targets action.spell.slot · 做 addDamage：攻击命中15尺内生物时追加大量元素伤害，需动作实例追加自选伤害类型，并卡在随身敌方困难地形光环
+- 阿斯莫（`XPHB:阿斯莫`）· attackHit, damageIncoming · 读 action.kind action.onMyTurn action.marks.天界启示 · 做 addDamage mark:天界启示：天界启示每回合一次在攻击或法术造成伤害时追加光耀/黯蚀伤害，需读取动作实例的类型（攻击或法术）与回合归属
+- 暗夜精魂之恩惠（`XPHB:暗夜精魂之恩惠`）· NEW:actionUsed · 读 action.economy action.by · 做 —：在微光/黑暗中附赠动作隐形并获得全抗性，采取动作/附赠/反应后立即破隐，需动作窗口感知动作执行并卡在光照环境判定
+- 超凡强韧之恩惠（`XPHB:超凡强韧之恩惠`）· NEW:healed · 读 NEW:action.heal · 做 NEW:addHeal：每当受到治疗时额外恢复体质调整值生命值（直至下回合开始限一次），卡在生命值恢复触发事件与治疗量修正
+- 穿刺者（`XPHB:穿刺者`）· attackHit, rollMod:damage · 读 action.damage.types action.damage.dice action.result.crit action.marks.穿刺者 · 做 rerollDamage addDamage:sameDice mark:穿刺者：穿刺命中重骰单枚伤害骰、重击追加一颗同面数骰，需在命中和伤害掷骰窗口读取伤害类型与重击结果并修改伤害骰
+- 次元旅行之恩惠（`XPHB:次元旅行之恩惠`）· NEW:actionDone, spellCast · 读 action.kind · 做 —：施法或执行攻击动作后传送至多30尺，需在动作完成窗口识别是否执行了攻击动作，并卡在传送落点自动化
+- 进阶结社形态（`XPHB:德鲁伊:进阶结社形态:6`）· attackHit · 读 action.damage.types · 做 set:damageType：荒野形态攻击命中时可将伤害类型改为光耀伤害，需在命中窗口读取伤害并改写伤害类型
+- 圣杯座（`XPHB:德鲁伊:圣杯座:3`）· spellCast · 读 action.spell.slot NEW:action.isHealing · 做 —：施展消耗法术位的治疗法术后为30尺内自愿生物追加额外治疗，需在 spellCast 窗口读取是否消耗法术位及是否为治疗法术
+- 元素狂怒（`XPHB:德鲁伊:元素狂怒:15`）· spellCast, attackHit · 读 action.spell.level action.spell.list action.spell.range · 做 set:range addDamage：施展德鲁伊戏法时施法距离+300尺且原力蛮击伤害提升至2d8，需在施法窗口改写戏法射程并升级额外伤害骰
+- 自然恢复（`XPHB:德鲁伊:自然恢复:6`）· spellCast, restCompleted · 读 action.key action.spell.slot · 做 refund:slot：结社法术免位施展与短休恢复法术位，需在施法窗口免除/退还法术位消耗，并卡在短休法术位恢复
+- 毒师（`XPHB:毒师`）· damageIncoming, attackHit · 读 action.damage.types action.attack.item · 做 NEW:ignoreResist：毒素伤害无视抗性，且武器涂毒命中消耗毒性触发体质豁免，需在伤害窗口读取伤害类型无视抗性，并卡在武器涂毒绑定
+- 盾牌大师（`XPHB:盾牌大师`）· attackHit, damageIncoming · 读 action.parent action.economy action.save.ability action.save.half action.result.saved · 做 NEW:reduceDamage：盾击需判定是否来自攻击动作中的近战武器攻击；介入盾牌需读取敏捷豁免半伤属性以精准清零伤害
+- 奥术守御（`XPHB:法师:奥术守御:3`）· spellCast · 读 action.spell.school action.spell.slot · 做 NEW:rechargeWard：施展防护学派法术时自动读取学派与消耗法术位充能结界，卡在独立于临时生命值的结界血池机制
+- 超限导能（`XPHB:法师:超限导能:14`）· rollMod:damage, spellCast · 读 action.spell.slot action.spell.list · 做 —：1-5环法师伤害法术骰取最大值需读取施法位环阶与法术来源职业，且后续反噬伤害需读取环阶并追踪长休内使用次数
+- 法术精通（`XPHB:法师:法术精通:18`）· spellCast · 读 action.key action.spell.level action.spell.slot · 做 refund:slot：以最低环施展选定的1环或2环法术时不消耗法术位，需在施法窗口判断法术与环阶并退还法术位
+- 法术抗性（`XPHB:法师:法术抗性:14`）· d20Rolled, damageIncoming · 读 action.kind · 做 —：抵抗法术时的豁免具有优势，以及对法术造成的伤害具有抗性，需在豁免与受伤害窗口识别动作来源是否为法术
+- 法术塑形（`XPHB:法师:法术塑形:6`）· spellCast · 读 action.spell.school action.spell.slot action.targets · 做 mark:法术塑形：施展塑能法术时选择至多1+环阶个生物，其豁免自动成功且半伤法术不受伤害，需读取学派环阶并标记受保护目标
+- 破法者（`XPHB:法师:破法者:10`）· rollMod:d20, spellCast · 读 action.name action.spell.slot · 做 refund:slot：解除魔法施法属性检定加熟练加值需识别法术名，且法术反制或解除魔法失败时不消耗法术位需在施法窗口退还法术位
+- 强化幻术（`XPHB:法师:强化幻术:3`）· spellCast · 读 action.name action.spell.school action.spell.components action.spell.range · 做 set:components set:range set:economy：幻术法术免除言语成分、射程增加60尺且次级幻象可附赠动作施展，需在施法窗口修改成分、射程与动作经济
+- 强力戏法（`XPHB:法师:强力戏法:3`）· attackMissed, saveSucceeded · 读 action.spell.level · 做 runBranch:onHit:damageOnly:x0.5 runBranch:onFail:damageOnly:x0.5：戏法失手或豁免成功时，把命中或豁免失败那一支的伤害减半结算，不带其他效果
+- 强效塑能（`XPHB:法师:强效塑能:10`）· rollMod:damage · 读 action.spell.school action.spell.list action.marks.强效塑能 · 做 mark:强效塑能：塑能学派法师法术的其中一次伤害掷骰加智力调整值，需读取学派来源并通过记号保证一次施法只生效一次
+- 预言专家（`XPHB:法师:预言专家:6`）· spellCast · 读 action.spell.school action.spell.slot · 做 refund:slot：消耗法术位施展2环或更高预言法术后恢复一个更低环阶且不超过5环的法术位，需读取学派环阶并恢复法术位
+- 预兆（`XPHB:法师:预兆:3`）· d20Rolled · 读 — · 做 set:roll：长休掷骰记录2颗预言骰，并在自身或可见生物掷D20前用预言骰点数替换该次检定结果，需记录预言骰点数并改写检定骰值
+- 招牌法术（`XPHB:法师:招牌法术:20`）· spellCast · 读 action.key action.spell.level action.spell.slot · 做 refund:slot：每次短休或长休可不消耗法术位各以3环施展一次选定的两道招牌法术，需在施法窗口识别法术并退还法术位
+- 法术射手（`XPHB:法术射手`）· spellCast · 读 action.spell.range action.attack.* · 做 set:range：法术攻击无视半身与四分之三掩护（卡在掩护系统），且至少10尺射程的法术攻击射程增加60尺需在施法窗口改写射程
+- 法术溯回之恩惠（`XPHB:法术溯回之恩惠`）· spellCast · 读 action.spell.slot · 做 refund:slot：使用1至4环法术位施法后投1d4，若点数等于法术位环阶则不消耗该法术位，需在施法窗口读取消耗环阶并退还法术位
+- 横扫攻击（`XPHB:横扫攻击`）· attackHit · 读 action.attack.melee action.attack.weapon action.damage.types · 做 addDamage:sameType：近战命中后消耗卓越骰对5尺内另一生物造成同类型卓越骰伤害，需读取原攻击伤害类型并对副目标追加伤害
+- 谨慎法术（`XPHB:谨慎法术`）· spellCast · 读 action.save.ability action.targets · 做 mark:谨慎法术：施展强迫豁免法术时消耗术法点指定目标豁免自动成功且半伤不受伤害，需在施法窗口读取豁免要求并标记保护目标
+- 精灵（`XPHB:精灵`）· spellCast · 读 action.key action.spell.slot · 做 refund:slot：血系习得法术每日一次免法术位施展需在施法窗口退还法术位，妖精血统对抗魅惑豁免优势卡在状态豁免识别
+- 精妙法术（`XPHB:精妙法术`）· spellCast · 读 action.spell.components · 做 set:components：施法时消耗1术法点移除言语姿势与非耗材材料成分，需在施法窗口改写法术成分
+- 酒馆斗殴者（`XPHB:酒馆斗殴者`）· rollMod:damage · 读 action.attack.unarmed · 做 rerollDamage：徒手打击伤害骰掷出1时重掷该骰，需在伤害掷骰窗口识别徒手打击并支持单骰重掷
+- 巨武器大师（`XPHB:巨武器大师`）· attackHit, reducedTo0 · 读 action.attack.* action.parent action.onMyTurn · 做 addDamage：重型武器攻击命中加熟练加值伤害需识别攻击动作与重型词条，重击或击倒敌人赋予同武器附赠攻击
+- 苦痛魔爆（`XPHB:苦痛魔爆`）· rollMod:damage · 读 action.key action.name action.spell.list · 做 addDamage：将魅力调整值加到所选契术师伤害戏法上，目前仅在法术攻击命中时弹窗且不支持豁免型戏法，需在伤害掷骰窗口识别戏法并加伤害
+- 孪生法术（`XPHB:孪生法术`）· spellCast · 读 action.spell.level action.spell.slot action.targets · 做 set:slot：施展升环可增加目标的法术时消耗1术法点将有效环阶提升一环，需在施法窗口改写法术有效环阶与目标数
+- 魔法学徒（`XPHB:魔法学徒`）· spellCast · 读 action.key action.spell.slot · 做 refund:slot：每日一次免法术位施展所选1环法术，需在施法窗口识别所选法术并退还法术位
+- 魔能长枪（`XPHB:魔能长枪`）· spellCast · 读 action.name action.spell.level action.spell.range · 做 set:range：施展所选魔契师戏法时射程增加30×等级尺，需在施法窗口读取并修改range
+- 创造奴仆（`XPHB:魔契师:创造奴仆:14`）· spellCast, attackHit · 读 action.key action.spell.concentration action.by action.targets · 做 NEW:setConcentration addDamage：施展异怪召唤术时免专注、改持续时间与赋予临时生命值，且召唤物命中脆弱诅咒目标时追加心灵伤害，涉及施法实例修改与召唤物攻击联动
+- 斗转星移（`XPHB:魔契师:斗转星移:10`）· attackHit, damageTaken · 读 action.by action.result.damage · 做 NEW:halveDamage：被命中后反应使攻击伤害减半并在承受伤害后反击攻击者，需读取攻击者和实际承受伤害数值
+- 光耀之魂（`XPHB:魔契师:光耀之魂:6`）· rollMod:damage · 读 action.kind action.damage.types action.targets · 做 addDamage：施展法术造成光耀或火焰伤害时每回合一次对其中一个目标增加魅力调整值伤害，需在伤害掷骰时读取伤害类型与目标并加伤
+- 骇异恶咒（`XPHB:魔契师:骇异恶咒:10`）· spellCast · 读 action.key action.targets · 做 —：施展脆弱诅咒时使目标选定属性豁免带劣势，卡在效应生命周期无法与施法专注绑定
+- 锐眼斗士（`XPHB:魔契师:锐眼斗士:6`）· NEW:actionUsed · 读 action.key action.targets · 做 —：使用唤醒心灵建立连结时联动迫使目标进行感知豁免并随连结持续，卡在动作感知与契约法术位重置资源
+- 思维之盾（`XPHB:魔契师:思维之盾:10`）· damageTaken · 读 action.by action.damage.types action.result.damage · 做 —：受到心灵伤害时将承受伤害等量反射给伤害来源生物，需在 damageTaken 窗口读取伤害来源与承受数值
+- 雾隐遁行（`XPHB:魔契师:雾隐遁行:6`）· damageTaken, spellCast · 读 action.key action.name · 做 —：受伤害反应施展迷踪步，且施展迷踪步时强化额外效果（隐形或传送起点/终点5尺范围感知豁免与伤害），卡在反应施法与区域定位
+- 心灵法术（`XPHB:魔契师:心灵法术:3`）· spellCast · 读 action.spell.list action.damage.types · 做 set:damageType：施展造成伤害的魔契师法术时将伤害类型替换为心灵伤害，需在施法窗口读取并修改 damageType
+- 玄奥秘法（`XPHB:魔契师:玄奥秘法:11`）· spellCast · 读 action.key action.spell.level · 做 refund:slot：指定高环法术免法术位施展并消耗对应秘法次数，需在施法窗口退还法术位并绑定独立资源池
+- 妖精步伐（`XPHB:魔契师:妖精步伐:3`）· spellCast · 读 action.key · 做 —：施展迷踪步时选择额外效应（复苏步伐选盟友加临时生命、嘲弄步伐传送前5尺豁免施加劣势），卡在施法触发与多目标/区域豁免选择
+- 灼光复仇（`XPHB:魔契师:灼光复仇:14`）· NEW:deathSaveIncoming · 读 action.by · 做 cancel：自身或60尺内盟友将要进行死亡豁免时反应触发，免除豁免并恢复半血站起同时爆发生物范围伤害，卡在死亡豁免拦截窗口与盟友目标选择
+- 醉心魔法（`XPHB:魔契师:醉心魔法:14`）· spellCast · 读 action.economy action.spell.slot action.spell.school · 做 —：以动作消耗法术位施展惑控或幻术法术后免法术位施展迷踪步，需在 spellCast 窗口读取动作类型、法术位消耗与学派
+- 光冕（`XPHB:牧师:光冕:17`）· rollMod:d20 · 读 action.key action.name action.damage.types · 做 —：灵光内敌人抵抗黎明曙光或火焰/光耀法术豁免带劣势，需在豁免窗口读取动作来源特性/法术的伤害类型，且卡在光照模拟
+- 诡诈换位（`XPHB:牧师:诡诈换位:6`）· NEW:actionUsed · 读 action.key · 做 —：以附赠动作创造或移动召现分身时传送互换位置，需 actionUsed 感知对应动作，卡在幻象实体追踪与位移
+- 极效治疗（`XPHB:牧师:极效治疗:17`）· rollMod:damage · 读 action.by action.kind · 做 NEW:maxDice：施法或引导神力恢复生命值时治疗骰直接取最大值，需在治疗掷骰窗口读取施放者和动作类型，防止误作用于外部治疗
+- 精通受祝击（`XPHB:牧师:精通受祝击:14`）· attackHit, spellCast · 读 action.attack.weapon action.damage.types action.spell.level action.spell.list · 做 addDamage：神圣打击武器命中追加2d8伤害，或强力施法在戏法造成伤害时赋予60尺内生物临时生命值，需识别武器攻击与牧师戏法实例
+- 神圣干预（`XPHB:牧师:神圣干预:10`）· spellCast · 读 action.economy action.spell.level action.spell.list · 做 refund:slot NEW:modifyCost：以动作免费施展任意5环或更低非反应牧师法术，需在施法窗口退还法术位、免除材料并校验学派环阶
+- 神佑医者（`XPHB:牧师:神佑医者:6`）· spellCast · 读 action.spell.slot action.targets · 做 —：消耗法术位为他人施展治疗法术后自身恢复2+环阶生命值，需在施法/治疗窗口读取法术位环阶与目标
+- 生命门徒（`XPHB:牧师:生命门徒:3`）· spellCast · 读 action.spell.slot · 做 addDamage：消耗法术位施展法术恢复生命值时追加2+环阶治疗量，需在施法/治疗掷骰窗口读取消耗法术位环阶并追加治疗
+- 战神祝福（`XPHB:牧师:战神祝福:6`）· spellCast · 读 action.key action.spell.concentration · 做 refund:slot NEW:setConcentration：用引导神力代替法术位施展虔诚护盾或灵体武器且无需专注、持续1分钟，需在施法窗口改写消耗与专注设置
+- 灼净亡灵（`XPHB:牧师:灼净亡灵:5`）· NEW:actionUsed · 读 action.key action.result.saved · 做 addDamage：使用驱散亡灵时对豁免失败的亡灵额外造成光耀伤害且不打破驱散，需读取驱散动作与豁免失败目标并结算统一伤害
+- 能量抗性之恩惠（`XPHB:能量抗性之恩惠`）· damageTaken · 读 action.damage.types · 做 —：受到所选抗性类型伤害后用反应传导同类型伤害给60尺内生物，需在 damageTaken 窗口读取伤害类型
+- 念动力（`XPHB:念动力`）· spellCast · 读 action.key action.spell.components action.spell.range · 做 set:range NEW:setComponents：法师之手免成分/隐形/射程+30尺以及附赠动作推撞5尺，卡在法术实例参数修改与强制位移
+- 骑乘战斗（`XPHB:骑乘战斗`）· attackHit, damageIncoming · 读 action.save.ability action.save.half action.targets · 做 NEW:evasion NEW:redirectAttack：骑乘突击攻击优势、坐骑敏捷豁免反射闪避与替坐骑承受攻击，需在攻击/伤害窗口重定向目标并读取豁免减半属性，且卡在骑乘状态与关系
+- 强效法术（`XPHB:强效法术`）· rollMod:damage · 读 action.damage.dice action.kind · 做 rerollDamage：法术伤害掷骰时消耗1术法点重掷最多魅力调整值颗伤害骰，需在伤害掷骰窗口读取伤害骰并执行 rerollDamage
+- 擒抱者（`XPHB:擒抱者`）· attackHit · 读 action.attack.unarmed action.economy · 做 —：徒手打击命中后附赠擒抱与攻击受擒目标优势已实现，需判断攻击动作的徒手打击，高速拖行卡在移动力消耗自动化
+- 刃之魔契（`XPHB:刃之魔契`）· d20Rolled, rollMod:damage · 读 action.attack.ability action.attack.weapon · 做 set:damageType：契约武器用魅力进行攻击和伤害掷骰并可替换为黯蚀/心灵/光耀伤害，卡在装备实体与攻击属性/伤害类型改写
+- 哨兵（`XPHB:哨兵`）· attackHit, leftReach · 读 action.attack.melee action.economy action.targets · 做 —：借机攻击命中令敌人速度变0、撤离离开触及或5尺内攻击盟友时反应借机攻击，需感知借机攻击动作与攻击目标
+- 神射手（`XPHB:神射手`）· d20Rolled · 读 action.attack.ranged action.attack.weapon · 做 —：远程武器攻击无视掩护、贴身无劣势、远距离无劣势，需在攻击检定时读取远程武器属性并配合掩护与距离引擎
+- 升阶法术（`XPHB:升阶法术`）· spellCast · 读 action.save.ability action.targets · 做 —：消耗2术法点使法术影响的目标之一首轮豁免带劣势，需在施法窗口读取豁免属性并支持在多目标中指定受影响生物
+- 不灭哨卫（`XPHB:圣武士:不灭哨卫:15`）· reducedTo0 · 读 action.result.killed · 做 —：生命值降至0且未直接致死时改为恢复1+3×等级生命值，需读取是否直接致死判定
+- 仇敌誓言（`XPHB:圣武士:仇敌誓言:3`）· NEW:actionUsed, reducedTo0 · 读 action.kind action.targets · 做 —：攻击动作时立誓对目标攻击获优势，誓言目标降至0时转移给新目标，需在动作中选择目标并在目标归零时转移
+- 复仇之魂（`XPHB:圣武士:复仇之魂:15`）· attackHit, attackMissed · 读 action.by · 做 —：仇敌誓言目标发动攻击后反应进行近战武器反击，需读取攻击者身份并卡在装备武器触及与反击动作
+- 复原之触（`XPHB:圣武士:复原之触:14`）· NEW:actionUsed · 读 action.key action.targets · 做 —：使用圣疗时可选消耗5点治疗能量终止指定异常状态且不回血，卡在圣疗动作的分支选项与状态清除
+- 鼓舞斩（`XPHB:圣武士:鼓舞斩:3`）· spellCast · 读 action.key · 做 —：施展至圣斩后消耗引导神力分配临时生命值，需监听至圣斩施法并卡在多目标点数分配
+- 辉煌防御（`XPHB:圣武士:辉煌防御:15`）· attackHit, attackMissed · 读 action.by action.result.hit action.targets · 做 —：反应为10尺内被命中者提升AC，若攻击因此失手且攻击者在触及内则对其武器反击，需读取攻击目标与重判后的失手结果
+- 坚韧复仇（`XPHB:圣武士:坚韧复仇:7`）· attackHit · 读 action.attack.melee action.economy · 做 —：借机攻击命中后使目标速度归零并立刻免借机移动半速，需识别借机攻击动作，卡在反应内移动流程
+- 上古斗士（`XPHB:圣武士:上古斗士:20`）· spellCast, rollMod:d20 · 读 action.economy action.kind action.spell.list · 做 set:economy：灵光内敌人抗法豁免劣势、每回合回血10点并将动作法术改为附赠施展，需读取法术动作类型并修改施法经济，且需识别自身法术来源
+- 现世传说（`XPHB:圣武士:现世传说:20`）· d20Rolled, attackMissed · 读 action.attack.weapon action.result.hit · 做 set:hit：化身传说获得魅力优势、重掷豁免及每回合一次武器失手直接改命中，需在攻击失手时改写命中判定
+- 至圣光轮（`XPHB:圣武士:至圣光轮:20`）· rollMod:d20, turnStarted · 读 action.by · 做 —：对抗邪魔/不死生物豁免优势、30尺灵光敌人回合开始受光耀伤害且散发阳光，需在豁免窗口判断来源生物类型，卡在阳光光照模拟
+- 守护馈赠（`XPHB:守护馈赠`）· reducedTo0 · 读 action.result.killed · 做 —：书页上记录的生物生命值归零且未直接致死时改为生命值变为1，需判断未直接致死，卡在名单记忆与单次触发限制
+- 奥术登神（`XPHB:术士:奥术登神:20`）· spellCast · 读 action.marks.超魔法 action.onMyTurn · 做 refund:resource：先天术法激活时每自己回合一次免术法点使用超魔法，需在施法窗口退还术法点并标记回合单次限制
+- 超魔法（`XPHB:术士:超魔法:2`）· spellCast · 读 action.marks.超魔法 action.spell.level · 做 mark:超魔法：施法时消耗术法点应用超魔法且每道法术限制一种（强效法术除外），需在施法窗口打标记并管理消耗
+- 混沌之潮（`XPHB:术士:混沌之潮:3`）· spellCast · 读 action.spell.list action.spell.slot · 做 refund:resource：消耗法术位施展术士法术时恢复混沌之潮使用权并触发狂野魔法浪涌，需在施法窗口校验术士法术位消耗
+- 狂野魔法浪涌（`XPHB:术士:狂野魔法浪涌:3`）· spellCast · 读 action.spell.list action.spell.slot · 做 —：消耗法术位施展术士法术后每回合一次掷d20判定狂野浪涌，需在 spellCast 窗口读取法术来源与法术位消耗
+- 灵能术法（`XPHB:术士:灵能术法:6`）· spellCast · 读 action.key action.spell.components action.spell.level · 做 refund:slot NEW:setComponents：施展灵能法术时改消耗术法点替代法术位并免除V/S及无价值M成分，需在施法窗口改写消耗与成分
+- 龙伴（`XPHB:术士:龙伴:18`）· spellCast · 读 action.key action.spell.concentration · 做 refund:slot NEW:setConcentration：免法术位施展龙类召唤术且无需专注、持续1分钟，需在施法窗口修改法术专注属性与消耗
+- 律令之壁（`XPHB:术士:律令之壁:6`）· damageIncoming · 读 action.result.damage · 做 NEW:reduceDamage：受到伤害时消耗屏障内的d8减免伤害，需在伤害结算前减免伤害并动态追踪剩余骰子池
+- 术法化身（`XPHB:术士:术法化身:7`）· spellCast · 读 action.marks.超魔法 · 做 mark:超魔法：先天术法激活期间每道法术可应用两种超魔法，需在施法窗口追踪超魔法使用次数放宽至2次
+- 驯服浪涌（`XPHB:术士:驯服浪涌:18`）· spellCast · 读 action.spell.list action.spell.slot · 做 —：用法术位施展术士法术后自选狂野魔法浪涌效应代替随机掷骰，需读取法术位消耗并支持浪涌效果选单
+- 元素亲和（`XPHB:术士:元素亲和:6`）· attackHit, NEW:damageRolled · 读 action.spell.* action.damage.types action.marks.元素亲和 · 做 addDamage mark:元素亲和：施展对应属性法术造成伤害时，豁免类等非攻击检定法术伤害无法读取法术信息并追加魅力调整值伤害
+- 双持客（`XPHB:双持客`）· NEW:actionUsed · 读 action.kind action.attack.weapon action.economy · 做 —：需读取本回合此前是否执行过攻击动作且使用了轻型武器攻击，并处理副手武器装备与拔刀交互
+- 徒手战斗（`XPHB:徒手战斗`）· attackHit, turnStarted · 读 action.attack.unarmed · 做 NEW:replaceDamageDice：徒手打击命中时需替换伤害骰，且回合开始时需定位被自身擒抱的目标并造成伤害
+- 无敌攻势之恩惠（`XPHB:无敌攻势之恩惠`）· attackHit, damageIncoming · 读 action.damage.types · 做 NEW:ignoreResistance：摧坚破甲需要攻击动作附带忽略钝击、穿刺、挥砍伤害抗性标记，引擎缺少无视抗性结算机制
+- 拨挡攻击（`XPHB:武僧:拨挡攻击:3`）· damageIncoming, attackHit · 读 action.kind action.attack.* action.damage.types · 做 reduceDamage remember：需识别伤害成因是否为攻击及原攻击伤害类型，且伤害降至 0 时需支持向新目标发起重新定向豁免与伤害
+- 流星步（`XPHB:武僧:流星步:11`）· NEW:actionUsed · 读 action.economy action.key · 做 NEW:grantAction：需感知前置动作的消耗类型为附赠动作且非疾步如风，并在该动作完成后立即触发疾步如风
+- 轻身坠（`XPHB:武僧:轻身坠:4`）· damageIncoming · 读 action.kind · 做 reduceDamage：伤害流入窗口缺少伤害成因标识（无法自动区分坠落伤害与普通钝击攻击伤害），需读取动作或伤害类型
+- 散打技巧（`XPHB:武僧:散打技巧:3`）· attackHit · 读 action.name action.parent · 做 —：需读取命中攻击实例是否来自于「疾风连击」动作，且慌神效果缺少禁止借机攻击的状态标记
+- 渗透劲（`XPHB:武僧:渗透劲:17`）· attackHit, NEW:actionUsed · 读 action.attack.unarmed action.economy · 做 NEW:replaceAttackWithAction：徒手命中打入暗劲，且以攻击动作中其中一次攻击替换结算暗劲需要动作替换与唯一目标追踪
+- 升阶专注（`XPHB:武僧:升阶专注:10`）· NEW:actionUsed · 读 action.key action.cost · 做 NEW:grantTempHp：需在消耗功力使用坚强防御或疾步如风时触发额外临时生命值与携友移动效果
+- 生杀予夺（`XPHB:武僧:生杀予夺:11`）· attackHit, NEW:actionUsed · 读 action.parent action.name action.attack.unarmed action.marks.生杀予夺 · 做 addDamage mark:生杀予夺 NEW:replaceAttackWithAction：需识别疾风连击动作实例以替换攻击为予命之手，并在疾风连击命中时追加免费夺命之手伤害
+- 生死之触（`XPHB:武僧:生死之触:6`）· NEW:actionUsed · 读 action.key · 做 applyEffect NEW:removeCondition：需挂接在予命之手与夺命之手的动作结算上，追加状态清除选择与施加中毒效果
+- 四象神通（`XPHB:武僧:四象神通:17`）· NEW:enteredReach · 读 action.name · 做 runBranch:damage：破灭奔行需在疾步如风移动经过敌人 5 尺范围时对每个目标造成武艺骰伤害，缺少动态移动碰撞触发与频次限制
+- 无影步（`XPHB:武僧:无影步:11`）· NEW:actionUsed · 读 action.name action.economy · 做 repeat NEW:chainAttack：使用消耗功力的暗影步后需在同一个附赠动作内链式触发一次徒手打击
+- 武艺骰（`XPHB:武僧:武艺骰:1`）· rollMod:damage · 读 action.attack.weapon action.damage.dice · 做 set:dice：武僧武器造成伤害时需支持动态比较并将武器原始伤害骰替换为武艺骰
+- 予命之手（`XPHB:武僧:予命之手:3`）· NEW:actionUsed · 读 action.parent action.economy action.name · 做 NEW:replaceAttackWithAction：需支持在疾风连击动作序列中将其中一次徒手打击替换为免消耗的予命之手
+- 元素同调（`XPHB:武僧:元素同调:3`）· attackHit · 读 action.attack.unarmed · 做 set:damageType：徒手打击命中需支持动态修改伤害类型为所选元素，且缺少徒手打击触及距离增加机制
+- 真力注拳（`XPHB:武僧:真力注拳:6`）· attackHit, rollMod:damage · 读 action.attack.unarmed · 做 set:damageType：徒手打击命中结算伤害时需支持弹窗选择将伤害类型替换为力场伤害
+- 凶蛮打手（`XPHB:凶蛮打手`）· attackHit, rollMod:damage · 读 action.attack.weapon action.damage.dice · 做 rerollDamage：武器命中伤害掷骰时需支持重掷整组武器伤害骰并选择取较高结果，每回合限一次
+- 延效法术（`XPHB:延效法术`）· spellCast · 读 action.spell.duration action.spell.concentration · 做 set:duration：施法时需读取法术持续时间并将其翻倍改写，同时为需要专注的法术附加专注豁免优势效应
+- 报偿（`XPHB:野蛮人:报偿:10`）· damageTaken · 读 action.by action.attack.* · 做 NEW:invokeWeaponAttack：受伤反应反击已自动化徒手攻击，但无法直接调用角色装备库中的近战武器实体发起攻击
+- 根击千钧（`XPHB:野蛮人:根击千钧:10`）· attackHit · 读 action.attack.weapon action.attack.weaponProperties · 做 —：需读取武器属性标签（重型/多用）自动免问触发推离/失衡，且引擎缺乏近战触及距离加值机制
+- 莽驰（`XPHB:野蛮人:莽驰:7`）· NEW:actionUsed · 读 action.key · 做 grantAction：需在激活狂暴动作使用时作为该动作一部分联动赋予半速移动预算，无法感知激活狂暴动作
+- 神之狂暴（`XPHB:野蛮人:神之狂暴:14`）· NEW:actionUsed · 读 action.key · 做 applyEffect：需在激活狂暴时自动附带激活圣斗士姿态，且引擎缺少飞行速度与悬浮机制
+- 圣树活力（`XPHB:野蛮人:圣树活力:3`）· NEW:actionUsed, effectEnded · 读 action.key · 做 grantTempHp：需在激活狂暴动作执行时自动赋予野蛮人等级临时生命值，并在狂暴结束时清除剩余临时生命值
+- 世界树之奇旅（`XPHB:野蛮人:世界树之奇旅:14`）· NEW:actionUsed · 读 action.key · 做 grantAction：激活狂暴动作时无法联动触发免费传送，且缺少单次狂暴周期内的独立传送次数追踪与多目标协同传送
+- 兽力威能（`XPHB:野蛮人:兽力威能:14`）· NEW:actionUsed, attackHit · 读 action.key action.attack.melee · 做 remember：激活狂暴时需记录选择的兽力形态以避免反复弹窗确认，且猎鹰形态缺乏飞行速度支持
+- 兽性狂暴（`XPHB:野蛮人:兽性狂暴:3`）· NEW:actionUsed · 读 action.key · 做 remember grantAction：需在激活狂暴动作时统合记录形态选择，并在进入狂暴时支持作为同一动作的一部分执行撤离与疾走
+- 无我狂暴（`XPHB:野蛮人:无我狂暴:6`）· NEW:actionUsed · 读 action.key · 做 removeEffect：激活狂暴动作时需自动清除自身已有的魅惑与恐慌状态，缺乏激活动作与状态清除联动
+- 凶蛮打击（`XPHB:野蛮人:凶蛮打击:9`）· d20Rolled, attackHit · 读 action.attack.ability action.attack.disadvantage · 做 addDamage：需在 d20 检定窗口读取该攻击原本是否已具备劣势以限制宣告，且震撼猛击缺少禁止借机攻击机制
+- 医疗师（`XPHB:医疗师`）· NEW:healRolled, NEW:actionUsed · 读 action.kind action.name · 做 NEW:rerollHeal：治疗掷骰时缺少针对治疗骰出 1 重掷的机制（rollMod:heal），且缺少消耗物品充能与目标生命骰的追踪
+- 不破威仪（`XPHB:吟游诗人:不破威仪:14`）· attackHit · 读 action.by action.marks.不破威仪 · 做 cancel mark:不破威仪：攻击命中时需强制攻击者进行魅力豁免并在失败时将命中改为失手（cancel），且需记录每生物每回合首次命中
+- 创生圣言（`XPHB:吟游诗人:创生圣言:20`）· spellCast · 读 action.spell.key action.targets · 做 set:targets：施展特定九环法术时需支持为法术动态追加符合距离条件的第二目标
+- 额外攻击（`XPHB:吟游诗人:额外攻击:6`）· NEW:actionUsed · 读 action.kind action.economy · 做 NEW:replaceAttackWithSpell：攻击动作的多次攻击预算管理及支持将其中的单次攻击替换为一动作戏法
+- 灵巧打击（`XPHB:吟游诗人:灵巧打击:3`）· NEW:actionUsed · 读 action.cost action.economy · 做 NEW:chainAttack：需感知任意动作、附赠动作或反应中消耗了诗人激励资源，并作为该动作序列的一部分追加徒手打击
+- 诗人痛击（`XPHB:吟游诗人:诗人痛击:3`）· attackHit, rollMod:damage · 读 action.attack.unarmed · 做 set:dice：徒手打击造成伤害时需支持将其基础伤害骰替换为诗人激励骰
+- 威仪作锦（`XPHB:吟游诗人:威仪作锦:6`）· saveForced · 读 action.spell.key · 做 runBranch:onFail：施展命令术时，若目标魅惑了施法者则其豁免应自动判定失败，需在豁免窗口读取法术来源与魅惑关系
+- 战斗激励（`XPHB:吟游诗人:战斗激励:3`）· attackHit · 读 action.attack.damageType · 做 addDamage set:ac：被命中时需根据激励骰动态调整防御者 AC 并重新裁决命中，命中时需读取原攻击伤害类型追加激励骰伤害
+- 战斗魔法（`XPHB:吟游诗人:战斗魔法:14`）· NEW:actionUsed · 读 action.kind action.economy · 做 grantAction：需读取本回合此前使用的动作是否为一动作法术，以此解锁附赠动作武器攻击
+- 饮命者（`XPHB:饮命者`）· attackHit · 读 action.attack.weapon · 做 addDamage：需读取攻击是否使用契约武器以自动触发额外伤害，且消耗生命骰回血缺少生命骰资源池支持
+- 隐伏者（`XPHB:隐伏者`）· attackMissed, attackHit · 读 action.kind · 做 cancel：攻击失手时不破除躲藏隐形状态，需要攻击判定窗口与隐匿/隐形状态解除机制挂接
+- 撤步（`XPHB:游荡者:撤步（花费：1d6）:5`）· attackHit · 读 action.damage.dice action.marks.偷袭 · 做 NEW:reduceSneakDice：需在造成偷袭伤害时扣除 1d6 偷袭骰预算，并赋予半速位移与防借机效应
+- 淬毒武器（`XPHB:游荡者:淬毒武器:13`）· attackHit, saveForced · 读 action.marks.淬毒 · 做 addDamage NEW:ignoreResistance：需挂接在诡诈打击淬毒分支上追加 2d6 毒素伤害，且引擎不支持无视毒素抗性
+- 法术窃贼（`XPHB:游荡者:法术窃贼:17`）· spellCast · 读 action.spell.key action.spell.level action.targets · 做 cancel remember NEW:excludeTarget：需在 spellCast 窗口读取敌方法术信息，豁免失败时单目标消除/排除自身受术并记忆窃取该法术
+- 诡术伏击（`XPHB:游荡者:诡术伏击:9`）· spellCast · 读 action.targets · 做 runBranch:disadvOnSave：施法时需读取法术全部目标列表，仅针对该法术本身的豁免检定赋予劣势
+- 诡诈打击（`XPHB:游荡者:诡诈打击:5`）· attackHit · 读 action.marks.偷袭 action.damage.dice · 做 NEW:reduceSneakDice：偷袭命中造成伤害时需支持扣减指定数量偷袭伤害骰并按扣除项分发触发子效应
+- 恍惚（花费：2d6）（`XPHB:游荡者:恍惚（花费：2d6）:14`）· attackHit · 读 action.marks.偷袭 action.damage.dice · 做 NEW:reduceSneakDice：需从偷袭伤害中扣除 2d6 骰子，且体质豁免失败后目标陷入行动经济三选一的特殊状态机制缺失
+- 击昏（花费：6d6）（`XPHB:游荡者:击昏（花费：6d6）:14`）· attackHit · 读 action.marks.偷袭 action.damage.dice · 做 NEW:reduceSneakDice：需在偷袭命中时扣除 6d6 伤害骰，体质豁免失败附加昏迷状态已具备基本支持
+- 极效潜行（`XPHB:游荡者:极效潜行:9`）· attackHit · 读 action.marks.偷袭 action.damage.dice · 做 NEW:reduceSneakDice：需挂接诡诈打击扣除 1d6 偷袭骰，且依赖掩护检测以防止攻击后打破躲藏隐形状态
+- 进阶诡诈打击（`XPHB:游荡者:进阶诡诈打击:11`）· attackHit · 读 action.marks.偷袭 action.damage.dice · 做 NEW:reduceSneakDice：需支持在单次偷袭命中实例中多选两种诡诈打击效果并复合扣除对应的偷袭骰
+- 可靠才能（`XPHB:游荡者:可靠才能:7`）· rollMod:d20 · 读 action.check.skill action.check.tool action.check.proficient · 做 set:minD20：d20Rolled 或 rollMod 窗口需读取检定是否运用了熟练项，以自动保底 10 而无需弹窗人工确认
+- 灵振诀窍（`XPHB:游荡者:灵振诀窍:3`）· d20Rolled · 读 action.check.proficient action.result.failing · 做 set:roll refund:resource：d20 检定窗口无法读取检定是否具备熟练项，且成功后才确认扣减灵能骰需回溯结算
+- 使用魔法装置（`XPHB:游荡者:使用魔法装置:13`）· NEW:itemUsed, NEW:resourceSpent · 读 action.item.charges action.cost · 做 refund:resource：缺少使用魔法物品充能时的触发窗口以判定 1d6 出 6 返还充能，且同调上限需支持扩展至 4
+- 摔绊（`XPHB:游荡者:摔绊（花费：1d6）:5`）· attackHit · 读 action.marks.偷袭 action.damage.dice · 做 NEW:reduceSneakDice：需挂接在偷袭命中上自动扣除 1d6 偷袭骰，目标敏捷豁免失败施加倒地状态已有支持
+- 撕裂心智（`XPHB:游荡者:撕裂心智:17`）· attackHit · 读 action.marks.偷袭 action.attack.weapon · 做 —：需读取本次攻击是否真正触发并造成了偷袭伤害（而非用优势和盟友近似条件判断）
+- 投毒（`XPHB:游荡者:投毒（花费：1d6）:5`）· attackHit · 读 action.marks.偷袭 action.damage.dice · 做 NEW:deductSneakDice:1d6：诡诈打击在造成偷袭伤害时扣减1d6偷袭伤害骰并迫使目标体质豁免陷入中毒
+- 万能诡术（`XPHB:游荡者:万能诡术:13`）· attackHit · 读 action.marks.诡诈打击 action.targets · 做 set:targets：使用诡诈打击摔绊时可同时对法师之手5尺内另一生物生效，需读取诡诈打击选项并关联召唤物位置追加目标
+- 眩目（花费：3d6）（`XPHB:游荡者:眩目（花费：3d6）:14`）· attackHit · 读 action.marks.偷袭 action.damage.dice · 做 NEW:deductSneakDice:3d6：诡诈打击在造成偷袭伤害时扣减3d6偷袭伤害骰并迫使目标敏捷豁免陷入目盲
+- 致命一击（`XPHB:游荡者:致命一击:17`）· attackHit · 读 action.marks.偷袭 action.damage.dice · 做 set:damage：首轮偷袭命中后迫使体质豁免，豁免失败需将本次动作的全部伤害翻倍
+- 专业渗透（`XPHB:游荡者:专业渗透:9`）· NEW:actionUsed · 读 action.name · 做 cancel：使用稳定瞄准时移动速度不归零，需在 actionUsed 窗口感知稳定瞄准动作并取消其速度归零负面效应
+- 法术共享（`XPHB:游侠:法术共享:15`）· spellCast · 读 action.kind action.targets · 做 set:targets：施展以自身为目标的法术时可同时作用于30尺内的原初行侣，需读取法术目标并增加行侣为目标，且卡在召唤物参与战斗
+- 高阶猎杀技艺（`XPHB:游侠:高阶猎杀技艺:11`）· attackHit · 读 action.marks.猎人印记 action.targets · 做 NEW:applyDamageToTarget：对猎人印记目标造成伤害后对30尺内另一生物造成同等额外力场伤害，需读取标记目标并对次要目标结算伤害
+- 精宸所与（`XPHB:游侠:精宸所与:11`）· spellCast · 读 action.name action.spell.concentration · 做 set:concentration：免费施展妖精召唤术时免除专注且持续时间改为1分钟，需在施法实例中修改专注与持续时间，且卡在召唤物自动化
+- 猎杀技艺（`XPHB:游侠:猎杀技艺:3`）· attackHit, attackMissed · 读 action.attack.weapon action.targets · 做 repeat：灭族者在武器攻击后对原目标5尺内另一生物再发动一次相同武器攻击，需读取武器动作并追加攻击目标
+- 兽性狂怒（`XPHB:游侠:兽性狂怒:11`）· attackHit · 读 action.by action.targets · 做 addDamage：原初野兽击中猎人印记目标时额外造成同等力场伤害，需识别攻击者为行侣召唤物并附加伤害
+- 特殊训练（`XPHB:游侠:特殊训练:7`）· attackHit · 读 action.by action.damage.types · 做 set:damageType：野兽攻击命中时可将伤害类型改为力场伤害，需在命中窗口修改动作伤害类型，且卡在召唤物附赠动作指令
+- 屠灭众敌（`XPHB:游侠:屠灭众敌:20`）· rollMod:damage · 读 action.marks.猎人印记 action.damage.dice · 做 set:damage：将猎人印记的额外伤害骰由d6提升为d10，需在伤害掷骰或标记生效时替换伤害骰面
+- 雾行漫游（`XPHB:游侠:雾行漫游:15`）· spellCast · 读 action.name · 做 set:targets：施展迷踪步时可携带5尺内自愿生物一同传送，需在施法动作中感知迷踪步施展并协同传送次要目标
+- 妖思魅缕（`XPHB:游侠:妖思魅缕:7`）· saveSucceeded · 读 action.targets NEW:save.condition · 做 —：生物通过对抗魅惑或恐慌的豁免时用反应迫使另一生物豁免，需在豁免成功窗口读取豁免针对的状态与目标身份
+- 追猎如风（`XPHB:游侠:追猎如风:11`）· attackHit · 读 action.attack.weapon action.targets action.marks.恐惧打击 · 做 repeat：恐惧打击命中后二选一：瞬息打击需用相同武器追加攻击次要目标，群慌需对目标周围生物施加豁免
+- 元素掌控（`XPHB:元素掌控`）· rollMod:damage · 读 action.kind action.damage.types · 做 NEW:ignoreResistance：施展选定伤害类型法术时无视目标抗性且伤害骰1视为2，需读取动作法术性质与伤害类型并附加无视抗性
+- 远程法术（`XPHB:远程法术`）· spellCast · 读 action.spell.range · 做 set:range：施法时消耗术法点将触碰法术射程改为30尺或翻倍法术射程，需在施法窗口读取并修改射程
+- 奥法打击（`XPHB:战士:奥法打击:10`）· attackHit, rollMod:d20 · 读 action.by action.kind · 做 —：武器命中后使目标对抗自身法术的下一次豁免具有劣势，需在豁免窗口读取法术施法者与动作类型，并在此次豁免后自动消耗效应
+- 奥能冲锋（`XPHB:战士:奥能冲锋:15`）· NEW:actionUsed · 读 action.key · 做 —：使用动作如潮时可在额外动作之前或之后传送30尺，需 actionUsed 窗口感知动作如潮并在动作前或后插入传送
+- 坚韧（`XPHB:战士:坚韧:15`）· NEW:actionUsed · 读 action.name · 做 refund:resource NEW:replaceDie:1d8：每回合使用战技时可免耗卓越骰并以1d8替代骰值，需在战技动作触发时免除资源消耗并重设战技骰
+- 精通战争魔法（`XPHB:战士:精通战争魔法:18`）· NEW:actionUsed · 读 action.kind action.economy · 做 NEW:replaceAttacksWithSpell：执行攻击动作时将其中两次攻击替换为施展一或二环动作法师法术，需动作实例支持替换多次子攻击为施法
+- 念力突刺（`XPHB:战士:念力突刺:7`）· attackHit · 读 action.marks.灵能打击 · 做 —：灵能打击造成伤害后迫使目标力量豁免并倒地或任意方向推拉10尺，需读取灵能打击标记并支持多方向位移
+- 战术主宰（`XPHB:战士:战术主宰:9`）· d20Rolled · 读 action.attack.mastery action.attack.weapon · 做 set:mastery：发动武器攻击时将武器精通属性替换为推离、削弱或缓速之一，需在攻击检定前读取并修改 mastery
+- 战术转进（`XPHB:战士:战术转进:5`）· NEW:actionUsed · 读 action.key · 做 —：使用回气附赠动作后触发半速移动且免借机，需 actionUsed 窗口感知回气动作
+- 战争魔法（`XPHB:战士:战争魔法:7`）· NEW:actionUsed · 读 action.kind action.economy · 做 NEW:replaceAttackWithSpell：执行攻击动作时将其中一次攻击替换为施展动作戏法，需动作实例支持嵌套或替换单次攻击
+- 长柄武器大师（`XPHB:长柄武器大师`）· NEW:enterReach,actionDone · 读 action.kind action.attack.item · 做 —：生物进入触及范围触发借机攻击（缺 enterReach），以及附赠打击需校验前置动作为长柄武器攻击
+- 指挥官奇袭（`XPHB:指挥官奇袭`）· attackHit · 读 action.kind action.attack.weapon · 做 addDamage：指挥盟友用反应发动武器攻击并在命中时追加卓越骰伤害，需关联盟友攻击动作与追加伤害
+- 转化法术（`XPHB:转化法术`）· spellCast · 读 action.damage.types · 做 set:damageType：施法时改变法术伤害类型为酸冷火电毒雷之一，需在 spellCast 窗口修改 damageType
+- 奥法超负荷（`AU:奥法超负荷`）· rollMod:damage · 读 action.spell.school action.damage.dice · 做 addDamage：施展塑能法术造成伤害时追加熟练加值伤害，豁免法术缺伤害掷骰时读取学派并追加伤害
+- 奥法护佑者（`AU:奥法护佑者`）· NEW:actionUsed · 读 action.name action.targets · 做 —：协助盟友检定时提供临时生命值需识别协助动作与目标，附赠施法可用 grantAction 实现
+- 奥法艺术家（`AU:奥法艺术家`）· spellCast · 读 action.spell.school · 做 —：施展幻术法术后给30尺内可见盟友英雄激励，需在 spellCast 窗口读取学派
+- 爆裂弹（`AU:爆裂弹`）· attackHit · 读 action.attack.ranged action.attack.weapon action.targets · 做 addDamage：远程武器攻击命中时主目标加力场伤害，并对周围10尺内生物造成同等伤害
+- 变化专家（`AU:变化专家`）· spellCast · 读 action.spell.school action.spell.slot · 做 —：消耗法术位施展变化法术时按法术位环阶×5提升速度，需在 spellCast 读取学派与环阶
+- 缠绕弹（`AU:缠绕弹`）· attackHit · 读 action.attack.ranged action.attack.weapon · 做 addDamage：远程武器攻击命中时追加挥砍伤害并迫使力量豁免陷入束缚，卡在命中追加效果与挣脱动作
+- 穿梭弹（`AU:穿梭弹`）· — · 读 action.damage.dice action.attack.item · 做 —：替换远程攻击为线状豁免射击，需读取当前武器的基础伤害骰与加值
+- 变形生物（`AU:法师:变形生物:10`）· spellCast · 读 action.name action.targets · 做 NEW:modifyPolymorph：施展变形术自指时保留心智属性与施法能力，需拦截自身施法并修改变形状态规则
+- 分裂惑控（`AU:法师:分裂惑控:6`）· spellCast · 读 action.spell.school action.spell.slot · 做 set:slot set:targets：消耗法术位施展升环多目标的惑控法术时有效环阶+1，需在 spellCast 窗口修改 slot 或 targets
+- 坟冢之力（`AU:法师:坟冢之力:6`）· rollMod:damage · 读 action.spell.list action.damage.types · 做 NEW:ignoreResist：法师法术与特性的伤害无视暗蚀抗性，需在伤害检定时读取法术来源并设置无视抗性
+- 裂分召唤（`AU:法师:裂分召唤:14`）· spellCast · 读 action.spell.school action.spell.slot · 做 NEW:modifySummonCount NEW:modifySummonHp：施展咒法召唤法术时改为召唤两个生命值减半的生物，需拦截施法修改召唤参数
+- 强力变化（`AU:法师:强力变化:6`）· spellCast · 读 action.spell.school action.spell.slot action.attack.* action.save.* · 做 set:slot：消耗法术位施展无攻击无豁免的变化法术时有效环阶提升一环，需在施法窗口判断并修改 slot
+- 强韧召唤（`AU:法师:强韧召唤:6`）· spellCast · 读 action.spell.school action.spell.slot · 做 NEW:buffSummon：消耗法术位施展咒法召唤法术时为新召唤物赋予临时生命值与抗性，需在施法时读取并作用于召唤物
+- 收割亡灵（`AU:法师:收割亡灵:10`）· damageTaken · 读 action.result.damage · 做 —：受伤陷入浴血时用反应牺牲一只受控亡灵回复生命值，卡在浴血触发窗口与对目标致死/清零生命值
+- 死灵魔典（`AU:法师:死灵魔典:3`）· spellCast · 读 action.spell.school action.spell.slot · 做 —：施展死灵法术时按法术位环阶+法师等级治疗60尺内可见亡灵，需在 spellCast 窗口读取学派与环阶
+- 死之尊主（`AU:法师:死之尊主:14`）· reducedTo0 · 读 action.result.reducedTo0 · 做 —：可见亡灵生命值降到0时用反应引爆产生范围暗蚀伤害，需在 reducedTo0 窗口捕获阵亡目标并结算范围伤害
+- 亡灵仆役（`AU:法师:亡灵仆役:6`）· attackHit,spellCast · 读 action.by action.attack.* action.spell.school · 做 addDamage NEW:modifySummonHp：施法召唤亡灵时增加生命上限，且操控的亡灵攻击命中时追加暗蚀伤害
+- 直觉魅惑（`AU:法师:直觉魅惑:10`）· attackHit,spellCast · 读 action.attack.range action.attack.reach action.spell.school action.spell.slot · 做 set:targets refund:resource：被攻击命中时反应迫使豁免并将攻击改打射程内另一目标，以及施展惑控法术恢复使用次数
+- 法术诡计（`AU:法术诡计`）· spellCast · 读 action.economy action.spell.slot action.spell.components · 做 —：消耗法术位施展动作法术后附赠疾走躲藏，且隐形施法不破隐，需读取施法动作经济与成分并与隐形状态联动
+- 放逐弹（`AU:放逐弹`）· attackHit · 读 action.attack.ranged action.attack.weapon · 做 addDamage：远程武器攻击命中时追加心灵伤害并迫使魅力豁免陷入放逐状态，需在命中窗口追加伤害与豁免放逐
+- 契灵复苏（`AU:魔契师:契灵复苏:10`）· reducedTo0 · 读 action.targets action.result.reducedTo0 · 做 set:hpMax：契灵将降至0时用反应消耗法术位使其生命值回满并传送，需在 reducedTo0 拦截并修改目标生命值
+- 巩固法术（`AU:牧师:巩固法术:3`）· spellCast · 读 action.targets · 做 —：施法时消耗引导神力为法术目标之一赋予临时生命值，需在 spellCast 窗口读取目标列表
+- 驱法复原（`AU:牧师:驱法复原:6`）· spellCast · 读 action.spell.slot action.name · 做 —：消耗法术位施展治疗或解除状态法术后顺发免位解除魔法，需识别施法性质并联动施展解除魔法
+- 稳固法术（`AU:牧师:稳固法术:3`）· d20Rolled · 读 action.by action.save.ability action.marks.首次豁免 · 做 mark:首次豁免：目标对抗你法术的首次豁免成功时减1d6骰点，需关联豁免所属的施法动作来源与首次豁免标记
+- 欺诈弹（`AU:欺诈弹`）· attackHit · 读 action.attack.ranged action.attack.weapon · 做 addDamage：远程武器攻击命中追加心灵伤害并迫使感知豁免陷入魅惑，卡在指定盟友为魅惑者及破魅规则
+- 尚武魔宠（`AU:尚武魔宠`）· attackHit · 读 action.targets · 做 cancel：魔宠用反应使5尺内受击生物AC加PB使攻击失手，需拦截 attackHit 并关联魔宠位置与反应
+- 死灵专家（`AU:死灵专家`）· spellCast · 读 action.spell.school action.spell.slot · 做 —：消耗法术位施展死灵法术时消耗生命骰自愈（骰值+环阶），需在施法窗口读取学派和环阶并消耗生命骰
+- 塑能专家（`AU:塑能专家`）· rollMod:damage · 读 action.spell.school action.damage.dice · 做 addDamage：施展塑能法术造成伤害时消耗生命骰追加伤害，需在伤害掷骰时读取学派并消耗生命骰追加伤害
+- 慰疗魔宠（`AU:慰疗魔宠`）· rollMod:heal · 读 action.damage.dice · 做 NEW:minDie:3：盟友在魔宠5尺光环内掷治疗骰时1和2视为3，需支持治疗骰rollMod/minDie及随从灵光
+- 精通秘法战斗风格（`AU:武僧:精通秘法战斗风格:17`）· NEW:actionUsed · 读 action.name action.economy · 做 NEW:replaceAttacksWithSpell：疾风连击时将两次徒手打击替换为施展一二环术士动作法术，需动作实例支持嵌套施法或替换多次攻击为施法
+- 秘法战斗风格（`AU:武僧:秘法战斗风格:6`）· NEW:actionUsed · 读 action.kind action.economy · 做 NEW:replaceAttackWithSpell：攻击动作中将一次徒手打击替换为施展动作戏法，需动作实例支持嵌套施法或替换单次攻击
+- 凝神击（`AU:武僧:凝神击:11`）· attackHit,NEW:actionUsed · 读 action.attack.unarmed action.attack.melee · 做 —：使用震慑拳时给目标施加对抗自身法术豁免劣势的效应，需识别震慑拳动作或命中标记
+- 虚弱弹（`AU:虚弱弹`）· attackHit · 读 action.attack.ranged action.attack.weapon · 做 addDamage：远程武器攻击命中追加黯蚀伤害并迫使体质豁免陷入中毒（伤害扣减），需在命中追加伤害与削弱效应
+- 预言专家（`AU:预言专家`）· d20Rolled,spellCast · 读 action.spell.school action.spell.slot · 做 refund:resource：反应干预60尺内生物D20检定赋予优劣势，且施展预言法术时恢复使用次数，需在施法窗口读取学派
+- 奥术射击（`AU:战士:奥术射击:3`）· attackHit · 读 action.attack.ranged action.attack.weapon · 做 addDamage：远程武器攻击命中并造成伤害时为攻击赋予奥术射击选项，需在 attackHit 挂载子选项菜单
+- 不屈传送（`AU:战士:不屈传送:15`）· d20Rolled · 读 action.marks.不屈 action.result.saved · 做 —：使用不屈特性且豁免成功后传送至多60尺，需在豁免成功窗口识别是否使用了不屈特性标记
+- 宗师射术（`AU:战士:宗师射术:18`）· attackMissed · 读 action.by · 做 —：可见生物对你攻击失手时以反应半速后撤免借机并进行远程反击，需在 attackMissed 窗口捕获攻击者并提供反击动作
+- 咒能爆发之恩惠（`AU:咒能爆发之恩惠`）· spellCast,rollMod:damage · 读 action.damage.dice action.spell.slot · 做 NEW:minDie:3 NEW:addConditionOnDamage:倒地：消耗法术位施法时伤害骰1和2视为3且受损生物倒地，需在施法/伤害窗口修改伤害下限并对受损目标附加状态
+- 追踪弹（`AU:追踪弹`）· — · 读 action.damage.dice action.attack.item · 做 —：替换远程攻击为追踪敏捷豁免伤害，需读取手持武器基础伤害骰与最大射程
+- 魂灵提灯（`AU:spell:魂灵提灯`）· reducedTo0 · 读 action.result.reducedTo0 · 做 —：敌人在60尺光照内阵亡时收集灵魂碎片，需在 reducedTo0 窗口捕获阵亡生物及距离并累加资源
+- 汲能术（`AU:spell:汲能术`）· NEW:damageDealt · 读 action.result.damage · 做 —：法术造成伤害时自身恢复造成伤害数值一半的生命值，需读取本次动作造成的实际伤害值
+- 暴风骤岚之恩惠（`FRHoF:暴风骤岚之恩惠`）· d20Rolled · 读 action.by action.kind action.damage.types · 做 set:disadv：对抗你造成电鸣伤害法术的豁免具劣势，需在豁免掷骰窗口读取法术来源与伤害类型
+- 翠绿闲庭新羽（`FRHoF:翠绿闲庭新羽`）· NEW:actionUsed · 读 action.name · 做 —：执行协助动作时与5尺内自愿盟友交换位置且免借机，需识别协助动作并支持双生物换位
+- 毒手殁心之恩惠（`FRHoF:毒手殁心之恩惠`）· rollMod:damage,damageIncoming · 读 action.damage.types · 做 —：每回合一次毒素伤害骰取最大值，需在伤害掷骰时读取伤害类型是否包含毒素
+- 额外攻击（`FRHoF:法师:额外攻击:6`）· NEW:actionUsed · 读 action.kind action.economy · 做 NEW:replaceAttackWithSpell：攻击动作中将一次额外攻击替换为施展动作戏法，需动作实例支持嵌套施法或替换单次攻击
+- 剑歌（`FRHoF:法师:剑歌:3`）· attackHit,NEW:actionUsed · 读 action.attack.* action.name · 做 NEW:endEffect refund:resource：剑歌在双手武器攻击时结束且奥术回想时恢复次数，需读取攻击武器性质与特性动作
+- 胜利之歌（`FRHoF:法师:胜利之歌:14`）· spellCast · 读 action.economy action.kind · 做 —：施展动作法术后解锁附赠动作武器攻击，需在 spellCast 窗口读取施法动作经济
+- 街头正义（`FRHoF:街头正义`）· d20Rolled · 读 action.targets · 做 NEW:grantAdv：盟友攻击被你擒抱的目标具有优势，需在检定窗口识别擒抱来源并赋予优势
+- 领主联盟特工（`FRHoF:领主联盟特工`）· attackHit,damageTaken · 读 action.result.crit action.by action.targets · 做 —：重击给盟友英雄激励，以及敌人对5尺内盟友造成伤害后反击获优势，需关联伤害来源
+- 迷锁触碰（`FRHoF:迷锁触碰`）· attackHit,d20Rolled · 读 action.attack.spell action.kind · 做 —：受法术攻击命中或对抗法术豁免失败时以反应触发密斯特拉之触随机表，需判断触发动作为法术
+- 散塔林会暴徒（`FRHoF:散塔林会暴徒`）· rollMod:damage,initiativeRolled · 读 action.marks.借机攻击 action.damage.dice · 做 rerollDamage：借机攻击重掷伤害骰取高，需识别借机攻击并在伤害骰掷骰时支持重掷
+- 散塔林会战术（`FRHoF:散塔林会战术`）· attackHit · 读 action.attack.melee action.by · 做 —：5尺内生物近战命中你后用反应对其发动借机攻击，需捕获近战攻击命中及攻击者
+- 生机勃发之恩惠（`FRHoF:生机勃发之恩惠`）· NEW:tempHpGained,rollMod:heal · 读 action.damage.dice · 做 NEW:addTempHp:5：获得临时生命值时+5且消耗生命骰治疗骰取最大值，需拦截获得临时生命值事件与生命骰最大化
+- 火巨灵之狂怒（`FRHoF:圣武士:火巨灵之狂怒:3`）· spellCast · 读 action.name action.targets · 做 addDamage：施展至圣斩后消耗引导神力为目标及30尺内另一生物各追加2d4火焰伤害，需关联至圣斩目标
+- 巨灵贵胄（`FRHoF:圣武士:巨灵贵胄:20`）· d20Rolled · 读 action.result.* · 做 NEW:succeed：灵光内自身或盟友D20检定失败时以反应改为成功，需在 d20Rolled 窗口直接判定为成功
+- 气巨灵之遁形（`FRHoF:圣武士:气巨灵之遁形:3`）· spellCast · 读 action.name · 做 —：施展至圣斩后消耗引导神力传送30尺并化为半虚体抗性，需在至圣斩施法后触发传送与效应
+- 水巨灵之激流（`FRHoF:圣武士:水巨灵之激流:3`）· spellCast · 读 action.name action.targets · 做 —：施展至圣斩后迫使目标及10尺光环内其他生物力量豁免推开并倒地，需读取至圣斩目标及自身光环
+- 土巨灵之碾压（`FRHoF:圣武士:土巨灵之碾压:3`）· spellCast · 读 action.name action.targets · 做 —：施展至圣斩后消耗引导神力使目标陷入受擒与束缚，需关联至圣斩目标并附加复合状态
+- 炽焰鼓舞（`FRHoF:术士:炽焰鼓舞:3`）· NEW:resourceSpent,spellCast · 读 action.economy action.kind · 做 —：在动作或附赠中消耗术法点时为自身或30尺内生物提供临时生命值，需感知动作中消耗术法点事件
+- 辉耀之火（`FRHoF:术士:辉耀之火:3`）· NEW:resourceSpent,spellCast · 读 action.economy action.kind · 做 —：在动作或附赠中消耗术法点时对30尺内生物造成火/光伤害，需感知动作中消耗术法点事件
+- 汲纳法术（`FRHoF:术士:汲纳法术:6`）· d20Rolled · 读 action.name action.result.saved · 做 refund:resource：目标对抗你的法术反制豁免失败时恢复1d4术法点，需在豁免窗口关联法术反制来源
+- 咒火冠冕（`FRHoF:术士:咒火冠冕:18`）· damageIncoming,attackHit · 读 action.kind action.damage.dice · 做 NEW:evasion NEW:reduceDamage：受法术伤害时获得反射闪避及被命中时减伤，需在伤害窗口读取动作类型为法术/魔法
+- 竖琴手协同（`FRHoF:竖琴手协同`）· NEW:actionUsed,d20Rolled · 读 action.name action.targets action.result.saved · 做 —：协助动作附赠使敌人下次豁免劣势，且豁免解除自身恐慌麻痹时解除盟友相同状态
+- 新锻臂铠（`FRHoF:新锻臂铠`）· NEW:forcedMove,NEW:actionUsed · 读 action.name action.targets · 做 cancel：反应阻止5尺内盟友被强制位移（缺 forcedMove 窗口），及执行预备动作后赋予受击劣势
+- 新晋龙巫教徒（`FRHoF:新晋龙巫教徒`）· d20Rolled · 读 action.result.saved · 做 —：使生物陷入恐慌时获得英雄激励，需在豁免失败窗口捕获状态施加并奖励激励
+- 妖精诡术（`FRHoF:妖精诡术`）· attackHit,NEW:actionUsed · 读 action.name action.attack.* · 做 —：攻击命中时迫使感知豁免使目标所有豁免劣势，及撤离动作忽略困难地形
+- 夜宴狂欢之恩惠（`FRHoF:夜宴狂欢之恩惠`）· d20Rolled,damageTaken · 读 action.name action.spell.concentration · 做 NEW:preventBreakConcentration：施展奥图迷舞受伤不破专注且受魅惑目标无法言语法术，需在受伤窗口豁免专注打断
+- 熠熠生辉之恩惠（`FRHoF:熠熠生辉之恩惠`）· rollMod:damage · 读 action.damage.types · 做 —：造成光耀伤害时每颗骰子取最大值，需在伤害掷骰窗口读取伤害类型是否包含光耀
+- 明月激励（`FRHoF:吟游诗人:明月激励:3`）· spellCast,NEW:healApplied · 读 action.spell.slot action.kind action.damage.dice · 做 NEW:addHeal：消耗法术位施法治疗时消耗激励骰追加恢复量与速度，需读取施法消耗法术位及治疗掷骰
+- 月光祝福（`FRHoF:吟游诗人:月光祝福:6`）· d20Rolled · 读 action.name action.result.saved · 做 —：生物未通过月华之光豁免时触发治疗60尺内生物2d4，需关联区域/法术豁免失败事件
+- 恶毒灵光（`FRHoF:游荡者:恶毒灵光:13`）· NEW:actionUsed · 读 action.name · 做 —：使用嗜血传送时对起点与终点10尺内所选生物造成无视抗性伤害，需感知嗜血动作并以落点为中心范围伤害
+- 恐怖化身（`FRHoF:游荡者:恐怖化身:17`）· rollMod:damage · 读 action.marks.偷袭 action.damage.dice · 做 NEW:minDie:3：投掷偷袭伤害骰时1和2视为3，需在伤害掷骰窗口读取偷袭标记并设置伤害骰保底
+- 嗜血（`FRHoF:游荡者:嗜血:3`）· damageTaken · 读 action.targets action.result.damage · 做 —：30尺内可见敌人受伤害陷入浴血时用反应传送至其5尺内发动近战攻击，需在 damageTaken 检测目标浴血
+- 袭杀恐惧（`FRHoF:游荡者:袭杀恐惧:9`）· attackHit · 读 action.marks.偷袭 action.damage.dice · 做 NEW:deductSneakDice:1d6：诡诈打击花费1d6偷袭骰迫使感知豁免陷入恐慌并获攻击优势，需在命中窗口扣减伤害骰并附加状态
+- 冰结恶灵（`FRHoF:游侠:冰结恶灵:15`）· spellCast · 读 action.name · 做 remember：施展猎人印记时激活幽灵形态及寒冷光环，需在 spellCast 窗口联动猎人印记持续时间
+- 冬猎霜寒（`FRHoF:游侠:冬猎霜寒:3`）· spellCast · 读 action.name action.targets · 做 —：施展猎人印记获得临时生命值且使目标无法撤离，需在 spellCast 读取法术名与目标并施加限制
+- 冻原探索者（`FRHoF:游侠:冻原探索者:3`）· attackHit,rollMod:damage · 读 action.attack.weapon action.spell.list action.damage.types · 做 addDamage NEW:ignoreResist：极地打击每目标每回合一次额外寒冷伤害，且武器与游侠法术无视寒冷抗性
+- 寒心复仇（`FRHoF:游侠:寒心复仇:11`）· attackHit · 读 action.by · 做 —：被攻击命中时以反应迫使攻击者感知豁免陷入震慑，需在 attackHit 捕获攻击者并迫使豁免
+- 集结如潮（`FRHoF:战士:集结如潮:10`）· NEW:actionUsed · 读 action.name · 做 —：使用动作如潮时命令30尺内盟友用反应攻击或半速移动免借机，需感知动作如潮使用
+- 咒火专家（`FRHoF:咒火专家`）· rollMod:damage,damageIncoming · 读 action.kind action.damage.types action.damage.dice · 做 addDamage NEW:ignoreResist：施法造成光耀伤害时消耗生命骰加伤且光耀伤害无视抗性，需在伤害检定中读取法术类型并设置无视抗性
+- 艾拉斯卓的月辉之篷（`FRHoF:spell:艾拉斯卓的月辉之篷`）· d20Rolled · 读 action.result.saved · 做 set:succeed NEW:endConcentration：豁免失败时以反应改为成功并终止法术，需在 d20Rolled 修改豁免为成功并结束专注
+- 反冲术（`FRHoF:spell:反冲术`）· damageIncoming · 读 action.by · 做 NEW:reduceDamage：现有 spec 已支持（damageIncoming before 反应结合 reduceDamage 及 aim: 'actor' 体质豁免反击），移除提示用 note 节点即可
+- 伊尔明斯特的法术闪避（`FRHoF:spell:伊尔明斯特的法术闪避`）· rollMod:save,damageIncoming · 读 action.kind action.save.half · 做 NEW:evasion：对抗法术豁免具有优势且受法术伤害时获得反射闪避（成功免伤），需读取检定动作是否来自法术
+- 伊尔明斯特的绚丽光球（`FRHoF:spell:伊尔明斯特的绚丽光球`）· damageIncoming · 读 action.damage.types · 做 NEW:halveDamage：受到元素伤害时反应消耗光球获得抗性，需在 damageIncoming 识别元素伤害并减半
+- 咒火风暴（`FRHoF:spell:咒火风暴`）· spellCast · 读 action.by action.targets · 做 cancel：区域内生物施法时须体质豁免否则打断施法，需在 spellCast 窗口检测生物是否处于区域内并打断
+- 炽烈回生（`TCE:德鲁伊:炽烈回生:14`）· reducedTo0 · 读 action.result.reducedTo0 · 做 NEW:setHp:hpMax/2：自身降至0时用反应牺牲120尺内野火灵魄回复半血并站立，需在 reducedTo0 拦截致死并销毁随从
+- 强化链接（`TCE:德鲁伊:强化链接:6`）· rollMod:damage,rollMod:heal · 读 action.kind action.damage.types action.marks.强化链接 · 做 addDamage mark:强化链接：野火灵魄存在时施展火焰或治疗法术加1d8掷骰，需读取法术类型与伤害/治疗类型并仅限一次伤害掷骰
+- 一体共生（`TCE:德鲁伊:一体共生:2`）· attackHit,rollMod:damage · 读 action.name action.attack.weapon action.attack.melee action.damage.dice · 做 addDamage：近战武器攻击命中加暗蚀伤害，且孢子环绕伤害多掷一颗骰，需在命中与伤害窗口读取特性并加骰
+- 真菌感染（`TCE:德鲁伊:真菌感染:6`）· reducedTo0 · 读 action.targets action.result.reducedTo0 · 做 —：10尺内小型中型生物生命降至0时用反应活化为1点生命值丧尸，需在 reducedTo0 捕获死者实体并召唤
+- 灼烧烈焰（`TCE:德鲁伊:灼烧烈焰:10`）· reducedTo0,NEW:enteredSpace · 读 action.targets action.result.reducedTo0 · 做 —：生物死亡时在所在格留下幽火，生物进入时反应造成伤害或治疗，需在 reducedTo0 记录死者坐标并生成触发点
+- 觉醒魔典（`TCE:法师:觉醒魔典:2`）· spellCast · 读 action.spell.slot action.spell.list action.damage.types · 做 set:damageType：消耗法术位施展法师法术时将伤害类型替换为法术书中同环法术的类型，需在 spellCast 窗口修改 damageType
+- 一字同心（`TCE:法师:一字同心:14`）· damageIncoming · 读 action.damage.dice · 做 cancel：意识显现时受到伤害以反应驱散意识使伤害归零，需在 damageIncoming 窗口完全抵消伤害并扣除法术位准备
+- 风暴符文（`TCE:风暴符文`）· d20Rolled · 读 action.targets · 做 set:adv set:disadv：先知形态下用反应使60尺内生物的攻击/豁免/检定获得优势或劣势，需在 d20Rolled 拦截并赋予优劣势
+- 符令责斥（`TCE:符令责斥`）· attackHit · 读 action.by action.targets · 做 —：护符佩戴者被命中时用反应对30尺内攻击者造成心灵伤害并推开10尺，需捕获攻击者并执行推离
+- 符之魔契（`TCE:符之魔契`）· d20Rolled · 读 action.result.* · 做 NEW:addToRoll:1d4：护符佩戴者属性检定失败时加1d4，需在 d20Rolled 拦截并将修正应用到佩戴者
+- 护符庇佑（`TCE:护符庇佑`）· d20Rolled · 读 action.result.* · 做 NEW:addToRoll:1d4：护符佩戴者豁免检定失败时加1d4，需在 d20Rolled 拦截并将修正应用到佩戴者
+- 警戒（`TCE:警戒`）· NEW:enterReach,attackHit · 读 action.attack.melee action.attack.weapon · 做 addDamage：生物进入触及范围触发借机攻击并在命中时追加卓越骰伤害，缺 enterReach 触发时机
+- 快手投掷（`TCE:快手投掷`）· attackHit · 读 action.attack.weapon action.attack.ranged · 做 addDamage：以附赠动作投掷武器并在命中时将卓越骰计入伤害，需在命中窗口追加卓越骰伤害
+- 魔法力量护甲（`TCE:魔法力量护甲`）· d20Rolled,NEW:conditionIncoming · 读 action.save.ability · 做 cancel：力量检定/豁免失败加智力加值，以及受到倒地状态时反应消耗充能抵消倒地
+- 擒握触手（`TCE:魔契师:擒握触手:10`）· spellCast,damageTaken · 读 action.name action.spell.concentration · 做 NEW:preventBreakConcentration：施展艾伐黑触手获临时生命值且受伤不破坏该法术专注，需在施法与受伤窗口关联特定法术专注
+- 保护联结（`TCE:牧师:保护联结:6`）· damageIncoming · 读 action.damage.dice action.targets · 做 NEW:redirect：联结生物受伤害时以反应传送至其身旁代为承受整包伤害，需在 damageIncoming 拦截并转移伤害承伤者
+- 律法化身（`TCE:牧师:律法化身:6`）· spellCast · 读 action.spell.school action.spell.slot action.economy · 做 set:economy：消耗法术位施展动作惑控法术时施法时间改为附赠动作，需在 spellCast 窗口修改 economy
+- 权威之音（`TCE:牧师:权威之音:1`）· spellCast · 读 action.spell.slot action.targets · 做 —：消耗法术位施法指向盟友时令该盟友用反应发动一次武器攻击，需在施法窗口读取目标是否含盟友并驱动反应反击
+- 受祝击（`TCE:牧师:受祝击:8`）· attackHit,rollMod:damage · 读 action.attack.weapon action.spell.level action.kind · 做 addDamage：戏法或武器攻击造成伤害时每轮一次追加1d8光耀伤害，豁免戏法缺伤害掷骰时读取戏法等级并加伤
+- 增强联结（`TCE:牧师:增强联结:17`）· damageIncoming · 读 action.damage.dice · 做 NEW:halveDamage：保护联结承伤时获得伤害抗性且范围升至60尺，需在代承伤害窗口将伤害减半
+- 尘世壁垒（`TCE:圣武士:尘世壁垒:20`）· attackHit,rollMod:d20 · 读 action.attack.weapon action.result.damage · 做 —：对异界生物攻击具优势且攻击命中造成伤害时迫使豁免放逐，需在命中结算中触发放逐豁免
+- 鼓舞斩（`TCE:圣武士:鼓舞斩:3`）· NEW:damageDealt,spellCast · 读 action.name action.result.damage · 做 —：以至圣斩造成伤害后以附赠动作消耗引导神力为自身或盟友提供临时生命值，需感知至圣斩造成伤害
+- 辉煌防御（`TCE:圣武士:辉煌防御:15`）· attackHit · 读 action.by action.targets · 做 cancel：受击时反应增加AC使攻击失手，且若失手可对触及内攻击者反击，需在 attackHit 修改判定并提供反击动作
+- 警戒呵斥（`TCE:圣武士:警戒呵斥:15`）· d20Rolled · 读 action.by action.result.saved · 做 —：自身或30尺内生物心智豁免成功时以反应对迫使豁免者造成力场伤害，需在豁免成功窗口捕获迫使豁免来源
+- 现世传说（`TCE:圣武士:现世传说:20`）· d20Rolled,attackMissed · 读 action.attack.weapon action.result.* · 做 NEW:succeed：武器攻击失手改为命中及豁免失败重骰，需在失手/豁免窗口修改判定结果为成功
+- 归复平衡（`TCE:术士:归复平衡:1`）· d20Rolled · 读 action.attack.* · 做 NEW:clearAdv：现有 spec 已支持（d20Rolled before 反应结合 clearAdv 消除优劣势），移除提示性 note 即可
+- 灵能术法（`TCE:术士:灵能术法:6`）· spellCast · 读 action.name action.spell.level action.spell.components · 做 set:components refund:slot：施展灵能法术时改消耗等量术法点免除法术位与言语姿势材料成分，需在施法窗口改写消耗与成分
+- 律令之壁（`TCE:术士:律令之壁:6`）· damageIncoming · 读 action.damage.dice · 做 NEW:reduceDamage：被守护者受伤时反应消耗屏障d8减伤，需在 damageIncoming 窗口根据剩余骰池减免伤害
+- 生杀予夺（`TCE:武僧:生杀予夺:11`）· attackHit,NEW:actionUsed · 读 action.name action.attack.unarmed · 做 addDamage：疾风连击中徒手攻击替换为予命之手且命中时免气附加夺命之手伤害，需关联疾风连击动作与命中加伤
+- 生死之触（`TCE:武僧:生死之触:6`）· attackHit,NEW:actionUsed · 读 action.name action.targets · 做 —：予命之手解除目标异常状态且夺命之手附加中毒状态，需联动相应特性的结算动作
+- 予命之手（`TCE:武僧:予命之手:3`）· NEW:actionUsed · 读 action.name action.economy · 做 NEW:replaceAttackWithHeal：疾风连击中可将一次徒手打击替换为予命之手治疗，需动作实例支持单次攻击替换为治疗动作
+- 感染之怒（`TCE:野蛮人:感染之怒:10`）· attackHit · 读 action.attack.* action.targets · 做 —：狂暴天生武器命中时迫使感知豁免受心灵伤害或用反应攻击指定生物，需在命中窗口读取武器并驱动目标反应攻击
+- 狂野浪潮（`TCE:野蛮人:狂野浪潮:3`）· NEW:actionUsed · 读 action.name · 做 —：进入狂暴时投掷1d8触发狂野魔法浪潮随机表，需感知狂暴动作并支持随机效应分支
+- 野兽之形（`TCE:野蛮人:野兽之形:3`）· attackHit,d20Rolled · 读 action.attack.* action.targets · 做 cancel：尾击防御在被命中时掷骰加AC对抗攻击检定可能变失手；爪击在攻击检定后追加一次攻击
+- 不竭鼓舞（`TCE:吟游诗人:不竭鼓舞:6`）· d20Rolled · 读 action.result.* · 做 refund:resource：使用诗人激励检定仍失败时保留激励骰不消耗，需感知激励骰使用情况及检定失败结果并退还/保留资源
+- 传播鼓舞（`TCE:吟游诗人:传播鼓舞:14`）· d20Rolled · 读 action.result.* · 做 —：盟友使用诗人激励检定成功后用反应给另一生物激励，需感知激励骰使用及检定成功结果
+- 潜能微尘（`TCE:吟游诗人:潜能微尘:3`）· d20Rolled,attackHit · 读 action.targets action.attack.* · 做 addDamage NEW:triggerSave：消耗激励骰时根据检定类型触发重骰、雷鸣溅射伤害或临时生命，需在检定及命中窗口联动动作与目标
+- 撕裂心智（`TCE:游荡者:撕裂心智:17`）· attackHit · 读 action.attack.item action.damage.dice · 做 —：心灵之刃造成偷袭伤害时迫使目标感知豁免陷入震慑，需读取攻击武器为心灵之刃且包含偷袭伤害
+- 心灵之刃（`TCE:游荡者:心灵之刃:3`）· NEW:actionUsed · 读 action.kind action.attack.item · 做 —：在攻击动作中化出念刃并在其后提供附赠动作次要攻击，需与攻击动作实例与装备空手检测联动
+- 蜂聚集群（`TCE:游侠:蜂聚集群:3`）· attackHit · 读 action.targets · 做 addDamage：攻击命中后自选追加穿刺伤害、迫使力量豁免位移击倒或自身位移掩护，需在 attackHit 读目标并追加伤害或联动位移
+- 精宸所与（`TCE:游侠:精宸所与:11`）· spellCast · 读 action.name action.spell.concentration · 做 set:spell：施展妖精召唤术时免除专注且持续时间变为1分钟，需在 spellCast 窗口修改法术专注属性与持续时间
+- 群逸逃散（`TCE:游侠:群逸逃散:15`）· damageIncoming · 读 action.damage.dice · 做 NEW:halveDamage：受到伤害时反应使伤害减半并传送30尺，卡在伤害减半结算与反应传送
+- 雾行漫游（`TCE:游侠:雾行漫游:15`）· spellCast · 读 action.name action.targets · 做 set:targets：施展迷踪步时携带5尺内自愿同伴一同传送，需在施法实例中识别迷踪步并扩展传送目标
+- 妖思魅缕（`TCE:游侠:妖思魅缕:7`）· d20Rolled,NEW:saveSucceeded · 读 action.result.saved action.save.ability · 做 —：自身或盟友通过对抗魅惑/恐慌豁免后反应迫使另一生物受控，需读取豁免结果及其关联状态
+- 云雾符文（`TCE:云雾符文`）· attackHit · 读 action.targets action.by · 做 set:targets：被攻击命中时以反应将攻击重定向至30尺内另一生物，需在 attackHit 窗口修改攻击目标并沿用检定值
+- 巨人之力（`TCE:战士:巨人之力:3`）· attackHit · 读 action.attack.weapon action.damage.types · 做 addDamage:sameType：现有 spec 已支持（attackHit before 触发 addDamage 加伤，附魔加优势），体型提示 note 不影响核心自动化
+- 念力突刺（`TCE:战士:念力突刺:7`）· attackHit · 读 action.attack.weapon action.damage.dice · 做 —：灵能打击命中造成伤害后迫使目标力量豁免击倒或推开，需在 attackHit 确认使用了灵能打击并迫使豁免
+- 翠炎剑（`TCE:spell:翠炎剑`）· attackHit · 读 action.attack.* action.targets · 做 addDamage NEW:secondaryDamage：施法发动近战武器攻击且命中后火焰飞跃至第二目标，需动作实例支持武器攻击嵌套及第二目标伤害派生
+- 轰雷剑（`TCE:spell:轰雷剑`）· attackHit,NEW:moved · 读 action.attack.* action.targets · 做 addDamage：施法嵌套武器攻击命中包覆雷鸣能量，并在目标主动移动时触发二次伤害，需动作实例与移动事件触发
+- 魂灵环绕（`TCE:spell:魂灵环绕`）· attackHit · 读 action.targets · 做 addDamage：命中10尺内生物追加自选类型伤害并禁疗，且光环减速，需在 attackHit 判定目标距离并追加伤害与禁疗效应
+- 矮人坚毅（`XGE:矮人坚毅`）· NEW:actionUsed · 读 action.name · 做 —：执行回避动作时消耗生命骰自愈，需在动作执行窗口识别回避动作并消耗生命骰恢复生命
+- 精魂图腾（`XGE:德鲁伊:精魂图腾:2`）· spellCast · 读 action.spell.slot action.kind · 做 —：精魂图腾光环提供常驻加值，独角兽图腾在施法位治疗时触发群体协同回血，需在 spellCast 识别消耗法术位的治疗法术
+- 全能牧者（`XGE:德鲁伊:全能牧者:6`）· spellCast,NEW:summoned · 读 action.spell.* · 做 NEW:buffSummon：法术召唤的野兽与精类增加生命值上限且天生武器视为魔法，卡在召唤物生成时属性改写与武器魔法标签
+- 奥术偏斜（`XGE:法师:奥术偏斜:2`）· attackHit,d20Rolled · 读 action.result.* · 做 cancel NEW:addToAc：被命中时反应+2 AC或豁免失败+4且14级反弹力场伤害，需在命中与豁免窗口拦截判定并联动法术施展限制与反伤
+- 魔力潮涌（`XGE:法师:魔力潮涌:6`）· attackHit,rollMod:damage,NEW:spellCountered · 读 action.kind action.spell.list action.damage.types · 做 addDamage：反制/驱散成功充能潮涌且法师法术造成伤害时追加力场伤害，需读取法术归属与法术反制结算并追加伤害
+- 弗莱格索斯之焰（`XGE:弗莱格索斯之焰`）· spellCast,rollMod:damage · 读 action.damage.types action.damage.dice · 做 rerollDamage：施展火系法术唤起烈焰护盾且火系伤害骰重骰1点，需在施法与伤害掷骰窗口读取伤害类型并重掷伤害骰
+- 慷慨吉运（`XGE:慷慨吉运`）· d20Rolled · 读 action.by · 做 NEW:reroll：30尺内盟友检定骰出1时以反应迫使其重骰，需在 d20Rolled 窗口拦截并触发重骰且暂时封锁自身幸运特质
+- 莱维斯图斯之墓（`XGE:莱维斯图斯之墓`）· damageIncoming · 读 action.damage.dice · 做 NEW:absorb：受伤害时以反应化冰自封获得大量临时生命吸收伤害并陷入瘫痪，需在 damageIncoming 前置结算护盾并在到期时清空剩余临时生命
+- 光耀之魂（`XGE:魔契师:光耀之魂:6`）· rollMod:damage,attackHit · 读 action.kind action.damage.types action.damage.dice · 做 addDamage：施展光耀或火焰法术时将魅力调整值加入伤害掷骰，需在伤害掷骰窗口识别法术伤害类型并追加伤害
+- 巫咒大师（`XGE:魔契师:巫咒大师:14`）· reducedTo0 · 读 action.targets · 做 cancel NEW:transferEffect：受咒目标死亡时放弃回血将诅咒转移至30尺内新目标，需在致死结算时拦截回血并重新施加诅咒
+- 巫咒盔甲（`XGE:魔契师:巫咒盔甲:10`）· attackHit · 读 action.by · 做 cancel：受咒目标攻击命中时反应掷d6达4+令其直接失手，需在 attackHit 窗口判定掷骰并取消命中
+- 巫咒战士（`XGE:魔契师:巫咒战士:1`）· rollMod:attack,rollMod:damage · 读 action.attack.weapon action.attack.* · 做 set:atk set:damageType：触碰武器使用魅力调整值替代力量或敏捷进行攻击与伤害检定，卡在特定装备绑定与攻击属性动态替换
+- 咒缚幽灵（`XGE:魔契师:咒缚幽灵:6`）· reducedTo0 · 读 action.result.killed action.targets · 做 —：击杀类人生物时将其灵魂唤醒为恶灵随从，需在击杀事件中读取被杀目标生物类型并召唤恶灵
+- 咒剑诅咒（`XGE:魔契师:咒剑诅咒:1`）· attackHit,reducedTo0,rollMod:attack · 读 action.targets action.damage.types · 做 addDamage：附赠动作诅咒目标提供伤害加值、19暴击与死亡回血，需在攻击检定、伤害命中及死亡窗口绑定受诅状态
+- 不移胜者（`XGE:圣武士:不移胜者:20`）· NEW:actionUsed,rollMod:attack · 读 action.kind action.economy · 做 repeat：化身征服化身获得全抗性、19重击且攻击动作提供额外攻击，需感知攻击动作实例并增加攻击次数
+- 叱喝暴力（`XGE:圣武士:叱喝暴力:3`）· damageTaken,attackHit · 读 action.by action.targets action.result.* · 做 —：30尺内生物攻击伤及同伴时反应迫使其受同等光耀反伤，需读取攻击者、目标及本次造成的实际伤害数值
+- 导引打击（`XGE:圣武士:导引打击:3`）· d20Rolled · 读 action.attack.* · 做 set:atk：现有 spec 已完全支持（d20Rolled before 窗口通过 modify addToRoll +10 并消耗引导神力），已全自动
+- 救赎使节（`XGE:圣武士:救赎使节:20`）· damageIncoming,damageTaken · 读 action.by action.result.* · 做 NEW:halveDamage：常驻全伤害抗性且受击反弹一半光耀伤害，需读取伤害数值与攻击者并维护针对特定生物的失效白名单
+- 轻蔑呵斥（`XGE:圣武士:轻蔑呵斥:15`）· attackHit · 读 action.by · 做 —：被攻击击中时攻击者承受魅力调整值心灵伤害，需在 attackHit 窗口准确向攻击来源施加反伤
+- 兽人狂怒（`XGE:兽人狂怒`）· attackHit,reducedTo0 · 读 action.attack.weapon action.damage.dice action.damage.types · 做 addDamage:sameDice：武器命中追加同款伤害骰且不屈坚毅触发后反应反击，需在 attackHit 读取武器伤害骰并追加同骰加伤
+- 暴风狂怒（`XGE:术士:暴风狂怒:14`）· attackHit · 读 action.attack.melee action.by · 做 —：被近战命中时反应对攻击者造成闪电伤害并迫使力量豁免击退20尺，需在 attackHit 识别近战性质并反击定位攻击者
+- 暴风魔法（`XGE:术士:暴风魔法:1`）· spellCast · 读 action.spell.slot action.onMyTurn · 做 —：施展1环及以上法术前后附赠动作飞行10尺免借机，需在 spellCast 窗口检验法术位环阶与回合归属
+- 风暴之心（`XGE:术士:风暴之心:6`）· spellCast · 读 action.spell.slot action.damage.types · 做 —：施展1环以上雷电法术时对周围10尺自选生物造成伤害，需在 spellCast 窗口读取法术位与伤害类型
+- 强效治疗（`XGE:术士:强效治疗:6`）· NEW:healRolled · 读 action.kind action.targets · 做 NEW:rerollHeal：自身或5尺内盟友掷法术治疗骰时花1术法点重骰，需动作实例支持治疗掷骰窗口拦截与骰子重掷
+- 酣醉若狂（`XGE:武僧:酣醉若狂:17`）· NEW:actionUsed · 读 action.name action.targets · 做 repeat：使用疾风连击时对不同生物追加至多3次额外攻击，需动作实例追踪已攻击目标集合并扩充分支攻击
+- 借力打力（`XGE:武僧:借力打力:6`）· attackMissed · 读 action.by action.attack.melee action.damage.dice action.damage.types · 做 set:targets runBranch:onHit：近战攻击失手时花1气反应将该次攻击改为击中5尺内另一生物，需在 attackMissed 窗口改写命中并转移结算
+- 灵巧格挡（`XGE:武僧:灵巧格挡:3`）· attackHit,attackMissed · 读 action.attack.unarmed action.kind action.onMyTurn · 做 —：攻击动作中进行徒手打击且持握剑圣武器时AC+2，需在攻击窗口验证徒手攻击、攻击动作归属与持握武器
+- 热能袭（`XGE:武僧:热能袭:6`）· NEW:actionUsed · 读 action.kind action.onMyTurn · 做 —：执行攻击动作后附赠动作消耗功力施展及升环燃烧之手，需在动作执行后感知攻击动作并联动施法
+- 人剑合一（`XGE:武僧:人剑合一:6`）· attackHit · 读 action.attack.weapon action.damage.types · 做 addDamage:sameType：剑圣武器命中追加武艺骰伤害且攻击视为魔法，需在 attackHit 验证剑圣武器并追加伤害及设置魔法属性
+- 太阳盾（`XGE:武僧:太阳盾:17`）· attackHit · 读 action.attack.melee action.by · 做 —：光照开启期间被近战命中反应对攻击者造成反伤，需在 attackHit 识别近战性质并反噬攻击来源
+- 耀阳箭（`XGE:武僧:耀阳箭:3`）· NEW:actionUsed · 读 action.kind action.attack.item · 做 repeat：在攻击动作中发射耀阳箭且使用后可附赠消耗功力连射两发，需动作实例支持嵌套法术攻击与附赠动作解锁
+- 醉拳技巧（`XGE:武僧:醉拳技巧:3`）· NEW:actionUsed · 读 action.name · 做 —：使用疾风连击时自动获得撤离效果且移速+10尺，需在动作执行窗口识别疾风连击并附加撤离与移速
+- 冻原（`XGE:野蛮人:冻原:14`）· NEW:actionUsed · 读 action.name · 做 —：激活风暴灵光时迫使灵光内可见生物进行力量豁免，失败速度降为0，需识别风暴灵光激活并施加减速状态
+- 不破威仪（`XGE:吟游诗人:不破威仪:14`）· NEW:attackTargeted · 读 action.targets action.by action.marks.不破威仪 · 做 cancel set:targets mark:不破威仪：生物回合内首次攻击你时触发魅力豁免，失败则打断攻击或迫使其重选目标且本回合无法攻击你
+- 乱击剑舞（`XGE:吟游诗人:乱击剑舞:3`）· attackHit · 读 action.attack.kind action.damage.types action.onMyTurn · 做 addDamage:sameType repeat：武器攻击命中时消耗激励骰加伤，并对5尺内另一可见生物造成同等伤害，需读取命中动作伤害类型并对次要目标造成伤害
+- 推击剑舞（`XGE:吟游诗人:推击剑舞:3`）· attackHit · 读 action.attack.kind action.damage.types action.onMyTurn · 做 addDamage:sameType：武器命中消耗激励加伤并根据掷骰推开目标并反应跟进移动，需读取命中动作并结合移动击退
+- 威仪作锦（`XGE:吟游诗人:威仪作锦:6`）· saveForced · 读 action.key · 做 NEW:setFail：被魅惑目标对抗此特性施展的命令术自动豁免失败，需在豁免时识别法术来源并改写豁免结果
+- 永生者赠礼（`XGE:永生者赠礼`）· NEW:healIncoming · 读 action.kind · 做 NEW:maxDice：魔宠在100尺内时受到的所有治疗骰取最大值，卡在魔宠距离检测与治疗掷骰最大化
+- 瞬息打击（`XGE:游荡者:瞬息打击:17`）· NEW:actionUsed · 读 action.name action.targets action.onMyTurn · 做 NEW:allowSneakAttack：本回合执行攻击动作后可用附赠动作额外攻击，且即使已偷袭仍可对不同目标再次偷袭，需记录攻击动作与偷袭目标
+- 误导（`XGE:游荡者:误导:13`）· attackHit · 读 action.targets action.by · 做 set:targets：被攻击命中时以反应将攻击转嫁给5尺内提供掩护的生物，需重设攻击目标并判断掩护状态
+- 灵体防御（`XGE:游侠:灵体防御:15`）· damageIncoming · 读 action.damage.types action.attack · 做 runBranch:damageOnly:x0.5：受到攻击伤害时以反应使本次伤害减半并获得该攻击各伤害类型抗性至回合结束，需读取攻击伤害类型并在回合内保持抗性
+- 魔法使的克星（`XGE:游侠:魔法使的克星:11`）· spellCast, NEW:teleport · 读 action.kind action.by · 做 cancel：60尺内生物施法或传送时反应迫使感知豁免，失败则打断并浪费其动作实例（cancel）
+- 杀手反制（`XGE:游侠:杀手反制:15`）· saveForced · 读 action.by action.save.ability · 做 NEW:makeAttack set:succeed：被猎物迫使豁免时以反应进行武器攻击，若命中则当前动作实例的豁免直接改为成功
+- 闪现打击（`XGE:游侠:闪现打击:11`）· NEW:beforeAttack · 读 action.targets action.parent · 做 NEW:extraAttack：攻击动作每次攻击前传送10尺，且若攻击了两个不同目标则同一动作实例内增加第3次攻击
+- 位面战士（`XGE:游侠:位面战士:3`）· attackHit · 读 action.damage.types action.targets action.attack.kind · 做 set:damageType addDamage：命中时把武器攻击的所有伤害类型转换为力场伤害并增加力场伤害骰，需读取并改写命中动作伤害类型
+- 坚守战线（`XGE:战士:坚守战线:10`）· attackHit, NEW:moveWithinReach · 读 action.attack.opportunity · 做 —：在触及内移动引发借机攻击，且需在 attackHit 识别借机攻击实例以将目标速度降为0
+- 生死流转（`XGE:战士:生死流转:18`）· reducedTo0 · 读 action.damage · 做 cancel：受到致0伤害时以反应延缓倒地并立即插入一个额外回合，卡在回合打断插入机制
+- 守护战技（`XGE:战士:守护战技:7`）· attackHit · 读 action.attack.roll action.targets · 做 cancel runBranch:damageOnly:x0.5：被攻击命中时反应掷1d8加进AC，使攻击未命中或使受到的伤害减半，需读取攻击检定结果并动态改变命中状态或减半伤害
+- 燕返（`XGE:战士:燕返:15`）· d20Rolled · 读 action.targets action.kind action.onMyTurn · 做 clearAdv NEW:extraAttack：检定有优势时放弃优势换取对同一目标的额外攻击，需在 d20 检定中清除优势并赋予限定同一目标的额外攻击
+- 混乱箭（`XGE:spell:混乱箭`）· attackHit · 读 action.damage.dice · 做 set:damageType repeat：命中根据两颗d8掷骰决定伤害类型，若两颗点数相同则跳跃对新目标发起重复攻击（repeat）
+- 烈焰箭矢（`XGE:spell:烈焰箭矢`）· attackHit, NEW:attackMade · 读 action.attack.kind action.attack.weapon NEW:action.attack.ammunition · 做 addDamage：远程武器使用附魔箭矢攻击时附加火焰伤害并消耗弹药计数，需识别弹药武器并管理12发弹药资源
+- 灵魂牢笼（`XGE:spell:灵魂牢笼`）· NEW:creatureKilled · 读 action.targets NEW:action.target.creatureType · 做 —：类人生物死亡时反应捕获灵魂为6次充能容器，需在生物死亡事件中识别生物类型并管理充能
+- 魔石术（`XGE:spell:魔石术`）· rollMod:d20, rollMod:damage · 读 action.attack.kind action.attack.weapon NEW:action.weapon.name · 做 NEW:overrideAtkMod NEW:overrideDmgMod：附魔3块石头允许任何人投掷时使用施法者的属性调整值并造成1d6钝击，需读取投掷动作并覆盖攻击/伤害加值
+- 莫伊之影（`XGE:spell:莫伊之影`）· attackHit · 读 action.by action.targets · 做 runBranch:onHit:NEW:dealDamage：自身获得重度遮蔽与光耀抗性，且10尺内生物攻击命中你时反弹2d8暗蚀伤害，需在 attackHit 捕获攻击者并反击伤害
+- 神圣武器（`XGE:spell:神圣武器`）· attackHit · 读 action.attack.weapon · 做 addDamage：武器命中附加2d8光耀伤害已由现有 attackHit 的 addDamage 完全支持，次要爆发动作已写全，把 automation 改为 full 即可
+- 生命转换（`XGE:spell:生命转换`）· damageTaken · 读 action.result.damage · 做 NEW:healTarget：自身承受4d8不可减少伤害，同时给30尺内目标恢复等同于实际承受伤害两倍的生命值，需读取实际造成伤害（action.result.damage）并传给治疗
+- 吸收元素（`XGE:spell:吸收元素`）· damageIncoming, attackHit · 读 action.damage.types action.attack.melee · 做 remember runBranch:damageOnly:x0.5 addDamage:sameType：受到特定元素伤害时以反应减半本次伤害并记住该类型，在下回合首次近战命中时附加该类型的额外伤害
+- 西风打击（`XGE:spell:西风打击`）· rollMod:d20, attackHit · 读 action.attack.weapon action.onMyTurn · 做 set:adv addDamage：法术期间任选一次武器攻击获得优势并加伤+速度，卡在由玩家自选触发攻击的窗口（choice）
+- 幽影刃（`XGE:spell:幽影刃`）· rollMod:d20 · 读 action.attack.weapon NEW:action.target.lighting · 做 set:adv：微光或黑暗中攻击目标具有优势，需在攻击检定中读取目标光照环境（vision）赋予优势
+- 元素灾厄（`XGE:spell:元素灾厄`）· damageIncoming · 读 action.damage.types action.marks.元素灾厄 · 做 NEW:stripResistance addDamage:sameType mark:元素灾厄：剥夺指定元素抗性且每回合首次受到该类型伤害额外受2d6伤害，需在 damageIncoming 剥夺抗性并加伤
+- 矮人飞锤（`XDMG:item:矮人飞锤`）· attackHit · 读 action.attack.ranged action.attack.weapon action.targets · 做 addDamage：远程武器攻击命中时根据目标类型是否为巨人追加 1d8 或 2d8 力场伤害
+- 矮人王圣斧（`XDMG:item:矮人王圣斧`）· attackHit · 读 action.attack.weapon action.attack.ranged action.result.crit action.targets · 做 addDamage：攻击掷出20追加20点挥砍伤害，投掷命中对巨人额外追加力场伤害；另有召唤土元素
+- 艾恩石, 高等吸收（`XDMG:item:艾恩石, 高等吸收`）· spellCast · 读 action.spell.level action.by · 做 cancel：用反应使8环及以下法术无效化并累计消耗20环，需在 spellCast 读取法术环阶并 cancel
+- 艾恩石, 吸收（`XDMG:item:艾恩石, 吸收`）· spellCast · 读 action.spell.level action.by · 做 cancel：用反应使4环及以下法术无效化并累计消耗20环，需在 spellCast 读取法术环阶并 cancel
+- 奥喀斯之杖（`XDMG:item:奥喀斯之杖`）· attackHit · 读 action.attack.melee action.attack.weapon · 做 addDamage：近战命中追加 2d12 暗蚀伤害需 attackHit 注入伤害；另有召唤30只不死生物的大规模召唤缺口
+- 百眼法袍（`XDMG:item:百眼法袍`）· spellCast · 读 action.name action.targets · 做 —：被光亮术指定或5尺内施展昼明术时致盲，需在 spellCast 检测法术名与目标/范围
+- 波涛（`XDMG:item:波涛`）· attackHit · 读 action.attack.weapon action.result.crit · 做 addDamage：攻击掷出20时追加21点暗蚀伤害，需在 attackHit 读取暴击并追加伤害；另有支配野兽
+- 成长药水（`XDMG:item:成长药水`）· attackHit · 读 action.attack.weapon action.attack.unarmed · 做 addDamage：变巨期间武器与徒手攻击命中额外造成 1d4 伤害，需在 attackHit 追加伤害并处理体型增大
+- 触须权杖（`XDMG:item:触须权杖`）· attackHit · 读 action.targets action.result.hit · 做 NEW:checkMultiHitCount：单次动作发动3次触须攻击，需统计多段攻击是否命中同一目标并触发敏捷豁免束缚
+- 淬毒匕首（`XDMG:item:淬毒匕首`）· attackHit · 读 action.attack.weapon action.targets · 做 NEW:consumePoisonCoat：附赠动作覆毒后，下一次武器命中生物时触发体质豁免并施加毒素伤害与中毒，命中后消耗毒刃
+- 打击之锤（`XDMG:item:打击之锤`）· attackHit,rollMod:attack,rollMod:damage · 读 action.attack.weapon action.result.crit action.targets · 做 addDamage NEW:destroyCreature：对构装生物攻伤+2，暴击追加钝击伤害且构装生物残血直接摧毁，需读取暴击及目标类型与生命值
+- 发条护符（`XDMG:item:发条护符`）· d20Rolled · 读 action.kind action.attack.* · 做 set:d20:10：攻击检定时可选择不掷骰而直接在 d20 上取 10，需在 d20Rolled 阶段固定骰值
+- 法术反转戒指（`XDMG:item:法术反转戒指`）· saveSucceeded,spellCast · 读 action.spell.level action.targets action.area action.by · 做 set:targets cancel：7环及以下单目标法术豁免成功时用反应反弹给施法者，需在豁免成功时读取法术环阶与目标并反弹
+- 反射闪避戒指（`XDMG:item:反射闪避戒指`）· d20Rolled · 读 action.kind action.save.ability · 做 succeed：敏捷豁免失败时用反应消耗充能改为成功，需在 d20Rolled 拦截失败并将结果改为成功
+- 防护圣甲虫（`XDMG:item:防护圣甲虫`）· d20Rolled,rollMod:save · 读 action.spell.school action.by · 做 succeed：法术豁免优势，对抗死灵系或亡灵有害效应豁免失败时反应改成功，需在 d20Rolled 拦截死灵学派/亡灵来源并改判定
+- 光辉头盔（`XDMG:item:光辉头盔`）· attackHit,damageIncoming · 读 action.attack.weapon action.damage.types action.kind · 做 addDamage：武器附火命中追加 1d6 火焰伤害；受到法术火焰伤害时可能引爆头盔宝石，需拦截命中与法术火伤
+- 黑刃（`XDMG:item:黑刃`）· attackHit,reducedTo0 · 读 action.attack.weapon action.targets action.result.reducedTo0 · 做 NEW:gainTempHpFromTargetMaxHp：命中亡灵反噬；击杀非亡灵非构装生物时吞噬灵魂并获得等同其生命上限的临时生命值，需拦截 attackHit 与 reducedTo0
+- 轰天震雷鲁特琴（`XDMG:item:轰天震雷鲁特琴`）· attackHit · 读 action.attack.weapon action.attack.melee · 做 addDamage：近战武器命中时追加 2d8 雷鸣伤害，需在 attackHit 注入额外雷鸣伤害
+- 静语卷册（`XDMG:item:静语卷册`）· spellCast · 读 action.spell.level action.economy action.spell.components · 做 set:economy:bonus refund:slot：以附赠动作施展法术且免除成分与法术位消耗，需在 spellCast 修改动作类型与免消耗法术位
+- 凯斯之剑（`XDMG:item:凯斯之剑`）· attackHit · 读 action.attack.weapon action.targets · 做 addDamage：对亡灵攻击命中追加 2d10 挥砍伤害；发动攻击时可将命中加值转移为AC，需拦截 attackHit 与攻击时动态加值分配
+- 雷霆法杖（`XDMG:item:雷霆法杖`）· attackHit · 读 action.attack.melee action.attack.weapon · 做 addDamage：近战命中时触发追加闪电伤害与体质豁免震慑，需读取命中动作属性并追加伤害与判定
+- 雷霆巨棒（`XDMG:item:雷霆巨棒`）· attackHit · 读 action.attack.weapon action.targets · 做 addDamage：武器攻击命中时追加雷鸣伤害（生物1d8/物件3d8），需感知武器攻击与目标类型；主动能力卡在地表破坏与区域规则
+- 魅惑法杖（`XDMG:item:魅惑法杖`）· d20Rolled,NEW:saveSucceeded · 读 action.spell.school action.targets action.by · 做 NEW:reflectSpell：单目标惑控法术豁免失败改成功，及豁免成功后反应反射回施法者，需读取法术学派、目标与来源并重定向法术
+- 辟矢夺箭手套（`XDMG:item:辟矢夺箭手套`）· damageIncoming · 读 action.attack.ranged action.attack.weapon · 做 reduceDamage：被远程武器攻击命中时反应减伤，需读取攻击是否为远程武器，且减至0时抓取抛掷物卡在物品交互
+- 祈神蜡烛（`XDMG:item:祈神蜡烛`）· spellCast · 读 action.spell.level action.spell.list · 做 refund:slot：30尺区域内牧师/德鲁伊施展1环法术不耗法术位（需读取法术环阶与职业列表并退还法术位），且包含区域光照D20优势与异界之门召唤
+- 骑士之盾（`XDMG:item:骑士之盾`）· attackHit,saveForced · 读 action.targets · 做 cancel：受到攻击或被迫豁免时反应开启5尺庇护力场阻隔触发动作与内外伤害，需阻断触发动作并卡在绝对区域屏障
+- 闪电标枪（`XDMG:item:闪电标枪`）· attackHit · 读 action.attack.weapon action.damage.types · 做 set:damageType：用该标枪命中时可将伤害类型转换为闪电伤害，需在命中后修改动作伤害类型（set:damageType）
+- 圣洁之书（`XDMG:item:圣洁之书`）· spellCast · 读 action.spell.slot · 做 set:slot：施法时将消耗的法术位视为高一阶结算（需读取并修改 spell.slot），且神光附带光环攻击劣势规则
+- 速度之靴（`XDMG:item:速度之靴`）· rollMod:d20 · 读 NEW:action.attack.isOpportunity · 做 —：速度加倍已可实现，但针对自身的借机攻击施加劣势需检定修正识别动作是否为借机攻击（NEW:action.attack.isOpportunity）
+- 缩小药水（`XDMG:item:缩小药水`）· rollMod:damage · 读 action.attack.weapon action.attack.unarmed · 做 NEW:reduceDamage：缩小武器或徒手命中时伤害掷骰减1d4（最低1），需在伤害掷骰窗口读取攻击方式并减少伤害骰，且体型缩小涉及规则支撑
+- 统御权杖（`XDMG:item:统御权杖`）· damageTaken · 读 action.by · 做 NEW:endEffect：展示权杖魅惑目标8小时视你为领袖，受到施法者或其盟友伤害时提前终止，需在受伤害时读取伤害来源（action.by）并移除效应
+- 瓦解之锤（`XDMG:item:瓦解之锤`）· attackHit · 读 action.attack.weapon action.result.damage · 做 NEW:forceSaveAndDestroy：命中邪魔或不死生物时追加光耀伤害，且若目标生命值因此降至25以下须迫使感知豁免失败直接摧毁，需读取动作伤害结果与即死摧毁机制
+- 王者权杖（`XDMG:item:王者权杖`）· attackHit · 读 action.attack.item · 做 addDamage：近战命中时可选择追加汲取生命伤害回血或迫使体质豁免麻痹，以及附赠动作切换武器形态与次数管理
+- 维克那法眼（`XDMG:item:维克那法眼`）· spellCast · 读 action.name · 做 NEW:soulDevourCheck：消耗充能施法后需触发5%几率灵魂被吞噬沦为NPC的反噬，且附带30尺透视与超大真实视觉
+- 维克那魔掌（`XDMG:item:维克那魔掌`）· attackHit, spellCast · 读 action.attack.melee action.name · 做 addDamage NEW:forceSelfSave：近战攻击命中时追加2d8寒冷伤害，且每次施展魔掌法术后对自身触发暗示术迫使恶行
+- 无踪粉（`XDMG:item:无踪粉`）· attackHit, attackMissed, spellCast · 读 action.by · 做 NEW:removeEffect：以操作动作赋予光环内群体隐形，受影响生物发动攻击或施法时需自动提前终止其隐形状态
+- 吸矢盾（`XDMG:item:吸矢盾`）· attackHit · 读 action.attack.ranged action.targets · 做 set:targets：周围5尺内目标受到远程攻击时以反应代替成为目标，需在命中前读取远程攻击属性并将目标重定向为自身
+- 吸收权杖（`XDMG:item:吸收权杖`）· spellCast · 读 action.targets action.area action.spell.slot · 做 cancel：以反应吸收仅以自身为目标的非范围法术，打断施法并没收法术位，将法术环阶存为能量转为法术位
+- 贤者法杖（`XDMG:item:贤者法杖`）· spellCast · 读 action.targets action.area action.spell.slot · 做 cancel：反应吸收仅以自身为目标的法术打断施法并获得等量充能，超额触发复仇打击自爆
+- 阳炎剑（`XDMG:item:阳炎剑`）· attackHit · 读 action.attack.weapon · 做 addDamage：命中亡灵额外造成1d8光耀伤害，现有 attackHit before 的 addDamage 与 target.type 判断已完全支持
+- 伊格薇尔伏恶魔志（`XDMG:item:伊格薇尔伏恶魔志`）· rollMod:damage, spellCast · 读 action.kind action.targets action.name · 做 NEW:maxDamage set:slot：对恶魔施法伤害骰取最大值、施展防护法阵和异界誓缚视为9环且恶魔豁免劣势，需修改动作伤害与施法环阶
+- 银龙鳞甲（`XDMG:item:银龙鳞甲`）· rollMod:d20 · 读 action.by action.name · 做 —：对抗龙类的战栗威仪或吐息武器豁免具有优势，需读取动作名称及发起者类别以自动赋予优势
+- 引弹盾（`XDMG:item:引弹盾`）· attackHit, damageIncoming · 读 action.attack.ranged action.attack.weapon action.targets · 做 set:targets halveDamage：10尺内生物成为远程武器攻击目标时强制重定向为自身，且自身受远程武器伤害减半，需改写攻击目标与减半伤害
+- 隐形药水（`XDMG:item:隐形药水`）· attackHit, attackMissed, spellCast · 读 action.by · 做 NEW:removeEffect：饮用进入隐形，在自身发动攻击检定、造成伤害或施展法术时自动解除隐形状态
+- 应答之剑（`XDMG:item:应答之剑`）· damageTaken · 读 action.by · 做 NEW:reactionAttack：受到伤害时以反应对伤害来源发动具优势且无视抗性免疫的反击近战攻击，需在 damageTaken 获取攻击者并触发反击
+- 杂技长棍（`XDMG:item:杂技长棍`）· attackHit · 读 action.targets · 做 cancel：被攻击命中时以反应临时提升5点AC并可能取消该次命中，需在 attackHit before 介入改写命中结果
+- 征服（`XDMG:item:征服`）· attackHit · 读 action.attack.weapon action.targets · 做 addDamage：战锤命中构装、元素或巨人时造成4d8额外力场伤害，需在 attackHit 读取目标类型追加差异化伤害
+- 基础毒药（`XPHB:item:基础毒药`）· attackHit · 读 action.attack.weapon action.damage.types · 做 addDamage：涂抹武器或弹药在下一次造成穿刺/挥砍伤害时追加1d4毒素伤害并消耗，需在 attackHit 读取伤害类型并追加伤害
+- 抗毒剂（`XPHB:item:抗毒剂`）· rollMod:d20 · 读 NEW:action.save.condition · 做 —：避免或结束中毒状态的豁免具有优势，需读取豁免所针对的状态类型以避免弹窗询问
+- 燃油（`XPHB:item:燃油`）· damageIncoming · 读 action.damage.types · 做 addDamage：被泼油目标受到火焰伤害时追加5点火伤，需在 damageIncoming 读取火焰伤害类型并追加伤害
+- 魅惑（`XPHB:condition:魅惑`）· attackHit, spellCast · 读 action.targets · 做 cancel：禁止以魅惑源为目标发动攻击或伤害性法术，需读取动作目标并在选为目标时拦截打断
+- 协助（`XPHB:action:协助`）· rollMod:d20 · 读 action.by · 做 —：协助盟友下一次属性检定或攻击获得优势，现有 rollMod 与 effect 消耗机制已完全支持
+- 预备（`XPHB:action:预备`）· NEW:readiedTrigger · 读 action.name action.by · 做 NEW:executeReadiedAction：声明触发条件并在满足时消耗反应执行预备的动作，需动态监听触发动作并结算预留动作
+- 横扫（`XPHB:mastery:横扫`）· attackHit · 读 action.attack.melee action.attack.weapon action.targets action.marks.横扫 · 做 repeat mark:横扫：近战武器命中时每回合一次对5尺内另一生物追加一次不加调整值的攻击，需 repeat 重复攻击并 mark 记录每回合次数
+- 迅击（`XPHB:mastery:迅击`）· NEW:attackAction · 读 action.attack.weapon action.marks.迅击 · 做 set:economy mark:迅击：双持轻型武器的副手额外攻击转为攻击动作的一部分而非附赠动作，需修改额外攻击的动作经济开销
+- 猎人印记（`XPHB:spell:猎人印记`）· reducedTo0, rollMod:d20 · 读 action.targets action.result.reducedTo0 · 做 NEW:enableMarkTransfer：目标生命值降至0时解锁附赠动作转移印记，需在 reducedTo0 捕获印记目标倒下并允许附赠动作转移而不重置专注时长
+
+## 现在就能写的（数据要改）
+
+- 油腻术（`XPHB:spell:油腻术`）：现有 spec 已支持（zone 节点自带 on: ['enter', 'turnEnd']、difficult: true 与 rounds: 10，移除提示性 note 节点即可）
+- 反射闪避（`XPHB:武僧:反射闪避:7`）：现有 spec 已支持：damageIncoming before 下 when: "damage.save == 'dex' && !self.has('失能')" 配合 modify: [{ op: 'evasion' }] 即可
+- 返本还元（`XPHB:武僧:返本还元:10`）：战斗内回合结束移除魅惑/恐慌/中毒已用 turnEnded 触发器完整实现；不吃不喝免力竭属于探索规则无需战斗自动化
+- 引导闪避（`XPHB:吟游诗人:引导闪避:14`）：现有 spec 已支持：自身与灵光分享给盟友的 evasion 均在 damageIncoming before 生效，无需额外动作实例
+- 恐惧伏击（`XPHB:游侠:恐惧伏击:3`）：现有 spec 已支持：可在 turnStarted 触发器中判断 round == 1 附加持续至回合结束的速度+10效应，无需常驻人物卡静态层
+- 宿敌（`XPHB:游侠:宿敌:1`）：现有 spec 已完整支持免法术位施展猎人印记及消耗专属资源，资源上限按等级缩放属人物卡静态层配置
+- 战地施法者（`XPHB:战地施法者`）：现有 spec 已完整支持（leftReach 窗口通过 choose+castFrom 施展单目标动作法术代替借机攻击，专注豁免优势通过 rollMods 实现）
+- 运动健将（`XPHB:战士:运动健将:3`）：现有 spec 已支持（attackHit 读 roll.crit 加移动力并附加 cannot:['provoke'] 效应），移除提示性 note 即可
+- 反冲术（`FRHoF:spell:反冲术`）：现有 spec 已支持（damageIncoming before 反应结合 reduceDamage 及 aim: 'actor' 体质豁免反击），移除提示用 note 节点即可
+- 元素赐福（`TCE:魔契师:元素赐福:6`）：现有 spec 已支持（静态抗性加附赠动作激活飞行悬浮），移除纯文字提示即可
+- 引导神力：秩序之令（`TCE:牧师:引导神力：秩序之令:3`）：现有 spec 已支持（引导神力范围感知豁免施加受伤害解除的魅惑），移除提示丢弃物品的 note 即可
+- 归复平衡（`TCE:术士:归复平衡:1`）：现有 spec 已支持（d20Rolled before 反应结合 clearAdv 消除优劣势），移除提示性 note 即可
+- 灵能面纱（`TCE:游荡者:灵能面纱:13`）：现有 spec 已支持（隐形效应配置 endsOn: attackHit, attackMissed, saveForced），完善 endsOn 条件即可全自动
+- 巨人之力（`TCE:战士:巨人之力:3`）：现有 spec 已支持（attackHit before 触发 addDamage 加伤，附魔加优势），体型提示 note 不影响核心自动化
+- 隐匿通途（`XGE:德鲁伊:隐匿通途:10`）：现有 spec 已支持（已实现自身附赠传送与触碰动作传送自愿生物），移除提示 note 即可全自动
+- 导引打击（`XGE:圣武士:导引打击:3`）：现有 spec 已完全支持（d20Rolled before 窗口通过 modify addToRoll +10 并消耗引导神力），已全自动
+- 精魂之盾（`XGE:野蛮人:精魂之盾:6`）：按当前 spec 已支持 damageIncoming before 窗口下的 reduceDamage，自身等级分支与30尺可见条件均已写全，把 automation 改为 full 即可
+- 额外攻击（`XGE:吟游诗人:额外攻击:6`）：额外攻击已由人物卡内置规则完全自动化支持，无需额外动作实例或触发器
+- 战术大师（`XGE:游荡者:战术大师:3`）：附赠动作协助且距离放宽至30尺，已完整自动化
+- 追猎如风（`XGE:游侠:追猎如风:11`）：未命中时返还一次攻击机会，按现有 spec 触发器已完全实现（automation: full）
+- 坚定之印（`XGE:战士:坚定之印:3`）：命中标记敌人并赋予劣势光环及附赠惩戒攻击加伤，已由现有触发器与效应系统完全实现
+- 潮涌（`XGE:spell:潮涌`）：法术伤害与倒地豁免已完全实现，熄灭环境未受保护火焰属于环境互动，把 automation 改为 full 即可
+- 创造篝火（`XGE:spell:创造篝火`）：区域伤害与进入/回合结束判定按当前 spec 已完全写全，点燃可燃物属于环境效果，把 automation 改为 full 即可
+- 地颤（`XGE:spell:地颤`）：按现有 spec 已支持 area 伤害、倒地状态以及 zone 的 difficult: true 困难地形，补齐 root 节点即可自动化
+- 神圣武器（`XGE:spell:神圣武器`）：武器命中附加2d8光耀伤害已由现有 attackHit 的 addDamage 完全支持，次要爆发动作已写全，把 automation 改为 full 即可
+- 土石喷发（`XGE:spell:土石喷发`）：敏捷豁免半伤与留下 difficult: true 困难地形区域按现有 spec 已完全写全，把 automation 改为 full 即可
+- 矮人腰带（`XDMG:item:矮人腰带`）：现 spec 支持：用 rollMods 在对抗中毒豁免与针对矮人游说检定时提供优势
+- 白龙鳞甲（`XDMG:item:白龙鳞甲`）：现 spec 支持：用 rollMods 在对抗龙类战栗威仪和吐息武器豁免时提示优势
+- 迷醉香水（`XDMG:item:迷醉香水`）：现有 spec 已通过 ask() 询问 5 尺内目标实现魅力检定优势，社交检定手动确认已可直接使用
+- 鸟鸣法杖（`XDMG:item:鸟鸣法杖`）：消耗充能发出鸟鸣音效属纯叙事背景风味，现有实现已满足需求，手动处理正常
+- 通晓药水（`XDMG:item:通晓药水`）：饮用获得通晓语言状态，文字与口头语言理解属探索叙事能力，现有数据已完整支持手动处理
+- 阳炎剑（`XDMG:item:阳炎剑`）：命中亡灵额外造成1d8光耀伤害，现有 attackHit before 的 addDamage 与 target.type 判断已完全支持
+- 移位斗篷（`XDMG:item:移位斗篷`）：对自身攻击具有劣势且受到伤害后失效至下回合开始，现有 rollMod 与 damageTaken 的 applyEffect 已完全支持
+- 协助（`XPHB:action:协助`）：协助盟友下一次属性检定或攻击获得优势，现有 rollMod 与 effect 消耗机制已完全支持
+- 躲藏（`XPHB:action:躲藏`）：执行DC 15隐匿检定成功获得隐形状态，规则已在动作树中完全实现，视线与掩护依赖DM判断
