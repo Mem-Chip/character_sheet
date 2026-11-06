@@ -34,7 +34,7 @@ const NODE_KINDS = new Set([
   'mark', 'runBranch', 'refund', 'chooseTargets', 'allocate', 'retype', 'trimDamage', 'repeatAction',
 ]);
 const ROLL_OPS = new Set(['adv', 'disadv', 'noAdv', 'add', 'addDice', 'autoFail', 'autoSucceed', 'critRange', 'autoCritOnHit', 'minD20', 'minDie', 'targetAdd', 'maxDice']);
-const MODIFY_OPS = new Set(['reroll', 'addToRoll', 'reduceDamage', 'halveDamage', 'doubleDamage', 'setHp', 'cancel', 'evasion', 'succeed', 'redirect', 'absorb', 'clearAdv', 'cancelUnlessSave', 'unlessSave', 'setDc', 'setAttackBonus', 'setDamageType', 'rerollDamage']);
+const MODIFY_OPS = new Set(['reroll', 'addToRoll', 'setD20', 'reduceDamage', 'halveDamage', 'doubleDamage', 'setHp', 'cancel', 'evasion', 'succeed', 'redirect', 'absorb', 'clearAdv', 'cancelUnlessSave', 'unlessSave', 'setDc', 'setAttackBonus', 'setDamageType', 'rerollDamage']);
 const STATIC_KINDS = new Set(['ac', 'speed', 'hpMax', 'speedSet', 'spellDc', 'resist', 'resistAll', 'immune', 'vuln', 'conditionImmune']);
 
 const NUM = T.num;
@@ -154,7 +154,7 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
         if (n.from && !['all', 'enemies', 'allies', 'targets'].includes(n.from)) out.push(`${where(at)}：from 只认 all / enemies / allies / targets`);
         if (n.kind === 'allocate') {
           if (!n.var) out.push(`${where(at)}：allocate 缺少 var（分到的数放在哪）`);
-          expr(n.total, 'node', NUM, `${at}.total`);
+          expr(n.total, 'node', DICE, `${at}.total`);
           expr(n.maxEach, 'node', NUM, `${at}.maxEach`);
         }
         if (n.kind !== 'repeatAction') nodes(n.do, `${at}.do`);
@@ -171,7 +171,7 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
         if (!n.from && !n.fromVar) out.push(`${where(at)}：castFrom 要写 from 或 fromVar（施展哪一条动作）`);
         break;
       case 'resource':
-        expr(n.delta, 'node', NUM, `${at}.delta`);
+        expr(n.delta, 'node', DICE, `${at}.delta`);
         break;
       case 'economy':
         expr(n.move, 'node', NUM, `${at}.move`);

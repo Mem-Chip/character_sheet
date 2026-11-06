@@ -160,7 +160,7 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
         d,
         scope: {
           self: p.source!, source: d.source, target: p.target, attacker: p.source!, attack: p.attack ?? NO_ATTACK, effect: d.effect,
-          damage: { type: primary, amount: 0, crit: p.crit } as Record<string, Value>,
+          damage: { type: primary, amount: 0, crit: p.crit, isAttack: !!p.attack } as Record<string, Value>,
         },
       }));
     if (cands.length) {
@@ -207,7 +207,7 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
     scope: {
       attack: p.attack,
       // save：这次伤害来自哪项豁免（不是豁免带来的 = 空字符串）；saved：豁免成功了没有
-      damage: { type: p.components[0]?.type ?? '', amount: rolledTotal, crit: p.crit, save: p.save?.ability ?? '', saved: !!p.save?.success },
+      damage: { type: p.components[0]?.type ?? '', amount: rolledTotal, crit: p.crit, save: p.save?.ability ?? '', saved: !!p.save?.success, isAttack: !!p.attack },
       event: { label: p.label, source: p.source },
     },
     cause: rolledSeq,
@@ -311,7 +311,7 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
   if (hpBefore > 0 && hpAfter === 0 && rest > 0) {
     fireWindow(tx, {
       event: 'reducedTo0', window: 'before', actor: p.source ?? undefined, target: p.target,
-      scope: { attack: p.attack, damage: { type: p.components[0]?.type ?? '', amount: total, crit: p.crit } },
+      scope: { attack: p.attack, damage: { type: p.components[0]?.type ?? '', amount: total, crit: p.crit, isAttack: !!p.attack } },
       cause: rolledSeq,
       modify: (m, by) => {
         if (m.op === 'setHp') {
@@ -389,7 +389,7 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
     tx.emit('damageTaken', { id: p.target, from: p.source ?? null, amount: total, type: p.components[0]?.type ?? '', crit: !!p.crit, tempAbsorbed, downed, killed }, seq);
     fireWindow(tx, {
       event: 'damageTaken', window: 'after', actor: p.source ?? undefined, target: p.target,
-      scope: { attack: p.attack, damage: { type: p.components[0]?.type ?? '', amount: total, crit: p.crit } },
+      scope: { attack: p.attack, damage: { type: p.components[0]?.type ?? '', amount: total, crit: p.crit, isAttack: !!p.attack } },
       cause: seq,
     });
   }

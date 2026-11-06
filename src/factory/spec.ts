@@ -49,7 +49,7 @@ const SCOPE_FIELDS: Array<[ScopeKind, string]> = [
 
 /** 窗口：引擎在什么时候问「有没有能力要在这时生效」 */
 const WINDOWS: Array<[string, string, string, string, string]> = [
-  ['d20Rolled', 'before', '掷骰者 / 攻击检定的目标', 'roll（还没判定；roll.failing = 按现在的结果会失败）、attack', 'reroll、addToRoll、succeed（改成成功 / 命中）、cancel、clearAdv（消掉优势 / 劣势）'],
+  ['d20Rolled', 'before', '掷骰者 / 攻击检定的目标', 'roll（还没判定；roll.failing = 按现在的结果会失败）、attack', 'reroll、addToRoll、setD20（d20 直接取某个值）、succeed（改成成功 / 命中）、cancel、clearAdv（消掉优势 / 劣势）'],
   ['d20Rolled', 'after', '同上', 'roll（已判定）、attack', '—'],
   ['attackHit', 'before', '攻击者 / 被命中者', 'attack、roll。先问防守方，再问进攻方', '防守方：halveDamage、cancel（改为未命中）、redirect（改攻击目标）；进攻方：doubleDamage，或用 do 里的 addDamage 加伤害'],
   ['attackHit', 'after', '同上', 'attack、roll、damage（已结算）', '—'],
@@ -185,6 +185,8 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
 **伤害骰**：\`action.damage.dice\`（最近一次伤害的骰子）、\`action.damage.die\`（其中一颗：2d10 → 1d10，「多掷一颗这次的伤害骰」写 \`addDamage\` 的 \`dice: 'action.damage.die'\`、\`type: 'action.damage.type'\`）、\`action.damage.type\`、\`action.damage.total\`。
 命中窗口里伤害还没掷，\`dice\` / \`die\` 已经是这次要掷的。**「用完一个动作之后」**挂 \`actionDone\` 窗口（只开给最外层的动作），这时结果都齐了。
 区域（\`zone\` 节点放下的）每次生效都算放出它的那道法术的一次结算：区域的 do 里 \`action\` 就是那道法术（\`action.zone\` 不为空），区域伤害也是法术伤害；记号跟着区域走，同一次施法只算一次。
+**这包伤害是不是攻击造成的**：伤害窗口（damageIncoming、damageTaken）里用 \`damage.isAttack\`（法术豁免、区域、持续伤害都是 false），不要写 \`attack != null\`，也不用问人。
+检定修正（rollMod）里没有 \`damage\`，伤害的类型读 \`action.damage.type\`。\`includes\` 也能查文字：\`includes(action.name, '吐息')\` = 名字里有「吐息」。
 不在动作里（回合开始的触发器这类）时 \`action\` 是 null，读它的字段得到空值：\`action.spell.level == 0\` 为假。
 触发器的 do 读到的就是**触发它的那次动作**；带 \`trigger\` 的反应动作进了 root 之后读到的是它自己，触发它的那次在 \`action.parent\`。
 
@@ -209,7 +211,7 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
   挑 \`min\`～\`count\` 个，对每个执行 \`do\`（target = 它）。必须挑的写 \`min: '1'\`（候选不多于下限时不问，直接全要）。没有地图时不按距离筛，提示里会写「N 尺内」让人自己把握。
   「5 尺内另一个生物」：\`within: { ft: '5', of: 'target' }, exclude: ['self', 'target']\`；「法术的目标之一」：\`from: 'targets'\`。
   在 \`spellCast\` before 窗口里写 \`addTo: 'cast'\`：把挑中的加进这次施法的目标（孪生法术，配 \`modifyCast\` 的 \`slotDelta: '1'\` 按高一环算）。
-- **分配点数** \`allocate\`：总共 \`total\` 点，候选同上（先挑给谁），再逐个问给多少（每个最多 \`maxEach\`，表达式里 target = 那个生物），分到的数在 \`vars.<var>\`。维持生命、鼓舞斩用它。
+- **分配点数** \`allocate\`：总共 \`total\` 点，候选同上（先挑给谁），再逐个问给多少（每个最多 \`maxEach\`，表达式里 target = 那个生物），分到的数在 \`vars.<var>\`。维持生命、鼓舞斩用它。\`total\` 可以带骰子（\`2d8 + level\`），先掷出总数再分；\`resource\` 节点的 \`delta\` 也一样（「重获 1d4 点」写 \`delta: '1d4'\`）。
 - **几选一** \`choose\`：\`count\` 可以是表达式（11 级起选两种）；\`pool\` 可以按学派 / 职业列表筛（\`school: '预言'\`、\`list: '牧师'\`）。
 - **改伤害类型** \`retype\`：命中窗口 / 受伤窗口里改正在结算的伤害；施法窗口里改这次施法的。配 \`choose\` 的 \`var\`：\`{ kind: 'retype', value: 'vars.elem' }\`。
 - **扣骰子** \`trimDamage\`：命中窗口里从伤害包的某一项去掉几颗骰（诡诈打击：\`from: '偷袭'\`，那一项的来源名就是加伤害的那个能力的 label）。

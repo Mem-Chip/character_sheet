@@ -102,6 +102,12 @@ function dice(tx: Tx, ctx: ExecCtx, e: ExprSrc, what: string): Dice {
   return v;
 }
 
+/** 数量字段可以写骰子（「重获 1d4 点」「合计 2d8 + 等级点」）：写死的数直接用，有骰子就当场掷 */
+function rolledNum(tx: Tx, ctx: ExecCtx, e: ExprSrc, what: string): number {
+  const d = dice(tx, ctx, e, what);
+  return rollComponent(tx, { dice: d, type: what, from: ctx.actionName }, false, controllerOf(tx, ctx.self), 0).total;
+}
+
 /** 伤害类型字段：含「.」的当表达式（`attack.damageType`），否则是字面类型名 */
 function typeOf(tx: Tx, ctx: ExecCtx, t: string | undefined): string {
   if (ctx.cast?.damageType) return ctx.cast.damageType;
@@ -376,7 +382,7 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
       const c = tx.state.combatants[id];
       const max = effectiveView(tx, id).resources[n.id] ?? 0;
       const used = c.live.resourcesUsed[n.id] ?? 0;
-      const delta = num(tx, ctx, n.delta, '资源变化');
+      const delta = rolledNum(tx, ctx, n.delta, '资源变化');
       tx.emit('resourceUsed', { id, resource: n.id, used: Math.max(0, Math.min(max, used - delta)) }, ctx.cause);
       return;
     }
@@ -1002,7 +1008,7 @@ function pickTargets(tx: Tx, ctx: ExecCtx, pick: TargetPick, prompt: string): Id
 
 /** 分配点数：按候选逐个问给多少（剩下的点数用完就停），对分到的执行 do */
 function allocate(tx: Tx, n: Extract<Node, { kind: 'allocate' }>, ctx: ExecCtx): void {
-  let left = num(tx, ctx, n.total, `${n.prompt} 的总数`);
+  let left = rolledNum(tx, ctx, n.total, `${n.prompt} 的总数`);
   const cap = n.maxEach !== undefined ? n.maxEach : undefined;
   const who = pickTargets(tx, ctx, { ...n, count: n.count ?? 99, min: n.min ?? 0 }, n.prompt);
   const share: Array<[Id, number]> = [];

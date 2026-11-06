@@ -150,6 +150,8 @@ export interface TriggerSpec {
 export type Modify =
   | { op: 'reroll'; die: 'd20'; keep: 'new' | 'higher' | 'lower' }
   | { op: 'addToRoll'; value: ExprSrc }
+  /** d20 不用掷、直接取这个值（时计护符「d20 取 10」）；当自然值算，所以取 20 也是重击、取 1 也是失手 */
+  | { op: 'setD20'; value: ExprSrc }
   /** value 可以带骰子（1d10 + pb），由能力持有者掷一次 */
   | { op: 'reduceDamage'; value: ExprSrc; types?: string[] }
   | { op: 'halveDamage' }

@@ -297,6 +297,13 @@ export function d20Test(tx: Tx, req: RollRequest): RollResult {
         v.terms.forEach((t, i) => { total += t.sign * fs[i].reduce((a, b) => a + b, 0); });
         result.extra.push({ label: by.label, dice: v.toString(), faces: fs.flat(), total });
         recompute();
+      } else if (m.op === 'setD20') {
+        const v = runInt(m.value, makeEnv(tx, { self: by.owner, source: by.source, effect: by.effect, roll: rollValue(result) }));
+        if (v instanceof Unknown) return;
+        result.natural = Math.max(1, Math.min(20, v));
+        result.d20 = [result.natural];
+        result.mods.push({ op: 'add', label: `${by.label}：d20 取 ${result.natural}`, owner: by.owner, from: by.from });
+        recompute();
       } else if (m.op === 'succeed') {
         // 传奇抗性、现世传说：失败改成成功 / 命中（连自动失败也盖过）
         result.autoFail = false;

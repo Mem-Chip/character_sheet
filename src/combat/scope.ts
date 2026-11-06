@@ -57,7 +57,7 @@ const FUNCS: Record<string, FnSig> = {
   ask: { params: [T.str], returns: T.bool, doc: '显式询问' },
   abilityMod: { params: [T.str], returns: T.num, doc: "self 某属性的调整值：abilityMod(attack.ability)" },
   combatant: { params: [T.str], returns: T.ref, doc: '按 id 取参与者（事件载荷里只有 id）' },
-  includes: { params: [T.list(T.any), T.any], returns: T.bool, doc: "列表里有没有某个值：includes(action.spell.lists, '法师')" },
+  includes: { params: [T.any, T.any], returns: T.bool, doc: "列表里有没有某个值：includes(action.spell.lists, '法师')；第一个是文字时看有没有这一段：includes(action.name, '吐息')" },
 };
 
 const ROLL_FULL = T.obj({
@@ -78,7 +78,8 @@ const ACTION = T.obj({
   results: T.list(T.open), hitCount: T.num, critCount: T.num, savedCount: T.num, failedCount: T.num, damageTotal: T.num, downedCount: T.num,
   damage: T.obj({ dice: T.dice, die: T.dice, type: T.str, total: T.num }),
 });
-const DAMAGE = T.obj({ type: T.str, amount: T.num, crit: T.bool, save: T.str, saved: T.bool });
+/** 正在结算的这包伤害；isAttack：是不是攻击（命中）造成的，法术豁免、区域、持续伤害都是 false */
+const DAMAGE = T.obj({ type: T.str, amount: T.num, crit: T.bool, save: T.str, saved: T.bool, isAttack: T.bool });
 
 const COMMON: Record<string, Ty> = {
   self: T.ref, source: T.ref,
@@ -331,6 +332,7 @@ export function makeEnv(tx: Tx, d: ScopeData, assumptions?: string[]): EvalEnv {
     },
     includes: (a) => {
       const [list, x] = a;
+      if (typeof list === 'string') return typeof x === 'string' && list.includes(x);
       if (!Array.isArray(list)) return false;
       return list.some((v) => (isRef(v) && isRef(x) ? v.id === x.id : v === x));
     },

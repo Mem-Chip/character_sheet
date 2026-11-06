@@ -76,7 +76,7 @@ const COST_KEYS: Array<[string, readonly string[]]> = [
   ['economy', ['economy', 'n']], ['resource', ['resource', 'n']], ['slot', ['slot']], ['recharge', ['recharge', 'id']], ['charges', ['charges', 'n']],
 ];
 const MODIFY_KEYS: Record<string, readonly string[]> = {
-  reroll: ['die', 'keep'], addToRoll: ['value'], succeed: [],
+  reroll: ['die', 'keep'], addToRoll: ['value'], setD20: ['value'], succeed: [],
   reduceDamage: ['value', 'types'], halveDamage: [], doubleDamage: [], evasion: [],
   setHp: ['value'], cancel: ['refundSlot'], redirect: ['to'], absorb: ['from'], clearAdv: ['which'], rerollDamage: ['count'],
 };
