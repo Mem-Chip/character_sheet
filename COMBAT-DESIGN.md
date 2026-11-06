@@ -1453,4 +1453,6 @@ type OverridePatch =
 | 用一次攻击施展戏法 | 不用新引擎：动作 `cost: [{ economy: 'attack' }]` + `choose`（`pool.from: 'ownCantrips'`、`list`）+ `castFrom`。战争魔法、吟游诗人 / 剑咏者的额外攻击、秘法战斗风格这么写了 |
 | 改射程 | 效应 `flags.rangeMult` / `touchRange`；`effectiveRange`（exec.ts）算法术实际射程，界面选目标时用它筛（远程法术） |
 
-还没做：一次换两次攻击（精通战争魔法）、疾风连击里换徒手打击（`economy: 'attack'` 不认 n）。
+| 一次花几次攻击 | `cost: [{ economy: 'attack', n: 2 }]`（精通战争魔法：两次攻击换一道 1～2 环法术）；这个攻击动作剩的不够就拒绝 |
+
+| 疾风连击里换徒手打击 | 疾风连击不走攻击次数（附赠动作的 root 里 repeat 几次徒手打击）：开头一个 `choose`（选项带 `when: self.hasSource(…)`，没有这项能力就只剩「不换」、不问），repeat 次数减去换掉的。予命之手这么写了 |

@@ -277,3 +277,68 @@ describe('真数据：战争魔法（用一次攻击施展戏法）、远程法�
     expect(s.peek((tx) => effectiveRange(tx, 'f', bolt))).toBe(120);
   });
 });
+
+describe('一次花两次攻击（精通战争魔法）', () => {
+  it('攻击动作 4 次里花 2 次施展一道 1 环法术（照常花法术位），还剩 2 次', () => {
+    const dice = scriptedDice();
+    const s = new Session(createEncounter('mwm'), { rules: new RuleBook([FILES[0], aiSpells as unknown as RuleFile, ...FILES.slice(1)]), diceFor: () => dice });
+    done(s.dispatch({ type: 'addCombatant', combatant: makeCombatant({ id: 'f', kind: 'pc', view: makeView({ name: 'f', hpMax: 40, level: 18, pb: 6, levels: { 战士: 18 }, attacksPerAction: 4,
+      score: { int: 14 }, spell: { dc: 14, atk: 6, mod: 2, ability: 'int' }, slots: { 1: 2 }, sources: ['XPHB:战士:精通战争魔法:18', 'XPHB:spell:灼热射线', 'XPHB:spell:魔法飞弹'] }) }) }));
+    done(s.dispatch({ type: 'addCombatant', combatant: makeCombatant({ id: 'g', kind: 'monster', view: makeView({ name: 'g', hpMax: 40, ac: 12 }) }) }));
+    done(s.dispatch({ type: 'startCombat', order: ['f', 'g'] }));
+    // 1～2 环的法师法术有两道（魔法飞弹、灼热射线）→ 问哪道；选魔法飞弹
+    const d = pending(s.dispatch({ type: 'useAction', actor: 'f', action: 'XPHB:战士:精通战争魔法:18#spell', targets: ['g'] }));
+    const mm = d.options.find((o) => o.label === '魔法飞弹')!;
+    dice.push(...Array(10).fill(2));
+    const r = s.decide([mm.id]);
+    if (r.status === 'pending') done(s.decide(r.decision.default as never));
+    expect(s.state.combatants.f.economy.attacksLeft).toBe(2);
+    expect(s.state.combatants.f.live.slotsUsed[1]).toBe(1);
+    expect(s.state.combatants.g.live.hp).toBeLessThan(40);
+  });
+
+  it('攻击动作只剩 1 次时不能用', () => {
+    const dice = scriptedDice();
+    const s = new Session(createEncounter('mwm2'), { rules: new RuleBook([FILES[0], aiSpells as unknown as RuleFile, ...FILES.slice(1)]), diceFor: () => dice });
+    done(s.dispatch({ type: 'addCombatant', combatant: makeCombatant({ id: 'f', kind: 'pc', view: makeView({ name: 'f', hpMax: 40, levels: { 战士: 18 }, attacksPerAction: 3, slots: { 1: 2 },
+      attacks: [{ id: 'ls', name: '长剑', bonus: 5, damage: '1d8', damageType: '挥砍', melee: true, ranged: false, finesse: false, ability: 'str' }],
+      sources: ['XPHB:战士:精通战争魔法:18', 'XPHB:spell:魔法飞弹'] }) }) }));
+    done(s.dispatch({ type: 'addCombatant', combatant: makeCombatant({ id: 'g', kind: 'monster', view: makeView({ name: 'g', hpMax: 40, ac: 30 }) }) }));
+    done(s.dispatch({ type: 'startCombat', order: ['f', 'g'] }));
+    dice.push(2); done(s.dispatch({ type: 'useAction', actor: 'f', action: 'weapon:ls', targets: ['g'] }));
+    dice.push(2); done(s.dispatch({ type: 'useAction', actor: 'f', action: 'weapon:ls', targets: ['g'] }));
+    const r = s.dispatch({ type: 'useAction', actor: 'f', action: 'XPHB:战士:精通战争魔法:18#spell', targets: ['g'] });
+    expect(r.status).toBe('rejected');
+    expect(r.status === 'rejected' && r.reason).toContain('只剩 1 次');
+  });
+});
+
+describe('疾风连击里把一次徒手打击换成予命之手', () => {
+  function monk(sources: string[]) {
+    const dice = scriptedDice();
+    const s = new Session(createEncounter('fl'), { rules: new RuleBook(FILES), diceFor: () => dice });
+    done(s.dispatch({ type: 'addCombatant', combatant: makeCombatant({ id: 'm', kind: 'pc', hp: 10, view: makeView({ name: 'm', hpMax: 30, level: 3, pb: 2, levels: { 武僧: 3 },
+      score: { dex: 16, wis: 14 }, classTable: { 武艺: '1d6' }, resources: { 功力: 3 }, sources: ['XPHB:武僧:疾风连击:2', ...sources] }) }) }));
+    done(s.dispatch({ type: 'addCombatant', combatant: makeCombatant({ id: 'g', kind: 'monster', view: makeView({ name: 'g', hpMax: 40, ac: 10 }) }) }));
+    done(s.dispatch({ type: 'startCombat', order: ['m', 'g'] }));
+    return { s, dice };
+  }
+
+  it('没有予命之手：不问，照常两次徒手打击', () => {
+    const { s, dice } = monk([]);
+    dice.push(15, 3, 15, 3);
+    done(s.dispatch({ type: 'useAction', actor: 'm', action: 'XPHB:武僧:疾风连击:2#use', targets: ['g'] }));
+    expect(evs(s, 'attackHit').length).toBe(2);
+  });
+
+  it('有予命之手：换掉一次 → 治疗自己 1d6 + 2，只打一下', () => {
+    const { s, dice } = monk(['XPHB:武僧:予命之手:3']);
+    const d = pending(s.dispatch({ type: 'useAction', actor: 'm', action: 'XPHB:武僧:疾风连击:2#use', targets: ['g'] }));
+    const yes = d.options.find((o) => o.label.startsWith('换'))!;
+    dice.push(4, 15, 3);   // 治疗 1d6 = 4；一次徒手打击命中
+    done(s.decide([yes.id]));   // 盟友只有自己 → 不再问治疗谁
+    expect(s.state.combatants.m.live.hp).toBe(10 + 4 + 2);
+    expect(evs(s, 'attackHit').length).toBe(1);
+    expect(s.state.combatants.m.live.resourcesUsed['功力']).toBe(1);
+  });
+});

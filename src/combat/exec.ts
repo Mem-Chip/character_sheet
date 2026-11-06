@@ -1449,14 +1449,22 @@ function runAction(tx: Tx, o: ExecuteOpts, x: {
 }): void {
   const { action, actor, c, isSpell, costs, slotLevel0, entryKey, quick, seq, inst } = x;
 
-  // 武器攻击：消耗「攻击」动作给的攻击次数（额外攻击）
-  if (inCombat(tx) && costs.some((k) => 'economy' in k && k.economy === 'attack')) {
-    if (c.economy.attacksLeft > 0) {
-      tx.emit('economyChanged', { id: actor, patch: { attacksLeft: c.economy.attacksLeft - 1 } }, seq);
-    } else if (o.force || c.economy.action > 0) {
-      const per = effectiveView(tx, actor).attacksPerAction;
-      tx.emit('economyChanged', { id: actor, patch: { action: Math.max(0, c.economy.action - 1), attacksLeft: per - 1 } }, seq);
+  // 武器攻击：消耗「攻击」动作给的攻击次数（额外攻击）；n = 一次花几次攻击（精通战争魔法：两次攻击换一道法术）
+  const atkCost = costs.find((k): k is Extract<Cost, { economy: unknown }> => 'economy' in k && k.economy === 'attack');
+  if (inCombat(tx) && atkCost) {
+    const need = atkCost.n === undefined ? 1 : Math.max(1, num(tx, { self: actor, targets: [], entryKey, actionName: action.name, cause: seq, locals: {} }, atkCost.n, '花几次攻击'));
+    const per = effectiveView(tx, actor).attacksPerAction;
+    if (c.economy.attacksLeft >= need) {
+      tx.emit('economyChanged', { id: actor, patch: { attacksLeft: c.economy.attacksLeft - need } }, seq);
+    } else if (c.economy.attacksLeft === 0 && (o.force || c.economy.action > 0) && per >= need) {
+      tx.emit('economyChanged', { id: actor, patch: { action: Math.max(0, c.economy.action - 1), attacksLeft: per - need } }, seq);
       tx.emit('note', { text: `${c.name} 执行「攻击」动作（本动作共 ${per} 次攻击）`, owner: actor }, seq);
+    } else if (o.force) {
+      tx.emit('economyChanged', { id: actor, patch: { attacksLeft: 0 } }, seq);
+    } else if (c.economy.attacksLeft > 0) {
+      throw new Rejected(`「${action.name}」要花 ${need} 次攻击，这个攻击动作只剩 ${c.economy.attacksLeft} 次`);
+    } else if (per < need) {
+      throw new Rejected(`「${action.name}」要花 ${need} 次攻击，${c.name} 一个攻击动作只有 ${per} 次`);
     } else {
       throw new Rejected(`${c.name} 没有剩余的攻击次数，也没有动作了`);
     }

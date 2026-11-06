@@ -960,7 +960,7 @@
      "id": "use",
      "name": "疾风连击",
      "activation": "bonus",
-     "text": "消耗 1 点功力，以附赠动作进行两次徒手打击（10 级起三次），都打选中的那个目标。要分给两个目标时，第二下请手动处理。",
+     "text": "消耗 1 点功力，以附赠动作进行两次徒手打击（10 级起三次），都打选中的那个目标。有予命之手（慈悲之道）的，开头会问要不要把其中一次换成予命之手（不花功力）。要分给两个目标时，第二下请手动处理。",
      "requires": "turn.isMine",
      "cost": [
       {
@@ -977,8 +977,42 @@
      ],
      "root": [
       {
+       "kind": "choose",
+       "prompt": "疾风连击：把其中一次徒手打击换成予命之手吗？（不花功力）",
+       "var": "hh",
+       "options": [
+        {
+         "label": "不换",
+         "value": "no"
+        },
+        {
+         "label": "换：治疗触及范围内的一个生物（可以是自己）",
+         "value": "yes",
+         "when": "self.hasSource('XPHB:武僧:予命之手:3')",
+         "do": [
+          {
+           "kind": "chooseTargets",
+           "prompt": "予命之手：治疗谁",
+           "min": "1",
+           "from": "allies",
+           "within": {
+            "ft": "5"
+           },
+           "do": [
+            {
+             "kind": "heal",
+             "amount": "classTable('武艺') + self.mod.wis",
+             "to": "target"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
        "kind": "repeat",
-       "n": "2 + min(1, floor(self.levelOf('武僧') / 10))",
+       "n": "2 + min(1, floor(self.levelOf('武僧') / 10)) - cond(vars.hh == 'yes', 1, 0)",
        "do": [
         {
          "kind": "attack",
@@ -2715,6 +2749,52 @@
      "text": "下一道法术射程翻倍（触碰改成 30 尺），施完就散。"
     }
    }
+  },
+  "XPHB:战士:精通战争魔法:18": {
+   "name": "精通战争魔法",
+   "automation": "full",
+   "text": "自己回合执行攻击动作时，可以把其中两次攻击换成施展一道施法时间为动作的 1 环或 2 环法师法术（照常花法术位）：用「精通战争魔法：用两次攻击施法」，挑法术和目标。范围、自身类的法术请直接从法术栏施展。",
+   "actions": [
+    {
+     "id": "spell",
+     "name": "精通战争魔法：用两次攻击施法",
+     "activation": "none",
+     "tags": [
+      "magical"
+     ],
+     "cost": [
+      {
+       "economy": "attack",
+       "n": 2
+      }
+     ],
+     "targeting": {
+      "type": "creature",
+      "count": 1
+     },
+     "root": [
+      {
+       "kind": "choose",
+       "prompt": "施展哪道法术？",
+       "var": "k",
+       "pool": {
+        "from": "ownSpells",
+        "minLevel": 1,
+        "maxLevel": 2,
+        "castTime": "action",
+        "list": "法师"
+       },
+       "options": []
+      },
+      {
+       "kind": "castFrom",
+       "fromVar": "k",
+       "to": "target"
+      }
+     ]
+    }
+   ],
+   "triggers": []
   }
  }
 }
