@@ -31,6 +31,11 @@ const AI_DIR = resolve(ROOT, 'data', 'dyn', 'ai');
 const AI_FILES: Record<string, string> = { 1: 'features.json', 2: 'spells.json', 3: 'books.json', 4: 'items.json' };
 const read = (p: string): Json => JSON.parse(readFileSync(p, 'utf8'));
 const GOLDEN = [rulesJson, spellsJson, featuresJson] as unknown as RuleFile[];
+/** 覆盖率审查后补的手写层（最后加载，同键盖过 AI 的）：redo 出题时拿它当「现在的数据」，collect 写回 AI 文件后从这里删掉这个键 */
+const REVIEWED = resolve(ROOT, 'data', 'dyn', 'reviewed.json');
+const reviewedEntries = (): Record<string, Entry> => (existsSync(REVIEWED) ? (read(REVIEWED) as { entries: Record<string, Entry> }).entries : {});
+/** 只在 reviewed.json 里、AI 文件里没有的键：按键猜它该回哪个 AI 文件 */
+const aiFileForKey = (key: string) => (!key.startsWith('XPHB:') ? 'books.json' : key.includes(':spell:') ? 'spells.json' : key.includes(':item:') ? 'items.json' : 'features.json');
 
 const aiFile = (wave: string): RuleFile => aiFileByName(AI_FILES[wave]);
 const allAi = (): RuleFile[] => Object.keys(AI_FILES).map(aiFile);
@@ -229,9 +234,11 @@ async function redo(outDir: string, listFile: string): Promise<void> {
   let n = 0;
   for (const it of list) {
     if (hand.has(it.key)) { failed.push(`${it.key}：已经有手写数据，不出题`); continue; }
-    const file = Object.values(AI_FILES).find((f) => aiFileByName(f).entries[it.key]);
+    const rev = reviewedEntries()[it.key];
+    const file = Object.values(AI_FILES).find((f) => aiFileByName(f).entries[it.key]) ?? (rev ? aiFileForKey(it.key) : undefined);
     if (!file) { failed.push(`${it.key}：AI 数据里没有`); continue; }
-    const cur = aiFileByName(file).entries[it.key];
+    // reviewed.json 同键逐字段盖过 AI 的：现在生效的是合起来的那份
+    const cur = { ...(aiFileByName(file).entries[it.key] ?? {}), ...(rev ?? {}) } as Entry;
     const id = `R${String(++n).padStart(3, '0')}`;
     try {
       const iface = { actions: (cur.actions ?? []).map((a) => ({ id: a.id, name: a.name })), effects: Object.keys(cur.effects ?? {}) };
@@ -372,8 +379,18 @@ async function collect(dir: string): Promise<void> {
     if (decls.length && !isItem) declaredAll.push({ key: m.key, resources: decls });
     written++;
   }
+  // 写回 AI 文件的条目，如果 reviewed.json 里还有同键的那份，删掉它（不然它会盖住新答案）
+  const rev = existsSync(REVIEWED) ? read(REVIEWED) as { entries: Record<string, Entry> } : null;
+  const dropped: string[] = [];
+  if (rev) {
+    for (const out of outs.values()) for (const k of Object.keys(out.entries)) {
+      if (rev.entries[k] && manifest.some((m) => m.key === k)) { delete rev.entries[k]; dropped.push(k); }
+    }
+    if (dropped.length) writeFileSync(REVIEWED, JSON.stringify(rev, null, 1) + '\n');
+  }
   mkdirSync(AI_DIR, { recursive: true });
   const totals: string[] = [];
+  if (dropped.length) totals.push(`data/dyn/reviewed.json 删掉被新答案取代的 ${dropped.length} 条`);
   for (const [name, out] of outs) {
     const sorted = Object.fromEntries(Object.entries(out.entries).sort(([a], [b]) => a.localeCompare(b, 'zh')));
     writeFileSync(resolve(AI_DIR, name), JSON.stringify({
