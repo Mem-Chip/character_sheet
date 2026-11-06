@@ -63,6 +63,7 @@ const WINDOWS: Array<[string, string, string, string, string]> = [
   ['leftReach', 'after', '走开的人 / 被离开触及范围的人', '—（借机攻击引擎自己会问，不用写）', '—'],
   ['spellCast', 'before', '施法者（role: \'target\' 是被施法的那个）', 'event.spell、event.key、event.targets；attacker = 施法者，target = 被施法的那个', 'cancel（打断施法，缺省退回法术位；要消耗法术位写 refundSlot: false）'],
   ['spellCast', 'after', '施法者（role: \'target\' 是被施法的那个）', 'event.spell、event.key、event.targets；attacker = 施法者，target = 被施法的那个', '—'],
+  ['actionDone', 'after', '用动作的人（只有一个目标时 target 是它）', 'action.*（这次动作的结果：action.hitCount、action.result…）', '—（只开给最外层的动作：反应、窗口里用的动作不再触发）'],
   ['initiativeRolled', 'after', '掷先攻的人', '—', '—'],
   ['restCompleted', 'after', '休息的人', 'event.kind（short / long）', '—'],
 ];
@@ -179,6 +180,10 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
 \`action.kind\`（spell / weapon / item / feature）、\`action.name\`、\`action.key\`、\`action.by\`（谁用的）、\`action.economy\`（action / bonus / reaction…）、\`action.onMyTurn\`、
 \`action.spell.level\`（基础环阶，戏法 0）、\`action.spell.slot\`（实际用的环阶）、\`action.spell.school\`（中文学派名：塑能、防护…）、\`action.spell.lists\`（在哪些职业的法术列表里，用 \`includes(action.spell.lists, '法师')\`）、
 \`action.spell.concentration\` / \`ritual\` / \`range\` / \`components\`（'VSM' 的子集）、\`action.attack\`（最近一次攻击的性质）、\`action.targets\`、\`action.targetCount\`、\`action.marks.<名字>\`、\`action.parent\`（外层那次动作）。
+**结果**：\`action.result\` = 正在结算的那个目标的结果（\`hit\`、\`crit\`、\`saved\`、\`damage\` 这次对它造成的伤害合计、\`reducedTo0\`、\`killed\`；没攻击 / 没豁免的是 null），
+\`action.results\`（每个目标一份，带 \`target\`）、计数 \`action.hitCount\` / \`critCount\` / \`savedCount\` / \`failedCount\` / \`downedCount\`、\`action.damageTotal\`。
+**伤害骰**：\`action.damage.dice\`（最近一次伤害的骰子）、\`action.damage.die\`（其中一颗：2d10 → 1d10，「多掷一颗这次的伤害骰」写 \`addDamage\` 的 \`dice: 'action.damage.die'\`、\`type: 'action.damage.type'\`）、\`action.damage.type\`、\`action.damage.total\`。
+命中窗口里伤害还没掷，\`dice\` / \`die\` 已经是这次要掷的。**「用完一个动作之后」**挂 \`actionDone\` 窗口（只开给最外层的动作），这时结果都齐了。
 区域（\`zone\` 节点放下的）每次生效都算放出它的那道法术的一次结算：区域的 do 里 \`action\` 就是那道法术（\`action.zone\` 不为空），区域伤害也是法术伤害；记号跟着区域走，同一次施法只算一次。
 不在动作里（回合开始的触发器这类）时 \`action\` 是 null，读它的字段得到空值：\`action.spell.level == 0\` 为假。
 触发器的 do 读到的就是**触发它的那次动作**；带 \`trigger\` 的反应动作进了 root 之后读到的是它自己，触发它的那次在 \`action.parent\`。

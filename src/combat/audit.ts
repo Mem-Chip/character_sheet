@@ -17,13 +17,13 @@ import type { Action, EffectTemplate, Entry, Node, RollMod, Trigger } from './ty
 /** 引擎会打开窗口的事件（触发器只能挂这些） */
 export const WINDOW_EVENTS = new Set([
   'turnStarted', 'turnEnded', 'initiativeRolled', 'spellCast', 'd20Rolled', 'attackHit', 'attackMissed',
-  'saveForced', 'saveSucceeded', 'saveFailed', 'damageIncoming', 'damageTaken', 'reducedTo0', 'restCompleted', 'leftReach',
+  'saveForced', 'saveSucceeded', 'saveFailed', 'damageIncoming', 'damageTaken', 'reducedTo0', 'restCompleted', 'leftReach', 'actionDone',
 ]);
 
 /** 引擎会发出的事件（endsOn 能监听的） */
 export const EMITTED_EVENTS = new Set([
   ...WINDOW_EVENTS,
-  'actionUsed', 'actionDone', 'damageApplied', 'damageRolled', 'healed', 'tempHpGained',
+  'actionUsed', 'damageApplied', 'damageRolled', 'healed', 'tempHpGained',
   'effectApplied', 'effectEnded', 'turnEnding', 'roundStarted', 'combatStarted', 'combatEnded', 'died', 'timeAdvanced',
   'moved', 'zoneHit', 'zoneMarked', 'entryGranted', 'entryRevoked',
 ]);

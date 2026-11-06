@@ -1,5 +1,5 @@
 import spellMeta from '../../data/spell-meta.json';
-import type { Value } from '../expr';
+import { parseDice, type Value } from '../expr';
 import { refOf } from './scope';
 import type { Tx } from './tx';
 import type { Action, AttackInfo, Entry, Id, Node } from './types';
@@ -67,6 +67,36 @@ export interface ActionInstance {
   pending: PendingBranch | null;
   /** 区域生效时压的实例：是哪块区域（不是区域 = 没有） */
   zone?: string;
+  /** 每个目标的结果（攻击 / 豁免 / 伤害结算时填） */
+  results: Record<Id, TargetResult>;
+  /** 正在结算的是哪个目标（action.result 读它的） */
+  last: Id | null;
+  /** 最近一次伤害掷骰：骰子（文本）、类型、掷出的总数 */
+  damage: { dice: string; type: string; total: number } | null;
+}
+
+export interface TargetResult {
+  /** 命中（null = 没有攻击检定） */
+  hit: boolean | null;
+  crit: boolean;
+  /** 豁免成功（null = 没有豁免） */
+  saved: boolean | null;
+  /** 这次动作对它造成的伤害合计 */
+  damage: number;
+  reducedTo0: boolean;
+  killed: boolean;
+}
+
+/** 某个目标的结果格子（没有就建一个），顺带把它设成「正在结算的目标」 */
+export function resultOf(a: ActionInstance, id: Id, focus = true): TargetResult {
+  if (focus) a.last = id;
+  return (a.results[id] ??= { hit: null, crit: false, saved: null, damage: 0, reducedTo0: false, killed: false });
+}
+
+/** 「一颗同样的骰子」：伤害骰里面数最大的那种骰子的一颗（2d10 + 3 → 1d10） */
+function oneDie(dice: string): string | null {
+  const faces = [...dice.matchAll(/\d*d(\d+)/gi)].map((m) => Number(m[1]));
+  return faces.length ? `1d${Math.max(...faces)}` : null;
 }
 
 const META = spellMeta as Record<string, SpellMeta>;
@@ -125,6 +155,18 @@ export function actionValue(tx: Tx, a: ActionInstance | null): Value {
     targets: a.targets.filter((t) => tx.state.combatants[t]).map((t) => refOf(tx, t)),
     targetCount: a.targets.length,
     zone: a.zone ?? null,
+    result: a.last && a.results[a.last] ? { ...a.results[a.last] } : null,
+    results: Object.entries(a.results).filter(([id]) => tx.state.combatants[id]).map(([id, r]) => ({ ...r, target: refOf(tx, id) })),
+    hitCount: Object.values(a.results).filter((r) => r.hit === true).length,
+    critCount: Object.values(a.results).filter((r) => r.crit).length,
+    savedCount: Object.values(a.results).filter((r) => r.saved === true).length,
+    failedCount: Object.values(a.results).filter((r) => r.saved === false).length,
+    damageTotal: Object.values(a.results).reduce((n, r) => n + r.damage, 0),
+    downedCount: Object.values(a.results).filter((r) => r.reducedTo0).length,
+    damage: a.damage ? {
+      dice: parseDice(a.damage.dice), type: a.damage.type, total: a.damage.total,
+      die: oneDie(a.damage.dice) ? parseDice(oneDie(a.damage.dice)!) : null,
+    } : null,
     marks: { ...a.marks },
     parent: a.parent ? actionValue(tx, a.parent) : null,
   } as Record<string, Value>;

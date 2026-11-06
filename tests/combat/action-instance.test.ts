@@ -24,6 +24,25 @@ const TEST = {
         do: [{ kind: 'note', text: '探针：不该出现' }],
       }],
     },
+    // 用完动作之后：按这次动作的结果说一句（actionDone 窗口 + action.result / 计数）
+    'T:战报': {
+      name: '战报',
+      triggers: [{
+        id: 'd', on: 'actionDone', role: 'actor', when: "action.kind == 'spell'",
+        do: [
+          { kind: 'if', when: 'action.failedCount == 1 && action.savedCount == 1', then: [{ kind: 'note', text: '战报：一个没过、一个过了' }] },
+          { kind: 'if', when: 'action.hitCount == 1 && action.result.damage > 0 && action.downedCount == 1', then: [{ kind: 'note', text: '战报：命中并打倒' }] },
+        ],
+      }],
+    },
+    // 命中时多掷一颗这次攻击的伤害骰（action.damage.die / type）
+    'T:加一骰': {
+      name: '加一骰',
+      triggers: [{
+        id: 'x', on: 'attackHit', window: 'before', role: 'actor', when: "action.kind == 'spell'",
+        do: [{ kind: 'addDamage', dice: 'action.damage.die', type: 'action.damage.type' }],
+      }],
+    },
     // 豁免成功时退还法术位（refund），并在动作上做记号（mark）
     'T:退还': {
       name: '退还',
@@ -148,5 +167,30 @@ describe('refund / mark：退还触发窗口的那次动作的法术位，记号
     done(s.dispatch({ type: 'useAction', actor: 'w', action: 'XPHB:spell:火球术#cast', targets: ['g1', 'g2'], slotLevel: 3 }));
     expect(s.state.combatants.w.live.slotsUsed[3] ?? 0).toBe(0);
     expect(evs(s, 'note').filter((n) => String(n.text).includes('退还')).length).toBe(1);
+  });
+});
+
+describe('第二期：每个目标的结果、伤害骰、用完动作之后', () => {
+  it('actionDone 窗口读到每个目标的豁免结果', () => {
+    const { s, dice } = scene(['T:战报'], 2);
+    dice.push(1, ...Array(8).fill(3), 20);   // 第一个没过（掷 8d6），第二个过了
+    done(s.dispatch({ type: 'useAction', actor: 'w', action: 'XPHB:spell:火球术#cast', targets: ['g1', 'g2'], slotLevel: 3 }));
+    expect(evs(s, 'note').map((n) => n.text)).toContain('战报：一个没过、一个过了');
+  });
+
+  it('命中、伤害、打倒都记在 action.result 上', () => {
+    const { s, dice } = scene(['T:战报']);
+    done(s.dispatch({ type: 'adjustHp', id: 'g1', set: 5 }));   // 先把血量调到 5，好打倒
+    dice.push(18, 6, 6);   // 命中，2d10 = 12
+    done(s.dispatch({ type: 'useAction', actor: 'w', action: 'XPHB:spell:火焰箭#cast', targets: ['g1'] }));
+    expect(evs(s, 'note').map((n) => n.text)).toContain('战报：命中并打倒');
+  });
+
+  it('命中窗口里 action.damage.die 是这次伤害骰的一颗（2d10 → 1d10），类型跟着走', () => {
+    const { s, dice, hp } = scene(['T:加一骰']);
+    dice.push(18, 4, 4, 7);   // 命中；2d10 = 8，加的 1d10 = 7
+    done(s.dispatch({ type: 'useAction', actor: 'w', action: 'XPHB:spell:火焰箭#cast', targets: ['g1'] }));
+    expect(hp('g1')).toBe(60 - 15);
+    expect(evs(s, 'damageAdded').at(-1)?.dice).toBe('1d10');
   });
 });

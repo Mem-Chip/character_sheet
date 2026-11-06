@@ -1,6 +1,6 @@
 import { Dice, Unknown, runDice, runInt, type Value } from '../expr';
 import { rollModsOf } from './collect';
-import { currentAction, hideMarksOfRoll, markAction } from './instance';
+import { currentAction, hideMarksOfRoll, markAction, resultOf } from './instance';
 import { controllerOf, d20Test, evaluateMods, filterMatches } from './d20';
 import { applyEffect, concentrationOf, effectiveView, effectsOf, endConcentration, endEffect } from './effects';
 import { makeEnv, nameOf } from './scope';
@@ -148,6 +148,11 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
   }
   if (p.scale !== undefined) for (const k of Object.keys(byType)) byType[k] = Math.floor(byType[k] * p.scale);
   const rolledTotal = sum(Object.values(byType));
+  // 动作实例记下这次的伤害骰（「再掷一颗同样的骰子」用 action.damage.die）：取第一项（武器 / 法术本身的伤害）
+  const dinst = currentAction(tx);
+  if (dinst && p.source === dinst.by && p.components[0]) {
+    dinst.damage = { dice: p.components[0].dice.toString(), type: normType(p.components[0].type), total: rolledTotal };
+  }
   const index = tx.damageIdx++;
   const rolledSeq = tx.emit('damageRolled', {
     index, source: p.source, target: p.target, label: p.label, crit: p.crit, parts: rolledParts, byType: { ...byType }, scale: p.scale ?? 1,
@@ -320,6 +325,16 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
       });
       if (r.outcome === 'fail') endConcentration(tx, p.target, `专注检定失败（DC ${dc}）`, r.seq);
     }
+  }
+
+  // 动作实例：这次动作对这个目标造成了多少、打倒了没有（action.result.*）
+  const ainst = currentAction(tx);
+  if (ainst && p.source === ainst.by) {
+    const r = resultOf(ainst, p.target, false);
+    r.damage += total;
+    // 「降到 0」看生命值本身：怪物降到 0 直接算死（killed），不是 downed
+    if (hpBefore > 0 && hpAfter === 0) r.reducedTo0 = true;
+    if (killed) r.killed = true;
   }
 
   // ⑧ 受到伤害之后

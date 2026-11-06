@@ -321,7 +321,7 @@ function withZoneInstance(tx: Tx, z: Zone, victim: Id, seq: number, fn: () => vo
     economy: 'none', onMyTurn: tx.state.round === null || tx.state.order[tx.state.turnIndex] === z.source,
     spell: meta ? { ...meta, slot: z.slot ?? meta.level } : null,
     attack: null, targets: [victim], marks: { ...((z.marks ?? {}) as ActionInstance['marks']) }, markRoll: {}, paid: { resources: [] },
-    parent: currentAction(tx), pending: null, zone: z.id,
+    parent: currentAction(tx), pending: null, zone: z.id, results: {}, last: victim, damage: null,
   };
   const before = JSON.stringify(inst.marks);
   tx.actions.push(inst);

@@ -58,9 +58,9 @@
 
 ## 中的
 
-- **动作实例第二期**（引擎，第一期见 COMBAT-DESIGN §16.11）：按 `datafy/instance-audit/report.generated.md` 的统计补
-  每个目标的结果 `action.result.*`、伤害骰 `action.damage.dice`（再掷一颗同骰、重掷、偷袭扣骰）、`repeat`（孪生法术、繁彩球）、
-  改字段（目标、射程、环阶、动作经济）、「用了一个动作之后」的事件（58 条）。在哪：`src/combat/instance.ts`、`exec.ts`（`runAttack` / `runSave` / `runDamageNodes`）。
+- **动作实例剩下的**（引擎，已做的见 COMBAT-DESIGN §16.11：action.*、结果、伤害骰、actionDone 窗口、区域）：
+  重掷这次的伤害骰（强效法术）、偷袭扣骰（游荡者诡诈打击 7 条）、`repeat`（对另一目标再来一次：孪生法术、繁彩球）、
+  改字段（目标、射程、环阶、动作经济：远程法术、孪生法术、瞬发…）。在哪：`src/combat/instance.ts`、`exec.ts`（`runAttack` / `runSave` / `runDamageNodes`）、选目标的流程。
 - **按动作实例重写数据**：审查里 `now: true` 的 35 条（现在就能写）、只用到现有能力的 61 条，以及第一期能做的
   （超限导能、超魔法、法术塑形、预言专家…：读 `action.spell.*` 就不用再问人）。列表在 `datafy/instance-audit/report.generated.md`。
 - **菜单选择**（审查里卡在 `choice` 上的 77 条，动作实例之后最大的一类）：施法 / 命中时让人在几项里挑（附加效果、伤害类型、给谁），

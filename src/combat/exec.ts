@@ -2,7 +2,7 @@ import { ABIL_CN, Dice, Unknown, run, runBool, runDice, runInt, type ExprSrc, ty
 import { applyDamagePacket, applyHeal, grantTempHp, maxDiceFor, normType, rollComponent, type DamageComponent, type DamagePacket } from './damage';
 import { controllerOf, d20Test, rollValue } from './d20';
 import { newCastPlan, type CastPlan } from './castplan';
-import { currentAction, markAction, spellMetaOf, type ActionInstance } from './instance';
+import { currentAction, markAction, resultOf, spellMetaOf, type ActionInstance } from './instance';
 import { activeTemplates, applyEffect, effectiveView, effectsOf, endConcentration, endEffect, skillBonus, startConcentration } from './effects';
 import { makeEnv, nameOf, type ScopeData } from './scope';
 import { entryOf } from './collect';
@@ -750,11 +750,12 @@ function runAttack(tx: Tx, n: Extract<Node, { kind: 'attack' }>, ctx: ExecCtx): 
   });
   const hctx: ExecCtx = { ...ctx, attack, attacker: ctx.self, roll: rollValue(r), cause: r.seq };
   const inst = currentAction(tx);
-  if (inst) inst.attack = attack;
+  if (inst) { inst.attack = attack; resultOf(inst, target); }
 
   const miss = (why?: string) => {
     const seq = tx.emit('attackMissed', { attacker: ctx.self, target, label: ctx.actionName, total: r.total, vs: r.vs, why }, r.seq);
     const mctx = { ...hctx, target, cause: seq };
+    if (inst) resultOf(inst, target).hit = false;
     runNodes(tx, n.onMiss, mctx);
     withPending(inst, { kind: 'attack', target, node: n, ran: 'onMiss', ctx: mctx }, () =>
       fireWindow(tx, { event: 'attackMissed', window: 'after', actor: ctx.self, target, scope: { attack, roll: rollValue(r) }, cause: seq }));
@@ -768,6 +769,11 @@ function runAttack(tx: Tx, n: Extract<Node, { kind: 'attack' }>, ctx: ExecCtx): 
   };
   for (const d of dmgNodes) packet.components.push({ dice: dice(tx, hctx, d.dice ?? '0', ctx.actionName), type: typeOf(tx, hctx, d.type), from: ctx.actionName });
   const hitSeq = tx.emit('attackHit', { attacker: ctx.self, target, label: ctx.actionName, total: r.total, vs: r.vs, crit: r.crit }, r.seq);
+  if (inst) {
+    Object.assign(resultOf(inst, target), { hit: true, crit: r.crit });
+    // 命中窗口里伤害还没掷：先记下这次要掷的骰子（「多掷一颗武器伤害骰」读 action.damage.die）
+    if (packet.components[0]) inst.damage = { dice: packet.components[0].dice.toString(), type: normType(packet.components[0].type), total: 0 };
+  }
 
   // a. 防守方（护盾术、镜影术、庇护术、骑乘战斗、云雾符文……）
   let cancelledBy: string | null = null;
@@ -835,6 +841,7 @@ function runAttack(tx: Tx, n: Extract<Node, { kind: 'attack' }>, ctx: ExecCtx): 
   const offRoll = { ...rollValue(r), target, crit: packet.crit };
   fireWindow(tx, { event: 'attackHit', window: 'before', actor: ctx.self, target, scope: { attack, roll: offRoll }, packet, phase: 'offensive', cause: hitSeq, modify });
 
+  if (inst) Object.assign(resultOf(inst, target), { hit: true, crit: packet.crit });
   const res = applyDamagePacket(tx, packet, hitSeq);
   const after: ExecCtx = { ...hctx, target, roll: offRoll, damage: { type: packet.components[0]?.type ?? '', amount: res.total, crit: packet.crit }, cause: res.seq };
   runNodes(tx, (n.onHit ?? []).filter((x) => x.kind !== 'damage'), after);
@@ -864,6 +871,8 @@ function runSave(tx: Tx, n: Extract<Node, { kind: 'save' }>, ctx: ExecCtx): void
   // 成功分支里有减半的伤害 = 「豁免成功只受一半」（反射闪避据此把成功改成不受伤害、失败改成一半）
   const half = (n.onSuccess ?? []).some((x) => x.kind === 'damage' && x.scale === 0.5);
   const sctx: ExecCtx = { ...ctx, target, roll: rollValue(r), cause: seq, dc, save: { ability, success: ok, half } };
+  const sinst = currentAction(tx);
+  if (sinst) resultOf(sinst, target).saved = ok;
   runNodes(tx, ok ? n.onSuccess : n.onFail, sctx);
   // 结果窗口：强力戏法这类「豁免成功时…」挂这里；runBranch 能改跑另一支
   withPending(currentAction(tx), { kind: 'save', target, node: n, ran: ok ? 'onSuccess' : 'onFail', ctx: sctx }, () =>
@@ -1271,7 +1280,7 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
     economy: act,
     onMyTurn: !inCombat(tx) || tx.state.order[tx.state.turnIndex] === actor,
     spell: meta ? { ...meta, slot: slotLevel0 ?? meta.level } : null,
-    attack: null, targets: o.targets.slice(), marks: {}, markRoll: {}, paid: { resources: [] },
+    attack: null, targets: o.targets.slice(), marks: {}, markRoll: {}, paid: { resources: [] }, results: {}, last: null, damage: null,
     parent: currentAction(tx), pending: null,
   };
   tx.actions.push(inst);
@@ -1402,7 +1411,11 @@ function runAction(tx: Tx, o: ExecuteOpts, x: {
     ...o.window,
   };
   runNodes(tx, action.root, ctx);
-  tx.emit('actionDone', { actor, action: action.name }, seq);
+  const doneSeq = tx.emit('actionDone', { actor, action: action.name }, seq);
+  // 「用完一个动作之后」（施法后传送、攻击后附赠动作…）：只开给最外层的动作 —— 反应、窗口里用的动作不再触发一轮
+  if (!inst.parent && !o.viaReaction) {
+    fireWindow(tx, { event: 'actionDone', window: 'after', actor, target: inst.targets.length === 1 ? inst.targets[0] : undefined, scope: {}, cause: doneSeq });
+  }
 }
 
 
