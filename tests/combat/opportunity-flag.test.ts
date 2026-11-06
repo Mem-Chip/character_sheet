@@ -1,7 +1,7 @@
-// 「不能进行借机攻击」：引擎在问借机攻击之前会读 flags.cannot 里的 opportunityAttack（电爪就是这样写的）
+// 「不能进行借机攻击」：flags.cannot 里写动作 id 就不能用那个动作 —— 借机攻击是规则数据里 id 为 opportunityAttack 的反应（电爪就是这样写的）
 import { describe, expect, it } from 'vitest';
 import { RuleBook, Session, createEncounter, makeCombatant, makeView, scriptedDice, type Positions, type RuleFile } from '../../src/combat';
-import { done, pending } from './helpers';
+import { FILES, done, pending } from './helpers';
 
 const TEST = {
   note: 'T',
@@ -26,7 +26,7 @@ const TEST = {
 function scene() {
   const dice = scriptedDice();
   const positions = { current: { z: { x: 0, y: 0, s: 1 }, a: { x: 1, y: 0, s: 1 }, b: { x: 2, y: 0, s: 1 } } as Positions };
-  const s = new Session(createEncounter('o'), { rules: new RuleBook([TEST] as RuleFile[]), diceFor: () => dice, positions: () => positions.current });
+  const s = new Session(createEncounter('o'), { rules: new RuleBook([...FILES, TEST] as RuleFile[]), diceFor: () => dice, positions: () => positions.current });
   const add = (id: string, view: Record<string, unknown>, kind: 'pc' | 'monster' = 'pc') => done(s.dispatch({
     type: 'addCombatant',
     combatant: makeCombatant({ id, kind, ...(kind === 'monster' ? { side: 'enemy' } : {}), view: makeView({ name: id, hpMax: 30, ac: 12, ...view }) }),

@@ -1906,14 +1906,15 @@
   "XPHB:战地施法者": {
    "name": "战地施法者",
    "automation": "full",
-   "text": "【专注】你为维持专注所做的体质豁免具有优势（自动）。【响应法术】当一个生物因离开你的触及范围而引发你的借机攻击时，你可以用反应**对那个生物施展一道法术**，而不是发动借机攻击：引擎会在那一刻问你要不要用，答「是」就花掉反应、不再问借机攻击，接着只列出**施法时间为动作、且只打一个生物**的法术，挑完那道法术立刻对离开的生物结算（法术位照常扣，不再额外花动作），结束之后什么也不留下。如果那道法术本身还会波及别人（例如带范围溅射），请按实际再手动处理。",
+   "text": "【专注】你为维持专注所做的体质豁免具有优势（自动）。【响应法术】当一个生物因离开你的触及范围而引发你的借机攻击时，你可以用反应**对那个生物施展一道法术**，而不是发动借机攻击：它和借机攻击在同一个「要使用以下能力吗」里问，选它就花掉反应（借机攻击也就打不了了），接着只列出**施法时间为动作、且只打一个生物**的法术，挑完那道法术立刻对离开的生物结算（法术位照常扣，不再额外花动作），结束之后什么也不留下。如果那道法术本身还会波及别人（例如带范围溅射），请按实际再手动处理。",
    "triggers": [
     {
      "id": "reactive-spell",
      "label": "战地施法者：用一道法术代替借机攻击",
      "on": "leftReach",
-     "role": "any",
-     "when": "target.id == self.id && ask('有生物离开你的触及范围：用一道法术代替这次借机攻击吗？')",
+     "role": "target",
+     "optional": true,
+     "when": "event.provokes",
      "cost": [
       {
        "economy": "reaction"
@@ -2795,6 +2796,667 @@
     }
    ],
    "triggers": []
+  },
+  "XPHB:哨兵": {
+   "name": "哨兵",
+   "automation": "partial",
+   "text": "【阻拦】你的借机攻击命中一名生物时，该生物在当前回合剩余时间内速度为 0（自动）。【守护者】你 5 尺内的生物撤离后离开你的触及范围，或者它的攻击命中了你以外的目标时，你可以用反应对它借机攻击：引擎在那一刻问你，选了就按借机攻击结算（挑近战武器、命中照样触发阻拦）。执行撤离后始终没离开你触及范围的生物，引擎不会提示（它只在离开触及范围时才知道），这种请自己留意。",
+   "triggers": [
+    {
+     "id": "hinder",
+     "label": "哨兵：阻拦",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "after",
+     "when": "attack.melee && action.parent.key == 'XPHB:action:借机攻击'",
+     "do": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "阻拦"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "阻拦": {
+     "text": "本回合剩余时间内速度为 0。",
+     "statics": [
+      {
+       "kind": "speedSet",
+       "value": 0
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      }
+     }
+    }
+   },
+   "actions": [
+    {
+     "id": "guardian-disengage",
+     "name": "哨兵：守护者（它撤离了）",
+     "activation": "reaction",
+     "trigger": {
+      "on": "leftReach",
+      "role": "target",
+      "aim": "actor",
+      "when": "!event.provokes"
+     },
+     "root": [
+      {
+       "kind": "castFrom",
+       "from": "XPHB:action:借机攻击#opportunityAttack",
+       "to": "target",
+       "cost": []
+      }
+     ]
+    },
+    {
+     "id": "guardian-attack",
+     "name": "哨兵：守护者（它打了别人）",
+     "activation": "reaction",
+     "trigger": {
+      "on": "attackHit",
+      "window": "after",
+      "role": "any",
+      "aim": "actor",
+      "when": "attacker.id != self.id && target.id != self.id && within(self, attacker, 5)"
+     },
+     "root": [
+      {
+       "kind": "castFrom",
+       "from": "XPHB:action:借机攻击#opportunityAttack",
+       "to": "target",
+       "cost": []
+      }
+     ]
+    }
+   ]
+  },
+  "XPHB:圣武士:坚韧复仇:7": {
+   "name": "坚韧复仇",
+   "automation": "partial",
+   "text": "你以借机攻击命中一个生物时，可以将其速度降为 0（直到当前回合结束），并在该攻击后立刻移动至多相当于你速度一半的距离（属于原反应、不引发借机攻击）。速度降为 0 自动生效；移动部分引擎挂上「坚韧复仇之步」效应（免借机）并请手动在战图上移动。",
+   "triggers": [
+    {
+     "id": "relentless",
+     "label": "坚韧复仇",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "after",
+     "optional": true,
+     "when": "attack.melee && action.parent.key == 'XPHB:action:借机攻击'",
+     "do": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "坚韧复仇"
+      },
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "坚韧复仇之步"
+      },
+      {
+       "kind": "note",
+       "text": "坚韧复仇：你立刻移动至多你速度的一半（属于原反应、不引发借机攻击）——请手动在战图上移动。"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "坚韧复仇": {
+     "text": "速度降为 0，直到当前回合结束。",
+     "statics": [
+      {
+       "kind": "speedSet",
+       "value": 0
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      }
+     }
+    },
+    "坚韧复仇之步": {
+     "text": "这段来自坚韧复仇的移动不引发借机攻击；移动结束（moved）或你的下一回合开始时消失。",
+     "flags": {
+      "cannot": [
+       "provoke"
+      ]
+     },
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "bearer",
+       "nth": 1
+      },
+      "endsOn": [
+       {
+        "event": "moved",
+        "when": "event.id == self.id"
+       }
+      ]
+     }
+    }
+   }
+  },
+  "XPHB:武僧:散打技巧:3": {
+   "name": "散打技巧",
+   "automation": "full",
+   "text": "每当你疾风连击中的一次攻击命中一个生物时，可以迫使其承受下列效应之一：【慌神】直到它的下个回合开始不能使用借机攻击；【推离】力量豁免失败被推离 15 尺；【失衡】敏捷豁免失败陷入倒地状态。",
+   "triggers": [
+    {
+     "id": "open-hand",
+     "label": "散打技巧（疾风连击命中）",
+     "on": "attackHit",
+     "role": "actor",
+     "optional": true,
+     "when": "action.name == '疾风连击' && attack.unarmed",
+     "do": [
+      {
+       "kind": "choose",
+       "prompt": "散打技巧：选择一种效果",
+       "options": [
+        {
+         "label": "慌神",
+         "do": [
+          {
+           "kind": "applyEffect",
+           "to": "target",
+           "template": "散打技巧：慌神"
+          }
+         ]
+        },
+        {
+         "label": "推离 15 尺",
+         "do": [
+          {
+           "kind": "save",
+           "ability": "str",
+           "dc": "8 + self.pb + max(self.mod.dex, self.mod.wis)",
+           "onFail": [
+            {
+             "kind": "move",
+             "mode": "push",
+             "ft": 15
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "label": "失衡",
+         "do": [
+          {
+           "kind": "save",
+           "ability": "dex",
+           "dc": "8 + self.pb + max(self.mod.dex, self.mod.wis)",
+           "onFail": [
+            {
+             "kind": "applyEffect",
+             "to": "target",
+             "template": "XPHB:condition:倒地"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "散打技巧：慌神": {
+     "text": "不能使用借机攻击，直至其下个回合开始。",
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "bearer",
+       "nth": 1
+      }
+     },
+     "flags": {
+      "cannot": [
+       "opportunityAttack"
+      ]
+     }
+    }
+   }
+  },
+  "XPHB:野蛮人:凶蛮打击:9": {
+   "name": "凶蛮打击",
+   "automation": "partial",
+   "text": "如果你使用了鲁莽攻击，你可以放弃本回合你选择的一次基于力量的攻击检定具有的所有优势（不可选择具有劣势的攻击检定）：命中的话额外 1d10（17 级起 2d10）伤害，伤害类型与此次攻击相同，并附带一种你所选的凶蛮打击效应（13 级起多出震撼猛击、破势猛击；17 级起可同时选两种不同的效应，强化凶蛮打击 13 / 17 级的内容都已按等级并在这里）。做法：宣告后，本回合第一次力量攻击会被加上一个劣势来抵消优势（有优势又有劣势则平掷）；命中则加伤害并选效应，未命中也算用掉。【巨力猛击】推离之后，引擎给出半速移动预算，并让这一次移动不引发借机攻击。仍需人工判断：不能选已经具有劣势的攻击检定。",
+   "actions": [
+    {
+     "id": "use",
+     "name": "凶蛮打击",
+     "activation": "free",
+     "text": "在发动那次力量攻击之前宣告（需要本回合已使用鲁莽攻击，每回合一次）：这次攻击放弃优势。不能选已具有劣势的攻击（由人判断）。",
+     "requires": "turn.isMine && self.hasEffect('鲁莽攻击') && !self.hasEffect('凶蛮打击')",
+     "root": [
+      {
+       "kind": "applyEffect",
+       "to": "self",
+       "template": "凶蛮打击"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "凶蛮打击": {
+     "text": "本回合第一次力量攻击放弃优势；命中时 +1d10 伤害并附带一种凶蛮打击效应。",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      }
+     },
+     "rollMods": [
+      {
+       "on": {
+        "kind": "attack"
+       },
+       "who": "bearer",
+       "when": "attack.ability == 'str' && !self.hasEffect('凶蛮打击：已选')",
+       "op": "disadv",
+       "label": "凶蛮打击：放弃优势"
+      }
+     ],
+     "triggers": [
+      {
+       "id": "pick",
+       "label": "凶蛮打击：选定这次攻击",
+       "on": "d20Rolled",
+       "role": "actor",
+       "window": "before",
+       "when": "roll.kind == 'attack' && attack.ability == 'str' && !self.hasEffect('凶蛮打击：已选')",
+       "do": [
+        {
+         "kind": "applyEffect",
+         "to": "self",
+         "template": "凶蛮打击：已选"
+        }
+       ]
+      },
+      {
+       "id": "hit",
+       "label": "凶蛮打击：额外伤害与效应",
+       "on": "attackHit",
+       "role": "actor",
+       "window": "before",
+       "when": "attack.ability == 'str' && self.hasEffect('凶蛮打击：已选') && !self.hasEffect('凶蛮打击：已结算')",
+       "do": [
+        {
+         "kind": "addDamage",
+         "dice": "(1 + floor(self.levelOf('野蛮人') / 17))d10",
+         "type": "attack.damageType"
+        },
+        {
+         "kind": "applyEffect",
+         "to": "self",
+         "template": "凶蛮打击：已结算"
+        },
+        {
+         "kind": "if",
+         "when": "self.levelOf('野蛮人') >= 17",
+         "then": [
+          {
+           "kind": "choose",
+           "prompt": "凶蛮打击：选两种不同的效应",
+           "count": 2,
+           "options": [
+            {
+             "label": "巨力猛击：将目标直线推离 15 尺，随后你向它移动半速",
+             "do": [
+              {
+               "kind": "move",
+               "mode": "push",
+               "ft": 15
+              },
+              {
+               "kind": "economy",
+               "move": "floor(self.speed / 2)"
+              },
+              {
+               "kind": "applyEffect",
+               "to": "self",
+               "template": "凶蛮打击：追击移动"
+              },
+              {
+               "kind": "note",
+               "text": "巨力猛击：现在可以立刻向该目标移动至多一半速度（移动预算已给出），这次移动不引发借机攻击。"
+              }
+             ]
+            },
+            {
+             "label": "断筋猛击：目标速度 -15 尺",
+             "do": [
+              {
+               "kind": "applyEffect",
+               "to": "target",
+               "template": "断筋猛击"
+              }
+             ]
+            },
+            {
+             "label": "震撼猛击：目标下一次豁免具有劣势，且不能借机攻击",
+             "when": "self.levelOf('野蛮人') >= 13",
+             "do": [
+              {
+               "kind": "applyEffect",
+               "to": "target",
+               "template": "震撼猛击"
+              }
+             ]
+            },
+            {
+             "label": "破势猛击：他人对目标的下一次攻击检定 +5",
+             "when": "self.levelOf('野蛮人') >= 13",
+             "do": [
+              {
+               "kind": "applyEffect",
+               "to": "target",
+               "template": "破势猛击"
+              }
+             ]
+            }
+           ]
+          }
+         ],
+         "else": [
+          {
+           "kind": "choose",
+           "prompt": "凶蛮打击：选一种效应",
+           "count": 1,
+           "options": [
+            {
+             "label": "巨力猛击：将目标直线推离 15 尺，随后你向它移动半速",
+             "do": [
+              {
+               "kind": "move",
+               "mode": "push",
+               "ft": 15
+              },
+              {
+               "kind": "economy",
+               "move": "floor(self.speed / 2)"
+              },
+              {
+               "kind": "applyEffect",
+               "to": "self",
+               "template": "凶蛮打击：追击移动"
+              },
+              {
+               "kind": "note",
+               "text": "巨力猛击：现在可以立刻向该目标移动至多一半速度（移动预算已给出），这次移动不引发借机攻击。"
+              }
+             ]
+            },
+            {
+             "label": "断筋猛击：目标速度 -15 尺",
+             "do": [
+              {
+               "kind": "applyEffect",
+               "to": "target",
+               "template": "断筋猛击"
+              }
+             ]
+            },
+            {
+             "label": "震撼猛击：目标下一次豁免具有劣势，且不能借机攻击",
+             "when": "self.levelOf('野蛮人') >= 13",
+             "do": [
+              {
+               "kind": "applyEffect",
+               "to": "target",
+               "template": "震撼猛击"
+              }
+             ]
+            },
+            {
+             "label": "破势猛击：他人对目标的下一次攻击检定 +5",
+             "when": "self.levelOf('野蛮人') >= 13",
+             "do": [
+              {
+               "kind": "applyEffect",
+               "to": "target",
+               "template": "破势猛击"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "id": "miss",
+       "label": "凶蛮打击：这次攻击未命中",
+       "on": "attackMissed",
+       "role": "actor",
+       "window": "after",
+       "when": "attack.ability == 'str' && self.hasEffect('凶蛮打击：已选') && !self.hasEffect('凶蛮打击：已结算')",
+       "do": [
+        {
+         "kind": "applyEffect",
+         "to": "self",
+         "template": "凶蛮打击：已结算"
+        }
+       ]
+      }
+     ]
+    },
+    "凶蛮打击：已选": {
+     "text": "凶蛮打击已经落在本回合的某次力量攻击上。",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      }
+     }
+    },
+    "凶蛮打击：已结算": {
+     "text": "凶蛮打击的那次攻击已经结算，本回合不能再触发。",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      }
+     }
+    },
+    "断筋猛击": {
+     "stackKey": "断筋猛击",
+     "text": "断筋猛击：速度 -15 尺，直到施加者的下个回合开始；同一时间只受最近一次断筋猛击影响。",
+     "statics": [
+      {
+       "kind": "speed",
+       "bonus": -15
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "source",
+       "nth": 1
+      }
+     }
+    },
+    "震撼猛击": {
+     "text": "震撼猛击：下一次豁免具有劣势；直到施加者的下个回合开始都不能发动借机攻击。",
+     "rollMods": [
+      {
+       "on": {
+        "kind": "save"
+       },
+       "who": "bearer",
+       "op": "disadv",
+       "label": "震撼猛击：下一次豁免具有劣势"
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "source",
+       "nth": 1
+      },
+      "endsOn": [
+       {
+        "event": "d20Rolled",
+        "when": "event.kind == 'save' && event.roller == self.id"
+       }
+      ]
+     },
+     "flags": {
+      "cannot": [
+       "opportunityAttack"
+      ]
+     }
+    },
+    "破势猛击": {
+     "stackKey": "破势猛击",
+     "text": "破势猛击：直到施加者的下个回合开始，下一次由其他生物对其进行的攻击检定 +5；一次攻击只能吃到一次破势猛击。",
+     "rollMods": [
+      {
+       "on": {
+        "kind": "attack"
+       },
+       "who": "against",
+       "when": "source != null && attacker.id != source.id",
+       "op": "add",
+       "value": 5,
+       "label": "破势猛击：攻击检定 +5"
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnStart",
+       "of": "source",
+       "nth": 1
+      },
+      "endsOn": [
+       {
+        "event": "d20Rolled",
+        "when": "event.kind == 'attack' && event.target == self.id && source != null && event.roller != source.id"
+       }
+      ]
+     }
+    },
+    "凶蛮打击：追击移动": {
+     "text": "巨力猛击之后向目标的那次移动不引发借机攻击；移动结束后失效。",
+     "flags": {
+      "cannot": [
+       "provoke"
+      ]
+     },
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      },
+      "endsOn": [
+       {
+        "event": "moved",
+        "when": "event.id == self.id"
+       }
+      ]
+     }
+    }
+   }
+  },
+  "XGE:战士:坚守战线:10": {
+   "name": "坚守战线",
+   "automation": "partial",
+   "text": "【在触及范围内移动也引发借机攻击】生物在你触及范围内移动 5 尺或更多即引发你的借机攻击——引擎只认「离开触及范围」，「在触及范围内走动」这个时机请人工判断，用「用反应攻击」手动发起。【借机攻击命中定身】你以借机攻击命中生物时，该生物速度降为 0 直至本回合结束（自动，手动发起的借机攻击也算）。",
+   "triggers": [
+    {
+     "id": "hold-line",
+     "label": "坚守战线：借机攻击命中定身",
+     "on": "attackHit",
+     "role": "actor",
+     "window": "after",
+     "when": "attack.melee && action.parent.key == 'XPHB:action:借机攻击'",
+     "do": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "坚守战线：定身"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "坚守战线：定身": {
+     "text": "被坚守战线的借机攻击命中：速度降为 0 直至本回合结束。",
+     "statics": [
+      {
+       "kind": "speedSet",
+       "value": 0
+      }
+     ],
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "bearer",
+       "nth": 0
+      }
+     }
+    }
+   }
+  },
+  "XGE:游荡者:梦幻舞步:3": {
+   "name": "梦幻舞步",
+   "automation": "full",
+   "text": "在你的回合中，如果你对某一生物发动了一次近战攻击（命中与否都算），那个生物在你本回合的剩余时间内无法对你进行借机攻击（自动：你离开它的触及范围时，它不会被问借机攻击）。",
+   "triggers": [
+    {
+     "id": "fancyFootwork",
+     "label": "梦幻舞步：它不能对你借机攻击",
+     "on": "d20Rolled",
+     "role": "actor",
+     "window": "after",
+     "when": "turn.isMine && roll.kind == 'attack' && attack.melee && target != null && !target.hasEffect('梦幻舞步')",
+     "do": [
+      {
+       "kind": "applyEffect",
+       "to": "target",
+       "template": "梦幻舞步"
+      }
+     ]
+    }
+   ],
+   "effects": {
+    "梦幻舞步": {
+     "text": "本回合剩余时间内，该生物不能对来源发动借机攻击。",
+     "duration": {
+      "until": {
+       "at": "turnEnd",
+       "of": "source",
+       "nth": 0
+      }
+     },
+     "flags": {
+      "cannot": [
+       "opportunityAttack:source"
+      ]
+     }
+    }
+   }
   }
  }
 }

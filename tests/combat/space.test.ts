@@ -49,9 +49,11 @@ describe('借机攻击', () => {
     done(s.dispatch({ type: 'startCombat', order: ['g', 'f'] }));
     const d = pending(s.dispatch({ type: 'move', id: 'g', ft: 10, path: path([1, 0], [2, 0], [3, 0]) }));
     expect(d.to).toBe('f');
-    expect(d.options.map((o) => o.label)).toContain('借机攻击：长剑');
+    // 借机攻击是规则数据里的反应：和别的「离开触及范围时」能力在同一个决定里问；只有一件近战武器就不再问用哪件
+    expect(d.prompt).toContain('离开了');
+    expect(d.options.map((o) => o.label)).toContain('战士：借机攻击');
     dice.push(15, 4);
-    done(s.decide('ls'));
+    done(s.decide([d.options.find((o) => o.label === '战士：借机攻击')!.id]));
     expect(hp(s, 'g')).toBe(30 - 7);
     expect(s.state.combatants.f.economy.reaction).toBe(0);
     expect(last(s, 'moved').to).toEqual({ x: 3, y: 0 });
@@ -60,9 +62,9 @@ describe('借机攻击', () => {
   it('打倒了就停在原地；撤离了不会被打', () => {
     const a = setupM([fighter(), goblin('g', {}, 5)], { f: [0, 0], g: [1, 0] });
     done(a.s.dispatch({ type: 'startCombat', order: ['g', 'f'] }));
-    pending(a.s.dispatch({ type: 'move', id: 'g', ft: 10, path: path([1, 0], [2, 0], [3, 0]) }));
+    const d = pending(a.s.dispatch({ type: 'move', id: 'g', ft: 10, path: path([1, 0], [2, 0], [3, 0]) }));
     a.dice.push(15, 4);
-    done(a.s.decide('ls'));
+    done(a.s.decide([d.options.find((o) => o.label === '战士：借机攻击')!.id]));
     expect(hp(a.s, 'g')).toBe(0);
     expect(evs(a.s, 'moved')).toHaveLength(0);
 

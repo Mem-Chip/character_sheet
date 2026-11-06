@@ -4,12 +4,11 @@
  * 棋子位置不在遭遇状态里（地图是服务器的），引擎每笔操作拿一份快照（tx.pos）。
  * 引擎移动了棋子就发 `moved` 事件（最后停在哪），服务器照着改地图。
  */
-import { controllerOf } from './d20';
 import { activeTemplates, effectiveView, effectsOf, endEffect, entryOf } from './effects';
 import { currentAction, spellMetaOf, type ActionInstance } from './instance';
-import { executeAction, findAction, runNodes, collectDamageDefs } from './exec';
+import { runNodes, collectDamageDefs } from './exec';
 import { nameOf } from './scope';
-import { blockedEconomy, fireWindow } from './triggers';
+import { fireWindow } from './triggers';
 import type { Positions, Tx } from './tx';
 import type { Id, Zone, ZoneWhen } from './types';
 
@@ -131,39 +130,23 @@ export function provokers(tx: Tx, mover: Id, from: Cell, to: Cell): Id[] {
   return out;
 }
 
-/** 能不能用反应来借机攻击（有反应、没失能、没被禁止借机攻击、有近战武器） */
-function canReact(tx: Tx, id: Id): boolean {
-  const c = tx.state.combatants[id];
-  if (!c || c.live.dead || c.live.hp <= 0) return false;
-  if (tx.state.round !== null && c.economy.reaction <= 0) return false;
-  if (blockedEconomy(tx, id).has('reaction')) return false;
-  return !activeTemplates(tx, id).some((a) => a.tpl.flags?.cannot?.includes('opportunityAttack'));
-}
-
 /** 撤离了（或者有别的「移动不引发借机攻击」） */
 function disengaged(tx: Tx, id: Id): boolean {
   return effectsOf(tx, id).some((e) => e.name === '撤离')
     || activeTemplates(tx, id).some((a) => a.tpl.flags?.cannot?.includes('provoke'));
 }
 
+/**
+ * 走一步离开了谁的触及：发 leftReach、开窗口。借机攻击本身是规则数据（rules-2024 的「借机攻击」：
+ * 挂在这个窗口上的反应），哨兵、战地施法者这些和它在同一个窗口里一起问。
+ * event.provokes = 这次移动会不会引发借机攻击（撤离了就不会；哨兵这类「撤离了也能打」的看它）。
+ */
 function opportunity(tx: Tx, mover: Id, from: Cell, to: Cell, cause: number | null): void {
   for (const e of provokers(tx, mover, from, to)) {
     if (!tx.state.combatants[mover] || tx.state.combatants[mover].live.dead) return;
-    // 给数据里的触发器（哨兵之类）一个时机：发起者 = 走的人，承受者 = 被离开的人
-    const seq = tx.emit('leftReach', { id: mover, from: e }, cause);
-    fireWindow(tx, { event: 'leftReach', window: 'after', actor: mover, target: e, scope: {}, cause: seq });
-    if (disengaged(tx, mover) || !canReact(tx, e)) continue;
-    const weapons = effectiveView(tx, e).attacks.filter((a) => a.melee);
-    const v = tx.decide({
-      kind: 'choose', to: controllerOf(tx, e),
-      prompt: `${nameOf(tx, mover)} 离开了 ${nameOf(tx, e)} 的触及范围。借机攻击吗？（用反应）`,
-      options: [...weapons.map((a) => ({ id: a.id, label: `借机攻击：${a.name}` })), { id: '', label: '不攻击' }],
-      default: '',
-    });
-    const pick = String(Array.isArray(v) ? v[0] ?? '' : v ?? '');
-    if (!pick || !weapons.some((a) => a.id === pick)) continue;
-    const { key: k, action } = findAction(tx, e, `weapon:${pick}`);
-    executeAction(tx, { actor: e, actionKey: k, action, targets: [mover], cause: seq, viaReaction: true, options: { as: 'reaction' } });
+    const provokes = !disengaged(tx, mover);
+    const seq = tx.emit('leftReach', { id: mover, from: e, provokes }, cause);
+    fireWindow(tx, { event: 'leftReach', window: 'after', actor: mover, target: e, scope: { event: { provokes, forced: false } }, cause: seq });
   }
 }
 

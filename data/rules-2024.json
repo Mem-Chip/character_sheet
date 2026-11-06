@@ -10,7 +10,8 @@
     "flanking": false,
     "diagonal": "5",
     "initiative": "individual",
-    "rest": { "short": 60, "long": 480 }
+    "rest": { "short": 60, "long": 480 },
+    "opportunityAttack": "XPHB:action:借机攻击#opportunityAttack"
   },
   "entries": {
     "XPHB:condition:目盲": {
@@ -365,7 +366,16 @@
     "XPHB:action:借机攻击": {
       "name": "借机攻击",
       "tags": ["basic"],
-      "text": "你可见的生物离开你的触及范围时，你可以执行反应，用武器或徒手打击对其发动一次近战攻击。（在地图上走时引擎会问；撤离了的不会被打。不在地图上的，用武器攻击并选择「作为反应」发起。）"
+      "global": true,
+      "text": "你可见的生物离开你的触及范围时，你可以执行反应，用武器或徒手打击对其发动一次近战攻击。（在地图上走时引擎会问；撤离了的不会被打。不在地图上的，用武器攻击并选择「作为反应」发起。）",
+      "actions": [{
+        "id": "opportunityAttack", "name": "借机攻击", "activation": "reaction",
+        "trigger": { "on": "leftReach", "role": "target", "aim": "actor", "when": "event.provokes" },
+        "root": [
+          { "kind": "choose", "prompt": "用哪件武器借机攻击？", "var": "weapon", "pool": { "from": "attacks", "melee": true } },
+          { "kind": "castFrom", "fromVar": "weapon", "to": "target", "cost": [] }
+        ]
+      }]
     },
     "XPHB:action:躲藏": {
       "name": "躲藏", "tags": ["basic"],

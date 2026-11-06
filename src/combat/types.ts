@@ -72,9 +72,15 @@ export interface Flags {
   blocks?: Array<'action' | 'bonus' | 'reaction'>;
   /** 施加时结束承受者的专注（失能） */
   breaksConcentration?: boolean;
-  /** concentrate / castSpells / speak / see / hear / perceive / moveCloser:source … */
+  /**
+   * concentrate / castSpells / speak / see / hear / perceive / moveCloser:source …；
+   * 写动作 id = 不能用那个动作（opportunityAttack：不能借机攻击），`<动作 id>:source` = 不能对效应来源用它
+   */
   cannot?: string[];
-  /** 不受某些东西影响：difficultTerrain = 困难地形不多花移动力 */
+  /**
+   * 不受某些东西影响：difficultTerrain = 困难地形不多花移动力；
+   * resistance / immunity = 自己造成的伤害无视目标的抗性 / 免疫
+   */
   ignores?: string[];
   /** 选目标时排除效应来源（魅惑） */
   forbidTarget?: 'source';
@@ -404,7 +410,13 @@ export type Node =
   | {
       kind: 'choose'; prompt: string; options?: Array<{ label: string; do?: Node[]; when?: ExprSrc; value?: string }>;
       pool?: {
-        from: 'ownSpells' | 'ownCantrips'; maxLevel?: ExprSrc; minLevel?: ExprSrc;
+        /**
+         * ownSpells / ownCantrips：自己会的法术 / 戏法；spells：规则书里所有法术（巫术帽「从法师法术列表里挑一道」，配 list）；
+         * attacks：自己的武器攻击（选项的 value 是 `weapon:<id>`，交给 castFrom 跑：借机攻击、反应反击）
+         */
+        from: 'ownSpells' | 'ownCantrips' | 'spells' | 'attacks'; maxLevel?: ExprSrc; minLevel?: ExprSrc;
+        /** attacks：只要近战 / 远程的 */
+        melee?: boolean; ranged?: boolean;
         castTime?: 'action' | 'bonus' | 'reaction'; singleTarget?: boolean;
         /** 只要某个学派的（中文名：预言、塑能…） / 只要在某个职业法术列表里的 */
         school?: string; list?: string;
@@ -419,6 +431,11 @@ export type Node =
   | {
       kind: 'castFrom'; fromVar?: string; from?: string; to?: 'target' | 'attacker' | 'self' | 'each';
       cost?: Cost[]; activation?: 'action' | 'bonus' | 'reaction' | 'free' | 'none';
+      /**
+       * 这一次借来的动作自带的修正（应答之剑：这次攻击带优势、无视抗性）：
+       * 结算前给自己挂上这个效应，结算完摘掉 —— 和普通效应一样走事件，撤销 / 重放照常
+       */
+      with?: EffectTemplate;
     }
   /** 让人选一个数（圣疗用多少点），结果放进 `vars.<var>` 给后面的节点用 */
   | { kind: 'number'; prompt: string; var: string; min?: ExprSrc; max: ExprSrc; default?: ExprSrc }

@@ -60,7 +60,7 @@ const WINDOWS: Array<[string, string, string, string, string]> = [
   ['damageTaken', 'after', '来源 / 承受者', 'damage', '—'],
   ['reducedTo0', 'before', '来源 / 承受者', 'damage', 'setHp（「改为降到 1」这类）'],
   ['turnStarted / turnEnded', 'after', '回合的主人（触发器里 target 也是他）', '—', '—'],
-  ['leftReach', 'after', '走开的人 / 被离开触及范围的人', '—（借机攻击引擎自己会问，不用写）', '—'],
+  ['leftReach', 'after', '走开的人 / 被离开触及范围的人', 'event.provokes（这次移动会不会引发借机攻击：撤离了就是 false）', '—'],
   ['spellCast', 'before', '施法者（role: \'target\' 是被施法的那个）', 'event.spell、event.key、event.targets；attacker = 施法者，target = 被施法的那个', 'cancel（打断施法，缺省退回法术位；要消耗法术位写 refundSlot: false）'],
   ['spellCast', 'after', '施法者（role: \'target\' 是被施法的那个）', 'event.spell、event.key、event.targets；attacker = 施法者，target = 被施法的那个', '—'],
   ['actionDone', 'after', '用动作的人（只有一个目标时 target 是它）', 'action.*（这次动作的结果：action.hitCount、action.result…）', '—（只开给最外层的动作：反应、窗口里用的动作不再触发）'],
@@ -230,8 +230,13 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
 **某人开始 / 结束回合时**（「敌人在你 10 尺内开始回合时」）：\`on: 'turnStarted'\`、\`role: 'enemy'\`（或 ally / any），\`when: 'dist(self, target) <= 10'\` —— 回合窗口里 \`target\` 就是回合的主人；
 写在效应里、只管承受者自己回合的用 \`role: 'actor'\`。灵光（aura）授予的触发器也一样。
 
-**借机攻击**引擎自己处理：走的人离开敌人的触及范围（有触及武器 10 尺，否则 5 尺）时，问那个敌人要不要用反应打一下；撤离了的不会被打。
-「移动不引发借机攻击」的效应写 \`flags: { cannot: ['provoke'] }\`；被离开时还要做点什么的（哨兵）挂 \`leftReach\` 窗口。
+**借机攻击**是规则数据（\`XPHB:action:借机攻击\` 里 id 为 \`opportunityAttack\` 的反应，挂在 \`leftReach\` 上，\`when: 'event.provokes'\`），所有生物都有，不用写：
+走的人离开敌人的触及范围（有触及武器 10 尺，否则 5 尺）时，和别的「离开触及范围时」能力在同一个决定里问。界面上手动「用反应攻击」也走它。
+- 「移动不引发借机攻击」的效应写 \`flags: { cannot: ['provoke'] }\`；「不能借机攻击」写 \`flags: { cannot: ['opportunityAttack'] }\`；「不能对你借机攻击」写 \`cannot: ['opportunityAttack:source']\`（效应来源 = 你）。
+  \`cannot\` 里写动作 id 都是这个意思：不能用那个动作 / 不能对来源用。
+- 「借机攻击命中时」（哨兵·阻拦、坚韧复仇）：attackHit 触发器 \`when: "attack.melee && action.parent.key == 'XPHB:action:借机攻击'"\`（借机攻击里跑的武器攻击，外层动作就是它）。不要挂效应去猜。
+- 「可以对它借机攻击」（哨兵·守护者：撤离了也能打）：写一个反应动作，\`trigger: { on: 'leftReach', role: 'target', aim: 'actor', when: '!event.provokes' }\`，
+  root 是 \`{ kind: 'castFrom', from: 'XPHB:action:借机攻击#opportunityAttack', to: 'target', cost: [] }\` —— 借用规则里的借机攻击，命中时的能力照样认得。
 
 **地图区域**（火墙、蛛网、刃之屏障这类持续存在的范围）：动作的 \`targeting.type\` 是 \`area\`，root 里写
 \`{ kind: 'zone', on: ['enter', 'turnStart'], do: [ …对进来的生物做什么… ] }\`。区域占的就是施法时选的那些格子；
@@ -318,9 +323,12 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
     - 代价默认**沿用那道动作自己的**（法术位照付）；反应已经在外层付过的（战地施法者），\`activation\` 留空就是 \`free\`，不会再扣一次动作经济；
     - 和 \`grantAction\` 的区别：\`grantAction\` 是**给他挂一个能用一阵子的动作**，\`castFrom\` 是**当场结算完什么都不留** ——
       「用反应代替一个动作」「借别人一次攻击顺手打一发」这种选 \`castFrom\`。
+    - \`with\`：这一次自带的修正（效应模板：rollMods、flags…），结算前挂上、结算完摘掉。应答之剑「反击带优势、无视抗性」：
+      \`with: { rollMods: [{ on: { kind: 'attack' }, who: 'bearer', op: 'adv', label: '…' }], flags: { ignores: ['resistance'] } }\`。
+    - **用一件武器打一下**：先 \`choose\`（\`pool: { from: 'attacks', melee: true }\`，选项的 value 是 \`weapon:<id>\`），再 \`castFrom\`（\`fromVar\`、\`cost: []\`）。只有一件就不问。
 30. **\`choose\` 的现算池还能过滤**（战地施法者要求「施法时间是动作 + 只以那个生物为唯一目标」）：
     \`{ kind: 'choose', pool: { from: 'ownSpells', castTime: 'action', singleTarget: true }, var: 'pick' }\`
-    - \`from\`：\`ownSpells\`（自己身上带施法动作的法术）/ \`ownCantrips\`（只要戏法）；
+    - \`from\`：\`ownSpells\`（自己身上带施法动作的法术）/ \`ownCantrips\`（只要戏法）/ \`spells\`（规则书里所有法术，配 \`list\` / \`school\` / 环阶筛：巫术帽「从法师法术列表里挑一道」）/ \`attacks\`（自己的武器攻击，\`melee\` / \`ranged\` 筛）；
     - \`castTime: 'action'\` 只列施法时间为动作的；\`singleTarget: true\` 只列单体目标的；\`maxLevel\` / \`minLevel\` 卡环阶。
 31. **移动 / 传送**：\`{ kind: 'move', mode: 'teleport', maxFt: '30' }\` —— 引擎会提示玩家**在地图上点落点**（超出 \`maxFt\` 会被拒）；
     \`mode: 'push' | 'pull'\` 是强制位移（\`ft\`，\`origin: 'source'\`），会自己算方向和距离，不用写坐标。

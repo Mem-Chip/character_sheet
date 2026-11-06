@@ -2,7 +2,7 @@ import { Dice, Unknown, runDice, runInt, type ExprSrc, type Value } from '../exp
 import { rollModsOf } from './collect';
 import { currentAction, hideMarksOfRoll, markAction, resultOf } from './instance';
 import { controllerOf, d20Test, evaluateMods, filterMatches } from './d20';
-import { applyEffect, concentrationOf, effectiveView, effectsOf, endConcentration, endEffect } from './effects';
+import { activeTemplates, applyEffect, concentrationOf, effectiveView, effectsOf, endConcentration, endEffect } from './effects';
 import { makeEnv, nameOf } from './scope';
 import { fireWindow } from './triggers';
 import type { Tx } from './tx';
@@ -258,14 +258,16 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
   const tv = effectiveView(tx, p.target);
   const notes: string[] = [];
   const final: Record<string, number> = {};
+  // 伤害来源身上「无视抗性 / 免疫」的标记（castFrom 的 with、效应 flags.ignores）
+  const srcIgnores = new Set(p.source && tx.state.combatants[p.source] ? activeTemplates(tx, p.source).flatMap((a) => a.tpl.flags?.ignores ?? []) : []);
   for (const [type, raw] of Object.entries(byType)) {
     let v = raw;
     if (p.cancel) { v = 0; notes.push('伤害被抵消'); }
     if (p.double) v *= 2;
     if (p.halve) v = Math.floor(v / 2);
     for (const r of p.reduce) if (!r.types || r.types.includes(type)) v = Math.max(0, v - r.value);
-    const noImmune = p.ignoreImmunity;
-    const noResist = p.ignoreResist;
+    const noImmune = p.ignoreImmunity || srcIgnores.has('immunity');
+    const noResist = p.ignoreResist || srcIgnores.has('resistance');
     if (!noImmune && tv.immune.includes(type)) { v = 0; notes.push(`免疫${type}`); }
     else {
       if (!noResist && (tv.resist.includes(type) || tv.resist.includes('*'))) { v = Math.floor(v / 2); notes.push(`抗性：${type}减半`); }

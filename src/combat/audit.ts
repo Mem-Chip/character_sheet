@@ -169,6 +169,7 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
         break;
       case 'castFrom':
         if (!n.from && !n.fromVar) out.push(`${where(at)}：castFrom 要写 from 或 fromVar（施展哪一条动作）`);
+        if (n.with) template(n.with, `${at}.with`);
         break;
       case 'resource':
         expr(n.delta, 'node', DICE, `${at}.delta`);
@@ -178,7 +179,7 @@ function auditEntry(book: RuleBook, key: string, e: Entry, out: string[]): void 
         break;
       case 'choose':
         if (!n.options && !n.pool) out.push(`${where(at)}：choose 要么写 options（写死的选项），要么写 pool（引擎现算的池子）`);
-        if (n.pool && !['ownSpells', 'ownCantrips'].includes(n.pool.from)) out.push(`${where(at)}：choose 的 pool.from 只认 ownSpells / ownCantrips`);
+        if (n.pool && !['ownSpells', 'ownCantrips', 'spells', 'attacks'].includes(n.pool.from)) out.push(`${where(at)}：choose 的 pool.from 只认 ownSpells / ownCantrips / spells / attacks`);
         expr(n.count, 'node', NUM, `${at}.count`);
         if (n.pool) {
           expr(n.pool.maxLevel, 'node', NUM, `${at}.pool.maxLevel`);

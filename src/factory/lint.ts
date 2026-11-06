@@ -63,7 +63,7 @@ const NODE_KEYS = {
   heal: ['amount', 'to'],
   tempHp: ['amount', 'to'],
   applyEffect: ['template', 'inline', 'name', 'to', 'duration', 'link', 'potency', 'state', 'whileInZone'],
-  removeEffect: ['match', 'from'],  extendEffect: ['template'], endConcentration: [], grantAction: ['key', 'from', 'fromVar', 'action', 'name', 'text', 'cost', 'activation', 'targeting', 'until'], removeGrant: ['key'], castFrom: ['from', 'fromVar', 'to', 'cost', 'activation'], modifyCast: ['cancel', 'refundSlot', 'dc', 'attackBonus', 'damageType', 'note', 'slotDelta'],
+  removeEffect: ['match', 'from'],  extendEffect: ['template'], endConcentration: [], grantAction: ['key', 'from', 'fromVar', 'action', 'name', 'text', 'cost', 'activation', 'targeting', 'until'], removeGrant: ['key'], castFrom: ['from', 'fromVar', 'to', 'cost', 'activation', 'with'], modifyCast: ['cancel', 'refundSlot', 'dc', 'attackBonus', 'damageType', 'note', 'slotDelta'],
   resource: ['id', 'delta'],
   economy: ['action', 'bonus', 'reaction', 'attacks', 'move'],
   choose: ['prompt', 'var', 'options', 'pool', 'count'],

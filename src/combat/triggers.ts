@@ -2,7 +2,7 @@ import { ABIL_CN, Unknown, runBool, runInt, type Question, type Value } from '..
 import { d20Test } from './d20';
 import { triggeredActionsOf, triggersOf } from './collect';
 import { activeTemplates, effectiveView } from './effects';
-import { actionCosts, canPay, describeCost, executeAction, payCosts, runNodes, triggeredActionUsable, type ExecCtx } from './exec';
+import { actionCosts, canPay, describeCost, executeAction, forbiddenAgainst, payCosts, runNodes, triggeredActionUsable, type ExecCtx } from './exec';
 import { normType, type DamagePacket } from './damage';
 import type { CastPlan } from './castplan';
 import { makeEnv, nameOf, type ScopeData } from './scope';
@@ -146,6 +146,7 @@ function collect(tx: Tx, spec: WindowSpec, done: Set<string>): TriggerCand[] {
       if (timing.window !== spec.window || !timing.on.includes(spec.event)) continue;
       const usable = triggeredActionUsable(tx, owner, action);
       if (!usable.ok) continue;
+      if (forbiddenAgainst(tx, owner, action, aimOf(spec, action))) continue;
       consider({
         key: limitKey({ from: key, id: action.id }),
         owner, source: owner, from: key, label: action.name, action, optional: true, cost: actionCosts(action),
@@ -165,6 +166,11 @@ function turnOrder(tx: Tx): Id[] {
   return [...all.slice(i), ...all.slice(0, i)];
 }
 
+/** 窗口触发的动作打谁：aim: 'actor' = 窗口发起者；否则窗口里的承受者，没有承受者时打生物的动作打发起者 */
+function aimOf(spec: WindowSpec, action: Action): Id | undefined {
+  return action.trigger?.aim === 'actor' ? spec.actor : (spec.target ?? (action.targeting?.type === 'creature' ? spec.actor : undefined));
+}
+
 function fire(tx: Tx, spec: WindowSpec, c: TriggerCand): void {
   const seq = tx.emit('triggerFired', {
     owner: c.owner, label: c.label, from: c.from, event: spec.event, window: spec.window,
@@ -178,7 +184,7 @@ function fire(tx: Tx, spec: WindowSpec, c: TriggerCand): void {
   if (c.action) {
     // 窗口触发的动作：动作自己付代价（反应 / 附赠 + 法术位…），自己跑效果树；
     // 目标 = 窗口里的目标（至圣斩打的是被命中的那个），没有就是自己；aim: 'actor' = 窗口的发起者（炼狱叱喝打伤害来源、法术反制打施法者）
-    const aimed = c.action.trigger?.aim === 'actor' ? spec.actor : (spec.target ?? (c.action.targeting?.type === 'creature' ? spec.actor : undefined));
+    const aimed = aimOf(spec, c.action);
     executeAction(tx, {
       actor: c.owner, actionKey: `${c.from}#${c.action.id}`, action: c.action,
       targets: aimed && tx.state.combatants[aimed] ? [aimed] : [c.owner],
@@ -322,6 +328,7 @@ function windowPrompt(tx: Tx, spec: WindowSpec): string {
       return `${a} 的攻击命中了 ${t}${r?.total != null ? `（总值 ${r.total}${r.vs != null ? ` 对 AC ${r.vs}` : ''}${r.crit ? '，重击' : ''}）` : ''}。要使用以下能力吗？`;
     }
     case 'damageIncoming': return `${t} 即将受到伤害。要使用以下能力吗？`;
+    case 'leftReach': return `${a} 离开了 ${t} 的触及范围。要使用以下能力吗？`;
     case 'd20Rolled': return `${rollText(spec, a, t)}要使用以下能力吗？`;
     case 'damageTaken': return `${t} 受到了伤害。要使用以下能力吗？`;
     case 'spellCast': {

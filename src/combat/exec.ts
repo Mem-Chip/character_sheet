@@ -360,11 +360,20 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
         : to === 'attacker' ? (ctx.attacker ? [ctx.attacker] : [])
         : to === 'each' ? ctx.targets.slice()
         : ctx.target ? [ctx.target] : ctx.targets.slice();
+      // with：这一次自带的修正，结算前挂上、结算完摘掉（真效应，走事件）
+      const tmp = n.with ? applyEffect(tx, {
+        bearer: ctx.self, source: ctx.self, inline: n.with, key: `${ctx.entryKey}#with`, name: n.with.name ?? ctx.actionName,
+        baseKey: ctx.entryKey, duration: { manual: true }, origin: { kind: ctx.originKind ?? 'feature', ref: ctx.entryKey }, cause: ctx.cause,
+      }) : null;
       // 反应本身已经在触发器那边付过了：这里不要再按 reaction 结算一次
-      executeAction(tx, {
-        actor: ctx.self, actionKey: `${found.key}#${cast.id}`, action: cast, targets,
-        cause: ctx.cause, force: true,
-      });
+      try {
+        executeAction(tx, {
+          actor: ctx.self, actionKey: `${found.key}#${cast.id}`, action: cast, targets,
+          cause: ctx.cause, force: true,
+        });
+      } finally {
+        if (tmp && tx.state.effects[tmp.id]) endEffect(tx, tmp.id, `「${ctx.actionName}」结束`, ctx.cause);
+      }
       return;
     }
     case 'extendEffect': {
@@ -399,7 +408,7 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
     }
     case 'choose': {
       // `pool`：选项由引擎按池子现算（战地施法者那种「从我的法术里挑一道」）—— 选项的 value 就是法术键
-      const fromPool = n.pool ? spellPoolOptions(tx, ctx, n.pool) : null;
+      const fromPool = n.pool ? poolOptions(tx, ctx, n.pool) : null;
       const options: Array<{ label: string; do?: Node[]; when?: ExprSrc; value?: string }> = fromPool ?? n.options ?? [];
       // 带 when 的选项：条件明确不满足就不列出来（圣疗「移除中毒」要求目标中毒、能量池至少 5 点）
       const open = options.map((o, i) => ({ o, i })).filter(({ o }) => {
@@ -413,7 +422,10 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
       }
       // count 可以是表达式（进阶诡诈打击：11 级起选两种）
       const count = n.count === undefined ? 1 : Math.max(1, num(tx, ctx, n.count, `${n.prompt} 选几项`));
-      const picked = open.length === 1 && count === 1 ? [String(open[0].i)] : tx.decide({
+      // 变量已经定好（发起时就挑了：界面上点了哪件武器做借机攻击），而且是个可选项：不再问
+      const preset = n.var !== undefined && ctx.vars?.[n.var] !== undefined
+        ? open.find(({ o }) => (o.value ?? o.label) === String(ctx.vars![n.var!])) : undefined;
+      const picked = preset ? [String(preset.i)] : open.length === 1 && count === 1 ? [String(open[0].i)] : tx.decide({
         kind: 'choose', to: controllerOf(tx, ctx.self), prompt: count > 1 ? `${n.prompt}（最多 ${count} 项）` : n.prompt, multi: count > 1,
         options: open.map(({ o, i }) => ({ id: String(i), label: o.label })),
         default: [String(open[0].i)],
@@ -591,14 +603,30 @@ function grantActionNode(tx: Tx, n: Extract<Node, { kind: 'grantAction' }>, ctx:
  * 战地施法者「用一道法术代替借机攻击」、各种「从你的已知法术里选一道」都用它；
  * 选项的 value 是法术键（`XPHB:spell:火球术`），配合 `grantAction.fromVar` 施展。
  */
-function spellPoolOptions(
-  tx: Tx, ctx: ExecCtx,
-  pool: { from: 'ownSpells' | 'ownCantrips'; maxLevel?: ExprSrc; minLevel?: ExprSrc; castTime?: 'action' | 'bonus' | 'reaction'; singleTarget?: boolean; school?: string; list?: string },
-): Array<{ label: string; value: string }> {
+type Pool = NonNullable<Extract<Node, { kind: 'choose' }>['pool']>;
+
+/**
+ * 选择池：引擎现算的选项，value 是能交给 castFrom 跑的东西（法术键 / `weapon:<id>`）。
+ * 「从哪挑」只有这一处：自己会的法术、规则书里的全部法术、自己的武器攻击。
+ */
+function poolOptions(tx: Tx, ctx: ExecCtx, pool: Pool): Array<{ label: string; value: string }> {
+  if (pool.from === 'attacks') {
+    return effectiveView(tx, ctx.self).attacks
+      .filter((a) => (pool.melee === undefined || a.melee === pool.melee) && (pool.ranged === undefined || a.ranged === pool.ranged))
+      .map((a) => ({ label: a.name, value: `weapon:${a.id}` }));
+  }
+  const keys = pool.from === 'spells' ? [...tx.rules.keys()] : effectiveView(tx, ctx.self).sources ?? [];
+  return spellPoolOptions(tx, ctx, pool, keys);
+}
+
+function spellPoolOptions(tx: Tx, ctx: ExecCtx, pool: Pool, keys: Iterable<string>): Array<{ label: string; value: string }> {
   const max = pool.maxLevel !== undefined ? num(tx, ctx, pool.maxLevel, '法术最高环阶') : Infinity;
   const min = pool.minLevel !== undefined ? num(tx, ctx, pool.minLevel, '法术最低环阶') : 0;
   const out: Array<{ label: string; value: string }> = [];
-  for (const key of effectiveView(tx, ctx.self).sources ?? []) {
+  const seen = new Set<string>();
+  for (const key of keys) {
+    if (seen.has(key)) continue;
+    seen.add(key);
     if (!key.includes(':spell:')) continue;
     const entry = tx.rules.entry(key) ?? effectiveView(tx, ctx.self).entries?.[key];
     if (!entry?.actions?.length || entry.automation === 'manual') continue;
@@ -1272,6 +1300,8 @@ export interface ExecuteOpts {
   cause: number | null;
   viaReaction?: boolean;
   options?: Record<string, unknown>;
+  /** 预先定好的变量（vars.<名>）：choose 发现这个变量已经是一个可选项，就不再问 */
+  vars?: Record<string, number | string>;
   /** 由窗口触发的动作（至圣斩、护盾术）：带上窗口的上下文 —— 命中窗口里的伤害包、攻击信息、检定 */
   window?: Pick<ExecCtx, 'packet' | 'attack' | 'attacker' | 'roll' | 'damage' | 'event' | 'modify'>;
   area?: ExecCtx['area'];
@@ -1304,6 +1334,15 @@ function cannotCastSpell(tx: Tx, owner: Id, action: Action): boolean {
 }
 
 /**
+ * flags.cannot 里的 `<动作 id>:source`：不能对效应来源用这个动作（梦幻舞步：本回合不能对你借机攻击）。
+ * 和 `moveCloser:source` 一个写法；不带 `:source` 的（`opportunityAttack`）是对谁都不能用。
+ */
+export function forbiddenAgainst(tx: Tx, owner: Id, action: Action, target: Id | undefined): boolean {
+  if (!target) return false;
+  return activeTemplates(tx, owner).some((a) => a.tpl.flags?.cannot?.includes(`${action.id}:source`) && a.effect.source === target);
+}
+
+/**
  * 窗口触发的动作现在能不能用（不抛错版的 executeAction 前置检查，不含目标检查）。
  * requires 不确定时返回问题，交给窗口一起问。
  */
@@ -1315,6 +1354,8 @@ export function triggeredActionUsable(tx: Tx, owner: Id, action: Action): { ok: 
   const costs = actionCosts(action);
   if (!canPay(tx, owner, costs)) return no;
   const cannot = new Set(activeTemplates(tx, owner).flatMap((a) => a.tpl.flags?.cannot ?? []));
+  // flags.cannot 里写动作 id = 不能用那个动作（opportunityAttack：不能借机攻击）
+  if (cannot.has(action.id)) return no;
   if (isSpell && cannotCastSpell(tx, owner, action)) return no;
   if (action.concentration && cannot.has('concentrate')) return no;
   if (inCombat(tx) && isSpell && costs.some((k) => 'slot' in k) && c.economy.slotSpellCast) return no;
@@ -1365,6 +1406,18 @@ export function effectiveAction(tx: Tx, actor: Id, action: Action): Action {
 }
 
 export function executeAction(tx: Tx, o: ExecuteOpts): void {
+  // 用反应发起一次武器攻击（界面上勾「用反应攻击」）= 用这件武器做一次借机攻击：
+  // 走规则里的借机攻击（core.opportunityAttack），这样「借机攻击命中时」的能力（哨兵、坚韧复仇）认得出来
+  const oaRef = tx.rules.coreAll().opportunityAttack as string | undefined;
+  if (o.options?.as === 'reaction' && (o.action.tags ?? []).includes('weapon') && oaRef && o.actionKey !== oaRef) {
+    try {
+      const oa = findAction(tx, o.actor, oaRef);
+      executeAction(tx, { ...o, actionKey: `${oa.key}#${oa.action.id}`, action: oa.action, options: undefined, vars: { weapon: o.actionKey } });
+      return;
+    } catch (e) {
+      if (!(e instanceof Rejected) || !/找不到动作/.test(e.message)) throw e;
+    }
+  }
   const quick = o.options?.as === 'reaction' ? undefined : quickenOf(tx, o.actor, o.action);
   const actor = o.actor;
   const action = quick ? { ...o.action, activation: 'bonus' as const } : o.action;
@@ -1385,6 +1438,7 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
       throw new Rejected(`${c.name} 现在无法执行${ACT_CN[act]}（失能）`);
     }
     const cannot = new Set(activeTemplates(tx, actor).flatMap((a) => a.tpl.flags?.cannot ?? []));
+    if (cannot.has(action.id)) throw new Rejected(`${c.name} 现在不能用「${action.name}」`);
     if (isSpell && cannotCastSpell(tx, actor, action)) throw new Rejected(`${c.name} 现在不能施法`);
     if (action.concentration && cannot.has('concentrate')) throw new Rejected(`${c.name} 现在无法保持专注`);
     if (action.requires !== undefined) {
@@ -1414,6 +1468,7 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
         if (!tx.state.combatants[tid]) throw new Rejected(`目标 ${tid} 不在遭遇中`);
         const forbidden = activeTemplates(tx, actor).some((a) => a.tpl.flags?.forbidTarget === 'source' && a.effect.source === tid);
         if (forbidden && tx.state.combatants[tid]) throw new Rejected(`${c.name} 处于魅惑状态，不能以 ${nameOf(tx, tid)} 为目标`);
+        if (forbiddenAgainst(tx, actor, action, tid)) throw new Rejected(`${c.name} 现在不能对 ${nameOf(tx, tid)} 用「${action.name}」`);
         // 范围法术里「你选择的生物」（filter 写成 ask(...)）：人已经在选目标时挑过了，不再逐个问
         const picked = t.type === 'area' && typeof t.filter === 'string' && /^\s*ask\(/.test(t.filter);
         if (t.filter !== undefined && !picked) {
@@ -1575,7 +1630,7 @@ function runAction(tx: Tx, o: ExecuteOpts, x: {
     ...(castPlan ? { cast: castPlan } : {}),
     ...(o.interrupting ? { interrupting: o.interrupting } : {}),
     originKind: isSpell ? 'spell' : (action.tags ?? []).includes('weapon') ? 'item' : 'feature',
-    vars: {},
+    vars: { ...(o.vars ?? {}) },
     ...(o.area ? { area: o.area } : {}),
     ...(form ? { form } : {}),
     ...o.window,
