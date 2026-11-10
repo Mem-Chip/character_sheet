@@ -5,8 +5,8 @@
  * 同名（或表列名以能力名开头）的合并成一个池；玩家记账在 char.resources[key] = { used, max? }。
  */
 import { clamp } from './constants';
-import { ABILS, run, type EvalEnv, type FnImpl } from '../expr';
-import { resolveNum, totalLevel } from './abilities';
+import { totalLevel } from './abilities';
+import { evalFormula } from './formula';
 import type { SheetEnv } from './env';
 import type { Json } from './store';
 import type { CharData } from './character';
@@ -93,64 +93,21 @@ export class Resources {
   }
 
   /**
-   * 资源上限公式：数字 / 'pb' / 属性名 / 'max(1, int)' / 'table'（交给等级表），
-   * 其余按表达式算（`level * 5`、`cond(level >= 17, 2, 1)`）—— 表达式里的 `level` 是**该职业**的等级。
+   * 资源上限公式（写法见 formula.ts）：数字 / 'pb' / 属性名 / 'max(1, int)' / `level * 5` / `cond(level >= 17, 2, 1)`；
+   * 'table' = 交给等级表。算式里的 `level` 是**该职业**的等级。算不出来返回 null。
    */
   resolveFormula(formula: unknown, sheet: Json, char: CharData | null, cls?: string): number | null {
     if (formula == null) return null;
     if (typeof formula === 'number') return formula;
     const s = String(formula).trim();
     if (s === 'table') return null;
-    const m = s.match(/^max\s*\(\s*(\d+)\s*,\s*([^)]+)\)$/i);
-    if (m) {
-      const inner = this.resolveFormula(m[2].trim(), sheet, char, cls);
-      return inner == null ? +m[1] : Math.max(+m[1], inner);
-    }
-    const ctx = { out: sheet || {}, char: char || null };
-    const viaNum = resolveNum(s, ctx);
-    if (typeof viaNum === 'number' && Number.isFinite(viaNum)) {
-      if (viaNum !== 0) return viaNum;
-      const isNumber = Number.isFinite(Number(s));
-      const isKnown = /^(pb|level|spellcasting|mod:[a-z]+|[a-z]{2,3})$/i.test(s) || /调整值|调整/.test(s);
-      if (!isNumber && !isKnown) return this.exprFormula(s, sheet, char, cls);
-      const m0 = s.match(/^mod:([a-z]{3})$/i);
-      if (m0 && sheet?.['mod:' + m0[1]] === undefined && sheet?.[m0[1]] === undefined) return null;
-      return viaNum;
-    }
-    return this.exprFormula(s, sheet, char, cls);
-  }
-
-  /** 表达式公式。根：level（该职业等级，非职业资源 = 总等级）、totalLevel、pb、mod、六个属性名；函数：max/min/floor/ceil/cond/levelOf */
-  private exprFormula(src: string, sheet: Json, char: CharData | null, cls?: string): number | null {
-    const classes: Json[] = char?._resolved?.classes || [];
-    const total = sheet?.level || totalLevel(char);
-    const levelOf = (name: string) => classes.find((k) => k.cls?.name === name)?.level ?? 0;
-    const mod = Object.fromEntries(ABILS.map((a) => [a, sheet?.['mod:' + a] ?? 0]));
-    const fns: Record<string, FnImpl> = {
-      max: (a) => Math.max(...(a as number[])),
-      min: (a) => Math.min(...(a as number[])),
-      floor: (a) => Math.floor(a[0] as number),
-      ceil: (a) => Math.ceil(a[0] as number),
-      cond: (a) => (a[0] ? a[1] : a[2]),
-      levelOf: (a) => levelOf(String(a[0])),
-    };
-    const env: EvalEnv = {
-      root(name) {
-        if (name === 'level') return cls ? levelOf(cls) || total : total;
-        if (name === 'totalLevel') return total;
-        if (name === 'pb') return sheet?.pb ?? 2 + Math.floor((Math.max(1, total) - 1) / 4);
-        if (name === 'mod') return mod;
-        if ((ABILS as readonly string[]).includes(name)) return mod[name];
-        throw new Error(`资源公式里不认识「${name}」`);
-      },
-      fn: (name) => fns[name],
-    };
-    try {
-      const v = run(src, env);
-      return typeof v === 'number' && Number.isFinite(v) ? Math.floor(v) : null;
-    } catch {
-      return null;
-    }
+    // 空的、纯数字的照原样（不取整）
+    if (Number.isFinite(Number(s))) return Number(s);
+    // 还没算出属性的时候问 mod:xxx：不知道，而不是 0
+    const m0 = s.match(/^mod:([a-z]{3})$/i);
+    if (m0 && sheet?.['mod:' + m0[1]] === undefined && sheet?.[m0[1]] === undefined) return null;
+    const v = evalFormula(s, { sheet: sheet || {}, char: char || null, cls });
+    return v === null ? null : Math.floor(v);
   }
 
   fromAbilities(derived: Json, char: CharData, sheet: Json): Json[] {

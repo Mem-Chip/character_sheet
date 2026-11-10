@@ -14,6 +14,7 @@ import type { Json } from './store';
 import { entryText, proseChoiceComplement } from './text';
 import type { CalcCtx } from './pipeline';
 import { decisionOwner } from '../keys';
+import { evalFormula } from './formula';
 
 export const HR_SOURCE = 'HR';
 
@@ -133,37 +134,11 @@ export function parseAcFormula(text: unknown): { base: number; abils: string[] }
 }
 
 /**
- * 「公式式」的数值引用 → 数字：数字 / 'pb' / 'level' / 裸属性名 / 'mod:dex' / 'spellcasting' / 中文「魅力调整值」。
- * 动态层用表达式语言（src/expr），这里保留原项目的写法以兼容静态数据。
+ * 算式 → 数字（算不出来当 0）。写法见 formula.ts：数字 / 'pb' / 'level' / 属性名 / 'max(1, wis)' / 旧写法「魅力调整值」都行。
  */
 export function resolveNum(v: unknown, ctx: { out: Record<string, any>; char: Json }): number {
-  // 支持 max(a, b) / min(a, b)（官方写法：「加值等于感知调整值，最小为 1」→ max(1, wis)）
-  if (typeof v === 'string') {
-    const fn = /^(max|min)\s*\(\s*([^,]+?)\s*,\s*([^)]+?)\s*\)$/.exec(v.trim());
-    if (fn) {
-      const a = resolveNum(fn[2], ctx), b = resolveNum(fn[3], ctx);
-      return fn[1] === 'max' ? Math.max(a, b) : Math.min(a, b);
-    }
-  }
   if (typeof v === 'number') return v;
-  if (v === 'pb') return ctx.out.pb ?? (2 + Math.floor((Math.max(1, ctx.out.level || totalLevel(ctx.char)) - 1) / 4));
-  if (v === 'level') return ctx.out.level ?? totalLevel(ctx.char);
-  if (typeof v === 'string' && (ABILS as readonly string[]).includes(v.trim())) return ctx.out['mod:' + v.trim()] || 0;
-  if (typeof v === 'string' && /调整值|调整/.test(v)) {
-    for (const [cn, en] of Object.entries(ABIL_WORD)) if (v.includes(cn)) return ctx.out['mod:' + en] || 0;
-  }
-  if (v === 'spellcasting') {
-    const casters = (ctx.char?._resolved?.classes || []).filter((k: Json) => k.cls.spellcastingAbility);
-    const ab = casters.length ? casters[0].cls.spellcastingAbility : null;
-    return ab ? (ctx.out['mod:' + ab] || 0) : 0;
-  }
-  if (typeof v === 'string' && v.startsWith('mod:')) {
-    const ab = v.slice(4);
-    if (ab === 'spellcasting') return resolveNum('spellcasting', ctx);
-    return ctx.out['mod:' + ab] || 0;
-  }
-  const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
+  return evalFormula(v, { sheet: ctx.out, char: ctx.char }) ?? 0;
 }
 
 export function totalLevel(c: Json): number {
