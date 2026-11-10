@@ -457,7 +457,10 @@ export function buildBrief(input: SpecInput): string {
 
 ## 0. 怎么查资料
 
-要细节时**只回一个查询请求**（是 JSON，但我们认这个形状，不是答卷）：
+要细节时按接口给的通道去要（两种都行，哪种能用用哪种）：
+
+- **有函数**（function calling）就直接调用下面那几个函数，一个回合可以调多个；
+- **没有函数**就只回一个查询请求（是 JSON，但我们认这个形状，不是答卷）：
 
 \`\`\`json
 { "lookup": [ { "tool": "node", "q": "zone" }, { "tool": "example", "q": "summon" } ] }

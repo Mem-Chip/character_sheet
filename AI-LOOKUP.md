@@ -85,5 +85,9 @@
   答案分别写进 `answers-brief/` / `answers-full/`，`exam.ts grade <卷> <答案目录>` 能指定阅卷目录。
   接口用 `OPENAI_BASE_URL` / `OPENAI_API_KEY` / `OPENAI_MODEL`。**只拿假接口验证过流程**（一题：brief 发了 3.4 万字、full 发了 57.3 万字），
   真实的通过率对比要填密钥自己跑。
-- [ ] 6. 以后：原生 tool calling（`makeChat` 发现接口支持就用 `tools` 传，查询函数不变）。
+- [x] 6. 原生 tool calling：接口这一层挪进 `src/factory/chat.ts`（`createChat`，浏览器和 Node 共用一份），
+  `Chat` 上多挂一个可选的 `tools` 通道；`datafy` 看到它就先发 `tools`，接口 400 说不认就抛 `ToolsUnsupported`、
+  自动退回文字协议（并在对话里告诉模型「这个接口不支持函数调用」）。查询计数、重复检测、催交卷两条通道共用一套。
+  `tests/factory/chat.test.ts`（消息形状、`response_format` 重试、不认 tools）、`tests/factory/tool-calling.test.ts`（协议两条通道）；
+  假接口上跑过：认 tools 的走函数调用（两轮往返），不认的第一次 400 之后就退回文字查询（三轮往返），两边都能交卷。
 

@@ -12,7 +12,8 @@ import { GOLDEN_FILES } from '../../src/bridge/rule-files';
 import type { CombatantView, Entry } from '../../src/combat';
 import { buildBrief, buildSpec, declaredResources, lintSheet, renderTask, sheetHasContent, type Task } from '../../src/factory';
 import { createLookup, type Lookup } from '../../src/factory';
-import { isSkip, type Chat, type ChatMsg } from '../../src/factory/ai';
+import { isSkip, type Chat } from '../../src/factory/ai';
+import { createChat } from '../../src/factory/chat';
 import { createTaskBuilder } from '../../src/factory/build';
 import type { Json } from '../../src/sheet';
 import { BREW_CLASSES, checkBrew, kindOfKey, type Brew, type LibraryItem, type ResPart } from '../../src/library';
@@ -63,36 +64,9 @@ export const AI_PRESETS: Array<{ label: string; baseUrl: string; model: string }
 
 export const aiBy = (s: AiSettings | null) => `byok:${s?.model ?? '?'}`;
 
+/** 浏览器侧的聊天：接口地址、模型、密钥来自设置（密钥只在本机），调用本身在 src/factory/chat.ts */
 export function makeChat(s: AiSettings, opts: { json?: boolean } = {}): Chat {
-  let useJson = opts.json !== false;
-  return async (messages: ChatMsg[], signal?: AbortSignal) => {
-    const url = s.baseUrl.replace(/\/+$/, '') + '/chat/completions';
-    for (let attempt = 0; attempt < 2; attempt++) {
-      let r: Response;
-      try {
-        r = await fetch(url, {
-          method: 'POST', signal,
-          headers: { 'content-type': 'application/json', ...(s.key ? { authorization: `Bearer ${s.key}` } : {}) },
-          body: JSON.stringify({ model: s.model, messages, temperature: 0.2, ...(useJson ? { response_format: { type: 'json_object' } } : {}) }),
-        });
-      } catch (e) {
-        if ((e as Error).name === 'AbortError') throw e;
-        throw new Error(`连不上 ${url}（地址不对，或者这个接口不允许浏览器直接调用）`);
-      }
-      const text = await r.text();
-      if (!r.ok) {
-        // 有的接口不认 response_format：去掉再试一次
-        if (useJson && r.status === 400 && /response_format|json_object/i.test(text)) { useJson = false; continue; }
-        throw new Error(`接口返回 ${r.status}：${text.slice(0, 300)}`);
-      }
-      let data: Json;
-      try { data = JSON.parse(text); } catch { throw new Error(`接口返回的不是 JSON：${text.slice(0, 200)}`); }
-      const out = data?.choices?.[0]?.message?.content;
-      if (typeof out !== 'string' || !out.trim()) throw new Error(`接口没给出内容：${text.slice(0, 200)}`);
-      return out;
-    }
-    throw new Error('接口调用失败');
-  };
+  return createChat({ baseUrl: s.baseUrl, model: s.model, key: s.key, json: opts.json, browser: true });
 }
 
 /* ───── 说明书、例子、任务 ───── */

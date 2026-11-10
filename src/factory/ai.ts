@@ -9,10 +9,41 @@
  * 纯逻辑：怎么调接口（chat）、怎么检查（check）、怎么查（lookup）由调用方给。
  */
 import type { ParsedMonster } from '../bridge/from-monster';
-import { isLookupReq, type Lookup, type LookupReq } from './lookup';
+import { isLookupReq, lookupTools, type Lookup, type LookupReq, type LookupTool, type ToolSpec } from './lookup';
 
-export interface ChatMsg { role: 'system' | 'user' | 'assistant'; content: string }
-export type Chat = (messages: ChatMsg[], signal?: AbortSignal) => Promise<string>;
+/** 一次函数调用（原生 tool calling）：模型要我们查什么 */
+export interface ToolCall { id: string; name: string; args: Record<string, unknown> }
+/** 模型的一轮回复：文字 + 可能还有要调的函数 */
+export interface ChatReply { content: string; toolCalls: ToolCall[] }
+
+export interface ChatMsg {
+  role: 'system' | 'user' | 'assistant' | 'tool';
+  content: string;
+  /** assistant 这一轮调了哪些函数 */
+  toolCalls?: ToolCall[];
+  /** role: 'tool' 的回执对应哪一次调用 */
+  toolCallId?: string;
+}
+
+/** 接口支持原生 tool calling 时的另一条通道 */
+export type ToolChat = (messages: ChatMsg[], tools: ToolSpec[], signal?: AbortSignal) => Promise<ChatReply>;
+
+export type Chat = ((messages: ChatMsg[], signal?: AbortSignal) => Promise<string>) & {
+  /** 挂上它 = 这个接口能传 tools；datafy 会优先走函数调用，不认就退回文字协议 */
+  tools?: ToolChat;
+};
+
+/** 接口不认 tools 参数（本地小模型、部分中转站）：datafy 见到它就退回文字协议 */
+export class ToolsUnsupported extends Error {
+  constructor(message = '这个接口不支持函数调用') { super(message); this.name = 'ToolsUnsupported'; }
+}
+
+/** 函数调用的参数 → 我们的查询请求（名字允许带 lookup_ 前缀，模型偶尔会自己加） */
+export function callToReq(c: ToolCall): LookupReq {
+  const name = c.name.replace(/^lookup[_:.-]/i, '') as LookupTool;
+  return { tool: name, q: typeof c.args.q === 'string' ? c.args.q : '', draft: c.args.draft };
+}
+
 
 export interface DatafyInput {
   chat: Chat;
@@ -77,6 +108,8 @@ export async function datafy(input: DatafyInput): Promise<DatafyResult> {
   const maxFix = input.maxFix ?? 2;
   const maxLookup = input.maxLookup ?? 6;
   const lookup = input.lookup;
+  const toolChat = input.chat.tools;
+  let useTools = !!lookup && !!toolChat;
   let raw = '';
   let answer: unknown = null;
   let problems: string[] = [];
@@ -89,20 +122,41 @@ export async function datafy(input: DatafyInput): Promise<DatafyResult> {
 
   for (;;) {
     input.onStep?.(fixes ? `检查没过，让它改（第 ${fixes} 次）…` : '等模型回答…');
-    raw = await input.chat(msgs, input.signal);
-    chats++;
+    let calls: ToolCall[] = [];
+    if (useTools) {
+      // 原生 tool calling：接口认 tools 就用它；不认就退回文字协议（这次请求没进历史）
+      try {
+        const reply = await toolChat!(msgs, lookupTools(), input.signal);
+        raw = reply.content ?? '';
+        calls = reply.toolCalls ?? [];
+        chats++;
+      } catch (e) {
+        if (!(e instanceof ToolsUnsupported)) throw e;
+        useTools = false;
+        input.onStep?.('这个接口不支持函数调用，改用文字查询…');
+        msgs.push({ role: 'user', content: '这个接口不支持函数调用：要资料时只回一个 JSON 查询请求 `{"lookup":[…]}`（照速览第 0 节），不要调用函数。' });
+        continue;
+      }
+    } else {
+      raw = await input.chat(msgs, input.signal);
+      chats++;
+    }
 
     let parsed: unknown;
     let badJson: string | null = null;
-    try { parsed = parseAnswer(raw); } catch (e) { badJson = `不是合法的 JSON：${(e as Error).message}`; }
+    if (!calls.length) {
+      try { parsed = parseAnswer(raw); } catch (e) { badJson = `不是合法的 JSON：${(e as Error).message}`; }
+    }
 
-    // 这一回要的是资料，不是答卷
-    if (!badJson && lookup && isLookupReq(parsed)) {
-      const reqs = (parsed.lookup as unknown[]).filter((r): r is LookupReq => !!r && typeof r === 'object');
+    // 这一回要的是资料，不是答卷（函数调用优先，其次是文字协议）
+    const reqs: LookupReq[] | null = calls.length ? calls.map(callToReq)
+      : !badJson && lookup && isLookupReq(parsed) ? (parsed.lookup as unknown[]).filter((r): r is LookupReq => !!r && typeof r === 'object')
+        : null;
+    if (reqs && lookup) {
       if (closed) {
         // 说过不能再查了还查：按答卷处理，交给检查去报，不再陪它兜圈
-        answer = parsed;
-        problems = [...await safeCheck(input.check, parsed), '这是查询请求，不是答卷'];
+        answer = parsed ?? null;
+        problems = [...await safeCheck(input.check, answer), '这是查询请求，不是答卷'];
         return { answer, problems, raw, rounds: chats };
       }
       const sig = reqs.map((r) => `${r.tool}:${String(r.q ?? '')}`);
@@ -111,19 +165,28 @@ export async function datafy(input: DatafyInput): Promise<DatafyResult> {
       stale = fresh.length ? 0 : stale + 1;
       if (queries >= maxLookup) {
         closed = true;
-        msgs.push({ role: 'assistant', content: raw });
+        // 不带 toolCalls 的助手消息：API 要求 tool_calls 后面必须跟 tool 回执，这里干脆只发一条 user
         msgs.push({ role: 'user', content: '查询轮数已经用完了，不能再查了。照速览直接输出答卷（做不到的部分写 skip / manual）。' });
         continue;
       }
       queries++;
       input.onStep?.(`查资料（第 ${queries} 轮）：${sig.map((s) => s.replace(':', ' ')).join('、') || '（空）'}`);
-      const text = await lookup.run(reqs, { check: input.check });
-      msgs.push({ role: 'assistant', content: raw });
-      msgs.push({
-        role: 'user',
-        content: `## 查询结果\n\n${text}\n\n`
-          + (stale >= 2 ? '这些你查过了，没有新东西。别再查了，照现在知道的直接写答卷。\n' : '接着写。要更多细节就再查，够了就输出答卷。\n'),
-      });
+      if (calls.length) {
+        // 函数调用：一条助手消息带全部调用，每个调用各回一条 tool 结果
+        const results: string[] = [];
+        for (const r of reqs) results.push(await lookup.run([r], { check: input.check }));
+        msgs.push({ role: 'assistant', content: raw, toolCalls: calls });
+        results.forEach((text, i) => msgs.push({ role: 'tool', toolCallId: calls[i].id, content: text }));
+        if (stale >= 2) msgs.push({ role: 'user', content: '这些你查过了，没有新东西。别再查了，照现在知道的直接写答卷。' });
+      } else {
+        const text = await lookup.run(reqs, { check: input.check });
+        msgs.push({ role: 'assistant', content: raw });
+        msgs.push({
+          role: 'user',
+          content: `## 查询结果\n\n${text}\n\n`
+            + (stale >= 2 ? '这些你查过了，没有新东西。别再查了，照现在知道的直接写答卷。\n' : '接着写。要更多细节就再查，够了就输出答卷。\n'),
+        });
+      }
       continue;
     }
 

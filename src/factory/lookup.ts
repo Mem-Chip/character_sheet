@@ -14,6 +14,32 @@ export const LOOKUP_TOOLS: LookupTool[] = ['spec', 'node', 'type', 'window', 'ex
 
 export interface LookupReq { tool: LookupTool; q?: string; draft?: unknown }
 
+/** 给原生 tool calling 用的函数定义（和文字协议是同一套工具，只是换个通道） */
+export interface ToolSpec { name: string; description: string; parameters: Record<string, unknown> }
+
+const param = (q: string, extra?: Record<string, unknown>): Record<string, unknown> => ({
+  type: 'object',
+  properties: { q: { type: 'string', description: q }, ...(extra ?? {}) },
+  required: ['q'],
+});
+
+const TOOL_SPECS: ToolSpec[] = [
+  { name: 'node', description: '效果节点的定义（kind）：有哪些字段、写在它上面的约定。', parameters: param('节点 kind，比如 zone、summon、choose') },
+  { name: 'type', description: '类型定义（Entry、Trigger、Duration…）或修改的 op（adv、reduceDamage…）。', parameters: param('类型名或 op') },
+  { name: 'window', description: '时机（窗口）：谁发起 / 谁承受、能读到什么、能做什么修改。', parameters: param('窗口事件名，比如 damageIncoming、summoned') },
+  { name: 'expr', description: '表达式里能用的名字和函数签名；q 也可以写作用域名（trigger、node、action…）。', parameters: param('作用域名、函数名或字段名') },
+  { name: 'spec', description: '说明书原段落：q 写章节号（5.23、7.2）或关键词（召唤、光环、借机攻击）。', parameters: param('章节号或关键词') },
+  { name: 'example', description: '手写条目里用到这种写法的几条（只给手写的，不含 AI 写的）。', parameters: param('节点 kind、窗口名、条目键或中文词') },
+  {
+    name: 'check',
+    description: '自查一份草稿：跑结构检查、审计、试算，返回问题列表（空 = 通过）。',
+    parameters: { type: 'object', properties: { draft: { type: 'object', description: '完整答卷（就是你要输出的那个 JSON 对象）' } }, required: ['draft'] },
+  },
+];
+
+/** 原生 tool calling 用的函数清单（名字和文字协议里的 tool 一样，方便两种通道互相切换） */
+export const lookupTools = (): ToolSpec[] => TOOL_SPECS;
+
 export interface LookupSources {
   /** 说明书全文（buildSpec 的输出） */
   spec: string;

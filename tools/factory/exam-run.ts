@@ -16,6 +16,7 @@ import { GOLDEN_FILES } from '../../src/bridge/rule-files';
 import type { Entry, RuleFile } from '../../src/combat';
 import { buildBrief, buildSpec, checkEntry } from '../../src/factory';
 import { datafy, type Chat, type ChatMsg } from '../../src/factory/ai';
+import { createChat } from '../../src/factory/chat';
 import { createLookup } from '../../src/factory/lookup';
 
 const ROOT = resolve(import.meta.dirname, '..', '..');
@@ -34,33 +35,12 @@ const opt = (name: string, dflt?: string) => {
   return i >= 0 && args[i + 1] ? args[i + 1] : dflt;
 };
 
-/** 环境变量里的接口 → Chat（和浏览器侧同一套协议，只是不经过 localStorage） */
+/** 环境变量里的接口 → Chat（和浏览器侧同一份实现，只是不经过 localStorage） */
 function envChat(): Chat {
   const baseUrl = process.env.OPENAI_BASE_URL ?? '';
-  const key = process.env.OPENAI_API_KEY ?? '';
   const model = process.env.OPENAI_MODEL ?? '';
   if (!baseUrl || !model) throw new Error('先设 OPENAI_BASE_URL / OPENAI_MODEL（还有 OPENAI_API_KEY）');
-  const url = `${baseUrl.replace(/\/+$/, '')}/chat/completions`;
-  let useJson = true;
-  return async (messages: ChatMsg[], signal?: AbortSignal) => {
-    for (let attempt = 0; attempt < 2; attempt++) {
-      const r = await fetch(url, {
-        method: 'POST', signal,
-        headers: { 'content-type': 'application/json', ...(key ? { authorization: `Bearer ${key}` } : {}) },
-        body: JSON.stringify({ model, messages, temperature: 0.2, ...(useJson ? { response_format: { type: 'json_object' } } : {}) }),
-      });
-      const text = await r.text();
-      if (!r.ok) {
-        // 有的接口不认 response_format：去掉再试一次
-        if (useJson && r.status === 400 && /response_format|json_object/i.test(text)) { useJson = false; continue; }
-        throw new Error(`接口返回 ${r.status}：${text.slice(0, 300)}`);
-      }
-      const out = (JSON.parse(text) as { choices?: Array<{ message?: { content?: unknown } }> }).choices?.[0]?.message?.content;
-      if (typeof out !== 'string' || !out.trim()) throw new Error(`接口没给出内容：${text.slice(0, 200)}`);
-      return out;
-    }
-    throw new Error('接口调用失败');
-  };
+  return createChat({ baseUrl, model, key: process.env.OPENAI_API_KEY ?? '' });
 }
 
 async function run(): Promise<void> {
@@ -103,10 +83,12 @@ async function run(): Promise<void> {
     const ctx = JSON.parse(readFileSync(resolve(dir, 'tasks', `${m.id}.ctx.json`), 'utf8')) as { key: string; resourceIds?: string[]; classTableColumns?: string[] };
     let chars = 0;
     let queries = 0;
-    const countingChat: Chat = async (msgs, signal) => {
-      chars += msgs.reduce((n, x) => n + x.content.length, 0);
-      return chat(msgs, signal);
-    };
+    // 记一下发给模型的字数（≈token 的量级），函数通道也要算上
+    const count = (msgs: ChatMsg[]) => { chars += msgs.reduce((n, x) => n + x.content.length, 0); };
+    const countingChat: Chat = Object.assign(
+      async (msgs: ChatMsg[], signal?: AbortSignal) => { count(msgs); return chat(msgs, signal); },
+      chat.tools ? { tools: async (msgs: ChatMsg[], tools: Parameters<NonNullable<Chat['tools']>>[1], signal?: AbortSignal) => { count(msgs); return chat.tools!(msgs, tools, signal); } } : {},
+    );
     const r = await datafy({
       chat: countingChat, spec, examples, task,
       check: (a) => checkEntry(a, ctx, FILES),
