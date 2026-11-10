@@ -25,6 +25,7 @@ const KEY = 'dnd2024-engine:combat';
 
 export type { DiceMode } from '../../src/combat';
 import type { DiceMode } from '../../src/combat';
+import { keyByName } from '../../src/keys';
 
 export interface CombatUi {
   session: Session | null;
@@ -576,8 +577,8 @@ export const combat = {
       else if (kind === 'tempHp') combat.dispatch({ type: 'tempHp', id, amount: value, ...q });
       else if (kind === 'damage') combat.dispatch({ type: 'damage', id, amount: value, damageType: extra || '钝击', ...q });
       else {
-        // 状态：走 applyEffect 的 template（XPHB:condition:<名>）
-        const tpl = `XPHB:condition:${extra}`;
+        // 状态：走 applyEffect 的 template（<来源>:condition:<名>，按名字在规则书里找）
+        const tpl = keyByName(engineRef?.rules.keys() ?? [], 'condition', extra ?? '');
         combat.dispatch({ type: 'applyEffect', to: id, template: tpl });
       }
     }

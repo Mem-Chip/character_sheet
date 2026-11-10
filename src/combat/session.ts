@@ -9,6 +9,7 @@ import { difficultExtra, ignoresDifficult, placeSummon, placeZone, relocateZone,
 import { advanceTime, joinInitiative, nextTurn, rest, setOrder, startCombat } from './turns';
 import { NeedDecision, Rejected, Tx, setPostEmit, type EngineCtx, type TapeEntry, type TxInput } from './tx';
 import type { Action, CombatantView, Command, Decision, EncounterState, GameEvent, OverridePatch, Settings, UserId, Zone } from './types';
+import { isConditionKey } from '../keys';
 
 setPostEmit(checkEndsOn);
 
@@ -133,7 +134,7 @@ function handle(tx: Tx, cmd: Command): void {
       applyEffect(tx, {
         bearer: cmd.to, source: cmd.source ?? null, ref: cmd.template, inline: cmd.inline, name: cmd.name,
         baseKey: cmd.template ?? 'manual', duration: cmd.duration, form: cmd.form,
-        origin: { kind: cmd.template?.includes(':condition:') ? 'condition' : 'manual', ref: cmd.template ?? 'manual' },
+        origin: { kind: cmd.template && isConditionKey(cmd.template) ? 'condition' : 'manual', ref: cmd.template ?? 'manual' },
         cause: seq,
       });
       // 生命值上限降到当前生命值以下：当前生命值跟着降

@@ -15,6 +15,7 @@ import type { CampaignData, CharData, HomeRuleEntry } from '../../src/sheet';
 import { api } from './api';
 import type { Engine } from './engine';
 import { getSync, subscribeSync } from './sync';
+import { isHomeruleKey } from '../../src/keys';
 
 export type { LibraryItem, ResPart, ShareState, ShareView };
 
@@ -251,7 +252,7 @@ export function pickedRulesOf(items: LibraryItem[], picked: Set<string>): HomeRu
 
 /** 资料库里「能套到卡上」的那些 part（有卡面数据、能覆盖官方、或者带战斗数据） */
 export const attachableOfItems = (items: LibraryItem[]): Array<{ part: ResPart; item: LibraryItem }> =>
-  items.flatMap((item) => (item.parts ?? []).filter((p) => hasSheetData(p) || p.combat || (p.key && !p.key.startsWith('HR:'))).map((part) => ({ part, item })));
+  items.flatMap((item) => (item.parts ?? []).filter((p) => hasSheetData(p) || p.combat || (p.key && !isHomeruleKey(p.key))).map((part) => ({ part, item })));
 
 /** 一堆条目里「选了才生效」的那些（人物卡把你的库和本团并起来列） */
 export const pickablesOfItems = (items: LibraryItem[]): Array<{ part: ResPart; item: LibraryItem }> =>

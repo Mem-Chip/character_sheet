@@ -10,6 +10,7 @@ import { resolveNum, totalLevel } from './abilities';
 import type { SheetEnv } from './env';
 import type { Json } from './store';
 import type { CharData } from './character';
+import { nameOfKey } from '../keys';
 
 export const RESOURCE_PICKS: Record<string, { n: number; hint: string }> = {
   神圣干预: { n: 2, hint: '指定你要请求的法术（用掉一次 = 一次请求）' },
@@ -172,7 +173,7 @@ export class Resources {
     const out = new Map<string, Json>();
     const covered = this.env.abilities.hrCoverKeys(char);
     // 家规覆盖的键可以是 `<来源>:<名字>`，也可以是职业特性的 `<来源>:<职业>:<名字>:<等级>`
-    const isCovered = (nm: string) => covered.some((k) => { const p = k.split(':'); return p.length === 4 ? p[2] === nm : k.slice(k.indexOf(':') + 1) === nm; });
+    const isCovered = (nm: string) => covered.some((k) => nameOfKey(k) === nm);
     // 只跳过被家规覆盖的那一列（「荒野形态」被改写 → 等级表的荒野形态列交给家规）；
     // 以前是职业里任何一个特性被覆盖就整张表都不要，覆盖了精魂图腾，荒野形态次数也跟着没了
     for (const k of char._resolved?.classes || []) {

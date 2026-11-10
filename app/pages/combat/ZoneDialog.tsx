@@ -4,6 +4,7 @@ import type { Node, ZoneWhen } from '../../../src/combat';
 import { Dialog } from '../../components/ui';
 import { combat, useCombat } from '../../lib/combat';
 import { CONDITIONS, DAMAGE_TYPES } from './shared';
+import { makeKey } from '../../../src/keys';
 
 const ABILS: Array<[string, string]> = [['', '不用豁免'], ['str', '力量'], ['dex', '敏捷'], ['con', '体质'], ['int', '智力'], ['wis', '感知'], ['cha', '魅力']];
 const WHEN: Array<[ZoneWhen, string]> = [['enter', '进入时'], ['turnStart', '在里面开始回合'], ['turnEnd', '在里面结束回合']];
@@ -32,7 +33,7 @@ export function ZoneDialog({ cells, tpl, onDone, onClose }: {
   const build = (): Node[] => {
     const hit: Node[] = [];
     if (dice.trim()) hit.push({ kind: 'damage', id: 'z', dice: dice.trim(), type });
-    if (cond) hit.push({ kind: 'applyEffect', template: `XPHB:condition:${cond}` });
+    if (cond) hit.push({ kind: 'applyEffect', template: makeKey('condition', 'XPHB', cond) });
     if (!abil) return hit;
     return [{
       kind: 'save', ability: abil as 'dex', dc: String(Number(dc) || 10), onFail: hit,

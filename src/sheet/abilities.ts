@@ -13,6 +13,7 @@ import { Source } from './source';
 import type { Json } from './store';
 import { entryText, proseChoiceComplement } from './text';
 import type { CalcCtx } from './pipeline';
+import { decisionOwner } from '../keys';
 
 export const HR_SOURCE = 'HR';
 
@@ -631,16 +632,12 @@ export class AbilityBook {
 
   /** 判断一条决策键是否仍属于当前角色已激活的职业与等级范围 */
   isDecisionKeyActive(char: Json, key: string): boolean {
-    const owner = String(key || '').split('#')[0];
-    const parts = owner.split(':');
-    if (parts.length >= 4) {
-      const [, clsLabel, , lvStr] = parts;
-      const baseCls = clsLabel.split('·')[0];
-      const subCls = clsLabel.includes('·') ? clsLabel.split('·')[1] : null;
+    const owner = decisionOwner(key);
+    if (owner) {
+      const { cls: baseCls, sub: subCls, level: lv } = owner;
       const k = (char?._resolved?.classes || []).find((x: Json) => x.cls?.name === baseCls);
       if (!k) return false;
       if (subCls && (k.subclassName !== subCls || k.level < 3)) return false;
-      const lv = Number(lvStr);
       if (Number.isFinite(lv) && lv > k.level) return false;
     }
     return true;

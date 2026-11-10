@@ -3,6 +3,7 @@
  */
 import { ABIL_CN, type Ability } from '../../src/expr';
 import type { GameEvent } from '../../src/combat';
+import { nameOfKey, subOf } from '../../src/keys';
 
 export type Tone = 'hit' | 'miss' | 'crit' | 'dmg' | 'heal' | 'warn' | 'danger' | 'dm' | 'head' | undefined;
 
@@ -126,7 +127,7 @@ function overrideText(p: P, name: (id: unknown) => string): string {
     case 'damage': return `对 ${name(p.id)} 造成 ${p.amount} 点${p.type}伤害`;
     case 'heal': return `治疗 ${name(p.id)} ${p.amount} 点`;
     case 'tempHp': return `给 ${name(p.id)} ${p.amount} 点临时生命值`;
-    case 'applyEffect': return `给 ${name(p.to)} 施加「${String(p.template).split(':').pop()}」`;
+    case 'applyEffect': return `给 ${name(p.to)} 施加「${subOf(String(p.template)) ?? nameOfKey(String(p.template))}」`;
     case 'removeEffect': return '移除效应';
     case 'groupRoll': {
       const dmg = p.damage as { dice: string; type: string } | undefined;

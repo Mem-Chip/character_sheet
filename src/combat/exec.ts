@@ -11,6 +11,7 @@ import { blockedEconomy, fireWindow } from './triggers';
 import { Rejected, type Tx } from './tx';
 import { makeCombatant, makeView } from './view';
 import type { Action, ActiveEffect, AttackInfo, AttackRow, CombatantView, Cost, Duration, EffectId, Entry, Id, Modify, Node, TargetPick, Zone } from './types';
+import { entryKeyOf, isSpellKey, splitRef, subOf } from '../keys';
 
 /**
  * 效果树解释器 + 动作执行（COMBAT-DESIGN §4.1 / §4.2）。
@@ -293,8 +294,8 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
         for (const e of effectsOf(tx, id)) {
           const m = n.match;
           const hit =
-            (m.key && (e.key === m.key || e.key.split('#')[0] === m.key)) ||
-            (m.name && (e.name === m.name || e.key.split('#')[1] === m.name)) ||
+            (m.key && (e.key === m.key || entryKeyOf(e.key) === m.key)) ||
+            (m.name && (e.name === m.name || subOf(e.key) === m.name)) ||
             (m.tag && e.tags.includes(m.tag));
           if (hit) endEffect(tx, e.id, `被「${ctx.actionName}」移除`, ctx.cause);
         }
@@ -627,7 +628,7 @@ function spellPoolOptions(tx: Tx, ctx: ExecCtx, pool: Pool, keys: Iterable<strin
   for (const key of keys) {
     if (seen.has(key)) continue;
     seen.add(key);
-    if (!key.includes(':spell:')) continue;
+    if (!isSpellKey(key)) continue;
     const entry = tx.rules.entry(key) ?? effectiveView(tx, ctx.self).entries?.[key];
     if (!entry?.actions?.length || entry.automation === 'manual') continue;
     const act = entry.actions[0];
@@ -1285,7 +1286,7 @@ export function findAction(tx: Tx, actor: Id, ref: string): { key: string; actio
     if (!row) throw new Rejected(`${nameOf(tx, actor)} 没有武器攻击「${id}」`);
     return { key: ref, action: weaponAction(row) };
   }
-  const [key, aid] = ref.split('#');
+  const [key, aid] = splitRef(ref);
   const entry = entryOf(tx, actor, key);
   const action = entry?.actions?.find((a) => a.id === (aid ?? entry.actions?.[0]?.id));
   if (!entry || !action) throw new Rejected(`找不到动作「${ref}」`);
@@ -1433,7 +1434,7 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
   const costs = actionCosts(action, asReaction);
   // 没指定环阶：按动作自己的最低环阶（`slot.min`）当默认值，别让 slot.level 在表达式里求值失败
   const slotLevel0 = o.slotLevel ?? (action.cost ?? []).flatMap((k) => ('slot' in k ? [k.slot.min] : []))[0];
-  const entryKey = o.actionKey.split('#')[0];
+  const entryKey = entryKeyOf(o.actionKey);
 
   if (!o.force) {
     if (c.live.dead) throw new Rejected(`${c.name} 已经死亡`);

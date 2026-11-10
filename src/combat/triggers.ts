@@ -8,6 +8,7 @@ import type { CastPlan } from './castplan';
 import { makeEnv, nameOf, type ScopeData } from './scope';
 import type { Tx } from './tx';
 import type { Action, ActiveEffect, Cost, Id, Modify, Trigger, TriggerSpec } from './types';
+import { isSpellKey } from '../keys';
 
 /**
  * 触发器分发（COMBAT-DESIGN §8.2 / §九）。
@@ -226,7 +227,7 @@ function fire(tx: Tx, spec: WindowSpec, c: TriggerCand): void {
       damage: spec.scope.damage,
       event: spec.scope.event,
       packet: spec.packet,
-      originKind: c.from.includes(':spell:') ? 'spell' : 'feature',
+      originKind: isSpellKey(c.from) ? 'spell' : 'feature',
       modify,
     };
     const outerPlan = tx.windowPlan;

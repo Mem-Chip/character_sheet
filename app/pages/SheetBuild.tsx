@@ -11,6 +11,7 @@ import { StartingEquipmentDialog } from '../components/StartingEquipmentDialog';
 import type { Engine } from '../lib/engine';
 import { actions } from '../lib/store';
 import { libraryNow } from '../lib/library';
+import { staleFeatDecisions } from '../../src/keys';
 
 interface Props { engine: Engine; id: string; char: CharData; sheet: Record<string, Json> }
 
@@ -247,14 +248,7 @@ function Feats({ engine, id, char, sheet }: Props) {
                 c.feats = list;
                 if (name && name !== nextVal && c.decisions) {
                   const remain = list.filter((n) => n === name).length;
-                  for (const k of Object.keys(c.decisions)) {
-                    if (remain === 0 && (k.startsWith(`XPHB:${name}#`) || k.startsWith(`expanded:${name}#`) || k.startsWith(`XPHB:${name}:`))) {
-                      delete c.decisions[k];
-                    } else if (remain > 0) {
-                      const m = new RegExp(`^XPHB:${name}:(\\d+)#`).exec(k);
-                      if (m && Number(m[1]) > remain) delete c.decisions[k];
-                    }
-                  }
+                  for (const k of staleFeatDecisions(Object.keys(c.decisions), name, remain)) delete c.decisions[k];
                 }
               })}>
                 <option value="">— 未选 —</option>

@@ -21,6 +21,7 @@
  */
 import type { DataStore } from './store';
 import { Source } from './source';
+import { makeKey } from '../keys';
 
 /** 类目码 → 类别（拿本地数据反查出来的） */
 export const CAT_KIND: Record<number, string> = {
@@ -139,19 +140,7 @@ export function parseIndex(raw: unknown): SearchHit[] {
 
 /** 类别 + 来源 + 名字 → 引擎条目键（和 src/sheet/abilities.ts 的 sourceKeyOf 一致） */
 function keyOf(kind: string, source: string, name: string, cls?: string, level?: number): string {
-  if (!source) return '';
-  switch (kind) {
-    case 'spell': return `${source}:spell:${name}`;
-    case 'item': return `${source}:item:${name}`;
-    case 'classFeature':
-    case 'subclassFeature': return cls && level !== undefined ? `${source}:${cls}:${name}:${level}` : '';
-    case 'condition': return `${source}:condition:${name}`;
-    case 'action': return `${source}:action:${name}`;
-    case 'monster': return `${source}:怪物:${name}`;
-    case 'disease': return `${source}:disease:${name}`;
-    case 'variantrule': return `${source}:variantrule:${name}`;
-    default: return `${source}:${name}`;
-  }
+  return makeKey(kind, source, name, cls, level);
 }
 
 /* ───────────── 装载与查询 ───────────── */

@@ -1,3 +1,4 @@
+import { candidateKeys } from '../keys';
 /**
  * 数据源适配器（移植自原项目 core/source.js）：2024 判据、文件清单、子职候选。换站只改这里。
  * 判据背后的踩坑记录见原项目 source.js 的注释，这里只留结论。
@@ -29,7 +30,7 @@ export const Source = {
     const s = String(ent.source || '').toUpperCase();
     const n = String(ent.name || '');
     if (!s || !n) return [];
-    return [`${s}:${n}`, `${s}:spell:${n}`, `${s}:item:${n}`, `${s}:怪物:${n}`];
+    return candidateKeys(s, n);
   },
   /** 这个条目是不是资料库覆盖过的 */
   isCovered(ent: Ent | null | undefined): boolean {

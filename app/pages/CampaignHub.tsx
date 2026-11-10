@@ -16,6 +16,7 @@ import { Dialog, Tag } from '../components/ui';
 import { actions } from '../lib/store';
 import { useEngine } from '../lib/useSheet';
 import type { Campaign } from '../lib/api';
+import { isHomeruleKey } from '../../src/keys';
 
 /** 2024 核心三本：一直在 */
 const BUILTIN = new Set(['XPHB', 'XDMG', 'XMM']);
@@ -27,7 +28,7 @@ const GROUP_CN: Record<string, string> = {
 const HIDDEN_GROUPS = new Set(['screen', 'recipe', 'homecraft']);
 
 const coversOfItem = (s: ShareView): string[] =>
-  (s.item.parts ?? []).filter((p) => !p.key.startsWith('HR:')).map((p) => p.key);
+  (s.item.parts ?? []).filter((p) => !isHomeruleKey(p.key)).map((p) => p.key);
 
 const STATE_CN: Record<string, [string, 'accent' | 'warn' | 'danger' | undefined]> = {
   auto: ['自动生效', 'accent'],

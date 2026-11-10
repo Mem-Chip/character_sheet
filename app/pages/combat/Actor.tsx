@@ -15,6 +15,7 @@ import { getApp } from '../../lib/store';
 import type { Engine } from '../../lib/engine';
 import { AimBar } from './Hotbar';
 import { DAMAGE_TYPES, type Namer } from './shared';
+import { isActionKey, isConditionKey, nameOfKey } from '../../../src/keys';
 
 export type Group = '武器攻击' | '法术' | '法术（未自动化）' | '特性' | '物品' | '通用动作' | '时机到了会问';
 export const GROUPS: Group[] = ['武器攻击', '法术', '法术（未自动化）', '特性', '通用动作', '时机到了会问'];
@@ -104,7 +105,7 @@ export function actionsFor(s: Session, rules: RuleBook, spells: Json[], id: stri
     });
   }
   const offTurn = (a: Action) => inCombat && s.state.order[s.state.turnIndex] !== id && (a.activation === 'action' || a.activation === 'bonus');
-  const keys = [...v.sources, ...rules.keys().filter((k) => k.startsWith('XPHB:action:'))];
+  const keys = [...v.sources, ...rules.keys().filter(isActionKey)];
   const seen = new Set<string>();
   for (const key of keys) {
     const e = rules.entry(key) ?? v.entries?.[key];
@@ -117,7 +118,7 @@ export function actionsFor(s: Session, rules: RuleBook, spells: Json[], id: stri
       const costs = actionCosts(eff);
       const ok = s.peek((tx) => canPay(tx, id, costs));
       const slotCost = (a.cost ?? []).find((k): k is Extract<Cost, { slot: unknown }> => 'slot' in k);
-      const group: Group = (a.tags ?? []).includes('spell') ? '法术' : (a.tags ?? []).includes('item') ? '物品' : key.includes(':action:') ? '通用动作' : '特性';
+      const group: Group = (a.tags ?? []).includes('spell') ? '法术' : (a.tags ?? []).includes('item') ? '物品' : isActionKey(key) ? '通用动作' : '特性';
       const act = typeof eff.activation === 'string' ? ACT_CN[eff.activation] + (eff !== a ? '（瞬发）' : '') : '';
       const t = a.targeting;
       out.push({
@@ -206,7 +207,7 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
     );
   }
   const conc = s.peek((tx) => concentrationOf(tx, id));
-  const conditions = engine.rules.keys().filter((k) => k.startsWith('XPHB:condition:'));
+  const conditions = engine.rules.keys().filter(isConditionKey);
   const tnames = ui.targets.map(name);
 
   const slotsFor = (min: number, max = 9) => freeSlots(s, id, min, max);
@@ -324,7 +325,7 @@ export function Actor({ s, ui, engine, name }: { s: Session; ui: CombatUi; engin
         <div className="effrow">
           <select value={cond} onChange={(e) => setCond(e.target.value)} aria-label="状态">
             <option value="">施加状态…</option>
-            {conditions.map((k) => <option key={k} value={k}>{k.split(':').pop()}</option>)}
+            {conditions.map((k) => <option key={k} value={k}>{nameOfKey(k)}</option>)}
           </select>
           <button className="btn sm" disabled={!cond} onClick={() => { combat.dispatch({ type: 'applyEffect', to: id, template: cond }); setCond(''); }}>施加</button>
           <span style={{ width: 8 }} />

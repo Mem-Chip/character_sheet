@@ -5,6 +5,7 @@ import { zonesOfConcentration } from './space';
 import { makeEnv, nameOf } from './scope';
 import type { Tx } from './tx';
 import type { ActiveEffect, Aura, CombatantView, Duration, EffectId, EffectTemplate, Entry, GameEvent, Id, Node, StaticMod } from './types';
+import { entryKeyOf, subOf } from '../keys';
 
 /**
  * ActiveEffect 的生命周期（COMBAT-DESIGN §3.3 / §3.4）：施加、叠加与压制、隐含状态、专注链接、结束。
@@ -20,7 +21,7 @@ export interface ActiveTpl {
   implied: boolean;
 }
 
-export const tplName = (key: string, tpl: EffectTemplate): string => tpl.name ?? key.split('#')[1] ?? key;
+export const tplName = (key: string, tpl: EffectTemplate): string => tpl.name ?? subOf(key) ?? key;
 
 export function templateOf(tx: Tx, e: ActiveEffect): EffectTemplate | null {
   return e.inline ?? tx.rules.template(e.key);
@@ -98,8 +99,8 @@ export function findEffect(tx: Tx, bearer: Id, nameOrKey: string): ActiveEffect 
     (e) =>
       e.name === nameOrKey ||
       e.key === nameOrKey ||
-      e.key.split('#')[0] === nameOrKey ||
-      e.key.split('#')[1] === nameOrKey,
+      entryKeyOf(e.key) === nameOrKey ||
+      subOf(e.key) === nameOrKey,
   );
 }
 

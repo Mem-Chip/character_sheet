@@ -1,4 +1,5 @@
 import type { EffectTemplate, Entry } from './types';
+import { entryKeyOf, isHomeruleKey, nameOfKey, splitRef } from '../keys';
 
 /**
  * 规则书：官方数据（多份文件按顺序逐字段合并）+ 房规层（§十五）。
@@ -98,7 +99,7 @@ export class RuleBook {
       mark();
       return;
     }
-    const isNew = r.key.startsWith('HR:');
+    const isNew = isHomeruleKey(r.key);
     if (r.remove) {
       if (isNew) { this.problems.push(`${where}：只能删除官方条目`); return; }
       this.entries.delete(r.key);
@@ -133,7 +134,7 @@ export class RuleBook {
 
   /** 被哪条房规改过（回执上显示「本团房规」） */
   overriddenBy(key: string): Overridden | undefined {
-    const entryKey = key.split('#')[0];
+    const entryKey = entryKeyOf(key);
     return this.overrides.get(entryKey);
   }
   scopeLabel(o: Overridden): string { return SCOPE_CN[o.scope]; }
@@ -160,17 +161,17 @@ export class RuleBook {
     let entryKey: string;
     let name: string | undefined;
     if (ref.includes('#')) {
-      [entryKey, name] = ref.split('#');
+      [entryKey, name] = splitRef(ref);
     } else if (ref.includes(':')) {
       entryKey = ref;
     } else {
-      entryKey = baseKey.split('#')[0];
+      entryKey = entryKeyOf(baseKey);
       name = ref;
     }
     const e = this.entries.get(entryKey);
     if (!e?.effects) return null;
     if (!name) {
-      const last = entryKey.split(':').at(-1)!;
+      const last = nameOfKey(entryKey);
       const names = Object.keys(e.effects);
       name = e.effects[last] ? last : names.length === 1 ? names[0] : undefined;
       if (!name) return null;

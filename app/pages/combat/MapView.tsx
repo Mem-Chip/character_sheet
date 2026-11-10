@@ -25,6 +25,7 @@ import { termOfEffect } from '../../lib/terms';
 import { NumInput } from '../../components/ui';
 import { combat, type CombatUi, type MapState, type Remote } from '../../lib/combat';
 import type { Namer } from './shared';
+import { isCondition } from '../../../src/keys';
 
 type Tool = 'move' | 'measure' | 'shape' | 'pen' | 'erase' | 'fog';
 const TOOL_CN: Record<Tool, string> = { move: '移动', measure: '测距', shape: '形状', pen: '画笔', erase: '橡皮', fog: '迷雾' };
@@ -491,7 +492,7 @@ export function MapView({ s, ui, remote, name }: { s: Session; ui: CombatUi; rem
     if (e.suppressed) continue;
     if (e.key === 'concentration') { concOf[e.bearer] = e; continue; }
     const lb = effectLabel(e.name);
-    if (lb.cond === '倒地' || e.key === 'XPHB:condition:倒地' || e.origin?.ref === 'XPHB:condition:倒地') proneOf[e.bearer] = true;
+    if (lb.cond === '倒地' || isCondition(e.key, '倒地') || isCondition(e.origin?.ref, '倒地')) proneOf[e.bearer] = true;
     (effOf[e.bearer] ??= []).push(lb.text);
     (rawEffOf[e.bearer] ??= []).push(e);
   }

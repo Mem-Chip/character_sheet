@@ -8,6 +8,7 @@ import { lintShape } from '../factory';
 import type { Json } from '../sheet';
 import { brewSource, checkBrew, normalizeBrew, type Brew } from './brew';
 import type { LibraryItem, ResPart, ShareState } from './types';
+import { CORE_PREFIX, HR_PREFIX, isCoreKey, isHomeruleKey } from '../keys';
 
 type Row = Record<string, unknown>;
 
@@ -23,13 +24,13 @@ export function keyProblem(key: string): string | null {
   if (!key) return '要写条目键（覆盖官方写官方键；新内容写 HR:<id>；核心参数写 core.<名>）';
   if (key.length > 200) return '条目键太长了';
   if (/\s/.test(key)) return '条目键里不能有空格';
-  if (key.startsWith('HR:')) return ID_RE.test(key.slice(3)) ? null : 'HR: 后面要写这条自己的 id（hr-xxxx）';
-  if (key.startsWith('core.')) return key.length > 5 ? null : 'core. 后面要写参数名';
+  if (isHomeruleKey(key)) return ID_RE.test(key.slice(HR_PREFIX.length)) ? null : 'HR: 后面要写这条自己的 id（hr-xxxx）';
+  if (isCoreKey(key)) return key.length > CORE_PREFIX.length ? null : 'core. 后面要写参数名';
   return key.includes(':') ? null : '官方条目键至少要有一段冒号（<来源>:<名字>）';
 }
 
 /** 这条 part 是不是在覆盖官方（决定挂到战役要不要 DM 点头） */
-export const isOverridePart = (p: ResPart): boolean => !String(p.key).startsWith('HR:');
+export const isOverridePart = (p: ResPart): boolean => !isHomeruleKey(p.key);
 
 /** 一条资源挂到战役时的初始状态：覆盖了官方 = 待审，否则自动生效 */
 export const shareStateOf = (item: LibraryItem): Extract<ShareState, 'auto' | 'pending'> =>
@@ -98,7 +99,7 @@ export function checkItem(x: unknown, id: string): { item: LibraryItem | null; p
     if (removed && (sheet || combat)) p.push(`${at}：标了「本版删除」就不要再写卡面 / 战斗数据`);
     if (!removed && !sheet && !combat && !str(raw.text, 4000).trim() && !str(raw.name, 60).trim()) p.push(`${at}：卡面、战斗、说明、名字至少要有一样`);
     // 覆盖官方能力的条目按能力键生效，勾「选了才生效」没有意义（勾了也不会有作用，直接说清楚）
-    if (raw.pickable && !key.startsWith('HR:')) p.push(`${at}：覆盖官方能力的条目不能勾「选了才生效」（覆盖是按能力生效的）`);
+    if (raw.pickable && !isHomeruleKey(key)) p.push(`${at}：覆盖官方能力的条目不能勾「选了才生效」（覆盖是按能力生效的）`);
 
     parts.push({
       id: pid, key,

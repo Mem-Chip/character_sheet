@@ -9,6 +9,7 @@ import { Source, classSlug, subclassCandidates } from './source';
 import type { SheetEnv } from './env';
 import type { Json } from './store';
 import { totalLevel } from './abilities';
+import { decisionOwner, staleFeatDecisions } from '../keys';
 
 /** 角色数据（与原项目 Character.blank() 同形；`_` 开头的是计算时挂上去的派生物，不存盘） */
 export type CharData = Record<string, any>;
@@ -76,14 +77,10 @@ export function pruneCharByLevel(env: SheetEnv, char: CharData): void {
   }
   if (char.decisions && typeof char.decisions === 'object') {
     for (const key of Object.keys(char.decisions)) {
-      const owner = key.split('#')[0];
-      const parts = owner.split(':');
-      if (parts.length >= 4) {
-        const [, clsLabel, , lvStr] = parts;
-        const baseCls = clsLabel.split('·')[0];
-        const subCls = clsLabel.includes('·') ? clsLabel.split('·')[1] : null;
+      const owner = decisionOwner(key);
+      if (owner) {
+        const { cls: baseCls, sub: subCls, level: lv } = owner;
         const spec = classes.find((x) => x.name === baseCls);
-        const lv = Number(lvStr);
         if (!spec || (subCls && ((+spec.level || 1) < 3 || (spec.subclass && spec.subclass !== subCls))) || (Number.isFinite(lv) && lv > (+spec.level || 1))) {
           delete char.decisions[key];
         }
@@ -119,14 +116,7 @@ export function pruneCharByLevel(env: SheetEnv, char: CharData): void {
     if (removedFeats.length && char.decisions) {
       for (const rf of removedFeats) {
         const remainCount = nextFeats.filter((n) => n === rf).length;
-        for (const k of Object.keys(char.decisions)) {
-          if (remainCount === 0 && (k.startsWith(`XPHB:${rf}#`) || k.startsWith(`expanded:${rf}#`) || k.startsWith(`XPHB:${rf}:`))) {
-            delete char.decisions[k];
-          } else if (remainCount > 0) {
-            const m = new RegExp(`^XPHB:${rf}:(\\d+)#`).exec(k);
-            if (m && Number(m[1]) > remainCount) delete char.decisions[k];
-          }
-        }
+        for (const k of staleFeatDecisions(Object.keys(char.decisions), rf, remainCount)) delete char.decisions[k];
       }
     }
     const optData: Json[] = env.store.data.optionalfeatures?.optionalfeature || [];

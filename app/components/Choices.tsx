@@ -9,6 +9,7 @@ import { actions } from '../lib/store';
 import { choiceTerm } from '../lib/terms';
 import { Term } from './Term';
 import { Panel, Tag } from './ui';
+import { staleFeatDecisions } from '../../src/keys';
 
 const KIND_CN: Record<string, string> = {
   skill: '技能', expertise: '专精', language: '语言', tool: '工具', feat: '专长', spell: '法术', cantrip: '戏法',
@@ -65,14 +66,7 @@ function FeatSlotChoice(p: { engine: Engine; id: string; char: CharData; sheet: 
     c.feats = list;
     if (oldName && oldName !== nextFeat && c.decisions) {
       const remain = list.filter((n) => n === oldName).length;
-      for (const k of Object.keys(c.decisions)) {
-        if (remain === 0 && (k.startsWith(`XPHB:${oldName}#`) || k.startsWith(`expanded:${oldName}#`) || k.startsWith(`XPHB:${oldName}:`))) {
-          delete c.decisions[k];
-        } else if (remain > 0) {
-          const m = new RegExp(`^XPHB:${oldName}:(\\d+)#`).exec(k);
-          if (m && Number(m[1]) > remain) delete c.decisions[k];
-        }
-      }
+      for (const k of staleFeatDecisions(Object.keys(c.decisions), oldName, remain)) delete c.decisions[k];
     }
   });
 

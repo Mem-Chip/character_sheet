@@ -16,6 +16,7 @@ import { ItemTags, LibraryEditor, kindLabel } from '../components/LibraryEditor'
 import { SearchPicker } from '../components/SearchPicker';
 import { Dialog, Panel, Tag } from '../components/ui';
 import type { Engine } from '../lib/engine';
+import { isHomeruleKey } from '../../src/keys';
 
 const STATE_CN: Record<string, [string, 'accent' | 'warn' | 'danger' | undefined]> = {
   auto: ['自动生效', 'accent'],
@@ -126,7 +127,7 @@ function ShareDialog({ item, campaigns, onClose }: { item: LibraryItem; campaign
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState('');
   const shareOf = (cid: string) => (hubNow(cid)?.attached ?? []).find((s) => s.itemId === item.id && s.item.id === item.id);
-  const covers = (item.parts ?? []).filter((p) => !p.key.startsWith('HR:')).map((p) => p.key);
+  const covers = (item.parts ?? []).filter((p) => !isHomeruleKey(p.key)).map((p) => p.key);
 
   const toggle = async (c: Campaign, on: boolean) => {
     setBusy(c.id); setErr(''); setMsg('');

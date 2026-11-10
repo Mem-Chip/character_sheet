@@ -7,6 +7,7 @@
  */
 import { CLASS_SLUG_BY_NAME, SCHOOL_CN, fmtPrereq, type Json } from '../../src/sheet';
 import type { Engine } from './engine';
+import { parseKey } from '../../src/keys';
 
 export interface TermRef { kind: string; name: string; source?: string; cls?: string; level?: number; /** 英文原名（只在搜索结果里有） */ en?: string }
 export interface TermData { kind: string; name: string; source: string; kindLabel: string; meta: string[]; entries: Json[] }
@@ -49,12 +50,14 @@ export const canLookup = (kind: string) => kind in TABLES || kind === 'classFeat
 /** 规则条目键 → 术语：`XPHB:spell:名`、`XPHB:action:名`、`XPHB:condition:名`、职业特性 `XPHB:职业:名:等级`、其余 `XPHB:名` */
 export function termOfKey(key: string): TermRef | null {
   if (!key) return null;
-  const p = key.split('#')[0].split(':');
-  if (p.length === 4) return { kind: 'classFeature', cls: p[1], name: p[2], level: Number(p[3]) || undefined };
-  if (p.length === 3 && ['spell', 'action', 'condition', 'item'].includes(p[1])) return { kind: p[1], name: p[2] };
-  if (p.length === 3 && p[1] === 'mastery') return { kind: 'itemMastery', name: p[2] };
-  if (p.length === 2 && !['HR', 'inline', 'weapon', 'summon'].includes(p[0])) return { kind: 'auto', name: p[1] };
-  return null;
+  const k = parseKey(key);
+  switch (k.kind) {
+    case 'classFeature': return { kind: 'classFeature', cls: k.cls, name: k.name, level: Number(k.level) || undefined };
+    case 'spell': case 'action': case 'condition': case 'item': return { kind: k.kind, name: k.name };
+    case 'mastery': return { kind: 'itemMastery', name: k.name };
+    case 'named': return k.name.includes(':') ? null : { kind: 'auto', name: k.name };
+    default: return null;
+  }
 }
 
 /** 身上挂载的效应 → 指向来源法术 / 特性 / 状态的术语引用（供悬浮窗查看原文） */

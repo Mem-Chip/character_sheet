@@ -10,6 +10,7 @@ import { getApp, actions } from '../../lib/store';
 import { termOfEffect, termOfKey } from '../../lib/terms';
 import { Term } from '../../components/Term';
 import { avatarOf, cropAvatarFile, effectLabel, type Namer } from './shared';
+import { isConditionKey, nameOfKey } from '../../../src/keys';
 
 let open: { id: string; x: number; y: number } | null = null;
 const subs = new Set<() => void>();
@@ -56,9 +57,9 @@ export function TokenMenu({ s, ui, engine, name }: { s: Session; ui: CombatUi; e
   const onMap = !!r?.map.tokens[m.id];
   const mine = combat.canControl(m.id);
   const effects = Object.values(s.state.effects).filter((e) => e.bearer === m.id);
-  const conditions = engine.rules.keys().filter((k) => k.startsWith('XPHB:condition:'));
+  const conditions = engine.rules.keys().filter(isConditionKey);
   // 身上已有的状态：手动加的按模板认，法术 / 特性带来的按名字认
-  const label = (k: string) => k.split(':').pop()!;
+  const label = nameOfKey;
   const has = (k: string) => effects.find((e) => e.origin?.ref === k || effectLabel(e.name).cond === label(k));
   const isCond = (e: (typeof effects)[number]) => conditions.some((k) => e.origin?.ref === k || effectLabel(e.name).cond === label(k));
   const act = (f: () => void) => () => { f(); close(); };

@@ -10,12 +10,13 @@
 import type { HouseRule } from '../combat';
 import type { HomeRuleEntry } from '../sheet';
 import type { LibraryItem, ResPart } from './types';
+import { homeruleKey, isCoreKey, isHomeruleKey, parseKey, sourceOfKey } from '../keys';
 
 /** key 是不是在覆盖官方（`HR:` 开头的是新内容） */
-export const isOverrideKey = (key: string): boolean => !String(key).startsWith('HR:');
+export const isOverrideKey = (key: string): boolean => !isHomeruleKey(key);
 
 /** 这条 part 在引擎里的条目键 */
-export const ruleKeyOf = (p: ResPart): string => (isOverrideKey(p.key) ? p.key : `HR:${p.id}`);
+export const ruleKeyOf = (p: ResPart): string => (isOverrideKey(p.key) ? p.key : homeruleKey(p.id));
 
 /** 这条 part 覆盖了哪条官方条目（新内容 = 空） */
 export const coversOf = (p: ResPart): string => (isOverrideKey(p.key) ? p.key : '');
@@ -80,7 +81,7 @@ export function houseRuleOf(p: ResPart, item: LibraryItem): HouseRule | null {
     id: p.id,
     key,
     text: String(p.text ?? item.text ?? '').trim() || p.name || item.name,
-    ...(c.entry !== undefined ? { entry: c.entry as HouseRule['entry'], ...(key.startsWith('HR:') ? {} : { fill: true }) } : {}),
+    ...(c.entry !== undefined ? { entry: c.entry as HouseRule['entry'], ...(isHomeruleKey(key) ? {} : { fill: true }) } : {}),
     ...(c.patch !== undefined ? { patch: c.patch } : {}),
     ...(c.value !== undefined ? { value: c.value } : {}),
   };
@@ -95,13 +96,9 @@ export const houseRulesFor = (items: LibraryItem[]): HouseRule[] => items.flatMa
 
 /** 从条目键猜类别（新写一条内容时要知道自己是什么；猜不出就算家规） */
 export function kindOfKey(key: string): string {
-  const parts = String(key).split(':');
-  if (parts[1] === 'spell') return 'spell';
-  if (parts[1] === 'item') return 'item';
-  if (parts[1] === 'monster') return 'monster';
-  if (parts[1] === 'condition' || parts[1] === 'action') return 'homerule';
-  if (parts.length === 4) return 'classFeature';
-  if (String(key).startsWith('HR:') || String(key).startsWith('core.')) return 'homerule';
+  const kind = parseKey(String(key)).kind;
+  if (kind === 'spell' || kind === 'item' || kind === 'monster' || kind === 'classFeature') return kind;
+  if (kind === 'condition' || kind === 'action' || kind === 'homerule' || kind === 'core') return 'homerule';
   return 'feat';
 }
 
@@ -114,8 +111,8 @@ export function sourcesOfItem(item: LibraryItem): string[] {
   if (item.source) out.add(String(item.source).toUpperCase());
   for (const p of item.parts ?? []) {
     const key = String(p.key ?? '');
-    if (!key || key.startsWith('HR:') || key.startsWith('core.')) continue;
-    const src = key.split(':')[0].toUpperCase();
+    if (!key || isHomeruleKey(key) || isCoreKey(key)) continue;
+    const src = sourceOfKey(key) ?? '';
     if (/^[A-Z0-9-]{1,24}$/.test(src)) out.add(src);
   }
   return [...out];
@@ -138,7 +135,7 @@ export function coveredKeysOf(item: LibraryItem): string[] {
   const out = new Set<string>();
   for (const p of item.parts ?? []) {
     const key = String(p.key ?? '');
-    if (!key || key.startsWith('HR:') || key.startsWith('core.')) continue;
+    if (!key || isHomeruleKey(key) || isCoreKey(key)) continue;
     out.add(key);
   }
   return [...out];
@@ -153,7 +150,7 @@ export function namesOf(items: LibraryItem[]): Record<string, string> {
   for (const item of items) {
     for (const p of item.parts ?? []) {
       const key = String(p.key ?? '');
-      if (!key || key.startsWith('HR:') || key.startsWith('core.')) continue;
+      if (!key || isHomeruleKey(key) || isCoreKey(key)) continue;
       const name = String(p.name ?? item.name ?? '').trim();
       if (name) out[key] = name;
     }

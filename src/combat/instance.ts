@@ -3,6 +3,7 @@ import { parseDice, type Value } from '../expr';
 import { refOf } from './scope';
 import type { Tx } from './tx';
 import type { Action, AttackInfo, Entry, Id, Node } from './types';
+import { withSource } from '../keys';
 
 /**
  * **动作实例**：一次动作（施一道法术、一次武器攻击、用一项特性）从开始到结算完。
@@ -111,7 +112,7 @@ const META = spellMeta as Record<string, SpellMeta>;
 /** 法术元数据：条目自带的（自制法术）优先，否则查 5etools 生成的表；再不行按法术位推环阶 */
 export function spellMetaOf(key: string, entry: Entry | undefined, action: Action): SpellMeta {
   const own = (entry as { spell?: Partial<SpellMeta> } | undefined)?.spell;
-  const base = META[key] ?? META[key.replace(/^[^:]+:/, 'XPHB:')];
+  const base = META[key] ?? META[withSource(key, 'XPHB')];
   const slotMin = (action.cost ?? []).flatMap((k) => ('slot' in k ? [k.slot.min] : []))[0];
   return {
     level: own?.level ?? base?.level ?? slotMin ?? 0,

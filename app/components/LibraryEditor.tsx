@@ -20,6 +20,7 @@ import { RULE_FILES } from '../../src/bridge/rule-files';
 import { RuleBook, auditRuleBook, type Entry, type RuleFile } from '../../src/combat';
 import { lintEntry, lintShape } from '../../src/factory/lint';
 import { genericOwner, smoke } from '../../src/factory/smoke';
+import { isHomeruleKey, nameOfKey } from '../../src/keys';
 
 const KINDS: Array<[string, string]> = [
   ['homerule', '家规 / 自制'], ['feat', '专长'], ['classFeature', '职业特性'], ['subclassFeature', '子职特性'],
@@ -34,7 +35,7 @@ interface Draft { id: string; kind: string; name: string; text: string; by: stri
 
 const pretty = (v: unknown) => (v === undefined ? '' : JSON.stringify(v, null, 1));
 const partToDraft = (p: ResPart): DraftPart => ({
-  id: p.id, key: p.key.startsWith('HR:') ? '' : p.key, name: p.name ?? '', text: p.text ?? '',
+  id: p.id, key: isHomeruleKey(p.key) ? '' : p.key, name: p.name ?? '', text: p.text ?? '',
   pickable: !!p.pickable, removed: !!p.removed, sheet: pretty(p.sheet), combat: pretty(p.combat),
 });
 const itemToDraft = (it: LibraryItem): Draft => ({
@@ -92,8 +93,8 @@ export function LibraryEditor(p: {
         id, key,
         ...(raw.name.trim() ? { name: raw.name.trim() } : {}),
         ...(raw.text.trim() ? { text: raw.text } : {}),
-        ...(raw.pickable && key.startsWith('HR:') ? { pickable: true } : {}),
-        ...(raw.removed && !key.startsWith('HR:') ? { removed: true } : {}),
+        ...(raw.pickable && isHomeruleKey(key) ? { pickable: true } : {}),
+        ...(raw.removed && !isHomeruleKey(key) ? { removed: true } : {}),
         ...(sheet ? { sheet } : {}),
         ...(combat ? { combat } : {}),
       };
@@ -101,7 +102,7 @@ export function LibraryEditor(p: {
     if (!d.name.trim()) bad.push('这条内容要有名字');
     if (db.problems.length) bad.push(...db.problems.map((m) => `自制书：${m}`));
     // 有自制书的可以先没有 part（数据还没写）；什么都没填的空 part 不存
-    const kept = db.brew ? parts.filter((x, i) => !x.key.startsWith('HR:') || hasSheetData(x) || x.combat || d.parts[i].text.trim() || d.parts[i].name.trim()) : parts;
+    const kept = db.brew ? parts.filter((x, i) => !isHomeruleKey(x.key) || hasSheetData(x) || x.combat || d.parts[i].text.trim() || d.parts[i].name.trim()) : parts;
     parts.splice(0, parts.length, ...kept);
     if (!parts.length && !db.brew) bad.push('至少要有一条');
     if (bad.length) { setProblems(bad); return; }
@@ -170,7 +171,7 @@ export function LibraryEditor(p: {
         <div className="small faint">条目（一份资源可以拆成几条：一个子职就是每级特性一条）</div>
         {d.parts.map((raw, i) => {
           const key = raw.key.trim() || `HR:${raw.id}`;
-          const isNew = key.startsWith('HR:');
+          const isNew = isHomeruleKey(key);
           // 自制书自己的特性（HB-<id>:…）：不是覆盖官方，也不能「本版删除」
           const ownBrew = !!db.brew && key.startsWith(`${brewSource(d.id)}:`);
           return (
@@ -315,7 +316,7 @@ function mergeParts(cur: DraftPart[], parts: ResPart[]): DraftPart[] {
     const j = next.findIndex((x) => (x.key.trim() || `HR:${x.id}`) === np.key);
     const fresh: DraftPart = {
       id: np.id,
-      key: np.key.startsWith('HR:') ? '' : np.key,
+      key: isHomeruleKey(np.key) ? '' : np.key,
       name: np.name ?? '',
       text: np.text ?? '',
       pickable: !!np.pickable,
@@ -333,7 +334,7 @@ function mergeParts(cur: DraftPart[], parts: ResPart[]): DraftPart[] {
 export function ItemTags({ item }: { item: LibraryItem }) {
   const parts = item.parts ?? [];
   // 自制书自己的特性键不算覆盖官方
-  const covers = parts.filter((x) => !x.key.startsWith('HR:') && !isOwnBrewKey(item, x.key)).map((x) => x.key);
+  const covers = parts.filter((x) => !isHomeruleKey(x.key) && !isOwnBrewKey(item, x.key)).map((x) => x.key);
   return (
     <>
       {item.brew && <Tag tone="accent" title={item.brew.subclassFeature.map((f) => `${f.level} 级 ${f.name}`).join('\n')}>自制子职 · {item.brew.subclass[0]?.className}</Tag>}
@@ -424,7 +425,7 @@ function CheckPanel({ parts }: { parts: Array<{ id: string; key: string; name: s
     const files = RULE_FILES as unknown as RuleFile[];
     for (const { key, name, entry } of entries()) {
       if (!entry || !Object.keys(entry).length) continue;
-      const e = { name: name || key.split(':').pop(), ...entry } as unknown as Entry;
+      const e = { name: name || nameOfKey(key), ...entry } as unknown as Entry;
       try {
         for (const m of lintShape(e)) es.push(`${key}：${m}`);
         for (const m of lintEntry(key, e, { files })) es.push(`${key}：${m}`);
@@ -445,7 +446,7 @@ function CheckPanel({ parts }: { parts: Array<{ id: string; key: string; name: s
     const files = RULE_FILES as unknown as RuleFile[];
     for (const { key, name, entry } of entries()) {
       if (!entry || !Object.keys(entry).length) continue;
-      const e = { name: name || key.split(':').pop(), ...entry } as unknown as Entry;
+      const e = { name: name || nameOfKey(key), ...entry } as unknown as Entry;
       try {
         const owner = genericOwner(key, {});
         const r = smoke(key, e, files, owner);

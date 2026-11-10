@@ -19,6 +19,7 @@ import { BREW_CLASSES, checkBrew, kindOfKey, type Brew, type LibraryItem, type R
 import { api } from './api';
 import type { Engine } from './engine';
 import { newItemId, newPartId, tagCampaign } from './library';
+import { isHomeruleKey } from '../../src/keys';
 
 /* ───── 设置 ───── */
 
@@ -192,7 +193,7 @@ export function checkParts(answer: unknown, c: PartsCheckCtx): string[] {
     const sheet = raw.sheet;
     const combat = raw.combat;
     if (raw.removed === true) {
-      if (key.startsWith('HR:') || !key.includes(':')) out.push(`${at}：removed 只能用在覆盖官方的条目上（key 写官方键）`);
+      if (isHomeruleKey(key) || !key.includes(':')) out.push(`${at}：removed 只能用在覆盖官方的条目上（key 写官方键）`);
       if (sheet !== undefined || combat !== undefined) out.push(`${at}：标了 removed 就不要再写 sheet / combat`);
       return;
     }
