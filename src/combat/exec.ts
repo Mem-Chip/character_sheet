@@ -10,7 +10,7 @@ import { placeSummon, placeZone, relocateZone, shove } from './space';
 import { blockedEconomy, fireWindow } from './triggers';
 import { Rejected, type Tx } from './tx';
 import { makeCombatant, makeView } from './view';
-import type { Action, ActiveEffect, AttackInfo, AttackRow, CombatantView, Cost, Duration, EffectId, Entry, Id, Modify, Node, TargetPick, Zone } from './types';
+import type { Action, ActionMod, ActiveEffect, AttackInfo, AttackRow, CombatantView, Cost, Duration, EffectId, Entry, Id, Modify, Node, TargetPick, Zone } from './types';
 import { entryKeyOf, isSpellKey, splitRef, subOf } from '../keys';
 
 /**
@@ -1382,32 +1382,46 @@ const scalesWithSlot = (a: Action) => JSON.stringify(a.root).includes('slot.leve
 
 const ACT_CN: Record<string, string> = { action: '动作', bonus: '附赠动作', reaction: '反应', free: '免费', none: '' };
 
-/** 瞬发：持有者身上带 quicken 标记的效应（没有 = undefined） */
-function quickenOf(tx: Tx, actor: Id, action: Action): ActiveEffect | undefined {
-  if (action.activation !== 'action' || !(action.tags ?? []).includes('spell')) return undefined;
-  return activeTemplates(tx, actor).find((a) => a.tpl.flags?.quicken)?.effect;
+/** 这条 actionMod 管不管这个动作 */
+function modCovers(m: ActionMod, action: Action): boolean {
+  if (m.on?.tag && !(action.tags ?? []).includes(m.on.tag)) return false;
+  if (m.on?.activation && action.activation !== m.on.activation) return false;
+  return true;
 }
 
-/** 这个动作实际怎么施放（瞬发法术：施法时间为动作的法术改成附赠动作）。界面算代价也用它 */
+/** 改这个动作激活方式的那条 actionMod 和它所在的效应（瞬发法术；没有 = undefined） */
+function activationModOf(tx: Tx, actor: Id, action: Action): { effect: ActiveEffect; mod: ActionMod } | undefined {
+  for (const a of activeTemplates(tx, actor)) {
+    for (const mod of a.tpl.actionMods ?? []) {
+      if (mod.activation && mod.activation !== action.activation && modCovers(mod, action)) return { effect: a.effect, mod };
+    }
+  }
+  return undefined;
+}
+
 /**
- * 这个动作实际的射程（尺）：远程法术这类效应（flags.rangeMult / touchRange）只改法术的。
+ * 这个动作实际的射程（尺）：远程法术这类效应（actionMods 的 rangeMult / touchRange）会改它。
  * 引擎不查射程（选目标是界面的事），界面选目标时用它；null = 不查（自身、没写）。
  */
 export function effectiveRange(tx: Tx, actor: Id, action: Action): number | null {
   const r = action.targeting?.range;
   const base = typeof r === 'number' ? r : r === 'touch' || r === 'reach' ? 5 : null;
-  if (!(action.tags ?? []).includes('spell') || base === null) return base;
+  if (base === null) return base;
   let out = base;
   for (const a of activeTemplates(tx, actor)) {
-    const f = a.tpl.flags;
-    if (r === 'touch' && f?.touchRange) out = Math.max(out, f.touchRange);
-    else if (typeof r === 'number' && f?.rangeMult) out = Math.max(out, r * f.rangeMult);
+    for (const m of a.tpl.actionMods ?? []) {
+      if (!modCovers(m, action)) continue;
+      if (r === 'touch' && m.touchRange) out = Math.max(out, m.touchRange);
+      else if (typeof r === 'number' && m.rangeMult) out = Math.max(out, r * m.rangeMult);
+    }
   }
   return out;
 }
 
+/** 这个动作实际怎么施放（瞬发法术：施法时间为动作的法术改成附赠动作）。界面算代价也用它 */
 export function effectiveAction(tx: Tx, actor: Id, action: Action): Action {
-  return quickenOf(tx, actor, action) ? { ...action, activation: 'bonus' } : action;
+  const m = activationModOf(tx, actor, action);
+  return m ? { ...action, activation: m.mod.activation! } : action;
 }
 
 export function executeAction(tx: Tx, o: ExecuteOpts): void {
@@ -1423,9 +1437,9 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
       if (!(e instanceof Rejected) || !/找不到动作/.test(e.message)) throw e;
     }
   }
-  const quick = o.options?.as === 'reaction' ? undefined : quickenOf(tx, o.actor, o.action);
+  const quick = o.options?.as === 'reaction' ? undefined : activationModOf(tx, o.actor, o.action);
   const actor = o.actor;
-  const action = quick ? { ...o.action, activation: 'bonus' as const } : o.action;
+  const action = quick ? { ...o.action, activation: quick.mod.activation! } : o.action;
   const c = tx.state.combatants[actor];
   if (!c) throw new Rejected(`没有参与者 ${actor}`);
   const isSpell = (action.tags ?? []).includes('spell');
@@ -1511,7 +1525,7 @@ export function executeAction(tx: Tx, o: ExecuteOpts): void {
 /** executeAction 做完前置检查、压好实例之后的部分 */
 function runAction(tx: Tx, o: ExecuteOpts, x: {
   action: Action; actor: Id; c: Tx['state']['combatants'][string]; isSpell: boolean; costs: Cost[];
-  slotLevel0: number | undefined; entryKey: string; quick: ActiveEffect | undefined; seq: number; inst: ActionInstance;
+  slotLevel0: number | undefined; entryKey: string; quick: { effect: ActiveEffect; mod: ActionMod } | undefined; seq: number; inst: ActionInstance;
 }): void {
   const { action, actor, c, isSpell, costs, slotLevel0, entryKey, quick, seq, inst } = x;
 
@@ -1555,7 +1569,7 @@ function runAction(tx: Tx, o: ExecuteOpts, x: {
   const slot = payCosts(tx, actor, costs, action.name, seq, slotLevel, inst.paid);
   inst.paid.slot = slot;
   if (inst.spell && slot !== undefined) inst.spell.slot = slot;
-  if (quick) endEffect(tx, quick.id, `用在了「${action.name}」上（附赠动作施放）`, seq);
+  if (quick?.mod.once) endEffect(tx, quick.effect.id, `用在了「${action.name}」上（${ACT_CN[quick.mod.activation!] ?? quick.mod.activation}施放）`, seq);
   if (slot !== undefined && inCombat(tx) && isSpell) tx.emit('economyChanged', { id: actor, patch: { slotSpellCast: true } }, seq);
   let castPlan: CastPlan | null = null;
   if (isSpell) {

@@ -84,10 +84,24 @@ export interface Flags {
   ignores?: string[];
   /** 选目标时排除效应来源（魅惑） */
   forbidTarget?: 'source';
-  /** 瞬发法术：下一道施法时间为动作的法术改用附赠动作施放（放完这个效应就结束） */
-  quicken?: boolean;
-  /** 远程法术：法术的射程乘几（触碰的改成 touchRange 尺）；效应自己写 endsOn 施法后结束 */
+}
+
+/**
+ * **改持有者某一类动作的属性**（效应的 `actionMods`）：
+ *   - 瞬发法术：`{ on: { tag: 'spell', activation: 'action' }, activation: 'bonus', once: true }`
+ *   - 远程法术：`{ on: { tag: 'spell' }, rangeMult: 2, touchRange: 30 }`（效应自己写 endsOn 施法后结束）
+ * 不写 on = 所有动作。
+ */
+export interface ActionMod {
+  /** 管哪些动作：tag = 动作带这个标签（spell / weapon / item…）；activation = 原本是这种激活方式的 */
+  on?: { tag?: string; activation?: 'action' | 'bonus' | 'reaction' };
+  /** 改成这种激活方式（用反应发起的动作不管） */
+  activation?: 'action' | 'bonus' | 'reaction' | 'free';
+  /** 用上一次（改了某个动作的激活方式并执行了）这个效应就结束 */
+  once?: boolean;
+  /** 射程乘几（只管写了尺数的） */
   rangeMult?: number;
+  /** 触碰的改成几尺 */
   touchRange?: number;
 }
 
@@ -111,6 +125,8 @@ export interface EffectTemplate {
   triggers?: Trigger[];
   aura?: Aura;
   flags?: Flags;
+  /** 改持有者某一类动作的激活方式 / 射程（瞬发法术、远程法术） */
+  actionMods?: ActionMod[];
   /** 隐含的状态（全键）：随本效应一起存在、一起结束 */
   implies?: string[];
   stackKey?: string;

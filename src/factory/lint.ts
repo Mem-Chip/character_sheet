@@ -8,7 +8,7 @@
  * 纯逻辑，浏览器和 Node 共用。
  */
 import { RuleBook, auditRuleBook, type Entry, type RuleFile } from '../combat';
-import type { Action, AttackInfo, Aura, Duration, EffectTemplate, Flags, Modify, Node, RollFilter, RollMod, Trigger } from '../combat/types';
+import type { Action, ActionMod, AttackInfo, Aura, Duration, EffectTemplate, Flags, Modify, Node, RollFilter, RollMod, Trigger } from '../combat/types';
 
 /** 联合类型里 tag 为 K 的那几种合起来有哪些字段（分配律：每一种各自取 keyof） */
 type FieldsOf<U, Tag extends string, K> = U extends Record<Tag, K> ? Exclude<keyof U, Tag> : never;
@@ -26,12 +26,14 @@ const KEYS = {
   rollMod: ['on', 'who', 'when', 'op', 'value', 'label', 'mark'],
   rollFilter: ['kind', 'ability', 'skill', 'attack', 'spell', 'part'],
   attackFilter: ['melee', 'ranged', 'weapon', 'spell'],
-  template: ['name', 'duration', 'statics', 'rollMods', 'triggers', 'aura', 'flags', 'implies', 'stackKey', 'stack', 'deathAtLevel', 'onApply', 'onEnd', 'tags', 'text'],
+  template: ['name', 'duration', 'statics', 'rollMods', 'triggers', 'aura', 'flags', 'actionMods', 'implies', 'stackKey', 'stack', 'deathAtLevel', 'onApply', 'onEnd', 'tags', 'text'],
   duration: ['instant', 'rounds', 'minutes', 'hours', 'until', 'max', 'saveEnds', 'endsOn', 'manual'],
   until: ['at', 'of', 'nth'],
   saveEnds: ['ability', 'dc', 'at'],
   endsOn: ['event', 'when'],
-  flags: ['blocks', 'breaksConcentration', 'cannot', 'forbidTarget', 'quicken', 'ignores', 'rangeMult', 'touchRange'],
+  flags: ['blocks', 'breaksConcentration', 'cannot', 'forbidTarget', 'ignores'],
+  actionMod: ['on', 'activation', 'once', 'rangeMult', 'touchRange'],
+  actionModOn: ['tag', 'activation'],
   aura: ['id', 'radius', 'affects', 'includeSelf', 'requires', 'grant', 'stackKey'],
   grant: ['rollMods', 'statics', 'triggers'],
   targeting: ['type', 'count', 'repeat', 'range', 'area', 'filter'],
@@ -49,7 +51,8 @@ type KeysDrift =
   | Clean<Diff<EffectTemplate, typeof KEYS.template>> | Clean<Diff<Duration, typeof KEYS.duration>>
   | Clean<Diff<Flags, typeof KEYS.flags>> | Clean<Diff<Aura, typeof KEYS.aura>>
   | Clean<Diff<Trigger, typeof KEYS.trigger>> | Clean<Diff<Action, typeof KEYS.action>>
-  | Clean<Diff<AttackInfo, typeof KEYS.attackInfo>>;
+  | Clean<Diff<AttackInfo, typeof KEYS.attackInfo>> | Clean<Diff<ActionMod, typeof KEYS.actionMod>>
+  | Clean<Diff<NonNullable<ActionMod['on']>, typeof KEYS.actionModOn>>;
 const keysInSync: [KeysDrift] extends [never] ? true : KeysDrift = true;
 void keysInSync;
 
@@ -193,7 +196,19 @@ export function lintShape(entry: unknown): string[] {
     list(o.rollMods, `${at}.rollMods`, rollMod);
     list(o.triggers, `${at}.triggers`, trigger);
     if (o.aura !== undefined) aura(o.aura, `${at}.aura`);
-    if (o.flags !== undefined) keys(o.flags, KEYS.flags, `${at}.flags`);
+    if (o.flags !== undefined) {
+      keys(o.flags, KEYS.flags, `${at}.flags`);
+      // 旧写法给个明白话（不然只会说「未知字段」）
+      if (isObj(o.flags) && ['quicken', 'rangeMult', 'touchRange'].some((k) => k in (o.flags as Obj))) {
+        out.push(`${at}.flags：quicken / rangeMult / touchRange 已经换成效应的 actionMods（瞬发：{ on: { tag: 'spell', activation: 'action' }, activation: 'bonus', once: true }；远程：{ on: { tag: 'spell' }, rangeMult: 2, touchRange: 30 }）`);
+      }
+    }
+    list(o.actionMods, `${at}.actionMods`, (m, a) => {
+      if (!keys(m, KEYS.actionMod, a)) return;
+      const mo = m as Obj;
+      if (mo.on !== undefined) keys(mo.on, KEYS.actionModOn, `${a}.on`);
+      if (mo.activation === undefined && mo.rangeMult === undefined && mo.touchRange === undefined) out.push(`${a}：没说要改什么（activation / rangeMult / touchRange 至少写一个）`);
+    });
     nodes(o.onApply, `${at}.onApply`);
     nodes(o.onEnd, `${at}.onEnd`);
   };
