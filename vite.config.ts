@@ -37,7 +37,7 @@ const UI_PORT = Number.isFinite(argPort) ? argPort : Number(process.env.VITE_POR
 const API_PORT = Number(process.env.API_PORT ?? 8789 + (UI_PORT - 5280));
 
 export default defineConfig({
-  // 相对路径：构建产物放在任何子路径下都能用（线上在 /v2/）
+  // 相对路径：构建产物放在任何子路径下都能用（线上在站点根目录，以前在 /v2/）
   base: './',
   plugins: [react(), localData()],
   // 后端（server/main.ts，默认 8789）：开发时把 /api 转过去。

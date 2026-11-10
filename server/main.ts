@@ -181,7 +181,7 @@ function send(res: ServerResponse, status: number, data: unknown, headers: Recor
 const NAME_RE = /^[^\s<>"'&]{1,24}$/u;
 
 async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  // nginx 原样转发 /v2/api/...；开发时 vite 转发 /api/...
+  // nginx 和开发时的 vite 都转发 /api/...；/v2/api/ 是以前页面在 /v2/ 下时的路径，留着兼容
   const url = new URL(req.url ?? '/', 'http://x');
   const path = url.pathname.replace(/^\/v2(?=\/api\/)/, '');
   const method = req.method ?? 'GET';

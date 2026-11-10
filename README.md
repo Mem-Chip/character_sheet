@@ -1,6 +1,6 @@
 # dnd2024-engine
 
-D&D 2024 网页工具：人物卡、战斗引擎、战役（多人在线遭遇 + VTT 地图 + 战役资料库）、AI 数据化。线上 dnd.memchip.cc/v2。
+D&D 2024 网页工具：人物卡、战斗引擎、战役（多人在线遭遇 + VTT 地图 + 战役资料库）、AI 数据化。线上 dnd.memchip.cc。
 
 - 静态规则逻辑（人物卡计算）移植自 `dsh-p/dnd/dnd2024-sheet`（只移植逻辑，界面重写），见 [PORTING.md](PORTING.md)。
 - 动态规则层（战斗中按时机生效的规则）是新写的，设计见 [COMBAT-DESIGN.md](COMBAT-DESIGN.md)。

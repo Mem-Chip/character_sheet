@@ -170,7 +170,7 @@
 | 反向代理 | 沿用服务器上已有的宝塔 nginx | 证书、基本认证、Cloudflare 都已经配好；自己的规则写在「伪静态」那个 include 文件里（面板不会覆盖它） |
 | 进程 | 一个进程：HTTP 接口 + WebSocket + 进行中遭遇的内存 Session，systemd 管理，只监听 127.0.0.1 | 和现有的 `dnd-sheet` 服务（原项目的卡片库后端）一个做法 |
 
-**现在的状态**：界面是纯静态的，已部署在 `dnd.memchip.cc/v2/`（`npm run deploy`，配置在不进 git 的 `.deploy.env`）。
+**现在的状态**：界面是纯静态的，已部署在 `dnd.memchip.cc`（站点根目录；2026-11 以前在 `/v2/` 下）（`npm run deploy`，配置在不进 git 的 `.deploy.env`）。
 每次部署前会把线上目录备份到服务器的 `~/backups/`。站点根目录仍是原项目的单文件人物卡和它的 `/api/` 后端，没有动。
 新旧两个页面同源，浏览器存储的键不冲突（`dnd2024-sheet:*` 与 `dnd2024-engine:*`）。
 

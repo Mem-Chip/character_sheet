@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# 一次性：在服务器上装后端（打包后的 dist-server/main.js）的 systemd 服务，并让 nginx 把 /v2/api/ 转给它。
+# 一次性：在服务器上装后端（打包后的 dist-server/main.js）的 systemd 服务，并让 nginx 把 /api/ 转给它。
 # 之后的更新走 npm run deploy（会顺带打包、上传 main.js 并重启服务）。
-# 再跑一次也安全：会重写 systemd 单元，nginx 已经配过就跳过。
+# 再跑一次也安全：会重写 systemd 单元和 nginx 里本脚本管的那一段。
 #
 # 用 .deploy.env 里的 DEPLOY_HOST / DEPLOY_KEY；另外可以设：
 #   API_PORT=8789（8787 是原项目的卡片库后端，8788 是音频转播）
@@ -48,13 +48,16 @@ UNIT
 sudo systemctl daemon-reload
 sudo systemctl enable dnd-v2 >/dev/null 2>&1
 
-if ! sudo grep -q 'location /v2/api/' "$INC"; then
-  sudo cp "$INC" "$INC.bak-$(date +%Y%m%d%H%M%S)"
-  sudo tee -a "$INC" >/dev/null <<NGINX
-
-# ── ⑤ v2 后端（账户、同步、战役）：把 /v2/api/ 转给本机 $PORT ──────────
-# proxy_pass 不带路径：后端收到的就是 /v2/api/...（它自己去掉 /v2）
-location /v2/api/ {
+# nginx：本脚本管的那段夹在 >>> / <<< 两行之间，每次整段重写；文件里别的规则不动。
+# 顺带删掉以前页面在 /v2/ 下时写的那段（「⑤ v2 后端」开头，到第一个单独的 } 为止）。
+BAK="$INC.bak-$(date +%Y%m%d%H%M%S)"
+sudo touch "$INC"
+sudo cp "$INC" "$BAK"
+sudo sed -i -e '/^# ── ⑤ v2 后端/,/^}$/d' -e '/^# >>> dnd-v2/,/^# <<< dnd-v2/d' "$INC"
+sudo tee -a "$INC" >/dev/null <<NGINX
+# >>> dnd-v2（tools/setup-server.sh 写的，再跑一次会整段重写）
+# 后端（账户、同步、战役）：/api/ 转给本机 $PORT；proxy_pass 不带路径，后端收到的就是 /api/...
+location /api/ {
     proxy_pass http://127.0.0.1:$PORT;
     proxy_http_version 1.1;
     proxy_set_header Host \$host;
@@ -62,13 +65,18 @@ location /v2/api/ {
     proxy_read_timeout 30s;
     client_max_body_size 8m;
 }
+# 页面以前在 /v2/ 下：旧链接、书签跳到根目录
+location = /v2 { return 301 /; }
+location ^~ /v2/ { rewrite ^/v2/(.*)\$ /\$1 permanent; }
+# <<< dnd-v2
 NGINX
-  NGX=$(command -v nginx || echo /www/server/nginx/sbin/nginx)
-  sudo "$NGX" -t
-  sudo "$NGX" -s reload
-  echo "nginx：已加上 /v2/api/ → 127.0.0.1:$PORT"
-else
-  echo "nginx：/v2/api/ 已经配过了"
+NGX=$(command -v nginx || echo /www/server/nginx/sbin/nginx)
+if ! sudo "$NGX" -t; then
+  sudo cp "$BAK" "$INC"
+  echo "nginx 配置检查没过：已恢复原来的 $INC" >&2
+  exit 1
 fi
+sudo "$NGX" -s reload
+echo "nginx：/api/ → 127.0.0.1:$PORT，/v2/ → 跳到 /（备份：$BAK）"
 REMOTE
 echo "完成。接着 npm run deploy 上传后端并启动。"

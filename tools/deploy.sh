@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# 把界面部署到服务器上的一个静态目录（线上：dnd.memchip.cc/v2/）。
+# 把界面部署到服务器上的站点目录（线上：dnd.memchip.cc，站点根目录）。
 #
 # 配置放在仓库根目录的 .deploy.env（不进 git），见 .deploy.env.example：
-#   DEPLOY_HOST=user@host     DEPLOY_KEY=~/.ssh/xxx.key     DEPLOY_DIR=/www/wwwroot/<站点>/v2
+#   DEPLOY_HOST=user@host     DEPLOY_KEY=~/.ssh/xxx.key     DEPLOY_DIR=/www/wwwroot/<站点>
 #   DEPLOY_OWNER=www:www（可选，网站文件的属主）
 #
-# 做的事：构建 → 打包上传到服务器的临时目录 → 备份线上目录到 ~/backups/ → 换上新的 → 检查；
+# 做的事：构建 → 打包上传到服务器的临时目录 → 备份要换掉的那几项到 ~/backups/ → 换上新的 → 检查；
+# 站点目录里构建产物以外的东西不动（页面用相对路径，放在子路径下也能用）。
 # 后端装过的话（tools/setup-server.sh），顺带上传打包好的 dist-server/main.js 并重启 dnd-v2 服务。
 # 页面本身是纯静态的（数据在 dist/5etools 里），站点外面那道 HTTP 基本认证不受影响。
 set -euo pipefail
@@ -36,17 +37,29 @@ echo "备份并替换 $DEPLOY_DIR …"
 "${SSH[@]}" "$DEPLOY_HOST" bash -s -- "$DEPLOY_DIR" "$STAGE" "$STAMP" "$DEPLOY_OWNER" <<'REMOTE'
 set -euo pipefail
 DIR="$1"; STAGE="$2"; STAMP="$3"; OWNER="$4"
+sudo mkdir -p "$DIR"
+cd "$STAGE"
+# 只换构建产物里有的那几项（index.html、assets、5etools…）：站点根目录里的别的东西
+# （宝塔的 .user.ini、证书验证用的 .well-known、错误页）不动
+ITEMS=(); for f in * .[!.]*; do [ -e "$f" ] && ITEMS+=("$f"); done
+OLD=(); for f in "${ITEMS[@]}"; do sudo test -e "$DIR/$f" && OLD+=("$f"); done
 mkdir -p ~/backups
-if sudo test -d "$DIR"; then
-  sudo tar -czf ~/backups/"$(basename "$DIR")-$STAMP.tar.gz" -C "$(dirname "$DIR")" "$(basename "$DIR")"
-  echo "  旧版本备份：~/backups/$(basename "$DIR")-$STAMP.tar.gz"
+if [ ${#OLD[@]} -gt 0 ]; then
+  sudo tar -czf ~/backups/"site-$STAMP.tar.gz" -C "$DIR" "${OLD[@]}"
+  echo "  旧版本备份：~/backups/site-$STAMP.tar.gz"
 fi
 sudo chown -R "$OWNER" "$STAGE"
-sudo rm -rf "$DIR.old"
-if sudo test -d "$DIR"; then sudo mv "$DIR" "$DIR.old"; fi
-sudo mv "$STAGE" "$DIR"
-sudo rm -rf "$DIR.old"
-echo "  已替换：$(sudo find "$DIR" -type f | wc -l) 个文件，$(sudo du -sh "$DIR" | cut -f1)"
+# index.html 最后换：它引用的新 assets 先到位
+for f in "${ITEMS[@]}"; do
+  [ "$f" = index.html ] && continue
+  sudo rm -rf "$DIR/$f.old"
+  if sudo test -e "$DIR/$f"; then sudo mv "$DIR/$f" "$DIR/$f.old"; fi
+  sudo mv "$STAGE/$f" "$DIR/$f"
+  sudo rm -rf "$DIR/$f.old"
+done
+sudo mv -f "$STAGE/index.html" "$DIR/index.html"
+cd / && sudo rmdir "$STAGE"
+echo "  已替换：${#ITEMS[@]} 项（$(sudo du -sh "$DIR" | cut -f1)）"
 REMOTE
 
 # 后端（打包后的 dist-server/main.js）：服务装过了（tools/setup-server.sh）才更新

@@ -1,5 +1,5 @@
 /**
- * 后端接口（server/main.ts）。页面在 /v2/ 下，接口在 /v2/api/；开发时 vite 把 /api 转给本机后端。
+ * 后端接口（server/main.ts）。接口在页面旁边的 api/（线上页面在根目录，就是 /api/）；开发时 vite 把 /api 转给本机后端。
  * 登录靠 httpOnly 的会话 cookie，这里不碰令牌。
  */
 export interface User { id: number; name: string }
