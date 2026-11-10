@@ -53,7 +53,8 @@ REMOTE
 if "${SSH[@]}" "$DEPLOY_HOST" 'systemctl cat dnd-v2 >/dev/null 2>&1'; then
   echo "更新后端 …"
   [ -f dist-server/main.js ] || { echo "dist-server/main.js 不存在：先 npm run build:server" >&2; exit 1; }
-  "${SSH[@]}" "$DEPLOY_HOST" "sudo tee /opt/dnd-v2/main.js >/dev/null && sudo systemctl restart dnd-v2 && sleep 1 && curl -sf http://127.0.0.1:${API_PORT:-8789}/api/health >/dev/null && echo '  后端已重启'" < dist-server/main.js
+  # 小机器上 node 加载打包文件要十几秒：健康检查最多等 30 秒
+  "${SSH[@]}" "$DEPLOY_HOST" "sudo tee /opt/dnd-v2/main.js >/dev/null && sudo systemctl restart dnd-v2 && for i in \$(seq 30); do sleep 1; curl -sf http://127.0.0.1:${API_PORT:-8789}/api/health >/dev/null && { echo \"  后端已重启（\${i} 秒）\"; exit 0; }; done; echo '  后端 30 秒内没起来：sudo journalctl -u dnd-v2 -n 30' >&2; exit 1" < dist-server/main.js
 else
   echo "（服务器上还没装后端：先跑一次 bash tools/setup-server.sh）"
 fi

@@ -298,6 +298,84 @@ function applyRemote(data: RemoteState): void {
   }
 }
 
+/* ───── 遭遇在哪跑 ─────
+ * 本地遭遇：引擎就在这台电脑上，命令直接进 Session。
+ * 战役遭遇：命令发给服务器（act），结果从 SSE 推回来再重放（applyRemote）。
+ * 发命令的地方只跟 host() 说话，不自己判断在哪跑；加一种操作时两边都得实现，编译器会盯着。
+ * 只有战役遭遇才有的事（藏参与者、地图、标点、转明骰…）不在这里，它们各自写 `if (ui.remote) act(…)`。 */
+interface Host {
+  /** 发一条命令（界面上点的每一下） */
+  dispatch(cmd: Command): DispatchResult;
+  /**
+   * 连着加几个参与者（几只怪、几个召唤物、一张卡）。extra 是跟着走的附注：
+   * cardId = 这个参与者对应哪张人物卡、owner = 归谁、hidden = 先藏着。本地只用得上 cardId
+   */
+  add(cmds: Command[], extra?: { cardId?: string; owner?: number | null; hidden?: boolean }): void;
+  decide(value: unknown): DispatchResult;
+  cancelPending(): void;
+  undo(n: number): void;
+  override(txIndex: number, patch: OverridePatch): DispatchResult;
+  reset(engine: Engine): void;
+  /** 指令框里的一句话 / 一次掷骰 / 分享的条目：entry 是本地算好的那条，wire 是发给服务器的原话（服务器自己掷） */
+  chat(entry: ChatRoll, wire: { text: string } | { term: ChatRoll['term'] }): void;
+  setDice(user: string, mode: DiceMode | ''): void;
+  setDicePhys(p: DicePhysics): void;
+  setDiceColor(color: string): void;
+}
+
+const localHost: Host = {
+  dispatch(cmd) {
+    const s = ui.session!;
+    const turnBefore = `${s.state.round}:${s.state.turnIndex}`;
+    const r = s.dispatch(cmd);
+    if (r.status === 'done' && (cmd.type === 'startCombat' || cmd.type === 'nextTurn') && `${s.state.round}:${s.state.turnIndex}` !== turnBefore) {
+      ui = { ...ui, selected: s.state.order[s.state.turnIndex] ?? ui.selected };
+    }
+    return after(r);
+  },
+  add(cmds, extra) {
+    const s = ui.session!;
+    for (const cmd of cmds) {
+      const r = s.dispatch(cmd);
+      if (r.status !== 'done') { after(r); return; }
+      if (extra?.cardId && cmd.type === 'addCombatant') ui = { ...ui, links: { ...ui.links, [cmd.combatant.id]: extra.cardId } };
+    }
+    after({ status: 'done', events: [] });
+  },
+  decide: (value) => after(ui.session!.decide(value)),
+  cancelPending() { ui.session!.cancelPending(); set({}); },
+  undo(n) { ui.session!.undo(n); after({ status: 'done', events: [] }); },
+  override: (txIndex, patch) => after(ui.session!.override(txIndex, patch)),
+  reset(engine) {
+    set({ session: new Session(createEncounter('enc'), ctxFor(engine)), links: {}, selected: null, manySel: [], targets: [], formPick: null, summonFor: null, replay: null });
+  },
+  chat(entry) { set({ chat: [...ui.chat, entry].slice(-100) }); },
+  setDice(user, mode) {
+    const dice = { ...ui.dice };
+    if (mode) dice[user] = mode;
+    else delete dice[user];
+    set({ dice });
+  },
+  setDicePhys(p) { setDiceLocalPhys(p); set({}, false); },
+  setDiceColor(color) { setDiceLocalColor(color || null); set({}, false); },
+};
+
+const remoteHost: Host = {
+  dispatch: (cmd) => act({ op: 'dispatch', cmd }),
+  add(cmds, extra) { for (const cmd of cmds) act({ op: 'dispatch', cmd, ...extra }); },
+  decide: (value) => act({ op: 'decide', value }),
+  cancelPending() { act({ op: 'cancelPending' }); },
+  undo(n) { act({ op: 'undo', n }); },
+  override: (txIndex, patch) => act({ op: 'override', txIndex, patch }),
+  reset() { act({ op: 'reset' }); },
+  chat(_entry, wire) { act({ op: 'chat', ...wire }); },
+  setDice(user, mode) { act({ op: 'setDice', user, mode }); },
+  setDicePhys(p) { act({ op: 'dicePhys', ...p }); },
+  setDiceColor(color) { act({ op: 'diceColor', color }); },
+};
+
+const host = (): Host => (ui.remote ? remoteHost : localHost);
+
 /** 上次进的战役遭遇（遭遇管理页的「继续」） */
 const LAST_KEY = 'dnd2024-engine:lastEncounter';
 export function lastEncounter(): string | null {
@@ -436,8 +514,7 @@ export const combat = {
   },
   /** DM：3D 骰子的物理参数 */
   setDicePhys(p: DicePhysics): void {
-    if (ui.remote) act({ op: 'dicePhys', ...p });
-    else { setDiceLocalPhys(p); set({}, false); }
+    host().setDicePhys(p);
   },
   /** DM：怪物的骰子明骰 / 暗骰 */
   setDiceOpen(open: boolean): void {
@@ -462,8 +539,7 @@ export const combat = {
   },
   /** 自己的骰子颜色（空 = 默认） */
   setDiceColor(color: string): void {
-    if (ui.remote) act({ op: 'diceColor', color });
-    else { setDiceLocalColor(color || null); set({}, false); }
+    host().setDiceColor(color);
   },
   /** 乐观更新地图（拖棋子、画线不用等服务器回来） */
   patchMap(fn: (m: MapState) => void): void {
@@ -489,34 +565,21 @@ export const combat = {
 
   dispatch(cmd: Command): DispatchResult {
     if (ui.replay !== null) ui = { ...ui, replay: null };
-    if (ui.remote) return act({ op: 'dispatch', cmd });
-    const s = ui.session!;
-    const turnBefore = `${s.state.round}:${s.state.turnIndex}`;
-    const r = s.dispatch(cmd);
-    if (r.status === 'done' && (cmd.type === 'startCombat' || cmd.type === 'nextTurn') && `${s.state.round}:${s.state.turnIndex}` !== turnBefore) {
-      ui = { ...ui, selected: s.state.order[s.state.turnIndex] ?? ui.selected };
-    }
-    return after(r);
+    return host().dispatch(cmd);
   },
   decide(value: unknown): DispatchResult {
-    if (ui.remote) return act({ op: 'decide', value });
-    return after(ui.session!.decide(value));
+    return host().decide(value);
   },
   cancelPending(): void {
-    if (ui.remote) { act({ op: 'cancelPending' }); return; }
-    ui.session!.cancelPending();
-    set({});
+    host().cancelPending();
   },
   undo(n = 1): void {
     if (ui.replay !== null) ui = { ...ui, replay: null };
-    if (ui.remote) { act({ op: 'undo', n }); return; }
-    ui.session!.undo(n);
-    after({ status: 'done', events: [] });
+    host().undo(n);
   },
   override(txIndex: number, patch: OverridePatch): DispatchResult {
     if (ui.replay !== null) ui = { ...ui, replay: null };
-    if (ui.remote) return act({ op: 'override', txIndex, patch });
-    return after(ui.session!.override(txIndex, patch));
+    return host().override(txIndex, patch);
   },
   /** 日志回放：跳到第 n 笔事务之后的状态（0 = 起点，null = 退出回放） */
   setReplay(n: number | null): void {
@@ -529,8 +592,7 @@ export const combat = {
     if (ui.remote) act({ op: 'refreshRules' });
   },
   reset(engine: Engine): void {
-    if (ui.remote) { act({ op: 'reset' }); return; }
-    set({ session: new Session(createEncounter('enc'), ctxFor(engine)), links: {}, selected: null, manySel: [], targets: [], formPick: null, summonFor: null, replay: null });
+    host().reset(engine);
   },
   select(id: string | null, add = false): void {
     if (!add) { set({ selected: id, manySel: [] }, true); return; }
@@ -605,12 +667,12 @@ export const combat = {
     set({ summonFor: summonerId }, false);
   },
   addSummon(summonerId: string, view: ViewInit, count = 1): void {
-    const s = ui.session!;
-    const summoner = s.state.combatants[summonerId];
+    const summoner = ui.session!.state.combatants[summonerId];
     if (!summoner) return;
+    const cmds: Command[] = [];
     for (let i = 1; i <= count; i++) {
       const name = count > 1 ? `${view.name} ${i}` : view.name;
-      const cmd: Command = {
+      cmds.push({
         type: 'addCombatant',
         combatant: makeCombatant({
           id: uniqueId('s'),
@@ -621,12 +683,9 @@ export const combat = {
           initiative: summoner.initiative,
           view: makeView({ ...view, name }),
         }),
-      };
-      if (ui.remote) { act({ op: 'dispatch', cmd }); continue; }
-      const r = s.dispatch(cmd);
-      if (r.status !== 'done') { after(r); return; }
+      });
     }
-    after({ status: 'done', events: [] });
+    host().add(cmds);
   },
   /* ───── 选目标模式 ───── */
   startAim(aim: Omit<Aim, 'picks'>): void {
@@ -677,30 +736,24 @@ export const combat = {
       entry = chatEntry(text, { id: Math.random().toString(36).slice(2, 10), by: 0, byName: '我', at: Date.now(), afterTx: ui.session?.transactions.length ?? 0 });
     } catch (e) { return (e as Error).message; }
     if (!entry) return null;
-    if (ui.remote) { act({ op: 'chat', text }); return null; }
-    set({ chat: [...ui.chat, entry].slice(-100) });
+    host().chat(entry, { text });
     return null;
   },
 
   /** /match：把一个条目发进日志（所有人看得到原文） */
   shareTerm(term: { kind: string; name: string; source?: string }): void {
-    if (ui.remote) { act({ op: 'chat', term }); return; }
     const entry: ChatRoll = {
       id: Math.random().toString(36).slice(2, 10), by: 0, byName: '我', at: Date.now(), afterTx: ui.session?.transactions.length ?? 0,
       private: false, note: '', results: [], term,
     };
-    set({ chat: [...ui.chat, entry].slice(-100) });
+    host().chat(entry, { term });
   },
   clearTargets(): void {
     set({ targets: [] });
   },
   /** mode 为空 = 跟随默认 */
   setDice(user: string, mode: DiceMode | ''): void {
-    if (ui.remote) { act({ op: 'setDice', user, mode }); return; }
-    const dice = { ...ui.dice };
-    if (mode) dice[user] = mode;
-    else delete dice[user];
-    set({ dice });
+    host().setDice(user, mode);
   },
   toast,
 
@@ -714,15 +767,10 @@ export const combat = {
     const id = uniqueId('pc');
     const c = combatantFromSheet(engine.env, work, sheet, { id, controller: id, side: 'party' });
     if (!c.name) c.name = card.char.name || '未命名';
-    // 战役遭遇：交给服务器；若卡上标记了 dmControlled 或卡主就是当前 DM，则直接归 DM 控制（owner: null）
-    if (ui.remote) {
-      const dmBound = !!card.char.dmControlled || (ui.remote.role === 'dm' && (!card.owner || card.owner.id === ui.remote.me));
-      act({ op: 'dispatch', cmd: { type: 'addCombatant', combatant: c, joinInitiative: true }, cardId, owner: dmBound ? null : card.owner?.id });
-      return;
-    }
-    const r = ui.session!.dispatch({ type: 'addCombatant', combatant: c, joinInitiative: true });
-    if (r.status === 'done') ui = { ...ui, links: { ...ui.links, [id]: cardId } };
-    after(r);
+    // 归谁（只有战役遭遇用得上）：卡上标记了 dmControlled 或卡主就是当前 DM，直接归 DM 控制（owner: null）
+    const r = ui.remote;
+    const dmBound = !!card.char.dmControlled || (r?.role === 'dm' && (!card.owner || card.owner.id === r.me));
+    host().add([{ type: 'addCombatant', combatant: c, joinInitiative: true }], { cardId, owner: dmBound ? null : card.owner?.id });
   },
 
   /** 人物卡 → 战斗：按卡上现在的样子重算数值（升级、换装备之后），作为一笔操作记进日志 */
@@ -739,15 +787,12 @@ export const combat = {
   },
 
   addMonster(view: ViewInit, count: number, side = 'enemy', hidden = false): void {
-    const s = ui.session!;
+    const cmds: Command[] = [];
     for (let i = 1; i <= count; i++) {
       const name = count > 1 ? `${view.name} ${i}` : view.name;
-      const cmd: Command = { type: 'addCombatant', combatant: makeCombatant({ id: uniqueId('m'), kind: 'monster', side, view: makeView({ ...view, name }) }), joinInitiative: true };
-      if (ui.remote) { act({ op: 'dispatch', cmd, hidden }); continue; }
-      const r = s.dispatch(cmd);
-      if (r.status !== 'done') { after(r); return; }
+      cmds.push({ type: 'addCombatant', combatant: makeCombatant({ id: uniqueId('m'), kind: 'monster', side, view: makeView({ ...view, name }) }), joinInitiative: true });
     }
-    after({ status: 'done', events: [] });
+    host().add(cmds, { hidden });
   },
 
   /** 战斗结果写回人物卡：HP、临时生命值、法术位、资源、死亡豁免（quiet：自动写回，出错不弹提示） */
