@@ -6,8 +6,10 @@
  *   npx tsx server/main.ts                    起服务（PORT、DB 见下面的环境变量）
  *   node main.js reset-password 名字 新密码     （服务器上：/opt/dnd-v2/main.js）
  *   node main.js users                        列出所有用户
+ *   node main.js gate-password 密码            设站点门禁密码（--off 关掉门禁）；旧的门禁 cookie 全部作废
+ *   node main.js bans / unban IP              看 / 解封因为输错门禁密码被封的 IP
  *
- * 只监听 127.0.0.1；外面是 nginx 和站点的 HTTP 基本认证。私人站点，默认用户都是好人：
+ * 只监听 127.0.0.1；外面是 nginx 和站点门禁（gate.ts：一个共用密码，输错多次封 IP）。私人站点，默认用户都是好人：
  * 注册不验证，账户只用来区分「你是谁」。
  *
  */
@@ -17,6 +19,7 @@ import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { createEncounters } from './encounters';
+import { clientIp, createGate } from './gate';
 import { createHub } from './hub';
 import { createLibrary } from './library';
 
@@ -189,6 +192,23 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
 
   if (path === '/api/health') return send(res, 200, { ok: true });
 
+  // 站点门禁：nginx 的 auth_request 每个页面请求都来问一次；接口在这里挡
+  if (path === '/api/gate/check') {
+    res.writeHead(gate.passed(req) ? 204 : gate.bannedUntil(clientIp(req)) ? 403 : 401, { 'cache-control': 'no-store' });
+    return void res.end();
+  }
+  if (method === 'GET' && path === '/api/gate/status') {
+    return send(res, 200, { enabled: gate.enabled(), passed: gate.passed(req), bannedUntil: gate.bannedUntil(clientIp(req)) });
+  }
+  if (method === 'POST' && path === '/api/gate/login') {
+    const b = await bodyOf(req);
+    const r = gate.login(clientIp(req), String(b.password ?? ''));
+    if (r.ok) return send(res, 200, { ok: true }, { 'set-cookie': gate.cookieHeader(r.token, SECURE_COOKIE) });
+    if (r.bannedUntil) return send(res, 429, { error: '输错太多次，这个 IP 暂时被封了', bannedUntil: r.bannedUntil });
+    return send(res, 401, { error: `密码不对，还能试 ${r.left} 次`, left: r.left });
+  }
+  if (!gate.passed(req)) return send(res, 401, { error: '要先输入站点密码', gate: true });
+
   if (method === 'POST' && path === '/api/register') {
     const b = await bodyOf(req);
     const name = String(b.name ?? '').trim(), password = String(b.password ?? '');
@@ -346,6 +366,7 @@ const deps = {
   one, all, run, exec: (sql: string) => db.exec(sql), bodyOf, send, roleIn,
   fail: (status: number, message: string) => new HttpError(status, message),
 };
+const gate = createGate(deps);
 const library = createLibrary(deps);
 const hub = createHub(deps, library);
 const encounters = createEncounters({ ...deps, campaignRules: library.campaignRules, ownerRules: library.rulesOfOwner });
@@ -363,6 +384,17 @@ if (cmd === 'reset-password') {
   console.log(`已重置「${name}」的密码，旧的登录全部失效`);
 } else if (cmd === 'users') {
   for (const r of all('SELECT id, name, created FROM users ORDER BY id')) console.log(r.id, r.name, new Date(Number(r.created)).toISOString());
+} else if (cmd === 'gate-password') {
+  const [password] = args;
+  if (!password) { console.error('用法：node main.js gate-password 密码   （--off 关掉门禁）'); process.exit(1); }
+  if (password === '--off') { gate.setPassword(null); console.log('门禁已关掉：谁都能打开站点'); }
+  else if (password.length < 6) { console.error('门禁密码至少 6 位'); process.exit(1); }
+  else { gate.setPassword(password); console.log('门禁密码已设好，旧的门禁 cookie 全部作废'); }
+} else if (cmd === 'bans') {
+  for (const r of gate.bans()) console.log(r.ip, '封到', new Date(Number(r.banned_until)).toISOString());
+} else if (cmd === 'unban') {
+  if (!args[0]) { console.error('用法：node main.js unban IP'); process.exit(1); }
+  gate.unban(args[0]); console.log(`已解封 ${args[0]}`);
 } else if (cmd) {
   console.error(`不认识的命令：${cmd}`);
   process.exit(1);

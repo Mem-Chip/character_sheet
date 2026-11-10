@@ -65,6 +65,23 @@ location /api/ {
     proxy_read_timeout 30s;
     client_max_body_size 8m;
 }
+# 站点门禁（server/gate.ts）：页面先问后端放不放行，没输过站点密码就转到 /gate.html。
+# 宝塔自己的正则 location（.js / .css / 图片、.well-known 证书验证）不经过这里：打包的代码和图标不算秘密，
+# 用户数据都在 /api/ 下，由后端自己挡。
+location = /api/gate/check {
+    internal;
+    proxy_pass http://127.0.0.1:$PORT;
+    proxy_pass_request_body off;
+    proxy_set_header Content-Length "";
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+}
+location / {
+    auth_request /api/gate/check;
+    error_page 401 403 = @gate;
+}
+location @gate { return 302 /gate.html; }
+location = /gate.html { }
 # 页面以前在 /v2/ 下：旧链接、书签跳到根目录
 location = /v2 { return 301 /; }
 location ^~ /v2/ { rewrite ^/v2/(.*)\$ /\$1 permanent; }

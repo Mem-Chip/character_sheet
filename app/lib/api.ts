@@ -29,6 +29,8 @@ export async function api<T = Record<string, unknown>>(method: string, path: str
     throw new ApiError(0, '连不上服务器', {});
   }
   const data = await res.json().catch(() => ({})) as Record<string, unknown>;
+  // 站点门禁的 cookie 过期 / 被作废了：去门禁页重新输密码（server/gate.ts）
+  if (res.status === 401 && data.gate) location.assign(new URL('gate.html', document.baseURI).href);
   if (!res.ok) throw new ApiError(res.status, String(data.error ?? `出错了（${res.status}）`), data);
   return data as T;
 }
