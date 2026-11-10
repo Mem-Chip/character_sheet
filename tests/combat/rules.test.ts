@@ -290,6 +290,31 @@ describe('力竭 6 级死亡；长休降 1 级', () => {
   });
 });
 
+describe('引擎不点名状态：哪个算力竭、0 生命值挂什么，由核心参数说', () => {
+  it('房规把 core.downed 指到别的状态：降到 0 时挂的是那个', () => {
+    const { s } = setup([fighter(), goblin('g')], {
+      layers: camp([{ id: 'hr1', key: 'core.downed', text: '倒下时只是失能，不昏迷', value: 'XPHB:condition:失能' }]),
+    });
+    done(s.dispatch({ type: 'damage', id: 'f', amount: 30, damageType: '钝击' }));
+    expect(has(s, 'f', '失能')).toBe(true);
+    expect(has(s, 'f', '昏迷')).toBe(false);
+  });
+
+  it('房规把 core.exhaustion 指到别的状态：官方的力竭不再算等级，长休也不降它', () => {
+    const { s } = setup([fighter()], {
+      layers: camp([{ id: 'hr1', key: 'core.exhaustion', text: '本团的力竭另有一套', value: 'XPHB:condition:中毒' }]),
+    });
+    for (let i = 0; i < 2; i++) done(s.dispatch({ type: 'applyEffect', to: 'f', template: 'XPHB:condition:力竭' }));
+    done(s.dispatch({ type: 'rest', kind: 'long' }));
+    expect(Object.values(s.state.effects).find((e) => e.name === '力竭')!.state.level).toBe(2);
+  });
+
+  it('撤离的效应自己带着「不引发借机攻击」的标志（引擎不再按名字认它）', () => {
+    const book = new RuleBook(FILES, []);
+    expect(book.template('XPHB:action:撤离#撤离')?.flags?.cannot).toContain('provoke');
+  });
+});
+
 describe('死亡豁免（回合开始时）', () => {
   it('成功一次 → 天然 1 记两次失败 → 天然 20 恢复 1 点生命值', () => {
     const { s, dice } = setup([fighter(), goblin('g')]);

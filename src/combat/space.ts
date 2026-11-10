@@ -135,10 +135,9 @@ export function reachChanges(tx: Tx, mover: Id, from: Cell, to: Cell): { left: I
 /** 谁会因为 mover 从 from 走到 to 而能借机攻击（离开了他的触及范围） */
 export const provokers = (tx: Tx, mover: Id, from: Cell, to: Cell): Id[] => reachChanges(tx, mover, from, to).left;
 
-/** 撤离了（或者有别的「移动不引发借机攻击」） */
+/** 移动不引发借机攻击（撤离、各种「不会引发借机攻击」的能力）：效应上的 `flags.cannot: ['provoke']` */
 function disengaged(tx: Tx, id: Id): boolean {
-  return effectsOf(tx, id).some((e) => e.name === '撤离')
-    || activeTemplates(tx, id).some((a) => a.tpl.flags?.cannot?.includes('provoke'));
+  return activeTemplates(tx, id).some((a) => a.tpl.flags?.cannot?.includes('provoke'));
 }
 
 /**

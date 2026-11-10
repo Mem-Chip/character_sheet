@@ -143,6 +143,10 @@ export class RuleBook {
     if (!(name in this.core)) throw new Error(`规则数据缺少核心参数 core.${name}`);
     return this.core[name] as T;
   }
+  /** 可以缺的核心参数：旧的房规层、测试里手搭的规则书没有它时用缺省值 */
+  coreOr<T>(name: string, fallback: T): T {
+    return name in this.core ? (this.core[name] as T) : fallback;
+  }
   coreAll(): Readonly<Record<string, unknown>> { return this.core; }
 
   /** 对所有参与者生效的条目（武器精通、可选核心规则） */

@@ -104,8 +104,17 @@ export function findEffect(tx: Tx, bearer: Id, nameOrKey: string): ActiveEffect 
   );
 }
 
+/**
+ * 身上的力竭效应。哪个状态算力竭由规则书说（`core.exhaustion` 指向的条目），引擎不认名字 ——
+ * `self.exhaustion`、长休降一级都看它。
+ */
+export function exhaustionEffect(tx: Tx, bearer: Id): ActiveEffect | undefined {
+  const entry = entryKeyOf(tx.rules.coreOr('exhaustion', 'XPHB:condition:力竭'));
+  return effectsOf(tx, bearer).find((x) => entryKeyOf(x.key) === entry);
+}
+
 export function exhaustionOf(tx: Tx, bearer: Id): number {
-  const e = effectsOf(tx, bearer).find((x) => x.name === '力竭');
+  const e = exhaustionEffect(tx, bearer);
   return e ? Number(e.state.level ?? 1) : 0;
 }
 

@@ -408,12 +408,13 @@ export function applyDamagePacket(tx: Tx, p: DamagePacket, cause: number | null)
   return { byType: final, total, hpBefore, hpAfter, tempAbsorbed, downed, killed, seq };
 }
 
-/** 降至 0：PC 陷入昏迷（随之倒地），死亡豁免归零 */
+/** 降至 0：PC 陷入昏迷（随之倒地），死亡豁免归零。挂哪个状态由规则书说（`core.downed`） */
 export function knockOut(tx: Tx, id: Id, cause: number | null): void {
+  const ref = tx.rules.coreOr('downed', 'XPHB:condition:昏迷');
   tx.emit('deathSavesChanged', { id, s: 0, f: 0 }, cause);
   tx.emit('stableChanged', { id, stable: false }, cause);
   applyEffect(tx, {
-    bearer: id, source: null, ref: 'XPHB:condition:昏迷', baseKey: 'XPHB:condition:昏迷',
+    bearer: id, source: null, ref, baseKey: ref,
     duration: { manual: true }, origin: { kind: 'rule', ref: '0hp' }, cause,
   });
 }

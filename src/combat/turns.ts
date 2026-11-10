@@ -1,7 +1,7 @@
 import { ABIL_CN, Unknown, runInt } from '../expr';
 import { applyHeal, kill } from './damage';
 import { d20Test } from './d20';
-import { conditionsOfTemplate, effectiveView, effectsOf, endEffect, roundsOf, templateOf } from './effects';
+import { conditionsOfTemplate, effectiveView, effectsOf, endEffect, exhaustionEffect, roundsOf, templateOf } from './effects';
 import { expireGrants } from './exec';
 import { makeEnv } from './scope';
 import { expireZones, zonesOnTurn } from './space';
@@ -273,7 +273,7 @@ export function rest(tx: Tx, kind: 'short' | 'long', ids: Id[] | undefined, caus
       for (const f of Object.keys(c.live.hitDiceUsed ?? {})) {
         if (c.live.hitDiceUsed?.[Number(f)]) tx.emit('hitDieUsed', { id, faces: Number(f), used: 0 }, seq);
       }
-      const ex = effectsOf(tx, id).find((e) => e.name === '力竭');
+      const ex = exhaustionEffect(tx, id);
       if (ex) {
         const level = Number(ex.state.level ?? 1) - 1;
         if (level <= 0) endEffect(tx, ex.id, '长休', seq);
