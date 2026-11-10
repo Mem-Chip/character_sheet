@@ -335,6 +335,7 @@ function windowPrompt(tx: Tx, spec: WindowSpec): string {
       ? `${t} 将要${(spec.scope.event as Record<string, unknown> | undefined)?.forced ? '被移动' : '移动'}。要使用以下能力吗？`
       : `${t} 移动了。要使用以下能力吗？`;
     case 'summoned': return `${a} 召唤出了 ${t}。要使用以下能力吗？`;
+    case 'effectApplied': return `${t} 陷入了「${(spec.scope.event as Record<string, unknown> | undefined)?.name ?? '效应'}」。要使用以下能力吗？`;
     case 'd20Rolled': return `${rollText(spec, a, t)}要使用以下能力吗？`;
     case 'damageTaken': return `${t} 受到了伤害。要使用以下能力吗？`;
     case 'spellCast': {

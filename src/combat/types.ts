@@ -228,6 +228,12 @@ export type Modify =
   /** 消除这次 d20 检定的优势 / 劣势，改用第一颗 d20（归复平衡 which 缺省 'both'，醉汉机运 which: 'disadv'） */
   | { op: 'clearAdv'; which?: 'both' | 'adv' | 'disadv' }
   /**
+   * 给这次 d20 检定加上优势 / 劣势（d20Rolled before：「用反应令这次攻击具有优势」）。
+   * 和掷骰前就有的一样结算：已经有同一种就不变，有相反的就互相抵消（按第一颗 d20 算），都没有就补掷一颗取高 / 取低。
+   */
+  | { op: 'adv' }
+  | { op: 'disadv' }
+  /**
    * **重掷这次伤害里最小的几颗骰子**（damageIncoming before，伤害来源那边用：强效法术）。count 可以是表达式（魅力调整值）。
    * 共享掷骰（火球术）的其他目标跟着用重掷后的骰面。
    */
@@ -466,10 +472,11 @@ export type Node =
    * - on 还能写 `create`（区域放下时已经在里面的；区域挪过来压到人算 enter）、`leave`（离开）、`move`（在里面每移动 5 尺，含走进来那一步）；
    * - `while`：待在里面就有的效果（只放 applyEffect），进来时挂上、离开 / 区域消失时自动摘掉，不受 oncePerTurn 限制；
    * - `difficult`：困难地形（走进这些格子每格多花 5 尺移动力）；
-   * - `fully`：棋子占的每一格都在区域里才算在里面（原文「完全位于」），缺省占到一格就算。
+   * - `fully`：棋子占的每一格都在区域里才算在里面（原文「完全位于」），缺省占到一格就算；
+   * - `withEffect`：随施放者自己身上的这个效应（名字或键）一起结束 —— 不靠专注的光环（精魂图腾「失能时提前结束」：效应上写 endsOn，区域跟着走）。
    */
   | {
-      kind: 'zone'; name?: string; on?: ZoneWhen[]; do?: Node[]; while?: Node[];
+      kind: 'zone'; name?: string; on?: ZoneWhen[]; do?: Node[]; while?: Node[]; withEffect?: string;
       affects?: 'all' | 'enemies' | 'allies'; oncePerTurn?: boolean; rounds?: number; difficult?: boolean; fully?: boolean;
     }
   /**
@@ -527,7 +534,7 @@ export interface Zone {
   oncePerTurn: boolean;
   /** 每次生效前问 DM */
   confirm: boolean;
-  /** 随这个专注结束 */
+  /** 随这个效应结束（专注，或 zone 节点 withEffect 指的那个） */
   link: EffectId | null;
   /** 到第几轮开始时消失（null = 一直在，等人删） */
   untilRound: number | null;

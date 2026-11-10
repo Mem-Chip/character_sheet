@@ -3,7 +3,7 @@ import { applyDamagePacket, applyHeal, grantTempHp, maxDiceFor, normType, rollCo
 import { controllerOf, d20Test, rollValue } from './d20';
 import { newCastPlan, type CastPlan } from './castplan';
 import { currentAction, markAction, resultOf, spellMetaOf, type ActionInstance } from './instance';
-import { activeTemplates, applyEffect, conditionsInNodes, effectiveView, effectsOf, endConcentration, endEffect, skillBonus, startConcentration } from './effects';
+import { activeTemplates, applyEffect, conditionsInNodes, effectiveView, effectsOf, endConcentration, endEffect, findEffect, skillBonus, startConcentration } from './effects';
 import { makeEnv, nameOf, type ScopeData } from './scope';
 import { entryOf } from './collect';
 import { placeSummon, placeZone, relocateZone, shove } from './space';
@@ -491,11 +491,14 @@ function runNode(tx: Tx, n: Node, ctx: ExecCtx): void {
         return;
       }
       const round = tx.state.round;
+      // withEffect：随自己身上的那个效应结束（没找到就退回专注 / rounds，并说一声）
+      const tied = n.withEffect ? findEffect(tx, ctx.self, tx.rules.resolveTemplate(n.withEffect, ctx.entryKey)?.key ?? n.withEffect) ?? findEffect(tx, ctx.self, n.withEffect) : undefined;
+      if (n.withEffect && !tied) tx.emit('note', { text: `${ctx.actionName}：身上没有「${n.withEffect}」，区域不会跟着它结束`, owner: ctx.self }, ctx.cause);
       const zone: Zone = {
         id: tx.nextId('z'), name: n.name ?? ctx.actionName, cells: ctx.area.cells.slice(), ...(ctx.area.tpl ? { tpl: ctx.area.tpl } : {}),
         source: ctx.self, entryKey: ctx.entryKey, on: n.on ?? [], do: n.do ?? [], affects: n.affects ?? 'all',
         ...(n.while?.length ? { while: n.while } : {}), ...(n.difficult ? { difficult: true } : {}), ...(n.fully ? { fully: true } : {}), ...(ctx.vars && Object.keys(ctx.vars).length ? { vars: { ...ctx.vars } } : {}),
-        oncePerTurn: n.oncePerTurn ?? true, confirm: false, link: ctx.concentrationId ?? null,
+        oncePerTurn: n.oncePerTurn ?? true, confirm: false, link: tied?.id ?? ctx.concentrationId ?? null,
         ...(Object.keys(currentAction(tx)?.marks ?? {}).length ? { marks: { ...currentAction(tx)!.marks } } : {}),
         untilRound: n.rounds && round !== null ? round + n.rounds : null, hits: {}, ...(ctx.slot !== undefined ? { slot: ctx.slot } : {}),
       };

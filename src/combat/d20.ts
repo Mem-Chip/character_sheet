@@ -327,6 +327,25 @@ export function d20Test(tx: Tx, req: RollRequest): RollResult {
         }
         result.mods.push({ op: 'noAdv', label: by.label, owner: by.owner, from: by.from });
         recompute();
+      } else if (m.op === 'adv' || m.op === 'disadv') {
+        // 掷完之后才给的优势 / 劣势，和掷骰前就有的一样算：
+        // 已经有同一种、或者两种已经互相抵消了 → 不变；有相反的 → 抵消，按第一颗算；都没有 → 补掷一颗取高 / 取低
+        const want = m.op;
+        const other = want === 'adv' ? 'disadv' : 'adv';
+        result.mods.push({ op: want, label: by.label, owner: by.owner, from: by.from });
+        if ((want === 'adv' && noAdv) || result[want] || result.cancelled) return;
+        if (result[other]) {
+          result[other] = false;
+          result.cancelled = true;
+          result.d20 = [result.d20[0]];
+          result.natural = result.d20[0];
+        } else {
+          const [[f]] = tx.roll([{ faces: 20, count: 1 }], controllerOf(tx, req.roller), `${nameOf(tx, req.roller)} 的${req.label}（${want === 'adv' ? '优势' : '劣势'}补掷）`, 'd20');
+          result.natural = want === 'adv' ? Math.max(result.natural, f) : Math.min(result.natural, f);
+          result.d20 = [...result.d20, f];
+          result[want] = true;
+        }
+        recompute();
       }
     },
     refresh: () => rollValue(result),

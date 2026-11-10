@@ -49,7 +49,7 @@ const SCOPE_FIELDS: Array<[ScopeKind, string]> = [
 
 /** 窗口：引擎在什么时候问「有没有能力要在这时生效」 */
 const WINDOWS: Array<[string, string, string, string, string]> = [
-  ['d20Rolled', 'before', '掷骰者 / 攻击检定的目标', 'roll（还没判定；roll.failing = 按现在的结果会失败）、attack', 'reroll、addToRoll、setD20（d20 直接取某个值）、succeed（改成成功 / 命中）、cancel、clearAdv（消掉优势 / 劣势）'],
+  ['d20Rolled', 'before', '掷骰者 / 攻击检定的目标', 'roll（还没判定；roll.failing = 按现在的结果会失败）、attack', 'reroll、addToRoll、setD20（d20 直接取某个值）、succeed（改成成功 / 命中）、cancel、clearAdv（消掉优势 / 劣势）、adv / disadv（给这次检定加上优势 / 劣势）'],
   ['d20Rolled', 'after', '同上', 'roll（已判定）、attack', '—'],
   ['attackHit', 'before', '攻击者 / 被命中者', 'attack、roll。先问防守方，再问进攻方', '防守方：halveDamage、cancel（改为未命中）、redirect（改攻击目标）；进攻方：doubleDamage，或用 do 里的 addDamage 加伤害'],
   ['attackHit', 'after', '同上', 'attack、roll、damage（已结算）', '—'],
@@ -65,6 +65,7 @@ const WINDOWS: Array<[string, string, string, string, string]> = [
   ['moved', 'before', '让它动的人（自己走就是自己；推离 / 拉近是推的人）/ 被移动的人', 'event.forced、event.by、event.ft（打算走几尺）', 'cancel（拦下这次移动：「阻止盟友被推离」）'],
   ['moved', 'after', '同上', 'event.forced、event.ft（实际走了几尺）、event.from / event.to', '—（轰雷剑「目标自愿移动 5 尺以上」：role: target、when: !event.forced && event.ft >= 5）'],
   ['summoned', 'after', '召唤者 / 召唤物', 'event.name、event.type；action 就是那道召唤法术', '—（强韧召唤：do 里对 target 给 tempHp、applyEffect 抗性 / 生命上限）'],
+  ['effectApplied', 'after', '效应的来源 / 得到效应的人', 'event.name（效应名）、event.key、event.conditions（它带来的状态名，含隐含的：昏迷 → 昏迷、失能、倒地）', '—（「你陷入失能时」：role: \'target\'、when: "includes(event.conditions, \'失能\')"）'],
   ['spellCast', 'before', '施法者（role: \'target\' 是被施法的那个）', 'event.spell、event.key、event.targets；attacker = 施法者，target = 被施法的那个', 'cancel（打断施法，缺省退回法术位；要消耗法术位写 refundSlot: false）'],
   ['spellCast', 'after', '施法者（role: \'target\' 是被施法的那个）', 'event.spell、event.key、event.targets；attacker = 施法者，target = 被施法的那个', '—'],
   ['actionDone', 'after', '用动作的人（只有一个目标时 target 是它）', 'action.*（这次动作的结果：action.hitCount、action.result…）', '—（只开给最外层的动作：反应、窗口里用的动作不再触发）'],
@@ -256,6 +257,9 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
 **困难地形**：zone 上写 \`difficult: true\`（走进这些格子每格多花 5 尺移动力，被推拉不算）；只是困难地形、没有别的效果的区域可以不写 on / do。
 「困难地形不多花移动力」的效应写 \`flags: { ignores: ['difficultTerrain'] }\`。
 原文是「**完全位于**区域内」的（沉默术、哈达之欲的目盲）写 \`fully: true\`：棋子占的每一格都在区域里才算，缺省占到一格就算。
+**不靠专注的光环**（精魂图腾「持续 1 分钟，失能时提前结束」）：先给自己挂一个效应（写好 duration / endsOn），再在 zone 上写 \`withEffect: '<效应名>'\` —— 效应结束区域就消失，不用让人手动删。
+**判断某人在不在区域里**：\`inZone(x, owner)\` = x 在不在 owner 放下的区域里，第三个参数只看某个名字的区域（\`inZone(target, self, '鹰之精魂')\`）。有地图按棋子位置算，没有地图会问人。
+「光环内由你选择的生物」不要用 \`within\`（那是离**你**多远，光环的中心不在你身上）：写 \`chooseTargets\` 的 \`filter: 'inZone(target, self)'\`。
 
 **推离 / 拉近**（\`move\` 节点）在地图上会真的移动目标：沿两者连线的方向走直线，碰到别的棋子停下；拉近到贴身为止。传送还是提示人手动拖。
 
@@ -298,8 +302,13 @@ ${WINDOWS.map((r) => `| ${r.join(' | ')} |`).join('\n')}
 20. **替盟友承受伤害**：在 \`damageIncoming\` before 窗口（\`role: 'ally'\`），用自己的临时生命值或生命值吸收伤害（原目标抗性算完之后先扣你的，扣不完再落回原目标）：写 \`{ op: 'absorb', from: 'tempHp' }\`（投射守御，配 \`when: 'self.tempHp > 0'\`）或 \`{ op: 'absorb', from: 'hp' }\`（护卫灵光）。整包伤害直接转给自己承受（按自己的抗性算）：写 \`{ op: 'redirect', to: 'self' }\`（保护联结）。
 21. **打断施法**（法术反制）：挂在 \`spellCast\` before 窗口（\`role: 'any'\`、\`aim: 'actor'\`），在豁免失败分支里写 \`{ kind: 'modify', modify: [{ op: 'cancel' }] }\`（2024 版不消耗对方体内的法术位，缺省 \`refundSlot: true\`）。
 22. **抹掉优势 / 劣势**：常驻「攻击检定不会对你有优势」（飘忽不定、序列意识）在 \`rollMods\` 里写 \`op: 'noAdv'\`；触发时消掉本次掷骰的优势 / 劣势（归复平衡、醉汉机运）在 \`d20Rolled\` before 写 \`modify: [{ op: 'clearAdv', which: 'both' | 'adv' | 'disadv' }]\`。
+    **掷出来之后才给优势 / 劣势**（「用反应令这次攻击具有优势」）：\`d20Rolled\` before 写 \`modify: [{ op: 'adv' }]\`（或 \`disadv\`）—— 不要用 \`reroll\` 凑，已有劣势时结果不一样。
 23. **召唤生物**（野兽召唤术、原初伴侣、寻获魔宠、荒野伙伴）：用 \`{ kind: 'summon', name: '…', size: 'S' | 'M' | 'L', creatureType: '…', ac: '11 + slot.level', hp: '30 + 5 * (slot.level - 2)', speed: 30, attacksPerAction: 'floor(slot.level / 2)', attacks: [{ name: '…', damage: '1d8 + 4 + slot.level', damageType: '穿刺' }] }\`。有多种形态（陆生 / 空生 / 水生）的套在 \`choose\` 节点里。专注法术召唤出的生物默认随专注结束退场；非专注或独立存续的写 \`link: false\`。
     独立存续（\`link: false\`）的召唤物**按组顶替**：同一道法术再施展一次会换掉旧的（缺省按这次动作分组），不同来源（坐骑 + 魔宠）各留各的；同一效果被拆成两个条目时（寻获坐骑 / 圣武士的「信实坐骑」）在两条里写相同的 \`group: 'steed'\` 才会互相顶替。
+    **「由你召唤的生物……」这类能力**（强化召唤物、召唤物命中时加伤害、召唤物回合结束时回血）有两种写法，都不用 \`ask\` 问「是不是你召唤的」：
+    - 召唤者自己的触发器，\`when\` 里认召唤物：\`target.summoner == self.id\`（回合窗口：\`on: 'turnEnded'\`、\`role: 'ally'\`）、\`attacker.summoner == self.id\`（命中窗口：\`on: 'attackHit'\`、\`role: 'ally'\`）。\`summoner\` 是召唤者的 id，不是召唤物就是空字符串；
+    - 或者在 \`summoned\` 窗口里给召唤物挂一个效应（\`applyEffect\`、\`to: 'target'\`），把修正 / 触发器写在这个效应里（效应里 \`self\` = 召唤物，\`source\` = 你）。生命上限、抗性这类恒定加成用这种。
+    只管某类生物的（野兽 / 妖精）在 \`summoned\` 的 \`when\` 里筛 \`event.type\`，或者 \`target.type\`。条目自己不是法术却召唤生物的动作（「施展一次 7 环的 X」）里 \`action.spell\` 是空的，别拿它当条件。
 24. **目标挣脱 / 效应被移除之后法术是否结束**：引擎**不会**因为「效应被移除」就自动结束专注 —— 多目标法术里一个目标摆脱了，法术对别人还在（golden #4 定身类人就是这么设计的）。
     原文说「成功则法术结束」的（诱捕打击这类），在 root 里显式写 \`{ kind: 'endConcentration' }\`：结束施法者自己的专注，链接的效应、区域、召唤物会一并退场。
 25. **灵光授予的静态修正**（\`aura.grant.statics\`：抗性、免疫、AC 加值…）会并进范围内生物的 view —— 不用再拿「受伤前减半」之类的写法绕。

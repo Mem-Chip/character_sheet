@@ -4,6 +4,7 @@ import {
 } from '../expr';
 import { effectiveView, exhaustionOf, findEffect, hasCondition, concentrationOf } from './effects';
 import { actionValue, currentAction } from './instance';
+import { zonesAt } from './space';
 import type { Tx } from './tx';
 import type { ActiveEffect, AttackInfo, Id } from './types';
 
@@ -24,6 +25,8 @@ export const REF_SHAPE: RefShape = {
     id: T.str, name: T.str, side: T.str, kind: T.str,
     hp: T.num, tempHp: T.num, hpMax: T.num, ac: T.num, speed: T.num, pb: T.num, level: T.num, initiative: T.num,
     exhaustion: T.num, size: T.str, type: T.str,
+    /** 召唤者的 id（不是召唤物 = 空字符串）：`target.summoner == self.id` */
+    summoner: T.str,
     mod: abilObj, score: abilObj, save: abilObj,
     spell: T.obj({ dc: T.num, atk: T.num, mod: T.num }),
     levels: T.open,
@@ -54,6 +57,7 @@ const FUNCS: Record<string, FnSig> = {
   within: { params: [T.ref, T.ref, T.num], returns: T.bool },
   allyWithin: { params: [T.ref, T.num, T.open], optional: 1, returns: T.bool, doc: 'x 周围 ft 尺内有没有 self 的盟友' },
   canSee: { params: [T.ref, T.ref], returns: T.bool },
+  inZone: { params: [T.ref, T.ref, T.str], optional: 1, returns: T.bool, doc: "x 在不在 owner 放下的区域里（第三个参数：只看叫这个名字的区域）：inZone(target, self, '鹰之精魂')。没有地图时变成一个问题" },
   ask: { params: [T.str], returns: T.bool, doc: '显式询问' },
   abilityMod: { params: [T.str], returns: T.num, doc: "self 某属性的调整值：abilityMod(attack.ability)" },
   combatant: { params: [T.str], returns: T.ref, doc: '按 id 取参与者（事件载荷里只有 id）' },
@@ -169,6 +173,7 @@ export function refOf(tx: Tx, id: Id): RefValue {
         case 'initiative': return v().initiative;
         case 'size': return v().size;
         case 'type': return v().type;
+        case 'summoner': return c().summoner ?? '';
         case 'exhaustion': return exhaustionOf(tx, id);
         case 'mod': return { ...v().mod };
         case 'score': return { ...v().score };
@@ -323,6 +328,22 @@ export function makeEnv(tx: Tx, d: ScopeData, assumptions?: string[]): EvalEnv {
         subjects: [p.id, q.id],
         guess,
         scope: 'turn',
+      });
+    },
+    inZone: (a) => {
+      const x = (a[0] as RefValue).id;
+      const owner = (a[1] as RefValue).id;
+      const name = a[2] === undefined || a[2] === null ? null : String(a[2]);
+      const mine = Object.values(tx.state.zones ?? {}).filter((z) => z.source === owner && (name === null || z.name === name || z.entryKey === name));
+      // 有地图：按棋子位置算（区域没放下 = 不在里面）；没有地图 / 这个人没上地图：问人
+      if (tx.pos?.[x]) return zonesAt(tx, x).some((z) => mine.some((m) => m.id === z.id));
+      if (tx.pos && !mine.length) return false;
+      const zn = name ?? mine[0]?.name;
+      return ask({
+        id: `zone:${owner}:${x}:${name ?? ''}`,
+        text: `${nameOf(tx, x)} 在 ${nameOf(tx, owner)} 的${zn ? `「${zn}」` : '区域'}范围内吗？`,
+        subjects: [x, owner],
+        scope: 'roll',
       });
     },
     ask: (a) => ask({ id: `ask:${self}:${String(a[0])}`, text: String(a[0]), subjects: [self], scope: 'roll' }),

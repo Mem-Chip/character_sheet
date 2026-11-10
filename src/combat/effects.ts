@@ -3,6 +3,7 @@ import { kill, normType } from './damage';
 import { runNodes } from './exec';
 import { zonesOfConcentration } from './space';
 import { makeEnv, nameOf } from './scope';
+import { fireWindow } from './triggers';
 import type { Tx } from './tx';
 import type { ActiveEffect, Aura, CombatantView, Duration, EffectId, EffectTemplate, Entry, GameEvent, Id, Node, StaticMod } from './types';
 import { entryKeyOf, subOf } from '../keys';
@@ -13,6 +14,9 @@ import { entryKeyOf, subOf } from '../keys';
  */
 
 export const CONC_KEY = 'concentration';
+
+/** effectApplied 窗口套了几层（按事务记，见 applyEffect） */
+const applyDepth = new WeakMap<Tx, number>();
 
 export interface ActiveTpl {
   effect: ActiveEffect;
@@ -522,6 +526,21 @@ export function applyEffect(tx: Tx, o: ApplyOpts): ActiveEffect | null {
       entryKey: key, actionName: name, cause: seq, locals: {}, effectId: effect.id,
     });
   }
+  // 挂上了：开 effectApplied 窗口（承受者 = 得到效应的人，发起者 = 效应来源）——「陷入失能时」这类能力挂在这里。
+  // 专注本身、已经被 onApply 摘掉的不开；窗口里的能力又挂效应会再开窗口，套得太深就停（防止数据写出死循环）。
+  const depth = applyDepth.get(tx) ?? 0;
+  if (key !== CONC_KEY && tx.state.effects[effect.id] && depth < 3) {
+    applyDepth.set(tx, depth + 1);
+    try {
+      fireWindow(tx, {
+        event: 'effectApplied', window: 'after', actor: o.source ?? undefined, target: o.bearer,
+        scope: { event: { id: effect.id, key, name, bearer: o.bearer, source: o.source, conditions: chain.filter((a) => a.tpl.tags?.includes('condition')).map((a) => tplName(a.key, a.tpl)) } },
+        cause: seq,
+      });
+    } finally {
+      applyDepth.set(tx, depth);
+    }
+  }
   return tx.state.effects[effect.id] ?? null;
 }
 
@@ -535,6 +554,9 @@ export function endEffect(tx: Tx, id: EffectId, reason: string, cause: number | 
       endEffect(tx, linked.id, `专注结束（${e.name}）`, seq);
     }
     zonesOfConcentration(tx, id, seq);
+  } else {
+    // 区域的 withEffect：不靠专注的光环随这个效应一起消失
+    zonesOfConcentration(tx, id, seq, `「${e.name}」结束`);
   }
   // 注意：反过来**不**自动结束专注 —— 多目标法术里一个目标摆脱了不代表整个法术结束
   // （golden #4 定身类人就靠这个）。要让整道法术结束，数据里写 `{ kind: 'endConcentration' }`。

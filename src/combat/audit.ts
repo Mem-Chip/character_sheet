@@ -18,7 +18,7 @@ import type { Action, EffectTemplate, Entry, Node, RollMod, Trigger } from './ty
 export const WINDOW_EVENTS = new Set([
   'turnStarted', 'turnEnded', 'initiativeRolled', 'spellCast', 'd20Rolled', 'attackHit', 'attackMissed',
   'saveForced', 'saveSucceeded', 'saveFailed', 'damageIncoming', 'damageTaken', 'reducedTo0', 'restCompleted', 'leftReach', 'actionDone',
-  'enteredReach', 'moved', 'summoned',
+  'enteredReach', 'moved', 'summoned', 'effectApplied',
 ]);
 
 /** 引擎会发出的事件（endsOn 能监听的） */
@@ -35,7 +35,7 @@ const NODE_KINDS = new Set([
   'mark', 'runBranch', 'refund', 'chooseTargets', 'allocate', 'retype', 'trimDamage', 'repeatAction',
 ]);
 const ROLL_OPS = new Set(['adv', 'disadv', 'noAdv', 'add', 'addDice', 'autoFail', 'autoSucceed', 'critRange', 'autoCritOnHit', 'minD20', 'minDie', 'targetAdd', 'maxDice']);
-const MODIFY_OPS = new Set(['reroll', 'addToRoll', 'setD20', 'reduceDamage', 'halveDamage', 'doubleDamage', 'setHp', 'cancel', 'evasion', 'succeed', 'redirect', 'absorb', 'clearAdv', 'cancelUnlessSave', 'unlessSave', 'setDc', 'setAttackBonus', 'setDamageType', 'rerollDamage']);
+const MODIFY_OPS = new Set(['reroll', 'addToRoll', 'setD20', 'reduceDamage', 'halveDamage', 'doubleDamage', 'setHp', 'cancel', 'evasion', 'succeed', 'redirect', 'absorb', 'clearAdv', 'cancelUnlessSave', 'unlessSave', 'setDc', 'setAttackBonus', 'setDamageType', 'rerollDamage', 'adv', 'disadv']);
 const STATIC_KINDS = new Set(['ac', 'speed', 'hpMax', 'speedSet', 'spellDc', 'resist', 'resistAll', 'immune', 'vuln', 'conditionImmune']);
 
 const NUM = T.num;

@@ -75,7 +75,7 @@ const NODE_KEYS = {
   forEach: ['in', 'do'],
   repeat: ['n', 'do'],
   move: ['mode', 'ft'],
-  zone: ['name', 'on', 'affects', 'oncePerTurn', 'rounds', 'do', 'while', 'difficult', 'fully'],
+  zone: ['name', 'on', 'affects', 'oncePerTurn', 'rounds', 'do', 'while', 'difficult', 'fully', 'withEffect'],
   moveZone: ['key'],
   summon: ['name', 'count', 'size', 'type', 'creatureType', 'ac', 'hp', 'speed', 'pb', 'score', 'attacksPerAction', 'attacks', 'actions', 'triggers', 'rollMods', 'resist', 'immune', 'conditionImmune', 'notes', 'link', 'group'],
   note: ['text'],
@@ -105,7 +105,7 @@ const COST_KEYS: Array<[string, readonly string[]]> = [
 const MODIFY_KEYS = {
   reroll: ['die', 'keep'], addToRoll: ['value'], setD20: ['value'], succeed: [],
   reduceDamage: ['value', 'types'], halveDamage: [], doubleDamage: [], evasion: [],
-  setHp: ['value'], cancel: ['refundSlot'], redirect: ['to'], absorb: ['from'], clearAdv: ['which'], rerollDamage: ['count'],
+  setHp: ['value'], cancel: ['refundSlot'], redirect: ['to'], absorb: ['from'], clearAdv: ['which'], rerollDamage: ['count'], adv: [], disadv: [],
 } as const satisfies { [K in Modify['op']]?: readonly FieldsOf<Modify, 'op', K>[] };
 type MissingModifyFields = { [K in keyof typeof MODIFY_KEYS]: Exclude<FieldsOf<Modify, 'op', K>, (typeof MODIFY_KEYS)[K][number]> }[keyof typeof MODIFY_KEYS];
 const modifyKeysComplete: [MissingModifyFields] extends [never] ? true : `lint 清单漏了字段：${MissingModifyFields & string}` = true;

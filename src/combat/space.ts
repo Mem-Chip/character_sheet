@@ -406,9 +406,9 @@ export function expireZones(tx: Tx, round: number, cause: number | null): void {
   }
 }
 
-/** 专注结束：随它的区域消失 */
-export function zonesOfConcentration(tx: Tx, concId: string, cause: number | null): void {
+/** 效应结束（专注，或区域 withEffect 指的那个）：随它的区域消失 */
+export function zonesOfConcentration(tx: Tx, concId: string, cause: number | null, reason = '专注结束'): void {
   for (const z of Object.values(tx.state.zones ?? {})) {
-    if (z.link === concId) removeZone(tx, z, '专注结束', cause);
+    if (z.link === concId) removeZone(tx, z, reason, cause);
   }
 }
