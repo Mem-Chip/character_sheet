@@ -1,65 +1,18 @@
 <!doctype html>
-<!-- 站点门禁页（server/gate.ts）：没输过站点密码时 nginx 把所有页面都转到这里。不依赖应用本体，自己带样式。 -->
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="robots" content="noindex" />
-  <title>DnD 2024 · 输入站点密码</title>
-  <link rel="icon" type="image/png" href="./favicon.png" />
-  <style>
-    :root { color-scheme: dark; --bg: #0c0d10; --panel: #15171c; --line: #2a2e37; --text: #e6e2d8; --dim: #8d8a83; --gold: #c9a86a; --bad: #e07a6a; }
-    @media (prefers-color-scheme: light) {
-      :root { color-scheme: light; --bg: #f4f1ea; --panel: #fffdf8; --line: #d9d3c6; --text: #26231e; --dim: #6f6a60; --gold: #8a6a2c; --bad: #b2412f; }
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--bg); color: var(--text);
-           font: 15px/1.6 "Noto Serif SC", "Songti SC", serif; padding: 16px; }
-    form { width: 100%; max-width: 340px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 28px 24px; }
-    h1 { margin: 0 0 4px; font-size: 22px; letter-spacing: .04em; color: var(--gold); }
-    p { margin: 0 0 20px; color: var(--dim); font-size: 13px; }
-    input { width: 100%; padding: 10px 12px; font: inherit; color: var(--text); background: var(--bg);
-            border: 1px solid var(--line); border-radius: 6px; outline: none; }
-    input:focus { border-color: var(--gold); }
-    button { width: 100%; margin-top: 12px; padding: 10px; font: inherit; font-weight: 600; cursor: pointer;
-             color: #1a160d; background: var(--gold); border: 0; border-radius: 6px; }
-    button:disabled { opacity: .5; cursor: default; }
-    #msg { min-height: 1.6em; margin: 12px 0 0; font-size: 13px; color: var(--bad); }
-  </style>
-</head>
-<body>
-  <form id="f">
-    <h1>DnD 2024</h1>
-    <p>私人站点，输入站点密码进入。输错 5 次会封这个 IP 一天。</p>
-    <input id="pw" type="password" autocomplete="current-password" placeholder="站点密码" required autofocus />
-    <button id="go" type="submit">进入</button>
-    <div id="msg" role="alert"></div>
-  </form>
-  <script>
-    var f = document.getElementById('f'), pw = document.getElementById('pw'), go = document.getElementById('go'), msg = document.getElementById('msg');
-    var home = new URL('./', location.href).href;
-    function banned(until) {
-      pw.disabled = go.disabled = true;
-      msg.textContent = '输错太多次，这个 IP 被封到 ' + new Date(until).toLocaleString() + '。';
-    }
-    fetch('api/gate/status', { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (s) {
-      if (s.passed) location.replace(home);
-      else if (s.bannedUntil) banned(s.bannedUntil);
-    }).catch(function () {});
-    f.addEventListener('submit', function (e) {
-      e.preventDefault();
-      go.disabled = true; msg.textContent = '';
-      fetch('api/gate/login', {
-        method: 'POST', credentials: 'same-origin',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ password: pw.value }),
-      }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); }).then(function (x) {
-        if (x.ok) return location.replace(home);
-        if (x.d.bannedUntil) return banned(x.d.bannedUntil);
-        go.disabled = false; pw.select();
-        msg.textContent = x.d.error || '没进去，再试一次';
-      }).catch(function () { go.disabled = false; msg.textContent = '连不上服务器，等一下再试'; });
-    });
-  </script>
-</body>
-</html>
+<!-- 站点门禁页（server/gate.ts）：没输过站点密码时 nginx 把页面转到这里 -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<title>密码</title>
+<form id="f">
+  <input id="pw" type="password" autofocus required>
+  <button>进入</button>
+</form>
+<p id="msg"></p>
+<script>
+  f.onsubmit = async (e) => {
+    e.preventDefault();
+    const r = await fetch('api/gate/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: pw.value }) });
+    if (r.ok) return location.replace('./');
+    msg.textContent = (await r.json().catch(() => ({}))).error || '不对';
+  };
+</script>
