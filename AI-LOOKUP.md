@@ -67,7 +67,8 @@
 
 ## 现在做到哪了
 
-- [ ] 1. 查询函数 + 测试
+- [x] 1. 查询函数 + 测试（`src/factory/lookup.ts`：`createLookup({ spec, typesSource, entries })` → `run(请求数组, { check })` / `one(请求)`；`isLookupReq`。
+  说明书第 4 节按加粗段落切成 `4.1`…，第 5 节按编号切成 `5.1`…；关键词搜索跳过第 2 节（整份 types.ts）。`tests/factory/lookup.test.ts`）
 - [ ] 2. 短总览
 - [ ] 3. 协议进 datafy
 - [ ] 4. 界面

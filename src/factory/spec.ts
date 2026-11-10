@@ -17,12 +17,12 @@ export const DAMAGE_TYPES = ['钝击', '穿刺', '挥砍', '火焰', '寒冷', '
 export const CREATURE_TYPES = [...new Set(Object.values(CREATURE_TYPE_CN))];
 export const SKILLS = ['运动', '体操', '巧手', '隐匿', '奥秘', '历史', '调查', '自然', '宗教', '驯兽', '洞悉', '医药', '察觉', '求生', '欺瞒', '威吓', '表演', '游说'];
 
-function fmtTy(t: Ty): string {
+export function fmtTy(t: Ty): string {
   if (t.k === 'obj' && t.fields) return `{ ${Object.keys(t.fields).join(', ')} }`;
   return tyName(t);
 }
 
-function fmtSig(name: string, f: FnSig): string {
+export function fmtSig(name: string, f: FnSig): string {
   const req = f.params.length - (f.optional ?? 0);
   const ps = f.params.map((p, i) => (i < req ? tyName(p) : `${tyName(p)}?`)).join(', ');
   return `\`${name}(${ps})\` → ${tyName(f.returns)}${f.doc ? `　${f.doc}` : ''}`;
@@ -48,7 +48,7 @@ const SCOPE_FIELDS: Array<[ScopeKind, string]> = [
 ];
 
 /** 窗口：引擎在什么时候问「有没有能力要在这时生效」 */
-const WINDOWS: Array<[string, string, string, string, string]> = [
+export const WINDOWS: Array<[string, string, string, string, string]> = [
   ['d20Rolled', 'before', '掷骰者 / 攻击检定的目标', 'roll（还没判定；roll.failing = 按现在的结果会失败）、attack', 'reroll、addToRoll、setD20（d20 直接取某个值）、succeed（改成成功 / 命中）、cancel、clearAdv（消掉优势 / 劣势）、adv / disadv（给这次检定加上优势 / 劣势）'],
   ['d20Rolled', 'after', '同上', 'roll（已判定）、attack', '—'],
   ['attackHit', 'before', '攻击者 / 被命中者', 'attack、roll。先问防守方，再问进攻方', '防守方：halveDamage、cancel（改为未命中）、redirect（改攻击目标）；进攻方：doubleDamage，或用 do 里的 addDamage 加伤害'],
