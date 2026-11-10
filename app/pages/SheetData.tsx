@@ -20,7 +20,7 @@ import { attachableOfItems, cardCampaign, combatFor, effectiveItems, newItemId, 
 import { AiDatafy } from '../components/AiDatafy';
 import { ModsEditor } from '../components/ModsEditor';
 import { kindOfKey } from '../../src/library';
-import { aiExamples, aiSheetExamplesText, aiSpec, partsFromAnswer, partsJobForKey } from '../lib/ai';
+import { partsFromAnswer, partsJobForKey } from '../lib/ai';
 import { actions, stripDerived, useApp } from '../lib/store';
 import { useSync } from '../lib/sync';
 
@@ -228,8 +228,7 @@ export function SheetData(p: Props) {
             })),
           } : undefined}
           saveLabel="存进我的资料库"
-          spec={aiSpec('both')}
-          examples={`${aiExamples()}\n\n## 卡面数据的例子（真实数据，照这个粒度写）\n\n${aiSheetExamplesText()}`}
+          mode="both"
           prepare={() => partsJobForKey(engine, cid, { key: ai.key, name: ai.s.name, text: '', smokeChar: stripDerived(p.char) })}
           onSave={async (a, by) => {
             const parts = partsFromAnswer(a, { key: ai.key, existing: ai.existing });

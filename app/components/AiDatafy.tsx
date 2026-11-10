@@ -1,10 +1,13 @@
 /**
  * 「AI 数据化」对话框：拼任务 → 调你自己的模型 → 检查（结构、审计、试算）→ 没过自动让它改 →
  * 你看结果，不满意写一句修改意见再来一轮，满意就存。结果可以直接手改，改完点「重新检查」。
+ *
+ * 默认走「按需查资料」（AI-LOOKUP.md）：只给速览版说明书，模型回 `{ "lookup": [...] }` 就现查给它。
+ * 关掉那个开关（或这个流程自己给了说明书）就是老办法：一次把说明书和全部例子给全。
  */
 import { useEffect, useRef, useState } from 'react';
 import { datafy } from '../../src/factory/ai';
-import { AI_PRESETS, aiBy, aiExamples, aiSpec, makeChat, setAiSettings, useAiSettings, type AiJob, type AiSettings } from '../lib/ai';
+import { AI_PRESETS, aiBy, aiRunInput, makeChat, setAiSettings, useAiSettings, type AiJob, type AiSettings } from '../lib/ai';
 import { Dialog, Field } from './ui';
 
 export function AiDatafy(p: {
@@ -13,9 +16,11 @@ export function AiDatafy(p: {
   /** 已有的结果（再改一版用） */
   initial?: unknown;
   saveLabel?: string;
-  /** 说明书：缺省只讲动态层（怪物那种按名字回答的流程）；资料库的双写流程传 `aiSpec('both')` */
+  /** 说明书和例子从哪来：`combat` 缺省（怪物那种按名字回答的流程）、`both` 卡面 + 战斗（资料库的双写流程） */
+  mode?: 'combat' | 'both';
+  /** 自己给说明书（整理自制书那种流程）；给了就不走按需查资料 */
   spec?: string;
-  /** 例子：缺省是战斗黄金条目；双写流程再拼上卡面数据的例子 */
+  /** 自己给例子 */
   examples?: string;
   onSave: (answer: unknown, by: string) => Promise<string[] | void>;
   onClose: () => void;
@@ -33,6 +38,7 @@ export function AiDatafy(p: {
   const [showTask, setShowTask] = useState(false);
   const abort = useRef<AbortController | null>(null);
   const running = !!step;
+  const mode = p.mode ?? 'combat';
 
   useEffect(() => {
     p.prepare().then(setJob, (e: Error) => setPrepErr(e.message));
@@ -47,8 +53,12 @@ export function AiDatafy(p: {
     setErr('');
     abort.current = new AbortController();
     try {
+      const input = aiRunInput({ mode, spec: p.spec, examples: p.examples, lookup: settings.lookup });
       const r = await datafy({
-        chat: makeChat(settings), spec: p.spec ?? aiSpec(), examples: p.examples ?? aiExamples(), task: job.task, check: job.check,
+        chat: makeChat(settings),
+        spec: input.spec, examples: input.examples,
+        task: job.task, check: job.check,
+        ...(input.lookup ? { lookup: input.lookup } : {}),
         ...(revise ? { previous: parsed(), feedback } : {}),
         onStep: setStep, signal: abort.current.signal,
       });
@@ -86,7 +96,7 @@ export function AiDatafy(p: {
   return (
     <Dialog title={p.title} onClose={p.onClose} footer={<>
       <span className="small muted" style={{ flex: 1 }}>
-        {settings?.model} · <button className="btn ghost sm" onClick={() => setEditSettings(true)}>接口设置</button>
+        {settings?.model} · {p.spec || settings?.lookup === false ? '一次给全' : '按需查资料'} · <button className="btn ghost sm" onClick={() => setEditSettings(true)}>接口设置</button>
       </span>
       {running && <button className="btn" onClick={() => abort.current?.abort()}>停止</button>}
       <button className="btn" onClick={p.onClose}>取消</button>
@@ -152,7 +162,7 @@ export function AiSettingsForm(p: { onSaved?: () => void } = {}) {
     } catch (e) { setMsg((e as Error).message); }
   };
   const save = () => {
-    setAiSettings({ baseUrl: s.baseUrl.trim(), model: s.model.trim(), key: s.key.trim() });
+    setAiSettings({ baseUrl: s.baseUrl.trim(), model: s.model.trim(), key: s.key.trim(), lookup: s.lookup !== false });
     setSaved(true);
     setMsg('存好了（只在这个浏览器里）');
     p.onSaved?.();
@@ -166,7 +176,12 @@ export function AiSettingsForm(p: { onSaved?: () => void } = {}) {
       <Field label="接口地址（到 /v1 为止）"><input value={s.baseUrl} onChange={(e) => { setS({ ...s, baseUrl: e.target.value }); setSaved(false); }} placeholder="https://api.deepseek.com/v1" /></Field>
       <Field label="模型"><input value={s.model} onChange={(e) => { setS({ ...s, model: e.target.value }); setSaved(false); }} /></Field>
       <Field label="密钥"><input type="password" value={s.key} onChange={(e) => { setS({ ...s, key: e.target.value }); setSaved(false); }} autoComplete="off" /></Field>
-      <div className="tiny faint">一条要发约 3 万 token 的说明书和例子；挑上下文长、写 JSON 稳的模型。</div>
+      <label className="row small" style={{ gap: 6, alignItems: 'flex-start' }}>
+        <input type="checkbox" checked={s.lookup !== false} onChange={(e) => { setS({ ...s, lookup: e.target.checked }); setSaved(false); }} />
+        <span>让 AI 按需查资料（推荐）——先给它一份几千字的速览，它要细节时自己来查（节点定义、时机、现成条目），省上下文。
+          关掉就是老办法：一次把整份说明书和全部例子发过去，小模型不会用查询协议时才关。</span>
+      </label>
+      <div className="tiny faint">开着时第一次请求只有一万字左右；关掉时一次要约 3 万 token 的说明书和例子。</div>
       <div className="row" style={{ gap: 6 }}>
         {cur && <button className="btn ghost sm danger" onClick={() => { setAiSettings(null); setS({ baseUrl: AI_PRESETS[0].baseUrl, model: AI_PRESETS[0].model, key: '' }); setMsg('清掉了'); setSaved(false); }}>清除</button>}
         <span style={{ flex: 1 }} />

@@ -8,12 +8,12 @@ import { useSyncExternalStore } from 'react';
 import abilities2024 from '../../data/abilities-2024.json';
 import typesSource from '../../src/combat/types.ts?raw';
 import type { ParsedMonster } from '../../src/bridge/from-monster';
-import { GOLDEN_FILES, RULE_FILES } from '../../src/bridge/rule-files';
+import { GOLDEN_FILES } from '../../src/bridge/rule-files';
 import type { CombatantView, Entry } from '../../src/combat';
-import { buildSpec, declaredResources, lintEntry, lintSheet, renderTask, sheetHasContent, type Task } from '../../src/factory';
+import { buildBrief, buildSpec, declaredResources, lintSheet, renderTask, sheetHasContent, type Task } from '../../src/factory';
+import { createLookup, type Lookup } from '../../src/factory';
 import { isSkip, type Chat, type ChatMsg } from '../../src/factory/ai';
 import { createTaskBuilder } from '../../src/factory/build';
-import { genericOwner, smoke } from '../../src/factory/smoke';
 import type { Json } from '../../src/sheet';
 import { BREW_CLASSES, checkBrew, kindOfKey, type Brew, type LibraryItem, type ResPart } from '../../src/library';
 import { api } from './api';
@@ -23,7 +23,13 @@ import { isHomeruleKey } from '../../src/keys';
 
 /* ───── 设置 ───── */
 
-export interface AiSettings { baseUrl: string; model: string; key: string }
+export interface AiSettings {
+  baseUrl: string;
+  model: string;
+  key: string;
+  /** 让 AI 按需查资料（速览 + 查询协议）。缺省开；关掉 = 一次把说明书和全部例子给全 */
+  lookup?: boolean;
+}
 const LS = 'dnd.ai.v1';
 const listeners = new Set<() => void>();
 let cached: AiSettings | null | undefined;
@@ -98,12 +104,63 @@ export const aiSpec = (mode: 'combat' | 'both' = 'combat') => {
   if (!s) specMemo.set(mode, (s = buildSpec({ typesSource, mode })));
   return s;
 };
-let examplesMemo: string | null = null;
-export function aiExamples(): string {
-  if (examplesMemo) return examplesMemo;
-  const all: Record<string, Entry> = {};
-  for (const f of GOLDEN_FILES) Object.assign(all, f.entries);
-  return (examplesMemo = JSON.stringify(all));
+let briefMemo = new Map<string, string>();
+/** 速览版说明书：只给框架和名字清单，细节让模型用 `{ "lookup": [...] }` 现查（AI-LOOKUP.md） */
+export const aiBrief = (mode: 'combat' | 'both' = 'combat') => {
+  let s = briefMemo.get(mode);
+  if (!s) briefMemo.set(mode, (s = buildBrief({ typesSource, mode })));
+  return s;
+};
+/** 手写条目：例子和 `example` 查询都只用这些（AI 写的错写法不当范例） */
+let goldenMemo: Record<string, Entry> | null = null;
+export const aiGoldenEntries = (): Record<string, Entry> =>
+  (goldenMemo ??= Object.fromEntries(GOLDEN_FILES.flatMap((f) => Object.entries(f.entries))));
+
+let examplesMemo = new Map<string, string>();
+/** 例子：`combat` = 全部手写条目；`both` = 再拼上卡面那一侧的真实数据 */
+export function aiExamples(mode: 'combat' | 'both' = 'combat'): string {
+  const hit = examplesMemo.get(mode);
+  if (hit !== undefined) return hit;
+  const s = JSON.stringify(aiGoldenEntries()) + (mode === 'both'
+    ? `\n\n## 卡面数据的例子（真实数据，照这个粒度写）\n\n${aiSheetExamplesText()}`
+    : '');
+  examplesMemo.set(mode, s);
+  return s;
+}
+
+/** 速览版只附最典型的几条，省得模型在 139 条里自己找 */
+const BRIEF_EXAMPLE_KEYS = ['XPHB:野蛮人:狂暴:1', 'XPHB:游荡者:偷袭:1', 'XPHB:spell:火球术', 'XPHB:spell:野兽召唤术', 'XPHB:spell:匕首之云'];
+let briefExamplesMemo = new Map<string, string>();
+export function aiBriefExamples(mode: 'combat' | 'both' = 'combat'): string {
+  const hit = briefExamplesMemo.get(mode);
+  if (hit !== undefined) return hit;
+  const all = aiGoldenEntries();
+  const picked = Object.fromEntries(BRIEF_EXAMPLE_KEYS.flatMap((k) => (all[k] ? [[k, all[k]]] : [])));
+  const s = JSON.stringify(picked) + (mode === 'both'
+    ? `\n\n## 卡面数据的例子（真实数据，照这个粒度写）\n\n${aiSheetExamplesText()}`
+    : '');
+  briefExamplesMemo.set(mode, s);
+  return s;
+}
+
+/** 按需查资料的工具：说明书全文、types.ts 源码、手写条目，检查交给调用方（datafy 会给） */
+export function aiLookup(mode: 'combat' | 'both' = 'combat'): Lookup {
+  return createLookup({ spec: aiSpec(mode), typesSource, entries: aiGoldenEntries() });
+}
+
+/**
+ * 这一次要发什么：速览 + 查询工具（按需查资料），还是整份说明书 + 全部例子（老办法）。
+ * 界面和测试共用这一处判断：自己给了说明书（整理自制书那种流程）就没有可查的全文，退回老办法。
+ */
+export function aiRunInput(o: { mode?: 'combat' | 'both'; spec?: string; examples?: string; lookup?: boolean } = {}) {
+  const mode = o.mode ?? 'combat';
+  const brief = !o.spec && o.lookup !== false;
+  return {
+    brief,
+    spec: brief ? aiBrief(mode) : o.spec ?? aiSpec(mode),
+    examples: brief ? aiBriefExamples(mode) : o.examples ?? aiExamples(mode),
+    lookup: brief ? aiLookup(mode) : undefined,
+  };
 }
 
 /** 卡面数据的例子：直接从 data/abilities-2024.json 里挑几条真实数据，不手抄 */
@@ -142,18 +199,10 @@ export function taskBuilder(engine: Engine, cid?: string | null) {
 
 /* ───── 检查 ───── */
 
-export interface CheckCtx { key: string; resourceIds?: string[]; classTableColumns?: string[]; owner?: CombatantView | null }
+import { checkEntry, type CheckCtx } from '../../src/factory/check';
 
-/** 检查一条 Entry：结构、审计、资源、试算（跑一场小遭遇，看运行时会不会出错） */
-export function checkEntry(answer: unknown, c: CheckCtx): string[] {
-  if (isSkip(answer)) return typeof answer.skip === 'string' && answer.skip.trim() ? [] : ['skip 要写一句原因'];
-  const problems = lintEntry(c.key, answer, { files: RULE_FILES, resourceIds: c.resourceIds, classTableColumns: c.classTableColumns });
-  if (problems.length) return problems;
-  const res: Record<string, string> = Object.fromEntries((c.resourceIds ?? []).map((id) => [id, id]));
-  for (const d of declaredResources(answer)) res[d.id] = d.name ?? d.id;
-  const owner = c.owner ? { ...c.owner, resources: { ...c.owner.resources, ...Object.fromEntries(Object.keys(res).map((id) => [id, c.owner!.resources[id] ?? 3])) }, resourceNames: { ...c.owner.resourceNames, ...res } } : genericOwner(c.key, res);
-  return smoke(c.key, answer as Entry, RULE_FILES, owner).errors.map((e) => `试算出错：${e}`);
-}
+export { checkEntry };
+export type { CheckCtx };
 
 export const checkCtxOf = (t: Task, owner?: CombatantView | null): CheckCtx => ({
   key: t.key, resourceIds: Object.keys(t.resources ?? {}), classTableColumns: Object.keys(t.classTable ?? {}), owner,

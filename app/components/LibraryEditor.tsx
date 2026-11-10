@@ -13,7 +13,7 @@ import { Dialog, Field, Tag } from './ui';
 import { CombatEditor } from './CombatEditor';
 import { SyntaxHelp } from './SyntaxHelp';
 import { ModsEditor } from './ModsEditor';
-import { aiExamples, aiSheetExamplesText, aiSpec, brewJob, brewSpec, partsFromAnswer, partsJobForKey } from '../lib/ai';
+import { brewJob, brewSpec, partsFromAnswer, partsJobForKey } from '../lib/ai';
 import type { Engine } from '../lib/engine';
 import { newPartId } from '../lib/library';
 import { RULE_FILES } from '../../src/bridge/rule-files';
@@ -238,8 +238,7 @@ export function LibraryEditor(p: {
             title={`AI 写「${raw.name || d.name}」的数据（卡面 + 战斗）`}
             initial={initial}
             saveLabel="填进这条"
-            spec={aiSpec('both')}
-            examples={`${aiExamples()}\n\n## 卡面数据的例子（真实数据，照这个粒度写）\n\n${aiSheetExamplesText()}`}
+            mode="both"
             prepare={() => partsJobForKey(p.engine, p.cid ?? null, { key, name: raw.name || d.name, text: raw.text || d.text, cls: p.item?.ref?.cls })}
             onSave={async (a, by) => {
               const parts = partsFromAnswer(a, { key });
@@ -289,8 +288,7 @@ export function LibraryEditor(p: {
             title={`AI 写「${brew.subclass[0].name}」每条特性的数据（卡面 + 战斗）`}
             initial={initial}
             saveLabel="填进条目"
-            spec={aiSpec('both')}
-            examples={`${aiExamples()}\n\n## 卡面数据的例子（真实数据，照这个粒度写）\n\n${aiSheetExamplesText()}`}
+            mode="both"
             prepare={() => partsJobForKey(p.engine, p.cid ?? null, { key: keys[0].key, name: brew.subclass[0].name, text: '', brew })}
             onSave={async (a, by) => {
               const parts = partsFromAnswer(a, { key: keys[0].key });

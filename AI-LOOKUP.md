@@ -69,7 +69,21 @@
 
 - [x] 1. 查询函数 + 测试（`src/factory/lookup.ts`：`createLookup({ spec, typesSource, entries })` → `run(请求数组, { check })` / `one(请求)`；`isLookupReq`。
   说明书第 4 节按加粗段落切成 `4.1`…，第 5 节按编号切成 `5.1`…；关键词搜索跳过第 2 节（整份 types.ts）。`tests/factory/lookup.test.ts`）
-- [ ] 2. 短总览
-- [ ] 3. 协议进 datafy
-- [ ] 4. 界面
-- [ ] 5. 对比考试
+- [x] 2. 短总览（`src/factory/spec.ts` 的 `buildBrief`：两种模式 7～8 千字，全文是 5.2 万字）。
+  节点 kind / 修改 op 从 types.ts 的联合成员里取，窗口名从 `WINDOWS` 取；第 5 节 32 条、第 6 节 10 条各压成一句（`CONVENTIONS` / `PITFALLS`），
+  编号必须和全文一一对上 —— `tests/factory/brief.test.ts` 拿全文的编号逐条比对，加了一条忘了写速览会挂。
+  例子里只附 5 条最典型的（狂暴、偷袭、火球术、野兽召唤术、匕首之云），其余现查。
+- [x] 3. 协议进 `datafy`（`src/factory/ai.ts`）：`DatafyInput.lookup`（给 `createLookup` 的产物，只用 `run`）→
+  回复是 `{ "lookup": [...] }` 就先查、把结果作为下一条 user 消息发回去；答卷照旧走检查 / 改稿循环。
+  **查询轮（缺省 6）和改稿轮（缺省 2）分开计数**；连续两轮查的全是查过的就催它交卷；轮数用完之后还查就当答卷处理（带一句「这是查询请求，不是答卷」）。
+  答卷里混了 `lookup` 字段的是答卷（`isLookupReq` 只认单个键）。`tests/factory/datafy-lookup.test.ts`）
+- [x] 4. 界面（`app/components/AiDatafy.tsx`）：AI 设置里一个「让 AI 按需查资料（推荐）」开关，缺省开（`AiSettings.lookup`）；
+  关掉就是老办法。对话框的 `mode`（`combat` / `both`）代替原来的 `spec` + `examples` 属性；
+  自己给说明书（整理自制书那种）时不走查询。进度里显示「查资料（第 N 轮）：node zone、example summon」。
+  `app/lib/ai.ts` 的 `aiBrief` / `aiBriefExamples` / `aiLookup` 是浏览器侧的那一份，`tests/app/ai-lookup.test.ts` 查它接的数据源对不对。
+- [x] 5. 对比考试（`tools/factory/exam-run.ts`）：同一张卷子跑两遍，`--mode brief` 用速览 + 查询、`--mode full` 用出卷时的整份说明书和例子；
+  答案分别写进 `answers-brief/` / `answers-full/`，`exam.ts grade <卷> <答案目录>` 能指定阅卷目录。
+  接口用 `OPENAI_BASE_URL` / `OPENAI_API_KEY` / `OPENAI_MODEL`。**只拿假接口验证过流程**（一题：brief 发了 3.4 万字、full 发了 57.3 万字），
+  真实的通过率对比要填密钥自己跑。
+- [ ] 6. 以后：原生 tool calling（`makeChat` 发现接口支持就用 `tools` 传，查询函数不变）。
+

@@ -378,6 +378,186 @@ ${both
 `;
 }
 
+/* ───────────── 速览版：按需查资料（AI-LOOKUP.md 第 2 步） ───────────── */
+
+/**
+ * 第 5 节每条约定的速览（编号 + 一句话）。全文里那条才是权威，这里只是让人知道「有这么一条、要细节查 5.N」——
+ * 编号和全文对不上会被 `tests/factory/brief.test.ts` 抓到。
+ */
+const CONVENTIONS: Array<[number, string]> = [
+  [1, '主动用的能力写 `actions`；`activation` 是 action / bonus / reaction / free / none（none 配 `cost: [{ economy: \'attack\' }]`）'],
+  [2, '玩家可以选择用不用的写 `optional: true`（引擎会问）；每回合一次写 `limit: \'oncePerTurn\'`'],
+  [3, '花资源写 `cost: [{ resource: \'<id>\' }]`；自己有的次数在条目顶层写 `resources`（`formula`：数字、`pb`、`max(1, wis)`、`level * 5`、`cond(…)`）'],
+  [4, '「被打中时 / 有人施法时」还要花附赠动作或反应的，写成 `actions` 里带 `trigger` 的动作（护盾术、至圣斩）'],
+  [5, '命中时加伤害（偷袭类）：`attackHit` before 窗口、`role: \'actor\'`，`do: [{ kind: \'addDamage\', … }]`'],
+  [6, '「检定失败时」：`d20Rolled` before 窗口，`when` 里用 `roll.failing`；只在会改变结果时才提供'],
+  [7, '持续时间：`until.nth: 0` = 本回合、`1` = 下一回合；`of: \'bearer\'` / `\'source\'` 指谁的回合'],
+  [8, '引用效应用全键：状态 `XPHB:condition:<名>`、通用动作 `XPHB:action:<名>#<效应名>`；自己施加的写在 `effects` 里'],
+  [9, '专注写在动作的 `concentration` 上；这个动作施加的效应默认随专注结束'],
+  [10, '法术的动作 `tags: [\'spell\', \'magical\']`，动作 id 一般是 `cast`'],
+  [11, '动作 `name`、触发器 `label`、检定修正 `label` 都以能力的中文名开头（弹窗上显示的就是它）'],
+  [12, '让人选：几个选项选一个用 `choose` 节点（可以带 `when`）；选一个数用 `number` 节点，结果在 `vars.<var>`'],
+  [13, '引擎做不到的（传送、视线、光照）用 `move` / `note` / `ask(\'…\')`；整条都做不到就写 `manual`，不要硬编'],
+  [14, '伤害类型、技能都用中文译名（烈焰 / 黯蚀 / 察觉…），照任务里列的写'],
+  [15, '恒定的数值（AC +1、速度 +10、熟练）不写；只有带条件的才写 `rollMods` / `statics`'],
+  [16, '对攻击者 / 伤害来源生效（反噬、让攻击者豁免）：节点上写 `to: \'attacker\'`'],
+  [17, '反射闪避：`damageIncoming` before，`when: "damage.save == \'dex\'"`，`modify: [{ op: \'evasion\' }]`'],
+  [18, '骰子取最大值：`rollMods` 里 `op: \'maxDice\'`，`on: { kind: \'damage\' | \'heal\' }`（法术的加 `spell: true`）'],
+  [19, '改攻击目标 / 让攻击落空：`{ op: \'redirect\', to: \'self\' | \'choose\' }`，直接落空 `{ op: \'cancel\' }`'],
+  [20, '替盟友承受伤害：`damageIncoming` before、`role: \'ally\'`，`{ op: \'absorb\', from: \'tempHp\' | \'hp\' }` 或 `redirect` 转给自己'],
+  [21, '打断施法（法术反制）：`spellCast` before、`role: \'any\'`、`aim: \'actor\'`，豁免失败分支里 `{ op: \'cancel\' }`'],
+  [22, '优势 / 劣势：常驻禁止写 `op: \'noAdv\'`；消掉本次的写 `clearAdv`；掷完才给的写 `adv` / `disadv`'],
+  [23, '召唤生物用 `summon` 节点；「由你召唤的生物……」在召唤者的触发器里认 `target.summoner == self.id`，或在 `summoned` 窗口挂效应'],
+  [24, '效应被移除**不会**自动结束专注；原文说「成功则法术结束」就在 root 里写 `{ kind: \'endConcentration\' }`'],
+  [25, '灵光授予的静态修正（抗性、免疫、AC）写 `aura.grant.statics`，会自动并进范围内生物的数值'],
+  [26, '临时给一个动作用 `grantAction`（免法术位施放：外层付动作，root 里 `cost: []`、`activation: \'free\'`）'],
+  [27, '改正在施展的那道法术：只在 `spellCast` before，用 `unlessSave` / `cancelUnlessSave` / `modifyCast`（窗口里的 `modify` 是同步求值的）'],
+  [28, '无视抗性 / 免疫：`damage` 节点加 `ignoreResist: true` / `ignoreImmunity: true`'],
+  [29, '借一道动作当场结算用 `castFrom`（不留动作）；`grantAction` 是挂一个能用一阵子的动作'],
+  [30, '`choose` 的现算池能过滤：`pool: { from: \'ownSpells\' | \'ownCantrips\' | \'spells\' | \'attacks\', castTime, singleTarget, maxLevel, list, school }`'],
+  [31, '移动 / 传送用 `move` 节点（`mode: \'teleport\' | \'push\' | \'pull\'`），落点由玩家在地图上点'],
+  [32, '移动区域（月华之光、炽焰法球）：另给一个动作，`targeting` 写 `area`，root 写 `{ kind: \'moveZone\' }`'],
+];
+
+/** 第 6 节「容易想错的地方」的速览；同样和全文编号对齐（测试会查） */
+const PITFALLS: Array<[number, string]> = [
+  [1, '攻击节点的 `bonus` 缺省是 `self.spell.atk`；武器攻击、徒手打击一定要自己写命中加值和属性调整值'],
+  [2, '`damage` 节点**会立刻造成伤害**，不只是掷骰；几个目标共用一次掷骰用 `id` / `ref`'],
+  [3, '需要目标的节点（attack、save、写给 target 的）有多个目标时会对每个目标各执行一次，不用包 `forEach`'],
+  [4, '触发器的顺序：先付代价，再应用 modify，最后执行 do（do 里读到的 `roll` 已经是改过的）'],
+  [5, '效应模板里的 `self` 是**承受者**；要用施加者的值就在 `applyEffect` 的 `state` 里记下来'],
+  [6, '防御性的反应改 AC 挂 `attackHit` before（防守方先问），引擎随后按新 AC 重判'],
+  [7, '升环公式按原文逐环累加：「2 环 4d6，每高一环 +1d6」= `(2 + slot.level)d6`，代进最低环验算一遍'],
+  [8, '`target.type` 只有任务里列的那些写法'],
+  [9, '`allyWithin(x, 尺, { exclude: [self], notCond: \'失能\' })` 的第三个参数可选'],
+  [10, '原文说「另一名生物」→ `targeting.filter: \'target.id != self.id\'`'],
+];
+
+/** types.ts 里联合成员的 `kind` / `op` 名（不 import splitTypes，免得和 lookup 绕成环） */
+function namesIn(src: string, field: 'kind' | 'op'): string[] {
+  const re = new RegExp(`^\\s*\\|\\s*\\(?\\{\\s*${field}:\\s*'(\\w+)'`, 'gm');
+  return [...new Set([...src.matchAll(re)].map((m) => m[1]))];
+}
+
+/**
+ * 速览版说明书：只讲框架、名字清单、约定标题，细节让模型用 `{ "lookup": [...] }` 现查。
+ * 目的是把一次 15 万字的请求压到一万字以内（见 AI-LOOKUP.md）。
+ */
+export function buildBrief(input: SpecInput): string {
+  const both = input.mode === 'both';
+  const nodes = namesIn(input.typesSource, 'kind');
+  const ops = namesIn(input.typesSource, 'op');
+  const types = [...new Set([...input.typesSource.matchAll(/^export (?:interface|type) (\w+)/gm)].map((m) => m[1]))];
+  const windows = [...new Set(WINDOWS.flatMap(([w]) => w.split(' / ')))];
+
+  return `# ${both ? '规则数据' : '动态层规则数据'}：写法速览
+
+你要把一条 D&D 2024 规则（职业特性、专长、法术、物品）写成引擎能执行的 JSON。
+这份只是速览：**细节不要凭印象编，用下面的查询去要**。
+
+## 0. 怎么查资料
+
+要细节时**只回一个查询请求**（是 JSON，但我们认这个形状，不是答卷）：
+
+\`\`\`json
+{ "lookup": [ { "tool": "node", "q": "zone" }, { "tool": "example", "q": "summon" } ] }
+\`\`\`
+
+我们查完把结果发回给你，你接着写。一轮最多 6 个查询，一共最多 6 轮；查够了就照常输出答卷。
+
+| tool | q | 查到 |
+|---|---|---|
+| \`node\` | 效果节点的 kind（\`zone\`、\`summon\`、\`choose\`…） | 那一种的定义，连同写在它上面的约定 |
+| \`type\` | 类型名或修改 op（\`Trigger\`、\`Duration\`、\`adv\`） | 同上 |
+| \`window\` | 窗口事件名（\`damageIncoming\`、\`summoned\`…） | 窗口表那一行：发起者 / 承受者、能读什么、能用什么修改 |
+| \`expr\` | 作用域（\`trigger\`、\`node\`、\`action\`…）或名字 / 函数（\`inZone\`、\`summoner\`、\`self.mod\`） | 能用的名字和函数签名 |
+| \`spec\` | 章节号（\`5.23\`、\`7.2\`）或关键词（召唤、光环、借机攻击） | 说明书的原段落 |
+| \`example\` | 节点 kind、窗口名、条目键或中文词（\`summon\`、\`精魂\`） | 手写条目里用到它的几条（键 + JSON） |
+| \`check\` | 草稿（\`{ "tool": "check", "draft": { …完整答卷… } }\`） | 现有的检查结果（结构、审计、试算） |
+
+查过的别再查；同一个问题查两遍没有新东西，我们会催你交卷。
+
+## 1. 产出什么
+
+${both ? `一个 JSON 对象，\`parts\` 是**一条或多条条目**：
+
+\`\`\`json
+{ "parts": [
+  { "key": "XPHB:野蛮人:狂暴:1", "name": "狂暴", "text": "原文摘要（照抄不要编）",
+    "sheet": { "mods": [], "grants": [], "choices": [], "resources": [ … ] },
+    "combat": { "name": "狂暴", "actions": [ … ] } }
+] }
+\`\`\`
+
+- **一个 part = 一条条目（一个键）**：一个子职 = 每级特性一条，各写自己的键。
+- \`key\`：覆盖官方就写任务里给的官方键；新内容**不写 key**（保存时填 \`HR:<id>\`）。
+- \`sheet\` 写卡面（第 7 节），\`combat\` 写战斗（第 2～6 节，**直接写 Entry**，不要包成 \`{ "entry": … }\`）。
+- 两边都没有就输出 \`{ "parts": [] }\`。` : `一个 JSON 对象，类型是 \`Entry\`：\`actions\`（主动用的）、\`triggers\`（时机触发的）、
+\`rollMods\`（检定修正）、\`auras\`（灵光）、\`effects\`（它施加的效应）。
+
+**不要写静态部分**：属性加值、熟练、授予法术、次数池上限，人物卡已经算好了。`}
+
+**没有可写的就跳过**：纯静态加值、纯叙事 → \`{ "skip": "一句话原因" }\`；写一部分 → \`automation: "partial"\`，在 \`text\` 里说清哪部分要人处理。
+**同名的高等级版本**（17 级的动作如潮）通常只是加强低等级那条：不要再写一遍，skip 并说明。
+**戏法按角色等级加骰**：\`(1 + floor((self.level + 1) / 6))d10\`。
+只输出 JSON 对象本身，不要解释。
+
+## 2. 效果节点与类型（查 node / type）
+
+节点的 \`kind\`：${nodes.join(' ')}
+修改的 \`op\`（\`modify\`、窗口里的修改、\`modifyCast\`）：${ops.join(' ')}
+类型：${types.join(' ')}
+
+每个节点有哪些字段、每个类型什么形状、每个 op 干什么，在 types.ts 的注释里写着 —— 用 \`{"tool":"node","q":"zone"}\` / \`{"tool":"type","q":"Trigger"}\` 查。
+
+## 3. 表达式（查 expr）
+
+写在字符串里：\`"pb + mod.str"\`、\`"(1 + slot.level)d8"\`、\`"target.has('倒地') && roll.failing"\`。
+- 运算 \`+ - * /\`、比较、\`&& || !\`、括号；最后向下取整。字符串用单引号。**没有三元运算符**，要分支用 \`if\` 节点。
+- 骰子 \`2d6\`、\`(slot.level + 1)d8\`（个数可以是表达式）；\`classTable('列名')\` 是职业表当前行的某一列。
+- 判断不了的事实会去问人：\`dist\`、\`within\`、\`allyWithin\`、\`canSee\`、\`ask('…')\`，不要自己假设。
+- \`self\` = 持有者，\`source\` = 效应来源，\`target\` = 当前目标，\`attacker\` = 攻击者。
+- 各字段能用的名字（\`self.mod.wis\`、\`self.tempHp\`、\`slot.level\`…）用 \`{"tool":"expr","q":"trigger"}\` 查。
+
+## 4. 时机（窗口，查 window）
+
+触发器的 \`on\` 和带 \`trigger\` 的动作挂在这些窗口上：
+
+${windows.join('、')}
+
+\`role\`：\`actor\`（发起者）/ \`target\`（承受者）/ \`ally\` / \`enemy\` / \`any\`；\`window\` 缺省 \`after\`，\`modify\` 只能用在 before 窗口。
+每个窗口谁发起 / 谁承受、能读到什么、能做什么修改，用 \`{"tool":"window","q":"damageIncoming"}\` 查。
+反应类「看到伤害再决定」（直觉闪避）：挂 \`attackHit\` before，加 \`deferTo: 'damageIncoming'\`。
+结算期间**所有**表达式都能读到正在结算的那次动作 \`action.*\`（名字、环阶、目标、这次的结果、伤害骰），查 \`{"tool":"spec","q":"动作实例"}\`。
+
+## 5. 约定（每条一句话；要细节查 \`{"tool":"spec","q":"5.N"}\`）
+
+${CONVENTIONS.map(([n, s]) => `${n}. ${s}`).join('\n')}
+
+## 6. 容易想错的地方（查 \`{"tool":"spec","q":"6.N"}\`）
+
+${PITFALLS.map(([n, s]) => `${n}. ${s}`).join('\n')}
+
+${both ? `## 7. 卡面数据（查 spec 7.1～7.5）
+
+\`sheet\` 是四块：\`mods\`（改数值）、\`grants\`（授予熟练 / 法术 / 专长…）、\`choices\`（要玩家做的决定）、\`resources\`（次数池）。
+- \`mods\` 的 kind：${Object.keys(MOD_KIND_DOC).join(' ')} —— 字段用 \`{"tool":"spec","q":"7.1"}\` 查
+- \`grants\` 的 kind：${Object.keys(GRANT_KINDS).join(' ')} —— \`level: N\` = 到 N 级才给
+- \`resources\`：\`{ "id", "name", "formula", "recovery": "short" | "long" }\`；战斗里用 \`cost: [{ resource: '<id>' }]\` 花它
+- \`choices\` 的 \`pool\` 只能用：${[...CHOICE_POOLS].join(' ')}
+**恒定**的（加值、熟练、授予、池子上限）→ \`sheet\`；**带条件**的（豁免优势、命中加伤害）→ \`combat\`。
+
+` : ''}## 8. 例子
+
+后面的消息里附了几条手写的典型条目（狂暴、偷袭、火球术、一次召唤、一个区域），照它们的风格和粒度写。
+要别的用 \`{"tool":"example","q":"…"}\` 查 —— 只给手写的，AI 写的错写法不会当范例。
+
+## 9. 交卷前
+
+写完用 \`{"tool":"check","draft":{…}}\` 自查一遍（草稿放完整答卷），有问题改完再交。
+`;
+}
+
 /* ───────────── 卡面那一节（mode: 'both' 时接在战斗那几节后面） ───────────── */
 
 function sheetSection(): string {

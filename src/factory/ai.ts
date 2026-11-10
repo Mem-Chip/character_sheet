@@ -3,28 +3,36 @@
  *
  * 一轮 = 说明书（system）+ 例子 + 任务 → 模型出 JSON → 检查（结构、审计、资源、试算）→
  * 没过就把问题原样回给它再改（最多 maxFix 次）。人看了不满意，写一句修改意见再来一轮（带上上一版）。
- * 纯逻辑：怎么调接口（chat）、怎么检查（check）由调用方给。
+ *
+ * 说明书太长时走「按需查资料」（AI-LOOKUP.md）：给的是速览版 + `lookup` 工具，
+ * 模型先回 `{ "lookup": [...] }` 要细节，我们查完发回去，它接着写。查询轮数和改稿轮数分开算。
+ * 纯逻辑：怎么调接口（chat）、怎么检查（check）、怎么查（lookup）由调用方给。
  */
 import type { ParsedMonster } from '../bridge/from-monster';
+import { isLookupReq, type Lookup, type LookupReq } from './lookup';
 
 export interface ChatMsg { role: 'system' | 'user' | 'assistant'; content: string }
 export type Chat = (messages: ChatMsg[], signal?: AbortSignal) => Promise<string>;
 
 export interface DatafyInput {
   chat: Chat;
-  /** 说明书（buildSpec） */
+  /** 说明书（buildSpec；按需查资料时是 buildBrief） */
   spec: string;
   /** 例子：键 → Entry 的 JSON */
   examples: string;
   /** 任务（renderTask / renderMonsterTask） */
   task: string;
-  /** 检查一份答卷，返回问题（空 = 通过） */
+  /** 检查一份答卷，返回问题（空 = 通过）；`check` 工具也是用它 */
   check: (answer: unknown) => string[] | Promise<string[]>;
   /** 上一版 + 人写的修改意见 */
   previous?: unknown;
   feedback?: string;
   /** 检查没过时自动让它改几次（缺省 2） */
   maxFix?: number;
+  /** 按需查资料的工具（createLookup 的产物；只用得到 run——检查由 check 提供） */
+  lookup?: Pick<Lookup, 'run'>;
+  /** 最多查几轮（缺省 6，和改稿轮数分开算） */
+  maxLookup?: number;
   onStep?: (msg: string) => void;
   signal?: AbortSignal;
 }
@@ -67,23 +75,80 @@ export async function datafy(input: DatafyInput): Promise<DatafyResult> {
     },
   ];
   const maxFix = input.maxFix ?? 2;
+  const maxLookup = input.maxLookup ?? 6;
+  const lookup = input.lookup;
   let raw = '';
   let answer: unknown = null;
   let problems: string[] = [];
-  for (let round = 0; ; round++) {
-    input.onStep?.(round ? `检查没过，让它改（第 ${round} 次）…` : '等模型回答…');
+  let chats = 0;      // 一共问了几次模型
+  let fixes = 0;      // 检查没过、让它改了几次
+  let queries = 0;    // 查了几轮资料
+  let closed = false; // 已经告诉过它「不能再查了」
+  let stale = 0;      // 连续几轮查的全是查过的
+  const seen = new Set<string>();
+
+  for (;;) {
+    input.onStep?.(fixes ? `检查没过，让它改（第 ${fixes} 次）…` : '等模型回答…');
     raw = await input.chat(msgs, input.signal);
-    try {
-      answer = parseAnswer(raw);
-      input.onStep?.('检查中…');
-      problems = await input.check(answer);
-    } catch (e) {
-      answer = null;
-      problems = [`不是合法的 JSON：${(e as Error).message}`];
+    chats++;
+
+    let parsed: unknown;
+    let badJson: string | null = null;
+    try { parsed = parseAnswer(raw); } catch (e) { badJson = `不是合法的 JSON：${(e as Error).message}`; }
+
+    // 这一回要的是资料，不是答卷
+    if (!badJson && lookup && isLookupReq(parsed)) {
+      const reqs = (parsed.lookup as unknown[]).filter((r): r is LookupReq => !!r && typeof r === 'object');
+      if (closed) {
+        // 说过不能再查了还查：按答卷处理，交给检查去报，不再陪它兜圈
+        answer = parsed;
+        problems = [...await safeCheck(input.check, parsed), '这是查询请求，不是答卷'];
+        return { answer, problems, raw, rounds: chats };
+      }
+      const sig = reqs.map((r) => `${r.tool}:${String(r.q ?? '')}`);
+      const fresh = sig.filter((s) => !seen.has(s));
+      for (const s of sig) seen.add(s);
+      stale = fresh.length ? 0 : stale + 1;
+      if (queries >= maxLookup) {
+        closed = true;
+        msgs.push({ role: 'assistant', content: raw });
+        msgs.push({ role: 'user', content: '查询轮数已经用完了，不能再查了。照速览直接输出答卷（做不到的部分写 skip / manual）。' });
+        continue;
+      }
+      queries++;
+      input.onStep?.(`查资料（第 ${queries} 轮）：${sig.map((s) => s.replace(':', ' ')).join('、') || '（空）'}`);
+      const text = await lookup.run(reqs, { check: input.check });
+      msgs.push({ role: 'assistant', content: raw });
+      msgs.push({
+        role: 'user',
+        content: `## 查询结果\n\n${text}\n\n`
+          + (stale >= 2 ? '这些你查过了，没有新东西。别再查了，照现在知道的直接写答卷。\n' : '接着写。要更多细节就再查，够了就输出答卷。\n'),
+      });
+      continue;
     }
-    if (!problems.length || round >= maxFix) return { answer, problems, raw, rounds: round + 1 };
+
+    // 答卷（混了 lookup 字段的也算答卷）
+    if (badJson) {
+      answer = null;
+      problems = [badJson];
+    } else {
+      input.onStep?.('检查中…');
+      answer = parsed;
+      problems = await safeCheck(input.check, parsed);
+    }
+    if (!problems.length || fixes >= maxFix) return { answer, problems, raw, rounds: chats };
+    fixes++;
     msgs.push({ role: 'assistant', content: raw });
     msgs.push({ role: 'user', content: `检查没过：\n${problems.map((p) => `- ${p}`).join('\n')}\n\n改好后输出完整的 JSON（只输出 JSON）。` });
+  }
+}
+
+/** 检查出错不该把整轮对话弄崩：当成一条问题报回去 */
+async function safeCheck(check: (a: unknown) => string[] | Promise<string[]>, a: unknown): Promise<string[]> {
+  try {
+    return await check(a);
+  } catch (e) {
+    return [`检查出错：${(e as Error).message}`];
   }
 }
 

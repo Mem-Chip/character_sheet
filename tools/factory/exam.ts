@@ -3,7 +3,7 @@
  *
  *   npx tsx tools/factory/exam.ts prepare            出卷：.factory/exam-<时间>/（说明书、例子、任务、上下文）
  *   npx tsx tools/factory/exam.ts lint <卷> <题号>    检查一份答案（考生自己可以跑，只报格式与审计问题，不报测试结果）
- *   npx tsx tools/factory/exam.ts grade <卷>          阅卷：每份答案单独替换进规则数据，跑场景测试，出报告
+ *   npx tsx tools/factory/exam.ts grade <卷> [答案目录] 阅卷：每份答案单独替换进规则数据，跑场景测试，出报告
  *
  * 两组题（A / B）互为对方的例子：考 A 时例子里没有 A 的任何答案，反之亦然。
  * 相关的条目放在同一组（至圣斩和圣武斩、疾风连击和震慑拳），免得从例子里抄到近似答案。
@@ -113,9 +113,9 @@ async function prepare(): Promise<void> {
   console.log(`说明书 ${size('spec.md')} 字；例子 A ${size('examples-A.json')} / B ${size('examples-B.json')} 字；题目 ${manifest.length} 道`);
 }
 
-function lintAnswer(dir: string, id: string, log = true): string[] {
+function lintAnswer(dir: string, id: string, log = true, answersDir = 'answers'): string[] {
   const ctx = JSON.parse(readFileSync(resolve(dir, 'tasks', `${id}.ctx.json`), 'utf8'));
-  const file = resolve(dir, 'answers', `${id}.json`);
+  const file = resolve(dir, answersDir, `${id}.json`);
   let problems: string[];
   if (!existsSync(file)) problems = [`没有答案文件 answers/${id}.json`];
   else {
@@ -130,7 +130,7 @@ function lintAnswer(dir: string, id: string, log = true): string[] {
   return problems;
 }
 
-function grade(dir: string): void {
+function grade(dir: string, answersDir = 'answers'): void {
   const manifest = JSON.parse(readFileSync(resolve(dir, 'manifest.json'), 'utf8')) as Array<{ id: string; key: string; fold: string; name: string }>;
   const work = resolve(dir, 'grading');
   mkdirSync(work, { recursive: true });
@@ -160,11 +160,11 @@ function grade(dir: string): void {
   let lintOk = 0, testOk = 0, answered = 0;
   for (const m of manifest) {
     const item = EXAM.find((x) => x.key === m.key)!;
-    const answerFile = resolve(dir, 'answers', `${m.id}.json`);
+    const answerFile = resolve(dir, answersDir, `${m.id}.json`);
     const a = attempts.get(m.id);
     if (!existsSync(answerFile)) { rows.push(`| ${m.id} | ${m.name} | 没交卷 | | | |`); continue; }
     answered++;
-    const problems = lintAnswer(dir, m.id, false);
+    const problems = lintAnswer(dir, m.id, false, answersDir);
     if (!problems.length) lintOk++;
     let testCell = '—';
     let detail = problems.slice(0, 2).join('；');
@@ -199,6 +199,6 @@ else if (cmd === 'lint' && dir && id) {
   const p = lintAnswer(resolve(dir), id);
   console.log(p.length ? `✗ ${p.length} 个问题：\n${p.map((x) => `- ${x}`).join('\n')}` : '✓ 通过（格式、表达式、引用、资源 id 都没问题）');
   process.exitCode = p.length ? 1 : 0;
-} else if (cmd === 'grade' && dir) grade(resolve(dir));
+} else if (cmd === 'grade' && dir) grade(resolve(dir), process.argv[4]);
 else if (cmd === 'list') console.log(readdirSync(resolve(ROOT, '.factory')).join('\n'));
-else console.log('用法：exam.ts prepare | lint <卷目录> <题号> | grade <卷目录>');
+else console.log('用法：exam.ts prepare | lint <卷目录> <题号> | grade <卷目录> [答案目录]');
